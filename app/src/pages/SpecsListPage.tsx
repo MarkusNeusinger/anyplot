@@ -249,6 +249,7 @@ export function SpecsListPage() {
                         component="img"
                         src={getFallbackSrc(currentImage.url)}
                         alt={spec.title}
+                        loading="lazy"
                         sx={{
                           display: 'block',
                           width: '100%',

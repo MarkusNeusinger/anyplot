@@ -186,6 +186,17 @@ class SpecRepository(BaseRepository[Spec]):
         result = await self.session.execute(select(Spec.id).order_by(Spec.id))
         return [row[0] for row in result.fetchall()]
 
+    async def count_with_impls(self) -> int:
+        """Count specs that have at least one implementation.
+
+        Lightweight aggregate — avoids loading every spec + impl row just to
+        compute the homepage `specifications` number (used by /stats).
+        """
+        result = await self.session.execute(
+            select(func.count(func.distinct(Impl.spec_id))).select_from(Impl)
+        )
+        return result.scalar_one() or 0
+
     async def search_by_tags(self, tags: list[str]) -> list[Spec]:
         """Search specs by tags. Eager-loads impls + library + code.
 
@@ -231,6 +242,18 @@ class LibraryRepository(BaseRepository[Library]):
         query = select(Library).order_by(Library.name)
         result = await self.session.execute(query)
         return list(result.scalars().all())
+
+    async def count_with_languages(self) -> tuple[int, int]:
+        """Return ``(library_count, distinct_language_count)`` in one round-trip.
+
+        Used by /stats to avoid loading every Library row just to take ``len()``
+        and ``len({lib.language_id})`` over the result set.
+        """
+        result = await self.session.execute(
+            select(func.count(Library.id), func.count(func.distinct(Library.language_id)))
+        )
+        row = result.one()
+        return int(row[0] or 0), int(row[1] or 0)
 
     async def upsert(self, library_data: dict) -> Library:
         """Create or update a library by ID."""
@@ -287,6 +310,11 @@ class ImplRepository(BaseRepository[Impl]):
                 Impl.code.isnot(None)
             )
         )
+        return result.scalar_one() or 0
+
+    async def count_all(self) -> int:
+        """Count all implementations (lightweight aggregate, no row loading)."""
+        result = await self.session.execute(select(func.count(Impl.id)))
         return result.scalar_one() or 0
 
     async def get_loc_per_impl(self) -> list[tuple[str, int]]:

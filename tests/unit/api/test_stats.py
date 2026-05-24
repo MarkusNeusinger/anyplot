@@ -57,22 +57,20 @@ class TestStatsRefreshFactory:
     """Tests for the _refresh_stats standalone factory function."""
 
     async def test_refresh_stats_queries_db(self) -> None:
-        """_refresh_stats should derive stats from DB query results."""
-        mock_impl = MagicMock()
-        mock_spec_with_impl = MagicMock()
-        mock_spec_with_impl.impls = [mock_impl]
-        mock_spec_no_impl = MagicMock()
-        mock_spec_no_impl.impls = []
+        """_refresh_stats should derive stats from aggregate count queries.
 
-        mock_lib = MagicMock()
-
+        The stats endpoint was refactored to use lightweight COUNT/DISTINCT
+        queries instead of loading every spec + impl + library row, so the
+        mocks here exercise the new repository methods.
+        """
         mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec_with_impl, mock_spec_no_impl])
+        mock_spec_repo.count_with_impls = AsyncMock(return_value=1)
 
         mock_lib_repo = MagicMock()
-        mock_lib_repo.get_all = AsyncMock(return_value=[mock_lib])
+        mock_lib_repo.count_with_languages = AsyncMock(return_value=(1, 1))
 
         mock_impl_repo = MagicMock()
+        mock_impl_repo.count_all = AsyncMock(return_value=1)
         mock_impl_repo.get_total_code_lines = AsyncMock(return_value=42)
 
         mock_db = AsyncMock()
@@ -98,19 +96,17 @@ class TestStatsEndpoint:
     """Tests for the /stats endpoint _fetch branch."""
 
     def test_stats_with_empty_specs(self, db_client) -> None:
-        """Stats should return specs=0, plots=0 when all specs lack implementations."""
+        """Stats should return specs=0, plots=0 when no implementations exist."""
         client, _ = db_client
 
-        mock_spec_no_impl = MagicMock()
-        mock_spec_no_impl.impls = []
-
         mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec_no_impl])
+        mock_spec_repo.count_with_impls = AsyncMock(return_value=0)
 
         mock_lib_repo = MagicMock()
-        mock_lib_repo.get_all = AsyncMock(return_value=[MagicMock()])
+        mock_lib_repo.count_with_languages = AsyncMock(return_value=(1, 1))
 
         mock_impl_repo = MagicMock()
+        mock_impl_repo.count_all = AsyncMock(return_value=0)
         mock_impl_repo.get_total_code_lines = AsyncMock(return_value=0)
 
         with (

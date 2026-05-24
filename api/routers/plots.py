@@ -444,15 +444,31 @@ async def get_filtered_plots(
         spec_lookup = _build_spec_lookup(all_specs)
         impl_lookup = _build_impl_lookup(all_specs)
         all_images = _collect_all_images(all_specs)
+        spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
+
+        global_counts = _calculate_global_counts(all_specs)
+
+        # Fast path for the unfiltered request (e.g. the /specs page list and
+        # the initial /plots load). With no filter groups, `filtered_images`
+        # equals `all_images`, `counts` equals `global_counts`, and `or_counts`
+        # is empty — so skip the two O(images × categories) recomputations
+        # that would otherwise dominate the cold-cache `filter:all` response.
+        if not filter_groups:
+            return FilteredPlotsResponse(
+                total=len(all_images),
+                images=all_images,
+                counts=global_counts,
+                globalCounts=global_counts,
+                orCounts=[],
+                specTitles=spec_titles,
+            )
+
         spec_id_to_tags = {spec_id: spec_data["tags"] for spec_id, spec_data in spec_lookup.items()}
 
         filtered_images = _filter_images(all_images, filter_groups, spec_lookup, impl_lookup)
 
-        global_counts = _calculate_global_counts(all_specs)
         counts = _calculate_contextual_counts(filtered_images, spec_id_to_tags, impl_lookup)
         or_counts = _calculate_or_counts(filter_groups, all_images, spec_id_to_tags, spec_lookup, impl_lookup)
-
-        spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
 
         return FilteredPlotsResponse(
             total=len(filtered_images),
