@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: linked-views-selection
 created: '2026-05-17T00:37:37Z'
-updated: '2026-05-24T07:38:44Z'
+updated: '2026-05-24T07:50:41Z'
 generated_by: claude-sonnet
 workflow_run: 26354894419
 issue: 3344
@@ -12,100 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-vi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Excellent use of the Iris dataset — real, factually correct, neutral scientific
-    dataset that clearly demonstrates multi-view linked selection
-  - 'Creative SVG export pattern: capturing raw SVG bytes and exploiting pygal''s
-    .serie-N CSS classes for JavaScript-driven cross-chart selection sync is a genuinely
-    distinctive pygal technique'
-  - 'Perfect palette compliance in both themes — first series is #009E73, canonical
-    order maintained, backgrounds #FAF8F1/#1A1A17 correct, identical data colors across
-    light/dark'
-  - Complete interactive HTML with species filter buttons, reset button, and selection
-    count display
-  - Clean KISS code structure with no functions or classes; all 10 code quality points
-    earned
+  - 'Perfect spec compliance: 3 coordinated views (scatter + bar + box) with real
+    HTML/JS linked selection implementing all spec requirements'
+  - 'Consistent anyplot palette across all three views with correct theme adaptation
+    (light #FAF8F1 / dark #1A1A17)'
+  - 'Excellent data choice: Iris dataset revealing different structural aspects —
+    cluster separation (scatter), magnitude differences (bar), distribution overlap
+    (box)'
+  - Real interactive linked selection in HTML output with species filter buttons,
+    reset functionality, click handlers on SVG chart elements, and selection count
+    display
+  - 'Idiomatic pygal usage: box_mode=tukey for Tukey whiskers, selective grid control
+    (scatter-only), Style object for full theme token propagation'
   weaknesses:
-  - Sub-chart font sizes (title=44, label=32, major_label=26) are below the pygal
-    style-guide recommendation (66/56/44); raise to at least title=54, label=44, major_label=36
-    in sub-charts so text is more prominent in the composite view
-  - Linked selection is via external species buttons, not within-chart brushing or
-    clicking — the spec requires selection FROM within a view to propagate to others;
-    make legend items or series elements clickable via injected JavaScript onClick
-    handlers that sync active selection across all three charts
-  - Box chart y-axis starts at 0 but sepal lengths start at ~4.3; reduce y_range_min
-    to ~3.5 so data occupies at least 70% of the chart area vertically
-  - Dashed grid lines present on all charts; disable grid on bar and box charts (show_x_guides=False,
-    show_y_guides=False) and keep grid only on scatter chart where it aids readability
+  - Sub-chart font sizes (title=54, label=44, major_label=36, legend=36) are slightly
+    below the pygal style guide defaults (66/56/44/44) — at final composite scale
+    the tick labels read as slightly small; consider increasing to guide-recommended
+    values for sub-charts
+  - Bar chart uses a single x-category ('Mean Petal Length') with three bars side-by-side,
+    leaving horizontal axis space underutilized — x-labels for each species (setosa,
+    versicolor, virginica) as separate bar groups would better communicate the comparison
+  - 'DE-01/DE-02: Design is well-configured but not publication-ready — could be elevated
+    with annotation callouts highlighting key insights (e.g. ''Setosa cleanly separates
+    by petal dims'') or more refined grid-free chart area in sub-charts'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "linked-views-selection · python · pygal · anyplot.ai" in box chart — dark text, readable. Scatter sub-title "Petal Length vs Petal Width" and bar sub-title "Mean Petal Length by Species" both readable in dark text. Axis labels "Petal Length (cm)", "Petal Width (cm)", "Sepal Length (cm)" readable in dark text. Tick labels readable but small (major_label_font_size=26). Legend entries (setosa, versicolor, virginica) readable in each sub-chart.
-      Data: First series setosa in #009E73 (teal) — correct. Second series versicolor in #9418DB (purple). Third series virginica in #B71D27 (red). All scatter dots visible, bar heights clearly distinct, box plots well-separated.
-      Legibility verdict: PASS — all text readable against light background; font sizes below style-guide recommendation but still legible
+      Background: Warm off-white (#FAF8F1 confirmed) — correct anyplot light surface, not pure white
+      Layout: Three sub-charts composited: scatter (top-left 1550×860), bar (top-right 1550×860), box plot (bottom 3120×840)
+      Chrome: Sub-chart titles ("Petal Length vs Petal Width", "Mean Petal Length by Species") in dark ink, readable. Axis labels with units ("Petal Length (cm)", "Petal Width (cm)", "Sepal Length (cm)") visible. Tick labels (numeric values) are small but legible. Main anyplot title in box plot: "linked-views-selection · python · pygal · anyplot.ai" readable.
+      Data: Scatter shows three species clusters: setosa (green #009E73) tight cluster at low petal values, versicolor (purple #9418DB) mid-range, virginica (red #B71D27) upper-right. Bar chart shows three bars with correctly ordered heights (setosa ~1.4cm, versicolor ~4.2cm, virginica ~5.6cm). Box plot shows Tukey-style boxes with y-axis range 4–8, one outlier visible for virginica.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct anyplot dark surface
-      Chrome: All text renders in light/off-white tones against dark background. Title, axis labels, tick labels, and legend labels all clearly readable. No dark-on-dark failures detected. Grid lines adapt to muted light tone via INK_MUTED token.
-      Data: Colors identical to light render — setosa #009E73, versicolor #9418DB, virginica #B71D27. Only chrome elements (backgrounds, text, grid) have flipped themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable against dark background
+      Background: Warm near-black (#1A1A17 confirmed) — correct anyplot dark surface, not pure black
+      Chrome: Sub-chart titles and axis labels render in light/cream text against the dark surface — all clearly readable. Tick labels legible. Main title visible.
+      Data: Data colors are IDENTICAL to light render — setosa=green, versicolor=purple, virginica=red — confirming only chrome (background, text) flipped, not data palette.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text elements use theme-adaptive light ink on dark surface
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but below recommendation (title=44 vs 66,
-          label=32 vs 56, major_label=26 vs 44); text readable but small in composite
-          sub-charts
+        comment: Font sizes explicitly set (title=54, label=44, major_label=36, legend=36);
+          readable in both themes. Slightly below style guide defaults (66/56/44)
+          — tick labels appear somewhat small in the composited sub-charts
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps in any of the three sub-charts
+        comment: No overlapping elements across any of the three views
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Scatter dots at size=5 visible for 150 points; slightly below optimal
-          for this density
+        comment: Scatter dots (dots_size=5) visible but slightly small for 150 points;
+          bars and boxes are prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; teal/purple/red clearly distinguishable
+        comment: anyplot palette is CVD-safe; three species clearly distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good composite layout; bar chart has sparse horizontal space; box
-          chart has large empty lower area (y-axis 0-4.3 unused)
+        comment: Multi-chart layout fills canvas well; bar chart uses single x-category
+          leaving some horizontal space underutilized
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axes include units: Petal Length (cm), Petal Width (cm), Sepal
-          Length (cm)'
+        comment: All axis labels include units (cm). Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; canonical palette order; backgrounds
-          #FAF8F1/#1A1A17 correct; identical data colors across themes'
+        comment: 'anyplot palette correctly applied; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome in both renders; data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -113,24 +112,25 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Custom Style object with anyplot palette; thoughtfully configured
-          but not publication-ready
+        comment: Multi-chart layout with consistent theming above defaults; not reaching
+          publication-quality due to pygal default chart chrome
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: INK_MUTED grid colors good; grid lines are dashed (guide prefers
-          solid); spines not removed
+        comment: Selective grid (scatter-only), theme-adaptive backgrounds, custom
+          font sizes; limited by pygal's refinement options (no spine removal)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three complementary views tell coherent Iris story; above default
-          but no focal point or visual hierarchy
+        comment: 'Intentional chart selection: scatter for clustering, bar for magnitude,
+          box for distribution — each view reveals different structure. Consistent
+          color coding aids cross-view comparison.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,51 +138,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Three coordinated views: XY scatter, Bar, Box — all correct'
+        comment: 'Three coordinated views: scatter (XY), bar (Bar), and box plot (Box)'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Selection mechanism, reset, count display all present; deduction:
-          selection via external buttons not within-chart brushing'
+        comment: Linked selection via HTML/JS buttons + click handlers; reset button;
+          unselected opacity=0.08; selection count label; consistent color encoding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All spec data dimensions correctly mapped across three views
+        comment: 'Correct mappings: scatter (PetalLength×PetalWidth), bar (species→MeanPetalLength),
+          box (species→SepalLength)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format correct in box chart; legends correctly label
-          all three species
+        comment: Title 'linked-views-selection · python · pygal · anyplot.ai' correct
+          in box chart. Species legend labels (setosa/versicolor/virginica) match
+          data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three chart types covering 2D clustering, mean comparison, and distribution;
-          dynamic selection only visible in HTML
+        comment: 'Three views collectively show all aspects: cluster separation, magnitude
+          differences, distribution overlap, outliers (Tukey whiskers reveal one virginica
+          outlier)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Iris dataset: canonical real scientific botany dataset, neutral
-          and comprehensible'
+        comment: 'Iris dataset: canonical real-world scientific dataset, neutral and
+          comprehensible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Factually correct iris measurements: petal 1-7cm, sepal 4-8cm'
+        comment: Biologically accurate Iris measurements (petal 1–7cm, sepal 4–8cm);
+          y-axis range 4–8 avoids wasted 0–4 blank space
     code_quality:
       score: 10
       max: 10
@@ -192,31 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level flow, no functions or classes
+        comment: 'Linear structure: imports → data → three sub-charts → composite
+          PNG → HTML output. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic Iris dataset, no random generation
+        comment: Iris dataset from sklearn is fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 7 imports are used
+        comment: All imports (os, sys, pandas, pygal, PIL, Style, load_iris) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for multi-SVG HTML generation; no fake functionality
+        comment: Well-structured; HTML string concatenation is verbose but appropriate
+          for the complex multi-chart interactive output. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly using current
+          pygal API
     library_mastery:
       score: 7
       max: 10
@@ -226,16 +233,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Style object usage, correct XY tuple format, chart.render()
-          for SVG bytes
+        comment: 'Idiomatic pygal: XY for scatter, Box with box_mode=tukey, Bar, Style
+          object for theme tokens, show_x/y_guides for selective grid, render() for
+          SVG bytes'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Exploits pygal's SVG architecture and .serie-N CSS classes for cross-chart
-          JavaScript selection sync
-  verdict: REJECTED
+        comment: 'Distinctive: SVG output embedded in multi-chart HTML dashboard with
+          JS linking (pygal-specific SVG class names .serie-N used for selection),
+          box_mode=tukey (pygal-specific Tukey whiskers), PIL compositing of pygal
+          sub-charts'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -243,9 +253,11 @@ impl_tags:
   techniques:
   - subplots
   - html-export
+  - hover-tooltips
+  - manual-ticks
   patterns:
   - dataset-loading
-  - iteration-over-groups
   - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling: []
