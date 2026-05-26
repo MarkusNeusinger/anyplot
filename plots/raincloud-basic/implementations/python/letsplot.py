@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-26
@@ -97,17 +97,17 @@ plot = (
         show_legend=False,
         position=position_nudge(y=-0.16),
     )
-    # Annotation: Treatment A faster mean (index 1)
+    # Annotation: Treatment A faster mean — text on the right (off the cloud), arrow lands just above the peak top
     + geom_text(
         x=690, y=1.55, label="~70ms faster mean\nthan Control", size=13, color=INK_SOFT, fontface="italic", hjust=1
     )
-    + geom_segment(x=560, y=1.45, xend=420, yend=1.15, color=INK_SOFT, size=0.5, arrow=arrow(length=8, type="closed"))
-    # Annotation: Treatment B bimodal (index 0, bottom)
+    + geom_segment(x=550, y=1.45, xend=400, yend=1.70, color=INK_SOFT, size=0.5, arrow=arrow(length=8, type="closed"))
+    # Annotation: Treatment B bimodal — text on the right, arrows land just above each peak top
     + geom_text(
         x=690, y=0.55, label="Two distinct\nresponse clusters", size=13, color=INK_SOFT, fontface="italic", hjust=1
     )
-    + geom_segment(x=560, y=0.35, xend=310, yend=0.12, color=INK_SOFT, size=0.5, arrow=arrow(length=8, type="closed"))
-    + geom_segment(x=590, y=0.30, xend=545, yend=0.12, color=INK_SOFT, size=0.5, arrow=arrow(length=8, type="closed"))
+    + geom_segment(x=550, y=0.45, xend=310, yend=0.55, color=INK_SOFT, size=0.5, arrow=arrow(length=8, type="closed"))
+    + geom_segment(x=620, y=0.30, xend=555, yend=0.40, color=INK_SOFT, size=0.5, arrow=arrow(length=8, type="closed"))
     + scale_fill_manual(values=palette)
     + scale_color_manual(values=palette)
     + scale_y_discrete(limits=cat_order)
@@ -122,7 +122,7 @@ plot = (
         axis_text_x=element_text(size=10, color=INK_SOFT),
         axis_text_y=element_text(size=12, color=INK, face="bold"),
         axis_ticks=element_blank(),
-        axis_line_x=element_line(color=INK_SOFT, size=0.5),
+        axis_line_x=element_blank(),
         axis_line_y=element_blank(),
         legend_position="none",
         panel_grid_major_y=element_blank(),
