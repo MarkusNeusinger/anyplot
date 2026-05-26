@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: highcharts 1.10.3 | Python 3.14
-Quality: 85/100 | Created: 2025-12-25
+Quality: 85/100 | Updated: 2026-05-26
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,30 +16,35 @@ from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.boxplot import BoxPlotSeries
 from highcharts_core.options.series.polygon import PolygonSeries
 from highcharts_core.options.series.scatter import ScatterSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Reaction times (ms) for different experimental conditions
+# Theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Data — reaction-time distributions across four experimental conditions
 np.random.seed(42)
 categories = ["Control", "Treatment A", "Treatment B", "Treatment C"]
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF"]
-colors_fill = [
-    "rgba(48, 105, 152, 0.50)",
-    "rgba(255, 212, 59, 0.50)",
-    "rgba(148, 103, 189, 0.50)",
-    "rgba(23, 190, 207, 0.50)",
-]
 
-# Generate realistic reaction time data with different distributions
+# anyplot palette positions 1–4 (canonical order: green, lavender, blue, ochre)
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+fills = ["rgba(0,158,115,0.45)", "rgba(196,117,253,0.45)", "rgba(68,103,163,0.45)", "rgba(189,130,51,0.45)"]
+
 control = np.random.normal(450, 60, 80)
 treatment_a = np.random.normal(380, 50, 80)
 treatment_b = np.concatenate([np.random.normal(350, 30, 40), np.random.normal(480, 35, 40)])
-treatment_c = np.random.normal(420, 80, 80)
-
+treatment_c = np.random.normal(420, 95, 80)
 all_data = [control, treatment_a, treatment_b, treatment_c]
 
-# Calculate statistics for box plots
+# Box-plot statistics (Tukey-style whiskers)
 box_data = []
 for data in all_data:
     q1, median, q3 = np.percentile(data, [25, 50, 75])
@@ -48,266 +54,275 @@ for data in all_data:
     box_data.append({"low": low, "q1": float(q1), "median": float(median), "q3": float(q3), "high": high})
 
 
-# KDE helper: vectorized Gaussian kernel with Silverman bandwidth
-def kde(data_arr, n_points=80, padding=10):
-    n = len(data_arr)
-    std = np.std(data_arr)
-    iqr_val = np.percentile(data_arr, 75) - np.percentile(data_arr, 25)
+# Vectorized Gaussian KDE with Silverman bandwidth
+def kde(arr, n_points=80, padding=10):
+    n = len(arr)
+    std = np.std(arr)
+    iqr_val = np.percentile(arr, 75) - np.percentile(arr, 25)
     bw = 0.9 * min(std, iqr_val / 1.34) * (n ** (-0.2))
-    xs = np.linspace(data_arr.min() - padding, data_arr.max() + padding, n_points)
-    # Vectorized: compute all kernels at once via broadcasting
-    density = np.exp(-0.5 * ((xs[:, None] - data_arr[None, :]) / bw) ** 2).sum(axis=1)
+    xs = np.linspace(arr.min() - padding, arr.max() + padding, n_points)
+    density = np.exp(-0.5 * ((xs[:, None] - arr[None, :]) / bw) ** 2).sum(axis=1)
     density /= n * bw * np.sqrt(2 * np.pi)
     return xs, density
 
 
-# Compute axis range from actual data extent (tight fit to avoid wasted space)
+# Value-axis range — tight fit to actual data, aligned to 50-ms ticks
 all_values = np.concatenate(all_data)
-data_min, data_max = float(np.min(all_values)), float(np.max(all_values))
-y_min = int(np.floor(data_min / 50) * 50)  # Align to tick interval of 50
-y_max = int(np.ceil(data_max / 50) * 50)
+y_min = int(np.floor(np.min(all_values) / 50) * 50)
+y_max = int(np.ceil(np.max(all_values) / 50) * 50)
 
-# Create chart — HORIZONTAL orientation using inverted chart
+# Chart — inverted for horizontal orientation
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "scatter",
     "inverted": True,
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#fafafa",
-    "marginBottom": 200,
-    "marginLeft": 420,
-    "marginRight": 220,
-    "marginTop": 200,
-    "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 140,
+    "marginBottom": 160,
+    "marginLeft": 280,
+    "marginRight": 140,
+    "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif", "color": INK},
 }
 
-# Title
 chart.options.title = {
-    "text": "raincloud-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "60px", "fontWeight": "700", "color": "#1a1a2e", "letterSpacing": "0.5px"},
-    "margin": 30,
+    "text": "raincloud-basic · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "600", "color": INK},
+    "margin": 40,
 }
 
-# Subtitle
 chart.options.subtitle = {
-    "text": "Reaction Time Distributions Across Experimental Conditions",
-    "style": {"fontSize": "38px", "color": "#636e72", "fontWeight": "300"},
+    "text": "Reaction time distributions across four experimental conditions",
+    "style": {"fontSize": "38px", "fontWeight": "300", "color": INK_SOFT},
 }
 
-# X-axis: categories (displayed vertically on left side due to inverted mode)
+# Inverted: x_axis renders vertically (categories on the left)
 chart.options.x_axis = {
     "title": {
         "text": "Experimental Condition",
-        "style": {"fontSize": "40px", "color": "#2d3436", "fontWeight": "600"},
+        "style": {"fontSize": "56px", "fontWeight": "600", "color": INK},
         "margin": 30,
     },
-    "labels": {"style": {"fontSize": "36px", "color": "#2d3436", "fontWeight": "500"}},
+    "labels": {"style": {"fontSize": "44px", "fontWeight": "500", "color": INK_SOFT}},
     "categories": categories,
     "tickPositions": [0, 1, 2, 3],
-    "min": -0.6,
-    "max": 3.6,
+    "min": -0.55,
+    "max": 3.55,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "lineWidth": 0,
     "tickWidth": 0,
     "gridLineWidth": 0,
 }
 
-# Y-axis: values (Reaction Time ms) — tight range matching data
+# Inverted: y_axis renders horizontally (reaction time at the bottom)
 chart.options.y_axis = {
     "title": {
         "text": "Reaction Time (ms)",
-        "style": {"fontSize": "40px", "color": "#2d3436", "fontWeight": "600"},
-        "margin": 20,
+        "style": {"fontSize": "56px", "fontWeight": "600", "color": INK},
+        "margin": 24,
     },
-    "labels": {"style": {"fontSize": "34px", "color": "#636e72"}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.05)",
-    "gridLineDashStyle": "Dot",
+    "gridLineColor": GRID,
     "tickInterval": 50,
     "min": y_min,
     "max": y_max,
     "startOnTick": False,
     "endOnTick": False,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "lineWidth": 0,
 }
 
-# Legend — show component types for clarity
+# Consolidated legend — one entry per category, none for rain/box
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "32px", "fontWeight": "400", "color": "#2d3436"},
+    "itemStyle": {"fontSize": "44px", "fontWeight": "500", "color": INK_SOFT},
     "align": "right",
     "verticalAlign": "top",
-    "layout": "vertical",
-    "x": -40,
-    "y": 80,
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderWidth": 0,
-    "borderRadius": 12,
-    "padding": 24,
-    "symbolWidth": 36,
-    "symbolHeight": 20,
-    "shadow": {"enabled": True, "color": "rgba(0,0,0,0.06)", "offsetX": 0, "offsetY": 2, "width": 8},
-    "title": {
-        "text": "<span style='font-size:28px;color:#636e72;font-weight:400'>&#9729; Cloud &nbsp; &#9679; Rain &nbsp; &#9744; Box</span>",
-        "style": {"fontSize": "28px"},
-    },
+    "layout": "horizontal",
+    "x": -20,
+    "y": 70,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": GRID,
+    "borderWidth": 1,
+    "borderRadius": 8,
+    "padding": 20,
+    "symbolWidth": 44,
+    "symbolHeight": 24,
 }
 
-# Plot options — refined box plot styling
 chart.options.plot_options = {
     "boxplot": {
-        "medianColor": "#1a1a2e",
-        "medianWidth": 7,
-        "stemColor": "#555",
+        "color": INK,
+        "medianColor": INK,
+        "medianWidth": 8,
         "stemWidth": 3,
-        "stemDashStyle": "Solid",
-        "whiskerColor": "#555",
+        "whiskerColor": INK_SOFT,
         "whiskerWidth": 3,
-        "whiskerLength": "50%",
-        "lineWidth": 2.5,
-        "pointWidth": 52,
-        "fillOpacity": 0.92,
+        "whiskerLength": "55%",
+        "lineWidth": 3,
+        "pointWidth": 60,
     },
-    "scatter": {"marker": {"radius": 11, "symbol": "circle"}, "zIndex": 5},
-    "polygon": {"fillOpacity": 0.50, "lineWidth": 2.5, "zIndex": 2},
+    "scatter": {"marker": {"radius": 12, "symbol": "circle"}, "zIndex": 5},
+    "polygon": {"fillOpacity": 0.50, "lineWidth": 3, "zIndex": 2},
     "series": {"animation": False},
 }
 
-# Tooltip disabled for static output
 chart.options.tooltip = {"enabled": False}
-
-# Credits disabled
 chart.options.credits = {"enabled": False}
 
-# Add half-violin "cloud" shapes ABOVE each category baseline
+# "Cloud" — half-violin above each category baseline (negative x offset in inverted mode)
 for i, data in enumerate(all_data):
     y_range, density = kde(np.array(data))
-    density_norm = density / density.max() * 0.35
+    density_norm = density / density.max() * 0.38
 
-    # Cloud polygon: extends upward (negative x offset in inverted mode)
-    polygon_points = [[float(i - d - 0.05), float(y)] for y, d in zip(y_range, density_norm, strict=True)]
-    polygon_points += [[float(i - 0.05), float(y)] for y in reversed(y_range)]
+    polygon_points = [[float(i - d - 0.04), float(y)] for y, d in zip(y_range, density_norm, strict=True)]
+    polygon_points += [[float(i - 0.04), float(y)] for y in reversed(y_range)]
 
     series = PolygonSeries()
     series.data = polygon_points
     series.name = categories[i]
     series.color = colors[i]
-    series.fill_color = colors_fill[i]
-    series.fill_opacity = 0.50
-    series.line_width = 2.5
+    series.fill_color = fills[i]
+    series.line_width = 3
     series.line_color = colors[i]
     series.z_index = 2
     chart.add_series(series)
 
-# Box plot series — white fill with dark outlines for clarity
+# Box plot — centered on each category baseline
 box_series = BoxPlotSeries()
 box_series.data = [
-    {"x": i, "low": b["low"], "q1": b["q1"], "median": b["median"], "q3": b["q3"], "high": b["high"]}
+    {
+        "x": i,
+        "low": b["low"],
+        "q1": b["q1"],
+        "median": b["median"],
+        "q3": b["q3"],
+        "high": b["high"],
+        "fillColor": ELEVATED_BG,
+        "color": INK,
+        "medianColor": INK,
+        "stemColor": INK_SOFT,
+        "whiskerColor": INK_SOFT,
+    }
     for i, b in enumerate(box_data)
 ]
-box_series.name = "Box Plot"
-box_series.color = "#2c3e50"
-box_series.fill_color = "rgba(255, 255, 255, 0.92)"
+box_series.name = "Box"
 box_series.show_in_legend = False
 box_series.z_index = 8
 chart.add_series(box_series)
 
-# Jittered scatter "rain" points BELOW each category baseline
+# "Rain" — jittered scatter below each category baseline
 for i, data in enumerate(all_data):
-    scatter_points = [[float(i + 0.2 + np.random.uniform(-0.06, 0.06)), float(val)] for val in data]
+    scatter_points = [[float(i + 0.22 + np.random.uniform(-0.07, 0.07)), float(val)] for val in data]
 
     scatter_series = ScatterSeries()
     scatter_series.data = scatter_points
     scatter_series.name = categories[i]
     scatter_series.color = colors[i]
     scatter_series.marker = {
-        "radius": 11,
+        "radius": 12,
         "lineWidth": 1,
-        "lineColor": "rgba(0,0,0,0.18)",
+        "lineColor": PAGE_BG,
         "fillColor": colors[i],
         "states": {"hover": {"enabled": False}},
     }
-    scatter_series.opacity = 0.6
+    scatter_series.opacity = 0.65
     scatter_series.show_in_legend = False
     scatter_series.z_index = 5
     chart.add_series(scatter_series)
 
-# Download Highcharts JS and required modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Annotation callouts — one per category to complete the data story
+annotations = [
+    {"y_frac": 0.07, "x_frac": 0.65, "color": colors[0], "title": "Baseline", "body": "Mean ~450 ms"},
+    {
+        "y_frac": 0.30,
+        "x_frac": 0.05,
+        "color": colors[1],
+        "title": "Fastest responses",
+        "body": "Mean ~380 ms, tight spread",
+    },
+    {
+        "y_frac": 0.54,
+        "x_frac": 0.70,
+        "color": colors[2],
+        "title": "Bimodal distribution",
+        "body": "Two clusters: ~350 ms &amp; ~480 ms",
+    },
+    {
+        "y_frac": 0.78,
+        "x_frac": 0.06,
+        "color": colors[3],
+        "title": "Widest variability",
+        "body": "Long tails on both sides",
+    },
+]
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
-
-# Annotation JS for data storytelling — injected after chart render
-# Highlights bimodal Treatment B and the fastest Treatment A
-annotation_js = """
-setTimeout(function() {
-    var chart = Highcharts.charts[0];
-    if (!chart) return;
-
-    // Annotation: Control baseline (category 0, ~top of plot)
-    chart.renderer.label(
-        '<span style="font-size:28px;color:#1e5a8a;font-weight:600;">&#9654; Baseline</span>' +
-        '<br><span style="font-size:24px;color:#636e72;">Mean ~450 ms</span>',
-        chart.plotLeft + chart.plotWidth * 0.78,
-        chart.plotTop + chart.plotHeight * 0.02
+annotation_js_parts = []
+for ann in annotations:
+    label_html = (
+        f"<span style='font-size:32px;color:{ann['color']};font-weight:600;'>&#9654; {ann['title']}</span>"
+        f"<br><span style='font-size:26px;color:{INK_SOFT};'>{ann['body']}</span>"
     )
-    .attr({
-        fill: 'rgba(255,255,255,0.93)',
-        stroke: '#306998',
+    annotation_js_parts.append(
+        f"""
+    chart.renderer.label(
+        {label_html!r},
+        chart.plotLeft + chart.plotWidth * {ann["x_frac"]},
+        chart.plotTop + chart.plotHeight * {ann["y_frac"]},
+        null, null, null, true
+    )
+    .attr({{
+        fill: {ELEVATED_BG!r},
+        stroke: {ann["color"]!r},
         'stroke-width': 2,
         r: 10,
-        padding: 16,
+        padding: 14,
         zIndex: 20
-    })
-    .css({lineHeight: '36px'})
+    }})
+    .css({{lineHeight: '40px'}})
     .add();
-
-    // Annotation: Treatment A fastest (category 1, ~25% down)
-    chart.renderer.label(
-        '<span style="font-size:28px;color:#b8860b;font-weight:600;">&#9654; Fastest responses</span>' +
-        '<br><span style="font-size:24px;color:#636e72;">Mean ~380 ms, tight spread</span>',
-        chart.plotLeft + chart.plotWidth * 0.05,
-        chart.plotTop + chart.plotHeight * 0.32
-    )
-    .attr({
-        fill: 'rgba(255,255,255,0.93)',
-        stroke: '#FFD43B',
-        'stroke-width': 2,
-        r: 10,
-        padding: 16,
-        zIndex: 20
-    })
-    .css({lineHeight: '36px'})
-    .add();
-
-    // Annotation: Treatment B bimodal (category 2, ~50% down)
-    chart.renderer.label(
-        '<span style="font-size:28px;color:#7c3aed;font-weight:600;">&#9654; Bimodal distribution</span>' +
-        '<br><span style="font-size:24px;color:#636e72;">Two distinct response clusters<br>at ~350 ms and ~480 ms</span>',
-        chart.plotLeft + chart.plotWidth * 0.75,
-        chart.plotTop + chart.plotHeight * 0.52
-    )
-    .attr({
-        fill: 'rgba(255,255,255,0.93)',
-        stroke: '#9467BD',
-        'stroke-width': 2,
-        r: 10,
-        padding: 16,
-        zIndex: 20
-    })
-    .css({lineHeight: '36px'})
-    .add();
-}, 500);
 """
+    )
 
-# Generate HTML with inline scripts
+annotation_js = (
+    "setTimeout(function() { var chart = Highcharts.charts[0]; if (!chart) return;"
+    + "".join(annotation_js_parts)
+    + "}, 500);"
+)
+
+
+# Download Highcharts JS + boxplot module (headless Chrome can't load CDN from file://)
+def _fetch(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (anyplot)"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return r.read().decode("utf-8")
+
+
+highcharts_js = _fetch("https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js")
+highcharts_more_js = _fetch("https://cdn.jsdelivr.net/npm/highcharts@11/highcharts-more.js")
+
 html_str = chart.to_js_literal()
+
+# Inject boxplot defaults that highcharts_core's serializer silently drops
+# (fillColor, fillOpacity at plot_options.boxplot — confirmed via HTML inspection).
+# Highcharts.setOptions runs before the chart is constructed, so the boxplot
+# series picks up these theme-adaptive defaults instead of the library's white.
+setoptions_js = f"""
+Highcharts.setOptions({{
+    plotOptions: {{
+        boxplot: {{
+            fillColor: '{ELEVATED_BG}',
+            fillOpacity: 0.95
+        }}
+    }}
+}});
+"""
 
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -316,32 +331,45 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
+    <script>{setoptions_js}</script>
     <script>{html_str}</script>
     <script>{annotation_js}</script>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Render to PNG via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Setup Chrome for screenshot
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(6)
-
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Belt-and-braces: pin saved PNG to exact target dims so the post-render gate is happy
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
