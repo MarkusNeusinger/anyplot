@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-26
+Quality: 94/100 | Updated: 2026-05-26
 """
 
 import os
