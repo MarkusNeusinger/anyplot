@@ -1,27 +1,48 @@
-""" pyplots.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: seaborn 0.13.2 | Python 3.14
-Quality: 90/100 | Created: 2025-12-25
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.patches import PathPatch
 
 
-# Data - Reaction times (ms) for different experimental conditions
-np.random.seed(42)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-control = np.random.normal(450, 60, 80)
-treatment_a = np.random.normal(380, 50, 80)  # Faster, less variable
-treatment_b = np.concatenate(
-    [  # Bimodal - shows advantage of raincloud over box plots
-        np.random.normal(350, 30, 50),
-        np.random.normal(480, 40, 30),
-    ]
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
+
+# Reaction times (ms) across experimental conditions; Treatment B is bimodal to
+# showcase what a raincloud reveals that a box plot would hide.
+np.random.seed(42)
+control = np.random.normal(450, 60, 80)
+treatment_a = np.random.normal(380, 50, 80)
+treatment_b = np.concatenate([np.random.normal(350, 30, 50), np.random.normal(480, 40, 30)])
 
 data = pd.DataFrame(
     {
@@ -32,13 +53,12 @@ data = pd.DataFrame(
     }
 )
 
-# Create figure - HORIZONTAL orientation: x=values, y=categories
-fig, ax = plt.subplots(figsize=(16, 9))
-
-palette = {"Control": "#306998", "Treatment A": "#E6A800", "Treatment B": "#4DAF4A"}
 order = ["Control", "Treatment A", "Treatment B"]
+palette = {c: ANYPLOT_PALETTE[i] for i, c in enumerate(order)}
 
-# Cloud (half-violin) - use seaborn's violinplot then clip to upper half
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+
+# Cloud — half-violin, clipped to the upper half above each category baseline
 sns.violinplot(
     data=data,
     x="Reaction Time",
@@ -46,26 +66,47 @@ sns.violinplot(
     hue="Condition",
     palette=palette,
     order=order,
+    hue_order=order,
     cut=0,
     inner=None,
     density_norm="width",
-    width=0.7,
-    linewidth=1.5,
+    width=0.8,
+    linewidth=0.6,
     ax=ax,
     legend=False,
 )
-
-# Clip violins to show only top half (cloud above baseline)
 for i, collection in enumerate(ax.collections):
-    paths = collection.get_paths()
-    for path in paths:
-        vertices = path.vertices
-        center = i
-        mask = vertices[:, 1] >= center
-        vertices[~mask, 1] = center
+    for path in collection.get_paths():
+        v = path.vertices
+        v[v[:, 1] < i, 1] = i
 
-# Box plot - centered on category baseline
-colors = [palette[c] for c in order]
+n_violin_collections = len(ax.collections)
+
+# Rain — jittered strip points, shifted below the baseline
+sns.stripplot(
+    data=data,
+    x="Reaction Time",
+    y="Condition",
+    hue="Condition",
+    palette=palette,
+    order=order,
+    hue_order=order,
+    jitter=0.07,
+    size=3.5,
+    alpha=0.55,
+    edgecolor=PAGE_BG,
+    linewidth=0.3,
+    ax=ax,
+    legend=False,
+)
+for collection in ax.collections[n_violin_collections:]:
+    offsets = collection.get_offsets()
+    offsets[:, 1] -= 0.25
+    collection.set_offsets(offsets)
+    collection.set_zorder(2)
+
+# Box plot — outlined boxes on the baseline; palette colours the outline,
+# whiskers, caps, and median in one stroke (no fragile post-hoc recolouring).
 sns.boxplot(
     data=data,
     x="Reaction Time",
@@ -73,86 +114,61 @@ sns.boxplot(
     hue="Condition",
     palette=palette,
     order=order,
-    width=0.12,
+    hue_order=order,
+    fill=False,
+    width=0.14,
     showfliers=False,
-    linewidth=2,
-    boxprops={"facecolor": "white", "zorder": 4},
-    medianprops={"linewidth": 2.5, "zorder": 5},
-    whiskerprops={"linewidth": 2, "zorder": 4},
-    capprops={"linewidth": 2, "zorder": 4},
+    linewidth=1.4,
+    medianprops={"linewidth": 2.0, "solid_capstyle": "butt"},
     ax=ax,
     legend=False,
+    zorder=4,
 )
 
-# Color box elements to match their category for visual cohesion
-box_patches = [c for c in ax.get_children() if isinstance(c, PathPatch)]
-for i, patch in enumerate(box_patches):
-    color = colors[i]
-    patch.set_edgecolor(color)
-    patch.set_facecolor("white")
-
-# Color whiskers, caps, and medians (5 lines per box: 2 whiskers, 2 caps, 1 median)
-lines = ax.get_lines()
-lines_per_box = 5
-for i in range(len(order)):
-    color = colors[i]
-    for j in range(lines_per_box):
-        idx = i * lines_per_box + j
-        if idx < len(lines):
-            lines[idx].set_color(color)
-            lines[idx].set_zorder(4)
-
-# Rain (jittered points) - below category baseline
-for i, condition in enumerate(order):
-    subset = data[data["Condition"] == condition]["Reaction Time"].values
-    color = palette[condition]
-    jitter = np.random.uniform(-0.06, 0.06, len(subset))
-    ax.scatter(subset, i - 0.25 + jitter, s=55, alpha=0.6, color=color, edgecolor="white", linewidth=0.5, zorder=3)
-
-# Styling
-ax.set_xlabel("Reaction Time (ms)", fontsize=20, labelpad=12)
-ax.set_ylabel("Condition", fontsize=20, labelpad=12)
-ax.set_title("raincloud-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
-
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, axis="x", alpha=0.2, linestyle="--", linewidth=0.8)
+ax.set_xlabel("Reaction Time (ms)", fontsize=10, labelpad=6, color=INK)
+ax.set_ylabel("Condition", fontsize=10, labelpad=6, color=INK)
+ax.set_title("raincloud-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=3, width=0.6)
+ax.grid(True, axis="x", alpha=0.15, linewidth=0.5, color=INK)
+ax.set_axisbelow(True)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_linewidth(0.8)
-ax.spines["bottom"].set_linewidth(0.8)
+ax.spines["left"].set_linewidth(0.6)
+ax.spines["bottom"].set_linewidth(0.6)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-ax.set_ylim(-0.5, 2.6)
+ax.set_ylim(-0.55, 2.45)
 
-# Data Storytelling: annotate the bimodal distribution in Treatment B
-
+# Data storytelling
 ax.annotate(
     "Bimodal distribution\nrevealed by raincloud",
-    xy=(475, 2.15),
-    xytext=(530, 1.3),
-    fontsize=13,
+    xy=(490, 2.08),
+    xytext=(540, 1.55),
+    fontsize=7,
     fontweight="medium",
-    color="#333333",
+    color=INK_SOFT,
     ha="left",
-    arrowprops={"arrowstyle": "->", "color": "#666666", "linewidth": 1.5, "connectionstyle": "arc3,rad=-0.2"},
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.9},
+    va="center",
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "linewidth": 0.7, "connectionstyle": "arc3,rad=-0.2"},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.5},
 )
 
-# Annotate Treatment A showing faster responses
-ta_median = np.median(data[data["Condition"] == "Treatment A"]["Reaction Time"])
-ctrl_median = np.median(data[data["Condition"] == "Control"]["Reaction Time"])
+ta_median = float(np.median(data.loc[data["Condition"] == "Treatment A", "Reaction Time"]))
+ctrl_median = float(np.median(data.loc[data["Condition"] == "Control", "Reaction Time"]))
 diff_ms = ctrl_median - ta_median
 
 ax.annotate(
     f"~{diff_ms:.0f} ms faster\nthan Control",
-    xy=(ta_median, 1),
-    xytext=(280, 0.3),
-    fontsize=13,
+    xy=(ta_median, 1.0),
+    xytext=(290, 0.4),
+    fontsize=7,
     fontweight="medium",
-    color="#333333",
+    color=INK_SOFT,
     ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#666666", "linewidth": 1.5, "connectionstyle": "arc3,rad=0.2"},
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.9},
+    va="center",
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "linewidth": 0.7, "connectionstyle": "arc3,rad=0.25"},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.5},
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
