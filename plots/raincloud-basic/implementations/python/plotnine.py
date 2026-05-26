@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-26
@@ -23,6 +23,7 @@ from plotnine import (
     labs,
     scale_color_manual,
     scale_fill_manual,
+    scale_x_discrete,
     scale_y_continuous,
     stage,
     theme,
@@ -77,9 +78,7 @@ plot = (
         show_legend=False,
     )
     # Boxplot — centered on category baseline, theme-adaptive fill/edge
-    + geom_boxplot(
-        width=0.06, outlier_shape="", fill=ELEVATED_BG, color=INK_SOFT, size=0.5, alpha=0.95, show_legend=False
-    )
+    + geom_boxplot(width=0.06, outlier_shape="", fill=ELEVATED_BG, color=INK, size=0.5, alpha=0.95, show_legend=False)
     # Rain (jittered points) — nudged negative x = downward after flip
     + geom_jitter(
         aes(x=stage("condition", after_scale="x-0.18")), width=0.06, height=0, size=3.0, alpha=0.6, show_legend=False
@@ -87,16 +86,17 @@ plot = (
     # Annotation: bimodal callout for Treatment B (category index 1, 0-based)
     + annotate(
         "text",
-        x=0.55,
+        x=0.35,
         y=425,
-        label="← Bimodal: two distinct\n     response clusters",
+        label="Bimodal: two distinct response clusters",
         size=13,
         color=INK_SOFT,
         ha="center",
         fontstyle="italic",
     )
-    + annotate("segment", x=0.7, xend=0.95, y=370, yend=350, size=0.5, color=INK_MUTED, linetype="dashed")
-    + annotate("segment", x=0.7, xend=0.95, y=480, yend=500, size=0.5, color=INK_MUTED, linetype="dashed")
+    # Arrows land inside the half-violin's two humps (above baseline x=1.15, at peak y=350 / y=500)
+    + annotate("segment", x=0.5, xend=1.28, y=420, yend=350, size=0.5, color=INK_MUTED, linetype="dashed")
+    + annotate("segment", x=0.5, xend=1.28, y=430, yend=500, size=0.5, color=INK_MUTED, linetype="dashed")
     # Annotation: Treatment A shifted left
     + annotate(
         "text",
@@ -110,6 +110,8 @@ plot = (
     )
     + scale_fill_manual(values=colors)
     + scale_color_manual(values=colors)
+    # Extra bottom padding (after coord_flip, the lower x = lower vertical) for the bimodal annotation
+    + scale_x_discrete(expand=(0, 0.95, 0, 0.6))
     + scale_y_continuous(expand=(0.02, 0, 0.08, 0))
     + coord_flip()
     + labs(x="Experimental Condition", y="Reaction Time (ms)", title="raincloud-basic · python · plotnine · anyplot.ai")
@@ -119,7 +121,7 @@ plot = (
         text=element_text(size=7, color=INK),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        plot_title=element_text(size=12, color=INK),
+        plot_title=element_text(size=14, color=INK),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.15),
