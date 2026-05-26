@@ -144,6 +144,22 @@ async def _build_spec_images(db: AsyncSession, spec_id: str) -> dict:
     return {"spec_id": spec_id, "images": images}
 
 
+async def _refresh_specs_list() -> list[SpecListItem]:
+    """Standalone factory for background refresh + startup prewarm.
+
+    Creates its own DB session so it can be invoked outside the request
+    cycle (e.g. by the lifespan prewarm hook in api/main.py).
+    """
+    async with get_db_context() as fresh_db:
+        return await _build_specs_list(fresh_db)
+
+
+async def _refresh_specs_map() -> list[SpecMapItem]:
+    """Standalone factory for /specs/map background refresh + startup prewarm."""
+    async with get_db_context() as fresh_db:
+        return await _build_specs_map(fresh_db)
+
+
 @router.get("/specs", response_model=list[SpecListItem])
 async def get_specs(db: AsyncSession = Depends(require_db)):
     """Get list of all specs with metadata (specs with at least one implementation)."""
@@ -151,12 +167,8 @@ async def get_specs(db: AsyncSession = Depends(require_db)):
     async def _fetch() -> list[SpecListItem]:
         return await _build_specs_list(db)
 
-    async def _refresh() -> list[SpecListItem]:
-        async with get_db_context() as fresh_db:
-            return await _build_specs_list(fresh_db)
-
     return await get_or_set_cache(
-        cache_key("specs_list"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh
+        cache_key("specs_list"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh_specs_list
     )
 
 
@@ -170,12 +182,8 @@ async def get_specs_map(db: AsyncSession = Depends(require_db)):
     async def _fetch() -> list[SpecMapItem]:
         return await _build_specs_map(db)
 
-    async def _refresh() -> list[SpecMapItem]:
-        async with get_db_context() as fresh_db:
-            return await _build_specs_map(fresh_db)
-
     return await get_or_set_cache(
-        cache_key("specs_map"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh
+        cache_key("specs_map"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh_specs_map
     )
 
 

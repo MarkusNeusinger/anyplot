@@ -158,16 +158,22 @@ class TestStatsRouter:
             assert "libraries" in data
 
     def test_stats_with_db(self, db_client, mock_spec, mock_lib) -> None:
-        """Stats should return counts when DB is configured."""
+        """Stats should return counts when DB is configured.
+
+        After the lightweight-aggregate refactor, /stats relies on
+        count_with_impls / count_all / count_with_languages instead of
+        loading every Spec + Library row.
+        """
         client, _ = db_client
 
         mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_spec_repo.count_with_impls = AsyncMock(return_value=1)
 
         mock_lib_repo = MagicMock()
-        mock_lib_repo.get_all = AsyncMock(return_value=[mock_lib])
+        mock_lib_repo.count_with_languages = AsyncMock(return_value=(1, 1))
 
         mock_impl_repo = MagicMock()
+        mock_impl_repo.count_all = AsyncMock(return_value=1)
         mock_impl_repo.get_total_code_lines = AsyncMock(return_value=0)
 
         with (

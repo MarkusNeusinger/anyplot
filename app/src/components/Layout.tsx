@@ -34,52 +34,56 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setHomeState((prev) => ({ ...prev, scrollY: window.scrollY }));
   }, []);
 
-  // Load shared data after browser is idle — gives /plots/filter bandwidth priority.
-  // Safari/iOS doesn't ship requestIdleCallback by default, so feature-detect
-  // and fall back to setTimeout — otherwise the TypeError takes the app down.
+  // Fire metadata fetches immediately on mount. Previously these were wrapped
+  // in requestIdleCallback to "give /plots/filter bandwidth priority", but that
+  // delays the NumbersStrip ("languages / libraries / specs" counts under the
+  // hero) by up to the 2 s timeout on Chrome while Safari (no rIC) ran fast —
+  // explaining the user-reported "manchmal echt lange". HTTP/2 multiplexes
+  // these tiny aggressively-cached responses with /plots/filter without real
+  // contention, and the fetches are async so they don't block first paint.
   useEffect(() => {
-    const callback = async () => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    const load = async () => {
       try {
         const [specsRes, libsRes, langsRes, statsRes] = await Promise.all([
-          fetch(`${API_URL}/specs`),
-          fetch(`${API_URL}/libraries`),
-          fetch(`${API_URL}/languages`),
-          fetch(`${API_URL}/stats`),
+          fetch(`${API_URL}/specs`, { signal }),
+          fetch(`${API_URL}/libraries`, { signal }),
+          fetch(`${API_URL}/languages`, { signal }),
+          fetch(`${API_URL}/stats`, { signal }),
         ]);
+
+        if (signal.aborted) return;
 
         if (specsRes.ok) {
           const data = await specsRes.json();
-          setSpecsData(Array.isArray(data) ? data : data.specs || []);
+          if (!signal.aborted) setSpecsData(Array.isArray(data) ? data : data.specs || []);
         }
 
         if (libsRes.ok) {
           const data = await libsRes.json();
-          setLibrariesData(data.libraries || []);
+          if (!signal.aborted) setLibrariesData(data.libraries || []);
         }
 
         if (langsRes.ok) {
           const data = await langsRes.json();
-          setLanguagesData(data.languages || []);
+          if (!signal.aborted) setLanguagesData(data.languages || []);
         }
 
         if (statsRes.ok) {
           const data = await statsRes.json();
-          setStats(data);
+          if (!signal.aborted) setStats(data);
         }
       } catch (err) {
+        if (signal.aborted) return;
         console.warn('Initial data load incomplete:', err instanceof Error ? err.message : err);
       }
     };
 
-    const hasRIC = typeof window.requestIdleCallback === 'function';
-    const id: number = hasRIC
-      ? window.requestIdleCallback(callback, { timeout: 2000 })
-      : window.setTimeout(callback, 1);
+    load();
 
-    return () => {
-      if (hasRIC) window.cancelIdleCallback(id);
-      else window.clearTimeout(id);
-    };
+    return () => abortController.abort();
   }, []);
 
   return (
