@@ -1,16 +1,28 @@
-""" pyplots.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
-Library: plotly 6.5.2 | Python 3.14
-Quality: 90/100 | Created: 2025-12-25
+Library: plotly | Python 3.13
+Quality: pending | Updated: 2026-05-26
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - reaction times (ms) for different experimental conditions
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
+# anyplot categorical palette — first series is always brand green
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Data — reaction times (ms) across experimental conditions
+np.random.seed(42)
 conditions = ["Control", "Treatment A", "Treatment B", "Treatment C"]
 n_per_group = 80
 
@@ -22,33 +34,34 @@ data = {
     ),
     "Treatment C": np.random.normal(400, 80, n_per_group),
 }
-
 data["Control"] = np.append(data["Control"], [620, 650, 280])
 data["Treatment C"] = np.append(data["Treatment C"], [600, 620, 250])
 
-# Compute x-axis range from actual data with padding
+# X-axis range from data with padding
 all_values = np.concatenate(list(data.values()))
 x_min, x_max = all_values.min(), all_values.max()
 x_padding = (x_max - x_min) * 0.05
 x_range = [x_min - x_padding, x_max + x_padding]
 
-# Cohesive blue-teal palette: good contrast on white, colorblind-safe
-colors = ["#306998", "#4B8BBE", "#2A9D8F", "#7B68AE"]
-
+# Plot
 fig = go.Figure()
 
-violin_width = 0.45
+cloud_width = 0.7
+box_width = 0.10
+rain_offset = -0.22
+rain_jitter_amp = 0.08
 
 for i, (condition, values) in enumerate(data.items()):
-    color = colors[i]
+    color = ANYPLOT_PALETTE[i]
+    y_base = np.full(len(values), i)
 
-    # Cloud (half-violin) - extends UPWARD (positive y-direction)
+    # Cloud — half-violin extending upward above the category baseline
     fig.add_trace(
         go.Violin(
             x=values,
-            y=[condition] * len(values),
+            y=y_base,
             side="positive",
-            width=violin_width,
+            width=cloud_width,
             line_color=color,
             fillcolor=color,
             opacity=0.55,
@@ -58,147 +71,111 @@ for i, (condition, values) in enumerate(data.items()):
             name=condition,
             legendgroup=condition,
             showlegend=True,
-            hoverinfo="x+name",
             hoveron="violins",
+            hoverinfo="x+name",
             orientation="h",
+            scalemode="width",
         )
     )
 
-    # Box plot - centered on category baseline
+    # Box plot — centered on the category baseline
     fig.add_trace(
         go.Box(
             x=values,
-            y=[condition] * len(values),
-            width=0.08,
+            y=y_base,
+            width=box_width,
             marker_color=color,
-            line_color="#2D2D2D",
-            fillcolor="white",
+            line={"color": INK, "width": 1.2},
+            fillcolor=ELEVATED_BG,
             boxpoints=False,
             name=condition,
             legendgroup=condition,
             showlegend=False,
             orientation="h",
+            hoverinfo="skip",
         )
     )
 
-    # Rain (jittered points) - falls DOWNWARD (negative y-direction)
+    # Rain — idiomatic scatter falling downward below the baseline
+    rng = np.random.default_rng(42 + i)
+    y_jitter = rng.uniform(-rain_jitter_amp, rain_jitter_amp, size=len(values))
     fig.add_trace(
-        go.Violin(
+        go.Scatter(
             x=values,
-            y=[condition] * len(values),
-            side="negative",
-            width=0,
-            points="all",
-            pointpos=-0.4,
-            jitter=0.08,
-            marker={"size": 9, "color": color, "opacity": 0.6, "line": {"width": 0.5, "color": "#2D2D2D"}},
-            line_width=0,
-            fillcolor="rgba(0,0,0,0)",
+            y=i + rain_offset + y_jitter,
+            mode="markers",
+            marker={"size": 6, "color": color, "opacity": 0.6, "line": {"width": 0.5, "color": PAGE_BG}},
             name=condition,
             legendgroup=condition,
             showlegend=False,
-            orientation="h",
-            hovertemplate=f"<b>{condition}</b><br>Value: %{{x:.0f}} ms<extra></extra>",
+            hovertemplate=f"<b>{condition}</b><br>%{{x:.0f}} ms<extra></extra>",
         )
     )
 
-# Annotations for data storytelling
-annotations = [
-    {
-        "x": 415,
-        "y": "Treatment B",
-        "text": "Bimodal: two distinct<br>response clusters",
-        "ax": 0,
-        "ay": -55,
-        "font_size": 15,
-        "bordercolor": "#2A9D8F",
-    },
-    {"x": 640, "y": "Control", "text": "Outliers", "ax": -50, "ay": -40, "font_size": 14, "bordercolor": "#306998"},
-    {
-        "x": 380,
-        "y": "Treatment A",
-        "text": "Tight cluster<br>(low variance)",
-        "ax": -80,
-        "ay": -45,
-        "font_size": 14,
-        "bordercolor": "#4B8BBE",
-    },
-]
+# Title — length-scaled fontsize (baseline 16px @ 67 chars)
+title = "raincloud-basic · python · plotly · anyplot.ai"
+title_fontsize = max(11, round(16 * 67 / len(title))) if len(title) > 67 else 16
 
-for ann in annotations:
-    fig.add_annotation(
-        x=ann["x"],
-        y=ann["y"],
-        text=ann["text"],
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=1,
-        arrowwidth=1.5,
-        arrowcolor="#555555",
-        ax=ann["ax"],
-        ay=ann["ay"],
-        font={"size": ann["font_size"], "color": "#2D2D2D"},
-        bgcolor="rgba(255,255,255,0.85)",
-        bordercolor=ann["bordercolor"],
-        borderwidth=1.5,
-        borderpad=4,
-    )
-
-# Layout - HORIZONTAL orientation with categories on y-axis, values on x-axis
+# Layout
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 110, "r": 40, "t": 60, "b": 80},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     title={
-        "text": (
-            "raincloud-basic · plotly · pyplots.ai"
-            '<br><span style="font-size:17px;color:#666666;">'
-            "Distribution shape, summary stats, and individual observations in one view</span>"
-        ),
-        "font": {"size": 32, "color": "#2D2D2D", "family": "Arial, sans-serif"},
+        "text": title,
+        "font": {"size": title_fontsize, "color": INK},
         "x": 0.5,
         "xanchor": "center",
+        "y": 0.96,
+        "yanchor": "top",
     },
+    font={"color": INK},
     yaxis={
-        "title": {"text": "Experimental Condition", "font": {"size": 24, "color": "#444444"}},
-        "tickfont": {"size": 20, "color": "#333333"},
-        "categoryorder": "array",
-        "categoryarray": conditions,
+        "title": {"text": "Experimental Condition", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickmode": "array",
+        "tickvals": list(range(len(conditions))),
+        "ticktext": conditions,
+        "range": [-0.45, len(conditions) - 0.45],
         "showgrid": False,
         "zeroline": False,
+        "showline": False,
+        "ticks": "",
     },
     xaxis={
-        "title": {"text": "Reaction Time (ms)", "font": {"size": 24, "color": "#444444"}},
-        "tickfont": {"size": 20, "color": "#333333"},
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "title": {"text": "Reaction Time (ms)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "range": x_range,
         "zeroline": False,
         "showline": True,
-        "linecolor": "rgba(0,0,0,0.15)",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
     },
-    template="plotly_white",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    margin={"l": 170, "r": 40, "t": 110, "b": 90},
     violingap=0,
     violinmode="overlay",
     legend={
-        "title": {"text": "Condition", "font": {"size": 18, "color": "#333333"}},
-        "font": {"size": 16},
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "rgba(0,0,0,0.15)",
+        "title": {"text": "Condition", "font": {"size": 10, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "orientation": "h",
         "x": 0.5,
-        "y": -0.15,
+        "y": -0.20,
         "xanchor": "center",
         "yanchor": "top",
     },
-    hoverlabel={"bgcolor": "white", "bordercolor": "#2D2D2D", "font": {"size": 16, "color": "#2D2D2D"}},
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK, "font": {"size": 10, "color": INK}},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+# Save PNG (static) at the canonical landscape canvas: 3200×1800
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 
-# Add range slider for interactive HTML exploration
+# Save HTML with range slider for interactive exploration
 fig.update_xaxes(rangeslider={"visible": True, "thickness": 0.05})
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
