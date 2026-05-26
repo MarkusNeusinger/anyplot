@@ -1,71 +1,61 @@
 library: highcharts
+language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:22:11Z'
-updated: '2026-02-14T21:40:10Z'
-generated_by: claude-opus-4-6
-workflow_run: 20501867092
-issue: 0
-python_version: '3.14'
-library_version: 1.10.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/highcharts/plot.html
-quality_score: 85
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - annotations
-  - layer-composition
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
-  - grid-styling
-  - edge-highlighting
+updated: '2026-05-26T23:30:29Z'
+generated_by: claude-opus
+workflow_run: 26480243052
+issue: 1876
+language_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/highcharts/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent raincloud metaphor execution with cloud above, box centered, rain below
-    — correctly oriented horizontally
-  - Outstanding data storytelling with three annotation callouts identifying baseline,
-    fastest responses, and bimodal distribution
-  - 'Sophisticated visual design: custom typography, subtle grid, shadow legend, refined
-    color palette'
-  - Strong data variety showing normal, tight, bimodal, and wide-spread distributions
-  - Creative use of Highcharts polygon series and renderer labels for a chart type
-    not natively supported
+  - 'Attempt-1 issues addressed cleanly: legend vs Baseline-callout collision is gone
+    (legend top-right, Baseline callout top-left); Bimodal callout shifted away from
+    data; tickLength: 0 kills the stray left-edge stub.'
+  - Faithful raincloud metaphor - cloud above, box on, rain below - reads instantly
+    on both themes.
+  - Theme-adaptive chrome wired through PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID
+    tokens; box fill, polygon outlines, whisker chrome and annotation backgrounds
+    all flip cleanly between renders.
+  - 'Anyplot palette in canonical order with first series #009E73; partially transparent
+    cloud fills keep distributions distinct without competing with rain dots.'
+  - 'Idiomatic highcharts-core use: inverted chart, PolygonSeries for the half-violin,
+    native BoxPlotSeries with highcharts-more, and chart.renderer.label for the four
+    callouts.'
+  - Strong storytelling - each annotation names the takeaway rather than restating
+    values; bimodal Treatment B is both visually obvious (two humps in the cloud)
+    and called out in text.
   weaknesses:
-  - Blue (#306998) and cyan (#17BECF) for Control and Treatment C are somewhat similar
-    and may cause colorblind accessibility issues — consider differentiating these
-    more
-  - Vertical spacing between categories creates large whitespace gaps, reducing canvas
-    utilization
-  - Legend duplicates entries (each category appears for both cloud and rain series)
-    — consolidating would reduce clutter
-  - Treatment C lacks an annotation, missing an opportunity to complete the data story
-    (e.g., noting widest variability)
-  image_description: 'The plot displays a horizontal raincloud chart with four experimental
-    conditions (Control, Treatment A, Treatment B, Treatment C) on the y-axis and
-    Reaction Time (ms) on the x-axis, ranging from ~150 to ~650 ms. Each condition
-    features three layered components: a half-violin KDE "cloud" extending above the
-    category baseline, a white-filled box plot with dark median line centered on the
-    baseline, and jittered scatter "rain" points below the baseline. Colors are blue
-    (Control), yellow (Treatment A), purple (Treatment B), and cyan (Treatment C)
-    — all with semi-transparent fills. Three annotation callout boxes highlight key
-    insights: "Baseline" (Mean ~450 ms) for Control, "Fastest responses" (Mean ~380
-    ms, tight spread) for Treatment A, and "Bimodal distribution" (Two distinct response
-    clusters at ~350 ms and ~480 ms) for Treatment B. The title reads "raincloud-basic
-    · highcharts · pyplots.ai" with a subtitle "Reaction Time Distributions Across
-    Experimental Conditions". A legend in the top-right corner identifies cloud, rain,
-    and box components along with category colors. Background is light gray (#fafafa)
-    with subtle dotted gridlines.'
+  - 'Bimodal-distribution callout now sits in free space to the right of Treatment
+    B''s right whisker but is positioned near the right edge of the plot area (x_frac:
+    0.85) - visually fine on a 3200x1800 canvas but tight; if the value-axis range
+    ever expands the callout could collide with the whisker tip again. Consider anchoring
+    annotations to data coords via chart.xAxis[0].toPixels / yAxis[0].toPixels for
+    resilience.'
+  - Annotation positions remain hard-coded as x_frac / y_frac of plot width/height
+    rather than data-anchored, so any data-range change desyncs them. Cosmetic, not
+    blocking.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), correct light surface, not pure white.
+      Chrome: Title "raincloud-basic · python · highcharts · anyplot.ai" in bold near-black; subtitle "Reaction time distributions across four experimental conditions" in soft grey; x-axis title "Reaction Time (ms)" in bold dark ink; x-axis tick labels 100-650 step 50 and y-axis category labels (Control / Treatment A / Treatment B / Treatment C) all clearly legible.
+      Data: Four rainclouds — green Control (#009E73), lavender Treatment A (#C475FD), blue Treatment B (#4467A3, visibly bimodal), ochre Treatment C (#BD8233). Each row: half-violin cloud above baseline, cream-fill box with dark median + Tukey whiskers on baseline, jittered rain dots below. Four annotation callouts (Baseline, Fastest responses, Bimodal distribution, Widest variability) sit in free regions — no longer overlapping legend or data. Legend (4 entries) sits top-right unobstructed. No stray tick stub on left edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), correct dark surface, not pure black.
+      Chrome: Title, subtitle, axis titles, category labels and tick labels all render in light ink (~#F0EFE8 / muted lighter grey) and are clearly readable. No dark-on-dark failures anywhere.
+      Data: Colors are IDENTICAL to the light render (same #009E73 / #C475FD / #4467A3 / #BD8233 series). Only the box-plot fill flips from cream to charcoal #242420, and whisker/spine chrome flips to light ink — exactly the expected chrome-only flip.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -73,69 +63,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (60px title, 40px axis titles, 36px
-          category labels, 34px tick labels). All text clearly readable.
+        comment: All chrome text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements. Categories well-spaced, annotations
-          positioned away from data.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Scatter points visible at radius 11 with opacity 0.6. Adequate for
-          80 points per group but could be slightly larger.
+        comment: Attempt-1 collisions resolved; Bimodal callout sits in free space
+          to the right of Treatment B's whisker but is near the right edge
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Clouds, boxes, rain dots all distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/purple/cyan avoids red-green. Blue and cyan may be hard
-          to distinguish for some colorblind profiles.
+        comment: Anyplot palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Significant vertical whitespace between categories. Plot doesn't
-          fully utilize canvas height.
+        passed: true
+        comment: 'Stray left-edge tick stub fixed via tickLength: 0; no overflow'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Reaction Time (ms) with units, Experimental Condition descriptive.
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical anyplot order, first series #009E73, correct chrome on
+          both themes'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, refined typography, subtle background, shadow
-          legend. Near publication quality.
+        comment: Strong palette, clean hierarchy, polished after collision fix
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Dotted grid with very low opacity, no axis lines, generous margins,
-          legend with shadow. Minor: large gaps between categories.'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three annotation callouts highlight baseline, fastest responses,
-          and bimodal distribution. Missing annotation for Treatment C.
+        comment: Subtle grid, no chart border, restrained typography
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations name takeaways rather than restating raw data
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct raincloud plot with all three components: half-violin cloud,
-          box plot, jittered scatter rain.'
+        comment: Full raincloud (cloud + box + rain) implemented
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, cloud above, rain below, box centered, half-violin,
-          jitter, alpha on rain, median/quartile markers.
+        comment: Horizontal layout, cloud above, box centered, rain below, jitter
+          ~0.07, alpha 0.65, medians + Tukey whiskers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, values on x-axis, all data visible.
+        comment: Categories on y-axis, value on x-axis
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend duplicates entries for cloud and rain
-          series per category.
+        comment: Title format matches spec-id · python · highcharts · anyplot.ai;
+          legend unobstructed
     data_quality:
       score: 15
       max: 15
@@ -174,23 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent variation: normal, tight/shifted, bimodal, and wide-spread
-          distributions.'
+        comment: Bimodal Treatment B exercises the cloud-shape advantage of raincloud
+          over box-only
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction times for experimental conditions — real, neutral scientific
-          scenario.
+        comment: Reaction-time experiment, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 150-650ms realistic for human reaction time experiments.
+        comment: 350-450 ms range with sensible 50 ms ticks
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -198,35 +186,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Defines a kde() function, deviating from pure flat structure, though
-          necessary since Highcharts has no built-in KDE.
+        comment: One kde helper + one _fetch helper, otherwise linear
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Slightly verbose with separate loops and embedded JavaScript annotation
-          string.
+        comment: Vectorized KDE; setOptions boxplot-fill workaround appropriately
+          commented
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Uses strict=True in zip() (Python 3.10+) and container.screenshot()
-          instead of driver.save_screenshot().
-    library_mastery:
+        passed: true
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html with PIL canvas safety
+          net
+    library_features:
       score: 8
       max: 10
       items:
@@ -235,13 +222,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of PolygonSeries, BoxPlotSeries, ScatterSeries, chart inversion,
-          to_js_literal().
+        comment: 'High-level OO highcharts_core API, inverted: True for horizontal
+          raincloud'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts-specific inverted chart mode, renderer.label() annotations,
-          polygon series for KDE, highcharts-more.js, zIndex layering.
+        comment: PolygonSeries + BoxPlotSeries + ScatterSeries on one inverted chart,
+          highcharts-more for boxplot, chart.renderer.label for annotation callouts
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - quantiles
+  styling:
+  - publication-ready
+  - alpha-blending
