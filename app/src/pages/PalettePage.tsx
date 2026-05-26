@@ -154,12 +154,6 @@ const ANCHORS: Anchor[] = [
 const HYBRID_V3_CVD: number[] = [36.19, 16.34, 13.98, 13.98, 13.70, 10.70, 8.81];
 const PURE_CVD_GREEDY: number[] = [36.19, 21.45, 19.81, 15.20, 13.70, 10.70, 8.81];
 
-function verdictFor(de: number): 'safe' | 'borderline' | 'fail' {
-  if (de >= 14) return 'safe';
-  if (de >= 10) return 'borderline';
-  return 'fail';
-}
-
 const WCAG_TABLE: { hex: string; name: string; light: number; dark: number }[] = [
   { hex: '#009E73', name: 'brand-green', light: 3.08,  dark: 5.48 },
   { hex: '#AE3030', name: 'matte-red',   light: 5.79,  dark: 2.92 },
@@ -615,11 +609,64 @@ export function PalettePage() {
               </Box>
             </Box>
             {sort === 'cvd' && (
-              <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', fontFamily: typography.mono, lineHeight: 1.55, mb: 2, p: 1.5, borderLeft: `2px solid ${colors.primary}`, backgroundColor: 'var(--bg-surface)' }}>
-                pure max-min sort — best ΔE under deuteranopia / protanopia (n=3..4 goes from 16.34 → 21.45 and
-                13.98 → 19.81). but the first 4 slots end up with two greens (brand + lime) and two purples
-                (lavender + rose) side by side. copy this set if your audience is CVD-first and small-n;
-                imprint default is the better balance for general use.
+              <Box sx={{ fontFamily: typography.mono, lineHeight: 1.55, mb: 2, p: 2, borderLeft: `2px solid ${colors.primary}`, backgroundColor: 'var(--bg-surface)' }}>
+                <Box sx={{ fontSize: '12px', color: 'var(--ink)', fontWeight: 600, mb: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  why use CVD-optimal sort?
+                </Box>
+                <Box sx={{ fontSize: '12px', color: 'var(--ink-soft)', mb: 1.5 }}>
+                  this ordering picks each next slot by maximising ΔE under the worst of deuteranopia /
+                  protanopia / tritanopia simulation against the already-placed set. it&apos;s the best choice
+                  when colour alone has to carry the categorical encoding for users with red-green colour
+                  vision deficiency — e.g. small-n charts in publications targeting CVD-first audiences,
+                  status-only legends, or signage-style summary tiles.
+                </Box>
+
+                {/* Compact per-n table — only shown in CVD mode since that's where the trade-off matters */}
+                <Box sx={{ overflowX: 'auto', mt: 2 }}>
+                  <Box component="table" sx={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '11px',
+                    '& th, & td': { padding: '4px 10px', textAlign: 'left', borderBottom: '1px solid var(--rule)' },
+                    '& th': { color: 'var(--ink-muted)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' },
+                  }}>
+                    <thead>
+                      <tr>
+                        <th>n series</th>
+                        <th style={{ textAlign: 'right' }}>imprint default</th>
+                        <th style={{ textAlign: 'right' }}>CVD-optimal (active)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {HYBRID_V3_CVD.map((de, i) => {
+                        const altDe = PURE_CVD_GREEDY[i];
+                        const gain = altDe - de;
+                        return (
+                          <tr key={i}>
+                            <td>{i + 2}</td>
+                            <td style={{ textAlign: 'right', color: 'var(--ink-muted)' }}>{de.toFixed(2)}</td>
+                            <td style={{ textAlign: 'right', color: gain > 0 ? '#007A59' : 'var(--ink-muted)', fontWeight: gain > 0 ? 600 : 400 }}>
+                              {altDe.toFixed(2)}{gain > 0 ? ` (+${gain.toFixed(2)})` : gain < 0 ? ` (${gain.toFixed(2)})` : ' (=)'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Box>
+                </Box>
+
+                <Box sx={{ fontSize: '12px', color: 'var(--ink-soft)', mt: 2 }}>
+                  <Box component="strong" sx={{ color: 'var(--ink)' }}>trade-off:</Box> the first 4 slots end
+                  up with two greens (brand at slot 0 + lime at slot 2) and two purples (lavender at slot 1 +
+                  rose at slot 3) side by side — the eye loses the &ldquo;four distinct hue families&rdquo;
+                  cue that imprint default gives you. n=2..6 gains 0.71–5.83 ΔE under CVD; n=7..8 are
+                  identical because both sortings ship the same 8 hexes.
+                </Box>
+                <Box sx={{ fontSize: '12px', color: 'var(--ink-muted)', mt: 1 }}>
+                  <Box component="strong" sx={{ color: 'var(--ink)' }}>when to switch:</Box> CVD-first
+                  audience + small-n (n ≤ 4) + colour is the only encoding. otherwise the imprint default is
+                  the better balance — and at n = 7..8 you should add a marker shape or linestyle either way.
+                </Box>
               </Box>
             )}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
@@ -826,64 +873,7 @@ export function PalettePage() {
           </Box>
         </Box>
 
-        {/* 5. CVD SAFETY */}
-        <Box component="section" sx={sectionSx}>
-          <SectionHeader prompt="❯" title={<em>best variant for CVD users</em>} />
-          <Box sx={proseColumnSx}>
-            <Box sx={textStyle}>
-              the imprint sort holds worst-pair ΔE under simulated deuteranopia / protanopia / tritanopia above
-              the 10-point discrimination floor through <strong>n = 6</strong>. beyond that the eye starts
-              losing pairs — add a marker shape or linestyle.
-            </Box>
-            <Box sx={{ overflowX: 'auto', mt: 2 }}>
-              <Box component="table" sx={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontFamily: typography.mono,
-                fontSize: '11px',
-                '& th, & td': { padding: '6px 12px', textAlign: 'left', borderBottom: '1px solid var(--rule)' },
-                '& th': { color: 'var(--ink-muted)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' },
-                '& td.num': { textAlign: 'right', color: 'var(--ink)' },
-              }}>
-                <thead>
-                  <tr>
-                    <th>n series</th>
-                    <th style={{ textAlign: 'right' }}>imprint (default)</th>
-                    <th style={{ textAlign: 'right' }}>CVD-optimal sort</th>
-                    <th>verdict (imprint)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {HYBRID_V3_CVD.map((de, i) => {
-                    const verdict = verdictFor(de);
-                    const altDe = PURE_CVD_GREEDY[i];
-                    return (
-                      <tr key={i}>
-                        <td>{i + 2}</td>
-                        <td className="num">{de.toFixed(2)}</td>
-                        <td className="num" style={{ color: altDe > de ? '#007A59' : 'var(--ink-muted)' }}>
-                          {altDe.toFixed(2)}{altDe > de ? ' ↑' : altDe < de ? ' ↓' : ' ='}
-                        </td>
-                        <td style={{
-                          color: verdict === 'safe' ? '#007A59' : verdict === 'borderline' ? '#b56b18' : '#b62d2d',
-                          fontWeight: 600,
-                        }}>{verdict}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Box>
-            </Box>
-            <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
-              the CVD-optimal sort is technically better at n=3..4 but groups two greens and two purples in
-              the first 4 slots. imprint trades a few ΔE points for visually distinct hue families up front —
-              the n=8 floor (8.81) is identical because both sortings ship the same 8 hexes. swap to it via
-              the sort toggle above if your audience is CVD-first.
-            </Box>
-          </Box>
-        </Box>
-
-        {/* 6. WCAG AUDIT (collapsible) */}
+        {/* 5. WCAG AUDIT (collapsible) — was section 6 before "best variant for CVD users" was folded into the sort toggle expanded view */}
         <Box component="section" sx={sectionSx}>
           <Box sx={proseColumnSx}>
             <CollapsibleSection title="WCAG contrast on both themes (and the outline pattern)">
@@ -931,7 +921,7 @@ export function PalettePage() {
           </Box>
         </Box>
 
-        {/* 7. HISTORY (collapsible) */}
+        {/* 6. HISTORY (collapsible) */}
         <Box component="section" sx={sectionSx}>
           <Box sx={proseColumnSx}>
             <CollapsibleSection title="palette history — how we got here">
