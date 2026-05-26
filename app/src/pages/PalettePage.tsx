@@ -10,7 +10,6 @@ import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { PaletteStrip } from '../components/PaletteStrip';
 import { SectionHeader } from '../components/SectionHeader';
 import { useAnalytics } from '../hooks';
 import { colors, typography, textStyle } from '../theme';
@@ -89,9 +88,25 @@ const TOL_MUTED: CompPalette = {
   ],
 };
 
-const VARIANT_D: CompPalette = {
-  id: 'd',
-  name: 'anyplot variant D (previous)',
+const SET2: CompPalette = {
+  id: 'set2',
+  name: 'ColorBrewer Set2',
+  href: 'https://colorbrewer2.org',
+  hexes: [
+    { hex: '#66C2A5', L: 0.749, C: 0.099, H: 170.8 },
+    { hex: '#FC8D62', L: 0.755, C: 0.147, H: 41.5 },
+    { hex: '#8DA0CB', L: 0.707, C: 0.067, H: 266.1 },
+    { hex: '#E78AC3', L: 0.748, C: 0.132, H: 343.3 },
+    { hex: '#A6D854', L: 0.821, C: 0.169, H: 127.3 },
+    { hex: '#FFD92F', L: 0.892, C: 0.173, H: 95.2 },
+    { hex: '#E5C494', L: 0.837, C: 0.073, H: 76.8 },
+    { hex: '#B3B3B3', L: 0.767, C: 0.000, H: 89.9 },
+  ],
+};
+
+const ANYPLOT_PREV: CompPalette = {
+  id: 'prev',
+  name: 'anyplot (previous)',
   hexes: [
     { hex: '#009E73', L: 0.620, C: 0.130, H: 165.5 },
     { hex: '#9418DB', L: 0.529, C: 0.259, H: 307.4 },
@@ -103,7 +118,7 @@ const VARIANT_D: CompPalette = {
   ],
 };
 
-const COMPARISONS: CompPalette[] = [OKABE_ITO, TOL_MUTED, VARIANT_D];
+const COMPARISONS: CompPalette[] = [OKABE_ITO, TOL_MUTED, SET2, ANYPLOT_PREV];
 
 type Anchor = {
   key: string;
@@ -160,7 +175,6 @@ const WCAG_TABLE: { hex: string; name: string; light: number; dark: number }[] =
 type HistoryEntry = {
   id: string;
   title: string;
-  date: string;
   hexes: string[];
   summary: string;
   href?: string;
@@ -171,21 +185,18 @@ const HISTORY: HistoryEntry[] = [
   {
     id: 'v3',
     title: 'v3 — imprint (current)',
-    date: '2026',
     hexes: ['#009E73', '#C475FD', '#4467A3', '#BD8233', '#AE3030', '#2ABCCD', '#954477', '#99B314'],
     summary: '8 hues with first 4 slots from distinct hue families; semantic-red deferred to slot 4 so it stays a free anchor for bad / loss / error. Plus 3 anchors outside the pool (amber, neutral, muted).',
   },
   {
     id: 'v2',
     title: 'v2 — D1-8 (8-hex expansion)',
-    date: '2026',
     hexes: ['#009E73', '#AE3030', '#C475FD', '#99B314', '#4467A3', '#2ABCCD', '#954477', '#BD8233'],
     summary: 'Eight-hex expansion of variant D. Picked over a vivid-8 alternative by 5 expert reviewers — muted and CVD-safe, but had two greens and two purples next to each other in the canonical order.',
   },
   {
     id: 'v1',
     title: 'v1 — variant D ("balanced")',
-    date: 'May 2026',
     hexes: ['#009E73', '#9418DB', '#B71D27', '#16B8F3', '#99B314', '#D359A7', '#BA843E'],
     summary: 'anyplot\'s first custom palette. 7 hues + adaptive neutral. Brand green inherited from Okabe-Ito; positions 2–7 from a Petroff-style max-min ΔE search in the muted-paper chroma envelope.',
     href: 'https://arxiv.org/abs/2107.02270',
@@ -194,7 +205,6 @@ const HISTORY: HistoryEntry[] = [
   {
     id: 'v0',
     title: 'v0 — Okabe-Ito',
-    date: '2002 / 2011',
     hexes: ['#009E73', '#D55E00', '#0072B2', '#CC79A7', '#E69F00', '#56B4E9', '#F0E442'],
     summary: 'The original colorblind-safe categorical palette (Wong 2011, Nature Methods). 7 hues + adaptive neutral, brand green at slot 0.',
     href: 'https://jfly.uni-koeln.de/color/',
@@ -345,20 +355,22 @@ function ChromaWheel({
           boxShadow: 'inset 0 0 0 1px var(--rule)',
         }}
       />
-      {/* SVG overlay — dots */}
+      {/* SVG overlay — dots with hover tooltips for the hex */}
       <Box component="svg" viewBox={`0 0 ${size} ${size}`} sx={{ position: 'absolute', inset: 0 }}>
         {/* Overlay palette (hollow rings) — render BELOW imprint dots so imprint stays visually dominant */}
         {overlay && overlay.map((d, i) => {
           const { x, y } = project(d.H, d.C);
           return (
-            <circle
-              key={`o-${i}`}
-              cx={x} cy={y} r={dotR - 1}
-              fill="none"
-              stroke={d.hex}
-              strokeWidth={2.5}
-              opacity={0.95}
-            />
+            <g key={`o-${i}`}>
+              <title>{d.hex}</title>
+              <circle
+                cx={x} cy={y} r={dotR - 1}
+                fill="none"
+                stroke={d.hex}
+                strokeWidth={2.5}
+                opacity={0.95}
+              />
+            </g>
           );
         })}
         {/* Imprint dots (filled) */}
@@ -366,11 +378,13 @@ function ChromaWheel({
           const { x, y } = project(d.H, d.C);
           return (
             <g key={i}>
+              <title>{d.hex}</title>
               <circle
                 cx={x} cy={y} r={dotR}
                 fill={d.hex}
                 stroke={i === 0 ? 'var(--ink)' : 'var(--bg-page)'}
                 strokeWidth={i === 0 ? 2 : 1.2}
+                style={{ cursor: 'pointer' }}
               />
             </g>
           );
@@ -472,9 +486,13 @@ export function PalettePage() {
    *  `cvd` = pure-CVD-greedy max-min (best per-n ΔE under CVD, but groups
    *  two greens + two purples close together in the first 4 slots). */
   const [sort, setSort] = useState<'imprint' | 'cvd'>('imprint');
-  // legacy state retained but no longer wired to a toggle — the per-n table
-  // now always shows both sortings side-by-side so the trade-off is visible
-  // without an extra UI control.
+  const [copiedHex, setCopiedHex] = useState<string | null>(null);
+
+  const copyHex = (hex: string) => {
+    navigator.clipboard.writeText(hex);
+    setCopiedHex(hex);
+    setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+  };
 
   useEffect(() => {
     trackPageview('/palette');
@@ -484,7 +502,6 @@ export function PalettePage() {
     () => (sort === 'imprint' ? PALETTE : CVD_OPTIMAL_ORDER.map(i => PALETTE[i])),
     [sort]
   );
-  const sortedHexes = useMemo(() => sortedPalette.map(s => s.hex), [sortedPalette]);
 
   // Wheel dots are positioned by hue + chroma, independent of sort order —
   // we keep the canonical PALETTE order so the brand-green outline stays on
@@ -509,7 +526,7 @@ export function PalettePage() {
       <Box sx={{ pb: 4 }}>
         {/* 1. HERO */}
         <Box component="section" sx={sectionSx}>
-          <SectionHeader prompt="❯" title={<em>imprint</em>} />
+          <SectionHeader prompt="❯" title={<em>anyplot&apos;s imprint palette</em>} />
           <Box sx={{ ...proseColumnSx, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 400px' }, gap: 4, alignItems: 'center', mt: 3 }}>
             <Box>
               <Box sx={textStyle}>
@@ -569,12 +586,9 @@ export function PalettePage() {
               </Box>
             </Box>
           </Box>
-          <Box sx={{ mt: 4 }}>
-            <PaletteStrip maxWidth={null} height={48} mt={0} hexes={sortedHexes} />
-          </Box>
         </Box>
 
-        {/* 2. COMPACT PALETTE GRID + SORT TOGGLE */}
+        {/* 2. PALETTE GRID + SORT TOGGLE */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>the 8 categorical hues</em>} />
           <Box sx={proseColumnSx}>
@@ -608,58 +622,77 @@ export function PalettePage() {
                 imprint default is the better balance for general use.
               </Box>
             )}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(4, 1fr)', md: 'repeat(8, 1fr)' }, gap: 1 }}>
-              {sortedPalette.map((s, i) => (
-                <Box key={s.hex} sx={{ display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{
-                    height: 72,
-                    bgcolor: s.hex,
-                    color: textOn(s.hex),
-                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                    pb: 0.5,
-                    fontFamily: typography.mono, fontSize: '10px',
-                    borderRadius: 1,
-                    boxShadow: i === 0 ? `inset 0 0 0 2px var(--ink)` : 'inset 0 0 0 1px var(--rule)',
-                  }}>
-                    {s.hex}
-                  </Box>
-                  <Box sx={{
-                    fontFamily: typography.mono, fontSize: '9px',
-                    textAlign: 'center',
-                    mt: 0.5,
-                    lineHeight: 1.4,
-                  }}>
-                    <Box sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
-                    <Box sx={{ color: 'var(--ink)' }}>{s.name}</Box>
-                    <Box sx={{ color: 'var(--ink-muted)', mt: 0.5 }}>{s.role}</Box>
-                    <Box sx={{ color: 'var(--ink-muted)', mt: 0.5 }}>H={s.H.toFixed(0)}°</Box>
-                    <Tooltip title="min ΔE to any other slot — normal vision">
-                      <Box sx={{ color: 'var(--ink-muted)', mt: 0.5, display: 'inline-block', cursor: 'help' }}>
-                        norm <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minNorm.toFixed(1)}</Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+              {sortedPalette.map((s, i) => {
+                const copied = copiedHex === s.hex;
+                return (
+                  <Tooltip key={s.hex} title={copied ? 'copied' : 'click to copy hex'} placement="top">
+                    <Box
+                      component="button"
+                      onClick={() => copyHex(s.hex)}
+                      sx={{
+                        display: 'flex', flexDirection: 'column',
+                        background: 'none', border: 'none', padding: 0,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        '&:hover .v3-sw': { transform: 'scale(1.02)' },
+                      }}
+                    >
+                      <Box
+                        className="v3-sw"
+                        sx={{
+                          height: 96,
+                          bgcolor: s.hex,
+                          color: textOn(s.hex),
+                          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                          pb: 1,
+                          fontFamily: typography.mono, fontSize: '13px', fontWeight: 600,
+                          borderRadius: 1,
+                          boxShadow: i === 0 ? `inset 0 0 0 2px var(--ink)` : 'inset 0 0 0 1px var(--rule)',
+                          transition: 'transform 0.15s',
+                        }}
+                      >
+                        {copied ? 'copied ✓' : s.hex}
                       </Box>
-                    </Tooltip>
-                    <Box sx={{ color: 'var(--ink-muted)' }}> · </Box>
-                    <Tooltip title="min ΔE to any other slot — worst of deuteranopia / protanopia / tritanopia">
-                      <Box sx={{ color: 'var(--ink-muted)', display: 'inline-block', cursor: 'help' }}>
-                        cvd <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minCvd.toFixed(1)}</Box>
+                      <Box sx={{
+                        fontFamily: typography.mono, fontSize: '11px',
+                        mt: 1, lineHeight: 1.5,
+                      }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                          <Box sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
+                          <Box sx={{ color: 'var(--ink-muted)', fontSize: '10px' }}>H={s.H.toFixed(0)}°</Box>
+                        </Box>
+                        <Box sx={{ color: 'var(--ink)' }}>{s.name}</Box>
+                        <Box sx={{ color: 'var(--ink-muted)', fontSize: '10px', mt: 0.5 }}>{s.role}</Box>
+                        <Box sx={{ display: 'flex', gap: 1.5, mt: 0.75, fontSize: '10px' }}>
+                          <Tooltip title="min ΔE to any other slot — normal vision">
+                            <Box component="span" sx={{ color: 'var(--ink-muted)', cursor: 'help' }}>
+                              norm <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minNorm.toFixed(1)}</Box>
+                            </Box>
+                          </Tooltip>
+                          <Tooltip title="min ΔE to any other slot — worst of deuteranopia / protanopia / tritanopia">
+                            <Box component="span" sx={{ color: 'var(--ink-muted)', cursor: 'help' }}>
+                              cvd <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minCvd.toFixed(1)}</Box>
+                            </Box>
+                          </Tooltip>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, fontSize: '10px' }}>
+                          <Tooltip title="WCAG contrast on cream bg #F5F3EC — graphical objects 3:1 minimum">
+                            <Box component="span" sx={{ color: s.wcagL >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
+                              ☼ {s.wcagL.toFixed(1)}:1
+                            </Box>
+                          </Tooltip>
+                          <Tooltip title="WCAG contrast on dark bg #121210">
+                            <Box component="span" sx={{ color: s.wcagD >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
+                              ☽ {s.wcagD.toFixed(1)}:1
+                            </Box>
+                          </Tooltip>
+                        </Box>
                       </Box>
-                    </Tooltip>
-                    <Box sx={{ color: 'var(--ink-muted)', mt: 0.5 }}>
-                      <Tooltip title="WCAG contrast on cream bg (#F5F3EC) — graphical objects 3:1 minimum">
-                        <Box component="span" sx={{ color: s.wcagL >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
-                          ☼ {s.wcagL.toFixed(1)}
-                        </Box>
-                      </Tooltip>
-                      {' / '}
-                      <Tooltip title="WCAG contrast on dark bg (#121210)">
-                        <Box component="span" sx={{ color: s.wcagD >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
-                          ☽ {s.wcagD.toFixed(1)}
-                        </Box>
-                      </Tooltip>
                     </Box>
-                  </Box>
-                </Box>
-              ))}
+                  </Tooltip>
+                );
+              })}
             </Box>
           </Box>
         </Box>
@@ -709,8 +742,7 @@ export function PalettePage() {
           <SectionHeader prompt="❯" title={<em>continuous cmaps</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              for continuous data the categorical pool is replaced with two palette-derived colormaps. no
-              other cmap is used — not viridis, not jet, not rainbow.
+              for continuous data the categorical pool is replaced with two palette-derived colormaps.
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mt: 2 }}>
               {/* Sequential */}
@@ -909,9 +941,6 @@ export function PalettePage() {
                     <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1, flexWrap: 'wrap' }}>
                       <Box sx={{ fontFamily: typography.mono, fontSize: '13px', color: 'var(--ink)', fontWeight: 600 }}>
                         {entry.title}
-                      </Box>
-                      <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
-                        {entry.date}
                       </Box>
                       {entry.href && (
                         <Box
