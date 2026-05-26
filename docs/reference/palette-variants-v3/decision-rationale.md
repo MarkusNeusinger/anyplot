@@ -57,6 +57,61 @@ This is why every published categorical palette caps at "min ΔE_CVD ≈ 11" at 
 (Okabe-Ito, Paul Tol "muted", Petroff 2021's n=8 reach ~18) rather than chasing
 the unreachable ΔE ≥ 15 ceiling.
 
+## Why n=8?
+
+The current live `ANYPLOT_PALETTE` in `core/images.py` ships **7 categorical
+hues** plus 1 adaptive neutral — the classic Okabe-Ito layout. muted-8 adds
+one categorical slot. Four reasons that&apos;s the right pool size:
+
+**1. The 7-hue palette has a documented hue-coverage gap.** With 7 slots you
+must pick *either* lime or cyan, *either* lavender or rosé. anyplot live
+chose lime + pink and gave up cyan + lavender — both of which are needed for
+the named-API roles (`palette.cyan` → info / tech-cool, `palette.lavender` →
+creative / brand-secondary). With 8 slots all six primary hue families
+(red / yellow / green / cyan / blue / purple) plus two tertiary tones fit.
+
+**2. n=8 is the CVD-discrimination sweet spot.** The min ΔE_CVD floor falls
+roughly geometrically with n in any well-spaced palette:
+
+| n | muted-8 hybrid-v3 min ΔE_CVD | discrimination floor |
+|---|---|---|
+| 2..4 | 14–36 | well above |
+| 5..6 | 13.70 | safely above |
+| 7 | 10.70 | borderline |
+| 8 | 8.81 | marginal but usable |
+| 9+ | extrapolated &lt; 7 | unusable for CVD |
+
+Tableau-10 and D3 schemeCategory10 push past this boundary and are known to
+fail CVD users (Petroff 2021 §3 measures this). 8 is the largest pool size
+where every published categorical palette still clears the practical floor.
+
+**3. Lineage consistency.** Most academic-publishing categorical palettes sit
+at n=7..9:
+
+| Palette | Slots | Year |
+|---|---|---|
+| Okabe-Ito (Wong 2011, *Nature Methods*) | 7 cat. + 1 neutral = 8 | 2011 |
+| ColorBrewer Set2 | 8 (incl. grey) | 2003 |
+| Paul Tol "muted" | 9 (incl. grey) | 2018 |
+| Petroff 2021 (*arXiv*) | 8 | 2021 |
+| **muted-8** (anyplot v3) | **8 + 3 anchors** | **2026** |
+
+**4. 360° / 45° = 8 — clean hue-wheel coverage.** With 8 slots every
+categorical hex gets its own 45°-bin on the perceptual hue wheel. With 7 you
+have one 51°+ gap (a family "missing"); with 9 you have to double up. muted-8
+distributes evenly:
+
+```
+hue:  25°   70°   115°  166°  209°  254°  305°  345°
+      red   ochre lime  green cyan  blue  lavnd rose
+```
+
+**What n=8 does NOT mean.** It does not mean "render 8 series in a single
+chart." The n &gt; 4 redundant-encoding guidance (linestyle / marker / small
+multiples) still applies — the 8 are a *semantic pool*, not a stack-lines
+ceiling. The slot-pool size lets the named API cover the standard semantic
+roles without sacrificing the neutral; it doesn&apos;t encourage cramming.
+
 ## Hybrid-v3 vs pure-CVD-greedy
 
 Both sortings use the **identical** 8 hexes of muted-8:
@@ -220,6 +275,56 @@ from `green↔red` (CVD 16.34) to `green↔ochre` (CVD 13.98). In exchange:
 Callers who want red back at slot 2 can pass `defer=()` to the sorter; the
 parameter is configurable, just not the default.
 
+## Red anchor — considered alternatives, stayed with `#AE3030`
+
+Three of five v2 reviewers (editorial / brand / accessibility-implicit) flagged
+`#AE3030` as too soft for the semantic-red role. The four proposed
+alternatives were measured against the rest of muted-8 + both theme
+backgrounds:
+
+| hex | source | J* | C | H° | WCAG light | WCAG dark | min ΔE_CVD | nearest |
+|---|---|---|---|---|---|---|---|---|
+| `#AE3030` ★ | **current muted-8** | 45.1 | 32.0 | 25.3° | 5.79:1 ✓ | **2.92:1 ❌** | 15.20 | rose |
+| `#BE2B2B` | brand-rec (chroma+) | 47.9 | 35.2 | 26.6° | 5.30:1 ✓ | 3.19:1 ✓ | 14.59 | ochre |
+| `#C8322C` | brand-rec (max chroma) | 50.8 | 35.5 | 28.1° | 4.79:1 ✓ | 3.53:1 ✓ | **11.52** | ochre |
+| `#B71D27` | live-D / vivid-8 red | 45.1 | 36.1 | 25.0° | 5.88:1 ✓ | **2.87:1 ❌** | 17.38 | ochre |
+| `#A41E22` | editorial-rec (darker) | 40.7 | 33.8 | 25.9° | 6.79:1 ✓ | **2.49:1 ❌** | 16.14 | rose |
+
+**What each reviewer argument actually says, vs the data:**
+
+- **Editorial: "AE3030 sits too close to rosé under deuteranopia."** Confirmed
+  empirically — AE has the smallest ΔE_CVD to `#954477` rosé (15.20). All
+  four alternatives push that gap to 16+. But 15.20 is still well above the
+  10-point confident-discrimination threshold, so the practical impact is
+  small.
+- **Brand: "AE3030 is brick, not red — push hue back toward 25°."** Marketing
+  language — all five candidates sit at hue 25–28°, virtually identical.
+  What reviewers perceive as "redder" is actually higher chroma (32 → 35–36)
+  and lightness, not hue. There is no meaningful hue shift available.
+- **Accessibility (implicit): "matte red has less hue-rotation under CVD
+  because less chroma."** Correct — and this is exactly why AE works.
+  `#C8322C` raises chroma to 35.5 and immediately collapses min ΔE_CVD to
+  11.52 against ochre (because ochre also sits in the warm hue band — higher
+  chroma rotates *into* that collision under CVD).
+
+**The only candidate that&apos;s a real refinement, not a regression:**
+
+`#BE2B2B` would close the dark-bg WCAG gap (2.92:1 → 3.19:1, just over the
+3:1 line) and slightly widen the rosé gap under CVD (15.20 → 18.22). The
+trade-off: marginally tighter ochre gap (14.59), still well above floor.
+Visually it is essentially indistinguishable from AE — same hue, +3 chroma.
+
+**Decision: keep `#AE3030`.**
+
+The dark-bg sub-3:1 is documented in the "Contrast caveats" section and
+handled by the outline pattern, which is needed for the other sub-3:1 hexes
+on light bg regardless. Switching to `#BE2B2B` would close one half of one
+WCAG line at the cost of regenerating every CVD-distance figure, slot
+annotation, and screenshot in the rationale — for a change that&apos;s
+visually marginal. The v3 documentation is built on AE3030 and that&apos;s
+the shipping choice. Future per-theme hex sets (next step #6) would solve
+the dark-bg gap structurally rather than by 0.07-point optimisation.
+
 ## Semantic anchors outside the categorical pool
 
 The 8 hues above are the **categorical pool** — what `palette[:n]` returns.
@@ -378,6 +483,20 @@ the 1px ink ring.
    conservative current behaviour) but lettable down to ~0.6 for users who
    explicitly want the palette tuned to realistic deuteranomaly severity
    instead of full dichromacy.
+6. *Future work — per-theme hex sets.* The "Contrast caveats" section
+   documents that 5 hexes sit below WCAG 3:1 on cream bg, and `#AE3030`
+   marginally below on dark bg. A separate dark-theme variant with L+12
+   lifted on the cool half would close those structurally rather than via
+   outline. Until then, the outline pattern is the documented fix.
+7. *Future work — OKLCH notation + Display-P3 variant.* CSS Color Level 4 is
+   broadly supported (Chrome 111+, Firefox 113+, Safari 15.4+). Defining the
+   web-side palette in OKLCH would give predictable chroma editing and
+   prevent the auto-saturation P3 browsers apply to sRGB hex. The Python
+   plotting side (matplotlib / plotly / altair) stays on hex — those engines
+   don&apos;t accept OKLCH input today. So this is a web/docs polish, not a
+   plot-render improvement. A `palette.p3.*` namespace with deliberately
+   raised chroma would only pay off once the plot generators support P3
+   color() output (likely 1–2 years out).
 
 ## References
 
