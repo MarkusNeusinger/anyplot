@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 raincloud-basic: Basic Raincloud Plot
-Library: bokeh 3.9.0 | Python 3.13.12
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-26
 """
 
 import base64
