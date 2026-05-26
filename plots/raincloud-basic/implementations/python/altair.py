@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-26
+Quality: 91/100 | Updated: 2026-05-26
 """
 
 import os

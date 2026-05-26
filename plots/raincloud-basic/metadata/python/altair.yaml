@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:23:10Z'
-updated: '2026-05-26T23:19:35Z'
+updated: '2026-05-26T23:26:35Z'
 generated_by: claude-opus
 workflow_run: 26480006170
 issue: 1876
@@ -12,141 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Faithful raincloud anatomy in horizontal orientation — half-violin cloud rises
-    ABOVE each baseline, IQR box sits centered ON the baseline, and jittered rain
-    points fall BELOW, exactly matching the spec's 'cloud above / rain below' metaphor.
-  - 'Anyplot palette applied correctly: first categorical series (Control) is #009E73,
-    with #C475FD and #4467A3 for Treatment A/B; semantic red #AE3030 reserved for
-    the median tick — clear semantic separation between category and statistic.'
-  - Treatment B bimodality is explicitly storytold with two italic peak labels, a
-    dashed horizontal connector, and a 'Bimodal distribution' caption — gives the
-    plot a real focal point and demonstrates why a raincloud beats a plain boxplot.
-  - 'Theme-adaptive chrome flips cleanly between #FAF8F1 and #1A1A17 backgrounds while
-    data colors stay identical; INK_SOFT tick labels and INK titles read well in both
-    renders.'
-  - 'Strong altair idiom: transform_density for KDE, transform_calculate to project
-    the half-violin upward via condition_num + density*100, layered composition (violin
-    + whisker + box + median tick + median labels + strip + annotations) with shared
-    scales — leverages multiple distinctive altair features.'
-  - Canvas lands exactly on 3200×1800 with PAGE_BG padding, no AR-09 edge clipping,
-    all axis labels and the long mandated title fully visible in both themes.
+  - 'All three minor weaknesses from Attempt 1 addressed cleanly: median labels lifted
+    to dy=-14 (no longer graze IQR-box stroke), rain jitter tightened to -0.22 to
+    -0.08 (inside spec''s moderate-jitter envelope), and ''Bimodal distribution''
+    caption bumped to INK + bold to match the Peak 1/2 labels'' visual weight.'
+  - Faithful raincloud anatomy in horizontal orientation — cloud above, box on baseline,
+    rain below — exactly matching the spec's mandatory geometry.
+  - 'Anyplot palette applied correctly: Control = #009E73 (first series), with semantic
+    red #AE3030 reserved for the median tick + median value labels.'
+  - 'Theme-adaptive chrome flips cleanly: data hues identical between light and dark
+    renders, only background/text/box-fill flip.'
+  - 'Strong altair idiom: transform_density + transform_calculate project the half-violin
+    upward from each baseline via condition_num + 0.04 + density * 100.'
+  - Canvas lands exactly on 3200×1800 via inline PAD-only block; no AR-09 edge clipping.
   weaknesses:
-  - The median value labels ('442', '383', '361') are placed dy=-10 directly above
-    each box top edge and slightly clip / overlap the upper IQR-box stroke — nudge
-    them further above (e.g. dy=-14 or anchor them outside the box envelope) so the
-    numbers float cleanly above the box without touching the stroke.
-  - Rain jitter offset uses np.random.uniform(-0.30, -0.08), a 0.22-unit range that
-    is wider than the spec's recommended 'moderate jitter (0.05-0.1)'. The visual
-    still reads as rain, but tightening the jitter band (e.g. -0.22 to -0.08) would
-    keep the rain band more compact and visually distinct from the box.
-  - '''Bimodal distribution'' caption is rendered in INK_SOFT and sits between gridlines
-    — it reads as quite subtle, especially in the light render. Consider INK color
-    (not INK_SOFT) or a small bold weight so the storytelling caption matches the
-    visual weight of the ''Peak 1'' / ''Peak 2'' labels it summarizes.'
-  - 'LM-02 leaves some altair power on the table: there is no `selection_point()`
-    / `add_params()` legend-style interactivity, no faceting, and the tooltips are
-    minimal — for a flagship altair raincloud, an interactive selection or hover-driven
-    cross-filter on condition would strengthen distinctive-features scoring.'
+  - 'LM-02 leaves altair power on the table: only .interactive() (pan/zoom) and tooltips
+    — no alt.selection_point/add_params for interactive condition cross-filter, no
+    faceting. A flagship altair raincloud should bind a selection on condition:N to
+    mark opacity so the user can isolate a single condition.'
+  - '''Bimodal distribution'' caption + arrow + peak labels are anchored to fixed
+    (x, y) coordinates (e.g. x=355, y=3.95). If condition_order is reordered or jitter
+    geometry changes, annotations would float free — slightly fragile compared to
+    data-driven annotation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 as required — not pure white, not dark.
-      Chrome: bold dark title "raincloud-basic · python · altair · anyplot.ai" centered at top, fully visible. X-axis title "Reaction Time (ms)" in dark INK with bold weight; tick labels 260–600 in 20-unit steps clearly visible in INK_SOFT gray. Y-axis condition labels "Control", "Treatment A", "Treatment B" in bold dark INK at three baselines. Subtle vertical gridlines at gridOpacity ~0.15. No spine, no y-ticks (intentional minimalism).
-      Data: three half-violins above each baseline — green #009E73 (Control), purple #C475FD (Treatment A), navy-blue #4467A3 (Treatment B). IQR boxes have ELEVATED_BG #FFFDF6 fill with dark stroke, vertical red #AE3030 median tick with red numeric label above each box. Jittered rain dots in the matching category color sit below each baseline. Italic "Peak 1" and "Peak 2" labels with a dashed connector and "Bimodal distribution" caption call out Treatment B's bimodality.
-      Legibility verdict: PASS — all chrome and data text readable.
+      Background: Warm off-white #FAF8F1, 3200×1800 exact.
+      Chrome: Bold dark title "raincloud-basic · python · altair · anyplot.ai" centered at top. X-axis title "Reaction Time (ms)" in bold INK; tick labels 260–600 in INK_SOFT. Y-axis baseline labels "Control"/"Treatment A"/"Treatment B" in bold INK. Subtle vertical gridlines at low opacity. All readable.
+      Data: Three half-violin clouds rise above baselines — green #009E73 (Control, bottom), purple #C475FD (Treatment A, middle), navy-blue #4467A3 (Treatment B, top). IQR boxes with elevated #FFFDF6 fill, dark stroke, rounded corners; semantic-red #AE3030 vertical median tick; red numeric median labels "442"/"383"/"361" sitting clear of the box stroke (dy=-14 nudge applied). Whisker rules extend from each box. Rain dots in matching category colors fall below baselines within tightened band (-0.22 to -0.08). Treatment B has italic-bold "Peak 1"/"Peak 2" labels, dashed connector, and INK + bold "Bimodal distribution" caption.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 as required — not pure black.
-      Chrome: title in light INK #F0EFE8 clearly visible against the dark background; x-axis title and tick labels in lighter INK_SOFT #B8B7B0 fully readable; condition labels on y-axis bold and clearly readable. No dark-on-dark failures. Gridlines subtle but visible.
-      Data: identical hues to the light render — #009E73 green Control, #C475FD purple Treatment A, #4467A3 blue Treatment B; only the IQR-box fill flips to ELEVATED_BG #242420 with a light stroke (matches theme inversion). Semantic red median tick is identical and clearly visible. Annotation labels and dashed connector still readable.
-      Legibility verdict: PASS — all chrome and data text readable, no dark-on-dark elements detected.
+      Background: Warm near-black #1A1A17, 3200×1800 exact.
+      Chrome: Title and y-baseline labels in light INK #F0EFE8; tick labels, peak labels, bimodal caption in light INK_SOFT variant. IQR box fill flips to #242420 with light stroke. All text clearly readable — no dark-on-dark failures.
+      Data: Identical to light render — same #009E73/#C475FD/#4467A3 cloud and rain colors, same semantic red #AE3030 median tick + red numeric labels (readable against the elevated-dark box surface).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 16, axis title 12, labels 10/12,
-          annotations 10); all text readable in both themes. 'Bimodal distribution'
-          caption in INK_SOFT is slightly subtle but still legible.
+        comment: All text explicitly sized and themed; bimodal caption now INK + bold,
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Median number labels ('442', '383', '361') sit immediately above
-          the IQR box stroke and visually graze it; otherwise no collisions between
-          violins, boxes, rain points, or annotations.
+        comment: Median labels lifted to dy=-14; rain band tightened; annotations
+          sit cleanly above Treatment B
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Half-violins are prominent, rain points sized=14 with opacity 0.55
-          are visible without overplotting, box outlines are crisp.
+        comment: Markers, clouds, boxes, ticks all clearly distinguishable in both
+          renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; semantic red median is high-contrast
-          against both elevated-bg fills.
+        comment: Anyplot palette CVD-safe; semantic red reserved for median signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas-gate passed (PNG = 3200×1800 exactly via PAD-only). Nothing
-          clipped at edges; balanced axis labels; title proportion appropriate for
-          the mandated length.
+        comment: PNG = 3200×1800 exactly, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Reaction Time (ms)'' with units. Y-axis uses readable
-          categorical baselines (no separate axis title needed).'
+        comment: X-axis title with units, title exact-match to spec
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Control), palette positions 1-3 used in canonical
-          order. PAGE_BG #FAF8F1/#1A1A17 correct. No forbidden continuous scheme.'
+        comment: 'First series #009E73, theme-correct chrome both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default (4): semantic color separation between category palette
-          and red median, ELEVATED_BG box fill, cornerRadius, bold y-baseline labels
-          — but composition still reads as ''standard raincloud'' rather than a genuinely
-          distinctive piece.'
+        comment: Elevated box fill, rounded corners, semantic red for median, clean
+          palette separation
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): y-axis domain and ticks suppressed, grid kept
-          subtle at opacity 0.15, padding tuned, view stroke removed.'
+        comment: Y-axis domain/ticks suppressed, grid subtle, view stroke removed
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Above default (2): Treatment B bimodality explicitly annotated with
-          two peak labels, a dashed connector, and a summary caption — clear focal
-          point that justifies choosing a raincloud over a boxplot.'
+        comment: Treatment B bimodality annotated with peak labels + connector + matching-weight
+          caption
     spec_compliance:
       score: 15
       max: 15
@@ -156,30 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct raincloud: half-violin + box + jittered strip layered per
-          category.'
+        comment: Proper raincloud anatomy
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cloud above, box on baseline, rain below — exactly matches the spec's
-          mandatory layout. Median and quartile markers present. Violin clipped to
-          half (uses y2 to project upward from baseline).
+        comment: Cloud above, box on baseline, rain below; jitter inside spec's moderate
+          range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Horizontal orientation with categorical y-axis and continuous x-axis
-          as required; all 80 observations per condition rendered as rain points.
+        comment: Horizontal orientation, categorical y / continuous x
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'raincloud-basic · python · altair · anyplot.ai' exact. No
-          legend needed (y-axis labels identify groups).
+        comment: Title exact, no legend needed (color redundant to y-position)
     data_quality:
       score: 15
       max: 15
@@ -189,23 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Distribution shape (violin), summary statistics (box + median + whiskers),
-          and individual observations (rain) all shown simultaneously — the full raincloud
-          value proposition.
+        comment: Distribution shape + summary stats + individual points; Treatment
+          B has explicit bimodality
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction times (ms) in Control vs Treatment A/B is a neutral, plausible
-          clinical/psych-experiment scenario.
+        comment: Neutral reaction-time clinical scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times in 260–600 ms range are realistic for cognitive tasks;
-          bimodal Treatment B at 340/460 ms is a believable response-strategy split.
+        comment: 80 obs/group, ms-scale values, sensible domain
     code_quality:
       score: 10
       max: 10
@@ -215,34 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single procedural script, no functions or classes.
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random draws.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, numpy, pandas, PIL.Image — all used.
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Layer composition is clear, no fake UI elements, no over-abstraction.
+        comment: Declarative altair, well-commented sections
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current chart.save
-          API; inline PAD-only block lands on canonical 3200×1800.
+        comment: Saves plot-{THEME}.png + .html, inline PAD-only to 3200×1800
     library_features:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -250,24 +218,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses altair's transform_density, transform_calculate, alt.layer,
-          declarative encodings, configure_axis/title — strongly idiomatic Vega-Lite
-          style.
+        comment: transform_density, transform_calculate, alt.layer, declarative encodings,
+          Vega labelExpr
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: transform_density (KDE), transform_calculate (violin upward projection),
-          Vega expression labelExpr for y-axis labels, tooltips, interactive() — multiple
-          distinctive features. Could lift further with selection_point/cross-filter.
+        passed: false
+        comment: Only .interactive() + tooltips — no selection_point/add_params for
+          cross-filter, no faceting
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   - html-export
   - hover-tooltips
   patterns:
@@ -277,4 +243,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - publication-ready
+  - grid-styling
