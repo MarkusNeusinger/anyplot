@@ -66,6 +66,8 @@ v2 = _load("palette_variants_v2", "palette-variants-v2.py")
 from _palette_common import (  # noqa: E402
     DARK_THEME_FULL,
     LIGHT_THEME_FULL,
+    NEUTRAL_DARK,
+    NEUTRAL_LIGHT,
     PAGE_CSS,
     PAGE_JS,
     hex_to_rgb1,
@@ -75,6 +77,22 @@ from _palette_common import (  # noqa: E402
     to_jab,
     worst_cvd_pairwise_delta_e,
 )
+
+
+# -----------------------------------------------------------------------------
+# Semantic anchors that live outside the categorical pool.
+# These are NOT used by palette[:n] — only by the named API
+# (palette.amber, palette.neutral, palette.muted) for warning / baseline /
+# disabled-other use cases the 8 categorical hues don't cover.
+# -----------------------------------------------------------------------------
+
+AMBER = "#DDCC77"  # Paul Tol "muted" yellow — see decision-rationale.md
+# adaptive ink (full-contrast neutral): ink on light bg, ink on dark bg
+INK_LIGHT = NEUTRAL_LIGHT  # "#1A1A17"
+INK_DARK = NEUTRAL_DARK    # "#F0EFE8"
+# adaptive ink-muted (soft-contrast neutral): for "other / rest / disabled"
+INK_MUTED_LIGHT = LIGHT_THEME_FULL["ink_muted"]  # "#6B6A63"
+INK_MUTED_DARK = DARK_THEME_FULL["ink_muted"]    # "#A8A79F"
 
 
 # -----------------------------------------------------------------------------
@@ -235,6 +253,26 @@ V3_CSS = """
 .v3-section { padding: 28px; border-top: 1px solid var(--rule); }
 .v3-section > h2 { margin: 0 0 4px; font-size: 22px; }
 .v3-section > p.intro { margin: 0 0 14px; color: var(--ink-muted); font-size: 14px; max-width: 84ch; line-height: 1.55; }
+
+/* Semantic anchors row (amber + 2 adaptive neutrals). Each anchor is a card
+   showing the hex(es), a role label, and a one-line use-case hint. The
+   adaptive neutrals show a split swatch — left half = light-theme value,
+   right half = dark-theme value — so the theme-flip is visible at a glance. */
+.v3-anchors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.v3-anchors .anchor { border: 1px solid var(--rule); border-radius: 8px; padding: 0; overflow: hidden; background: var(--bg-surface); }
+.v3-anchors .sw-full { height: 64px; }
+.v3-anchors .sw-split { height: 64px; display: grid; grid-template-columns: 1fr 1fr; }
+.v3-anchors .sw-split > span { display: flex; align-items: flex-end; justify-content: center; font-family: var(--mono); font-size: 10px; padding-bottom: 4px; }
+.v3-anchors .sw-split > span.lit { color: #1A1A17; }
+.v3-anchors .sw-split > span.dim { color: #F0EFE8; }
+.v3-anchors .body { padding: 10px 12px 12px; }
+.v3-anchors .role { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); margin: 0 0 4px; }
+.v3-anchors .api { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); margin: 0 0 6px; }
+.v3-anchors .hint { font-size: 12px; color: var(--ink-muted); line-height: 1.45; margin: 0; }
+.v3-anchors .hex { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); }
+@media (max-width: 720px) {
+    .v3-anchors { grid-template-columns: 1fr; }
+}
 
 .v3-strip { display: flex; height: 80px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px var(--rule); margin-bottom: 6px; }
 .v3-strip .sw { flex: 1; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; }
@@ -457,6 +495,89 @@ def render_hero(hybrid_hexes: list[str]) -> str:
     )
 
 
+def render_semantic_anchors_section() -> str:
+    """Render the 3 semantic anchors that live OUTSIDE the categorical pool.
+
+    These never enter the palette[:n] slot order — they're only reachable via
+    the named API. Two of them (neutral, muted) are theme-adaptive: their hex
+    flips between the light and dark theme.
+    """
+    # Pre-compute the worst-pair CVD ΔE from amber to every muted-8 member so we
+    # can quote the min in the page (justifies the amber pick).
+    rgbs = np.stack([hex_to_rgb1(c) for c in [AMBER, *MUTED_8]])
+    cvd_min = float("inf")
+    for cvd in ("deuter", "protan", "tritan"):
+        m = pairwise_delta_e(rgbs, cvd)
+        cvd_min = min(cvd_min, float(min(m[0, 1:])))
+    return (
+        '<section class="v3-section" id="anchors">'
+        "<h2>semantic anchors — outside the categorical pool</h2>"
+        '<p class="intro">'
+        "the 8 categorical hues above cover the hue-diverse roles "
+        "(<code>palette.green</code>, <code>palette.red</code>, …). three "
+        "additional anchors live <strong>outside</strong> the slot pool — they "
+        "are never returned by <code>palette[:n]</code>, only by the named API. "
+        "two are <em>theme-adaptive</em>: their hex flips between the light and "
+        "dark theme so the role stays semantically consistent across both modes "
+        "(same pattern as Apple HIG / Material Design / GitHub Primer)."
+        "</p>"
+        '<div class="v3-anchors">'
+        # 1. amber — warning / caution
+        f'<div class="anchor">'
+        f'<div class="sw-full" style="background:{AMBER};"></div>'
+        f'<div class="body">'
+        f'<p class="role">warning / caution</p>'
+        f'<p class="api">palette.amber — <span class="hex">{AMBER}</span></p>'
+        f"<p class=\"hint\">Paul Tol &ldquo;muted&rdquo; yellow. min ΔE under "
+        f"CVD to the 8 categorical hexes = {cvd_min:.2f} — confidently distinct "
+        f"from every member, including <code>#99B314</code> lime (the two more "
+        f"saturated amber options, <code>#D4A017</code> and <code>#D4AF37</code> "
+        f"goldenrod, both collapse to ΔE_CVD ≈ 2.3 against lime under "
+        f"deuteranopia)."
+        f"</p>"
+        f"</div>"
+        f"</div>"
+        # 2. neutral — full-contrast ink (theme-adaptive)
+        f'<div class="anchor">'
+        f'<div class="sw-split">'
+        f'<span class="dim" style="background:{INK_LIGHT};">{INK_LIGHT}</span>'
+        f'<span class="lit" style="background:{INK_DARK};">{INK_DARK}</span>'
+        f"</div>"
+        f'<div class="body">'
+        f'<p class="role">totals / baseline / outline</p>'
+        f'<p class="api">palette.neutral — adaptive</p>'
+        f'<p class="hint">full-contrast ink, theme-adaptive. on cream bg → '
+        f'<code>{INK_LIGHT}</code>; on dark bg → <code>{INK_DARK}</code>. same '
+        f"value as text and gridlines, so &ldquo;total&rdquo; / "
+        f"&ldquo;baseline&rdquo; / &ldquo;reference outline&rdquo; series "
+        f"automatically read as part of the chart's structural layer rather "
+        f"than as &ldquo;just another category&rdquo;."
+        f"</p>"
+        f"</div>"
+        f"</div>"
+        # 3. muted — soft-contrast ink (theme-adaptive)
+        f'<div class="anchor">'
+        f'<div class="sw-split">'
+        f'<span class="dim" style="background:{INK_MUTED_LIGHT};">{INK_MUTED_LIGHT}</span>'
+        f'<span class="lit" style="background:{INK_MUTED_DARK};">{INK_MUTED_DARK}</span>'
+        f"</div>"
+        f'<div class="body">'
+        f'<p class="role">other / rest / disabled</p>'
+        f'<p class="api">palette.muted — adaptive</p>'
+        f'<p class="hint">soft-contrast ink, theme-adaptive. on cream bg → '
+        f'<code>{INK_MUTED_LIGHT}</code>; on dark bg → <code>{INK_MUTED_DARK}</code>. '
+        f"meant for &ldquo;other&rdquo; / &ldquo;rest&rdquo; slices in stacked "
+        f"charts, disabled / inactive series, confidence bands, and "
+        f"any annotation that should sit behind the data without competing for "
+        f"attention."
+        f"</p>"
+        f"</div>"
+        f"</div>"
+        "</div>"
+        "</section>"
+    )
+
+
 def render_finalist_section(hybrid_hexes: list[str]) -> str:
     cvd = measure_per_n_cvd(hybrid_hexes)
     norm = measure_per_n_normal(hybrid_hexes)
@@ -533,6 +654,7 @@ def render_page(hybrid_hexes: list[str]) -> str:
         "</head><body>"
         '<main class="page">'
         f"{render_hero(hybrid_hexes)}"
+        f"{render_semantic_anchors_section()}"
         f"{render_finalist_section(hybrid_hexes)}"
         f"{render_compare_section(sort_rows)}"
         f"{render_footer()}"
@@ -579,6 +701,21 @@ def render_rationale_md(
         f"| {i} | `{hybrid_hexes[i]}` | {fine} | {coarse} | {hue:.1f}° |"
         for i, (fine, coarse, hue) in enumerate(annos)
     )
+
+    # Amber → muted-8 worst-CVD min distance (used in the "semantic anchors"
+    # section to back the amber pick). Worst of deuter/protan/tritan, smallest
+    # ΔE to any of the 8 categorical hexes.
+    amber_rgbs = np.stack([hex_to_rgb1(c) for c in [AMBER, *MUTED_8]])
+    amber_cvd_min = float("inf")
+    for cvd_name in ("deuter", "protan", "tritan"):
+        m = pairwise_delta_e(amber_rgbs, cvd_name)
+        amber_cvd_min = min(amber_cvd_min, float(min(m[0, 1:])))
+
+    # Theme-adaptive neutral hexes (for the "Semantic anchors" section).
+    ink_light = INK_LIGHT
+    ink_dark = INK_DARK
+    ink_muted_light = INK_MUTED_LIGHT
+    ink_muted_dark = INK_MUTED_DARK
 
     return f"""# palette-v3 — muted-8 finalist (decision rationale)
 
@@ -794,31 +931,100 @@ from `green↔red` (CVD 16.34) to `green↔ochre` (CVD 13.98). In exchange:
 Callers who want red back at slot 2 can pass `defer=()` to the sorter; the
 parameter is configurable, just not the default.
 
-## Optional: the semantic named-API (decoupled from position)
+## Semantic anchors outside the categorical pool
 
-The position-based access pattern (`palette[:n]`) is the default. For projects
-where consistent semantic anchors matter (every chart in the slide deck uses
-the same red for "loss"), a parallel named API is the right tool — separate
-from slot order:
+The 8 hues above are the **categorical pool** — what `palette[:n]` returns.
+But several semantic roles don't map cleanly onto any of the 8: warning
+(needs leuchtgelb, not ochre-brown), totals/baseline (needs a neutral that's
+visually structural rather than categorical), and "other/rest" in stacked
+charts (needs a soft neutral that doesn't compete with the data). Three
+additional anchors close those gaps. They live **outside** the slot pool and
+are only reachable via the named API.
+
+### palette.amber — warning / caution
+
+Fixed hex `#DDCC77` (Paul Tol "muted" yellow). Min ΔE under CVD to all 8
+categorical hexes = **{amber_cvd_min:.2f}** — confidently distinct from every
+member, including `#99B314` lime.
+
+| candidate | min ΔE_normal | min ΔE_CVD | C | comment |
+|---|---|---|---|---|
+| `#D4A017` amber-2017 | 12.62 | **2.37** | 29.2 | collapses against `#99B314` lime under deuteranopia (unusable) |
+| `#D4AF37` goldenrod | 14.99 | **2.33** | 27.1 | same lime collision (unusable) |
+| `#DDCC77` Tol muted-yellow ★ | 19.56 | **14.52** | 20.6 | only CVD-safe option; consistent with the academic-publishing family muted-8 lives in |
+
+The two more saturated amber candidates fail because under deuteranopia /
+protanopia they collapse to the same lightness-band as lime. Tol's
+lower-chroma amber sits in a different lightness band (J*=84 vs lime's J*=71)
+and survives the simulation. C=20.6 is *just* below the muted-8 chroma
+envelope (C ∈ [24, 32]) but that's a feature: it signals "I'm not a
+categorical-pool member, I'm a semantic anchor next to it".
+
+### palette.neutral — totals / baseline / outline (theme-adaptive)
+
+The neutral isn't a fixed hex but a **role** that flips per theme — same
+pattern as Apple HIG, Material Design, GitHub Primer, and Wong (2011)
+Okabe-Ito position 8 (style-guide §4.1):
+
+- **light theme** → `{ink_light}` (warm near-black ink)
+- **dark theme** → `{ink_dark}` (warm near-white ink)
+
+Same hex as the chart's text and gridlines, so a "totals" / "baseline" /
+"reference outline" series reads as part of the chart's structural layer
+rather than as just another category. Implemented today as `NEUTRAL_LIGHT` /
+`NEUTRAL_DARK` in `scripts/_palette_common.py:70-71`.
+
+### palette.muted — other / rest / disabled (theme-adaptive)
+
+A second adaptive neutral, soft-contrast rather than full-contrast:
+
+- **light theme** → `{ink_muted_light}` (warm mid-gray)
+- **dark theme** → `{ink_muted_dark}` (warm mid-gray)
+
+For "other" / "rest" slices in stacked bars, disabled / inactive series,
+confidence bands, and annotations that should sit behind the data without
+competing. Comes from `LIGHT_THEME["ink_muted"]` /
+`DARK_THEME["ink_muted"]` — already used everywhere in the design system,
+just not yet exposed through the palette API.
+
+## Final named-API surface
 
 ```python
-anyplot.palette.green   # → #009E73   ("good / profit / energy")
-anyplot.palette.red     # → #AE3030   ("bad / loss / error")
-anyplot.palette.blue    # → #4467A3   ("cool / water / info")
-anyplot.palette.ochre   # → #BD8233   ("warning / commodity")
-# … plus palette.semantic.{{good, bad, warning, info}} aliases
+# Categorical pool (8 hues — sorted by hybrid-v3, slots 0..7)
+anyplot.palette.green     # → #009E73   ("good / profit / energy")
+anyplot.palette.red       # → #AE3030   ("bad / loss / error")
+anyplot.palette.blue      # → #4467A3   ("cool / water / info")
+anyplot.palette.cyan      # → #2ABCCD   ("sky / tech-cool")
+anyplot.palette.lime      # → #99B314   ("growth / nature")
+anyplot.palette.ochre     # → #BD8233   ("earth / commodity")
+anyplot.palette.lavender  # → #C475FD   ("creative")
+anyplot.palette.rose      # → #954477   ("wellness / feminine")
+
+# Semantic anchors OUTSIDE the categorical pool (never returned by palette[:n])
+anyplot.palette.amber     # → #DDCC77   ("caution / warning")
+anyplot.palette.neutral   # → adaptive  ("totals / baseline / outline")
+anyplot.palette.muted     # → adaptive  ("other / rest / disabled")
+
+# Semantic-role aliases that map to the anchors above
+anyplot.palette.semantic.good      # → green
+anyplot.palette.semantic.bad       # → red
+anyplot.palette.semantic.warning   # → amber   (NB: NOT ochre — ochre is "earth", not "caution")
+anyplot.palette.semantic.info      # → cyan
+anyplot.palette.semantic.baseline  # → neutral (adaptive)
+anyplot.palette.semantic.other     # → muted   (adaptive)
 ```
 
-This is documented in [`../palette-variants-v2/expert-reviews.md`](../palette-variants-v2/expert-reviews.md)
-under "Recommended additional design move". Slot order and named access are
-independent — both ship.
+Slot order and named access are independent — both ship.
 
 ## Next steps
 
 1. Apply the hybrid-v3 ordering above as the new live `ANYPLOT_PALETTE`.
-2. Ship the named API alongside (`palette.red`, `palette.semantic.bad`, etc.).
-3. Document the n > 4 redundant-encoding guidance (linestyle / marker / shape).
-4. *Optional* — expose a `palette.cvd_severity` knob defaulting to 1.0 (the
+2. Ship the named API alongside, with `amber` / `neutral` / `muted` as the
+   three semantic anchors outside the categorical pool.
+3. Wire `semantic.warning → amber` (not ochre — ochre is the "earth /
+   commodity" categorical hue, not a caution signal).
+4. Document the n > 4 redundant-encoding guidance (linestyle / marker / shape).
+5. *Optional* — expose a `palette.cvd_severity` knob defaulting to 1.0 (the
    conservative current behaviour) but lettable down to ~0.6 for users who
    explicitly want the palette tuned to realistic deuteranomaly severity
    instead of full dichromacy.

@@ -220,31 +220,100 @@ from `green↔red` (CVD 16.34) to `green↔ochre` (CVD 13.98). In exchange:
 Callers who want red back at slot 2 can pass `defer=()` to the sorter; the
 parameter is configurable, just not the default.
 
-## Optional: the semantic named-API (decoupled from position)
+## Semantic anchors outside the categorical pool
 
-The position-based access pattern (`palette[:n]`) is the default. For projects
-where consistent semantic anchors matter (every chart in the slide deck uses
-the same red for "loss"), a parallel named API is the right tool — separate
-from slot order:
+The 8 hues above are the **categorical pool** — what `palette[:n]` returns.
+But several semantic roles don't map cleanly onto any of the 8: warning
+(needs leuchtgelb, not ochre-brown), totals/baseline (needs a neutral that's
+visually structural rather than categorical), and "other/rest" in stacked
+charts (needs a soft neutral that doesn't compete with the data). Three
+additional anchors close those gaps. They live **outside** the slot pool and
+are only reachable via the named API.
+
+### palette.amber — warning / caution
+
+Fixed hex `#DDCC77` (Paul Tol "muted" yellow). Min ΔE under CVD to all 8
+categorical hexes = **14.52** — confidently distinct from every
+member, including `#99B314` lime.
+
+| candidate | min ΔE_normal | min ΔE_CVD | C | comment |
+|---|---|---|---|---|
+| `#D4A017` amber-2017 | 12.62 | **2.37** | 29.2 | collapses against `#99B314` lime under deuteranopia (unusable) |
+| `#D4AF37` goldenrod | 14.99 | **2.33** | 27.1 | same lime collision (unusable) |
+| `#DDCC77` Tol muted-yellow ★ | 19.56 | **14.52** | 20.6 | only CVD-safe option; consistent with the academic-publishing family muted-8 lives in |
+
+The two more saturated amber candidates fail because under deuteranopia /
+protanopia they collapse to the same lightness-band as lime. Tol's
+lower-chroma amber sits in a different lightness band (J*=84 vs lime's J*=71)
+and survives the simulation. C=20.6 is *just* below the muted-8 chroma
+envelope (C ∈ [24, 32]) but that's a feature: it signals "I'm not a
+categorical-pool member, I'm a semantic anchor next to it".
+
+### palette.neutral — totals / baseline / outline (theme-adaptive)
+
+The neutral isn't a fixed hex but a **role** that flips per theme — same
+pattern as Apple HIG, Material Design, GitHub Primer, and Wong (2011)
+Okabe-Ito position 8 (style-guide §4.1):
+
+- **light theme** → `#1A1A17` (warm near-black ink)
+- **dark theme** → `#F0EFE8` (warm near-white ink)
+
+Same hex as the chart's text and gridlines, so a "totals" / "baseline" /
+"reference outline" series reads as part of the chart's structural layer
+rather than as just another category. Implemented today as `NEUTRAL_LIGHT` /
+`NEUTRAL_DARK` in `scripts/_palette_common.py:70-71`.
+
+### palette.muted — other / rest / disabled (theme-adaptive)
+
+A second adaptive neutral, soft-contrast rather than full-contrast:
+
+- **light theme** → `#6B6A63` (warm mid-gray)
+- **dark theme** → `#A8A79F` (warm mid-gray)
+
+For "other" / "rest" slices in stacked bars, disabled / inactive series,
+confidence bands, and annotations that should sit behind the data without
+competing. Comes from `LIGHT_THEME["ink_muted"]` /
+`DARK_THEME["ink_muted"]` — already used everywhere in the design system,
+just not yet exposed through the palette API.
+
+## Final named-API surface
 
 ```python
-anyplot.palette.green   # → #009E73   ("good / profit / energy")
-anyplot.palette.red     # → #AE3030   ("bad / loss / error")
-anyplot.palette.blue    # → #4467A3   ("cool / water / info")
-anyplot.palette.ochre   # → #BD8233   ("warning / commodity")
-# … plus palette.semantic.{good, bad, warning, info} aliases
+# Categorical pool (8 hues — sorted by hybrid-v3, slots 0..7)
+anyplot.palette.green     # → #009E73   ("good / profit / energy")
+anyplot.palette.red       # → #AE3030   ("bad / loss / error")
+anyplot.palette.blue      # → #4467A3   ("cool / water / info")
+anyplot.palette.cyan      # → #2ABCCD   ("sky / tech-cool")
+anyplot.palette.lime      # → #99B314   ("growth / nature")
+anyplot.palette.ochre     # → #BD8233   ("earth / commodity")
+anyplot.palette.lavender  # → #C475FD   ("creative")
+anyplot.palette.rose      # → #954477   ("wellness / feminine")
+
+# Semantic anchors OUTSIDE the categorical pool (never returned by palette[:n])
+anyplot.palette.amber     # → #DDCC77   ("caution / warning")
+anyplot.palette.neutral   # → adaptive  ("totals / baseline / outline")
+anyplot.palette.muted     # → adaptive  ("other / rest / disabled")
+
+# Semantic-role aliases that map to the anchors above
+anyplot.palette.semantic.good      # → green
+anyplot.palette.semantic.bad       # → red
+anyplot.palette.semantic.warning   # → amber   (NB: NOT ochre — ochre is "earth", not "caution")
+anyplot.palette.semantic.info      # → cyan
+anyplot.palette.semantic.baseline  # → neutral (adaptive)
+anyplot.palette.semantic.other     # → muted   (adaptive)
 ```
 
-This is documented in [`../palette-variants-v2/expert-reviews.md`](../palette-variants-v2/expert-reviews.md)
-under "Recommended additional design move". Slot order and named access are
-independent — both ship.
+Slot order and named access are independent — both ship.
 
 ## Next steps
 
 1. Apply the hybrid-v3 ordering above as the new live `ANYPLOT_PALETTE`.
-2. Ship the named API alongside (`palette.red`, `palette.semantic.bad`, etc.).
-3. Document the n > 4 redundant-encoding guidance (linestyle / marker / shape).
-4. *Optional* — expose a `palette.cvd_severity` knob defaulting to 1.0 (the
+2. Ship the named API alongside, with `amber` / `neutral` / `muted` as the
+   three semantic anchors outside the categorical pool.
+3. Wire `semantic.warning → amber` (not ochre — ochre is the "earth /
+   commodity" categorical hue, not a caution signal).
+4. Document the n > 4 redundant-encoding guidance (linestyle / marker / shape).
+5. *Optional* — expose a `palette.cvd_severity` knob defaulting to 1.0 (the
    conservative current behaviour) but lettable down to ~0.6 for users who
    explicitly want the palette tuned to realistic deuteranomaly severity
    instead of full dichromacy.
