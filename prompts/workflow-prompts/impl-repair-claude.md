@@ -46,7 +46,7 @@ Adjust the canvas-controlling knobs of the relevant library family:
 **Common VQ-07 failures and fixes:**
 - Legacy `#306998` still in code → replace with `#009E73` (anyplot palette position 1).
 - First series not brand green → rewrite so the primary category renders in `#009E73`.
-- Any non-anyplot cmap (jet/hsv/rainbow/viridis/cividis/BrBG/Reds/Blues/Greens) → switch to `anyplot_seq` (single-polarity) or `anyplot_div` (diverging) — see `prompts/default-style-guide.md` "Continuous Data".
+- Any non-anyplot cmap (jet/hsv/rainbow/viridis/cividis/BrBG/Reds/Blues/Greens) → switch to `imprint_seq` (single-polarity) or `imprint_div` (diverging) — see `prompts/default-style-guide.md` "Continuous Data".
 - Pure `#FFFFFF` / `#000000` background → use `#FAF8F1` / `#1A1A17` via the `ANYPLOT_THEME` token block.
 - Chrome wrong-theme (dark text on dark bg) → wire up all title/axis/tick/grid/legend colors to the `INK`/`INK_SOFT` tokens.
 

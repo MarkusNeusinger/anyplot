@@ -75,8 +75,9 @@ PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ('#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E')
+ANYPLOT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314')
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -117,8 +118,9 @@ chart = pygal.Bar(
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`. For pygal, the palette is always passed via the `Style` object — see the Sizing + Theme section above.
 
 ```python
-ANYPLOT_PALETTE = ('#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E')
+ANYPLOT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314')
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series: ANYPLOT_PALETTE[0] is still the first color pygal cycles through
 custom_style = Style(..., colors=ANYPLOT_PALETTE)
@@ -131,9 +133,9 @@ def _lerp_hex(c0, c1, t):
     r1, g1, b1 = (int(c1[i:i+2], 16) for i in (1, 3, 5))
     r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
     return f"#{r:02X}{g:02X}{b:02X}"
-# Sequential (single-polarity): #009E73 → #003D94
-seq_stops = tuple(_lerp_hex("#009E73", "#003D94", i / (n - 1)) for i in range(n))
-# Diverging (around a meaningful midpoint): #BB0D22 ↔ #A2A598 ↔ #007AD9
+# Sequential (single-polarity): #009E73 → #4467A3
+seq_stops = tuple(_lerp_hex("#009E73", "#4467A3", i / (n - 1)) for i in range(n))
+# Diverging (around a meaningful midpoint): #AE3030 ↔ #F5F3EC ↔ #4467A3
 ```
 
 ## Grid Opacity

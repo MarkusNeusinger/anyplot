@@ -80,8 +80,9 @@ For static outputs → `write_image()`.
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E']
+ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314']
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 fig = go.Figure(go.Scatter(x=x, y=y, mode='markers',
@@ -92,8 +93,8 @@ fig = px.scatter(df, x='x', y='y', color='category',
                  color_discrete_sequence=ANYPLOT_PALETTE)
 
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
-ANYPLOT_SEQ = [[0.0, "#009E73"], [1.0, "#003D94"]]                                   # sequential / single-polarity
-ANYPLOT_DIV = [[0.0, "#BB0D22"], [0.5, "#A2A598"], [1.0, "#007AD9"]]                 # diverging
+ANYPLOT_SEQ = [[0.0, "#009E73"], [1.0, "#4467A3"]]                                   # sequential / single-polarity
+ANYPLOT_DIV = [[0.0, "#AE3030"], [0.5, "#F5F3EC"], [1.0, "#4467A3"]]                 # diverging
 # Sequential: color_continuous_scale=ANYPLOT_SEQ
 # Diverging:  color_continuous_scale=ANYPLOT_DIV
 # Forbidden: any other scale ('viridis'/'cividis'/'BrBG'/'Reds'/'Blues'/'Greens'/'jet'/'hsv'/'rainbow').

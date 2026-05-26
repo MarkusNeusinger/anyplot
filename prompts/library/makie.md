@@ -130,13 +130,15 @@ Use the anyplot palette (see `prompts/default-style-guide.md`
 ```julia
 const ANYPLOT_PALETTE = [
     colorant"#009E73",  # 1 — first categorical series (anyplot brand green)
-    colorant"#9418DB",  # 2
-    colorant"#B71D27",  # 3
-    colorant"#16B8F3",  # 4
-    colorant"#99B314",  # 5
-    colorant"#D359A7",  # 6
-    colorant"#BA843E",  # 7
+    colorant"#C475FD",  # 2 — lavender
+    colorant"#4467A3",  # 3 — blue
+    colorant"#BD8233",  # 4 — ochre
+    colorant"#AE3030",  # 5 — matte red (semantic anchor for bad / loss / error)
+    colorant"#2ABCCD",  # 6 — cyan
+    colorant"#954477",  # 7 — rose
+    colorant"#99B314",  # 8 — lime
 ]
+const ANYPLOT_AMBER = colorant"#DDCC77"  # warning / caution (outside the categorical pool)
 
 # Single-series
 scatter!(ax, x, y; color = ANYPLOT_PALETTE[1])
@@ -146,8 +148,8 @@ scatter!(ax, x, y; color = group, colormap = ANYPLOT_PALETTE)
 
 # Continuous — only the two anyplot palette-derived cmaps are allowed.
 using ColorSchemes
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#003D94"])                                    # sequential / single-polarity
-const ANYPLOT_DIV = cgrad([colorant"#BB0D22", colorant"#A2A598", colorant"#007AD9"])                 # diverging
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])                                    # sequential / single-polarity
+const ANYPLOT_DIV = cgrad([colorant"#AE3030", colorant"#F5F3EC", colorant"#4467A3"])                 # diverging (midpoint #F5F3EC light / #1A1A17 dark)
 # Sequential heatmap:  heatmap!(ax, z; colormap = ANYPLOT_SEQ)
 # Diverging heatmap:   heatmap!(ax, z; colormap = ANYPLOT_DIV)
 ```
@@ -232,8 +234,8 @@ const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const ANYPLOT_PALETTE = [
-    colorant"#009E73", colorant"#9418DB", colorant"#B71D27", colorant"#16B8F3",
-    colorant"#99B314", colorant"#D359A7", colorant"#BA843E",
+    colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
+    colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 
 # --- Data -------------------------------------------------------------------

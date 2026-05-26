@@ -110,9 +110,11 @@ ax.boxplot(data, tick_labels=group_names)  # Right
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
 
 ```python
-# anyplot palette — use positions 1→N in canonical order
-ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E']
+# anyplot palette (imprint) — 8 hues, use positions 1→N in canonical order
+ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314']
+# Semantic anchors — outside the categorical pool, reached intentionally
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution
 
 # Single-series: always position 1 (brand green)
 color = ANYPLOT_PALETTE[0]  # '#009E73'
@@ -123,10 +125,11 @@ ax.set_prop_cycle(color=ANYPLOT_PALETTE[:N])
 # Continuous data — only the two anyplot palette-derived cmaps are allowed
 # (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):
 from matplotlib.colors import LinearSegmentedColormap
-anyplot_seq = LinearSegmentedColormap.from_list("anyplot_seq", ["#009E73", "#003D94"])
-anyplot_div = LinearSegmentedColormap.from_list("anyplot_div", ["#BB0D22", "#A2A598", "#007AD9"])
-# Sequential / single-polarity heatmaps: cmap=anyplot_seq
-# Diverging (signed deviations, residuals, correlations):    cmap=anyplot_div
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+midpoint = "#F5F3EC" if THEME == "light" else "#1A1A17"  # theme-adaptive
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
+# Sequential / single-polarity heatmaps: cmap=imprint_seq
+# Diverging (signed deviations, residuals, correlations):  cmap=imprint_div
 ```
 
 ## Theme-adaptive Chrome (matplotlib mapping)
