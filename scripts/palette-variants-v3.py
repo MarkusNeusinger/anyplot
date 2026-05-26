@@ -559,7 +559,7 @@ def _contrast_dot(
         # bg, so report THAT ratio (the actually-effective contrast).
         ratio_str = f"{stroke_ratio:.2f}:1"
         ratio_class = "pass" if stroke_ratio >= 3.0 else "fail"
-        ring = f"box-shadow: inset 0 0 0 2px {outlined_stroke};"
+        ring = f"box-shadow: inset 0 0 0 1px {outlined_stroke};"
     else:
         ratio_str = f"{ratio:.2f}:1"
         ratio_class = "pass" if ratio >= 3.0 else "fail"
@@ -603,7 +603,7 @@ def render_contrast_section() -> str:
         )
         light_fix = (
             f'<div>'
-            f'<h4>↳ same {len(weak_light)} sub-3:1 hexes with a 2px '
+            f'<h4>↳ same {len(weak_light)} sub-3:1 hexes with a 1px '
             f'<code>{ink_light}</code> ink ring</h4>'
             f'<div class="v3-contrast-fix">{light_fix_dots}</div>'
             f"</div>"
@@ -618,7 +618,7 @@ def render_contrast_section() -> str:
         )
         dark_fix = (
             f'<div>'
-            f'<h4>↳ same {len(weak_dark)} sub-3:1 hex with a 2px '
+            f'<h4>↳ same {len(weak_dark)} sub-3:1 hex with a 1px '
             f'<code>{ink_dark}</code> ink ring</h4>'
             f'<div class="v3-contrast-fix">{dark_fix_dots}</div>'
             f"</div>"
@@ -637,7 +637,7 @@ def render_contrast_section() -> str:
         "Tol &ldquo;muted&rdquo;, and ColorBrewer Set2 all have the same "
         "issue. The industry-standard fix is a thin ink-color outline on the "
         "affected series. Below: every categorical hue + amber on both themes, "
-        "with the sub-3:1 ones shown both as-is and with a 2px ring."
+        "with the sub-3:1 ones shown both as-is and with a 1px ring."
         "</p>"
         '<div class="v3-contrast-stage stage-light">'
         '<h3>on cream bg <code>#F5F3EC</code> (light theme)</h3>'
@@ -1247,7 +1247,7 @@ pattern is the documented fix.
 
 See the live demo in [`index.html`](./index.html#contrast) — every member
 rendered on both themes, with the sub-3:1 ones shown both as-is and with
-the 2px ink ring.
+the 1px ink ring.
 
 ## Next steps
 

@@ -364,7 +364,7 @@ pattern is the documented fix.
 
 See the live demo in [`index.html`](./index.html#contrast) — every member
 rendered on both themes, with the sub-3:1 ones shown both as-is and with
-the 2px ink ring.
+the 1px ink ring.
 
 ## Next steps
 
