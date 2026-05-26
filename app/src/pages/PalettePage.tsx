@@ -673,8 +673,8 @@ export function PalettePage() {
               {sortedPalette.map((s, i) => {
                 const copied = copiedHex === s.hex;
                 return (
-                  <Tooltip key={s.hex} title={copied ? 'copied' : 'click to copy hex'} placement="top">
                     <Box
+                      key={s.hex}
                       component="button"
                       onClick={() => copyHex(s.hex)}
                       sx={{
@@ -737,7 +737,6 @@ export function PalettePage() {
                         </Box>
                       </Box>
                     </Box>
-                  </Tooltip>
                 );
               })}
             </Box>
