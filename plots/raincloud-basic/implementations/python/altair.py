@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-26
@@ -47,7 +47,7 @@ condition_map = {c: i * 1.5 for i, c in enumerate(condition_order)}
 data["condition_num"] = data["condition"].map(condition_map)
 
 # Rain positions — jittered BELOW each baseline
-data["jitter_pos"] = data["condition_num"] + np.random.uniform(-0.30, -0.08, len(data))
+data["jitter_pos"] = data["condition_num"] + np.random.uniform(-0.22, -0.08, len(data))
 
 # Box plot statistics per condition
 box_rows = []
@@ -167,14 +167,14 @@ bimodal_arrow = (
 note_df = pd.DataFrame([{"x": 400, "y": 4.20, "text": "Bimodal distribution"}])
 bimodal_note = (
     alt.Chart(note_df)
-    .mark_text(fontSize=10, color=INK_SOFT, fontStyle="italic")
+    .mark_text(fontSize=10, color=INK, fontStyle="italic", fontWeight="bold")
     .encode(x="x:Q", y=alt.Y("y:Q", scale=y_scale), text="text:N")
 )
 
 # Median value labels above each box
 median_labels = (
     alt.Chart(box_df)
-    .mark_text(fontSize=10, color=SEMANTIC_RED, fontWeight="bold", dy=-10)
+    .mark_text(fontSize=10, color=SEMANTIC_RED, fontWeight="bold", dy=-14)
     .encode(
         x=alt.X("median:Q", scale=x_scale),
         y=alt.Y("condition_num:Q", scale=y_scale),
