@@ -75,6 +75,7 @@ from _palette_common import (  # noqa: E402
     render_sample_bars,
     render_sample_chart,
     to_jab,
+    wcag_contrast,
     worst_cvd_pairwise_delta_e,
 )
 
@@ -109,6 +110,18 @@ MUTED_8: list[str] = [
     "#954477",  # matte rosé
     "#BD8233",  # ochre / tan
 ]
+
+# Short display labels used in the contrast audit dots.
+MUTED_8_LABELS: dict[str, str] = {
+    "#009E73": "brand-G",
+    "#AE3030": "red",
+    "#C475FD": "lavender",
+    "#99B314": "lime",
+    "#4467A3": "blue",
+    "#2ABCCD": "cyan",
+    "#954477": "rose",
+    "#BD8233": "ochre",
+}
 
 
 # -----------------------------------------------------------------------------
@@ -253,6 +266,39 @@ V3_CSS = """
 .v3-section { padding: 28px; border-top: 1px solid var(--rule); }
 .v3-section > h2 { margin: 0 0 4px; font-size: 22px; }
 .v3-section > p.intro { margin: 0 0 14px; color: var(--ink-muted); font-size: 14px; max-width: 84ch; line-height: 1.55; }
+
+/* Contrast audit (graphical-objects WCAG 3:1 against bg_page per theme).
+   Two "stages" — one light, one dark — each shows every categorical hue
+   + amber as a 48px dot on its theme's bg, with hex/label/ratio under it.
+   For sub-3:1 members, a second "outlined" variant is shown alongside,
+   demonstrating that a 1.5px ink-color stroke rescues the contrast. */
+.v3-contrast-stage { border-radius: 10px; padding: 18px 16px 16px; margin-top: 10px; box-shadow: 0 0 0 1px var(--rule); }
+.v3-contrast-stage h3 { margin: 0 0 4px; font-size: 14px; font-family: var(--mono); letter-spacing: 0.04em; }
+.v3-contrast-stage p.note { margin: 0 0 12px; font-size: 12px; line-height: 1.5; max-width: 60ch; }
+.v3-contrast-stage.stage-light { background: #F5F3EC; color: #1A1A17; }
+.v3-contrast-stage.stage-light p.note { color: #4A4A44; }
+.v3-contrast-stage.stage-dark  { background: #121210; color: #F0EFE8; }
+.v3-contrast-stage.stage-dark  p.note { color: #B8B7B0; }
+
+.v3-contrast-row { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-top: 6px; }
+.v3-contrast-row .cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.v3-contrast-row .dot { width: 48px; height: 48px; border-radius: 50%; box-shadow: none; }
+.v3-contrast-row .label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.02em; opacity: 0.85; }
+.v3-contrast-row .hex { font-family: var(--mono); font-size: 9px; opacity: 0.7; }
+.v3-contrast-row .ratio { font-family: var(--mono); font-size: 10px; font-weight: 600; }
+.v3-contrast-row .ratio.pass { color: #2a8d52; }
+.v3-contrast-row .ratio.fail { color: #b62d2d; }
+.v3-contrast-stage.stage-dark .ratio.pass { color: #6fcf97; }
+.v3-contrast-stage.stage-dark .ratio.fail { color: #ff8585; }
+
+.v3-contrast-fix { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, max-content)); gap: 8px 14px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed currentColor; }
+.v3-contrast-fix .cell { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.95; }
+.v3-contrast-fix .dot { width: 48px; height: 48px; border-radius: 50%; }
+.v3-contrast-fix .pair { display: flex; gap: 6px; align-items: center; }
+.v3-contrast-fix h4 { margin: 0 0 6px; font-size: 12px; font-family: var(--mono); letter-spacing: 0.03em; font-weight: 600; opacity: 0.95; }
+@media (max-width: 720px) {
+    .v3-contrast-row { grid-template-columns: repeat(3, 1fr); }
+}
 
 /* Semantic anchors row (amber + 2 adaptive neutrals). Each anchor is a card
    showing the hex(es), a role label, and a one-line use-case hint. The
@@ -495,6 +541,131 @@ def render_hero(hybrid_hexes: list[str]) -> str:
     )
 
 
+def _contrast_dot(
+    hx: str, bg_hex: str, label: str, *, outlined_stroke: str | None = None
+) -> str:
+    """Render one dot cell: 48px filled circle, label, hex, ratio.
+
+    If outlined_stroke is given, draws a 1.5px ring of that color around the
+    fill. The ratio shown is then the stroke-vs-bg ratio (which always passes
+    since outline is full-ink).
+    """
+    ratio = wcag_contrast(hex_to_rgb1(hx), hex_to_rgb1(bg_hex))
+    if outlined_stroke is not None:
+        stroke_ratio = wcag_contrast(
+            hex_to_rgb1(outlined_stroke), hex_to_rgb1(bg_hex)
+        )
+        # The visible boundary in the outlined variant is the stroke against
+        # bg, so report THAT ratio (the actually-effective contrast).
+        ratio_str = f"{stroke_ratio:.2f}:1"
+        ratio_class = "pass" if stroke_ratio >= 3.0 else "fail"
+        ring = f"box-shadow: inset 0 0 0 2px {outlined_stroke};"
+    else:
+        ratio_str = f"{ratio:.2f}:1"
+        ratio_class = "pass" if ratio >= 3.0 else "fail"
+        ring = ""
+    return (
+        f'<div class="cell">'
+        f'<div class="dot" style="background:{hx};{ring}"></div>'
+        f'<div class="label">{html.escape(label)}</div>'
+        f'<div class="hex">{hx}</div>'
+        f'<div class="ratio {ratio_class}">{ratio_str}</div>'
+        f"</div>"
+    )
+
+
+def render_contrast_section() -> str:
+    """WCAG-3:1 contrast audit per theme + outline-fix demo for sub-3:1 hexes."""
+    palette = [*MUTED_8, AMBER]
+    labels = {**MUTED_8_LABELS, AMBER: "amber"}
+    bg_light = LIGHT_THEME_FULL["bg_page"]
+    bg_dark = DARK_THEME_FULL["bg_page"]
+    ink_light = NEUTRAL_LIGHT  # ink for light bg = dark
+    ink_dark = NEUTRAL_DARK    # ink for dark bg = light
+
+    def ratio(fg: str, bg: str) -> float:
+        return wcag_contrast(hex_to_rgb1(fg), hex_to_rgb1(bg))
+
+    weak_light = [hx for hx in palette if ratio(hx, bg_light) < 3.0]
+    weak_dark = [hx for hx in palette if ratio(hx, bg_dark) < 3.0]
+
+    light_dots = "".join(
+        _contrast_dot(hx, bg_light, labels[hx]) for hx in palette
+    )
+    dark_dots = "".join(
+        _contrast_dot(hx, bg_dark, labels[hx]) for hx in palette
+    )
+
+    if weak_light:
+        light_fix_dots = "".join(
+            _contrast_dot(hx, bg_light, labels[hx], outlined_stroke=ink_light)
+            for hx in weak_light
+        )
+        light_fix = (
+            f'<div>'
+            f'<h4>↳ same {len(weak_light)} sub-3:1 hexes with a 2px '
+            f'<code>{ink_light}</code> ink ring</h4>'
+            f'<div class="v3-contrast-fix">{light_fix_dots}</div>'
+            f"</div>"
+        )
+    else:
+        light_fix = ""
+
+    if weak_dark:
+        dark_fix_dots = "".join(
+            _contrast_dot(hx, bg_dark, labels[hx], outlined_stroke=ink_dark)
+            for hx in weak_dark
+        )
+        dark_fix = (
+            f'<div>'
+            f'<h4>↳ same {len(weak_dark)} sub-3:1 hex with a 2px '
+            f'<code>{ink_dark}</code> ink ring</h4>'
+            f'<div class="v3-contrast-fix">{dark_fix_dots}</div>'
+            f"</div>"
+        )
+    else:
+        dark_fix = ""
+
+    return (
+        '<section class="v3-section" id="contrast">'
+        "<h2>contrast on both themes — and the outline pattern</h2>"
+        '<p class="intro">'
+        "muted palettes share a known limitation: the lighter members carry "
+        "their distinguishability through chroma, not L-spread, so on a light "
+        "background (cream <code>#F5F3EC</code>) they fall under WCAG 2.1 "
+        "SC 1.4.11&apos;s 3:1 minimum for graphical objects. Okabe-Ito, Paul "
+        "Tol &ldquo;muted&rdquo;, and ColorBrewer Set2 all have the same "
+        "issue. The industry-standard fix is a thin ink-color outline on the "
+        "affected series. Below: every categorical hue + amber on both themes, "
+        "with the sub-3:1 ones shown both as-is and with a 2px ring."
+        "</p>"
+        '<div class="v3-contrast-stage stage-light">'
+        '<h3>on cream bg <code>#F5F3EC</code> (light theme)</h3>'
+        f'<div class="v3-contrast-row">{light_dots}</div>'
+        f"{light_fix}"
+        "</div>"
+        '<div class="v3-contrast-stage stage-dark" style="margin-top:14px;">'
+        '<h3>on warm near-black bg <code>#121210</code> (dark theme)</h3>'
+        f'<div class="v3-contrast-row">{dark_dots}</div>'
+        f"{dark_fix}"
+        "</div>"
+        '<p style="margin-top:14px;font-size:12px;color:var(--ink-muted);line-height:1.55;">'
+        "<strong>Guidance.</strong> on the light theme, render the affected "
+        f"series ({', '.join(labels[h] for h in weak_light)}) with a thin "
+        "outline in the ink color "
+        f"(<code>{ink_light}</code>): 1px stroke on line/scatter, 1–1.5px on "
+        "bar/pie fills. amber is a semantic anchor outside the categorical "
+        "pool — its low light-bg contrast is acceptable because it&apos;s "
+        "reached intentionally (<code>palette.amber</code>) for caution/"
+        "warning, and the same outline rule applies. on the dark theme, only "
+        f"<code>#AE3030</code> red sits marginally below 3:1 "
+        f"({ratio('#AE3030', bg_dark):.2f}:1) — same outline fix recommended "
+        "for high-stakes layouts."
+        "</p>"
+        "</section>"
+    )
+
+
 def render_semantic_anchors_section() -> str:
     """Render the 3 semantic anchors that live OUTSIDE the categorical pool.
 
@@ -656,6 +827,7 @@ def render_page(hybrid_hexes: list[str]) -> str:
         f"{render_hero(hybrid_hexes)}"
         f"{render_semantic_anchors_section()}"
         f"{render_finalist_section(hybrid_hexes)}"
+        f"{render_contrast_section()}"
         f"{render_compare_section(sort_rows)}"
         f"{render_footer()}"
         "</main>"
@@ -1015,6 +1187,67 @@ anyplot.palette.semantic.other     # → muted   (adaptive)
 ```
 
 Slot order and named access are independent — both ship.
+
+## Contrast caveats & the outline pattern
+
+The muted aesthetic carries a known trade-off: the lighter members reach
+their distinguishability through chroma, not L-spread, so on the light theme
+(cream `#F5F3EC`) five categorical hues + amber fall under WCAG 2.1
+SC 1.4.11&apos;s 3:1 minimum for graphical objects. This is not unique to
+muted-8 — Okabe-Ito&apos;s `#F0E442` yellow, Paul Tol &ldquo;muted&rdquo;&apos;s
+`#DDCC77` and `#88CCEE`, and ColorBrewer Set2&apos;s `#A6D854` green all
+have the same limitation.
+
+Per-theme ratios for every categorical hue + amber:
+
+| hex | name | on cream bg | on dark bg |
+|---|---|---|---|
+| `#009E73` | brand-green | 3.08:1 ✓ | 5.48:1 ✅ |
+| `#AE3030` | matte-red | 5.79:1 ✅ | **2.92:1** ❌ |
+| `#C475FD` | lavender | **2.59:1** ❌ | 6.53:1 ✅ |
+| `#99B314` | lime | **2.15:1** ❌ | 7.87:1 ✅ |
+| `#4467A3` | blue | 5.09:1 ✅ | 3.32:1 ✓ |
+| `#2ABCCD` | cyan | **2.06:1** ❌ | 8.19:1 ✅ |
+| `#954477` | rose | 5.61:1 ✅ | 3.01:1 ✓ |
+| `#BD8233` | ochre | **2.95:1** ❌ | 5.72:1 ✅ |
+| `#DDCC77` | amber (anchor) | **1.46:1** ❌ | 11.59:1 ✅ |
+
+### Recommended pattern: thin ink-color outline
+
+The industry-standard rescue is a thin stroke in the chart&apos;s ink color
+on the affected series — Tableau, Vega, and most modern dashboarding tools
+do this automatically in their accessibility mode. Recommended:
+
+- **line / scatter / area edges:** 1px solid ink stroke
+- **bar / pie fills:** 1–1.5px solid ink stroke
+- **legend swatches:** match the chart&apos;s outline behavior
+
+The stroke contrast (`#1A1A17` ink on `#F5F3EC` bg = 15.71:1) always passes
+on its own, so the *visible boundary* of the series clears 3:1 even if the
+fill colour doesn&apos;t.
+
+### What about amber specifically?
+
+`palette.amber = #DDCC77` is the worst case on light bg (1.46:1) but lives
+outside the categorical pool — it&apos;s only reached intentionally via
+`palette.amber` or `palette.semantic.warning` for caution / warning roles.
+On the light theme, the same outline rule applies: wherever amber is used
+(typically: a warning marker, a status icon, a single attention slice), add
+a thin ink stroke. amber is never used by `palette[:n]` so it never ends
+up on light bg by accident.
+
+### Dark-theme caveats
+
+The dark theme is mostly clean (every hue ≥ 3:1) except `#AE3030` matte-red
+at 2.92:1 — fractionally under threshold. Same outline rule applies for
+high-stakes layouts (financial dashboards, accessibility-strict contexts).
+Future work — listed in v2&apos;s reviewer recommendations — is a separate
+per-theme hex set with L+12 lift on the cool half; until then, the outline
+pattern is the documented fix.
+
+See the live demo in [`index.html`](./index.html#contrast) — every member
+rendered on both themes, with the sub-3:1 ones shown both as-is and with
+the 2px ink ring.
 
 ## Next steps
 

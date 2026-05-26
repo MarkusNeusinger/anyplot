@@ -305,6 +305,67 @@ anyplot.palette.semantic.other     # → muted   (adaptive)
 
 Slot order and named access are independent — both ship.
 
+## Contrast caveats & the outline pattern
+
+The muted aesthetic carries a known trade-off: the lighter members reach
+their distinguishability through chroma, not L-spread, so on the light theme
+(cream `#F5F3EC`) five categorical hues + amber fall under WCAG 2.1
+SC 1.4.11&apos;s 3:1 minimum for graphical objects. This is not unique to
+muted-8 — Okabe-Ito&apos;s `#F0E442` yellow, Paul Tol &ldquo;muted&rdquo;&apos;s
+`#DDCC77` and `#88CCEE`, and ColorBrewer Set2&apos;s `#A6D854` green all
+have the same limitation.
+
+Per-theme ratios for every categorical hue + amber:
+
+| hex | name | on cream bg | on dark bg |
+|---|---|---|---|
+| `#009E73` | brand-green | 3.08:1 ✓ | 5.48:1 ✅ |
+| `#AE3030` | matte-red | 5.79:1 ✅ | **2.92:1** ❌ |
+| `#C475FD` | lavender | **2.59:1** ❌ | 6.53:1 ✅ |
+| `#99B314` | lime | **2.15:1** ❌ | 7.87:1 ✅ |
+| `#4467A3` | blue | 5.09:1 ✅ | 3.32:1 ✓ |
+| `#2ABCCD` | cyan | **2.06:1** ❌ | 8.19:1 ✅ |
+| `#954477` | rose | 5.61:1 ✅ | 3.01:1 ✓ |
+| `#BD8233` | ochre | **2.95:1** ❌ | 5.72:1 ✅ |
+| `#DDCC77` | amber (anchor) | **1.46:1** ❌ | 11.59:1 ✅ |
+
+### Recommended pattern: thin ink-color outline
+
+The industry-standard rescue is a thin stroke in the chart&apos;s ink color
+on the affected series — Tableau, Vega, and most modern dashboarding tools
+do this automatically in their accessibility mode. Recommended:
+
+- **line / scatter / area edges:** 1px solid ink stroke
+- **bar / pie fills:** 1–1.5px solid ink stroke
+- **legend swatches:** match the chart&apos;s outline behavior
+
+The stroke contrast (`#1A1A17` ink on `#F5F3EC` bg = 15.71:1) always passes
+on its own, so the *visible boundary* of the series clears 3:1 even if the
+fill colour doesn&apos;t.
+
+### What about amber specifically?
+
+`palette.amber = #DDCC77` is the worst case on light bg (1.46:1) but lives
+outside the categorical pool — it&apos;s only reached intentionally via
+`palette.amber` or `palette.semantic.warning` for caution / warning roles.
+On the light theme, the same outline rule applies: wherever amber is used
+(typically: a warning marker, a status icon, a single attention slice), add
+a thin ink stroke. amber is never used by `palette[:n]` so it never ends
+up on light bg by accident.
+
+### Dark-theme caveats
+
+The dark theme is mostly clean (every hue ≥ 3:1) except `#AE3030` matte-red
+at 2.92:1 — fractionally under threshold. Same outline rule applies for
+high-stakes layouts (financial dashboards, accessibility-strict contexts).
+Future work — listed in v2&apos;s reviewer recommendations — is a separate
+per-theme hex set with L+12 lift on the cool half; until then, the outline
+pattern is the documented fix.
+
+See the live demo in [`index.html`](./index.html#contrast) — every member
+rendered on both themes, with the sub-3:1 ones shown both as-is and with
+the 2px ink ring.
+
 ## Next steps
 
 1. Apply the hybrid-v3 ordering above as the new live `ANYPLOT_PALETTE`.
