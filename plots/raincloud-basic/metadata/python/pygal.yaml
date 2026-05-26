@@ -1,132 +1,139 @@
 library: pygal
+language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:21:24Z'
-updated: '2026-02-14T21:16:58Z'
-generated_by: claude-opus-4-6
-workflow_run: 20501866165
-issue: 0
-python_version: '3.14'
+updated: '2026-05-26T23:23:27Z'
+generated_by: claude-opus
+workflow_run: 26480164519
+issue: 1876
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/pygal/plot.html
-quality_score: 85
-impl_tags:
-  dependencies:
-  - cairosvg
-  techniques:
-  - annotations
-  - manual-ticks
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - 'Raincloud metaphor is visually clear: clouds rise above, rain falls below each
-    category baseline'
-  - Median annotations with dashed leader lines and the 100 ms faster insight callout
-    add genuine data storytelling
-  - Colorblind-safe blue/yellow/green palette with good luminance contrast
-  - Creative SVG post-processing approach that works around pygal limitations for
-    custom shapes
-  - Horizontal orientation and all spec requirements fully met
+  - 'Correct raincloud geometry in both renders: half-violin clouds rise above each
+    category baseline, the boxplot sits centered on the baseline, and jittered rain
+    points fall below — the cloud-above / rain-below metaphor reads cleanly.'
+  - 'Anyplot palette applied correctly and identically across themes: Control = brand
+    green #009E73, Treatment A = lavender #C475FD, Treatment B = blue #4467A3. Only
+    chrome flips (PAGE_BG, INK tokens).'
+  - 'Repair feedback from attempt 1 fully addressed: dark-mode box fill switched from
+    PAGE_BG to #2E2E29 so the box reads as a distinct shape, and the cloud baseline
+    stroke is suppressed by drawing the polyline only on the curved top (poly[1:-1]).'
+  - 'All raincloud statistical features present: Silverman-bandwidth KDE with 5% tail
+    trim, IQR-clipped whiskers (1.5×IQR), Q1/Q3 box bounds, median rule, jittered
+    rain at spread=0.10.'
+  - Mandated title format exact; axis labels descriptive with units ('Reaction Time
+    (ms)', 'Treatment Group'); reaction-time data realistic and politically neutral.
   weaknesses:
-  - Box plots are thin and low-contrast, making them hard to distinguish from the
-    baseline — increasing fill opacity or stroke width would improve visibility
-  - The SVG coordinate mapping relies on regex parsing with hardcoded fallbacks, which
-    is fragile
-  - Heavy SVG post-processing means most visual elements bypass pygal API, reducing
-    library mastery score
-  - The Control group cloud extends very wide due to outliers, creating an asymmetric
-    look compared to other groups
-  image_description: 'The plot displays a horizontal raincloud chart titled "raincloud-basic
-    · pygal · pyplots.ai". Three treatment groups (Control, Treatment A, Treatment
-    B) are arranged on the y-axis with Reaction Time (ms) on the x-axis ranging from
-    ~200 to ~700 ms. Each group features: (1) a semi-transparent half-violin KDE "cloud"
-    extending upward from the category baseline — blue for Control, yellow/gold for
-    Treatment A, green for Treatment B; (2) jittered scatter dots ("rain") below the
-    baseline in matching saturated colors; (3) a thin box plot with whiskers centered
-    on the baseline, filled with a very light tint of the group color. Median annotations
-    appear above each cloud (432 ms for Control, 378 ms for Treatment A, 331 ms for
-    Treatment B) connected by dashed leader lines. A callout box in the upper-right
-    reads "▼ 100 ms faster" with a dashed green arrow pointing toward Treatment B''s
-    median. The background is white with subtle dashed vertical guide lines. The raincloud
-    metaphor (cloud above, rain below) is clearly realized for all three groups.'
+  - 'Heavy SVG post-processing remains: regex extraction of pygal''s plot transform
+    (<g transform=... class=''plot''>) plus string-splice injection of cloud polygons
+    and absolute-coord box rects. Fragile against any pygal SVG-structure change,
+    but acceptable since pygal lacks native violin / arbitrary-polygon primitives.'
+  - 'Limited use of pygal''s distinctive features: only the rain-dot series and the
+    whisker/median XY series flow through chart.add(...) and pygal''s tooltip/legend
+    machinery. Clouds and box rects are raw SVG so they bypass pygal''s interactivity
+    entirely — caps LM-02 at 2/5.'
+  - Rain dots from Treatment A approach the top of the Control cloud closely (gap
+    ≈ 0.18 data units vs cloud_height 0.36). No actual overlap but visually tight;
+    could be improved by slightly reducing cloud_height (e.g. 0.32) or rain_spread
+    (0.08) to add breathing room between layers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 page + plot background, no pure white.
+      Chrome: mandated title "raincloud-basic · python · pygal · anyplot.ai" centered above the plot in dark ink (~75% of plot width). Y-axis title "Treatment Group" rotated on the left; x-axis title "Reaction Time (ms)" centered below. Tick labels 100–600 in dark ink. Subtle vertical x-guides only; no y-guides. All text fully readable against the light background.
+      Data: three horizontal raincloud rows. Bottom = Control (brand green #009E73): half-violin cloud above the baseline, hollow box (cream-white interior, green outline, green median rule) centered on the baseline, jittered rain dots below. Middle = Treatment A (lavender #C475FD) with the same triple layout. Top = Treatment B (blue #4467A3) likewise. KDE polygon strokes only on the curved top — no visible baseline closure line.
+      Legibility verdict: PASS — all elements readable, no overlap, palette correct.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 page + plot background, no pure black.
+      Chrome: title, axis titles, and tick labels all in light ink (#F0EFE8 / INK_MUTED variants) — clearly visible against the dark surface. No dark-on-dark failures detected on any chrome element.
+      Data: identical cloud / rain / box colors to the light render (#009E73, #C475FD, #4467A3), confirming only chrome flips. Box fill is now #2E2E29 (rather than PAGE_BG) so the box interior reads as a distinct lighter shape against the darker plot background — the attempt-1 weakness is resolved. Colored box outlines and median rules are clearly visible. Brand green Control series stands out well on the dark surface.
+      Legibility verdict: PASS — all elements readable, no dark-on-dark, palette correct.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=84, labels=54, ticks=48). Y-axis
-          label rotated vertically slightly reduces readability.
+        comment: Title 66, label 56, major label 44 — all readable in both renders;
+          title fills ~75% of plot width (expected for the mandated 67-char title).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Median annotations well-positioned
-          above clouds.
+        comment: No text-text or text-data collisions. Rain dots from Treatment A
+          approach Control cloud closely but do not overlap (gap ≈ 0.18 data units).
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Rain dots well-sized, cloud polygons clear. Box plots somewhat thin
-          and hard to distinguish.
+        comment: Rain dots size 22 px, cloud fill alpha 0.55, box outline stroke 5
+          px — all visible in both themes.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Anyplot palette is CVD-safe by construction (max-min ΔE across protan/deutan/tritan).
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/yellow/green palette is colorblind-safe with strong luminance
-          contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization with configured margins. Some unused space
-          at top of chart area.
+        comment: 3200×1800 confirmed; canvas gate passed; nothing clipped; margins
+          balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Reaction Time (ms) with units, Treatment Group descriptive.
+        comment: X-axis carries unit (ms); Y-axis label 'Treatment Group' clear.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73; positions 2/3 = #C475FD / #4467A3; backgrounds
+          #FAF8F1 light, #1A1A17 dark; data colors identical across themes.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, white background, deliberate hierarchy with color-matched
-          annotations. Above defaults but box plots could be more prominent.
+        comment: Considered per-category coloring across three layers (cloud / box
+          outline / rain), hollow box with theme-adaptive interior fill, polyline
+          stroke restricted to the curved top — good polish; falls short of award-winning
+          craft.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed guide lines, clean white background, good whitespace management.
+        comment: No top/right spines (pygal default), subtle x-only guides, generous
+          margins. Some refinement remains (legend hidden, only vertical guides).
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Median annotations with leader lines, insight callout with directional
-          arrow — genuine narrative.
+        comment: Treatment-effect gradient (Control 450 → Treatment B 320 ms) reads
+          clearly across the three rows; no extra emphasis layer beyond the palette
+          ordering.
     spec_compliance:
       score: 15
       max: 15
@@ -136,104 +143,120 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct raincloud plot: half-violin cloud, jittered rain, box plot.
-          Horizontal orientation.'
+        comment: Raincloud with horizontal orientation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half-violin clipped, moderate jitter, transparency, median/quartile
-          markers, cloud-above/rain-below metaphor.
+        comment: Half-violin cloud above, boxplot centered, jittered rain below; median
+          + Q1/Q3 + whiskers; alpha on rain (0.55 fill, dots default); jitter spread
+          0.10.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, values on x-axis. All data visible.
+        comment: X = reaction time (continuous), Y = treatment group (categorical)
+          — correct horizontal mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend hidden since groups labeled on y-axis
-          — appropriate.
+        comment: Exact mandated title; legend suppressed since y-axis labels already
+          identify categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three groups with different means, spreads, and outliers. Shows distribution
-          shape variation.
+        comment: Shows distribution shape (cloud), summary stats (box, median, whiskers),
+          individual observations (rain).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction times for control vs treatment groups — plausible clinical
-          trial scenario.
+        comment: Reaction times for control vs treatments — neutral, real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 180-700 ms are realistic for human reaction times.
+        comment: 320–450 ms means with SDs 50–80 are sensible for human RT.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, chart config, rendering, SVG post-processing,
-          save.'
+        comment: One small helper to_svg; rest is procedural. Acceptable given the
+          SVG injection workload.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the top.
+        comment: np.random.seed(42) + per-category default_rng(42+i).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: re, cairosvg, numpy, pygal, Style.'
+        comment: All imports (os, re, cairosvg, numpy, pygal, Style) are used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: SVG regex coordinate extraction is fragile with hardcoded fallbacks,
-          though necessary for pygal.
+        passed: true
+        comment: Regex extraction of pygal's plot transform and string-splice SVG
+          injection are fragile, though unavoidable given pygal's lack of native violin/polygon
+          primitives.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png correctly via cairosvg.
+        comment: Saves plot-{THEME}.png + .svg + .html (pygal is interactive).
     library_features:
       score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses pygal XY chart, Style system, structured y_labels. But bulk
-          of visualization is SVG post-processing.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creatively leverages pygal SVG-native output for post-processing
-          injection of custom elements.
+        comment: Pygal Style + XY chart used correctly; per-series colors derived
+          from the same anyplot palette. The chart is partly a host for hand-drawn
+          SVG.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Rain dots get pygal hover labels and interactive HTML export; clouds
+          and box rects bypass pygal's interactivity (raw SVG).
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
