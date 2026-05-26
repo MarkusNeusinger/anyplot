@@ -28,12 +28,13 @@ Layout
 - Diverging cmap (``imprint_div_light`` / ``imprint_div_dark``): matte-red
   ↔ near-neutral ↔ blue. Theme-adaptive via ``diverging(theme)`` factory.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Callable
 
 from matplotlib.colors import LinearSegmentedColormap
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Identity
@@ -45,14 +46,14 @@ NAME: str = "imprint"
 # Categorical hues — slot order from hybrid-v3 sort
 # ─────────────────────────────────────────────────────────────────────────────
 
-GREEN: str = "#009E73"   # slot 0 — brand anchor (Okabe-Ito's bluish green)
-LAVENDER: str = "#C475FD"   # slot 1
-BLUE: str = "#4467A3"    # slot 2
-OCHRE: str = "#BD8233"   # slot 3
-RED: str = "#AE3030"     # slot 4 — semantic anchor for bad/loss/error (deferred past first-4)
-CYAN: str = "#2ABCCD"    # slot 5
-ROSE: str = "#954477"    # slot 6
-LIME: str = "#99B314"    # slot 7
+GREEN: str = "#009E73"  # slot 0 — brand anchor (Okabe-Ito's bluish green)
+LAVENDER: str = "#C475FD"  # slot 1
+BLUE: str = "#4467A3"  # slot 2
+OCHRE: str = "#BD8233"  # slot 3
+RED: str = "#AE3030"  # slot 4 — semantic anchor for bad/loss/error (deferred past first-4)
+CYAN: str = "#2ABCCD"  # slot 5
+ROSE: str = "#954477"  # slot 6
+LIME: str = "#99B314"  # slot 7
 
 IMPRINT: list[str] = [GREEN, LAVENDER, BLUE, OCHRE, RED, CYAN, ROSE, LIME]
 
@@ -64,15 +65,15 @@ IMPRINT: list[str] = [GREEN, LAVENDER, BLUE, OCHRE, RED, CYAN, ROSE, LIME]
 # categorical members (min ΔE_CVD = 14.52 to lime — the two more saturated
 # amber candidates #D4A017 and #D4AF37 both collapse to ΔE_CVD ≈ 2.3 against
 # lime under deuteranopia).
-AMBER: str = "#DDCC77"   # warning / caution
+AMBER: str = "#DDCC77"  # warning / caution
 
 # Theme-adaptive neutrals. Same hex pair as LIGHT_THEME["ink"] / DARK_THEME["ink"]
 # and LIGHT_THEME["ink_muted"] / DARK_THEME["ink_muted"] in scripts/_palette_common.py
 # (kept duplicated here so this module doesn't depend on the scripts/ tree).
-_INK_LIGHT: str = "#1A1A17"        # full-contrast neutral on cream bg
-_INK_DARK: str = "#F0EFE8"         # full-contrast neutral on warm near-black bg
+_INK_LIGHT: str = "#1A1A17"  # full-contrast neutral on cream bg
+_INK_DARK: str = "#F0EFE8"  # full-contrast neutral on warm near-black bg
 _INK_MUTED_LIGHT: str = "#6B6A63"  # soft-contrast neutral on cream bg
-_INK_MUTED_DARK: str = "#A8A79F"   # soft-contrast neutral on warm near-black bg
+_INK_MUTED_DARK: str = "#A8A79F"  # soft-contrast neutral on warm near-black bg
 
 
 def neutral_for(theme: str = "light") -> str:
@@ -114,22 +115,21 @@ palette = SimpleNamespace(
     name=NAME,
     as_list=IMPRINT,
     # by hue
-    green=GREEN, red=RED, blue=BLUE, cyan=CYAN,
-    lime=LIME, ochre=OCHRE, lavender=LAVENDER, rose=ROSE,
+    green=GREEN,
+    red=RED,
+    blue=BLUE,
+    cyan=CYAN,
+    lime=LIME,
+    ochre=OCHRE,
+    lavender=LAVENDER,
+    rose=ROSE,
     # semantic anchors outside the categorical pool
     amber=AMBER,
     neutral=neutral_for,  # call with "light" / "dark"
     muted=muted_for,
     # role-based aliases — semantic.warning maps to amber (NOT ochre — ochre
     # is the "earth / commodity" categorical hue, not a caution signal)
-    semantic=SimpleNamespace(
-        good=GREEN,
-        bad=RED,
-        warning=AMBER,
-        info=CYAN,
-        baseline=neutral_for,
-        other=muted_for,
-    ),
+    semantic=SimpleNamespace(good=GREEN, bad=RED, warning=AMBER, info=CYAN, baseline=neutral_for, other=muted_for),
 )
 
 
@@ -139,9 +139,7 @@ palette = SimpleNamespace(
 
 # Sequential: brand-green → blue. Endpoints picked so the warm end is the
 # brand identity and the cool end is the deepest blue in the palette.
-imprint_seq: LinearSegmentedColormap = LinearSegmentedColormap.from_list(
-    "imprint_seq", [GREEN, BLUE]
-)
+imprint_seq: LinearSegmentedColormap = LinearSegmentedColormap.from_list("imprint_seq", [GREEN, BLUE])
 
 
 def diverging(theme: str = "light") -> LinearSegmentedColormap:
@@ -157,9 +155,7 @@ def diverging(theme: str = "light") -> LinearSegmentedColormap:
         = warm near-black #1A1A17.
     """
     midpoint = "#F5F3EC" if theme == "light" else "#1A1A17"
-    return LinearSegmentedColormap.from_list(
-        f"imprint_div_{theme}", [RED, midpoint, BLUE]
-    )
+    return LinearSegmentedColormap.from_list(f"imprint_div_{theme}", [RED, midpoint, BLUE])
 
 
 imprint_div_light: LinearSegmentedColormap = diverging("light")
@@ -192,13 +188,25 @@ __all__ = [
     "NAME",
     # categorical pool
     "IMPRINT",
-    "GREEN", "LAVENDER", "BLUE", "OCHRE", "RED", "CYAN", "ROSE", "LIME",
+    "GREEN",
+    "LAVENDER",
+    "BLUE",
+    "OCHRE",
+    "RED",
+    "CYAN",
+    "ROSE",
+    "LIME",
     # semantic anchors
-    "AMBER", "neutral_for", "muted_for",
+    "AMBER",
+    "neutral_for",
+    "muted_for",
     # named API
     "palette",
     # cmaps
-    "imprint_seq", "imprint_div_light", "imprint_div_dark", "diverging",
+    "imprint_seq",
+    "imprint_div_light",
+    "imprint_div_dark",
+    "diverging",
     # mpl integration
     "register_with_matplotlib",
 ]

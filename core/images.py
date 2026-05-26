@@ -22,6 +22,30 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+# anyplot categorical palette — "imprint" (v3 hybrid-v3 ordering).
+# Defined as a separate module so the project's named-API (palette.green,
+# palette.semantic.bad, etc.) plus sequential / diverging cmaps live in one
+# place. Full design rationale:
+#   docs/reference/palette-variants-v3/decision-rationale.md
+from .palette import AMBER as ANYPLOT_AMBER  # noqa: F401  (re-exported public API)
+from .palette import BLUE as ANYPLOT_BLUE
+from .palette import CYAN as ANYPLOT_CYAN
+from .palette import GREEN as ANYPLOT_GREEN
+from .palette import IMPRINT as ANYPLOT_PALETTE  # noqa: F401  (re-exported public API)
+from .palette import LAVENDER as ANYPLOT_LAVENDER
+from .palette import LIME as ANYPLOT_LIME
+from .palette import OCHRE as ANYPLOT_OCHRE
+from .palette import RED as ANYPLOT_RED
+from .palette import ROSE as ANYPLOT_ROSE
+from .palette import palette  # noqa: F401  (re-exported named API)
+from .palette import register_with_matplotlib as _register_imprint_cmaps
+
+
+# Register imprint_seq + imprint_div_light/dark with matplotlib at import time
+# so any code path that imports core.images can use them via
+# ``plt.imshow(..., cmap="imprint_seq")``.
+_register_imprint_cmaps()
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,32 +67,8 @@ FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
 # Theme dicts so OG images can be rendered light or dark from the same code.
 # Token names mirror the CSS custom properties defined in the React app
 # (`--bg-page`, `--ink`, `--imprint-green`, etc.) so the OG cards read as a direct
-# translation of the in-product surfaces.
-
-# anyplot categorical palette — "imprint" (v3 hybrid-v3 ordering).
-# Defined as a separate module so the project's named-API (palette.green,
-# palette.semantic.bad, etc.) plus sequential / diverging cmaps live in one
-# place. Full design rationale:
-#   docs/reference/palette-variants-v3/decision-rationale.md
-from .palette import (
-    IMPRINT as ANYPLOT_PALETTE,
-    GREEN as ANYPLOT_GREEN,
-    LAVENDER as ANYPLOT_LAVENDER,
-    BLUE as ANYPLOT_BLUE,
-    OCHRE as ANYPLOT_OCHRE,
-    RED as ANYPLOT_RED,
-    CYAN as ANYPLOT_CYAN,
-    ROSE as ANYPLOT_ROSE,
-    LIME as ANYPLOT_LIME,
-    AMBER as ANYPLOT_AMBER,
-    palette,
-    register_with_matplotlib as _register_imprint_cmaps,
-)
-
-# Register imprint_seq + imprint_div_light/dark with matplotlib at import time
-# so any code path that imports core.images can use them via
-# ``plt.imshow(..., cmap="imprint_seq")``.
-_register_imprint_cmaps()
+# translation of the in-product surfaces. The imprint palette itself is
+# re-exported from core/palette at the top of this module.
 
 LIGHT_THEME: dict[str, str] = {
     "bg_page": "#F5F3EC",  # warm cream — matches `--bg-page` in app/src/styles/tokens.css
@@ -96,14 +96,14 @@ DARK_THEME: dict[str, str] = {
 # identity rather than a fixed slot position — so plotly stays blue-ish,
 # bokeh stays purple-ish, matplotlib keeps its red accent, etc.
 LIBRARY_COLORS: dict[str, str] = {
-    "matplotlib": ANYPLOT_RED,       # matplotlib logo's red accent
-    "seaborn": ANYPLOT_ROSE,         # warm statistical-plot mood
-    "plotly": ANYPLOT_BLUE,          # plotly's brand blue
-    "bokeh": ANYPLOT_LAVENDER,       # bokeh's purple brand
-    "altair": ANYPLOT_GREEN,         # altair has green, also brand anchor
-    "plotnine": ANYPLOT_LIME,        # ggplot/plotnine green family
-    "pygal": ANYPLOT_OCHRE,          # pygal's warm yellow logo
-    "highcharts": ANYPLOT_CYAN,      # highcharts cyan-blue brand — distinct from plotly
+    "matplotlib": ANYPLOT_RED,  # matplotlib logo's red accent
+    "seaborn": ANYPLOT_ROSE,  # warm statistical-plot mood
+    "plotly": ANYPLOT_BLUE,  # plotly's brand blue
+    "bokeh": ANYPLOT_LAVENDER,  # bokeh's purple brand
+    "altair": ANYPLOT_GREEN,  # altair has green, also brand anchor
+    "plotnine": ANYPLOT_LIME,  # ggplot/plotnine green family
+    "pygal": ANYPLOT_OCHRE,  # pygal's warm yellow logo
+    "highcharts": ANYPLOT_CYAN,  # highcharts cyan-blue brand — distinct from plotly
     "letsplot": ANYPLOT_GREEN,
     "lets-plot": ANYPLOT_GREEN,
 }
