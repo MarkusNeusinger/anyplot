@@ -45,22 +45,30 @@ FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
 # (`--bg-page`, `--ink`, `--ok-green`, etc.) so the OG cards read as a direct
 # translation of the in-product surfaces.
 
-# anyplot categorical palette — variant D ("balanced") from the palette
-# exploration in #5817. Position 1 (#009E73) carries the same bluish green
-# as Okabe-Ito's first slot so the brand identity (`any.plot()` dot, first
-# series) is preserved; positions 2–7 are selected via Petroff-style
-# max-min ΔE search in the CAM02-UCS paper-ink corridor (J' ∈ [45,72],
-# C ∈ [22,36]). See docs/reference/palette-variants/D-balanced.html for
-# the derivation and CVD analysis.
-ANYPLOT_GREEN = "#009E73"  # brand anchor — the dot in any.plot(); ALWAYS first series
-ANYPLOT_PURPLE = "#9418DB"
-ANYPLOT_RED = "#B71D27"
-ANYPLOT_SKY = "#16B8F3"
-ANYPLOT_LIME = "#99B314"
-ANYPLOT_PINK = "#D359A7"
-ANYPLOT_TAN = "#BA843E"
+# anyplot categorical palette — "imprint" (v3 hybrid-v3 ordering).
+# Defined as a separate module so the project's named-API (palette.green,
+# palette.semantic.bad, etc.) plus sequential / diverging cmaps live in one
+# place. Full design rationale:
+#   docs/reference/palette-variants-v3/decision-rationale.md
+from .palette import (
+    IMPRINT as ANYPLOT_PALETTE,
+    GREEN as ANYPLOT_GREEN,
+    LAVENDER as ANYPLOT_LAVENDER,
+    BLUE as ANYPLOT_BLUE,
+    OCHRE as ANYPLOT_OCHRE,
+    RED as ANYPLOT_RED,
+    CYAN as ANYPLOT_CYAN,
+    ROSE as ANYPLOT_ROSE,
+    LIME as ANYPLOT_LIME,
+    AMBER as ANYPLOT_AMBER,
+    palette,
+    register_with_matplotlib as _register_imprint_cmaps,
+)
 
-ANYPLOT_PALETTE = [ANYPLOT_GREEN, ANYPLOT_PURPLE, ANYPLOT_RED, ANYPLOT_SKY, ANYPLOT_LIME, ANYPLOT_PINK, ANYPLOT_TAN]
+# Register imprint_seq + imprint_div_light/dark with matplotlib at import time
+# so any code path that imports core.images can use them via
+# ``plt.imshow(..., cmap="imprint_seq")``.
+_register_imprint_cmaps()
 
 LIGHT_THEME: dict[str, str] = {
     "bg_page": "#F5F3EC",  # warm cream — matches `--bg-page` in app/src/styles/tokens.css
@@ -84,18 +92,20 @@ DARK_THEME: dict[str, str] = {
 
 # Library → anyplot palette accent color used for the colored 8x8 chip square
 # next to library.method() callouts. Falls back to brand green for unknowns.
-# Mapping is preserved by palette position from the original Okabe-Ito assignment.
+# Mapping picks the imprint hue that best matches each library's own brand
+# identity rather than a fixed slot position — so plotly stays blue-ish,
+# bokeh stays purple-ish, matplotlib keeps its red accent, etc.
 LIBRARY_COLORS: dict[str, str] = {
-    "matplotlib": ANYPLOT_RED,  # pos 3
-    "seaborn": ANYPLOT_PINK,  # pos 6
-    "plotly": ANYPLOT_SKY,  # pos 4
-    "bokeh": ANYPLOT_PURPLE,  # pos 2
-    "altair": ANYPLOT_GREEN,  # pos 1
-    "plotnine": ANYPLOT_LIME,  # pos 5
-    "pygal": ANYPLOT_TAN,  # pos 7
-    "highcharts": ANYPLOT_RED,  # pos 3
-    "letsplot": ANYPLOT_GREEN,  # pos 1
-    "lets-plot": ANYPLOT_GREEN,  # pos 1
+    "matplotlib": ANYPLOT_RED,       # matplotlib logo's red accent
+    "seaborn": ANYPLOT_ROSE,         # warm statistical-plot mood
+    "plotly": ANYPLOT_BLUE,          # plotly's brand blue
+    "bokeh": ANYPLOT_LAVENDER,       # bokeh's purple brand
+    "altair": ANYPLOT_GREEN,         # altair has green, also brand anchor
+    "plotnine": ANYPLOT_LIME,        # ggplot/plotnine green family
+    "pygal": ANYPLOT_OCHRE,          # pygal's warm yellow logo
+    "highcharts": ANYPLOT_CYAN,      # highcharts cyan-blue brand — distinct from plotly
+    "letsplot": ANYPLOT_GREEN,
+    "lets-plot": ANYPLOT_GREEN,
 }
 
 # Library → typical method call hint shown inside `library.method()` chips.
