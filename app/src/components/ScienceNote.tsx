@@ -58,8 +58,8 @@ export function ScienceNote() {
           px: 2.5,
           m: 0,
         }}>
-          A palette proposed as unambiguous to both colorblind and non-colorblind
-          viewers, with vivid colors that stay recognizable on screen and in print.
+          A palette unambiguous to colourblind and non-colourblind viewers alike,
+          warm-tinted to stay legible on screen and in print.
         </Box>
 
         <Box component="cite" sx={{
@@ -72,7 +72,7 @@ export function ScienceNote() {
           textTransform: 'uppercase',
           letterSpacing: '0.15em',
         }}>
-          — Okabe & Ito, Color Universal Design (2008)
+          — anyplot imprint, design rationale
         </Box>
 
         <PaletteStrip />

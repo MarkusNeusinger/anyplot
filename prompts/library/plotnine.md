@@ -99,8 +99,9 @@ geom_tile()      # Heatmap
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E']
+ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314']
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 + geom_point(color=ANYPLOT_PALETTE[0])
@@ -112,11 +113,11 @@ ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
 from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gradient, scale_fill_gradient2
 # Sequential (single-polarity)
-+ scale_color_gradient(low='#009E73', high='#003D94')
-+ scale_fill_gradient(low='#009E73',  high='#003D94')
++ scale_color_gradient(low='#009E73', high='#4467A3')
++ scale_fill_gradient(low='#009E73',  high='#4467A3')
 # Diverging (around a meaningful midpoint, often 0)
-+ scale_color_gradient2(low='#BB0D22', mid='#A2A598', high='#007AD9', midpoint=0)
-+ scale_fill_gradient2(low='#BB0D22',  mid='#A2A598', high='#007AD9', midpoint=0)
++ scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)
++ scale_fill_gradient2(low='#AE3030',  mid='#FAF8F1', high='#4467A3', midpoint=0)
 # Forbidden: scale_color_cmap / scale_fill_cmap with viridis/cividis/BrBG/Reds/Blues/Greens — only anyplot stops.
 ```
 
@@ -137,7 +138,7 @@ INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
     panel_border=element_rect(color=INK_SOFT, fill=None),
     axis_title=element_text(color=INK),

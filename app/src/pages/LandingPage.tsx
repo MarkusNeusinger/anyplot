@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -80,7 +80,7 @@ export function LandingPage() {
  * left, decorative SVG cluster preview on the right. The preview is purely
  * static (no data fetch, no force simulation) so it stays cheap on the
  * landing page; it only hints at the real map's clustering aesthetic using
- * the same Okabe-Ito palette.
+ * the same imprint palette.
  */
 function MapSection({ specCount }: { specCount?: number }) {
   const { trackEvent } = useAnalytics();
@@ -157,8 +157,8 @@ function MapSection({ specCount }: { specCount?: number }) {
 }
 
 /**
- * Decorative SVG mini-cluster — three loose groups of circles in Okabe-Ito
- * cluster colours, connected by hairline edges. Static (no force simulation,
+ * Decorative SVG mini-cluster — three loose groups of circles in the
+ * imprint cluster colours, connected by hairline edges. Static (no force simulation,
  * no data fetch) so it's cheap to render; the aspect ratio matches the
  * featured-thumb cards (16:10) for visual rhythm. Positions are hand-picked
  * to read as "three blobs gently bridged" — like the real map at low zoom.
@@ -171,7 +171,7 @@ const MAP_PREVIEW_NODES: Array<{ x: number; y: number; r: number; cluster: 0 | 1
   { x: 95, y: 160, r: 6, cluster: 0 },
   { x: 135, y: 95, r: 6, cluster: 0 },
   { x: 60, y: 100, r: 5, cluster: 0 },
-  // Cluster B — top-right, vermillion
+  // Cluster B — top-right, matte red
   { x: 320, y: 70, r: 9, cluster: 1 },
   { x: 350, y: 100, r: 7, cluster: 1 },
   { x: 295, y: 105, r: 6, cluster: 1 },
@@ -200,7 +200,7 @@ const MAP_PREVIEW_LINKS: Array<[number, number]> = [
   [2, 16], [16, 8], [3, 17], [17, 11], [16, 17], [17, 18], [18, 3],
 ];
 
-const CLUSTER_PALETTE = ['#009E73', '#D55E00', '#0072B2'] as const;
+const CLUSTER_PALETTE = ['#009E73', '#AE3030', '#4467A3'] as const;
 
 function MapClusterPreview() {
   return (
@@ -248,7 +248,6 @@ function MapClusterPreview() {
  * the left, labelled palette strip on the right.
  */
 function PaletteSection() {
-  const { trackEvent } = useAnalytics();
   return (
     <Box sx={{ py: { xs: 2, md: 3 } }}>
       <SectionHeader prompt="❯" title={<em>palette</em>} linkText="palette.explore()" linkTo="/palette" />
@@ -272,24 +271,10 @@ function PaletteSection() {
               maxWidth: '52ch',
             }}
           >
-            a colourblind-safe set of eight, proposed by{' '}
-            <Box
-              component="a"
-              href="https://jfly.uni-koeln.de/color/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackEvent('nav_click', { source: 'palette_okabe_ito', target: 'jfly_uni_koeln' })}
-              sx={{
-                color: 'var(--ink)',
-                textDecoration: 'none',
-                borderBottom: '1px dotted currentColor',
-                '&:hover': { color: colors.primary },
-              }}
-            >
-              Okabe &amp; Ito (2002, rev. 2008)
-            </Box>
-            . every plot in the catalogue picks from it — and so does this
-            site, accent for accent.
+            <strong>imprint</strong>, a colourblind-safe set of eight plus three semantic anchors.
+            tuned for warm-paper rendering, validated against the three main forms of colour vision
+            deficiency. every plot in the catalogue picks from it — and so does this site, accent
+            for accent.
           </Box>
         </Box>
 
@@ -300,17 +285,32 @@ function PaletteSection() {
 }
 
 const PALETTE = [
-  { background: '#009E73', hex: '#009E73', name: 'bluish green' },
-  { background: '#D55E00', hex: '#D55E00', name: 'vermillion' },
-  { background: '#0072B2', hex: '#0072B2', name: 'blue' },
-  { background: '#CC79A7', hex: '#CC79A7', name: 'reddish purple' },
-  { background: '#E69F00', hex: '#E69F00', name: 'orange' },
-  { background: '#56B4E9', hex: '#56B4E9', name: 'sky blue' },
-  { background: '#F0E442', hex: '#F0E442', name: 'yellow' },
-  { background: 'var(--ink)', hex: 'adaptive', name: 'ink' },
+  { background: '#009E73', hex: '#009E73', name: 'brand green' },
+  { background: '#C475FD', hex: '#C475FD', name: 'lavender' },
+  { background: '#4467A3', hex: '#4467A3', name: 'blue' },
+  { background: '#BD8233', hex: '#BD8233', name: 'ochre' },
+  { background: '#AE3030', hex: '#AE3030', name: 'matte red' },
+  { background: '#2ABCCD', hex: '#2ABCCD', name: 'cyan' },
+  { background: '#954477', hex: '#954477', name: 'rose' },
+  { background: '#99B314', hex: '#99B314', name: 'lime' },
 ] as const;
 
 function LabelledPaletteStrip() {
+  const [copiedHex, setCopiedHex] = useState<string | null>(null);
+  const handleCopy = (hex: string) => {
+    // Clipboard API can throw (insecure context, denied permission, unsupported
+    // browser). Wrap so we only flip the "copied" state when the write actually
+    // succeeded, and we don't leak an unhandled promise rejection on failure.
+    void navigator.clipboard
+      .writeText(hex)
+      .then(() => {
+        setCopiedHex(hex);
+        setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+      })
+      .catch(() => {
+        // Silently ignore — the user can still read the hex on the swatch.
+      });
+  };
   return (
     <Box>
       <Box
@@ -322,27 +322,36 @@ function LabelledPaletteStrip() {
           '&:hover .swatch:hover': { flex: 3 },
         }}
       >
-        {PALETTE.map(({ background, hex }) => (
-          <Box
-            key={background}
-            className="swatch"
-            sx={{
-              flex: 1,
-              height: 120,
-              background,
-              transition: 'flex 0.3s',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '& .hex-label': { opacity: 0, transition: 'opacity 0.2s' },
-              '&:hover .hex-label': { opacity: 1 },
-            }}
-          >
+        {PALETTE.map(({ background, hex }) => {
+          const copied = copiedHex === hex;
+          return (
             <Box
-              className="hex-label"
+              key={background}
+              component="button"
+              type="button"
+              aria-label={`Copy ${hex} to clipboard`}
+              onClick={() => handleCopy(hex)}
+              className="swatch"
               sx={{
-                fontFamily: typography.mono,
+                flex: 1,
+                height: 120,
+                background,
+                transition: 'flex 0.3s',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                '& .hex-label': { opacity: copied ? 1 : 0, transition: 'opacity 0.2s' },
+                '&:hover .hex-label': { opacity: 1 },
+              }}
+            >
+              <Box
+                className="hex-label"
+                sx={{
+                  fontFamily: typography.mono,
                 fontSize: '12px',
                 fontWeight: 500,
                 color: '#fff',
@@ -354,10 +363,11 @@ function LabelledPaletteStrip() {
                 pointerEvents: 'none',
               }}
             >
-              {hex}
+              {copied ? 'copied ✓' : hex}
             </Box>
           </Box>
-        ))}
+          );
+        })}
       </Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${PALETTE.length}, 1fr)`, mt: 1 }}>
         {PALETTE.map(({ background, name }) => (

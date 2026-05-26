@@ -188,8 +188,9 @@ If you can't get the screenshot to land on exact dims, the PIL pad-or-crop snipp
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3",
-                   "#99B314", "#D359A7", "#BA843E"]
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
+                   "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"  // warning / caution (outside the categorical pool)
 
 # Single-series via chart-level colors (first is used)
 chart.options.colors = ANYPLOT_PALETTE[:1]
@@ -201,14 +202,14 @@ chart.options.colors = ANYPLOT_PALETTE
 # Sequential (single-polarity, heatmap/treemap):
 chart.options.color_axis = {
     'minColor': '#009E73',
-    'maxColor': '#003D94',
-    'stops':    [[0, '#009E73'], [1, '#003D94']],
+    'maxColor': '#4467A3',
+    'stops':    [[0, '#009E73'], [1, '#4467A3']],
 }
 # Diverging (around a meaningful midpoint):
 chart.options.color_axis = {
-    'minColor': '#BB0D22',
-    'maxColor': '#007AD9',
-    'stops':    [[0, '#BB0D22'], [0.5, '#A2A598'], [1, '#007AD9']],
+    'minColor': '#AE3030',
+    'maxColor': '#4467A3',
+    'stops':    [[0, '#AE3030'], [0.5, '#FAF8F1'], [1, '#4467A3']],
 }
 # Forbidden: any other gradient (viridis/cividis/BrBG stops, Reds/Blues/Greens).
 ```
@@ -224,7 +225,7 @@ PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID        = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID        = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 chart.options.chart = {
     'type': 'column',

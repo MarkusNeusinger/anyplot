@@ -123,8 +123,9 @@ chart = chart.interactive()
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E']
+ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314']
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 alt.Chart(df).mark_circle(color=ANYPLOT_PALETTE[0]).encode(x='x', y='y')
@@ -137,10 +138,10 @@ alt.Chart(df).mark_circle().encode(
 
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
 # Sequential: two-stop range
-alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#003D94']))
+alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#4467A3']))
 # Diverging: three-stop range with domainMid at 0
 alt.Color('delta:Q', scale=alt.Scale(
-    range=['#BB0D22', '#A2A598', '#007AD9'],
+    range=['#AE3030', '#FAF8F1', '#4467A3'],
     domainMid=0,
 ))
 # Forbidden: scheme='viridis'/'cividis'/'brownbluegreen' and any other named scheme for continuous data.
@@ -162,7 +163,7 @@ chart = (
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT,
-        gridColor=INK, gridOpacity=0.10,
+        gridColor=INK, gridOpacity=0.15,
         labelColor=INK_SOFT, titleColor=INK,
     )
     .configure_title(color=INK)

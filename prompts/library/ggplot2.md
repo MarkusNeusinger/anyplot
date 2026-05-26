@@ -124,13 +124,15 @@ Palette"). First series is **always** `#009E73`.
 ```r
 ANYPLOT_PALETTE <- c(
   "#009E73",  # 1 — first categorical series (brand green)
-  "#9418DB",  # 2
-  "#B71D27",  # 3
-  "#16B8F3",  # 4
-  "#99B314",  # 5
-  "#D359A7",  # 6
-  "#BA843E"   # 7
+  "#C475FD",  # 2 — lavender
+  "#4467A3",  # 3 — blue
+  "#BD8233",  # 4 — ochre
+  "#AE3030",  # 5 — matte red (semantic anchor for bad / loss / error)
+  "#2ABCCD",  # 6 — cyan
+  "#954477",  # 7 — rose
+  "#99B314"   # 8 — lime
 )
+ANYPLOT_AMBER <- "#DDCC77"  # warning / caution (outside the categorical pool)
 
 # Single-series
 geom_point(color = ANYPLOT_PALETTE[1])
@@ -141,11 +143,11 @@ scale_fill_manual(values  = ANYPLOT_PALETTE)
 
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
 # Sequential (single-polarity)
-scale_color_gradient(low = "#009E73", high = "#003D94")
-scale_fill_gradient(low  = "#009E73", high = "#003D94")
+scale_color_gradient(low = "#009E73", high = "#4467A3")
+scale_fill_gradient(low  = "#009E73", high = "#4467A3")
 # Diverging (around a meaningful midpoint, often 0)
-scale_color_gradient2(low = "#BB0D22", mid = "#A2A598", high = "#007AD9", midpoint = 0)
-scale_fill_gradient2(low  = "#BB0D22", mid = "#A2A598", high = "#007AD9", midpoint = 0)
+scale_color_gradient2(low = "#AE3030", mid = "#FAF8F1", high = "#4467A3", midpoint = 0)
+scale_fill_gradient2(low  = "#AE3030", mid = "#FAF8F1", high = "#4467A3", midpoint = 0)
 ```
 
 Never use `viridis::scale_*_viridis_*()`, `scale_*_distiller()`/`scale_*_brewer()`,
@@ -226,8 +228,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-ANYPLOT_PALETTE <- c("#009E73", "#9418DB", "#B71D27", "#16B8F3",
-                     "#99B314", "#D359A7", "#BA843E")
+ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # --- Data -------------------------------------------------------------------
 df <- tibble::tibble(

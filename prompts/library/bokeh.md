@@ -138,8 +138,9 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E']
+ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314']
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 p.scatter(x, y, color=ANYPLOT_PALETTE[0])
@@ -156,10 +157,11 @@ def _lerp_hex(c0, c1, t):
     r1, g1, b1 = (int(c1[i:i+2], 16) for i in (1, 3, 5))
     r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
     return f"#{r:02X}{g:02X}{b:02X}"
-ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#003D94", t/255.0) for t in range(256)]
+ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t/255.0) for t in range(256)]
+_midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
 ANYPLOT_DIV256 = (
-    [_lerp_hex("#BB0D22", "#A2A598", t/127.0) for t in range(128)] +
-    [_lerp_hex("#A2A598", "#007AD9", t/127.0) for t in range(128)]
+    [_lerp_hex("#AE3030", _midpoint, t/127.0) for t in range(128)] +
+    [_lerp_hex(_midpoint, "#4467A3", t/127.0) for t in range(128)]
 )
 # Pass to bokeh.models.LinearColorMapper(palette=ANYPLOT_SEQ256, low=…, high=…)
 # Forbidden: bokeh's Viridis/Cividis/BrBG and any other named palette for continuous data.
@@ -191,8 +193,8 @@ p.yaxis.major_tick_line_color = INK_SOFT
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
 
 if p.legend:
     p.legend.background_fill_color = ELEVATED_BG
