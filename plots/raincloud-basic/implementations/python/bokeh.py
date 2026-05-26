@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-26
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -19,10 +19,10 @@ from selenium.webdriver.chrome.options import Options
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BOX_FILL = "#FFFDF6" if THEME == "light" else "#242420"
+GRID_ALPHA = 0.15 if THEME == "light" else 0.20
 
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
@@ -44,16 +44,16 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="raincloud-basic · bokeh · pyplots.ai",
+    title="raincloud-basic · python · bokeh · anyplot.ai",
     x_axis_label="Reaction Time (ms)",
     y_axis_label="Treatment Group",
-    y_range=(-0.55, len(categories) - 0.45),
+    y_range=(-0.55, len(categories) - 0.30),
     x_range=(150, 650),
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=220,
     min_border_top=110,
-    min_border_right=60,
+    min_border_right=80,
     tools="",
 )
 
@@ -80,12 +80,10 @@ p.yaxis.minor_tick_line_color = None
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = None
-p.xgrid.grid_line_alpha = 0.15
+p.xgrid.grid_line_alpha = GRID_ALPHA
 
 p.yaxis.ticker = list(range(len(categories)))
 p.yaxis.major_label_overrides = dict(enumerate(categories))
-
-legend_items = []
 
 for idx, (cat, values) in enumerate(data.items()):
     color = ANYPLOT_PALETTE[idx]
@@ -130,7 +128,7 @@ for idx, (cat, values) in enumerate(data.items()):
     p.line(x=[q2, q2], y=[y_base - box_h, y_base + box_h], line_color=color, line_width=6)
 
     # Rain — jittered points below the baseline
-    jitter = np.random.uniform(-0.32, -0.10, len(values))
+    jitter = np.random.uniform(-0.40, -0.08, len(values))
     mean_val = float(np.mean(values))
     std_val = float(np.std(values))
     source_points = ColumnDataSource(
@@ -148,14 +146,12 @@ for idx, (cat, values) in enumerate(data.items()):
         x="x",
         y="y",
         source=source_points,
-        size=16,
+        size=12,
         fill_color=color,
         fill_alpha=0.65,
         line_color=PAGE_BG,
-        line_width=1.2,
+        line_width=1.0,
     )
-
-    legend_items.append(LegendItem(label=cat, renderers=[scatter_glyph]))
 
     hover = HoverTool(
         renderers=[scatter_glyph],
@@ -171,24 +167,22 @@ for idx, (cat, values) in enumerate(data.items()):
     )
     p.add_tools(hover)
 
-legend = Legend(
-    items=legend_items,
-    location="center",
-    label_text_font_size="34pt",
-    label_text_color=INK_SOFT,
-    glyph_width=44,
-    glyph_height=44,
-    spacing=14,
-    padding=20,
-    background_fill_color=ELEVATED_BG,
-    background_fill_alpha=0.95,
-    border_line_color=INK_SOFT,
-    click_policy="hide",
+# Annotate Treatment B's bimodality — the most interesting feature of the synthetic data
+p.add_layout(
+    Label(
+        x=475,
+        y=2.35,
+        text="bimodal distribution",
+        text_color=INK_SOFT,
+        text_font_size="28pt",
+        text_font_style="italic",
+        text_align="left",
+        text_baseline="middle",
+    )
 )
-p.add_layout(legend, "right")
 
 # Save HTML (catalog artifact) + PNG via headless Chrome
-output_file(f"plot-{THEME}.html", title="raincloud-basic · bokeh · pyplots.ai")
+output_file(f"plot-{THEME}.html", title="raincloud-basic · python · bokeh · anyplot.ai")
 save(p)
 
 opts = Options()
