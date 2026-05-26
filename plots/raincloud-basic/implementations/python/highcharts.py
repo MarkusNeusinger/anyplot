@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-26
@@ -115,6 +115,7 @@ chart.options.x_axis = {
     "tickColor": INK_SOFT,
     "lineWidth": 0,
     "tickWidth": 0,
+    "tickLength": 0,
     "gridLineWidth": 0,
 }
 
@@ -239,7 +240,7 @@ for i, data in enumerate(all_data):
 
 # Annotation callouts — one per category to complete the data story
 annotations = [
-    {"y_frac": 0.07, "x_frac": 0.65, "color": colors[0], "title": "Baseline", "body": "Mean ~450 ms"},
+    {"y_frac": 0.07, "x_frac": 0.05, "color": colors[0], "title": "Baseline", "body": "Mean ~450 ms"},
     {
         "y_frac": 0.30,
         "x_frac": 0.05,
@@ -249,7 +250,7 @@ annotations = [
     },
     {
         "y_frac": 0.54,
-        "x_frac": 0.70,
+        "x_frac": 0.85,
         "color": colors[2],
         "title": "Bimodal distribution",
         "body": "Two clusters: ~350 ms &amp; ~480 ms",
