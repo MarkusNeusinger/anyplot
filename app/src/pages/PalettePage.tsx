@@ -31,7 +31,7 @@ type Swatch = {
   minNorm: number;
   /** Per-hex min ΔE to any other imprint member under worst CVD sim (deuter / protan / tritan). */
   minCvd: number;
-  /** WCAG contrast on cream bg #F5F3EC. */
+  /** WCAG contrast on cream bg #FAF8F1. */
   wcagL: number;
   /** WCAG contrast on warm near-black bg #121210. */
   wcagD: number;
@@ -235,7 +235,7 @@ color = ANYPLOT_PALETTE[0]
 # continuous data — sequential + diverging cmaps
 from matplotlib.colors import LinearSegmentedColormap
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["${seqStart}", "${seqEnd}"])
-midpoint = "#F5F3EC" if THEME == "light" else "#1A1A17"  # theme-adaptive
+midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["${divStart}", midpoint, "${divEnd}"])`;
     case 'r':
       return `ANYPLOT_PALETTE <- c(
@@ -247,7 +247,7 @@ ANYPLOT_AMBER <- "${amberVal}"  # warning / caution
 color <- ANYPLOT_PALETTE[1]
 
 # continuous data — ggplot2 gradient scales
-midpoint <- if (theme == "light") "#F5F3EC" else "#1A1A17"
+midpoint <- if (theme == "light") "#FAF8F1" else "#1A1A17"
 scale_color_gradient(low = "${seqStart}", high = "${seqEnd}")                         # sequential
 scale_color_gradient2(low = "${divStart}", mid = midpoint, high = "${divEnd}", midpoint = 0)  # diverging`;
     case 'julia':
@@ -261,7 +261,7 @@ color = ANYPLOT_PALETTE[1]
 
 # continuous data — Makie cgrad
 using ColorSchemes
-midpoint = theme == "light" ? colorant"#F5F3EC" : colorant"#1A1A17"
+midpoint = theme == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ANYPLOT_SEQ = cgrad([colorant"${seqStart}", colorant"${seqEnd}"])
 const ANYPLOT_DIV = cgrad([colorant"${divStart}", midpoint, colorant"${divEnd}"])`;
     case 'js':
@@ -274,7 +274,7 @@ const ANYPLOT_AMBER = "${amberVal}"; // warning / caution
 const color = ANYPLOT_PALETTE[0];
 
 // continuous data — two-stop / three-stop gradients
-const midpoint = theme === "light" ? "#F5F3EC" : "#1A1A17"; // theme-adaptive
+const midpoint = theme === "light" ? "#FAF8F1" : "#1A1A17"; // theme-adaptive
 const IMPRINT_SEQ = [[0, "${seqStart}"], [1, "${seqEnd}"]];
 const IMPRINT_DIV = [[0, "${divStart}"], [0.5, midpoint], [1, "${divEnd}"]];`;
   }
@@ -391,9 +391,15 @@ function ChromaWheel({
 function CodeBlock({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    void navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {
+        // Silently ignore — clipboard API can fail in insecure contexts.
+      });
   };
   return (
     <Box sx={{ position: 'relative', mt: 2 }}>
@@ -438,6 +444,7 @@ function CollapsibleSection({ title, defaultOpen = false, children }: { title: s
     <Box sx={{ borderTop: '1px solid var(--rule)', pt: 2 }}>
       <Box
         component="button"
+        type="button"
         onClick={() => setOpen(o => !o)}
         sx={{
           width: '100%',
@@ -483,9 +490,15 @@ export function PalettePage() {
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
 
   const copyHex = (hex: string) => {
-    navigator.clipboard.writeText(hex);
-    setCopiedHex(hex);
-    setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+    void navigator.clipboard
+      .writeText(hex)
+      .then(() => {
+        setCopiedHex(hex);
+        setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+      })
+      .catch(() => {
+        // Silently ignore — clipboard API can fail in insecure contexts.
+      });
   };
 
   useEffect(() => {
@@ -539,6 +552,7 @@ export function PalettePage() {
                     <Box
                       key={c.id}
                       component="button"
+                      type="button"
                       onClick={() => setCompareId(active ? null : c.id)}
                       sx={{
                         background: active ? 'var(--bg-surface)' : 'none',
@@ -592,6 +606,7 @@ export function PalettePage() {
                   <Box
                     key={s}
                     component="button"
+                    type="button"
                     onClick={() => setSort(s)}
                     sx={{
                       background: 'none', border: 'none', padding: 0, ml: 1,
@@ -675,6 +690,8 @@ export function PalettePage() {
                     <Box
                       key={s.hex}
                       component="button"
+                      type="button"
+                      aria-label={`Copy ${s.hex} (${s.name}) to clipboard`}
                       onClick={() => copyHex(s.hex)}
                       sx={{
                         display: 'flex', flexDirection: 'column',
@@ -723,7 +740,7 @@ export function PalettePage() {
                           </Tooltip>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, fontSize: '10px' }}>
-                          <Tooltip title="WCAG contrast on cream bg #F5F3EC — graphical objects 3:1 minimum">
+                          <Tooltip title="WCAG contrast on cream bg #FAF8F1 — graphical objects 3:1 minimum">
                             <Box component="span" sx={{ color: s.wcagL >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
                               ☼ {s.wcagL.toFixed(1)}:1
                             </Box>
@@ -824,7 +841,7 @@ export function PalettePage() {
                 <Box sx={{
                   height: 28,
                   borderRadius: 1,
-                  background: 'linear-gradient(to right, #AE3030, #F5F3EC, #4467A3)',
+                  background: 'linear-gradient(to right, #AE3030, #FAF8F1, #4467A3)',
                   boxShadow: '0 0 0 1px var(--rule)',
                 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
@@ -835,7 +852,7 @@ export function PalettePage() {
               </Box>
             </Box>
             <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
-              the diverging midpoint flips per theme — <code>#F5F3EC</code> on cream bg / <code>#1A1A17</code>
+              the diverging midpoint flips per theme — <code>#FAF8F1</code> on cream bg / <code>#1A1A17</code>
               on warm-near-black — so the zero point reads as part of the page rather than as a grey blob.
             </Box>
           </Box>
@@ -877,7 +894,7 @@ export function PalettePage() {
             <CollapsibleSection title="WCAG contrast on both themes (and the outline pattern)">
               <Box sx={textStyle}>
                 muted palettes share a known limit: the lighter members carry their distinguishability through
-                chroma, not L-spread. On cream bg <code>#F5F3EC</code>, five categorical hues + amber fall under
+                chroma, not L-spread. On cream bg <code>#FAF8F1</code>, five categorical hues + amber fall under
                 WCAG 2.1 SC 1.4.11&apos;s 3:1 minimum. The industry-standard fix is a <strong>1px ink-color
                 stroke</strong> on affected series — but it&apos;s a renderer judgment call, not a hard rule.
               </Box>

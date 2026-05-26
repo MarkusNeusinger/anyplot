@@ -209,7 +209,7 @@ chart.options.color_axis = {
 chart.options.color_axis = {
     'minColor': '#AE3030',
     'maxColor': '#4467A3',
-    'stops':    [[0, '#AE3030'], [0.5, '#F5F3EC'], [1, '#4467A3']],
+    'stops':    [[0, '#AE3030'], [0.5, '#FAF8F1'], [1, '#4467A3']],
 }
 # Forbidden: any other gradient (viridis/cividis/BrBG stops, Reds/Blues/Greens).
 ```

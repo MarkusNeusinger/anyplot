@@ -149,7 +149,8 @@ scatter!(ax, x, y; color = group, colormap = ANYPLOT_PALETTE)
 # Continuous — only the two anyplot palette-derived cmaps are allowed.
 using ColorSchemes
 const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])                                    # sequential / single-polarity
-const ANYPLOT_DIV = cgrad([colorant"#AE3030", colorant"#F5F3EC", colorant"#4467A3"])                 # diverging (midpoint #F5F3EC light / #1A1A17 dark)
+const _midpoint   = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"                         # theme-adaptive
+const ANYPLOT_DIV = cgrad([colorant"#AE3030", _midpoint, colorant"#4467A3"])                         # diverging
 # Sequential heatmap:  heatmap!(ax, z; colormap = ANYPLOT_SEQ)
 # Diverging heatmap:   heatmap!(ax, z; colormap = ANYPLOT_DIV)
 ```

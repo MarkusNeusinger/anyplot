@@ -151,10 +151,10 @@ def diverging(theme: str = "light") -> LinearSegmentedColormap:
     Parameters
     ----------
     theme : "light" | "dark", default "light"
-        On light bg, midpoint = warm cream #F5F3EC; on dark bg, midpoint
+        On light bg, midpoint = warm cream #FAF8F1; on dark bg, midpoint
         = warm near-black #1A1A17.
     """
-    midpoint = "#F5F3EC" if theme == "light" else "#1A1A17"
+    midpoint = "#FAF8F1" if theme == "light" else "#1A1A17"
     return LinearSegmentedColormap.from_list(f"imprint_div_{theme}", [RED, midpoint, BLUE])
 
 

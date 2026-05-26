@@ -141,7 +141,7 @@ alt.Chart(df).mark_circle().encode(
 alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#4467A3']))
 # Diverging: three-stop range with domainMid at 0
 alt.Color('delta:Q', scale=alt.Scale(
-    range=['#AE3030', '#F5F3EC', '#4467A3'],
+    range=['#AE3030', '#FAF8F1', '#4467A3'],
     domainMid=0,
 ))
 # Forbidden: scheme='viridis'/'cividis'/'brownbluegreen' and any other named scheme for continuous data.

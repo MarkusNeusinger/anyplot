@@ -88,7 +88,7 @@ Practical: in matplotlib `plt.plot(x, y, color="#DDCC77")` for a "warning" annot
 Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two palette-derived continuous colormaps; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow. Both anyplot cmaps are perceptually-uniform in CAM02-UCS:
 
 - **`imprint_seq` (sequential):** brand green → blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). Build with `LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])` (matplotlib) or the library's equivalent two-stop gradient API.
-- **`imprint_div` (diverging):** matte-red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps). The midpoint is theme-adaptive — use `#F5F3EC` on light bg, `#1A1A17` on dark bg. Build with `LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])`.
+- **`imprint_div` (diverging):** matte-red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps). The midpoint is theme-adaptive — use `#FAF8F1` on light bg, `#1A1A17` on dark bg. Build with `LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])`.
 
 Pick `imprint_seq` vs `imprint_div` from the data's polarity. Never substitute a matplotlib/library-native cmap "because it looks nicer" — palette identity is part of the brand.
 

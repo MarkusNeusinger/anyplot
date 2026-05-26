@@ -101,8 +101,8 @@ geom_density()     # Density
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
 + scale_color_gradient(low='#009E73', high='#4467A3')                              # sequential
 + scale_fill_gradient(low='#009E73',  high='#4467A3')
-+ scale_color_gradient2(low='#AE3030', mid='#F5F3EC', high='#4467A3', midpoint=0)  # diverging
-+ scale_fill_gradient2(low='#AE3030',  mid='#F5F3EC', high='#4467A3', midpoint=0)
++ scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)  # diverging
++ scale_fill_gradient2(low='#AE3030',  mid='#FAF8F1', high='#4467A3', midpoint=0)
 # Forbidden: scale_color_viridis / scale_fill_viridis or any non-anyplot stops.
 
 # Axis scales

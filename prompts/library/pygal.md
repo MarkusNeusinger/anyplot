@@ -135,7 +135,7 @@ def _lerp_hex(c0, c1, t):
     return f"#{r:02X}{g:02X}{b:02X}"
 # Sequential (single-polarity): #009E73 → #4467A3
 seq_stops = tuple(_lerp_hex("#009E73", "#4467A3", i / (n - 1)) for i in range(n))
-# Diverging (around a meaningful midpoint): #AE3030 ↔ #F5F3EC ↔ #4467A3
+# Diverging (around a meaningful midpoint): #AE3030 ↔ #FAF8F1 ↔ #4467A3
 ```
 
 ## Grid Opacity

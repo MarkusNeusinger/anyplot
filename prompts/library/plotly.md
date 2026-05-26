@@ -93,10 +93,11 @@ fig = px.scatter(df, x='x', y='y', color='category',
                  color_discrete_sequence=ANYPLOT_PALETTE)
 
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
-ANYPLOT_SEQ = [[0.0, "#009E73"], [1.0, "#4467A3"]]                                   # sequential / single-polarity
-ANYPLOT_DIV = [[0.0, "#AE3030"], [0.5, "#F5F3EC"], [1.0, "#4467A3"]]                 # diverging
-# Sequential: color_continuous_scale=ANYPLOT_SEQ
-# Diverging:  color_continuous_scale=ANYPLOT_DIV
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]                                            # sequential / single-polarity
+midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"                                       # theme-adaptive
+imprint_div = [[0.0, "#AE3030"], [0.5, midpoint], [1.0, "#4467A3"]]                           # diverging
+# Sequential: color_continuous_scale=imprint_seq
+# Diverging:  color_continuous_scale=imprint_div
 # Forbidden: any other scale ('viridis'/'cividis'/'BrBG'/'Reds'/'Blues'/'Greens'/'jet'/'hsv'/'rainbow').
 ```
 

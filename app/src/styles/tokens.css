@@ -33,7 +33,7 @@
   --ink:         #1A1A17;
   --ink-soft:    #4A4A44;
   --ink-muted:   #6B6A63;
-  --rule:        rgba(26, 26, 23, 0.10);
+  --rule:        rgba(26, 26, 23, 0.15);
 
   /* Typography stacks — MonoLisa-only experiment (serif/sans aliased to mono) */
   --serif: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
@@ -108,7 +108,7 @@ html, body { overflow-x: clip; }
   --ink:         #F0EFE8;
   --ink-soft:    #B8B7B0;
   --ink-muted:   #A8A79F;
-  --rule:        rgba(240, 239, 232, 0.10);
+  --rule:        rgba(240, 239, 232, 0.15);
 
   /* Code: warm near-black surface, cream text */
   --code-bg:     #1A1A17;

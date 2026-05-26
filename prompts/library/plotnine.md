@@ -116,8 +116,8 @@ from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gra
 + scale_color_gradient(low='#009E73', high='#4467A3')
 + scale_fill_gradient(low='#009E73',  high='#4467A3')
 # Diverging (around a meaningful midpoint, often 0)
-+ scale_color_gradient2(low='#AE3030', mid='#F5F3EC', high='#4467A3', midpoint=0)
-+ scale_fill_gradient2(low='#AE3030',  mid='#F5F3EC', high='#4467A3', midpoint=0)
++ scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)
++ scale_fill_gradient2(low='#AE3030',  mid='#FAF8F1', high='#4467A3', midpoint=0)
 # Forbidden: scale_color_cmap / scale_fill_cmap with viridis/cividis/BrBG/Reds/Blues/Greens — only anyplot stops.
 ```
 

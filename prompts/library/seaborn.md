@@ -131,8 +131,9 @@ from matplotlib.colors import LinearSegmentedColormap
 # Sequential / single-polarity (intensity, magnitude, density)
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Diverging (signed deviations, residuals, correlations)
-imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", "#F5F3EC", "#4467A3"])
+# Diverging (signed deviations, residuals, correlations) — midpoint theme-adaptive
+midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
 
 # Use via cmap=imprint_seq / cmap=imprint_div on heatmap, kdeplot, etc.
 # Forbidden: any other cmap (viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow).

@@ -126,7 +126,7 @@ ax.set_prop_cycle(color=ANYPLOT_PALETTE[:N])
 # (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):
 from matplotlib.colors import LinearSegmentedColormap
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
-midpoint = "#F5F3EC" if THEME == "light" else "#1A1A17"  # theme-adaptive
+midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
 # Sequential / single-polarity heatmaps: cmap=imprint_seq
 # Diverging (signed deviations, residuals, correlations):  cmap=imprint_div

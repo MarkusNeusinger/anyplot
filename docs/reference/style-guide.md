@@ -36,7 +36,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **1. Reserve color for moments that earn it.** The imprint palette has eight categorical colours. If the website itself uses them liberally — brightly colored buttons, banners, hero backgrounds — the actual plots lose their visual punch. We treat the palette as **precious**: the brand green appears in maybe five to ten places on a given page (logo, one italic headline accent, terminal cursor, primary CTA hover, active nav indicator, a handful of link underlines). Everything else is one of the eight gray tones.
 
-**2. Warmth over clinical.** Pure `#FFFFFF` backgrounds make palette colors look harsh and the layout feel like a banking app. We use a warm off-white (`#F5F3EC`) as the base, with slightly lighter surfaces (`#FAF8F1`) for cards. This gives the page a paper-like quality and makes the saturated plot colors look **intentional** rather than loud. Dark mode mirrors this: `#121210` rather than pure black, with a subtle warm undertone.
+**2. Warmth over clinical.** Pure `#FFFFFF` backgrounds make palette colors look harsh and the layout feel like a banking app. We use a warm off-white (`#FAF8F1`) as the base, with slightly lighter surfaces (`#FAF8F1`) for cards. This gives the page a paper-like quality and makes the saturated plot colors look **intentional** rather than loud. Dark mode mirrors this: `#121210` rather than pure black, with a subtle warm undertone.
 
 **3. Code is the native register.** Section headers carry shell prompts (`❯ libraries`, `$ plots`, `~/anyplot/`), action buttons read as method calls (`.copy()`, `.open()`, `.download()`), the hero headline types itself with a blinking cursor. The site speaks the dialect of its visitors. This is not skinning — it's the framing device. Removing the editorial paper underneath would over-tip into "developer toy"; removing the terminal layer would feel sterile and product-marketing-y. The two layers depend on each other.
 
@@ -311,7 +311,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 - **Package name**: `anyplot` (lowercase, one word)
 - **Import convention**: `import anyplot as ap`
 - **Sub-modules**: `anyplot.mpl`, `anyplot.plotly`, `anyplot.bokeh`, etc. — one sub-module per supported library
-- **Palettes**: `anyplot.palette`, `anyplot.palettes.viridis`, etc.
+- **Palette**: `anyplot.palette` (the imprint palette — categorical + semantic anchors + cmap helpers).
 - **Datasets**: `anyplot.load("penguins")`, `anyplot.load("iris")` — not `load_penguins()`; consistent loader signature
 
 **Domain:**
@@ -397,11 +397,11 @@ Plots and content sit inside **surface containers** with consistent styling:
 
 | Surface     | Light          | Dark           | Use                         |
 |-------------|----------------|----------------|-----------------------------|
-| `bg-page`   | `#F5F3EC`      | `#121210`      | Outer page background       |
+| `bg-page`   | `#FAF8F1`      | `#121210`      | Outer page background       |
 | `bg-surface`| `#FAF8F1`      | `#1A1A17`      | Cards, plot containers      |
 | `bg-elevated`| `#FFFDF6`     | `#242420`      | Modals, tooltips            |
 
-The warm off-white (`#F5F3EC`) is the foundation — pure white would make the saturated palette colors look harsh.
+The warm off-white (`#FAF8F1`) is the foundation — pure white would make the saturated palette colors look harsh.
 
 ### 4.3 Warm-tinted Grayscale
 
@@ -416,7 +416,7 @@ A warm-tinted grayscale (reddish-brown undertone instead of blue-gray) matches t
 
 All three text tokens pass **WCAG 2.1 AA contrast** (≥ 4.5:1 for normal text) against both `--bg-page` surfaces:
 
-| Token         | on `--bg-page` light (`#F5F3EC`) | on `--bg-page` dark (`#121210`) |
+| Token         | on `--bg-page` light (`#FAF8F1`) | on `--bg-page` dark (`#121210`) |
 |---------------|-----------------------------------|----------------------------------|
 | `--ink`       | 16.7 : 1 (AAA)                    | 16.5 : 1 (AAA)                   |
 | `--ink-soft`  | 7.79 : 1 (AAA)                    | 9.42 : 1 (AAA)                   |
@@ -1070,14 +1070,14 @@ The palette strip at the bottom responds to hover: normal state is even distribu
 
 - **First series = brand color (`#009E73`)**. Always. This is the single most important consistency rule.
 - **Neutral (semantic anchor)** is reserved for aggregates, totals, reference lines. Don't use it for a normal category — it sits outside the categorical pool by design.
-- **Light-bg WCAG caveat:** lavender, ochre, cyan, lime, and amber all fall below WCAG 2.1 SC 1.4.11's 3:1 minimum against cream `#F5F3EC`. Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants-v3/decision-rationale.md](palette-variants-v3/decision-rationale.md#contrast-caveats--the-outline-pattern).
+- **Light-bg WCAG caveat:** lavender, ochre, cyan, lime, and amber all fall below WCAG 2.1 SC 1.4.11's 3:1 minimum against cream `#FAF8F1`. Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants-v3/decision-rationale.md](palette-variants-v3/decision-rationale.md#contrast-caveats--the-outline-pattern).
 
 ### 9.2 Non-categorical Data
 
 imprint is a **categorical** palette — it's for distinct categories, not ordered or continuous data. For other data types, anyplot ships two palette-derived cmaps:
 
 - **`imprint_seq` (sequential)**: brand green → blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps).
-- **`imprint_div` (diverging)**: matte red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations). The midpoint flips per theme — `#F5F3EC` on cream bg, `#1A1A17` on dark bg.
+- **`imprint_div` (diverging)**: matte red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations). The midpoint flips per theme — `#FAF8F1` on cream bg, `#1A1A17` on dark bg.
 
 Don't reach for the categorical palette on continuous data — a categorical palette on continuous data produces misleading banding artifacts. And don't substitute viridis/cividis/BrBG/jet/hsv/rainbow either; palette identity is part of the brand.
 
@@ -1184,7 +1184,7 @@ For CSS:
 
 - **Lavender (`#C475FD`), cyan (`#2ABCCD`), rose (`#954477`), or lime (`#99B314`) in UI chrome.** These are plot-only colors. Using them in navigation or buttons breaks the color hierarchy.
 - **Brand green in backgrounds, body text emphasis, or non-logo icons.** Reserve `#009E73` for the seven approved contexts (§4.4).
-- **Categorical palettes on continuous data.** Use viridis/cividis/BrBG instead — see §9.2.
+- **Categorical palettes on continuous data.** Use `imprint_seq` (single-polarity) or `imprint_div` (diverging) instead — see §9.2.
 
 ---
 
@@ -1223,7 +1223,7 @@ The design system is implemented across:
       --imprint-amber:    #DDCC77; /* warning anchor (fixed) */
 
       /* Surfaces — warm off-white, not pure #fff */
-      --bg-page:     #F5F3EC;
+      --bg-page:     #FAF8F1;
       --bg-surface:  #FAF8F1;
       --bg-elevated: #FFFDF6;
 
@@ -1296,7 +1296,7 @@ Eventually, once the project is mature, consider writing a JOSS (Journal of Open
 
 **Non-web visual identity:**
 
-- **GitHub profile images**: square variant of the logo: `any.plot()` in MonoLisa Bold, centered, on warm off-white background (`#F5F3EC`). Green dot at `#009E73`. Maintain 1em padding from edges.
+- **GitHub profile images**: square variant of the logo: `any.plot()` in MonoLisa Bold, centered, on warm off-white background (`#FAF8F1`). Green dot at `#009E73`. Maintain 1em padding from edges.
 - **OG / Twitter card images**: 1200×630px. Top-left: `anyplot.ai` logo in MonoLisa Bold. Center-left: page title in MonoLisa — bold upright for the subject, italic + ss02 script for one accent word. Center-right: representative plot screenshot or palette strip. Bottom: minimal meta in mono.
 - **Presentations**: black or warm off-white backgrounds. MonoLisa throughout — upright for body, italic-script for section dividers. Brand green only for emphasis. Every plot in the deck uses imprint.
 - **T-shirts / merch (if ever)**: dark t-shirt, `any.plot()` in white with green dot, centered on chest. No taglines, no URLs, no GitHub handles. One variant only.

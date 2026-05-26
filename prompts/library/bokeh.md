@@ -158,9 +158,10 @@ def _lerp_hex(c0, c1, t):
     r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
     return f"#{r:02X}{g:02X}{b:02X}"
 ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t/255.0) for t in range(256)]
+_midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
 ANYPLOT_DIV256 = (
-    [_lerp_hex("#AE3030", "#F5F3EC", t/127.0) for t in range(128)] +
-    [_lerp_hex("#F5F3EC", "#4467A3", t/127.0) for t in range(128)]
+    [_lerp_hex("#AE3030", _midpoint, t/127.0) for t in range(128)] +
+    [_lerp_hex(_midpoint, "#4467A3", t/127.0) for t in range(128)]
 )
 # Pass to bokeh.models.LinearColorMapper(palette=ANYPLOT_SEQ256, low=…, high=…)
 # Forbidden: bokeh's Viridis/Cividis/BrBG and any other named palette for continuous data.

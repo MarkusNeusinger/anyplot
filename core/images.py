@@ -38,13 +38,14 @@ from .palette import OCHRE as ANYPLOT_OCHRE
 from .palette import RED as ANYPLOT_RED
 from .palette import ROSE as ANYPLOT_ROSE
 from .palette import palette  # noqa: F401  (re-exported named API)
-from .palette import register_with_matplotlib as _register_imprint_cmaps
 
 
-# Register imprint_seq + imprint_div_light/dark with matplotlib at import time
-# so any code path that imports core.images can use them via
-# ``plt.imshow(..., cmap="imprint_seq")``.
-_register_imprint_cmaps()
+# Note: imprint_seq / imprint_div_{light,dark} are NOT auto-registered with
+# matplotlib when this module is imported — core/images.py is PIL-only and
+# importing it should not pull matplotlib in as a side effect. Callers that
+# render with matplotlib should call
+# ``from core.palette import register_with_matplotlib; register_with_matplotlib()``
+# themselves before referring to the cmaps by string name.
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ LIGHT_THEME: dict[str, str] = {
     "ink": "#1A1A17",  # primary text — `--ink`
     "ink_soft": "#4A4A44",  # secondary text — `--ink-soft`
     "ink_muted": "#6B6A63",  # tertiary / meta — `--ink-muted`
-    "rule": "#DFDDD6",  # ~rgba(26,26,23,0.10) flattened on bg_page
+    "rule": "#D4D2CC",  # ~rgba(26,26,23,0.15) flattened on bg_page
     "card_shadow": "#D9D5C8",
 }
 
@@ -86,7 +87,7 @@ DARK_THEME: dict[str, str] = {
     "ink": "#F0EFE8",
     "ink_soft": "#B8B7B0",
     "ink_muted": "#A8A79F",
-    "rule": "#1E1E1B",  # ~rgba(240,239,232,0.10) flattened on bg_page
+    "rule": "#33332F",  # ~rgba(240,239,232,0.15) flattened on bg_page
     "card_shadow": "#000000",
 }
 

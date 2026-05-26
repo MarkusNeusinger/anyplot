@@ -298,9 +298,18 @@ const PALETTE = [
 function LabelledPaletteStrip() {
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
   const handleCopy = (hex: string) => {
-    navigator.clipboard.writeText(hex);
-    setCopiedHex(hex);
-    setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+    // Clipboard API can throw (insecure context, denied permission, unsupported
+    // browser). Wrap so we only flip the "copied" state when the write actually
+    // succeeded, and we don't leak an unhandled promise rejection on failure.
+    void navigator.clipboard
+      .writeText(hex)
+      .then(() => {
+        setCopiedHex(hex);
+        setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+      })
+      .catch(() => {
+        // Silently ignore — the user can still read the hex on the swatch.
+      });
   };
   return (
     <Box>
@@ -319,6 +328,8 @@ function LabelledPaletteStrip() {
             <Box
               key={background}
               component="button"
+              type="button"
+              aria-label={`Copy ${hex} to clipboard`}
               onClick={() => handleCopy(hex)}
               className="swatch"
               sx={{
