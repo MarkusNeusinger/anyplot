@@ -1,8 +1,9 @@
 import Box from '@mui/material/Box';
 
+// imprint palette — 8 categorical hues in hybrid-v3 sort order
 const SWATCHES = [
-  '#009E73', '#D55E00', '#0072B2', '#CC79A7',
-  '#E69F00', '#56B4E9', '#F0E442', 'var(--ink)',
+  '#009E73', '#C475FD', '#4467A3', '#BD8233',
+  '#AE3030', '#2ABCCD', '#954477', '#99B314',
 ];
 
 interface PaletteStripProps {
