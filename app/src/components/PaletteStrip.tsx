@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 
 // imprint palette — 8 categorical hues in hybrid-v3 sort order
-const SWATCHES = [
+const DEFAULT_SWATCHES = [
   '#009E73', '#C475FD', '#4467A3', '#BD8233',
   '#AE3030', '#2ABCCD', '#954477', '#99B314',
 ];
@@ -13,9 +13,12 @@ interface PaletteStripProps {
   height?: number;
   /** Top margin (MUI spacing units, default 5). */
   mt?: number;
+  /** Override the default 8-hex imprint set (e.g. to render an alternate sort). */
+  hexes?: string[];
 }
 
-export function PaletteStrip({ maxWidth = 400, height = 40, mt = 5 }: PaletteStripProps = {}) {
+export function PaletteStrip({ maxWidth = 400, height = 40, mt = 5, hexes }: PaletteStripProps = {}) {
+  const SWATCHES = hexes ?? DEFAULT_SWATCHES;
   return (
     <Box sx={{
       display: 'flex',

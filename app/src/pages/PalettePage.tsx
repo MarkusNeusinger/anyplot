@@ -28,18 +28,32 @@ type Swatch = {
   C: number;
   H: number;
   oklch: string;
+  /** Per-hex min ΔE to any other imprint member under normal vision. */
+  minNorm: number;
+  /** Per-hex min ΔE to any other imprint member under worst CVD sim (deuter / protan / tritan). */
+  minCvd: number;
+  /** WCAG contrast on cream bg #F5F3EC. */
+  wcagL: number;
+  /** WCAG contrast on warm near-black bg #121210. */
+  wcagD: number;
 };
 
 const PALETTE: Swatch[] = [
-  { hex: '#009E73', name: 'brand green', family: 'green',  role: '★ slot 0 — always first series',     L: 0.620, C: 0.130, H: 165.5, oklch: 'oklch(0.620 0.130 165.5)' },
-  { hex: '#C475FD', name: 'lavender',    family: 'purple', role: 'slot 1 — creative / artistic',       L: 0.704, C: 0.202, H: 308.9, oklch: 'oklch(0.704 0.202 308.9)' },
-  { hex: '#4467A3', name: 'blue',        family: 'blue',   role: 'slot 2 — cool / water / info',        L: 0.516, C: 0.104, H: 260.6, oklch: 'oklch(0.516 0.104 260.6)' },
-  { hex: '#BD8233', name: 'ochre',       family: 'yellow', role: 'slot 3 — earth / commodity',          L: 0.652, C: 0.118, H: 70.5,  oklch: 'oklch(0.652 0.118 70.5)' },
-  { hex: '#AE3030', name: 'matte red',   family: 'red',    role: 'slot 4 — deferred bad / loss anchor', L: 0.503, C: 0.163, H: 25.2,  oklch: 'oklch(0.503 0.163 25.2)' },
-  { hex: '#2ABCCD', name: 'cyan',        family: 'cyan',   role: 'slot 5 — sky / tech-cool',            L: 0.730, C: 0.117, H: 207.1, oklch: 'oklch(0.730 0.117 207.1)' },
-  { hex: '#954477', name: 'rose',        family: 'purple', role: 'slot 6 — wellness / health',          L: 0.508, C: 0.125, H: 343.9, oklch: 'oklch(0.508 0.125 343.9)' },
-  { hex: '#99B314', name: 'lime',        family: 'green',  role: 'slot 7 — growth / nature',            L: 0.722, C: 0.167, H: 119.8, oklch: 'oklch(0.722 0.167 119.8)' },
+  { hex: '#009E73', name: 'brand green', family: 'green',  role: 'first series',       L: 0.620, C: 0.130, H: 165.5, oklch: 'oklch(0.620 0.130 165.5)', minNorm: 22.51, minCvd: 13.70, wcagL: 3.08, wcagD: 5.48 },
+  { hex: '#C475FD', name: 'lavender',    family: 'purple', role: 'creative',           L: 0.704, C: 0.202, H: 308.9, oklch: 'oklch(0.704 0.202 308.9)', minNorm: 30.03, minCvd: 13.81, wcagL: 2.59, wcagD: 6.53 },
+  { hex: '#4467A3', name: 'blue',        family: 'blue',   role: 'cool / info',        L: 0.516, C: 0.104, H: 260.6, oklch: 'oklch(0.516 0.104 260.6)', minNorm: 32.35, minCvd: 10.70, wcagL: 5.09, wcagD: 3.32 },
+  { hex: '#BD8233', name: 'ochre',       family: 'yellow', role: 'earth / commodity',  L: 0.652, C: 0.118, H: 70.5,  oklch: 'oklch(0.652 0.118 70.5)',  minNorm: 24.00, minCvd: 8.81,  wcagL: 2.95, wcagD: 5.72 },
+  { hex: '#AE3030', name: 'matte red',   family: 'red',    role: 'bad / loss / error', L: 0.503, C: 0.163, H: 25.2,  oklch: 'oklch(0.503 0.163 25.2)',  minNorm: 20.73, minCvd: 15.20, wcagL: 5.79, wcagD: 2.92 },
+  { hex: '#2ABCCD', name: 'cyan',        family: 'cyan',   role: 'sky / tech-cool',    L: 0.730, C: 0.117, H: 207.1, oklch: 'oklch(0.730 0.117 207.1)', minNorm: 22.51, minCvd: 13.70, wcagL: 2.06, wcagD: 8.19 },
+  { hex: '#954477', name: 'rose',        family: 'purple', role: 'wellness / health',  L: 0.508, C: 0.125, H: 343.9, oklch: 'oklch(0.508 0.125 343.9)', minNorm: 20.73, minCvd: 10.70, wcagL: 5.61, wcagD: 3.01 },
+  { hex: '#99B314', name: 'lime',        family: 'green',  role: 'growth / nature',    L: 0.722, C: 0.167, H: 119.8, oklch: 'oklch(0.722 0.167 119.8)', minNorm: 24.00, minCvd: 8.81,  wcagL: 2.15, wcagD: 7.87 },
 ];
+
+/** Pure-CVD-greedy max-min sort — picks each next slot to maximise ΔE under CVD
+ *  against the already-placed set. Best discrimination at n=3..6 but groups
+ *  two greens (slot 7 lime + slot 0 brand) and two purples (slot 1 lavender +
+ *  slot 3 rose) close together. Order: [brand, lavender, lime, rose, red, cyan, blue, ochre]. */
+const CVD_OPTIMAL_ORDER: number[] = [0, 1, 7, 6, 4, 5, 2, 3];
 
 type CompPalette = { id: string; name: string; href?: string; hexes: { hex: string; L: number; C: number; H: number }[] };
 
@@ -197,9 +211,13 @@ const LANG_LABELS: Record<Lang, string> = {
   python: 'Python', r: 'R', julia: 'Julia', js: 'JavaScript',
 };
 
-function snippet(lang: Lang, oklch: boolean): string {
-  const values = oklch ? PALETTE.map(s => s.oklch) : PALETTE.map(s => s.hex);
+function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): string {
+  const values = oklch ? sortedPalette.map(s => s.oklch) : sortedPalette.map(s => s.hex);
   const amberVal = oklch ? 'oklch(0.841 0.108 98.3)' : '#DDCC77';
+  const seqStart = oklch ? 'oklch(0.620 0.130 165.5)' : '#009E73';
+  const seqEnd   = oklch ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
+  const divStart = oklch ? 'oklch(0.503 0.163 25.2)' : '#AE3030';
+  const divEnd   = oklch ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
   switch (lang) {
     case 'python':
       return `ANYPLOT_PALETTE = [
@@ -208,7 +226,13 @@ ${values.map(v => `    "${v}"`).join(',\n')},
 ANYPLOT_AMBER = "${amberVal}"  # warning / caution
 
 # first series is ALWAYS slot 0 (brand green)
-color = ANYPLOT_PALETTE[0]`;
+color = ANYPLOT_PALETTE[0]
+
+# continuous data — sequential + diverging cmaps
+from matplotlib.colors import LinearSegmentedColormap
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["${seqStart}", "${seqEnd}"])
+midpoint = "#F5F3EC" if THEME == "light" else "#1A1A17"  # theme-adaptive
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["${divStart}", midpoint, "${divEnd}"])`;
     case 'r':
       return `ANYPLOT_PALETTE <- c(
 ${values.map(v => `  "${v}"`).join(',\n')}
@@ -216,7 +240,12 @@ ${values.map(v => `  "${v}"`).join(',\n')}
 ANYPLOT_AMBER <- "${amberVal}"  # warning / caution
 
 # first series is ALWAYS slot 0 (brand green)
-color <- ANYPLOT_PALETTE[1]`;
+color <- ANYPLOT_PALETTE[1]
+
+# continuous data — ggplot2 gradient scales
+midpoint <- if (theme == "light") "#F5F3EC" else "#1A1A17"
+scale_color_gradient(low = "${seqStart}", high = "${seqEnd}")                         # sequential
+scale_color_gradient2(low = "${divStart}", mid = midpoint, high = "${divEnd}", midpoint = 0)  # diverging`;
     case 'julia':
       return `const ANYPLOT_PALETTE = [
 ${values.map(v => oklch ? `    "${v}"` : `    colorant"${v}"`).join(',\n')},
@@ -224,7 +253,13 @@ ${values.map(v => oklch ? `    "${v}"` : `    colorant"${v}"`).join(',\n')},
 const ANYPLOT_AMBER = ${oklch ? `"${amberVal}"` : `colorant"${amberVal}"`}  # warning
 
 # first series is ALWAYS slot 0 (brand green)
-color = ANYPLOT_PALETTE[1]`;
+color = ANYPLOT_PALETTE[1]
+
+# continuous data — Makie cgrad
+using ColorSchemes
+midpoint = theme == "light" ? colorant"#F5F3EC" : colorant"#1A1A17"
+const ANYPLOT_SEQ = cgrad([colorant"${seqStart}", colorant"${seqEnd}"])
+const ANYPLOT_DIV = cgrad([colorant"${divStart}", midpoint, colorant"${divEnd}"])`;
     case 'js':
       return `const ANYPLOT_PALETTE = [
 ${values.map(v => `  "${v}"`).join(',\n')},
@@ -232,7 +267,12 @@ ${values.map(v => `  "${v}"`).join(',\n')},
 const ANYPLOT_AMBER = "${amberVal}"; // warning / caution
 
 // first series is ALWAYS slot 0 (brand green)
-const color = ANYPLOT_PALETTE[0];`;
+const color = ANYPLOT_PALETTE[0];
+
+// continuous data — two-stop / three-stop gradients
+const midpoint = theme === "light" ? "#F5F3EC" : "#1A1A17"; // theme-adaptive
+const IMPRINT_SEQ = [[0, "${seqStart}"], [1, "${seqEnd}"]];
+const IMPRINT_DIV = [[0, "${divStart}"], [0.5, midpoint], [1, "${divEnd}"]];`;
   }
 }
 
@@ -243,6 +283,17 @@ const color = ANYPLOT_PALETTE[0];`;
 const MAX_WHEEL_CHROMA = 0.28; // clamp for radial position normalisation across palettes
 
 type WheelDot = { hex: string; L: number; C: number; H: number };
+
+/** Pick a readable text color (ink-dark or ink-light) for a hex bg via WCAG luminance. */
+function textOn(hex: string): string {
+  const s = hex.replace('#', '');
+  const r = parseInt(s.slice(0, 2), 16) / 255;
+  const g = parseInt(s.slice(2, 4), 16) / 255;
+  const b = parseInt(s.slice(4, 6), 16) / 255;
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  return L > 0.5 ? '#1A1A17' : '#F0EFE8';
+}
 
 function ChromaWheel({
   size = 320,
@@ -417,12 +468,27 @@ export function PalettePage() {
   const [lang, setLang] = useState<Lang>('python');
   const [oklch, setOklch] = useState(false);
   const [compareId, setCompareId] = useState<string | null>(null);
-  const [showPureCvd, setShowPureCvd] = useState(false);
+  /** `imprint` = hybrid-v3 (default, 4 hue families up front).
+   *  `cvd` = pure-CVD-greedy max-min (best per-n ΔE under CVD, but groups
+   *  two greens + two purples close together in the first 4 slots). */
+  const [sort, setSort] = useState<'imprint' | 'cvd'>('imprint');
+  // legacy state retained but no longer wired to a toggle — the per-n table
+  // now always shows both sortings side-by-side so the trade-off is visible
+  // without an extra UI control.
 
   useEffect(() => {
     trackPageview('/palette');
   }, [trackPageview]);
 
+  const sortedPalette: Swatch[] = useMemo(
+    () => (sort === 'imprint' ? PALETTE : CVD_OPTIMAL_ORDER.map(i => PALETTE[i])),
+    [sort]
+  );
+  const sortedHexes = useMemo(() => sortedPalette.map(s => s.hex), [sortedPalette]);
+
+  // Wheel dots are positioned by hue + chroma, independent of sort order —
+  // we keep the canonical PALETTE order so the brand-green outline stays on
+  // the same identity dot regardless of sort.
   const imprintDots: WheelDot[] = useMemo(
     () => PALETTE.map(s => ({ hex: s.hex, L: s.L, C: s.C, H: s.H })),
     []
@@ -444,40 +510,55 @@ export function PalettePage() {
         {/* 1. HERO */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>imprint</em>} />
-          <Box sx={{ ...proseColumnSx, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 320px' }, gap: 4, alignItems: 'center', mt: 3 }}>
-            <Box sx={textStyle}>
-              every plot on anyplot uses <strong>imprint</strong>, a categorical palette of 8 colours plus 3
-              semantic anchors. lower-chroma than Tableau, warm-tinted for cream paper, validated against
-              deuteranopia / protanopia / tritanopia. designed to be easier on the eyes and let the data
-              speak — same neighbourhood as palettes that have shipped at scale in scientific publishing and
-              editorial dashboards.
-              <Box component="span" sx={{ display: 'block', mt: 2, fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
-                compare with:{' '}
-                {COMPARISONS.map((c) => (
-                  <Box
-                    key={c.id}
-                    component="button"
-                    onClick={() => setCompareId(compareId === c.id ? null : c.id)}
-                    sx={{
-                      background: 'none',
-                      border: 'none',
-                      padding: 0,
-                      fontFamily: typography.mono,
-                      fontSize: '11px',
-                      color: compareId === c.id ? colors.primary : 'var(--ink-soft)',
-                      textDecoration: 'underline',
-                      textDecorationColor: compareId === c.id ? colors.primary : 'var(--rule)',
-                      cursor: 'pointer',
-                      mx: 0.5,
-                    }}
-                  >
-                    {c.name}
-                  </Box>
-                )).reduce<React.ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, <Box key={`sep-${i}`} component="span" sx={{ color: 'var(--ink-muted)' }}>·</Box>, el]), [])}
+          <Box sx={{ ...proseColumnSx, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 400px' }, gap: 4, alignItems: 'center', mt: 3 }}>
+            <Box>
+              <Box sx={textStyle}>
+                every plot on anyplot uses <strong>imprint</strong>, a categorical palette of 8 colours plus 3
+                semantic anchors. low-chroma, warm-tinted for cream paper, validated against
+                deuteranopia / protanopia / tritanopia. designed to be easier on the eyes and let the data
+                speak — same neighbourhood as palettes that have shipped at scale in scientific publishing and
+                editorial dashboards.
+              </Box>
+              <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', mt: 2 }}>
+                compare with other categorical palettes:
+              </Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                {COMPARISONS.map((c) => {
+                  const active = compareId === c.id;
+                  return (
+                    <Box
+                      key={c.id}
+                      component="button"
+                      onClick={() => setCompareId(active ? null : c.id)}
+                      sx={{
+                        background: active ? 'var(--bg-surface)' : 'none',
+                        border: `1px solid ${active ? colors.primary : 'var(--rule)'}`,
+                        borderRadius: 1,
+                        padding: '6px 10px',
+                        fontFamily: typography.mono,
+                        fontSize: '11px',
+                        color: active ? colors.primary : 'var(--ink-soft)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        '&:hover': { borderColor: colors.primary, color: colors.primary },
+                      }}
+                    >
+                      {/* Mini swatch strip for the comparison palette */}
+                      <Box sx={{ display: 'flex', borderRadius: 0.5, overflow: 'hidden', boxShadow: '0 0 0 1px var(--rule)' }}>
+                        {c.hexes.map((d) => (
+                          <Box key={d.hex} sx={{ width: 8, height: 14, bgcolor: d.hex }} />
+                        ))}
+                      </Box>
+                      {c.name}
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
             <Box sx={{ justifySelf: { xs: 'center', md: 'end' } }}>
-              <ChromaWheel size={300} imprintDots={imprintDots} overlay={overlayDots} />
+              <ChromaWheel size={380} imprintDots={imprintDots} overlay={overlayDots} />
               <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', textAlign: 'center', mt: 1 }}>
                 hue clockwise · chroma = distance from centre
                 {compareId && (
@@ -489,31 +570,93 @@ export function PalettePage() {
             </Box>
           </Box>
           <Box sx={{ mt: 4 }}>
-            <PaletteStrip maxWidth={null} height={48} mt={0} />
+            <PaletteStrip maxWidth={null} height={48} mt={0} hexes={sortedHexes} />
           </Box>
         </Box>
 
-        {/* 2. PALETTE GRID */}
+        {/* 2. COMPACT PALETTE GRID + SORT TOGGLE */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>the 8 categorical hues</em>} />
           <Box sx={proseColumnSx}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
-              {PALETTE.map((s, i) => (
-                <Box key={s.hex} sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '48px 1fr', md: '48px 110px 110px 1fr' },
-                  alignItems: 'center', gap: 2, py: 1,
-                  borderBottom: i < PALETTE.length - 1 ? '1px solid var(--rule)' : 'none',
-                }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: '8px', bgcolor: s.hex, border: '1px solid var(--rule)' }} />
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mt: 1, mb: 2, flexWrap: 'wrap', gap: 1 }}>
+              <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
+                sort:
+                {(['imprint', 'cvd'] as const).map((s) => (
+                  <Box
+                    key={s}
+                    component="button"
+                    onClick={() => setSort(s)}
+                    sx={{
+                      background: 'none', border: 'none', padding: 0, ml: 1,
+                      fontFamily: typography.mono, fontSize: '11px',
+                      color: sort === s ? colors.primary : 'var(--ink-soft)',
+                      textDecoration: 'underline',
+                      textDecorationColor: sort === s ? colors.primary : 'var(--rule)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {s === 'imprint' ? 'imprint (default)' : 'CVD-optimal (max ΔE under colorblindness)'}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+            {sort === 'cvd' && (
+              <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', fontFamily: typography.mono, lineHeight: 1.55, mb: 2, p: 1.5, borderLeft: `2px solid ${colors.primary}`, backgroundColor: 'var(--bg-surface)' }}>
+                pure max-min sort — best ΔE under deuteranopia / protanopia (n=3..4 goes from 16.34 → 21.45 and
+                13.98 → 19.81). but the first 4 slots end up with two greens (brand + lime) and two purples
+                (lavender + rose) side by side. copy this set if your audience is CVD-first and small-n;
+                imprint default is the better balance for general use.
+              </Box>
+            )}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(4, 1fr)', md: 'repeat(8, 1fr)' }, gap: 1 }}>
+              {sortedPalette.map((s, i) => (
+                <Box key={s.hex} sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{
+                    height: 72,
+                    bgcolor: s.hex,
+                    color: textOn(s.hex),
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                    pb: 0.5,
+                    fontFamily: typography.mono, fontSize: '10px',
+                    borderRadius: 1,
+                    boxShadow: i === 0 ? `inset 0 0 0 2px var(--ink)` : 'inset 0 0 0 1px var(--rule)',
+                  }}>
                     {s.hex}
                   </Box>
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '12px', color: 'var(--ink-muted)', display: { xs: 'none', md: 'block' } }}>
-                    {s.name}
-                  </Box>
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
-                    {s.role}
+                  <Box sx={{
+                    fontFamily: typography.mono, fontSize: '9px',
+                    textAlign: 'center',
+                    mt: 0.5,
+                    lineHeight: 1.4,
+                  }}>
+                    <Box sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
+                    <Box sx={{ color: 'var(--ink)' }}>{s.name}</Box>
+                    <Box sx={{ color: 'var(--ink-muted)', mt: 0.5 }}>{s.role}</Box>
+                    <Box sx={{ color: 'var(--ink-muted)', mt: 0.5 }}>H={s.H.toFixed(0)}°</Box>
+                    <Tooltip title="min ΔE to any other slot — normal vision">
+                      <Box sx={{ color: 'var(--ink-muted)', mt: 0.5, display: 'inline-block', cursor: 'help' }}>
+                        norm <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minNorm.toFixed(1)}</Box>
+                      </Box>
+                    </Tooltip>
+                    <Box sx={{ color: 'var(--ink-muted)' }}> · </Box>
+                    <Tooltip title="min ΔE to any other slot — worst of deuteranopia / protanopia / tritanopia">
+                      <Box sx={{ color: 'var(--ink-muted)', display: 'inline-block', cursor: 'help' }}>
+                        cvd <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minCvd.toFixed(1)}</Box>
+                      </Box>
+                    </Tooltip>
+                    <Box sx={{ color: 'var(--ink-muted)', mt: 0.5 }}>
+                      <Tooltip title="WCAG contrast on cream bg (#F5F3EC) — graphical objects 3:1 minimum">
+                        <Box component="span" sx={{ color: s.wcagL >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
+                          ☼ {s.wcagL.toFixed(1)}
+                        </Box>
+                      </Tooltip>
+                      {' / '}
+                      <Tooltip title="WCAG contrast on dark bg (#121210)">
+                        <Box component="span" sx={{ color: s.wcagD >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
+                          ☽ {s.wcagD.toFixed(1)}
+                        </Box>
+                      </Tooltip>
+                    </Box>
                   </Box>
                 </Box>
               ))}
@@ -561,6 +704,66 @@ export function PalettePage() {
           </Box>
         </Box>
 
+        {/* 3b. CONTINUOUS CMAPS — sequential + diverging */}
+        <Box component="section" sx={sectionSx}>
+          <SectionHeader prompt="❯" title={<em>continuous cmaps</em>} />
+          <Box sx={proseColumnSx}>
+            <Box sx={textStyle}>
+              for continuous data the categorical pool is replaced with two palette-derived colormaps. no
+              other cmap is used — not viridis, not jet, not rainbow.
+            </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mt: 2 }}>
+              {/* Sequential */}
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
+                    imprint_seq
+                  </Box>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                    single-polarity · density / magnitude
+                  </Box>
+                </Box>
+                <Box sx={{
+                  height: 28,
+                  borderRadius: 1,
+                  background: 'linear-gradient(to right, #009E73, #4467A3)',
+                  boxShadow: '0 0 0 1px var(--rule)',
+                }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                  <span>#009E73 brand-green</span>
+                  <span>#4467A3 blue</span>
+                </Box>
+              </Box>
+              {/* Diverging */}
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
+                    imprint_div
+                  </Box>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                    diverging · correlations / signed deviations
+                  </Box>
+                </Box>
+                <Box sx={{
+                  height: 28,
+                  borderRadius: 1,
+                  background: 'linear-gradient(to right, #AE3030, #F5F3EC, #4467A3)',
+                  boxShadow: '0 0 0 1px var(--rule)',
+                }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                  <span>#AE3030 red</span>
+                  <span style={{ color: 'var(--ink-muted)' }}>theme-adaptive midpoint</span>
+                  <span>#4467A3 blue</span>
+                </Box>
+              </Box>
+            </Box>
+            <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
+              the diverging midpoint flips per theme — <code>#F5F3EC</code> on cream bg / <code>#1A1A17</code>
+              on warm-near-black — so the zero point reads as part of the page rather than as a grey blob.
+            </Box>
+          </Box>
+        </Box>
+
         {/* 4. COPY SNIPPETS */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>copy &amp; paste</em>} />
@@ -587,7 +790,7 @@ export function PalettePage() {
                 label={<Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>OKLCH</Box>}
               />
             </Box>
-            <CodeBlock code={snippet(lang, oklch)} />
+            <CodeBlock code={snippet(lang, oklch, sortedPalette)} />
           </Box>
         </Box>
 
@@ -600,13 +803,7 @@ export function PalettePage() {
               the 10-point discrimination floor through <strong>n = 6</strong>. beyond that the eye starts
               losing pairs — add a marker shape or linestyle.
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, mb: 1 }}>
-              <FormControlLabel
-                control={<Switch size="small" checked={showPureCvd} onChange={(e) => setShowPureCvd(e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: colors.primary }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: colors.primary } }} />}
-                label={<Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>show alt. sort (max CVD distance)</Box>}
-              />
-            </Box>
-            <Box sx={{ overflowX: 'auto' }}>
+            <Box sx={{ overflowX: 'auto', mt: 2 }}>
               <Box component="table" sx={{
                 width: '100%',
                 borderCollapse: 'collapse',
@@ -619,19 +816,22 @@ export function PalettePage() {
                 <thead>
                   <tr>
                     <th>n series</th>
-                    <th style={{ textAlign: 'right' }}>ΔE_CVD (imprint)</th>
-                    {showPureCvd && <th style={{ textAlign: 'right' }}>ΔE_CVD (alt. sort)</th>}
-                    <th>verdict</th>
+                    <th style={{ textAlign: 'right' }}>imprint (default)</th>
+                    <th style={{ textAlign: 'right' }}>CVD-optimal sort</th>
+                    <th>verdict (imprint)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {HYBRID_V3_CVD.map((de, i) => {
                     const verdict = verdictFor(de);
+                    const altDe = PURE_CVD_GREEDY[i];
                     return (
                       <tr key={i}>
                         <td>{i + 2}</td>
                         <td className="num">{de.toFixed(2)}</td>
-                        {showPureCvd && <td className="num">{PURE_CVD_GREEDY[i].toFixed(2)}</td>}
+                        <td className="num" style={{ color: altDe > de ? '#007A59' : 'var(--ink-muted)' }}>
+                          {altDe.toFixed(2)}{altDe > de ? ' ↑' : altDe < de ? ' ↓' : ' ='}
+                        </td>
                         <td style={{
                           color: verdict === 'safe' ? '#007A59' : verdict === 'borderline' ? '#b56b18' : '#b62d2d',
                           fontWeight: 600,
@@ -642,14 +842,12 @@ export function PalettePage() {
                 </tbody>
               </Box>
             </Box>
-            {showPureCvd && (
-              <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
-                the alt. sort (greedy max-min CVD distance) is technically better at n=3..4 but groups two
-                greens and two purples in the first 4 slots. imprint trades a few ΔE points for visually
-                distinct hue families up front — the n=8 floor (8.81) is identical because both sortings
-                ship the same 8 hexes.
-              </Box>
-            )}
+            <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
+              the CVD-optimal sort is technically better at n=3..4 but groups two greens and two purples in
+              the first 4 slots. imprint trades a few ΔE points for visually distinct hue families up front —
+              the n=8 floor (8.81) is identical because both sortings ship the same 8 hexes. swap to it via
+              the sort toggle above if your audience is CVD-first.
+            </Box>
           </Box>
         </Box>
 
