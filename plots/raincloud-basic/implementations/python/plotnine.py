@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-26
+Quality: 89/100 | Updated: 2026-05-26
 """
 
 import os
