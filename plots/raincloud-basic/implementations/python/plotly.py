@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-26
@@ -70,7 +70,7 @@ for i, (condition, values) in enumerate(data.items()):
             points=False,
             name=condition,
             legendgroup=condition,
-            showlegend=True,
+            showlegend=False,
             hoveron="violins",
             hoverinfo="x+name",
             orientation="h",
@@ -78,14 +78,14 @@ for i, (condition, values) in enumerate(data.items()):
         )
     )
 
-    # Box plot — centered on the category baseline
+    # Box plot — centered on the category baseline, outline tinted with category color
     fig.add_trace(
         go.Box(
             x=values,
             y=y_base,
             width=box_width,
             marker_color=color,
-            line={"color": INK, "width": 1.2},
+            line={"color": color, "width": 1.6},
             fillcolor=ELEVATED_BG,
             boxpoints=False,
             name=condition,
@@ -121,7 +121,7 @@ fig.update_layout(
     autosize=False,
     width=800,
     height=450,
-    margin={"l": 110, "r": 40, "t": 60, "b": 80},
+    margin={"l": 110, "r": 40, "t": 60, "b": 60},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     title={
@@ -135,7 +135,7 @@ fig.update_layout(
     font={"color": INK},
     yaxis={
         "title": {"text": "Experimental Condition", "font": {"size": 12, "color": INK}},
-        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickfont": {"size": 11, "color": INK_SOFT},
         "tickmode": "array",
         "tickvals": list(range(len(conditions))),
         "ticktext": conditions,
@@ -147,7 +147,7 @@ fig.update_layout(
     },
     xaxis={
         "title": {"text": "Reaction Time (ms)", "font": {"size": 12, "color": INK}},
-        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickfont": {"size": 11, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
         "range": x_range,
@@ -158,19 +158,8 @@ fig.update_layout(
     },
     violingap=0,
     violinmode="overlay",
-    legend={
-        "title": {"text": "Condition", "font": {"size": 10, "color": INK}},
-        "font": {"size": 10, "color": INK_SOFT},
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
-        "orientation": "h",
-        "x": 0.5,
-        "y": -0.20,
-        "xanchor": "center",
-        "yanchor": "top",
-    },
-    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK, "font": {"size": 10, "color": INK}},
+    showlegend=False,
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK, "font": {"size": 11, "color": INK}},
 )
 
 # Save PNG (static) at the canonical landscape canvas: 3200×1800
