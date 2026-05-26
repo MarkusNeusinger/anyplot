@@ -16,10 +16,10 @@ const PRISM_LANGUAGE: Record<string, string> = {
   julia: 'julia',
 };
 
-// Theme-aware Okabe-Ito syntax theme. All colors come from CSS variables in
+// Theme-aware imprint syntax theme. All colors come from CSS variables in
 // tokens.css so the block adapts to light (paper) and dark modes. Comments
 // use the brand green as a deliberate editorial accent.
-const okabeItoTheme: Record<string, React.CSSProperties> = {
+const imprintTheme: Record<string, React.CSSProperties> = {
   'pre[class*="language-"]': {
     color: 'var(--code-text)',
     background: 'var(--code-bg)',
@@ -65,7 +65,7 @@ export default function CodeHighlighter({ code, language = 'python' }: CodeHighl
   return (
     <SyntaxHighlighter
       language={prismLanguage}
-      style={okabeItoTheme}
+      style={imprintTheme}
       customStyle={{
         margin: 0,
         padding: '24px 28px',

@@ -95,10 +95,12 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>palette</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              every plot uses the Okabe-Ito palette, designed to stay distinguishable under the main
-              forms of color vision deficiency. Masataka Okabe and Kei Ito published it on the Color
-              Universal Design page in 2002 (revised 2008). about 8% of men have some form of color
-              vision deficiency — most plotting libraries ignore this entirely. we make it the default.
+              every plot uses <strong>imprint</strong>, our own colourblind-safe categorical palette —
+              8 hues plus 3 semantic anchors, tuned for warm-paper rendering and validated against the
+              three main forms of colour vision deficiency. it sits in the same neighbourhood as
+              Okabe-Ito, Paul Tol&apos;s &ldquo;muted&rdquo;, and ColorBrewer Set2 — about 8% of men
+              have some form of CVD, and most plotting libraries ignore this entirely. we make it
+              the default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               see the{' '}

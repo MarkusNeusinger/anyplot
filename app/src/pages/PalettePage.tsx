@@ -527,8 +527,7 @@ export function PalettePage() {
                 every plot on anyplot uses <strong>imprint</strong>, a categorical palette of 8 colours plus 3
                 semantic anchors. low-chroma, warm-tinted for cream paper, validated against
                 deuteranopia / protanopia / tritanopia. designed to be easier on the eyes and let the data
-                speak — same neighbourhood as palettes that have shipped at scale in scientific publishing and
-                editorial dashboards.
+                speak.
               </Box>
               <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', mt: 2 }}>
                 compare with other categorical palettes:

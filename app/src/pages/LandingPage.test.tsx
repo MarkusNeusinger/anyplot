@@ -104,15 +104,12 @@ describe('LandingPage', () => {
     expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'specs_more_link', target: '/specs' });
   });
 
-  it('tracks the suggest_spec link and the okabe-ito reference', async () => {
+  it('tracks the suggest_spec link', async () => {
     const user = userEvent.setup();
     render(<LandingPage />);
 
     await user.click(screen.getByText(/suggest/));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'suggest_spec_link' }));
-
-    await user.click(screen.getByText(/Okabe/));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'palette_okabe_ito' }));
   });
 
   it('tracks the map teaser visual click', async () => {

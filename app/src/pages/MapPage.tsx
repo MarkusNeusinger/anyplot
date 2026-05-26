@@ -102,19 +102,19 @@ const visuallyHiddenSx = {
   border: 0,
 };
 
-// Top-N most frequent plot_types each get a distinct Okabe-Ito border color
+// Top-N most frequent plot_types each get a distinct imprint border color
 // so the catalog's biggest categories (line, scatter, bar, …) stand out at
 // a glance. Specs that don't fall into the top-N keep a neutral border.
-// The palette has 7 categorical colors + an adaptive neutral as the 8th —
-// here we use the 7 categorical ones; everything else stays uncolored.
+// 8 categorical hues in imprint's hybrid-v3 sort order.
 const CLUSTER_COLORS = [
-  '#009E73', // brand green
-  '#D55E00', // vermillion
-  '#0072B2', // blue
-  '#CC79A7', // reddish purple
-  '#E69F00', // orange
-  '#56B4E9', // sky blue
-  '#F0E442', // yellow
+  '#009E73', // slot 0 — brand green
+  '#C475FD', // slot 1 — lavender
+  '#4467A3', // slot 2 — blue
+  '#BD8233', // slot 3 — ochre
+  '#AE3030', // slot 4 — matte red
+  '#2ABCCD', // slot 5 — cyan
+  '#954477', // slot 6 — rose
+  '#99B314', // slot 7 — lime
 ] as const;
 
 function colorFor(bucket: string | null, topTypes: string[]): string | null {
