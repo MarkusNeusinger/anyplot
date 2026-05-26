@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:25:05Z'
-updated: '2026-05-26T23:06:50Z'
+updated: '2026-05-26T23:16:27Z'
 generated_by: claude-opus
 workflow_run: 26479853953
 issue: 1876
@@ -16,15 +16,18 @@ quality_score: 89
 review:
   strengths:
   - 'Correct horizontal raincloud composition: half-violin clipped to side=''positive''
-    rises above each category baseline, boxplot is centered on the baseline, and jittered
-    scatter falls below — the cloud-above / rain-below metaphor required by the spec
-    is unambiguously rendered.'
-  - Anyplot palette applied in canonical order with brand green (#009E73) as the first
-    series (Control); colors are pixel-identical between light and dark renders and
-    only chrome flips, exactly as the style guide requires.
+    rises above each category baseline, box-plot centered on the baseline, jittered
+    scatter falls below — cloud-above / rain-below metaphor required by the spec is
+    unambiguously rendered.'
+  - anyplot palette in canonical order with brand green (#009E73) as the first series
+    (Control); colors are pixel-identical between light and dark renders and only
+    chrome flips, exactly as the style guide requires.
   - Theme tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID) thread cleanly through
-    title, axis titles, tick labels, gridlines, axis line, legend chrome, and hover
-    label — both renders pass the dark-on-dark / light-on-light legibility check.
+    title, axis titles, tick labels, gridlines, axis line, and hover label — both
+    renders pass the dark-on-dark / light-on-light legibility check.
+  - Tick fontsize bump from 10pt to 11pt (attempt-1 fix) gives more mobile-thumbnail
+    headroom; box outlines now tinted with each category's color (attempt-1 fix) lifts
+    series identity in the boxes.
   - Idiomatic plotly graph_objects build (go.Violin + go.Box + go.Scatter overlaid
     via legendgroup) is the recommended pattern for raincloud in plotly; KISS structure
     with no functions/classes, deterministic seeding, and clean imports.
@@ -32,40 +35,40 @@ review:
     with sensible scale (250–650 ms, ~80 obs/group + a few outliers); Treatment B's
     bimodality is genuinely visible in the cloud — the plot actually tells a story.
   - Plotly-distinctive features used in the HTML output (rangeslider on x-axis, per-condition
-    hovertemplate, legendgroup-linked traces) — leverages the library beyond a static-screenshot
-    facsimile.
-  - Canvas locked to the mandated 3200×1800 landscape via autosize=False + width/height/scale,
-    with explicit margins; title fontsize length-scaled so the mandated '{spec-id}
-    · python · plotly · anyplot.ai' format fits comfortably.
+    hovertemplate, hoverlabel styling, legendgroup-linked traces) — leverages the
+    library beyond a static-screenshot facsimile.
+  - Canvas locked to the mandated 3200×1800 landscape via autosize=False + width/height/scale=4,
+    with explicit margins; canvas gate not triggered; title fontsize length-scaled
+    so the mandated '{spec-id} · python · plotly · anyplot.ai' format fits comfortably.
   weaknesses:
-  - 'Tick labels are a touch small for the 3200×1800 canvas: x-axis ticks render at
-    10pt which is fine on desktop but is the smallest comfortable size for the 400-px
-    mobile thumbnail — consider bumping to 11pt for a bit more headroom.'
-  - 'Box plots are visually understated: marker_color=color is set but boxpoints=False
-    makes it a no-op, so all four boxes look identical (same dark/light outline, same
-    neutral fill). Tinting the box outline or fill with a desaturated version of the
-    category color would improve series identity at a glance and tighten visual hierarchy
-    (DE-03).'
+  - 'Legend is still visible at the bottom of both renders (''Condition: Control /
+    Treatment A / Treatment B / Treatment C'') even though the code sets showlegend=False
+    on every trace AND in update_layout. The visible legend is redundant on a horizontal
+    raincloud where the y-axis already labels each row; either the legend hide didn''t
+    take effect or the rendered PNGs are stale relative to the latest fix commit.
+    Worth verifying that the attempt-1 legend-hide fix actually propagated to the
+    PNG render.'
+  - Box outlines are tinted with the category color but the effect is subtle at the
+    rendered scale; the median line and the box outline both use line.color so the
+    median isn't differentiated by emphasis. A slightly thicker median line (e.g.
+    width=2.5) or a contrasting median color would tighten the box-plot's information
+    density (DE-02/DE-03).
   - 'Design Excellence is solid but not standout: layout, palette, and typography
-    are clean and theme-correct, but there is no extra emphasis beyond the brand-green
-    default — e.g. a subtle highlight on Control (the reference series) or a one-line
-    subtitle would raise DE-01/DE-03 without breaking style-guide constraints.'
-  - Legend is technically correct but slightly redundant on a horizontal raincloud
-    where each row already carries its category label on the y-axis — consider showlegend=False
-    on the violins (or move the legend to the top in a single line) to reclaim vertical
-    space for the plot area.
+    are clean and theme-correct, but there is still no extra emphasis on the reference
+    series (Control) — e.g. a subtle desaturation of the three Treatment series or
+    a one-line subtitle would raise DE-01/DE-03 without breaking style-guide constraints.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white (#FAF8F1), uniform across paper and plot areas — not pure white.
-      Chrome: title "raincloud-basic · python · plotly · anyplot.ai" centered top in dark INK, fully readable; "Experimental Condition" y-axis title rotated on the left; "Reaction Time (ms)" x-axis title below, both in dark INK at 12pt; tick labels (200/300/400/500/600) and category labels (Control, Treatment A, Treatment B, Treatment C) in INK_SOFT (#4A4A44) at 10pt — clearly readable against the off-white background; subtle vertical gridlines at ~rgba(26,26,23,0.15); legend at the bottom with INK_SOFT border on ELEVATED_BG (#FFFDF6).
-      Data: each of the four conditions shows a half-violin "cloud" rising above the category baseline, a horizontal box-plot centered ON the baseline, and a jittered scatter "rain" falling below. Control series is brand green #009E73 (first series ✓), Treatment A is purple #C475FD, Treatment B is blue #4467A3 with a clearly bimodal cloud shape, Treatment C is tan #BD8233. Rain points at alpha≈0.6 with a thin off-white edge for separation.
-      Legibility verdict: PASS — no clipped text, no light-on-light, title/labels/ticks all comfortably legible.
+      Chrome: title "raincloud-basic · python · plotly · anyplot.ai" centered top in dark INK, fully readable; "Experimental Condition" y-axis title rotated on the left; "Reaction Time (ms)" x-axis title below, both in dark INK at ~12pt; tick labels (200/300/400/500/600) and category labels (Control, Treatment A, Treatment B, Treatment C) in INK_SOFT (#4A4A44) at 11pt — clearly readable against the off-white background; subtle vertical gridlines at ~rgba(26,26,23,0.15). A category legend ("Condition: Control / Treatment A / Treatment B / Treatment C") with INK_SOFT border on ELEVATED_BG (#FFFDF6) appears at the bottom — visible despite showlegend=False in code (likely stale render or unhonored setting).
+      Data: each of the four conditions shows a half-violin "cloud" rising above the category baseline, a horizontal box-plot centered ON the baseline, and a jittered scatter "rain" falling below. Control series is brand green #009E73 (first series ✓), Treatment A is purple #C475FD, Treatment B is blue #4467A3 with a clearly bimodal cloud shape, Treatment C is tan #BD8233. Rain points at alpha≈0.6 with a thin off-white edge for separation. Box outlines are subtly tinted with each category color.
+      Legibility verdict: PASS — no clipped text, no light-on-light, title/labels/ticks all comfortably legible. Canvas confirmed at 3200×1800.
 
     Dark render (plot-dark.png):
       Background: warm near-black (#1A1A17), uniform across paper and plot — not pure black.
-      Chrome: title in light INK (#F0EFE8) centered top — readable; y-axis title "Experimental Condition" and x-axis title "Reaction Time (ms)" in light INK; tick + category labels in INK_SOFT (#B8B7B0) — readable, no dark-on-dark; gridlines in rgba(240,239,232,0.15) — subtle but visible; legend on ELEVATED_BG (#242420) with INK_SOFT border at the bottom.
-      Data: identical layout to the light render — cloud above, box on baseline, rain below for each condition. Data fill colors are pixel-equivalent to the light render (Control green #009E73, Treatment A purple, Treatment B blue, Treatment C tan) — only the chrome flipped, as the style guide requires. Box outlines and median lines in light INK on dark fill, clearly visible.
-      Legibility verdict: PASS — brand green still pops, no dark-on-dark text, no clipped elements at the canvas edges.
+      Chrome: title in light INK (#F0EFE8) centered top — readable; y-axis title "Experimental Condition" and x-axis title "Reaction Time (ms)" in light INK; tick + category labels in INK_SOFT (#B8B7B0) at 11pt — readable, no dark-on-dark; gridlines in rgba(240,239,232,0.15) — subtle but visible. Same "Condition" legend at the bottom on ELEVATED_BG (#242420) with INK_SOFT border, mirroring the light render.
+      Data: identical layout to the light render — cloud above, box on baseline, rain below for each condition. Data fill colors are pixel-equivalent to the light render (Control green #009E73, Treatment A purple, Treatment B blue, Treatment C tan) — only the chrome flipped, as the style guide requires. Box outlines and median lines visible on dark fill.
+      Legibility verdict: PASS — brand green still pops, no dark-on-dark text, no clipped elements at the canvas edges. Canvas confirmed at 3200×1800.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -76,16 +79,16 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All fonts explicit and theme-aware; readable in both renders. Minor:
-          10pt ticks are the floor for 400-px mobile thumbnail readability — 11pt
-          would be safer.'
+        comment: All fonts explicit and theme-aware; readable in both renders. Tick
+          fontsize bumped to 11pt (vs. 10pt previously) — better mobile-thumbnail
+          headroom but a small margin still available.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, labels, or data. Category rows well-separated;
-          legend below the plot.
+        comment: No overlapping text or data; category rows well-separated; legend
+          below the plot area.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -113,7 +116,7 @@ review:
         max: 2
         passed: true
         comment: '''Reaction Time (ms)'' has units; ''Experimental Condition'' descriptive;
-          title in the mandated ''{spec-id} · python · plotly · anyplot.ai'' format.'
+          title in mandated ''{spec-id} · python · plotly · anyplot.ai'' format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -130,24 +133,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional polish with custom palette and theme tokens, but no
-          extra emphasis (subtitle, highlight on Control, refined typography hierarchy)
-          beyond the baseline.
+        comment: Professional polish with custom palette and theme tokens; box outlines
+          now tinted with category color but the extra emphasis (subtitle, focal-point
+          treatment) is still missing.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Y-axis spines removed; x-axis grid subtle; whitespace generous. Box
-          plots could be tinted with category color to lift refinement further.
+          outline tinting visible but subtle.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
         comment: Cloud-above/rain-below metaphor is the storytelling vehicle and Treatment
-          B's bimodality is visible. No explicit focal-point treatment (e.g. desaturate
-          non-Control series) so hierarchy is gentle.
+          B's bimodality is visible. No explicit focal-point treatment on Control
+          series.
     spec_compliance:
       score: 15
       max: 15
@@ -179,7 +182,6 @@ review:
         max: 3
         passed: true
         comment: Title format matches '{spec-id} · python · plotly · anyplot.ai' exactly.
-          Legend lists all 4 conditions with matching color swatches.
     data_quality:
       score: 15
       max: 15
@@ -220,7 +222,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) plus per-series rng with seed+i — fully deterministic.
+        comment: np.random.seed(42) plus per-series default_rng(42 + i) — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
