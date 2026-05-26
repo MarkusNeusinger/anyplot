@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-26
+Quality: 91/100 | Updated: 2026-05-26
 """
 
 import os
