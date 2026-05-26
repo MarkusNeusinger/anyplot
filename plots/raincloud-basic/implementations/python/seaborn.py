@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-26
@@ -73,6 +73,7 @@ sns.violinplot(
     density_norm="width",
     width=0.8,
     linewidth=0.6,
+    bw_adjust=0.6,
     ax=ax,
     legend=False,
 )
@@ -144,9 +145,9 @@ ax.set_ylim(-0.55, 2.45)
 # Data storytelling
 ax.annotate(
     "Bimodal distribution\nrevealed by raincloud",
-    xy=(490, 2.08),
+    xy=(425, 2.15),
     xytext=(540, 1.55),
-    fontsize=7,
+    fontsize=9,
     fontweight="medium",
     color=INK_SOFT,
     ha="left",
@@ -163,7 +164,7 @@ ax.annotate(
     f"~{diff_ms:.0f} ms faster\nthan Control",
     xy=(ta_median, 1.0),
     xytext=(290, 0.4),
-    fontsize=7,
+    fontsize=9,
     fontweight="medium",
     color=INK_SOFT,
     ha="center",
