@@ -1,140 +1,124 @@
-"""pyplots.ai
+""" anyplot.ai
 raincloud-basic: Basic Raincloud Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-26
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Patch
+from scipy.stats import gaussian_kde
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# anyplot palette positions 1-3
+COLORS = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Reaction times (ms) for three experimental conditions
 np.random.seed(42)
 
-# Control group: Normal distribution centered around 350ms
+# Control: roughly normal around 350 ms
 control = np.random.normal(350, 50, 80)
 
-# Treatment A: Faster responses, clearly bimodal with distinct modes
-treatment_a = np.concatenate(
-    [
-        np.random.normal(250, 25, 45),  # Fast responders - more separation
-        np.random.normal(340, 25, 35),  # Slower subgroup
-    ]
-)
+# Treatment A: clearly bimodal — two response strategies
+treatment_a = np.concatenate([np.random.normal(250, 25, 45), np.random.normal(340, 25, 35)])
 
-# Treatment B: Mixed results with some outliers
-treatment_b = np.concatenate(
-    [
-        np.random.normal(300, 40, 60),
-        np.random.normal(400, 25, 15),  # Slower subgroup
-        np.array([500, 520, 480]),  # Outliers
-    ]
-)
+# Treatment B: mostly central with a slow tail and a few outliers
+treatment_b = np.concatenate([np.random.normal(300, 40, 60), np.random.normal(400, 25, 15), np.array([500, 520, 480])])
 
 categories = ["Control", "Treatment A", "Treatment B"]
 data = [control, treatment_a, treatment_b]
-colors = ["#306998", "#FFD43B", "#4CAF50"]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Layout: Cloud (violin) on TOP, boxplot in MIDDLE, rain (points) BELOW
-# Using horizontal orientation with categories on y-axis
-cloud_offset = 0.2  # Offset for cloud (positive = top)
-rain_offset = -0.25  # Offset for rain (negative = below)
-box_width = 0.1
+# Raincloud layout: cloud above baseline, boxplot on baseline, rain below
+cloud_offset = 0.05
+cloud_height = 0.32
+rain_offset = -0.22
+box_width = 0.08
 
-for i, (d, color) in enumerate(zip(data, colors, strict=True)):
+for i, (d, color) in enumerate(zip(data, COLORS, strict=True)):
     pos = i + 1
 
-    # Calculate KDE for half-violin (Silverman's rule for bandwidth)
-    n = len(d)
-    std = np.std(d)
-    bw = 1.06 * std * n ** (-1 / 5)
-
+    # Cloud — half-violin via scipy KDE, Silverman's rule
+    kde = gaussian_kde(d, bw_method="silverman")
     x_min, x_max = d.min() - 30, d.max() + 30
-    x_vals = np.linspace(x_min, x_max, 200)
+    x_vals = np.linspace(x_min, x_max, 256)
+    density = kde(x_vals)
+    density_scaled = density / density.max() * cloud_height
 
-    # Gaussian kernel density estimation
-    kde_vals = np.zeros_like(x_vals)
-    for point in d:
-        kde_vals += np.exp(-0.5 * ((x_vals - point) / bw) ** 2) / (bw * np.sqrt(2 * np.pi))
-    kde_vals /= n
-
-    # Normalize and scale violin width (height in horizontal orientation)
-    kde_scaled = kde_vals / kde_vals.max() * 0.3
-
-    # Draw half-violin (cloud) on TOP (above the boxplot)
     ax.fill_between(
         x_vals,
         pos + cloud_offset,
-        pos + cloud_offset + kde_scaled,
-        alpha=0.7,
+        pos + cloud_offset + density_scaled,
         color=color,
-        edgecolor="white",
-        linewidth=1.5,
+        alpha=0.75,
+        edgecolor=color,
+        linewidth=0.8,
+        zorder=1,
     )
 
-    # Draw horizontal box plot in the middle
+    # Boxplot — sits on the category baseline
     bp = ax.boxplot([d], positions=[pos], widths=box_width, vert=False, patch_artist=True, showfliers=False, zorder=3)
-
-    # Style box plot
-    bp["boxes"][0].set_facecolor("white")
-    bp["boxes"][0].set_edgecolor("#333333")
-    bp["boxes"][0].set_linewidth(2)
-    bp["medians"][0].set_color("#333333")
-    bp["medians"][0].set_linewidth(2.5)
+    bp["boxes"][0].set_facecolor(ELEVATED_BG)
+    bp["boxes"][0].set_edgecolor(INK_SOFT)
+    bp["boxes"][0].set_linewidth(1.2)
+    bp["medians"][0].set_color(INK)
+    bp["medians"][0].set_linewidth(1.6)
     for whisker in bp["whiskers"]:
-        whisker.set_color("#333333")
-        whisker.set_linewidth(1.5)
+        whisker.set_color(INK_SOFT)
+        whisker.set_linewidth(1.0)
     for cap in bp["caps"]:
-        cap.set_color("#333333")
-        cap.set_linewidth(1.5)
+        cap.set_color(INK_SOFT)
+        cap.set_linewidth(1.0)
 
-    # Draw jittered points (rain) BELOW the boxplot
-    jitter = np.random.uniform(-0.06, 0.06, len(d))
+    # Rain — jittered points below the baseline
+    jitter = np.random.uniform(-0.07, 0.07, len(d))
     ax.scatter(
         d,
-        pos + rain_offset + jitter,
-        s=110,  # Increased from 80 for better visibility
+        np.full(len(d), pos + rain_offset) + jitter,
+        s=28,
         alpha=0.6,
         color=color,
-        edgecolor="white",
-        linewidth=0.5,
+        edgecolor=PAGE_BG,
+        linewidth=0.4,
         zorder=2,
     )
 
-# Styling
+# Axes & ticks
 ax.set_yticks([1, 2, 3])
-ax.set_yticklabels(categories, fontsize=18)
-ax.set_xlabel("Reaction Time (ms)", fontsize=20)
-ax.set_ylabel("Experimental Condition", fontsize=20)
-ax.set_title("raincloud-basic · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_yticklabels(categories, fontsize=10, color=INK_SOFT)
+ax.set_xlabel("Reaction Time (ms)", fontsize=10, color=INK)
+ax.set_ylabel("Experimental Condition", fontsize=10, color=INK)
 
-# Set axis ranges with padding
+title = "raincloud-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=10)
+
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+
+# Range with breathing room
 all_data = np.concatenate(data)
-ax.set_xlim(all_data.min() - 50, all_data.max() + 50)
-ax.set_ylim(0.4, 3.8)
+ax.set_xlim(all_data.min() - 40, all_data.max() + 40)
+ax.set_ylim(0.45, 3.55)
 
-# Subtle grid on x-axis only
-ax.xaxis.grid(True, alpha=0.3, linestyle="--")
+# Subtle x-axis grid only
+ax.xaxis.grid(True, alpha=0.15, color=INK, linewidth=0.8)
 ax.set_axisbelow(True)
 
-# Custom legend - positioned outside plot area
-legend_elements = [
-    Patch(facecolor=c, edgecolor="white", alpha=0.7, label=cat) for c, cat in zip(colors, categories, strict=True)
-]
-ax.legend(
-    handles=legend_elements, fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1), framealpha=0.9, edgecolor="none"
-)
-
-# Clean up spines
+# L-frame: keep left + bottom
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_linewidth(1.5)
-ax.spines["bottom"].set_linewidth(1.5)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+ax.spines["left"].set_linewidth(0.8)
+ax.spines["bottom"].set_linewidth(0.8)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.12, right=0.97, top=0.90, bottom=0.13)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
