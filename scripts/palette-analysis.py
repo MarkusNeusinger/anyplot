@@ -8,7 +8,17 @@
 #   "pillow>=11.0",
 # ]
 # ///
-"""Palette baseline diagnostic for anyplot.
+"""Palette baseline diagnostic for anyplot — HISTORICAL.
+
+This script was the original 2026 baseline diagnostic, generated when the
+anyplot palette was still the Okabe-Ito 7+1 set (before variant D and then
+the current imprint palette were adopted). It is preserved as a historical
+artefact for reproducing the early ΔE numbers cited in the rationale docs.
+
+For the currently-shipping palette and the full design rationale see:
+  - docs/reference/palette-variants-v3/decision-rationale.md
+  - core/palette.py (named API, sequential + diverging cmaps)
+  - docs/reference/style-guide.md §4.1
 
 Generates a single self-contained HTML page that visualises the **Okabe-Ito
 baseline** (the historical anyplot palette before variant D was adopted)
@@ -20,9 +30,6 @@ across three domains, each evaluated for normal vision and three
      ``palette-variants.py`` is scored against.
   B. Continuous plot colormaps (viridis, cividis, BrBG)
   C. Website surface & chrome tokens — including homepage hero mockup
-
-For the currently-active anyplot palette (variant D), see
-``docs/reference/palette-variants/D-balanced.html``.
 
 Run::
 

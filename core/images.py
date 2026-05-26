@@ -42,7 +42,7 @@ FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
 #
 # Theme dicts so OG images can be rendered light or dark from the same code.
 # Token names mirror the CSS custom properties defined in the React app
-# (`--bg-page`, `--ink`, `--ok-green`, etc.) so the OG cards read as a direct
+# (`--bg-page`, `--ink`, `--imprint-green`, etc.) so the OG cards read as a direct
 # translation of the in-product surfaces.
 
 # anyplot categorical palette — "imprint" (v3 hybrid-v3 ordering).
@@ -482,7 +482,7 @@ def _draw_anyplot_wordmark(
 
     - `any` and `plot` in `--ink`, MonoLisa Bold
     - `.` is the actual MonoLisa period glyph recolored to brand green (matches
-      the website where the dot is a `.` character with `color: var(--ok-green)`)
+      the website where the dot is a `.` character with `color: var(--imprint-green)`)
     - `()` in `--ink` at 45% opacity, normal weight (not bold)
 
     Args:
@@ -510,7 +510,7 @@ def _draw_anyplot_wordmark(
     cursor_x += _text_advance(draw, "any", bold_font)
 
     # "." — the actual MonoLisa period glyph, recolored brand green. Matches the
-    # website where the dot is a `.` character with `color: var(--ok-green)` and
+    # website where the dot is a `.` character with `color: var(--imprint-green)` and
     # a 1.3× scale, NOT a filled circle (which used to read way too heavy).
     draw.text((cursor_x, y), ".", fill=ANYPLOT_GREEN, font=bold_font)
     cursor_x += _text_advance(draw, ".", bold_font)

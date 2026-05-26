@@ -80,7 +80,7 @@ export function LandingPage() {
  * left, decorative SVG cluster preview on the right. The preview is purely
  * static (no data fetch, no force simulation) so it stays cheap on the
  * landing page; it only hints at the real map's clustering aesthetic using
- * the same Okabe-Ito palette.
+ * the same imprint palette.
  */
 function MapSection({ specCount }: { specCount?: number }) {
   const { trackEvent } = useAnalytics();
