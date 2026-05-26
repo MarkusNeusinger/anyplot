@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-26
@@ -19,6 +19,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Box-interior fill: in light mode the off-white reads as a hollow box; in dark
+# mode PAGE_BG blends into the canvas, so blend toward INK to keep the box
+# distinct from the surrounding plot background.
+BOX_FILL = "#FAF8F1" if THEME == "light" else "#2E2E29"
 
 ANYPLOT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -197,12 +202,18 @@ def to_svg(px, py):
     return px * x_scale + x_offset, py * y_scale + y_offset
 
 
-# Cloud polygons — injected inside the plot group (uses plot-local coords)
+# Cloud polygons — injected inside the plot group (uses plot-local coords).
+# Fill is the full polygon (closed back to baseline); the stroke is drawn
+# separately as a polyline along only the curved top edge so the baseline
+# closure doesn't show as a visible horizontal line.
 clouds_svg = '<g class="raincloud-clouds">'
 for color, poly in cloud_polygons:
     pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in (to_svg(px, py) for px, py in poly))
+    # Curve-only stroke: skip the first and last vertices (the baseline endpoints).
+    curve_pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in (to_svg(px, py) for px, py in poly[1:-1]))
     clouds_svg += (
-        f'<polygon points="{pts}" fill="{color}" fill-opacity="0.55" '
+        f'<polygon points="{pts}" fill="{color}" fill-opacity="0.55" stroke="none"/>'
+        f'<polyline points="{curve_pts}" fill="none" '
         f'stroke="{color}" stroke-width="2.5" stroke-opacity="0.9"/>'
     )
 clouds_svg += "</g>"
@@ -226,7 +237,7 @@ for color, cy, q1, q3, median, _w_lo, _w_hi in box_specs:
     box_bot_y = by + bh
     boxes_svg += (
         f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bw:.1f}" height="{bh:.1f}" '
-        f'fill="{PAGE_BG}" fill-opacity="0.85" '
+        f'fill="{BOX_FILL}" fill-opacity="0.92" '
         f'stroke="{color}" stroke-width="5"/>'
         f'<line x1="{mx:.1f}" y1="{box_top_y:.1f}" '
         f'x2="{mx:.1f}" y2="{box_bot_y:.1f}" '
