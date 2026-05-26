@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:28:01Z'
-updated: '2026-05-26T23:03:25Z'
+updated: '2026-05-26T23:10:47Z'
 generated_by: claude-opus
 workflow_run: 26479777673
 issue: 1876
@@ -12,79 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Raincloud metaphor is unambiguous in both renders: half-violin clouds rise above
-    each category baseline, the outlined box plot sits exactly on the baseline, and
-    jittered rain points fall below — the spec''s ''rain from a cloud'' visual is
-    preserved end to end.'
-  - 'Anyplot palette is applied correctly: Control = #009E73 (first series), Treatment
-    A = #C475FD, Treatment B = #4467A3, and the colors are identical between light
-    and dark renders — only chrome flips, as required.'
-  - 'Theme adaptation is fully threaded: warm off-white #FAF8F1 / warm near-black
-    #1A1A17 backgrounds, INK/INK_SOFT/INK_MUTED tokens flow into spines, ticks, labels,
-    annotation boxes, and edgecolor on rain markers — no dark-on-dark or light-on-light
-    failures.'
-  - 'Two thoughtful annotations carry the storytelling: a callout on Treatment B''s
-    upper mode highlights the bimodality (the very feature the raincloud is meant
-    to reveal vs. a plain boxplot), and a second callout quantifies Treatment A''s
-    ~59 ms speedup vs. Control. Both use subtle arrows on rounded ELEVATED_BG boxes
-    — refined, not noisy.'
-  - Box plot is rendered as outlined-only (fill=False, linewidth=1.4) with thickened
-    median — uses palette to color outlines/whiskers/caps/median in one stroke, avoiding
-    the fragile post-hoc artist recoloring that plagues many seaborn raincloud attempts.
-  - 'Synthetic data is well-chosen: Treatment B is deliberately bimodal (two normals
-    at 350±30 and 480±40) so the raincloud actually demonstrates its claimed advantage
-    over a plain box plot — strong DQ-01 feature coverage.'
+  - 'All three weaknesses from Attempt 1 addressed: bw_adjust=0.6 makes Treatment
+    B''s bimodal cloud silhouette readable; annotation fontsize bumped 7→9 so callouts
+    survive the 800/1200 px catalog resizes; bimodality arrow re-anchored at the valley
+    between modes'
+  - Raincloud metaphor unambiguous in both renders — cloud rises above each category
+    baseline, outlined box sits exactly on the baseline, jittered rain falls below
+    the baseline, exactly as the spec mandates
+  - 'Anyplot palette applied correctly (Control = #009E73 first, then C475FD / 4467A3);
+    data colors identical light↔dark, only chrome flips between themes'
+  - Theme tokens threaded through to annotation bbox, marker edgecolor, box-plot stroke,
+    grid, tick labels — no dark-on-dark or light-on-light anywhere; both renders pass
+    the legibility check
+  - Treatment B's bimodality is now the narrative payoff of the plot rather than buried
+    under default KDE smoothing — demonstrates the exact thing rainclouds exist to
+    reveal that a boxplot would hide
+  - Outlined box plot (fill=False, palette colors stroke + whiskers + caps + median
+    in one stroke) avoids the fragile post-hoc artist recoloring most seaborn rainclouds
+    resort to
+  - Canvas dimensions exact at 3200×1800 (gate passed); no bbox_inches='tight'; explicit
+    facecolor on savefig
   weaknesses:
-  - Treatment B's bimodality is more visible in the box-plot internals (off-center
-    median, wide IQR) than in the cloud silhouette itself — the half-violin reads
-    as a single skewed hump with only a faint shoulder around 480 ms. Consider increasing
-    the violin's KDE resolution or reducing the bandwidth (e.g. bw_adjust=0.6) so
-    the upper mode reads as a distinct second peak rather than a shoulder, which is
-    the whole point of choosing a bimodal example for a raincloud demo.
-  - The 'Bimodal distribution revealed by raincloud' annotation arrow lands on the
-    upper-right tail of the Treatment B violin (~500 ms) rather than between the two
-    suspected modes. Either re-anchor the arrow tip near the valley around ~420 ms
-    (where the bimodality is most diagnostic) or rephrase the label to point at the
-    specific mode it's calling out.
-  - Annotation text at fontsize=7 is on the small side for a 3200×1800 canvas — readable
-    at full size but starts to feel cramped when the page resizes to the 800/1200
-    px catalog variants. Bumping to ~9 pt would keep the annotation boxes visually
-    proportional to the 10 pt axis labels without crowding the plot area.
+  - Tick labels at 8pt are on the smaller end — a touch larger (9pt) would hold up
+    better at the 400/800 px catalog variants without crowding the canvas
+  - The half-violin clipping relies on ax.collections ordering and direct vertex mutation
+    — works correctly but is fragile if seaborn ever changes its internal collection
+    layout; a more idiomatic seaborn-native approach (e.g. kde-on-y composition) would
+    be more durable
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — matches the light-theme spec, not pure white.
-      Chrome: title "raincloud-basic · seaborn · anyplot.ai" rendered in dark INK at the top
-        and well-centered. Y-axis label "Condition" and x-axis label "Reaction Time (ms)"
-        are dark and clearly readable. Tick labels (300, 350 … 550 on x; Control, Treatment A,
-        Treatment B on y) are INK_SOFT and legible. Vertical grid lines at major x-ticks
-        are subtle. Top and right spines removed; left and bottom spines visible at thin
-        weight. Two annotation boxes ("Bimodal distribution revealed by raincloud" and
-        "~59 ms faster than Control") render as rounded #FFFDF6 boxes with dark text and
-        thin gray arrows — both fully legible.
-      Data: three rows, top-to-bottom Treatment B / Treatment A / Control. Each shows
-        a half-violin "cloud" above the baseline, an outlined box plot exactly on the
-        baseline, and a jittered strip of points (alpha~0.55) below the baseline.
-        Colors: Control = green #009E73 (first series, correct), Treatment A = light
-        purple #C475FD, Treatment B = blue #4467A3 — anyplot palette in canonical order.
-      Legibility verdict: PASS — all text dark on light, no overlap, all elements within canvas.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "raincloud-basic · seaborn · anyplot.ai" centered at top in dark INK at fontsize 12 — readable. Y-axis label "Condition" and x-axis label "Reaction Time (ms)" at fontsize 10 in dark INK — readable. Tick labels at fontsize 8 in INK_SOFT — readable. Top/right spines removed, left/bottom spines in INK_SOFT. Subtle vertical grid lines at low alpha.
+      Data: Three categories on the y-axis top-to-bottom: Treatment B (blue #4467A3), Treatment A (purple #C475FD), Control (green #009E73). First series is #009E73 — correct. For each category, the half-violin "cloud" rises ABOVE the baseline (clipped via path vertex mutation), an outlined box plot sits ON the baseline (fill=False, stroke colored by palette), and jittered strip points fall BELOW the baseline (offset -0.25, alpha 0.55, PAGE_BG edge ring). Treatment B is visibly bimodal — primary peak ~370ms and secondary peak ~480ms with a valley around 420–430ms (bw_adjust=0.6 reveals the second mode). Two rounded annotation boxes at fontsize 9 with ELEVATED_BG fill: "Bimodal distribution revealed by raincloud" anchors at the Treatment B valley; "~59 ms faster than Control" anchors at Treatment A's median.
+      Legibility verdict: PASS — no light-on-light text, all chrome and data clearly distinguishable from the warm off-white surface.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — matches the dark-theme spec, not pure black.
-      Chrome: title and axis labels rendered in light INK (#F0EFE8), clearly readable
-        against the near-black surface. Tick labels in INK_SOFT (#B8B7B0) — visible but
-        appropriately understated. Grid lines remain subtle. Annotation boxes flip to the
-        dark ELEVATED_BG (#242420) with light text and thin gray arrows — no dark-on-dark
-        failure, no light-on-light failure.
-      Data: colors are identical to the light render — Control = #009E73 green, Treatment A
-        = #C475FD purple, Treatment B = #4467A3 blue. Brand green is fully visible against
-        the near-black background. Half-violins, box outlines, and rain points all
-        distinguishable from the background. The rain-point edgecolor flips to PAGE_BG
-        (#1A1A17) which gives the markers a subtle dark halo against the cloud and
-        background — works on both themes.
-      Legibility verdict: PASS — no chrome-token failures observed.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all in light INK tokens (#F0EFE8 / #B8B7B0) — clearly readable. Spines and grid in light INK_SOFT at low alpha. Annotation boxes flip to dark ELEVATED_BG #242420 with light text and INK_MUTED arrows.
+      Data: Colors identical to the light render — Control = #009E73 green, Treatment A = #C475FD purple, Treatment B = #4467A3 blue. Only chrome flipped between themes, as required. Brand green #009E73 remains clearly visible against the near-black surface. Treatment B bimodality reads identically to the light render. Rain points' PAGE_BG (#1A1A17) edge ring gives a subtle dark halo on dark that helps the points separate from the cloud surface.
+      Legibility verdict: PASS — no dark-on-dark failures; tick labels, axis labels, title, and annotation text all clearly readable against the warm near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -95,72 +64,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, ticks 8pt — all readable in both themes;
-          annotations at 7pt are on the small side for resized variants.
+        comment: Annotations bumped 7→9pt hold up at 800/1200 px catalog variants;
+          tick labels at 8pt could ride slightly higher on resized variants but full-size
+          is solid
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Annotations placed clear of clouds/rain; no text collisions.
+        comment: The ~59 ms arrow passes through empty space; no actual text/data
+          collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rain points at size=3.5 with alpha=0.55 + PAGE_BG edge ring — visible
-          without overplotting at ~80 pts per category.
+        comment: size=3.5 + alpha=0.55 + PAGE_BG edge ring renders rain crisply at
+          ~80 pts/category in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; green/purple/blue are easy to distinguish.
+        comment: Anyplot palette is CVD-safe; sufficient contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas (gate passed), title ~50% width, nothing clipped,
-          balanced label sizes.
+        comment: 3200×1800 exact (canvas gate passed); title fits without overflow;
+          balanced axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Reaction Time (ms)'' carries unit; ''Condition'' descriptive.'
+        comment: X axis carries the unit (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (Control), canonical order, theme backgrounds
-          correct, no off-brand cmaps.'
+        comment: 'First series #009E73; canonical anyplot order; theme backgrounds
+          correct; identical data colors across renders'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom palette, outlined-box styling, intentional layering of cloud/box/rain
-          with refined linework.
+        comment: Outlined-box styling + intentional layering of cloud/box/rain + tightened
+          bw_adjust lets the bimodal cloud silhouette do its narrative work
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle x-grid at alpha 0.15, edge-rings
-          on rain points — clean but conventional refinement.
+        comment: Spines, grid, edge rings, annotation typography all dialed in
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Two callouts (bimodality + effect size) create focal points; annotation
-          anchor on the bimodal callout could be tightened.
+        comment: Bimodality callout now anchors at the valley between modes; ~59 ms
+          callout anchors on Treatment A's median — both narratively crisp
     spec_compliance:
       score: 15
       max: 15
@@ -170,27 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Genuine raincloud: half-violin + box + jittered strip per category.'
+        comment: Genuine raincloud with all three elements (cloud + box + rain)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, cloud above baseline, box on baseline, rain
-          below baseline, half-violin clipping, alpha and jitter within spec bounds.
+        comment: Horizontal orientation; cloud above / box on / rain below baseline;
+          half-violin clipping; alpha 0.55 and jitter 0.07 within spec bounds; medians
+          shown in box
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Reaction Time, y=Condition; all three groups visible end to end.
+        comment: x=Reaction Time, y=Condition; all three categories represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'raincloud-basic · seaborn · anyplot.ai' matches the seaborn-in-this-repo
-          convention; legend correctly suppressed (color already encoded by category).
+        comment: Title matches {spec-id} · {library} · anyplot.ai; hue mapping carries
+          the colors and the y-axis is effectively the legend (no redundant legend
+          needed)
     data_quality:
       score: 15
       max: 15
@@ -200,21 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three groups; one deliberately bimodal so the raincloud demonstrates
-          the very feature it exists to reveal vs. a plain boxplot.
+        comment: Treatment B's deliberate bimodality is now visible in the cloud silhouette,
+          demonstrating the exact thing rainclouds exist to reveal that boxplots hide
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time experiment (Control / Treatment A / Treatment B) is
-          neutral and standard for the technique.
+        comment: Reaction-time experiment (control vs two treatments) — neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300–600 ms range is realistic for human reaction times.
+        comment: 300–600 ms range is plausible for the domain
     code_quality:
       score: 10
       max: 10
@@ -224,32 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no helper functions or classes.
+        comment: Top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all sampling.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vertex-clipping the violin in place + offset-shifting the strip is
-          the right level of seaborn-fu; no fake interactivity (AR-08 clean).
+        comment: Vertex-clipping the violin + offset-shifting the strip is the right
+          level of finesse for raincloud composition; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with explicit facecolor; no bbox_inches='tight'.
+        comment: plot-{THEME}.png with explicit facecolor; no bbox_inches='tight'
     library_features:
       score: 7
       max: 10
@@ -259,16 +230,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct hue=+legend=False+palette dict pattern across all three high-level
-          functions; uses sns.set_theme for chrome.
+        comment: Correct hue=…, legend=False, palette= pattern across violinplot/stripplot/boxplot;
+          fill=False + medianprops carries box styling without post-hoc artist hacks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Compose-three-axes-level-functions-into-one-raincloud pattern is
-          recognizably seaborn-style, but the half-violin trick is generic matplotlib
-          path editing rather than something only seaborn enables.
+        comment: Composes three seaborn axes-level functions into one coherent raincloud;
+          the half-violin clipping itself is matplotlib path editing rather than something
+          distinctly seaborn
   verdict: APPROVED
 impl_tags:
   dependencies: []
