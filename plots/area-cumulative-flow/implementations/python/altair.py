@@ -22,7 +22,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — 90-day software delivery Kanban board
 np.random.seed(42)
@@ -71,7 +71,7 @@ base = (
         y=alt.Y("wip:Q", stack="zero", title="Cumulative Items"),
         color=alt.Color(
             "stage:N",
-            scale=alt.Scale(domain=stages, range=OKABE_ITO),
+            scale=alt.Scale(domain=stages, range=IMPRINT),
             legend=alt.Legend(title="Workflow Stage", orient="top-left"),
         ),
         order=alt.Order("stack_order:Q"),

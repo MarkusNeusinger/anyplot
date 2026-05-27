@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito data colors
 BRAND = "#009E73"  # position 1 — main price line
-SPAN1_COLOR = "#E69F00"  # position 5 — recession vertical span
-SPAN2_COLOR = "#D55E00"  # position 2 — threshold horizontal span
+SPAN1_COLOR = "#AE3030"  # position 5 — recession vertical span
+SPAN2_COLOR = "#DDCC77"  # imprint amber — threshold horizontal span (warning)
 
 # Data — stock price with recession dip and warning threshold zone
 np.random.seed(42)

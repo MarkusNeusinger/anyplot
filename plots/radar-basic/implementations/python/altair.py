@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]
 n = len(categories)
@@ -121,7 +121,7 @@ bob_x_c, bob_y_c = to_xy_closed(bob_vals)
 # Click-based interactive selection: click a vertex point to highlight its series
 selection = alt.selection_point(fields=["Employee"])
 
-color_scale = alt.Scale(domain=["Alice", "Bob"], range=[OKABE_ITO[0], OKABE_ITO[1]])
+color_scale = alt.Scale(domain=["Alice", "Bob"], range=[IMPRINT[0], IMPRINT[1]])
 
 # Static grid rings
 grid_lines = (
@@ -145,13 +145,13 @@ spokes = (
 # Static filled polygons (semi-transparent, one geoshape per series)
 alice_fill = (
     alt.Chart(alt.Data(values=[make_geo(alice_x_c, alice_y_c)]))
-    .mark_geoshape(fill=OKABE_ITO[0], fillOpacity=0.18, stroke="none")
+    .mark_geoshape(fill=IMPRINT[0], fillOpacity=0.18, stroke="none")
     .project(type="identity", reflectY=True)
 )
 
 bob_fill = (
     alt.Chart(alt.Data(values=[make_geo(bob_x_c, bob_y_c)]))
-    .mark_geoshape(fill=OKABE_ITO[1], fillOpacity=0.18, stroke="none")
+    .mark_geoshape(fill=IMPRINT[1], fillOpacity=0.18, stroke="none")
     .project(type="identity", reflectY=True)
 )
 

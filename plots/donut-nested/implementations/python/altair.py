@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Market share by region (inner) and product lines within each region (outer)
 data = {
@@ -49,7 +49,7 @@ inner_df["level_2"] = inner_df["level_1"]
 # Use Okabe-Ito palette positions with variations for subcategories
 color_map = {}
 for i, parent in enumerate(inner_df["level_1"]):
-    parent_color = OKABE_ITO[i % len(OKABE_ITO)]
+    parent_color = IMPRINT[i % len(IMPRINT)]
     parent_children = df[df["level_1"] == parent]["level_2"].tolist()
     color_map[parent] = {}
     for j, child in enumerate(parent_children):
@@ -73,7 +73,7 @@ df["color"] = outer_colors
 # Inner ring colors (use Okabe-Ito positions)
 inner_color_map = {}
 for i, parent in enumerate(inner_df["level_1"]):
-    inner_color_map[parent] = OKABE_ITO[i % len(OKABE_ITO)]
+    inner_color_map[parent] = IMPRINT[i % len(IMPRINT)]
 inner_df["color"] = inner_df["level_1"].map(inner_color_map)
 
 # Format values for tooltip

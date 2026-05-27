@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"
-PDP_COLOR = "#D55E00"
+PDP_COLOR = "#C475FD"
 
 # Data
 np.random.seed(42)

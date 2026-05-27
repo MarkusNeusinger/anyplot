@@ -1,159 +1,204 @@
 library: plotnine
+language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:15:14Z'
-updated: '2026-01-21T13:17:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21210864159
+updated: '2026-05-27T23:18:01Z'
+generated_by: claude-sonnet
+workflow_run: 26543218212
 issue: 3749
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with multiple geom layers (geom_line,
-    geom_vline, geom_segment, geom_point, geom_text)
-  - Good color and shape encoding for different event types making them easily distinguishable
-  - Smart alternating flag positioning algorithm to avoid visual clutter
-  - Clean, well-organized code following KISS principles
-  - Appropriate use of scale_color_manual and scale_shape_manual for custom styling
+  - Clean layered grammar-of-graphics composition — price line, LOWESS trend, dashed
+    reference lines, connector segments, flag markers, and text labels all stack elegantly
+    without visual conflicts
+  - 'Correct anyplot palette in canonical order with full semantic color assignment:
+    Earnings=#009E73, Dividend=#C475FD, News=#4467A3, Split=#BD8233'
+  - Redundant encoding with distinct marker shapes (square/diamond/triangle/circle)
+    per event type plus size hierarchy (Earnings markers larger) is a strong accessibility
+    win
+  - 'Theme-adaptive chrome is complete and correct: INK/INK_SOFT tokens applied to
+    all title, axis, legend, and grid elements — both renders look correct'
+  - 'Realistic, neutral financial dataset: 180-day period, quarterly earnings beats/misses,
+    dividends, split with proper price halving, news events — textbook financial chart
+    context'
+  - guides(size='none') correctly suppresses the size legend while retaining color+shape
+    — idiomatic plotnine
+  - LOWESS trend line (geom_smooth method='lowess') adds analytical value, helping
+    viewers see the overall downtrend despite short-term volatility
   weaknesses:
-  - Grid lines could be more subtle (alpha 0.3 instead of E0E0E0 which appears quite
-    visible)
-  image_description: 'The plot displays a stock price chart spanning from January
-    2024 to September 2024, with the price ranging from approximately $115 to $165.
-    The stock price is rendered as a thick blue line (#306998). Eight event flags
-    are positioned throughout the chart with connector lines linking each flag marker
-    to its corresponding date on the price line. Events are color-coded by type: blue
-    squares for Earnings (Q4 Beat, Q1 Miss, Q2 Beat), green diamonds for Dividends
-    (Div $0.50, Div $0.55), yellow triangles for News (New Product, Partnership),
-    and a red circle for the Split (2:1 Split). The flags alternate above and below
-    the price line to minimize overlap. Vertical dashed gray lines mark each event
-    date. The title "stock-event-flags · plotnine · pyplots.ai" is displayed at the
-    top. A legend on the right side explains the event type symbols and colors. X-axis
-    shows monthly dates (Jan 2024 through Sep 2024) with 45-degree rotation, Y-axis
-    shows "Stock Price ($)" with values from ~115 to ~165.'
+  - Event label text (geom_text size=3.5–4 mm) is on the smaller side — short labels
+    like 'Div $0.50', 'Q1 Miss', 'Partnership' are legible at full resolution but
+    borderline when scaled to mobile width (~400 px); increasing to size=4.5–5 would
+    help
+  - 'Flag crowding in the Feb–May 2024 region: the Earnings (Q4 Beat), Dividend (Div
+    $0.50), and News (New Product) flags all land within two months of each other,
+    and the alternating above/below offsets create some visual density; additional
+    horizontal nudging or label angle adjustment would reduce perceived clutter'
+  - Some event label text overlaps with the colored connector segments directly below/above
+    the flag markers — particularly the 'Div $0.50' and '2:1 Split' labels which sit
+    very close to their connector lines
+  - 'Design Excellence: no top/right spine removal beyond theme_minimal defaults —
+    an explicit axis_ticks_major / panel_border=element_blank() pass would give a
+    cleaner L-frame look'
+  - 'LM-02: no use of plotnine-distinctive techniques like facet_wrap for a split-period
+    comparison or stat_smooth with explicit span control — the implementation is correct
+    but conventional'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "stock-event-flags · python · plotnine · anyplot.ai" in bold dark ink — fully readable. X-axis label "Date" and Y-axis label "Stock Price ($)" in dark ink at 10pt — readable. Tick labels in INK_SOFT gray at 8pt — readable on the warm background. Month ticks rotated 45° without collision.
+      Data: Stock price line in INK_SOFT gray traces ~$150 pre-split, drops sharply at the 2:1 split (May 2024) to ~$65, then stabilizes. LOWESS trend in #009E73 brand green with subtle fill shows the overall downward trajectory. Eight event flags annotated: Earnings (green squares, #009E73), Dividends (lavender diamonds, #C475FD), News (blue triangles, #4467A3), Split (ochre circle, #BD8233) — all distinct. Colored connector segments link each flag marker to the corresponding price level. Vertical dashed gray lines mark event dates. Legend titled "Event Type" at right with 4 entries.
+      Legibility verdict: PASS — all text and labels readable, though event label text at size=3.5–4mm is small in the dense Feb–May region.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 ink — clearly readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark token) — readable, sufficient contrast. Legend background elevated to #242420 with INK_SOFT border. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — Earnings green, Dividend lavender, News blue, Split ochre — chrome-only flip confirmed. Stock price line rendered in lighter gray appropriate for dark bg. LOWESS trend in #009E73 remains clearly visible.
+      Legibility verdict: PASS — theme adaptation is correct throughout both renders.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is bold and large (24pt), axis labels are 20pt, tick labels
-          are 14pt. All text readable, tick labels could be slightly larger.
+        comment: Title/axis/tick labels readable in both themes; event label text
+          (geom_text 3.5-4mm) is legible at full res but borderline at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 7
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Event labels use alternating heights to avoid overlap. Minor visual
-          congestion around closely-spaced events but still readable.
+        comment: Alternating flag placement works well overall but Feb-May region
+          is moderately crowded; some label text touches connector segments
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line width (1.5) is appropriate, marker sizes (6) are clearly visible,
-          connector lines are distinguishable.
+        comment: Markers well-sized for sparse data (8 events); distinct shapes and
+          colors; filled markers with stroke are clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, green, yellow, and red colors are distinguishable and colorblind-safe
-          with different shapes.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills appropriate canvas area, legend positioned
-          well on the right.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has 'Stock Price ($)' with unit, X-axis has 'Date' which is
-          descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Anyplot palette with redundant shape encoding; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed (gate passed); landscape fits the time-series
+          well; some vertical compression given multiple flag levels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is slightly too prominent. Could use more subtle alpha.
+        passed: true
+        comment: Title matches required format; Y-axis 'Stock Price ($)' has units;
+          X-axis 'Date' is appropriate
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Earnings=first series=#009E73, canonical palette order, correct
+          backgrounds #FAF8F1/#1A1A17, identical data colors in both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, shape+size hierarchy, LOWESS trend, layered composition,
+          font weight hierarchy — clearly above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal base, subtle grid (alpha=0.15), dashed reference lines
+          at low alpha; could be refined further with explicit spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (price+trend+events), earnings events emphasized,
+          connector lines tie events to price levels, LOWESS reveals trend narrative
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct chart type: stock price line with event flag markers.'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, close price on Y-axis, events correctly mapped.
-      - id: SC-03
+        comment: Stock price line chart with flag-style event markers — correct chart
+          type
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has flags, connector lines, distinct shapes/colors per event type,
-          vertical dashed lines. Missing optional highlighted background regions.
-      - id: SC-04
-        name: Data Range
+        comment: Distinct icons/colors per event type, vertical dashed reference lines,
+          connector segments, event labels on flags — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, price on Y, all 8 events visible, split price adjustment
+          implemented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows event types with matching colors and shapes.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses 'stock-event-flags · plotnine · pyplots.ai' format.
+        comment: Title 'stock-event-flags · python · plotnine · anyplot.ai' correct;
+          legend 'Event Type' with 4 entries
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety of events (Earnings beat/miss, Dividends, News, Split),
-          8 events total with realistic price volatility.
+        comment: All 4 event types represented; price line + trend + annotations;
+          alternating flag placement; size hierarchy
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock scenario with quarterly earnings, dividends, split,
-          and news events.
+        comment: Realistic tech stock ~$150, quarterly earnings beats/misses, dividends
+          at $0.50/$0.55, 2:1 split with price adjustment, news events — neutral and
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range ~$115-165 is realistic. 180 business days is appropriate.
+        comment: 180 trading days, 8 events, realistic price range $60-155 with split
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,50 +206,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save. No functions
-          or classes.'
+        comment: Flat linear structure, no classes or functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible data.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used, no unnecessary imports.
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as 'plot.png' correctly.
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png at correct dimensions
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper aes() mappings, scale_*_manual for multi-encoding, guides()
+          to hide size legend, theme() for complete customization
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of plotnine grammar of graphics with multiple geom layers,
-          scale_color_manual, scale_shape_manual, theme customization.
+        comment: Effective use of geom_segment+geom_vline+geom_smooth combination;
+          no use of more distinctive plotnine features like faceting or stat layers
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -212,4 +262,3 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling

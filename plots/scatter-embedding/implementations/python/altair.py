@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Single-cell RNA-seq scenario with domain-specific cell type labels
 CELL_TYPES = ["T cells", "B cells", "NK cells", "Monocytes", "Dendritic cells", "Macrophages", "Plasma cells"]
@@ -54,7 +54,7 @@ scatter = (
         x=alt.X("tsne_1:Q", axis=alt.Axis(labels=False, ticks=False, title="t-SNE Dimension 1")),
         y=alt.Y("tsne_2:Q", axis=alt.Axis(labels=False, ticks=False, title="t-SNE Dimension 2")),
         color=alt.Color(
-            "cluster:N", scale=alt.Scale(domain=CELL_TYPES, range=OKABE_ITO), legend=alt.Legend(title="Cell Type")
+            "cluster:N", scale=alt.Scale(domain=CELL_TYPES, range=IMPRINT), legend=alt.Legend(title="Cell Type")
         ),
         opacity=alt.condition(selection, alt.value(0.70), alt.value(0.15)),
         stroke=alt.value(PAGE_BG),

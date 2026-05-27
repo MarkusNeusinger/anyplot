@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Crop yield across different soil types and seasons
 np.random.seed(42)
@@ -59,7 +59,7 @@ chart = (
     .encode(
         x=alt.X("Water Usage (mm):Q", scale=alt.Scale(zero=False)),
         y=alt.Y("Yield (tons/ha):Q", scale=alt.Scale(zero=False)),
-        color=alt.Color("Crop:N", scale=alt.Scale(domain=crop_types, range=OKABE_ITO[:3])),
+        color=alt.Color("Crop:N", scale=alt.Scale(domain=crop_types, range=IMPRINT[:3])),
         tooltip=["Yield (tons/ha)", "Water Usage (mm)", "Soil Type", "Season", "Crop"],
     )
     .properties(width=320, height=260)

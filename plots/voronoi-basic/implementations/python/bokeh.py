@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Okabe-Ito palette for Voronoi cells
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - seed points for Voronoi diagram
 np.random.seed(42)
@@ -132,7 +132,7 @@ for idx in range(n_points):
     if len(polygon) >= 3:
         xs = [v[0] for v in polygon]
         ys = [v[1] for v in polygon]
-        cell_color = OKABE_ITO[idx % len(OKABE_ITO)]
+        cell_color = IMPRINT[idx % len(IMPRINT)]
         p.patch(xs, ys, fill_color=cell_color, fill_alpha=0.5, line_color=INK_SOFT, line_width=2.5)
 
 # Draw seed points prominently

@@ -24,7 +24,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — technology comfort survey by age group
 age_groups = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
@@ -134,7 +134,7 @@ bars = (
         y2="y_end:Q",
         color=alt.Color(
             "comfort:N",
-            scale=alt.Scale(domain=comfort_cats, range=OKABE_ITO),
+            scale=alt.Scale(domain=comfort_cats, range=IMPRINT),
             legend=alt.Legend(
                 title="Technology Comfort",
                 titleFontSize=18,

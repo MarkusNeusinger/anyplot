@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Model curve
-SECONDARY = "#D55E00"  # Baseline reference
+SECONDARY = "#C475FD"  # Baseline reference
 
 # Data - Simulated model predictions for fraud detection
 np.random.seed(42)

@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1 — first categorical series
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Software module dependency network
 nodes_data = [
@@ -65,9 +65,9 @@ edges_data = [
 
 # Axis configuration: three axes at 120-degree separation using Okabe-Ito
 axis_config = {
-    "Core": {"angle": 30, "color": OKABE_ITO[0]},  # Bluish green
-    "Utility": {"angle": 150, "color": OKABE_ITO[1]},  # Vermillion
-    "Interface": {"angle": 270, "color": OKABE_ITO[2]},  # Blue
+    "Core": {"angle": 30, "color": IMPRINT[0]},  # Bluish green
+    "Utility": {"angle": 150, "color": IMPRINT[1]},  # Vermillion
+    "Interface": {"angle": 270, "color": IMPRINT[2]},  # Blue
 }
 
 # Build node DataFrame with positions
@@ -153,7 +153,7 @@ axis_chart = (
         x2="x2:Q",
         y2="y2:Q",
         color=alt.Color(
-            "axis:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=OKABE_ITO), legend=None
+            "axis:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=IMPRINT), legend=None
         ),
     )
 )
@@ -166,7 +166,7 @@ nodes_chart = (
         x="x:Q",
         y="y:Q",
         color=alt.Color(
-            "axis:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=OKABE_ITO), legend=None
+            "axis:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=IMPRINT), legend=None
         ),
         tooltip=["name:N", "axis:N", "importance:Q"],
     )
@@ -206,7 +206,7 @@ axis_label_chart = (
         y="y:Q",
         text="label:N",
         color=alt.Color(
-            "label:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=OKABE_ITO), legend=None
+            "label:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=IMPRINT), legend=None
         ),
     )
 )

@@ -25,7 +25,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris-like dataset with 4 dimensions and 3 species
 np.random.seed(42)
@@ -90,7 +90,7 @@ spec = (
         detail="id:N",
         color=alt.Color(
             "Species:N",
-            scale=alt.Scale(domain=species_names, range=OKABE_ITO),
+            scale=alt.Scale(domain=species_names, range=IMPRINT),
             legend=alt.Legend(
                 title="Species", titleFontSize=22, labelFontSize=20, symbolSize=300, symbolStrokeWidth=4, orient="right"
             ),

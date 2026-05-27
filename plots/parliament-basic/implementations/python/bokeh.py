@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Political parties left-to-right by political spectrum
 # Left parties first, then center, then right
@@ -71,7 +71,7 @@ for i in range(abs(diff)):
 # Build party assignment - each seat gets a party in order
 party_assignments = []
 for i, (party, seat_count) in enumerate(zip(parties, seats, strict=True)):
-    party_assignments.extend([(party, OKABE_ITO[i % len(OKABE_ITO)])] * seat_count)
+    party_assignments.extend([(party, IMPRINT[i % len(IMPRINT)])] * seat_count)
 
 # Generate seat positions - fill row by row
 x_positions = []
@@ -119,7 +119,7 @@ p.scatter(x="x", y="y", source=source, color="color", size=40, alpha=0.9, line_c
 
 # Create legend with party colors and counts below the chart
 legend_y_pos = -0.7
-for i, (party, seat_count, color) in enumerate(zip(parties, seats, OKABE_ITO[: len(parties)], strict=True)):
+for i, (party, seat_count, color) in enumerate(zip(parties, seats, IMPRINT[: len(parties)], strict=True)):
     # Horizontal spacing for legend items
     x_offset = -1.1 + i * 0.37
 

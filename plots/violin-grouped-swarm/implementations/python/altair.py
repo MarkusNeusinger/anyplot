@@ -25,7 +25,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Response times across task types and expertise levels
 np.random.seed(42)
@@ -56,7 +56,7 @@ df = pd.DataFrame(data)
 base = alt.Chart(df).encode(
     color=alt.Color(
         "Expertise:N",
-        scale=alt.Scale(domain=["Novice", "Expert"], range=OKABE_ITO[:2]),
+        scale=alt.Scale(domain=["Novice", "Expert"], range=IMPRINT[:2]),
         legend=alt.Legend(
             title="Expertise", titleFontSize=22, labelFontSize=20, orient="right", symbolSize=400, offset=20
         ),
@@ -92,7 +92,7 @@ swarm = (
             scale=alt.Scale(domain=[-1, 1]),
         ),
         y=alt.Y("Response Time (s):Q"),
-        color=alt.Color("Expertise:N", scale=alt.Scale(domain=["Novice", "Expert"], range=OKABE_ITO[:2]), legend=None),
+        color=alt.Color("Expertise:N", scale=alt.Scale(domain=["Novice", "Expert"], range=IMPRINT[:2]), legend=None),
     )
     .transform_calculate(jitter='(random() - 0.5) * 0.15 + (datum.Expertise === "Novice" ? -0.3 : 0.3)')
 )

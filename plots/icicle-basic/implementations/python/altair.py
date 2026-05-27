@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for levels
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: File system hierarchy with sizes (in MB)
 data = [
@@ -155,7 +155,7 @@ chart = (
         y2=alt.Y2("y_end:Q"),
         color=alt.Color(
             "level:O",
-            scale=alt.Scale(domain=list(range(max_level + 1)), range=OKABE_ITO),
+            scale=alt.Scale(domain=list(range(max_level + 1)), range=IMPRINT),
             legend=alt.Legend(title="Level", labelFontSize=16, titleFontSize=18, orient="right"),
         ),
         tooltip=["name:N", "value:Q", "parent:N", "level:O"],
