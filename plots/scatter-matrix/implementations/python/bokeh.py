@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 species_list = ["setosa", "versicolor", "virginica"]
 
 # Data - Iris-like dataset with 4 variables and species groups
@@ -81,7 +81,7 @@ for i in range(n_vars):
                     left="left",
                     right="right",
                     source=source,
-                    fill_color=OKABE_ITO[k],
+                    fill_color=IMPRINT[k],
                     line_color=PAGE_BG,
                     line_width=1.5,
                     alpha=0.7,
@@ -110,7 +110,7 @@ for i in range(n_vars):
                 source=source,
                 size=14,
                 alpha=0.65,
-                fill_color=factor_cmap("species", OKABE_ITO, species_list),
+                fill_color=factor_cmap("species", IMPRINT, species_list),
                 line_color="white" if THEME == "light" else "#2A2A27",
                 line_width=0.8,
             )

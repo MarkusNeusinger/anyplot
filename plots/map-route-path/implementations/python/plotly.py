@@ -27,8 +27,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito: position 1 = start, position 2 = end, position 3 = waypoints
 START_COLOR = "#009E73"
-END_COLOR = "#D55E00"
-WAYPOINT_COLOR = "#0072B2"
+END_COLOR = "#C475FD"
+WAYPOINT_COLOR = "#4467A3"
 
 # Data: Appalachian Trail section through Great Smoky Mountains, Tennessee
 np.random.seed(42)

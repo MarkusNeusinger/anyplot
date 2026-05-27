@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Quarterly revenue by product category
 np.random.seed(42)
@@ -56,7 +56,7 @@ p = figure(
 bottoms = [0] * len(categories)
 
 # Plot stacked bars
-for _comp_idx, (comp, color) in enumerate(zip(components, OKABE_ITO, strict=True)):
+for _comp_idx, (comp, color) in enumerate(zip(components, IMPRINT, strict=True)):
     tops = [b + v for b, v in zip(bottoms, data[comp], strict=True)]
     source = ColumnDataSource(
         data={

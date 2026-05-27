@@ -19,7 +19,7 @@ GRID = "rgba(26,26,23,0.08)" if THEME == "light" else "rgba(240,239,232,0.08)"
 GRID_SUBTLE = "rgba(26,26,23,0.04)" if THEME == "light" else "rgba(240,239,232,0.04)"
 
 # Okabe-Ito palette (first series always #009E73)
-COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Quarterly revenue by product category
 quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"]

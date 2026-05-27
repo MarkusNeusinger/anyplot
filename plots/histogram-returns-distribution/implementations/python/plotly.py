@@ -21,8 +21,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # position 1 — normal return bars
-VERMILLION = "#D55E00"  # position 2 — tail region bars
-BLUE = "#0072B2"  # position 3 — normal distribution curve
+VERMILLION = "#C475FD"  # position 2 — tail region bars
+BLUE = "#4467A3"  # position 3 — normal distribution curve
 
 # Data - Simulated daily stock returns (504 trading days / 2 years)
 np.random.seed(42)

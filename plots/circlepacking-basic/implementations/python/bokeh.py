@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for hierarchy levels
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Build hierarchical data: Portfolio composition by asset class (in millions)
 hierarchy = [
@@ -193,7 +193,7 @@ labels = [n["label"] for n in all_circles]
 values = [n["value"] for n in all_circles]
 
 # Color by depth using Okabe-Ito palette
-colors = [OKABE_ITO[min(d, 2)] for d in depths]
+colors = [IMPRINT[min(d, 2)] for d in depths]
 depth_names = ["Portfolio", "Asset Class", "Investment"]
 depth_labels = [depth_names[min(d, 2)] for d in depths]
 
@@ -245,7 +245,7 @@ p.add_tools(hover)
 
 # Create legend for depth colors
 legend_items = []
-for color, name in zip(OKABE_ITO[:3], depth_names, strict=True):
+for color, name in zip(IMPRINT[:3], depth_names, strict=True):
     dummy_source = ColumnDataSource(data={"x": [-99999], "y": [-99999], "r": [10]})
     dummy_circle = p.circle(
         x="x", y="y", radius="r", fill_color=color, fill_alpha=0.7, line_color=INK_SOFT, source=dummy_source

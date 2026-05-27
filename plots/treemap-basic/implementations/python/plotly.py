@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for main categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Budget allocation by department and project (in thousands)
 categories = [
@@ -75,11 +75,11 @@ treemap_values += values
 # Create color map using Okabe-Ito palette
 color_map = {
     "Budget": PAGE_BG,
-    "Engineering": OKABE_ITO[0],
-    "Marketing": OKABE_ITO[1],
-    "Sales": OKABE_ITO[2],
-    "Operations": OKABE_ITO[3],
-    "HR": OKABE_ITO[4],
+    "Engineering": IMPRINT[0],
+    "Marketing": IMPRINT[1],
+    "Sales": IMPRINT[2],
+    "Operations": IMPRINT[3],
+    "HR": IMPRINT[4],
 }
 
 # Assign colors based on category hierarchy
@@ -89,7 +89,7 @@ for i, label in enumerate(labels):
         colors.append(color_map[label])
     else:
         parent = parents[i]
-        colors.append(color_map.get(parent, OKABE_ITO[0]))
+        colors.append(color_map.get(parent, IMPRINT[0]))
 
 # Create treemap
 fig = go.Figure(

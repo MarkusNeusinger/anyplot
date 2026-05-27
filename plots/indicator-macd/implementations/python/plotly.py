@@ -22,7 +22,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # MACD
-SIGNAL_COLOR = "#D55E00"  # Signal line
+SIGNAL_COLOR = "#BD8233"  # imprint ochre — signal line (categorical contrast)
 
 # Data - Generate realistic stock price data and calculate MACD
 np.random.seed(42)
@@ -52,7 +52,7 @@ histogram = histogram.values[start_idx:]
 # Create histogram colors using diverging approach
 hist_positive = histogram >= 0
 hist_colors = [
-    "#0072B2" if val else "#CC79A7"  # Blue for positive, purple for negative
+    "#4467A3" if val else "#BD8233"  # Blue for positive, purple for negative
     for val in hist_positive
 ]
 

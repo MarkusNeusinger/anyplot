@@ -17,7 +17,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 BRAND = "#009E73"
 
 # Generate sample stock data and calculate RSI
@@ -59,7 +59,7 @@ fig.add_trace(
         fill="tonexty",
         mode="lines",
         line={"width": 0},
-        fillcolor="rgba(213, 94, 0, 0.15)",
+        fillcolor="rgba(196, 117, 253, 0.15)",
         name="Overbought Zone (70-100)",
     )
 )
@@ -86,9 +86,9 @@ fig.add_trace(
 fig.add_trace(go.Scatter(x=dates, y=rsi, mode="lines", name="RSI (14)", line={"color": BRAND, "width": 3}))
 
 # Add reference lines
-fig.add_hline(y=70, line_dash="dash", line_color="#D55E00", line_width=2)
+fig.add_hline(y=70, line_dash="dash", line_color="#AE3030", line_width=2)  # imprint red overbought
 fig.add_hline(y=50, line_dash="dot", line_color=INK_SOFT, line_width=1.5)
-fig.add_hline(y=30, line_dash="dash", line_color="#0072B2", line_width=2)
+fig.add_hline(y=30, line_dash="dash", line_color="#4467A3", line_width=2)
 
 # Annotations for threshold lines
 fig.add_annotation(
@@ -98,7 +98,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 16, "color": "#D55E00"},
+    font={"size": 16, "color": "#AE3030"},
 )
 fig.add_annotation(
     x=dates[-1],
@@ -116,7 +116,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 16, "color": "#0072B2"},
+    font={"size": 16, "color": "#4467A3"},
 )
 
 # Layout

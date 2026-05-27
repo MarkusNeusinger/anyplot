@@ -30,14 +30,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette with first series as brand
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
     "#1A1A1A" if THEME == "light" else "#E8E8E0",  # neutral
 ]
 
@@ -106,7 +106,7 @@ for i in range(n_segments):
             x=x_arc,
             y=y_arc,
             fill="toself",
-            fillcolor=OKABE_ITO[i],
+            fillcolor=IMPRINT[i],
             line={"color": INK_SOFT, "width": 1},
             name=segments[i],
             hoverinfo="name",
@@ -196,8 +196,8 @@ for i in range(n_segments):
             y_ribbon = np.concatenate([y_src, curve1_y, y_tgt, curve2_y, [y_src[0]]])
 
             # Blend colors inline
-            c1 = OKABE_ITO[i]
-            c2 = OKABE_ITO[j]
+            c1 = IMPRINT[i]
+            c2 = IMPRINT[j]
             r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
             r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
             r = int(r1 * 0.5 + r2 * 0.5)
@@ -244,7 +244,7 @@ for i in range(n_segments):
             x=x_bar,
             y=y_bar,
             fill="toself",
-            fillcolor=OKABE_ITO[i],
+            fillcolor=IMPRINT[i],
             opacity=0.6,
             line={"color": INK_SOFT, "width": 0.5},
             hoverinfo="text",

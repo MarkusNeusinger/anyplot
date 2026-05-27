@@ -24,8 +24,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-COLOR_UP = "#D55E00"  # vermillion
-COLOR_DOWN = "#0072B2"  # blue
+COLOR_UP = "#C475FD"  # vermillion
+COLOR_DOWN = "#4467A3"  # blue
 COLOR_NS = "#AAAAAA"  # neutral gray
 
 # Data - Simulated differential expression results

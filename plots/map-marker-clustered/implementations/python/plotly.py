@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # anyplot palette — canonical order for categorical series
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data - Retail store locations across North America
 np.random.seed(42)
@@ -38,7 +38,7 @@ cities = {
 }
 
 categories = ["Electronics", "Grocery", "Clothing", "Hardware"]
-category_colors = {cat: ANYPLOT_PALETTE[i] for i, cat in enumerate(categories)}
+category_colors = {cat: IMPRINT[i] for i, cat in enumerate(categories)}
 
 lats, lons, labels, cats = [], [], [], []
 store_id = 1
