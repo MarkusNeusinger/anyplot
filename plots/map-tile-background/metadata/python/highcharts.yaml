@@ -1,0 +1,278 @@
+library: highcharts
+language: python
+specification_id: map-tile-background
+created: '2026-05-27T15:40:32Z'
+updated: '2026-05-27T16:02:13Z'
+generated_by: claude-sonnet
+workflow_run: 26520632525
+issue: 3756
+language_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Excellent tiledwebmap + mappoint layer composition using Highcharts Maps-specific
+    API — layers the tile background under proportional data bubbles idiomatically
+  - Dark mode tile inversion via CSS filter (invert(1) hue-rotate(200deg) brightness(0.75)
+    saturate(0.85)) is a clever and effective technique for dark-theme tile maps
+  - Auto-computed map center and zoom derived from data bounds — view adapts automatically
+    if data changes, showing good design thinking
+  - Proportional bubble sizing (radius 8–30px based on visitor count) creates immediate
+    visual hierarchy — Paris dominates, Warsaw at the tail
+  - 'All theme-adaptive chrome tokens correctly applied: PAGE_BG, INK, INK_SOFT used
+    for title, subtitle, credits, marker outline, and data label color + outline'
+  - Realistic European tourism data with accurate city coordinates and plausible ~2023
+    visitor counts
+  - Title fontsize correctly scaled with title length via linear formula; text outline
+    on data labels (3px PAGE_BG) ensures readability on diverse tile textures
+  - Proper tile attribution in credits as required by OpenStreetMap terms of service
+  weaknesses:
+  - Data labels at fontSize 34px are below the style-guide-recommended 44px for highcharts
+    data labels; at mobile widths (~400px) city names may become borderline readable
+    — increase to 40–44px
+  - Implementation bypasses highcharts_core Python SDK entirely and builds raw JSON
+    config; while valid for tiledwebmap (Maps module), it skips the typed Python API
+    — LM-01 deduction
+  - 'Minor label crowding in the central European cluster: Prague (50.08°N), Vienna
+    (48.21°N), and Budapest (47.50°N) labels placed at y:-18 may visually crowd each
+    other; consider adding a small offset for conflicting labels'
+  - mapNavigation zoom buttons rendered in default Highcharts styling without explicit
+    theme adaptation — in the dark render the buttons appear with default (white/light)
+    chrome which may stand out slightly against the dark panel
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 visible in the title/subtitle band at top and bottom strip; the map area is occupied by OpenStreetMap tile imagery (green land, blue water, roads, labels).
+      Chrome: Title "European Tourism · map-tile-background · python · highcharts · anyplot.ai" in dark #1A1A17 text — clearly readable. Subtitle "Annual international arrivals — bubble size proportional to visitor volume" in lighter INK_SOFT text below. Credits "Tiles © OpenStreetMap contributors" in bottom-right at small but readable size.
+      Data: 15 green (#009E73) circles of proportionally varying radii overlaid on the map tiles. Paris carries the largest bubble (~30px radius), Warsaw the smallest. City name data labels appear in dark text with a 3px #FAF8F1 outline providing contrast against the tile background. All city names (Paris, London, Rome, Madrid, Berlin, Barcelona, Amsterdam, Vienna, Prague, Budapest, Lisbon, Athens, Copenhagen, Stockholm, Warsaw) are readable.
+      Legibility verdict: PASS — all title, subtitle, and city label text is clearly readable against the light OSM tiles and off-white frame areas.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 visible in the title/subtitle and bottom frame band. OSM tiles are CSS-inverted (invert(1) hue-rotate(200deg) brightness(0.75) saturate(0.85)), producing a dark greenish map aesthetic — land areas are dark teal/olive, water is dark teal-blue.
+      Chrome: Title and subtitle rendered in light #F0EFE8 text — clearly readable against the #1A1A17 dark background. Credits in INK_SOFT (#B8B7B0) at bottom-right, readable.
+      Data: Green (#009E73) circles identical in color and size to the light render — data palette is unchanged. City labels rendered in #F0EFE8 (INK in dark theme) with 3px #1A1A17 dark outline — visible against the dark-tinted tiles. No dark-on-dark failures observed; all labels are readable.
+      Legibility verdict: PASS — no dark-on-dark text failures; all chrome is theme-correct; data colors are identical to the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scaled to 60px with length formula;
+          subtitle 34px; credits 22px. Data labels at 34px are below the recommended
+          44px — readable at full res but borderline at mobile widths.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No severe overlap; minor visual crowding in central Europe cluster
+          (Prague/Vienna/Budapest labels at y:-18 offset are close together but individually
+          readable).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 sparse data points (< 50); bubbles radius 8–30px adapted to visitor
+          volume; fillOpacity 0.85; PAGE_BG outline (lineWidth 2) ensures markers
+          stand out against tiles.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series; #009E73 brand green has adequate contrast on tile
+          backgrounds; white/PAGE_BG outline adds separation.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas confirmed 3200x1800 (gate passed); map fills canvas with proper
+          margins [120,40,60,40]; no content clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (appropriate for map); subtitle explains encoding;
+          title follows spec format with descriptive prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First and only series is #009E73; PAGE_BG #FAF8F1 light / #1A1A17
+          dark confirmed; theme-adaptive INK/INK_SOFT tokens applied throughout; no
+          non-compliant colors.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured defaults: brand green with PAGE_BG outline on bubbles
+          is intentional and polished; dark tile inversion is creative; proportional
+          sizing adds sophistication. Not FiveThirtyEight-level but clearly thoughtful.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Reasonable margins, no legend (correct for single series), styled
+          subtitle and credits. mapNavigation buttons retain default Highcharts styling.
+          Between library default (2) and good (4).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Proportional bubbles immediately communicate the tourism hierarchy;
+          Paris dominates visually; subtitle explains the encoding. Visual hierarchy
+          through size variation guides the reader to the key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: tiledwebmap series for tile background + mappoint series
+          for data overlaid on tiles using Highcharts Maps.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: OSM tile background, data points on map, value
+          encoding (bubble size for visitor count), labels, zoom/pan navigation, auto-fit
+          to data bounds, tile attribution.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lat/lon correctly mapped to geographic coordinates; visitor count
+          correctly mapped to bubble radius; city names as data labels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'European Tourism · map-tile-background · python · highcharts
+          · anyplot.ai' matches required format {Descriptive Title} · {spec-id} ·
+          {language} · {library} · anyplot.ai. Legend disabled (appropriate for single
+          series).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: tile background, geographic distribution, proportional
+          bubble encoding, text labels, tooltip config, varying bubble sizes demonstrating
+          the encoding range.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real European cities with accurate coordinates; approximate 2023
+          international visitor counts (Paris 38.5M, London 31.2M, etc.) are realistic;
+          tourism data is politically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 cities within spec range (10-500); visitor counts in millions
+          with appropriate relative proportions; zoom level correctly covers European
+          extent.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean procedural flow: imports → tokens → data → chart config →
+          JS download → HTML render → Selenium screenshot. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; fully deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: json, math, os, tempfile, time, urllib.request,
+          pathlib.Path, PIL.Image, selenium.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and readable; tile provider config at top for easy switching;
+          auto-zoom formula is well-commented; no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; PIL normalization
+          ensures exact canvas dimensions.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct Highcharts Maps usage (tiledwebmap, mappoint, mapView, mapNavigation).
+          However, bypasses the highcharts_core Python SDK entirely in favor of raw
+          JSON config — the library prompt recommends using the typed Python API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses tiledwebmap (Highcharts Maps-exclusive), mappoint, mapView center/zoom,
+          mapNavigation — features that couldn't be replicated in matplotlib/seaborn.
+          Dark tile CSS filter is a browser-specific Highcharts Maps technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
