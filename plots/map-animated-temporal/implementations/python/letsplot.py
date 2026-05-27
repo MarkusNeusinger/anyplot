@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-27
@@ -14,16 +14,21 @@ from lets_plot import (
     element_rect,
     element_text,
     facet_wrap,
+    geom_livemap,
     geom_point,
     geom_polygon,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
+    guide_legend,
+    guides,
     labs,
     scale_color_gradient,
     scale_size,
     theme,
     theme_void,
+    tilesets,
     xlim,
     ylim,
 )
@@ -71,6 +76,9 @@ for week in snapshot_weeks:
 
 df_facet = pd.concat(df_snapshots, ignore_index=True)
 
+# Epicenter marker shown across all panels
+epicenter_df = pd.DataFrame([{"lon": epicenter_lon, "lat": epicenter_lat, "label": "Epicenter"}])
+
 # Simplified California outline basemap
 ca_coords = [
     (-124.4, 42.0),
@@ -107,32 +115,35 @@ ca_coords = [
 df_ca = pd.DataFrame(ca_coords, columns=["x", "y"])
 df_ca["group"] = 0
 
-# Title fontsize scaled for longer-than-baseline title
 title = "Seismic Activity Spread · map-animated-temporal · python · letsplot · anyplot.ai"
 n_chars = len(title)
-ratio = 67 / n_chars if n_chars > 67 else 1.0
-title_fontsize = max(11, round(16 * ratio))
+title_fontsize = max(11, round(16 * (67 / n_chars if n_chars > 67 else 1.0)))
 
-# Plot using facet_wrap for clean multi-panel layout
-plot = (
+mag_name = "Magnitude (M)"
+# Use matching breaks on both scales to produce a single merged legend — no limits to avoid
+# a lets-plot rendering failure when xlim clips a data point outside scale limits
+mag_breaks = [2, 3, 4, 5, 6]
+caption = "Cumulative aftershock sequence radiating from epicenter (×) | Central California region"
+
+# PNG: polygon basemap renders cleanly via SVG export
+plot_png = (
     ggplot(data=df_facet, mapping=aes(x="lon", y="lat"))
     + geom_polygon(data=df_ca, mapping=aes(x="x", y="y", group="group"), fill=MAP_FILL, color=MAP_BORDER, size=0.5)
     + geom_point(aes(size="magnitude", color="magnitude"), alpha=0.75)
-    + scale_color_gradient(low="#009E73", high="#4467A3", name="Magnitude (M)")
-    + scale_size(range=[2, 9], name="Magnitude (M)")
+    + geom_point(data=epicenter_df, mapping=aes(x="lon", y="lat"), shape=4, size=7, color=INK, stroke=2)
+    + geom_text(data=epicenter_df, mapping=aes(x="lon", y="lat", label="label"), nudge_y=0.22, size=3.5, color=INK)
+    + scale_color_gradient(low="#009E73", high="#4467A3", name=mag_name, breaks=mag_breaks)
+    + scale_size(range=[2, 9], name=mag_name, breaks=mag_breaks)
+    + guides(color=guide_legend(nrow=5), size=guide_legend(nrow=5))
     + facet_wrap("week_label", ncol=2)
     + xlim(-122.5, -116.5)
     + ylim(33.5, 38.5)
-    + labs(
-        x="Longitude",
-        y="Latitude",
-        title=title,
-        caption="Cumulative aftershock sequence radiating from epicenter | Central California region",
-    )
+    + labs(x="Longitude", y="Latitude", title=title, caption=caption)
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, size=0.3),
         plot_title=element_text(size=title_fontsize, color=INK, face="bold", hjust=0.5),
         plot_caption=element_text(size=9, color=INK_MUTED, hjust=0.5),
         strip_text=element_text(size=13, color=INK, face="bold"),
@@ -146,6 +157,33 @@ plot = (
     + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
-ggsave(plot, f"plot-{THEME}.html", path=".")
+# HTML: geom_livemap tile basemap — letsplot's distinctive interactive mapping feature
+tiles = tilesets.CARTO_POSITRON if THEME == "light" else tilesets.CARTO_MIDNIGHT_COMMANDER
+plot_html = (
+    ggplot(data=df_facet, mapping=aes(x="lon", y="lat"))
+    + geom_livemap(tiles=tiles)
+    + geom_point(aes(size="magnitude", color="magnitude"), alpha=0.75)
+    + geom_point(data=epicenter_df, mapping=aes(x="lon", y="lat"), shape=4, size=7, color=INK, stroke=2)
+    + scale_color_gradient(low="#009E73", high="#4467A3", name=mag_name, breaks=mag_breaks)
+    + scale_size(range=[2, 9], name=mag_name, breaks=mag_breaks)
+    + guides(color=guide_legend(nrow=5), size=guide_legend(nrow=5))
+    + facet_wrap("week_label", ncol=2)
+    + xlim(-122.5, -116.5)
+    + ylim(33.5, 38.5)
+    + labs(x="Longitude", y="Latitude", title=title, caption=caption)
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=title_fontsize, color=INK, face="bold", hjust=0.5),
+        plot_caption=element_text(size=9, color=INK_MUTED, hjust=0.5),
+        strip_text=element_text(size=13, color=INK, face="bold"),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
+    )
+    + ggsize(800, 450)
+)
+
+# Save — PNG uses polygon basemap (SVG-compatible), HTML uses geom_livemap (interactive tiles)
+ggsave(plot_png, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot_html, f"plot-{THEME}.html", path=".")
