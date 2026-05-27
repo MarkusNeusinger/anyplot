@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -55,11 +55,11 @@ ax.set_facecolor(PAGE_BG)
 
 # Plot Andrews curves for each observation
 for i in range(len(curves)):
-    ax.plot(t, curves[i], color=OKABE_ITO[y[i]], alpha=0.4, linewidth=2.5)
+    ax.plot(t, curves[i], color=IMPRINT[y[i]], alpha=0.4, linewidth=2.5)
 
 # Create legend with sample lines
 for idx, species in enumerate(species_names):
-    ax.plot([], [], color=OKABE_ITO[idx], linewidth=3, label=species, alpha=0.4)
+    ax.plot([], [], color=IMPRINT[idx], linewidth=3, label=species, alpha=0.4)
 
 # Style
 ax.set_xlabel("t (radians)", fontsize=20, color=INK)

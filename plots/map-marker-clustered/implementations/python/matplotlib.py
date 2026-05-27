@@ -26,7 +26,7 @@ BORDER_COL = "#AAAAAA" if THEME == "light" else "#555550"
 
 # anyplot categorical palette (positions 1-3)
 cat_names = ["Retail", "Grocery", "Electronics"]
-cat_colors = {"Retail": "#009E73", "Grocery": "#9418DB", "Electronics": "#B71D27"}
+cat_colors = {"Retail": "#009E73", "Grocery": "#C475FD", "Electronics": "#AE3030"}
 
 # Data: European store locations clustered by city
 np.random.seed(42)

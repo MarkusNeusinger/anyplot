@@ -23,10 +23,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-MACD_COLOR = "#0072B2"  # Blue (position 3)
-SIGNAL_COLOR = "#E69F00"  # Orange (position 5)
+MACD_COLOR = "#4467A3"  # Blue (position 3)
+SIGNAL_COLOR = "#AE3030"  # Orange (position 5)
 POSITIVE_COLOR = "#009E73"  # Green (position 1)
-NEGATIVE_COLOR = "#D55E00"  # Red-orange (position 2)
+NEGATIVE_COLOR = "#C475FD"  # Red-orange (position 2)
 
 # Generate synthetic stock price data and calculate MACD
 np.random.seed(42)

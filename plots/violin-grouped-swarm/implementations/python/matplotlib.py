@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first two colors for the two groups)
-COLORS = ["#009E73", "#D55E00"]
+COLORS = ["#009E73", "#C475FD"]
 
 # Data - Response times across task types and expertise levels
 np.random.seed(42)

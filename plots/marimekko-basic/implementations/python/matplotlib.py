@@ -34,8 +34,8 @@ values = np.array(
 )
 
 # Okabe-Ito palette (positions 1-4 in canonical order)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
-# Smart label contrast: white on dark segments, ink on lighter #CC79A7
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Smart label contrast: white on dark segments, ink on lighter #BD8233
 label_colors = ["white", "white", "white", INK]
 
 # Calculate bar widths (proportional to column totals)
@@ -48,7 +48,7 @@ cum_widths = np.concatenate([[0], np.cumsum(bar_widths)[:-1]])
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for i, (product, color, label_color) in enumerate(zip(products, OKABE_ITO, label_colors, strict=True)):
+for i, (product, color, label_color) in enumerate(zip(products, IMPRINT, label_colors, strict=True)):
     heights = values[i] / column_totals
     bottoms = values[:i].sum(axis=0) / column_totals if i > 0 else np.zeros(len(regions))
 

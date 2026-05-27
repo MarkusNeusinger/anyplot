@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito positions 1-5 (bottom to top: Done → Backlog)
-COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: 90-day software Kanban board simulation
 np.random.seed(42)

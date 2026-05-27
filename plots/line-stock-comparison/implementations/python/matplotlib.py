@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot palette — canonical order
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data — simulated daily stock prices for ~1 year (252 trading days)
 np.random.seed(42)
@@ -53,7 +53,7 @@ for symbol, params in stocks.items():
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for (symbol, values), color in zip(rebased.items(), ANYPLOT_PALETTE, strict=False):
+for (symbol, values), color in zip(rebased.items(), IMPRINT, strict=False):
     # SPY is the benchmark — thicker line for emphasis and visual hierarchy
     lw = 3.0 if symbol == "SPY" else 2.0
     ax.plot(dates, values, label=symbol, color=color, linewidth=lw)
@@ -63,7 +63,7 @@ ax.axhline(y=100, color=INK_MUTED, linestyle="--", linewidth=1.0, alpha=0.7, zor
 
 # Annotate SPY as benchmark to create visual hierarchy and storytelling focal point
 spy_final = rebased["SPY"][-1]
-spy_color = ANYPLOT_PALETTE[3]  # SPY is 4th series (#16B8F3)
+spy_color = IMPRINT[3]  # SPY is 4th series (#4467A3)
 ax.annotate(
     "Benchmark",
     xy=(dates[-1], spy_final),

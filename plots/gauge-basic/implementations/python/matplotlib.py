@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito zone colors (colorblind-safe red/yellow/green)
-ZONE_BAD = "#D55E00"  # vermillion
-ZONE_WARN = "#E69F00"  # orange
+ZONE_BAD = "#C475FD"  # vermillion
+ZONE_WARN = "#AE3030"  # orange
 ZONE_GOOD = "#009E73"  # bluish green (brand)
 
 # Data

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
 BRAND = "#009E73"  # violin fill
-ACCENT = "#D55E00"  # swarm points
+ACCENT = "#C475FD"  # swarm points
 
 # Data - Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)

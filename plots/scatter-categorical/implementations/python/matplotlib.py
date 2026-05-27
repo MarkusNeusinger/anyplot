@@ -18,11 +18,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (canonical order)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green — ALWAYS first series
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data — plant species with distinct petal characteristics
@@ -50,9 +50,9 @@ ax.set_facecolor(PAGE_BG)
 
 # Plot each category with distinct colors and markers
 scatter_data = [
-    (species_a_x, species_a_y, OKABE_ITO[0], markers[0]),
-    (species_b_x, species_b_y, OKABE_ITO[1], markers[1]),
-    (species_c_x, species_c_y, OKABE_ITO[2], markers[2]),
+    (species_a_x, species_a_y, IMPRINT[0], markers[0]),
+    (species_b_x, species_b_y, IMPRINT[1], markers[1]),
+    (species_c_x, species_c_y, IMPRINT[2], markers[2]),
 ]
 
 for i, (x, y, color, marker) in enumerate(scatter_data):

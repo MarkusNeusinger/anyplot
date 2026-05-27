@@ -18,7 +18,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Damped harmonic oscillator: m*x'' + c*x' + k*x = 0
 # Using underdamped solution: x(t) = A*exp(-gamma*t)*cos(omega_d*t + phi)
@@ -50,10 +50,10 @@ ax.set_facecolor(PAGE_BG)
 # Plot each trajectory
 for i, (x, v, A, _phi) in enumerate(trajectories):
     # Plot trajectory line
-    ax.plot(x, v, color=OKABE_ITO[i], linewidth=2.5, alpha=0.8, label=f"Trajectory {i + 1} (A={A:.1f})")
+    ax.plot(x, v, color=IMPRINT[i], linewidth=2.5, alpha=0.8, label=f"Trajectory {i + 1} (A={A:.1f})")
 
     # Mark start point with larger marker
-    ax.scatter(x[0], v[0], s=250, color=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=2, zorder=5, marker="o")
+    ax.scatter(x[0], v[0], s=250, color=IMPRINT[i], edgecolor=PAGE_BG, linewidth=2, zorder=5, marker="o")
 
     # Add arrows to show direction along trajectory
     n_points = len(x)
@@ -68,7 +68,7 @@ for i, (x, v, A, _phi) in enumerate(trajectories):
                 "",
                 xy=(x[idx + 10], v[idx + 10]),
                 xytext=(x[idx], v[idx]),
-                arrowprops={"arrowstyle": "->", "color": OKABE_ITO[i], "lw": 2.5, "mutation_scale": 20},
+                arrowprops={"arrowstyle": "->", "color": IMPRINT[i], "lw": 2.5, "mutation_scale": 20},
             )
 
 # Mark the equilibrium point (stable fixed point at origin)

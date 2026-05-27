@@ -20,10 +20,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 BRAND = "#009E73"  # Okabe-Ito #1 — test data points
-COLOR_FIT = "#D55E00"  # Okabe-Ito #2 — Basquin fit line
-COLOR_ULT = "#0072B2"  # Okabe-Ito #3 — Ultimate Strength
-COLOR_YLD = "#CC79A7"  # Okabe-Ito #4 — Yield Strength
-COLOR_END = "#E69F00"  # Okabe-Ito #5 — Endurance Limit
+COLOR_FIT = "#C475FD"  # Okabe-Ito #2 — Basquin fit line
+COLOR_ULT = "#4467A3"  # Okabe-Ito #3 — Ultimate Strength
+COLOR_YLD = "#BD8233"  # Okabe-Ito #4 — Yield Strength
+COLOR_END = "#AE3030"  # Okabe-Ito #5 — Endurance Limit
 
 # Data: Simulated fatigue test results for structural steel specimens
 np.random.seed(42)

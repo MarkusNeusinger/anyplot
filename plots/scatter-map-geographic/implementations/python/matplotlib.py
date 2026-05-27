@@ -20,13 +20,13 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette — use positions 1→N in canonical order
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # 1: bluish green (ALWAYS first series)
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
-    "#E69F00",  # 5: orange
-    "#56B4E9",  # 6: sky blue
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
+    "#AE3030",  # 5: orange
+    "#2ABCCD",  # 6: sky blue
 ]
 
 # Data - Major world cities with population and region
@@ -69,7 +69,7 @@ regions = [cities[c][3] for c in names]
 
 # Map regions to Okabe-Ito colors
 unique_regions = ["Asia", "South America", "North America", "Africa", "Europe", "Oceania"]
-region_colors = {region: OKABE_ITO[i] for i, region in enumerate(unique_regions)}
+region_colors = {region: IMPRINT[i] for i, region in enumerate(unique_regions)}
 colors = [region_colors[r] for r in regions]
 
 # Scale sizes based on population
@@ -480,7 +480,7 @@ size_values = [10, 20, 35]
 size_labels = ["10M", "20M", "35M"]
 size_handles = []
 for val, label in zip(size_values, size_labels, strict=True):
-    handle = ax.scatter([], [], c=OKABE_ITO[0], s=val * 22, label=label, edgecolors=PAGE_BG, linewidths=1.5, alpha=0.8)
+    handle = ax.scatter([], [], c=IMPRINT[0], s=val * 22, label=label, edgecolors=PAGE_BG, linewidths=1.5, alpha=0.8)
     size_handles.append(handle)
 
 size_legend = ax.legend(

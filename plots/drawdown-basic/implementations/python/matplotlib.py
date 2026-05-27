@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Semantic palette: red for drawdown (loss), green for recovery (gain)
-DRAWDOWN_COLOR = "#B71D27"  # anyplot palette position 3
+DRAWDOWN_COLOR = "#AE3030"  # anyplot palette position 3
 RECOVERY_COLOR = "#009E73"  # anyplot palette position 1
 
 # Data — 2 years of simulated daily portfolio values with multiple drawdown cycles

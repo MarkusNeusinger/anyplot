@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Renewable energy evolution (2014-2024)
 years = np.arange(2014, 2025)
@@ -41,7 +41,7 @@ ax.set_facecolor(PAGE_BG)
 labels = ["Solar", "Wind", "Hydro", "Natural Gas", "Coal"]
 
 # Create stacked area
-ax.stackplot(years, data_percent, labels=labels, colors=OKABE_ITO, alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
+ax.stackplot(years, data_percent, labels=labels, colors=IMPRINT, alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
 
 # Styling
 ax.set_xlabel("Year (2014–2024)", fontsize=20, color=INK)

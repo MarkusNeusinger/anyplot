@@ -25,9 +25,9 @@ REF_ALPHA = 0.10 if THEME == "light" else 0.18
 
 # Okabe-Ito — data series
 TEMP_COLOR = "#009E73"  # temperature — position 1
-DEWPOINT_COLOR = "#D55E00"  # dewpoint — position 2
-CAPE_COLOR = "#E69F00"  # CAPE shading — position 5
-CIN_COLOR = "#0072B2"  # CIN shading — position 3
+DEWPOINT_COLOR = "#C475FD"  # dewpoint — position 2
+CAPE_COLOR = "#AE3030"  # CAPE shading — position 5
+CIN_COLOR = "#4467A3"  # CIN shading — position 3
 
 # Data — simulated mid-latitude radiosonde sounding (surface to upper troposphere)
 np.random.seed(42)

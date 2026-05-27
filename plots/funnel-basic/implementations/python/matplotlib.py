@@ -17,8 +17,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first stage is brand green (#009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
-# Light orange #E69F00 needs dark text; pick INK so the label also
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Light orange #AE3030 needs dark text; pick INK so the label also
 # stays legible where it overflows the narrow bottom segment.
 TEXT_ON_FILL = ["white", "white", "white", "white", INK]
 
@@ -48,7 +48,7 @@ for i in range(n):
     y = np.array([y_top, y_bot])
     x_left = np.array([-w_top / 2, -w_bot / 2])
     x_right = np.array([w_top / 2, w_bot / 2])
-    ax.fill_betweenx(y, x_left, x_right, facecolor=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=2)
+    ax.fill_betweenx(y, x_left, x_right, facecolor=IMPRINT[i], edgecolor=PAGE_BG, linewidth=2)
 
     y_mid = (y_top + y_bot) / 2
     pct = (values[i] / max_value) * 100

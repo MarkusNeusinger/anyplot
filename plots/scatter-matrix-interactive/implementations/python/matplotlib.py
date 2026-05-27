@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (positions 1-3)
-COLORS = ["#009E73", "#D55E00", "#0072B2"]
+COLORS = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris dataset (4 numeric variables, 150 samples)
 iris = load_iris()

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First categorical series
-ACCENT = "#D55E00"  # Second color for overlay
+ACCENT = "#C475FD"  # Second color for overlay
 
 # Data: Generate realistic test score data with a normal distribution
 np.random.seed(42)

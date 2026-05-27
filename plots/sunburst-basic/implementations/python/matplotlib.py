@@ -16,8 +16,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Okabe-Ito base colors for level-1 departments (positions 1–3)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
-OKABE_RGB = [tuple(int(c[j : j + 2], 16) / 255 for j in (1, 3, 5)) for c in OKABE_ITO]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+OKABE_RGB = [tuple(int(c[j : j + 2], 16) / 255 for j in (1, 3, 5)) for c in IMPRINT]
 
 # Data: Company budget breakdown ($thousands)
 data = {
@@ -39,7 +39,7 @@ for i, (dept, teams) in enumerate(data.items()):
     dept_total = sum(sum(projs.values()) for projs in teams.values())
     level1_names.append(dept)
     level1_values.append(dept_total)
-    level1_colors.append(OKABE_ITO[i])
+    level1_colors.append(IMPRINT[i])
 
     r, g, b = OKABE_RGB[i]
     team_items = list(teams.items())

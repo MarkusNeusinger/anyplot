@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: remote work preference survey, n=100 employees
 categories = ["Hybrid", "Fully Remote", "In-Office"]
@@ -35,7 +35,7 @@ for i, c in enumerate(counts):
 
 xs = [idx % n_cols for idx in range(total)]
 ys = [n_rows - 1 - idx // n_cols for idx in range(total)]
-dot_colors = [OKABE_ITO[c] for c in dot_cats]
+dot_colors = [IMPRINT[c] for c in dot_cats]
 
 # Landscape figure: dot grid occupies a square central column; legend sits below
 fig, ax = plt.subplots(figsize=(16, 10), facecolor=PAGE_BG)
@@ -53,7 +53,7 @@ ax.axis("off")
 
 # Legend — three items in one row, centred below the grid
 handles = [
-    mpatches.Patch(color=OKABE_ITO[i], label=f"{categories[i]}  —  {counts[i]} / {total}")
+    mpatches.Patch(color=IMPRINT[i], label=f"{categories[i]}  —  {counts[i]} / {total}")
     for i in range(len(categories))
 ]
 leg = ax.legend(

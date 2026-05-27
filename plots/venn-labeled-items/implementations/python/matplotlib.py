@@ -19,8 +19,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical (canonical positions 1, 2, 3)
 COLOR_A = "#009E73"  # brand green — ALWAYS first series
-COLOR_B = "#D55E00"  # vermillion
-COLOR_C = "#0072B2"  # blue
+COLOR_B = "#C475FD"  # vermillion
+COLOR_C = "#4467A3"  # blue
 
 # Data: three Chartgeist-style traits
 RADIUS = 1.5

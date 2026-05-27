@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette for categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Software Development Project
 tasks = [
@@ -66,10 +66,10 @@ tasks = [
 
 # Category to color mapping using Okabe-Ito palette
 category_colors = {
-    "Planning": OKABE_ITO[0],
-    "Development": OKABE_ITO[1],
-    "Testing": OKABE_ITO[2],
-    "Deployment": OKABE_ITO[3],
+    "Planning": IMPRINT[0],
+    "Development": IMPRINT[1],
+    "Testing": IMPRINT[2],
+    "Deployment": IMPRINT[3],
 }
 
 # Plot
