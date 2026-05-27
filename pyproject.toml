@@ -17,12 +17,12 @@ keywords = [
 dependencies = [
     # Core Framework
     "fastapi>=0.136.3",
-    "uvicorn[standard]>=0.47.0",
+    "uvicorn[standard]>=0.48.0",
     # MCP Server
     "mcp>=1.27.1",
     "fastmcp>=3.3.1",
     # Database
-    "sqlalchemy[asyncio]>=2.0.49",
+    "sqlalchemy[asyncio]>=2.0.50",
     "asyncpg>=0.30.0",
     "pg8000>=1.31.0",  # Sync driver for Cloud SQL Connector in GitHub Actions
     "alembic>=1.14.0",
@@ -51,7 +51,7 @@ dependencies = [
     # Caching
     "cachetools>=7.1.4",
     # Auth — Cloudflare Access JWT verification on /debug/*
-    "pyjwt[crypto]>=2.12.1",
+    "pyjwt[crypto]>=2.13.0",
 ]
 
 [project.optional-dependencies]
@@ -150,6 +150,7 @@ ignore = [
 "plots/*/implementations/python/plotnine.py" = ["E402"]
 "plots/*/implementations/python/bokeh.py" = ["E402"]
 "plots/*/implementations/python/seaborn.py" = ["E402"]
+"plots/*/implementations/python/plotly.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"

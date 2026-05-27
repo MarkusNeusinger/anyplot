@@ -1,156 +1,196 @@
 library: altair
+language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:09:35Z'
-updated: '2026-01-20T23:12:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21190551596
+updated: '2026-05-27T17:49:11Z'
+generated_by: claude-sonnet
+workflow_run: 26526820203
 issue: 3754
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with proper encoding types (theta,
-    color, opacity)
-  - Interactive legend selection that dims non-selected categories - distinctive Altair
-    feature
-  - Clean layered composition combining donut, text labels, and center text
-  - Well-designed tooltips showing holding name, weight, category, and category total
-  - Professional color scheme with good contrast between asset classes
-  - White stroke between segments improves visual separation
+  - Dual-ring concentric donut with full interactive drill-down using Altair selection
+    grammar — outer ring click filters inner holdings ring via transform_filter
+  - 'Perfect spec compliance across all required features: hover tooltips, click-to-drill-down
+    by asset class, return-to-overview toggle, legend, color-coded by category'
+  - Anyplot palette in canonical order (green=Equities, purple=Fixed Income, blue=Alternatives);
+    both light and dark themes render correctly with proper chrome adaptation
+  - Clean idiomatic Altair code using alt.selection_point + transform_filter linked-selection
+    pattern and alt.condition for conditional opacity — library strengths well demonstrated
+  - Realistic portfolio data with real asset names (Apple, Microsoft, US Treasury)
+    summing to exactly 100%, sensible allocation breakdown across three distinct asset
+    classes
   weaknesses:
-  - Missing drill-down navigation feature mentioned in spec (click to explore sub-holdings)
-  - Center text could be more informative (e.g., show total value or selected category
-    details)
-  image_description: The plot displays an interactive donut chart showing portfolio
-    allocation across 10 holdings grouped into 3 asset classes. Equities (dark blue)
-    includes Apple 15%, Microsoft 12%, Amazon 10%, Nvidia 8%. Fixed Income (yellow/gold)
-    shows US Treasury 18%, Corporate Bonds 12%, Municipal Bonds 5%. Alternatives (lighter
-    blue) contains Gold ETF 8%, Real Estate Fund 7%, Commodities 5%. Weight percentages
-    appear as labels outside each arc segment. Center text reads "Portfolio Allocation".
-    A legend on the right identifies the three asset class categories with color-coded
-    symbols. Title "pie-portfolio-interactive · altair · pyplots.ai" appears at the
-    top.
+  - Design Excellence is the limiting factor — the dual-ring donut is well-crafted
+    but reads as a sophisticated configured implementation rather than a truly publication-ready
+    design; no data-level annotations or callouts to guide the viewer directly to
+    insights
+  - Inner ring arc segments for 5% holdings (Municipal Bonds, Commodities) are thin
+    and may be hard to distinguish on mobile-scaled widths — consider slightly increasing
+    innerRadius or adding a minimum arc threshold
+  - 'VQ-05: The donut area occupies a modest fraction of the 2400×2400 canvas with
+    notable dead space in all four corners; expanding chart.properties(width=, height=)
+    by ~10% would improve canvas utilization'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct
+      Chrome: Title "pie-portfolio-interactive · python · altair · anyplot.ai" in dark (#1A1A17) text fills ~75% of width — fully readable. Subtitle "Click outer ring to drill into category holdings · click again to reset" in muted secondary color — legible. Legend box has elevated background with Asset Class title and three labeled swatches.
+      Data: Outer ring (category totals) and inner ring (individual holdings) both use the anyplot palette — green (#009E73) for Equities (largest arc ~45%), lavender (#C475FD) for Fixed Income (~35%), blue (#4467A3) for Alternatives (~20%). Center shows "100%" bold and "10 Holdings" in softer text. Ring-gap strokes are PAGE_BG (white/cream), clearly separating segments.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black matching #1A1A17 — correct
+      Chrome: Title and subtitle render in light text (INK → #F0EFE8) — clearly visible against the dark surface. Legend box has elevated dark background (#242420) with light text labels. Ring-gap strokes switch to INK_SOFT (#B8B7B0) in dark mode — correctly adapted so gaps remain visible against dark arc segments.
+      Data: Green, purple, and blue arcs are identical in hue and arrangement to the light render — only chrome flips. Center "100%" text is light and bold, "10 Holdings" in softer secondary. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text clearly readable against the near-black background; the RING_STROKE INK_SOFT adaptation is correct and visible.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, center text, and percentage labels are all clearly readable
-          at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; labels well-positioned outside arcs
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Donut segments are well-sized and clearly visible; white stroke separates
-          segments nicely
+        comment: 'All font sizes explicitly set (title 16, subtitle 12, center 28+14,
+          legend 14/12). Well-proportioned and readable in both themes. Minor: subtitle
+          is compact at the canvas scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements — donut chart has no axis ticks; center text
+          sits cleanly in the hole; legend floats clear of the arcs.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Both rings clearly visible. 5% allocation arcs (Municipal Bonds,
+          Commodities) are thin in the inner ring — borderline at mobile widths.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and light blue provide good contrast and are colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Donut chart is well-centered and fills appropriate canvas space with
-          balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for pie/donut charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed on right, clear asset class labels with appropriate
-          symbol size
+        comment: Three anyplot palette colors with good perceptual separation; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400). Donut occupies a reasonable area
+          but dead corner space is notable for a square canvas. Legend well placed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes (donut chart). Title in canonical format. Legend title 'Asset
+          Class' is descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Equities=#009E73 (first, correct), Fixed Income=#C475FD (slot 2),
+          Alternatives=#4467A3 (slot 3). Canonical order. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome adapts correctly in both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful concentric dual-ring design with typographic center hierarchy
+          and is_dominant stroke-width emphasis. Above configured-default (4) but
+          not FiveThirtyEight publication level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, no spines. Legend styled with elevated background, rounded
+          corners, symbolic stroke. Theme-adaptive ring gap strokes. Genuine refinement
+          beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual-ring structure creates clear visual hierarchy — outer=asset
+          class, inner=holdings. Equities dominance (45%) immediately visible. Subtitle
+          communicates interaction model.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct donut chart visualization as specified
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Weights correctly mapped to arc angles, categories to colors
-      - id: SC-03
+        comment: Dual-ring interactive donut chart — exactly the specified visualization.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has tooltips, legend, color-coding by asset class; missing drill-down
-          navigation
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: pie/donut, hover tooltips with weights,
+          click drill-down by asset class, legend, color-coding, return-to-overview
+          via toggle.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, weights sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Theta encodes weight correctly for both rings. Tooltips expose asset,
+          weight %, category, num_holdings.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all three asset class categories
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format with middle dot separator
+        comment: Title is exact canonical format. Legend 'Asset Class' with correct
+          category labels.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety of holdings across all asset classes with different
-          weight distributions
+        comment: 'All chart features covered: three asset classes, 10 holdings, two-level
+          drill-down, dominant and minor allocations.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real-world portfolio scenario with recognizable assets (Apple, Microsoft,
-          Treasury, etc.)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Weights are realistic (5-18% range), sum to exactly 100%
+        comment: Real security names (Apple, Microsoft, US Treasury 10Y, Gold ETF).
+          Finance/investment context is neutral and business-appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Weights sum to exactly 100%. Allocation split (45% Equities, 35%
+          Fixed Income, 20% Alternatives) is realistic for a balanced growth portfolio.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,52 +198,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'No functions or classes. Clean linear flow: imports → tokens → data
+          → charts → layer → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random seed needed), but data is hardcoded
+        comment: Fully deterministic static data — no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: 'All imports used: os, altair, pandas, PIL.Image.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic. Appropriate complexity for a dual-ring interactive
+          donut. PIL padding logic follows canonical altair.md pattern.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API usage.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Leverages Altair's declarative encoding, selection_point for interactivity,
-          legend binding, layered composition with mark_arc and mark_text, tooltip
-          system
+        comment: Expertly uses alt.layer(), alt.selection_point(), transform_filter(),
+          alt.condition() for conditional encoding — all hallmark Altair patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The linked selection between outer and inner ring via transform_filter(category_sel)
+          is distinctly Altair — this cross-mark interaction grammar cannot be replicated
+          easily in other libraries.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - groupby-aggregation
   dataprep: []
   styling:
-  - edge-highlighting
+  - alpha-blending
