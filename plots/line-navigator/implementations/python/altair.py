@@ -47,7 +47,7 @@ start_ms = int(pd.Timestamp("2023-01-01").timestamp() * 1000)
 end_ms = int(pd.Timestamp("2023-07-01").timestamp() * 1000)
 brush = alt.selection_interval(encodings=["x"], value={"x": [start_ms, end_ms]})
 
-NAV_H = 50  # navigator chart height in pixels
+NAV_H = 40  # navigator height (18% of main 220px — within spec's 15-20% guideline)
 
 # Main chart — detail view linked to brush selection
 main_chart = (
@@ -65,12 +65,12 @@ main_chart = (
     .interactive()
 )
 
-# Navigator chart — full data overview with draggable selection window
+# Navigator chart — year-only x-axis labels reduce redundancy with main chart
 navigator_line = (
     alt.Chart(df)
     .mark_line(color=BRAND, strokeWidth=1)
     .encode(
-        x=alt.X("date:T", title=""),
+        x=alt.X("date:T", title="", axis=alt.Axis(tickCount="year", format="%Y")),
         y=alt.Y("value:Q", title="", axis=alt.Axis(labels=False, ticks=False), scale=alt.Scale(zero=False)),
     )
     .properties(width=620, height=NAV_H)
@@ -85,7 +85,26 @@ selection_highlight = (
     .transform_filter(brush)
 )
 
-navigator = alt.layer(navigator_line, selection_highlight).properties(width=620, height=NAV_H)
+# Date range text labels showing selected window start and end dates
+range_start_label = (
+    alt.Chart(df)
+    .transform_filter(brush)
+    .transform_aggregate(min_date="min(date)")
+    .mark_text(align="left", baseline="top", fontSize=9, color=INK_SOFT)
+    .encode(text=alt.Text("min_date:T", format="%Y-%m-%d"), x=alt.value(4), y=alt.value(2))
+)
+
+range_end_label = (
+    alt.Chart(df)
+    .transform_filter(brush)
+    .transform_aggregate(max_date="max(date)")
+    .mark_text(align="right", baseline="top", fontSize=9, color=INK_SOFT)
+    .encode(text=alt.Text("max_date:T", format="%Y-%m-%d"), x=alt.value(616), y=alt.value(2))
+)
+
+navigator = alt.layer(navigator_line, selection_highlight, range_start_label, range_end_label).properties(
+    width=620, height=NAV_H
+)
 
 # Combine main chart and navigator vertically
 combined = (
