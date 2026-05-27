@@ -17,7 +17,7 @@ keywords = [
 dependencies = [
     # Core Framework
     "fastapi>=0.136.1",
-    "uvicorn[standard]>=0.47.0",
+    "uvicorn[standard]>=0.48.0",
     # MCP Server
     "mcp>=1.27.1",
     "fastmcp>=3.3.1",
@@ -150,6 +150,7 @@ ignore = [
 "plots/*/implementations/python/plotnine.py" = ["E402"]
 "plots/*/implementations/python/bokeh.py" = ["E402"]
 "plots/*/implementations/python/seaborn.py" = ["E402"]
+"plots/*/implementations/python/plotly.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"

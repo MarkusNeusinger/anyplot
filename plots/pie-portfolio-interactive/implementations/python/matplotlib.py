@@ -1,18 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-27
 """
 
+import os
+
 import matplotlib.pyplot as plt
-import mplcursors
-import numpy as np
+from matplotlib.patches import Patch
 
 
-# Data - Portfolio allocation with asset classes
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+PCT_COLOR = "#FFFDF6" if THEME == "light" else "#F0EFE8"
 
-# Main asset categories with sub-holdings
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — diversified balanced fund allocation
+PORTFOLIO_TOTAL = 1_000_000
+
 categories = {
     "Equities": {"US Large Cap": 25.0, "International": 15.0, "Emerging Markets": 8.0},
     "Fixed Income": {"Government Bonds": 18.0, "Corporate Bonds": 12.0},
@@ -20,129 +31,95 @@ categories = {
     "Cash": {"Money Market": 5.0},
 }
 
-# Flatten for outer ring (individual holdings)
+cat_labels = list(categories.keys())
+cat_weights = [sum(assets.values()) for assets in categories.values()]
+cat_colors = ANYPLOT_PALETTE[:4]
+
 holdings = []
-weights = []
-category_colors = []
-category_for_holding = []
+holding_weights = []
+holding_cat_idx = []
 
-# Color scheme by asset class (colorblind-safe)
-color_map = {
-    "Equities": ["#306998", "#4A8BC2", "#6AA7D6"],  # Blues
-    "Fixed Income": ["#2E8B57", "#3CB371"],  # Greens
-    "Alternatives": ["#CD853F", "#D2691E"],  # Browns/oranges
-    "Cash": ["#708090"],  # Gray
-}
-
-for category, assets in categories.items():
+for i, (_cat, assets) in enumerate(categories.items()):
     for asset, weight in assets.items():
         holdings.append(asset)
-        weights.append(weight)
-        colors = color_map[category]
-        idx = list(assets.keys()).index(asset)
-        category_colors.append(colors[idx % len(colors)])
-        category_for_holding.append(category)
+        holding_weights.append(weight)
+        holding_cat_idx.append(i)
 
-# Category totals for inner ring
-category_totals = {cat: sum(assets.values()) for cat, assets in categories.items()}
-cat_labels = list(category_totals.keys())
-cat_weights = list(category_totals.values())
-cat_colors = ["#306998", "#2E8B57", "#CD853F", "#708090"]
+holding_colors = [cat_colors[i] for i in holding_cat_idx]
 
-# Create plot - square format for pie chart
-fig, ax = plt.subplots(figsize=(12, 12))
+# Plot — square canvas for pie/donut chart
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+fig.subplots_adjust(left=0.0, right=0.52, top=0.92, bottom=0.02)
 
-# Outer ring - individual holdings
-outer_wedges, outer_texts, outer_autotexts = ax.pie(
-    weights,
-    labels=None,
-    colors=category_colors,
-    autopct=lambda pct: f"{pct:.0f}%" if pct >= 8 else "",
-    pctdistance=0.82,
-    startangle=90,
-    radius=1.0,
-    wedgeprops={"linewidth": 2, "edgecolor": "white", "width": 0.35},
-    textprops={"fontsize": 13, "fontweight": "bold", "color": "white"},
-)
-
-# Inner ring - asset categories
-inner_wedges, inner_texts, inner_autotexts = ax.pie(
+# Inner ring — asset class totals
+inner_wedges, _, inner_pcts = ax.pie(
     cat_weights,
     labels=None,
     colors=cat_colors,
     autopct=lambda pct: f"{pct:.0f}%",
-    pctdistance=0.72,
+    pctdistance=0.70,
     startangle=90,
-    radius=0.65,
-    wedgeprops={"linewidth": 2, "edgecolor": "white", "width": 0.35},
-    textprops={"fontsize": 14, "fontweight": "bold", "color": "white"},
+    radius=0.56,
+    wedgeprops={"linewidth": 2.0, "edgecolor": PAGE_BG, "width": 0.32},
+    textprops={"fontsize": 8, "fontweight": "bold"},
 )
+for txt in inner_pcts:
+    txt.set_color(PCT_COLOR)
 
-# Add center text
-ax.text(0, 0, "Portfolio\nAllocation", ha="center", va="center", fontsize=20, fontweight="bold")
+# Outer ring — individual holdings (slightly transparent to suggest sub-level)
+outer_wedges, _, outer_pcts = ax.pie(
+    holding_weights,
+    labels=None,
+    colors=holding_colors,
+    autopct=lambda pct: f"{pct:.0f}%" if pct >= 8 else "",
+    pctdistance=0.84,
+    startangle=90,
+    radius=1.0,
+    wedgeprops={"linewidth": 1.5, "edgecolor": PAGE_BG, "width": 0.44},
+    textprops={"fontsize": 7},
+)
+for wedge in outer_wedges:
+    wedge.set_alpha(0.72)
+for txt in outer_pcts:
+    txt.set_color(PCT_COLOR)
 
-# Interactive hover tooltips for outer ring (individual holdings)
-cursor_outer = mplcursors.cursor(outer_wedges, hover=True)
+# Center label
+ax.text(0, 0, "Portfolio\nAllocation", ha="center", va="center", fontsize=10, fontweight="bold", color=INK)
 
-
-@cursor_outer.connect("add")
-def on_add_outer(sel):
-    idx = outer_wedges.index(sel.artist)
-    holding = holdings[idx]
-    weight = weights[idx]
-    category = category_for_holding[idx]
-    sel.annotation.set_text(f"{holding}\n{weight:.1f}%\n({category})")
-    sel.annotation.get_bbox_patch().set(fc="white", alpha=0.95)
-    sel.annotation.set_fontsize(14)
-
-
-# Interactive hover tooltips for inner ring (categories)
-cursor_inner = mplcursors.cursor(inner_wedges, hover=True)
-
-
-@cursor_inner.connect("add")
-def on_add_inner(sel):
-    idx = inner_wedges.index(sel.artist)
-    cat = cat_labels[idx]
-    weight = cat_weights[idx]
-    # List sub-holdings
-    sub_holdings = list(categories[cat].keys())
-    sub_text = "\n".join([f"  • {h}: {categories[cat][h]:.0f}%" for h in sub_holdings])
-    sel.annotation.set_text(f"{cat}: {weight:.0f}%\n{sub_text}")
-    sel.annotation.get_bbox_patch().set(fc="white", alpha=0.95)
-    sel.annotation.set_fontsize(13)
-
-
-# Create comprehensive legend showing all holdings grouped by category
+# Legend — categories with indented sub-holdings
 legend_handles = []
 legend_labels = []
+for i, cat in enumerate(cat_labels):
+    legend_handles.append(Patch(facecolor=cat_colors[i], edgecolor=INK_MUTED, linewidth=0.8))
+    cat_value = cat_weights[i] / 100 * PORTFOLIO_TOTAL
+    legend_labels.append(f"{cat}  {cat_weights[i]:.0f}%  ${cat_value:,.0f}")
+    for j in range(len(holdings)):
+        if holding_cat_idx[j] == i:
+            legend_handles.append(Patch(facecolor=cat_colors[i], alpha=0.60, edgecolor=INK_MUTED, linewidth=0.5))
+            holding_value = holding_weights[j] / 100 * PORTFOLIO_TOTAL
+            legend_labels.append(f"  {holdings[j]}  {holding_weights[j]:.0f}%  ${holding_value:,.0f}")
 
-for i, (cat, cat_color) in enumerate(zip(cat_labels, cat_colors, strict=True)):
-    # Category header
-    legend_handles.append(plt.Rectangle((0, 0), 1, 1, facecolor=cat_color, edgecolor="white", linewidth=1.5))
-    legend_labels.append(f"{cat} ({cat_weights[i]:.0f}%)")
-    # Individual holdings under this category
-    for j, (holding, weight) in enumerate(zip(holdings, weights, strict=True)):
-        if category_for_holding[j] == cat:
-            legend_handles.append(
-                plt.Rectangle((0, 0), 1, 1, facecolor=category_colors[holdings.index(holding)], edgecolor="none")
-            )
-            legend_labels.append(f"    {holding}: {weight:.0f}%")
-
-ax.legend(
+leg = ax.legend(
     legend_handles,
     legend_labels,
     loc="center left",
-    bbox_to_anchor=(1.05, 0.5),
-    fontsize=12,
+    bbox_to_anchor=(1.06, 0.5),
+    fontsize=8,
     frameon=True,
-    fancybox=True,
-    shadow=False,
-    title="Holdings",
-    title_fontsize=14,
+    title="Asset Allocation",
+    title_fontsize=8,
+    borderpad=1.0,
+    labelspacing=0.55,
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK)
 
-ax.set_title("pie-portfolio-interactive · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+# Title — centered on full figure width (not just the pie axes) to prevent clipping
+title = "pie-portfolio-interactive · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+fig.text(0.50, 0.96, title, ha="center", va="top", fontsize=title_fontsize, fontweight="medium", color=INK)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
