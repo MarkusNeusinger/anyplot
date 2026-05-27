@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-27
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 78/100 | Updated: 2026-05-27
 """
 
 import os
