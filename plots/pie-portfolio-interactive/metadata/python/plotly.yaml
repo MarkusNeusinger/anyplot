@@ -1,155 +1,197 @@
 library: plotly
+language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:09:02Z'
-updated: '2026-01-20T23:11:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21190551591
+updated: '2026-05-27T17:24:26Z'
+generated_by: claude-sonnet
+workflow_run: 26526610222
 issue: 3754
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Plotly interactive features with toggle buttons for switching
-    between All Holdings and By Category views
-  - Rich hover tooltips showing asset name, weight percentage, and category using
-    customdata
-  - Professional color scheme with consistent category-based coloring
-  - Clean visual separation between slices using white borders and pull effect
-  - Center annotation provides context (Portfolio Allocation)
-  - Legend shows category totals for quick overview
+  - Semantic ESG color mapping (green for Sustainable Equities, blue for Technology,
+    lavender for Green Fixed Income, ochre for Real Assets) creates meaningful visual
+    communication beyond arbitrary ordering
+  - Clean donut with bold center annotation immediately communicating fund identity
+  - Real Plotly updatemenus toggle buttons — genuine interactivity, not fake UI
+  - Rich hovertemplate with customdata surfaces asset name, weight, and category on
+    hover
+  - Custom category legend using ghost go.Scatter traces shows total weights per asset
+    class
+  - Correct theme-adaptive chrome in both renders with all fonts explicitly set
+  - Deterministic ESG data using real company names (Ørsted, NextEra, Vestas) summing
+    to exactly 100%
   weaknesses:
-  - Uses button-based view switching instead of true click-to-drill-down interaction
-    on slices as specified
-  - No random seed, though data is deterministic so reproducibility is maintained
-  image_description: 'The plot displays an interactive donut chart visualizing a portfolio
-    allocation with 10 holdings. The chart uses a 0.4 hole ratio with "Portfolio Allocation"
-    text in the center. Holdings are arranged radially with labels positioned outside
-    showing asset names and percentages (e.g., "Apple Inc. 15%", "US Treasury 10Y
-    18%"). Colors are mapped by asset class: Python Blue (#306998) for Equities, Python
-    Yellow (#FFD43B) for Fixed Income, Green (#4CAF50) for Alternatives, and Gray
-    (#9E9E9E) for Cash. White borders (3px) separate slices for visual clarity. Interactive
-    toggle buttons ("All Holdings" / "By Category") appear below the title. A legend
-    on the right displays "Asset Class" with category totals (Equities 45.0%, Fixed
-    Income 38.0%, Alternatives 13.0%, Cash 4.0%). The layout is clean with a white
-    background.'
+  - Spec calls for click-on-segment drill-down into sub-holdings (e.g., clicking Technology
+    reveals only Microsoft/Alphabet/Schneider Electric); implementation uses toggle
+    buttons for all-holdings vs. all-categories views — functional but misses the
+    specified interaction model
+  - Legend box border could be removed for cleaner minimalist appearance per anyplot
+    style guide
+  - 'DE-01 could improve: within-donut visual hierarchy is flat — differentiated outer-ring
+    arc labels by category or proportionally varied pull values would guide the eye
+    more deliberately'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface. No pure white.
+      Chrome: Title "pie-portfolio-interactive · python · plotly · anyplot.ai" in dark INK (#1A1A17), clear and fully visible at ~60% canvas width. Center annotation "ESG Portfolio" in bold dark INK at fontsize 22 — strong focal point. Toggle buttons ("All Holdings" / "By Category") in ELEVATED_BG with INK_SOFT border — readable. Legend at bottom with ELEVATED_BG box, INK_SOFT border, INK_SOFT text for 4 category entries — readable.
+      Data: Donut chart with 11 slices. Colors — Sustainable Equities: #009E73 (brand green), Technology: #4467A3 (blue), Green Fixed Income: #C475FD (lavender), Real Assets: #BD8233 (ochre). All from anyplot palette with semantic mapping. First series #009E73 PASS. White separators (PAGE_BG, width=3) between segments add clean definition. Percentage labels inside slices all visible.
+      Legibility verdict: PASS — all title, annotation, toggle, and legend text clearly readable against #FAF8F1 background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface. No pure black.
+      Chrome: Title text is light (#F0EFE8 via INK token) against dark background — fully readable. Center "ESG Portfolio" annotation appears in light text — readable. Toggle buttons styled with ELEVATED_BG (#242420) and light INK text — both visible. Legend text in INK_SOFT (#B8B7B0) on ELEVATED_BG (#242420) box — readable. No dark-on-dark failures observed.
+      Data: Same four colors as light render — #009E73, #4467A3, #C475FD, #BD8233 — identical to light render. Data colors correctly theme-invariant.
+      Legibility verdict: PASS — all chrome elements adapt correctly to dark theme. No "dark on dark" failures.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 28pt, labels 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Labels positioned outside with adequate spacing
+        comment: All font sizes explicitly set (title=16, pie text=13, annotation=22,
+          legend=12/13, buttons=13). Well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend entries well-spaced. Percentage labels
+          inside donut segments are non-overlapping.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Slices well-sized; smallest (4%) still visible but could be slightly
-          larger
+        comment: All 11 donut segments clearly visible with distinct colors. Percentage
+          labels readable. Center annotation prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/Yellow/Green/Gray palette is colorblind-safe
+        comment: Anyplot palette is CVD-safe. Four distinct hue families used. White
+          separator lines add contrast between adjacent same-family segments.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas; slight imbalance with legend positioned far right
+        comment: Square 2400x2400 canvas correct for pie/donut chart. Donut fills
+          ~60% of canvas area. Balanced margins (t=140, b=160, l/r=60). No content
+          cut off.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for pie charts, labels are descriptive
+        comment: Pie chart — no axis labels needed. Title is correct. Center annotation
+          serves as descriptive chart label.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed with category totals
+        comment: 'First category (Sustainable Equities) → #009E73 PASS. Semantic exception
+          correctly applied: all 4 colors from anyplot palette. Background #FAF8F1/#1A1A17
+          PASS. Chrome theme-adaptive PASS.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Strong semantic color mapping and ESG narrative coherence. Center
+          annotation, custom category legend, toggle interactivity elevate above defaults.
+          Not quite publication-ready — missing inner-chart visual hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: White segment separators, ELEVATED_BG buttons/legend with INK_SOFT
+          borders, generous margins. Clean presentation for a donut chart type.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center ESG focal point, semantic color coding (green=sustainability),
+          dual-view toggle enabling category-level comparison. Guides viewer to asset
+          class composition story.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Donut chart as specified
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Asset names, weights, categories correctly assigned
-      - id: SC-03
+        comment: Donut chart (pie with hole=0.42) — correct chart type per spec.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has hover tooltips, category grouping, view switching; missing click-to-drill-down
-          (uses buttons instead)
-      - id: SC-04
-        name: Data Range
+        comment: Hover tooltips (customdata+hovertemplate), color-coding by category,
+          category legend, both percentage and absolute values in tooltips, return-to-overview
+          navigation — all present. Drill-down is via toggle buttons rather than true
+          click-on-segment drill-down.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, weights sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Weights correctly mapped to pie values. 11 holdings summing to 100%.
+          Categories correctly assigned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows correct categories with totals
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        comment: Title 'pie-portfolio-interactive · python · plotly · anyplot.ai'
+          correct. Category legend with total weights per asset class.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows diverse portfolio with 4 asset classes; could include more
-          variety in allocation sizes
+        comment: 4 distinct asset classes, 11 holdings, varied weights (5%-15%), category
+          aggregation view available.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic investment portfolio with real company names and sensible
-          allocations
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Weights are realistic (4-18% range, sum to 100%)
+        comment: Real company names (Ørsted, NextEra Energy, Vestas Wind, Microsoft,
+          Alphabet, Schneider Electric). ESG fund is a real, neutral finance scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Weights sum to exactly 100%. Individual holdings 5-15% range is realistic
+          for a diversified ESG portfolio.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,49 +199,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Linear structure: imports → tokens → data → figure → layout → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed, but data is deterministic (hardcoded)
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data. No randomness requiring a seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and plotly used
+        comment: Only os, pandas, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Plotly API
+        comment: Clean Plotly idioms. Toggle via real updatemenus, not fake drawn
+          buttons. Ghost scatter for custom legend is established pattern.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
+          autosize=False with explicit width/height.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Interactive buttons with updatemenus, hover tooltips with customdata,
-          view switching, HTML export
+        comment: go.Pie with donut hole, updatemenus, customdata in hovertemplate,
+          add_annotation, update_traces(selector=dict(type='pie')) — all idiomatic
+          Plotly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: updatemenus with update method, customdata+hovertemplate, ghost scatter
+          custom legend pattern, html export — distinctively Plotly features. Not
+          quite 5 as none are advanced-tier Plotly.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - custom-legend
   - html-export
+  - annotations
+  - custom-legend
   patterns:
   - groupby-aggregation
   dataprep: []
