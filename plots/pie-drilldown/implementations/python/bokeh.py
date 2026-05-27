@@ -69,12 +69,12 @@ hierarchy = {
 # Okabe-Ito palette - first series ALWAYS #009E73
 colors = [
     "#009E73",  # Teal Green (Operations)
-    "#D55E00",  # Vermillion (Marketing)
-    "#0072B2",  # Blue (Research)
-    "#CC79A7",  # Pink/Magenta (HR)
-    "#E69F00",  # Orange
-    "#56B4E9",  # Sky Blue
-    "#F0E442",  # Yellow
+    "#C475FD",  # Vermillion (Marketing)
+    "#4467A3",  # Blue (Research)
+    "#BD8233",  # Pink/Magenta (HR)
+    "#AE3030",  # Orange
+    "#2ABCCD",  # Sky Blue
+    "#954477",  # Yellow
 ]
 
 # Calculate values for root level children

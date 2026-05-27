@@ -52,7 +52,7 @@ for team_name, parent_dept, team_budget in teams_data:
     values.append(team_budget)
 
 # Okabe-Ito palette for departments (positions 1–4)
-dept_colors = {"Engineering": "#009E73", "Marketing": "#D55E00", "Sales": "#0072B2", "Operations": "#CC79A7"}
+dept_colors = {"Engineering": "#009E73", "Marketing": "#C475FD", "Sales": "#4467A3", "Operations": "#BD8233"}
 
 colors = []
 for i, label in enumerate(labels):

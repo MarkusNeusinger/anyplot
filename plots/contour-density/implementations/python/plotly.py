@@ -44,7 +44,7 @@ y = np.concatenate([cluster1_y, cluster2_y, cluster3_y])
 colorscale = [
     [0, "rgba(255,255,255,0)"],  # Transparent at low density
     [0.2, "#FDB462"],  # Light orange (visible on both themes)
-    [0.5, "#0072B2"],  # Blue (Okabe-Ito position 3)
+    [0.5, "#4467A3"],  # Blue (Okabe-Ito position 3)
     [1, "#005073"],  # Dark blue (increased contrast)
 ]
 

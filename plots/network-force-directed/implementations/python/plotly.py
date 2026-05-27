@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette (positions 1-3)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 np.random.seed(42)
 
@@ -135,7 +135,7 @@ for comm_idx, comm_name in enumerate(community_names):
             mode="markers",
             marker={
                 "size": sizes,
-                "color": OKABE_ITO[comm_idx],
+                "color": IMPRINT[comm_idx],
                 "line": {"width": 2, "color": PAGE_BG},
                 "opacity": 0.9,
             },

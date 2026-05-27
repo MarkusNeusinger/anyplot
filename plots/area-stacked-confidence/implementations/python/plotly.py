@@ -17,12 +17,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
 # Okabe-Ito palette (positions 1-3 for three series)
 HYDRO_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
-WIND_COLOR = "#D55E00"  # Okabe-Ito position 2 (vermillion)
-SOLAR_COLOR = "#0072B2"  # Okabe-Ito position 3 (blue)
+WIND_COLOR = "#C475FD"  # Okabe-Ito position 2 (vermillion)
+SOLAR_COLOR = "#4467A3"  # Okabe-Ito position 3 (blue)
 
 # Data - Quarterly energy consumption forecast by source with uncertainty bands
 np.random.seed(42)
@@ -67,7 +67,7 @@ fig.add_trace(
         y=list(hydro_upper_stack) + list(hydro_lower_stack[::-1]),
         fill="toself",
         fillcolor="rgba(0, 158, 115, 0.25)",
-        line=dict(color="rgba(255,255,255,0)"),
+        line=dict(color="rgba(255, 255, 255, 0)"),
         showlegend=False,
         name="Hydro Band",
         hoverinfo="skip",
@@ -93,8 +93,8 @@ fig.add_trace(
         x=quarters + quarters[::-1],
         y=list(wind_upper_stack) + list(wind_lower_stack[::-1]),
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.25)",
-        line=dict(color="rgba(255,255,255,0)"),
+        fillcolor="rgba(196, 117, 253, 0.25)",
+        line=dict(color="rgba(255, 255, 255, 0)"),
         showlegend=False,
         name="Wind Band",
         hoverinfo="skip",
@@ -110,7 +110,7 @@ fig.add_trace(
         line=dict(color=WIND_COLOR, width=3),
         name="Wind",
         fill="tonexty",
-        fillcolor="rgba(213, 94, 0, 0.6)",
+        fillcolor="rgba(196, 117, 253, 0.6)",
     )
 )
 
@@ -120,8 +120,8 @@ fig.add_trace(
         x=quarters + quarters[::-1],
         y=list(solar_upper_stack) + list(solar_lower_stack[::-1]),
         fill="toself",
-        fillcolor="rgba(0, 114, 178, 0.25)",
-        line=dict(color="rgba(255,255,255,0)"),
+        fillcolor="rgba(68, 103, 163, 0.25)",
+        line=dict(color="rgba(255, 255, 255, 0)"),
         showlegend=False,
         name="Solar Band",
         hoverinfo="skip",
@@ -137,7 +137,7 @@ fig.add_trace(
         line=dict(color=SOLAR_COLOR, width=3),
         name="Solar",
         fill="tonexty",
-        fillcolor="rgba(0, 114, 178, 0.6)",
+        fillcolor="rgba(68, 103, 163, 0.6)",
     )
 )
 

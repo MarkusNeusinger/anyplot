@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 MALE_COLOR = "#009E73"  # Okabe-Ito position 1
-FEMALE_COLOR = "#D55E00"  # Okabe-Ito position 2
+FEMALE_COLOR = "#C475FD"  # Okabe-Ito position 2
 
 # Data - Population by age group (in thousands)
 age_groups = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"]

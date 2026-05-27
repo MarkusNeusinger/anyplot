@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - using iris-like multivariate data
 np.random.seed(42)
@@ -54,7 +54,7 @@ source = ColumnDataSource(
 )
 
 # Color mapping for categories using Okabe-Ito
-color_palette = OKABE_ITO[:3]
+color_palette = IMPRINT[:3]
 color_mapper = factor_cmap("category", palette=color_palette, factors=categories)
 
 # Create scatter plot (main selection view)
@@ -74,7 +74,7 @@ scatter_renderer = scatter.scatter(
     size=15,
     color=color_mapper,
     alpha=0.8,
-    selection_color=OKABE_ITO[1],
+    selection_color=IMPRINT[1],
     selection_alpha=1.0,
     nonselection_alpha=0.15,
     nonselection_color=INK_SOFT,
@@ -120,7 +120,7 @@ histogram.quad(
     left="left",
     right="right",
     source=hist_source,
-    fill_color=OKABE_ITO[0],
+    fill_color=IMPRINT[0],
     line_color=PAGE_BG,
     alpha=0.8,
 )
@@ -210,7 +210,7 @@ scatter2.scatter(
     size=15,
     color=color_mapper,
     alpha=0.8,
-    selection_color=OKABE_ITO[1],
+    selection_color=IMPRINT[1],
     selection_alpha=1.0,
     nonselection_alpha=0.15,
     nonselection_color=INK_SOFT,

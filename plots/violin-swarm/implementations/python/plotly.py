@@ -29,9 +29,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Colors - Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
-VIOLIN_COLOR = OKABE_ITO[0]  # Bluish green
-POINT_COLOR = OKABE_ITO[1]  # Vermillion
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+VIOLIN_COLOR = IMPRINT[0]  # Bluish green
+POINT_COLOR = IMPRINT[1]  # Vermillion
 
 # Data - Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)

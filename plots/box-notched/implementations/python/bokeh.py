@@ -31,12 +31,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
 ]
 
 # Data - Employee performance scores across departments
@@ -111,14 +111,14 @@ for i, cat in enumerate(categories):
     box_data["lower"].append(lower_whisker)
     box_data["notch_lower"].append(notch_lower)
     box_data["notch_upper"].append(notch_upper)
-    box_data["colors"].append(OKABE_ITO[i])
+    box_data["colors"].append(IMPRINT[i])
 
     # Find outliers
     outliers = values[(values < lower_fence) | (values > upper_fence)]
     for o in outliers:
         outlier_data["category"].append(cat)
         outlier_data["value"].append(o)
-        outlier_data["color"].append(OKABE_ITO[i])
+        outlier_data["color"].append(IMPRINT[i])
 
 # Create figure
 p = figure(

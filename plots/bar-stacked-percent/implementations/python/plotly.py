@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first color is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: Smartphone OS market share across world regions
 categories = ["North America", "South America", "Europe", "Africa", "Asia"]
@@ -45,7 +45,7 @@ for i, component in enumerate(components):
             name=component,
             x=categories,
             y=df[component].values,
-            marker=dict(color=OKABE_ITO[i], line=dict(width=0)),
+            marker=dict(color=IMPRINT[i], line=dict(width=0)),
             text=[f"{v:.0f}%" for v in df[component].values],
             textposition="inside",
             textfont=dict(size=16, color="white"),

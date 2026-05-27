@@ -22,9 +22,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
-LOSS_RED = "#B71D27"  # anyplot palette position 3 — semantic: loss/drawdown
+LOSS_RED = "#AE3030"  # anyplot palette position 3 — semantic: loss/drawdown
 RECOVERY_GREEN = "#009E73"  # anyplot palette position 1 — semantic: recovery/new high
 
 # Data — simulated stock price with realistic volatility
@@ -70,7 +70,7 @@ fig.add_trace(
         x=dates,
         y=drawdown,
         fill="tozeroy",
-        fillcolor="rgba(183,29,39,0.30)",
+        fillcolor="rgba(174, 48, 48, 0.30)",
         line=dict(color=LOSS_RED, width=2),
         name="Drawdown",
         hovertemplate="Date: %{x|%Y-%m-%d}<br>Drawdown: %{y:.2f}%<extra></extra>",

@@ -30,12 +30,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Monthly energy consumption by source (in gigawatt-hours)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 sources = ["Solar", "Wind", "Hydro", "Natural Gas"]
-colors = OKABE_ITO
+colors = IMPRINT
 
 data = {
     "Solar": [85, 92, 110, 125, 145, 165, 175, 160, 140, 115, 95, 80],

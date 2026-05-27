@@ -24,10 +24,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
 ]
 
 # Data: Software module dependency network
@@ -138,7 +138,7 @@ for i, angle in enumerate(axis_angles):
     y_start = inner_radius * np.sin(angle)
     x_end = outer_radius * np.cos(angle)
     y_end = outer_radius * np.sin(angle)
-    p.line([x_start, x_end], [y_start, y_end], line_width=4, line_color=OKABE_ITO[i], line_alpha=0.6)
+    p.line([x_start, x_end], [y_start, y_end], line_width=4, line_color=IMPRINT[i], line_alpha=0.6)
 
     # Axis labels
     label_radius = outer_radius + 300
@@ -168,7 +168,7 @@ for source, target in edges:
     curve_x = (1 - t_vals) ** 2 * src_pos["x"] + 2 * (1 - t_vals) * t_vals * ctrl_x + t_vals**2 * tgt_pos["x"]
     curve_y = (1 - t_vals) ** 2 * src_pos["y"] + 2 * (1 - t_vals) * t_vals * ctrl_y + t_vals**2 * tgt_pos["y"]
 
-    edge_color = OKABE_ITO[src_pos["axis"]]
+    edge_color = IMPRINT[src_pos["axis"]]
     p.line(curve_x.tolist(), curve_y.tolist(), line_width=2, line_color=edge_color, line_alpha=0.4)
 
 # Draw nodes with larger sizes for visibility
@@ -186,7 +186,7 @@ for axis_id in range(n_axes):
         y="y",
         size="size",
         source=source,
-        fill_color=OKABE_ITO[axis_id],
+        fill_color=IMPRINT[axis_id],
         line_color=PAGE_BG,
         line_width=3,
         alpha=0.85,

@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: Multiple 3D helix trajectories with different periods and amplitudes
 np.random.seed(42)
@@ -39,7 +39,7 @@ t1 = np.linspace(0, 8 * np.pi, 500)
 x1 = 5 * np.cos(t1)
 y1 = 5 * np.sin(t1)
 z1 = 3 * t1 / (8 * np.pi)
-trajectories.append((x1, y1, z1, OKABE_ITO[0]))
+trajectories.append((x1, y1, z1, IMPRINT[0]))
 labels.append("Standard Helix")
 
 # Helix 2: Compressed helix (faster rise, tighter spiral)
@@ -47,7 +47,7 @@ t2 = np.linspace(0, 6 * np.pi, 400)
 x2 = 3.5 * np.cos(2 * t2)
 y2 = 3.5 * np.sin(2 * t2)
 z2 = 5 * t2 / (6 * np.pi)
-trajectories.append((x2, y2, z2, OKABE_ITO[1]))
+trajectories.append((x2, y2, z2, IMPRINT[1]))
 labels.append("Compressed Helix")
 
 # Helix 3: Expanding helix (amplitude increases with height)
@@ -56,7 +56,7 @@ amplitude = 2 + 3 * (t3 / (4 * np.pi))
 x3 = amplitude * np.cos(t3)
 y3 = amplitude * np.sin(t3)
 z3 = 6 * t3 / (4 * np.pi)
-trajectories.append((x3, y3, z3, OKABE_ITO[2]))
+trajectories.append((x3, y3, z3, IMPRINT[2]))
 labels.append("Expanding Helix")
 
 # Create 3D line plot with multiple trajectories
