@@ -1,10 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-05-27
 """
 
+import math
 import os
+import re
 import sys
 from collections import defaultdict
 
@@ -14,6 +16,7 @@ _cwd = sys.path[0] if sys.path and sys.path[0] else None
 if _cwd:
     sys.path.remove(_cwd)
 
+import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
@@ -91,12 +94,13 @@ for i in range(1, len(bin_edges)):
     if bin_edges[i] <= bin_edges[i - 1]:
         bin_edges[i] = bin_edges[i - 1] + 1
 
+# Shortened labels to prevent legend truncation
 bin_labels = [
-    f"Low ({int(bin_edges[0])}–{int(bin_edges[1])} pickups)",
-    f"Med-Low ({int(bin_edges[1])}–{int(bin_edges[2])} pickups)",
-    f"Medium ({int(bin_edges[2])}–{int(bin_edges[3])} pickups)",
-    f"Med-High ({int(bin_edges[3])}–{int(bin_edges[4])} pickups)",
-    f"High ({int(bin_edges[4])}+ pickups)",
+    f"Low ({int(bin_edges[0])}–{int(bin_edges[1])})",
+    f"Med-Low ({int(bin_edges[1])}–{int(bin_edges[2])})",
+    f"Medium ({int(bin_edges[2])}–{int(bin_edges[3])})",
+    f"Med-High ({int(bin_edges[3])}–{int(bin_edges[4])})",
+    f"High ({int(bin_edges[4])}+)",
 ]
 
 # Geographic outlines (Manhattan island + waterways)
@@ -182,7 +186,7 @@ chart.add(None, manhattan_outline, stroke=True, dots_size=0, show_dots=False, fi
 chart.add(None, hudson_river, stroke=True, dots_size=0, show_dots=False, fill=False, stroke_width=3)
 chart.add(None, east_river, stroke=True, dots_size=0, show_dots=False, fill=False, stroke_width=3)
 
-# Density bins with size encoding (larger dots = more pickups)
+# Density bins with size encoding (larger hexagons = more pickups)
 series_data = [[] for _ in range(n_density_bins)]
 for h in hex_data:
     hx, hy = h["lon"], h["lat"]
@@ -202,8 +206,41 @@ for i in range(n_density_bins):
         series_data[i].append({"value": (-99, 0), "label": "No data"})
     chart.add(bin_labels[i], series_data[i], dots_size=dot_sizes[i])
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+
+def circles_to_hexagons(svg_text):
+    """Post-process SVG: replace circular dot markers with flat-top hexagonal polygons."""
+
+    def replace_one(m):
+        tag = m.group(0)
+        cx_m = re.search(r'\bcx="([^"]+)"', tag)
+        cy_m = re.search(r'\bcy="([^"]+)"', tag)
+        r_m = re.search(r'\br="([^"]+)"', tag)
+        if not (cx_m and cy_m and r_m):
+            return tag
+        cx = float(cx_m.group(1))
+        cy = float(cy_m.group(1))
+        r = float(r_m.group(1))
+        # Flat-top hexagon: vertex angles 30°, 90°, 150°, 210°, 270°, 330°
+        pts = " ".join(
+            f"{cx + r * math.cos(math.radians(60 * k + 30)):.2f},{cy + r * math.sin(math.radians(60 * k + 30)):.2f}"
+            for k in range(6)
+        )
+        poly = tag.replace("<circle", "<polygon", 1)
+        poly = re.sub(r'\bcx="[^"]*"\s*', "", poly)
+        poly = re.sub(r'\bcy="[^"]*"\s*', "", poly)
+        poly = re.sub(r'\br="[^"]*"', f'points="{pts}"', poly)
+        return poly
+
+    return re.sub(r"<circle\b[^>]*/>", replace_one, svg_text)
+
+
+# Render SVG, convert circle markers to hexagonal polygons, then produce PNG
+svg_bytes = chart.render()
+svg_str = svg_bytes.decode("utf-8")
+modified_svg = circles_to_hexagons(svg_str)
+modified_bytes = modified_svg.encode("utf-8")
+
+cairosvg.svg2png(bytestring=modified_bytes, write_to=f"plot-{THEME}.png")
 
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(modified_bytes)
