@@ -150,6 +150,7 @@ ignore = [
 "plots/*/implementations/python/plotnine.py" = ["E402"]
 "plots/*/implementations/python/bokeh.py" = ["E402"]
 "plots/*/implementations/python/seaborn.py" = ["E402"]
+"plots/*/implementations/python/plotly.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"
