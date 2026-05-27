@@ -60,6 +60,9 @@ ax_main = Axis(
     title              = TITLE_STR,
     titlesize          = TITLE_SIZE,
     titlecolor         = INK,
+    xlabel             = "Day",
+    xlabelsize         = 11,
+    xlabelcolor        = INK,
     ylabel             = "Temperature (°C)",
     ylabelsize         = 14,
     ylabelcolor        = INK,
@@ -80,7 +83,7 @@ ax_main = Axis(
     xminorgridvisible  = false,
 )
 
-# Navigator axis — full time series overview
+# Navigator axis — full time series overview with elevated background for visual hierarchy
 ax_nav = Axis(
     fig[2, 1];
     xlabel             = "Day",
@@ -92,7 +95,7 @@ ax_nav = Axis(
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
-    backgroundcolor    = PAGE_BG,
+    backgroundcolor    = ELEVATED_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
@@ -107,25 +110,25 @@ rowsize!(fig.layout, 1, Relative(0.78))
 rowsize!(fig.layout, 2, Relative(0.22))
 rowgap!(fig.layout, 1, 8)
 
-# Detail view: selected window with line plot
-lines!(ax_main, detail_t, detail_vals; color = ANYPLOT_PALETTE[1], linewidth = 2.5f0)
+# Detail view: selected window
+brand = ANYPLOT_PALETTE[1]
+lines!(ax_main, detail_t, detail_vals; color = brand, linewidth = 2.0f0)
 
-# Selected range label in detail chart
+# Annotation: selected range with insight context
 detail_ymin, detail_ymax = extrema(detail_vals)
 label_x = Float32(detail_t[1] + 3)
 label_y = Float32(detail_ymin + 0.87 * (detail_ymax - detail_ymin))
 text!(ax_main,
-      "Days $(WIN_START)–$(WIN_END) of $(N_DAYS)";
+      "Days $(WIN_START)–$(WIN_END) of $(N_DAYS) · Summer temperature peak";
       position = Point2f(label_x, label_y),
       align    = (:left, :center),
       color    = INK_MUTED,
-      fontsize = 10)
+      fontsize = 12)
 
-# Navigator: full series at reduced opacity
-brand = ANYPLOT_PALETTE[1]
+# Navigator: full series at reduced opacity with matching linewidth for visual consistency
 lines!(ax_nav, t, temperature;
        color     = RGBAf(red(brand), green(brand), blue(brand), 0.65f0),
-       linewidth = 0.9f0)
+       linewidth = 2.0f0)
 
 # Selection highlight — filled polygon over the selected range
 nav_ylo, nav_yhi = extrema(temperature)
@@ -135,10 +138,10 @@ sel_verts = Point2f[
     (WIN_END,   nav_yhi + nav_pad), (WIN_START, nav_yhi + nav_pad),
 ]
 poly!(ax_nav, sel_verts;
-      color       = RGBAf(red(brand), green(brand), blue(brand), 0.22f0),
+      color       = RGBAf(red(brand), green(brand), blue(brand), 0.30f0),
       strokewidth = 0)
 
 # Selection edge lines
-vlines!(ax_nav, [WIN_START, WIN_END]; color = ANYPLOT_PALETTE[1], linewidth = 1.8f0)
+vlines!(ax_nav, [WIN_START, WIN_END]; color = brand, linewidth = 2.0f0)
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
