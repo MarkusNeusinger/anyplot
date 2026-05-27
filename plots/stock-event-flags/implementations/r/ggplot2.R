@@ -73,17 +73,33 @@ price_range <- price_max - min(price_df$close)
 event_df <- event_df |>
   mutate(
     row_alt = row_number() %% 2,
-    flag_y  = price_max + price_range * (0.11 + row_alt * 0.09)
+    flag_y  = price_max + price_range * (0.11 + row_alt * 0.09),
+    is_miss = label == "Q2 Miss"
   )
 
 y_ceiling <- price_max + price_range * 0.36
 
-# Title (46 chars → size stays at default 12)
-title_str  <- "stock-event-flags · r · ggplot2 · anyplot.ai"
-title_size <- 12
+# Extract Q2 Miss row for targeted emphasis
+miss_row   <- event_df[event_df$is_miss, ]
+miss_date  <- miss_row$date
+miss_close <- miss_row$close
 
-# Plot
+# Earnings-season shading bands (±8 calendar days around each earnings release)
+earnings_dates <- event_df$date[event_df$event_type == "Earnings"]
+earnings_bands <- data.frame(
+  xmin = earnings_dates - 8,
+  xmax = earnings_dates + 8
+)
+
+title_str <- "stock-event-flags · r · ggplot2 · anyplot.ai"
+
 p <- ggplot() +
+  # Subtle earnings-window shading — highlights the quarterly reporting cadence
+  geom_rect(
+    data = earnings_bands,
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+    fill = ANYPLOT_PALETTE[3], alpha = 0.06, inherit.aes = FALSE
+  ) +
   # Price line (first categorical series = brand green)
   geom_line(
     data      = price_df,
@@ -106,14 +122,44 @@ p <- ggplot() +
     aes(x = date, y = flag_y, color = event_type, shape = event_type),
     size = 3.5
   ) +
-  # Short labels above flags
+  # Emphasis ring on Q2 Miss marker — matte red (semantic "loss") signals the miss
+  geom_point(
+    data = miss_row,
+    aes(x = date, y = flag_y),
+    shape = 1, size = 6.5, color = ANYPLOT_PALETTE[5], stroke = 1.2,
+    inherit.aes = FALSE
+  ) +
+  # Short labels above flags (size 2.7 for mobile readability)
   geom_text(
     data  = event_df,
     aes(x = date, y = flag_y, label = label, color = event_type),
-    size  = 2.2,
+    size  = 2.7,
     vjust = -0.65,
     fontface    = "bold",
     show.legend = FALSE
+  ) +
+  # Curved arrow callout: points to the price level at Q2 Miss, narrates the decline
+  annotate(
+    "curve",
+    x    = miss_date + 6,
+    xend = miss_date + 1,
+    y    = miss_close - price_range * 0.08,
+    yend = miss_close - price_range * 0.01,
+    color     = ANYPLOT_PALETTE[5],
+    linewidth = 0.5,
+    curvature = -0.3,
+    arrow = arrow(length = unit(0.06, "inches"), type = "closed")
+  ) +
+  annotate(
+    "text",
+    x     = miss_date + 6,
+    y     = miss_close - price_range * 0.09,
+    label = "Decline\nfollows miss",
+    color = ANYPLOT_PALETTE[5],
+    size  = 2.2,
+    hjust = 0,
+    vjust = 1,
+    fontface = "italic"
   ) +
   scale_color_manual(values = EVENT_COLORS, name = "Event") +
   scale_shape_manual(
@@ -142,7 +188,7 @@ p <- ggplot() +
     axis.line          = element_line(color = INK_SOFT,    linewidth = 0.4),
     axis.title         = element_text(color = INK,         size = 10),
     axis.text          = element_text(color = INK_SOFT,    size = 8),
-    plot.title         = element_text(color = INK,         size = title_size,
+    plot.title         = element_text(color = INK,         size = 12,
                                       face = "bold"),
     legend.background  = element_rect(fill = ELEVATED_BG,  color = INK_SOFT,
                                       linewidth = 0.3),
