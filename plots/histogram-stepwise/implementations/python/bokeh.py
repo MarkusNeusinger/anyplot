@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Two distributions with different spreads for comparison
 np.random.seed(42)
@@ -56,8 +56,8 @@ p = figure(
 )
 
 # Plot step histograms with Okabe-Ito colors
-line1 = p.line(x1, y1, line_width=4, color=OKABE_ITO[0], legend_label="Sensor A", alpha=0.85)
-line2 = p.line(x2, y2, line_width=4, color=OKABE_ITO[1], legend_label="Sensor B", alpha=0.85)
+line1 = p.line(x1, y1, line_width=4, color=IMPRINT[0], legend_label="Sensor A", alpha=0.85)
+line2 = p.line(x2, y2, line_width=4, color=IMPRINT[1], legend_label="Sensor B", alpha=0.85)
 
 # Add hover tooltips for interactivity
 hover1 = HoverTool(renderers=[line1], tooltips=[("Temperature (°C)", "$x{0.0}"), ("Frequency", "$y{0}")])

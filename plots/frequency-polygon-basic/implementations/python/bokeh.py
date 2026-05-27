@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Three groups with different distributions
 np.random.seed(42)
@@ -71,19 +71,19 @@ source_c = ColumnDataSource(data={"x": x_extended, "y": y_c_extended})
 
 # Plot frequency polygons with fills
 # Group A - Okabe-Ito 1 (Morning Session)
-p.patch(x="x", y="y", source=source_a, fill_alpha=0.25, fill_color=OKABE_ITO[0], line_width=0)
-p.line(x="x", y="y", source=source_a, line_color=OKABE_ITO[0], line_width=3, legend_label="Morning Session")
-p.scatter(x=bin_centers, y=counts_a, size=15, color=OKABE_ITO[0], alpha=0.9)
+p.patch(x="x", y="y", source=source_a, fill_alpha=0.25, fill_color=IMPRINT[0], line_width=0)
+p.line(x="x", y="y", source=source_a, line_color=IMPRINT[0], line_width=3, legend_label="Morning Session")
+p.scatter(x=bin_centers, y=counts_a, size=15, color=IMPRINT[0], alpha=0.9)
 
 # Group B - Okabe-Ito 2 (Afternoon Session)
-p.patch(x="x", y="y", source=source_b, fill_alpha=0.25, fill_color=OKABE_ITO[1], line_width=0)
-p.line(x="x", y="y", source=source_b, line_color=OKABE_ITO[1], line_width=3, legend_label="Afternoon Session")
-p.scatter(x=bin_centers, y=counts_b, size=15, color=OKABE_ITO[1], alpha=0.9)
+p.patch(x="x", y="y", source=source_b, fill_alpha=0.25, fill_color=IMPRINT[1], line_width=0)
+p.line(x="x", y="y", source=source_b, line_color=IMPRINT[1], line_width=3, legend_label="Afternoon Session")
+p.scatter(x=bin_centers, y=counts_b, size=15, color=IMPRINT[1], alpha=0.9)
 
 # Group C - Okabe-Ito 3 (Evening Session)
-p.patch(x="x", y="y", source=source_c, fill_alpha=0.25, fill_color=OKABE_ITO[2], line_width=0)
-p.line(x="x", y="y", source=source_c, line_color=OKABE_ITO[2], line_width=3, legend_label="Evening Session")
-p.scatter(x=bin_centers, y=counts_c, size=15, color=OKABE_ITO[2], alpha=0.9)
+p.patch(x="x", y="y", source=source_c, fill_alpha=0.25, fill_color=IMPRINT[2], line_width=0)
+p.line(x="x", y="y", source=source_c, line_color=IMPRINT[2], line_width=3, legend_label="Evening Session")
+p.scatter(x=bin_centers, y=counts_c, size=15, color=IMPRINT[2], alpha=0.9)
 
 # Theme-adaptive styling
 p.background_fill_color = PAGE_BG

@@ -33,7 +33,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors
 COLOR_0 = "#009E73"  # Class 0 - bluish green (brand color)
-COLOR_1 = "#D55E00"  # Class 1 - vermillion
+COLOR_1 = "#C475FD"  # Class 1 - vermillion
 
 # Data - Generate binary classification data
 np.random.seed(42)

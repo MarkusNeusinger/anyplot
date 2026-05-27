@@ -87,9 +87,9 @@ for i, node_id in enumerate(node_ids):
 # Okabe-Ito color palette for groups
 group_colors = {
     "core": BRAND,  # #009E73 - bluish green (Okabe-Ito position 1)
-    "infra": "#D55E00",  # vermillion
-    "shared": "#0072B2",  # blue
-    "dev": "#CC79A7",  # reddish purple
+    "infra": "#C475FD",  # vermillion
+    "shared": "#4467A3",  # blue
+    "dev": "#BD8233",  # reddish purple
 }
 
 # Prepare node data
