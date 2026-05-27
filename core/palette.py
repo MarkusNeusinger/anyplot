@@ -167,9 +167,11 @@ def diverging(theme: str = "light") -> LinearSegmentedColormap:
     return LinearSegmentedColormap.from_list(f"imprint_div_{theme}", [RED, midpoint, BLUE])
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> LinearSegmentedColormap:
     # Lazy-construct the cmap module attributes on first access so importing
-    # this module does not require matplotlib.
+    # this module does not require matplotlib. The return annotation is a
+    # forward reference under `from __future__ import annotations`, so it
+    # does not trigger a runtime matplotlib import.
     if name == "imprint_seq":
         from matplotlib.colors import LinearSegmentedColormap
 
