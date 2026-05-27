@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-05-27T13:58:35Z'
-updated: '2026-05-27T14:05:35Z'
+updated: '2026-05-27T14:19:42Z'
 generated_by: claude-sonnet
 workflow_run: 26513518255
 issue: 3767
@@ -12,53 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Correct imprint_seq colormap (green→blue) with appropriate log scale for count
-    data — exact anyplot spec
-  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all correctly
-    wired for both renders; land fill also theme-adaptive'
-  - 'Idiomatic Altair geo stack: alt.topo_feature(), alt.InlineData GeoJSON, mark_geoshape(),
-    alt.layer(), .project() — all distinctive Vega-Lite features used fluently'
-  - Clean flat-script structure; np.random.seed(42); all imports used; proper PAD-only
-    canvas logic with SystemExit guard on overshoot
-  - Realistic bird migration stopover scenario at real US flyway cities (Pacific,
-    Gulf Coast, Atlantic, Great Lakes, Mississippi corridors) — compelling, neutral,
-    factually grounded
-  - Hex boundary stroke using PAGE_BG at 0.3px creates clean cell separation without
-    visual noise; opacity=0.85 preserves base map context through hexagons
+  - Expert use of Altair geographic stack (topo_feature, InlineData GeoJSON, mark_geoshape,
+    project) all used idiomatically
+  - Complete theme-adaptive implementation including land fill/stroke tokens, not
+    just chart chrome
+  - Log-scale density gradient with imprint_seq perfectly suited for wide-range spatial
+    data
+  - Realistic bird migration dataset with geographically accurate cluster placement
+  - Canvas at exact 3200x1800 with proper PAD-only logic; no cropping
+  - All required spec features present and working (tooltips, transparency, count
+    aggregation, color legend)
   weaknesses:
-  - 'DE-03 LOW (3/6): All 8 hexbin clusters are treated visually equally — no focal
-    point or emphasis highlights the strongest migration hubs (Chicago/NY) vs. outlier
-    clusters. The viewer must search for the story rather than being guided to it.
-    Add a descriptive title prefix (e.g., ''US Bird Migration Hotspots · hexbin-map-geographic...'')
-    to anchor the narrative, or vary cluster densities more dramatically so the log-scale
-    color range is meaningfully wider across clusters.'
-  - 'DE-01 BELOW FIRST-ATTEMPT THRESHOLD (5/8): Implementation is functionally excellent
-    but the design is unadorned — plain hexagons, no descriptive title prefix, no
-    emphasis technique to direct the reader''s eye. To reach 90+ on repair, add a
-    ''Descriptive Title · '' prefix and consider one emphasis device (e.g., slightly
-    larger hexagons for the top-3 clusters, or a text annotation naming the densest
-    hotspot).'
-  - 'DQ-01 MINOR (5/6): All 8 source clusters have similar point counts (650–980),
-    so hexbin cell densities across clusters are within a narrow range. This underutilizes
-    the log-scale colormap — most hexagons land in the mid-green/mid-blue zone with
-    fewer extreme dark-blue (high density) cells. Widening the spread (e.g., one cluster
-    at 2000+ and another at 100) would create a more compelling density story and
-    better showcase the hexbin aggregation technique.'
+  - Annotation fontSize=8 is slightly small (32 source px); increase to 10px for consistency
+    with the label hierarchy and better mobile readability at 400px width
+  - Seattle label at lat=47.0 may be at the edge of the projected map extent and partially
+    obscured; verify it renders clearly or nudge lat slightly south
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, clearly not pure white
-      Chrome: Title "hexbin-map-geographic · python · altair · anyplot.ai" in bold dark ink, well-sized (~65% of canvas width), clearly readable. No axis labels (appropriate for geographic map). Legend titled "Sightings" with gradient bar and tick marks 1/10/100 — all readable. Legend frame has subtle INK_SOFT border on elevated-bg fill.
-      Data: US continental outline in light warm gray (#E8E4DC land fill, #B0AFA8 stroke). Hexagonal bin cells rendered in sequential green-to-blue (imprint_seq): low-density cells appear #009E73 (brand green), high-density cells appear #4467A3 (blue). 8 distinct cluster groups at Seattle/PNW, SF Bay, Houston, Chicago, NY/NJ, DC/mid-Atlantic, Miami, Minneapolis. Log scale produces visually differentiated gradients within each cluster.
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Bold title "US Bird Migration Hotspots" in dark #1A1A17 ink; subtitle "hexbin-map-geographic · python · altair · anyplot.ai" in soft gray #4A4A44; legend title "Sightings" in dark ink; legend labels in soft gray. All text clearly readable against light background.
+      Data: Hexagonal bins with green (#009E73) at low counts transitioning to blue (#4467A3) at high counts; eight geographic clusters; land fill in #E8E4DC; location annotations "Chicago" and "NYC Metro" in small dark text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, clearly not pure black
-      Chrome: Title in light warm cream (#F0EFE8), clearly readable against dark background. Legend text in INK_SOFT (#B8B7B0) — all tick labels and title text legible. Legend frame on elevated dark fill (#242420) with subtle border.
-      Data: US continental outline in dark warm gray (#2C2C28 land fill, #4A4A44 stroke) — good contrast against background, maintains geographic context. Hexagonal cell colors IDENTICAL to light render: same green-to-blue imprint_seq gradient in identical positions. Only chrome (background, land fill, land stroke, text, legend) has flipped.
-      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable; brand green #009E73 fully visible on dark surface; no black-on-dark issues detected
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title and subtitle text in light cream #F0EFE8 / #B8B7B0; legend labels in light gray; annotation labels in light #F0EFE8 ink. All text clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Hexagonal bin colors identical to light render (green #009E73 to blue #4467A3); land fill shifts to dark charcoal #2C2C28 with muted borders. Data palette is theme-invariant.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,84 +52,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title calculated, legend 10px). Title
-          readable in both themes at ~65% canvas width. Legend gradient labels are
-          small but legible. Minor deduction for the compact legend tick label size.
+        comment: All sizes explicitly set; annotation fontSize=8 is slightly small
+          (32 source px) but readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Hexagonal cells form clean non-overlapping
-          grid. Legend is separate from data area.
+        comment: No text collisions; dy=-4 annotation offset avoids hexagon centers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexagons clearly visible in both themes. Log-scale color range differentiates
-          density levels. 0.85 opacity preserves base map context. Appropriate size
-          relative to geographic extent.
+        comment: Hexagons well-sized at HEX_R=0.65 degrees; log scale keeps both sparse
+          and dense clusters visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe. No red-green only encoding.
-          Good luminance contrast between hexagons and land fill.
+        comment: Green-to-blue sequential gradient is CVD-safe; monotonic luminance
+          variation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas (landscape). Map fills ~55-60% of canvas area, appropriate
-          for geographic visualization with generous margins. Title above, legend
-          to the right — balanced layout.
+        comment: Exactly 3200x1800; map fills ~70% of canvas; balanced margins; legend
+          adjacent to chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (appropriate for geographic map). Title correct format.
-          Legend titled 'Sightings' with 1/10/100 tick values.
+        comment: Geographic map has no axis labels (appropriate); legend title Sightings
+          is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses exact imprint_seq: range=[''#009E73'', ''#4467A3'']
-          with log type. Light bg #FAF8F1, dark bg #1A1A17. All theme-adaptive chrome
-          correctly wired. Data colors identical across both renders.'
+        comment: 'imprint_seq (#009E73 to #4467A3) with log scale; backgrounds #FAF8F1
+          light / #1A1A17 dark; all chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above generic defaults: thoughtful log-scale choice, imprint_seq
-          palette, hex stroke separators, theme-adaptive land fills. But no descriptive
-          title prefix, no callout annotations, no emphasis technique — unadorned
-          for first-attempt threshold.'
+        passed: true
+        comment: 'Above configured default: theme-adaptive land fill/stroke, transparent
+          hexagons with PAGE_BG stroke, log-scale gradient. Not yet publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: PAGE_BG hex stroke at 0.3px width, opacity=0.85,
-          no unnecessary spines (map), clean legend frame with elevated-bg fill. Above
-          minimal-customization baseline.'
+        comment: opacity=0.85, strokeWidth=0.3 for cell definition, view stroke removed,
+          no decorative elements
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 8 migration stopover clusters are clearly positioned. Log scale reveals
-          density differences. But all clusters treated equally — no visual hierarchy,
-          no focal point directing viewer to strongest hubs, no descriptive title
-          to anchor the narrative.
+        passed: true
+        comment: Annotations at three densest hubs guide viewer; log scale reveals
+          density range; title frames narrative
     spec_compliance:
       score: 15
       max: 15
@@ -156,63 +129,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning map with geographic base map overlay. Flat-top
-          hex grid in lat/lon space, rendered as GeoJSON polygons over world-110m
-          topography.
+        comment: Correct hexagonal binning geographic map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hexagonal cells ✓, sequential colormap ✓, base map with geographic
-          context ✓, transparency ✓, interactive hover tooltips (count) ✓, count aggregation
-          (default) ✓.
+        comment: Hexagonal grid, base map overlay, sequential colormap+legend, transparency,
+          hover tooltips, count aggregation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Mercator projection centered on continental US (-96, 37) at scale=680.
-          Lat/lon correctly mapped. Count values correctly encoded as color via sequential
-          scale.
+        comment: Lat/lon correctly mapped to geographic position; count correctly
+          mapped to color intensity
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''hexbin-map-geographic · python · altair · anyplot.ai''
-          — correct format. Legend: ''Sightings'' with gradient bar and log-scale
-          ticks at 1/10/100.'
+        comment: Descriptive title + subtitle matching spec-id/language/library/anyplot.ai
+          pattern
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows clustering, density variation, geographic distribution, log-scale
-          range. Minor deduction: all 8 clusters have similar source densities (650-980
-          pts each), so hexbin cell counts span a narrower range than optimal for
-          showcasing the log-scale and density aggregation features.'
+        comment: Wide density spread (150-2500 per cluster); eight distinct geographic
+          clusters; log scale shows full range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bird species migration sightings at US metropolitan migration stopover
-          points on known flyways (Pacific, Gulf Coast, Atlantic, Great Lakes, Mississippi).
-          Excellent real-world scenario — neutral, scientifically grounded, geographically
-          accurate.
+        comment: Bird migration hotspots — real, neutral ecological scenario; cluster
+          centers match actual flyway corridors
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5,580 total data points (realistic for citizen-science monitoring).
-          Hex radius ~65 km at mid-latitudes is appropriate for city-scale aggregation.
-          8 clusters at real US flyway cities — geographically accurate.
+        comment: Geographically accurate coordinates; plausible sighting counts; HEX_R=0.65
+          degrees appropriate for city-level aggregation
     code_quality:
       score: 10
       max: 10
@@ -222,69 +185,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → data generation → hex grid computation
-          → GeoJSON → Altair chart → save. No functions or classes.'
+        comment: 'Linear: imports -> tokens -> data -> hexbin GeoJSON -> layers ->
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random data generation.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (env), sys (path fix), Counter (hex binning),
-          altair, numpy, PIL.Image (canvas padding).'
+        comment: 'All imports used: os, sys (path workaround), Counter, altair, numpy,
+          PIL.Image'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. The manual hexbin computation is complex but necessary
-          (no vega-lite hexbin transform). Clockwise winding comment explains a genuine
-          D3/vl-convert rendering invariant. No over-engineering.
+        comment: Manual GeoJSON construction is necessary; sys.path.pop(0) is commented
+          and intentional; canvas padding is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (with PAD-only canvas gate) and plot-{THEME}.html.
-          Current Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.x
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'High-quality Altair geo patterns: alt.topo_feature(), alt.InlineData
-          with JSON format, mark_geoshape(), alt.layer(), .project() with full parameter
-          set, configure_*() for theming. Slightly below 5 because hexbin grid is
-          computed manually rather than using vega-lite transforms.'
+        comment: 'Expert: alt.topo_feature, alt.InlineData, .project(), alt.layer(),
+          alt.TitleParams, configure_legend, configure_title all used correctly'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Genuine Altair/Vega-Lite distinctive features: alt.topo_feature()
-          from vega-datasets (Vega ecosystem-specific), alt.InlineData with GeoJSON,
-          geographic projection system, geoshape layer composition. Features not easily
-          replicated in matplotlib or seaborn.'
-  verdict: REJECTED
+        comment: Vega-Lite native geographic projection and mark_geoshape with inline
+          GeoJSON are Altair-distinctive; manual hexbin GeoJSON is an Altair-specific
+          pattern
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - hover-tooltips
-  - html-export
   - layer-composition
+  - hover-tooltips
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - binning
   styling:
