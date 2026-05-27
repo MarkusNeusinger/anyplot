@@ -1,36 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-21
+Library: bokeh | Python 3.13
+Quality: pending | Updated: 2026-05-27
 """
+
+import base64
+import os
+import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
-from bokeh.plotting import figure, save
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Label, Legend, LegendItem
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Generate synthetic stock price data for ~180 trading days
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = ANYPLOT_PALETTE[0]  # price line uses position 1
+
+# Data — 180 trading days of synthetic stock prices via geometric Brownian motion
 np.random.seed(42)
 n_days = 180
-start_date = pd.Timestamp("2024-01-02")
-dates = pd.bdate_range(start=start_date, periods=n_days)
+dates = pd.bdate_range(start=pd.Timestamp("2024-01-02"), periods=n_days)
 
-# Generate realistic stock price movement using geometric brownian motion
 initial_price = 150.0
 daily_returns = np.random.normal(0.0005, 0.018, n_days)
 close_prices = initial_price * np.cumprod(1 + daily_returns)
 
-# Generate OHLC data
-high_prices = close_prices * (1 + np.abs(np.random.normal(0, 0.01, n_days)))
-low_prices = close_prices * (1 - np.abs(np.random.normal(0, 0.01, n_days)))
-open_prices = np.roll(close_prices, 1)
-open_prices[0] = initial_price
+df = pd.DataFrame({"date": dates, "close": close_prices})
 
-df = pd.DataFrame({"date": dates, "open": open_prices, "high": high_prices, "low": low_prices, "close": close_prices})
-
-# Define events with dates, types, and labels
 events = [
     {"date": dates[25], "type": "earnings", "label": "Q4 Earnings"},
     {"date": dates[50], "type": "dividend", "label": "Dividend $0.50"},
@@ -42,60 +50,62 @@ events = [
 ]
 events_df = pd.DataFrame(events)
 
-# Event type colors and styling
+# Event styling — positions 2–5 (position 1 is the price line)
 event_colors = {
-    "earnings": "#306998",  # Python Blue
-    "dividend": "#2ECC71",  # Green
-    "split": "#9B59B6",  # Purple
-    "news": "#FFD43B",  # Python Yellow
+    "earnings": ANYPLOT_PALETTE[1],  # lavender
+    "dividend": ANYPLOT_PALETTE[2],  # blue
+    "split": ANYPLOT_PALETTE[3],  # ochre
+    "news": ANYPLOT_PALETTE[4],  # matte red
 }
-
 event_markers = {"earnings": "triangle", "dividend": "circle", "split": "square", "news": "diamond"}
 
-# Create figure
+# Plot
+title_str = "stock-event-flags · python · bokeh · anyplot.ai"
+
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     x_axis_type="datetime",
-    title="stock-event-flags · bokeh · pyplots.ai",
+    title=title_str,
     x_axis_label="Date",
-    y_axis_label="Price ($)",
-    tools="pan,wheel_zoom,box_zoom,reset,save",
+    y_axis_label="Price (USD)",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Style the figure
-p.title.text_font_size = "28pt"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.background_fill_color = "#fafafa"
-p.grid.grid_line_alpha = 0.4
-p.grid.grid_line_dash = [6, 4]
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Plot price as a line chart
+p.title.text_color = INK
+p.title.text_font_size = "50pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
+
+# Price line
 source = ColumnDataSource(df)
-price_line = p.line(
-    x="date", y="close", source=source, line_width=3, line_color="#306998", alpha=0.9, legend_label="Close Price"
-)
+price_line = p.line(x="date", y="close", source=source, line_width=4, line_color=BRAND, alpha=0.9)
 
-# Add hover tool for price line
-price_hover = HoverTool(
-    renderers=[price_line],
-    tooltips=[
-        ("Date", "@date{%F}"),
-        ("Open", "$@open{0.00}"),
-        ("High", "$@high{0.00}"),
-        ("Low", "$@low{0.00}"),
-        ("Close", "$@close{0.00}"),
-    ],
-    formatters={"@date": "datetime"},
-    mode="vline",
-)
-p.add_tools(price_hover)
-
-# Add vertical dashed lines and flags for each event
-legend_items = {}
+# Event flags — vertical connector lines + markers + labels
+legend_renderers = {}
 price_range = close_prices.max() - close_prices.min()
 
 for i, event in events_df.iterrows():
@@ -105,15 +115,12 @@ for i, event in events_df.iterrows():
     color = event_colors[event_type]
     marker = event_markers[event_type]
 
-    # Get price at event date
     idx = df[df["date"] == event_date].index[0]
     event_price = df.loc[idx, "close"]
 
-    # Alternate flag positions above/below price
-    offset_direction = 1 if i % 2 == 0 else -1
-    flag_y = event_price + offset_direction * price_range * 0.15
+    offset_dir = 1 if i % 2 == 0 else -1
+    flag_y = event_price + offset_dir * price_range * 0.15
 
-    # Add vertical dashed line from flag to price
     p.segment(
         x0=[event_date],
         y0=[event_price],
@@ -121,17 +128,12 @@ for i, event in events_df.iterrows():
         y1=[flag_y],
         line_color=color,
         line_dash="dashed",
-        line_width=2,
+        line_width=3,
         alpha=0.7,
     )
 
-    # Add flag marker
-    flag_source = ColumnDataSource(
-        data={"x": [event_date], "y": [flag_y], "label": [event_label], "type": [event_type.capitalize()]}
-    )
-
-    # Use scatter with marker parameter (triangle, diamond, square deprecated)
-    marker_size = 30 if marker == "diamond" else 25
+    flag_source = ColumnDataSource(data={"x": [event_date], "y": [flag_y]})
+    marker_size = 26 if marker == "diamond" else 20
     renderer = p.scatter(
         x="x",
         y="y",
@@ -139,46 +141,68 @@ for i, event in events_df.iterrows():
         size=marker_size,
         color=color,
         alpha=0.9,
-        line_color="white",
+        line_color=PAGE_BG,
         line_width=2,
         marker=marker,
     )
 
-    # Collect renderers for legend
-    if event_type not in legend_items:
-        legend_items[event_type] = renderer
+    if event_type not in legend_renderers:
+        legend_renderers[event_type] = renderer
 
-    # Add hover for event flags
-    event_hover = HoverTool(
-        renderers=[renderer],
-        tooltips=[("Event", "@type"), ("Label", "@label"), ("Date", "@x{%F}")],
-        formatters={"@x": "datetime"},
-    )
-    p.add_tools(event_hover)
-
-    # Add label next to flag
-    label_offset_x = 15
     label = Label(
         x=event_date,
         y=flag_y,
         text=event_label,
-        text_font_size="14pt",
+        text_font_size="26pt",
         text_color=color,
-        x_offset=label_offset_x,
-        y_offset=5 if offset_direction > 0 else -20,
+        x_offset=22,
+        y_offset=8 if offset_dir > 0 else -40,
         text_font_style="bold",
     )
     p.add_layout(label)
 
-# Create custom legend for event types
-legend_items_list = [LegendItem(label="Close Price", renderers=[price_line])]
-for event_type, renderer in legend_items.items():
-    legend_items_list.append(LegendItem(label=event_type.capitalize(), renderers=[renderer]))
+# Legend
+legend_items = [LegendItem(label="Close Price", renderers=[price_line])]
+for event_type, renderer in legend_renderers.items():
+    legend_items.append(LegendItem(label=event_type.capitalize(), renderers=[renderer]))
 
-legend = Legend(items=legend_items_list, location="top_left", label_text_font_size="16pt", background_fill_alpha=0.8)
+legend = Legend(
+    items=legend_items,
+    location="top_left",
+    label_text_font_size="34pt",
+    label_text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    border_line_color=INK_SOFT,
+)
 p.add_layout(legend)
-p.legend.click_policy = "hide"
 
-# Save outputs
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="Stock Chart with Event Flags")
+# Save HTML artifact
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+# Force exact viewport via CDP to override any OS/browser chrome overhead
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+screenshot_b64 = driver.execute_cdp_cmd(
+    "Page.captureScreenshot", {"format": "png", "fromSurface": True, "captureBeyondViewport": False}
+)["data"]
+with open(f"plot-{THEME}.png", "wb") as f:
+    f.write(base64.b64decode(screenshot_b64))
+driver.quit()
