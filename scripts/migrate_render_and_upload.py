@@ -217,14 +217,16 @@ def render(spec: str, language: str, library: str) -> tuple[Path, Path]:
 
     # Fallback: a handful of impls save to the impl directory (script_dir) instead
     # of cwd — e.g. lines like `plt.savefig(os.path.join(script_dir, f"plot-{theme}.png"))`.
-    # Move stray PNGs into the preview dir if found before checking existence.
+    # Move stray PNGs (and matching HTML sidecars for interactive libs) into the
+    # preview dir if found before checking existence.
     impl_dir = impl.parent
     for theme in ("light", "dark"):
-        target = preview / f"plot-{theme}.png"
-        if not target.is_file():
-            stray = impl_dir / f"plot-{theme}.png"
-            if stray.is_file():
-                stray.rename(target)
+        for ext in ("png", "html"):
+            target = preview / f"plot-{theme}.{ext}"
+            if not target.is_file():
+                stray = impl_dir / f"plot-{theme}.{ext}"
+                if stray.is_file():
+                    stray.rename(target)
 
     if not light_png.is_file() or not dark_png.is_file():
         raise RuntimeError(f"render incomplete in {preview} — missing light or dark PNG")
