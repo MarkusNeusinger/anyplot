@@ -1,151 +1,184 @@
 library: plotnine
+language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:40:33Z'
-updated: '2026-01-20T23:02:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21189771608
+updated: '2026-05-27T15:39:46Z'
+generated_by: claude-sonnet
+workflow_run: 26520398115
 issue: 3756
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Creative solution to simulate tile-like background using geom_rect grid without
-    external map dependencies
-  - 'Proper grammar of graphics layering: tiles → coastline → points → labels'
-  - Colorblind-safe palette with 8 distinct category colors
-  - Size encoding effectively communicates visitor volume
-  - Attribution text included as per spec requirement
-  - Fixed aspect ratio (coord_fixed) maintains geographic accuracy
+  - 'Full theme-adaptive implementation: backgrounds, text, terrain colors, and label
+    fills all respond correctly to ANYPLOT_THEME in both renders'
+  - Clever use of plotnine grammar-of-graphics primitives (geom_rect + geom_polygon)
+    to approximate a tile-style map within a library with no native map support
+  - Dual encoding (color=category, size=visitors) with correct anyplot palette assignment;
+    brand green correctly assigned to first alphabetical category
+  - Clean code with no functions/classes, proper seed, all imports used, correct output
+    API
   weaknesses:
-  - Title truncated on left edge (SF Landmarks appears as arks)
-  - Fishermans Wharf and Pier 39 labels still overlap despite nudge adjustments
-  - Plot occupies less than ideal canvas area with large white space below
-  image_description: 'The plot displays a map of San Francisco landmarks with a simulated
-    tile background. The background consists of a grid of rectangles colored in beige
-    (land) and light blue (water), representing a stylized map-tile effect. A dark
-    gray coastline polygon outlines the SF peninsula. Data points are rendered as
-    colored circles with size encoding visitor counts (thousands per year) - larger
-    circles represent more visitors. The points are color-coded by category using
-    a colorblind-safe palette: blue for Landmarks, cyan for Tourism, green for Museum,
-    yellow for Shopping, orange for Transport, red for Sports, purple for Cultural,
-    and brown for Historic. Four labels identify top attractions: Golden Gate Bridge,
-    Fisherman''s Wharf (partially visible as "Fisherma"), Pier 39, and Union Square
-    - displayed in white boxes. The title reads "SF Landmarks · map-tile-background
-    · plotnine · pyplots.ai" (truncated at left showing "arks"). Axis labels show
-    Longitude (°) and Latitude (°) with appropriate tick marks. Two legends on the
-    right show Visitors (K/yr) with size encoding and Category with color encoding.'
+  - 8 categories pushes the anyplot palette to its limit (style guide requires redundant
+    marker-shape encoding at n=7-8); add shape=category to aes() and scale_shape_manual()
+    to improve CVD accessibility
+  - Attribution text at size=2.5mm is very small and will be unreadable at mobile
+    widths; increase to 3.0-3.5mm
+  - Smallest data points (visitors~500, geom_point size=2 ggplot units) barely visible
+    in dense central cluster; raise scale_size_continuous range from (2,10) to (3,12)
+  - Union Square label nudge_x=0.025 lands very close to right coord boundary (lon=-122.38
+    vs lon_max=-122.36); reduce to nudge_x=0.01 or nudge downward to give breathing
+    room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct anyplot light theme background
+      Chrome: Title "map-tile-background · python · plotnine · anyplot.ai" bold dark text, readable; axis labels "Longitude (°)" and "Latitude (°)" in dark INK color; tick labels in INK_SOFT; legend text readable
+      Data: Simulated tile grid (beige land, light-blue water), brown coastline polygon, 15 landmark circles color-coded by 8 anyplot palette categories with size proportional to visitor count; first category "Cultural" correctly gets brand green #009E73; box labels on top-3 landmarks
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct anyplot dark theme background
+      Chrome: Title and all labels flip to light tones (#F0EFE8 / #B8B7B0); legend boxes use elevated dark bg #242420; landmark label boxes use dark fill with light text; no dark-on-dark failures observed
+      Data: Colors are identical to light render — all 8 anyplot palette data colors unchanged; terrain colors flip to dark brownish land and deep navy water
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Most text readable, but title is truncated on left edge
+        comment: All text readable in both themes; attribution text at 2.5mm size
+          very small for mobile
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Fisherman's Wharf and Pier 39 labels overlap slightly
+        comment: Labels reasonably separated; some data point overlap in dense central
+          cluster inherent to data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers well-sized with alpha for overlapping points
+        comment: Size range appropriate; smallest points (Coit Tower 500K/yr) barely
+          visible in cluster
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette with distinct colors
+        comment: CVD-safe anyplot palette used throughout
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot area could use more canvas space; white space below
+        comment: 3200x1800 confirmed; Union Square label sits tight against right
+          coord boundary
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Longitude (°), Latitude (°)'
+        comment: Title correct, Longitude/Latitude with degree units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid hidden, legends well-placed on right
+        comment: Brand green to first alphabetical category; all 8 palette slots in
+          canonical order; correct backgrounds
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Multiple geom layers, dual encoding, theme-adaptive terrain colors,
+          attribution note
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid removed (appropriate for maps), panel border retained as map
+          frame, theme-adaptive chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size foregrounds high-traffic landmarks; labels guide viewer to top-3;
+          geographic cluster pattern visible
     spec_compliance:
-      score: 23
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct map visualization with tile-style background
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly assigned, size and color encoding working
-      - id: SC-03
-        name: Required Features
         score: 4
         max: 5
         passed: true
-        comment: Has tile background, data points, size/color encoding, labels, attribution
-      - id: SC-04
-        name: Data Range
+        comment: Map with tile-style background implemented using geom_rect simulation
+          (best feasible in plotnine without extensions)
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: lat/lon, size encoding, labels, tile background, attribution present;
+          multiple providers and clustering absent (static library limitation)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude X, Latitude Y, color=category, size=visitors, coord_fixed
+          for geographic aspect
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both legends correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title truncated, starts with arks instead of full SF Landmarks
+        comment: Title format correct; category and size legends labeled correctly
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows various categories, sizes, geographic distribution
+        comment: Demonstrates lat/lon scatter, continuous size, categorical color,
+          bounding, text labels, attribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real SF landmarks with plausible visitor counts
+        comment: 'SF landmark visitor data: real-world plausible, geographically accurate,
+          politically neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Visitor counts reasonable, coordinates accurate
+        comment: 15 landmarks at realistic coordinates; visitor counts 500K-15M/yr
+          plausible for SF attractions
     code_quality:
       score: 10
       max: 10
@@ -155,54 +188,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No functions or classes; clean procedural flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported symbols used; sys/os workaround for naming conflict
+          is legitimate
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API
+        comment: Appropriate complexity; no fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: plot.save(f'plot-{THEME}.png', ...) correct
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar-of-graphics layer composition, proper scale_* functions,
+          coord_fixed, annotate(), multiple geoms with different data= frames
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with layered geoms, scale_manual, coord_fixed,
-          theme customization
+        comment: geom_rect for tiles, geom_polygon for coastline, coord_fixed(ratio=1.06)
+          for geographic projection — creative use of primitives
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - patches
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
-  - minimal-chrome
