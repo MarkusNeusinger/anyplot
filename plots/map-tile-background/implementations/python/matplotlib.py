@@ -1,82 +1,32 @@
-""" pyplots.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
 
 import io
 import math
+import os
 import urllib.request
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 from PIL import Image
 
 
-# Helper functions to convert lat/lon to tile coordinates
-def lat_lon_to_tile(lat, lon, zoom):
-    """Convert latitude/longitude to tile x, y at given zoom level."""
-    n = 2**zoom
-    x = int((lon + 180) / 360 * n)
-    lat_rad = math.radians(lat)
-    y = int((1 - math.asinh(math.tan(lat_rad)) / math.pi) / 2 * n)
-    return x, y
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Continuous colormap (imprint_seq: brand green → blue) for visitor density
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-def tile_to_lat_lon(x, y, zoom):
-    """Convert tile coordinates to latitude/longitude (NW corner)."""
-    n = 2**zoom
-    lon = x / n * 360 - 180
-    lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * y / n)))
-    lat = math.degrees(lat_rad)
-    return lat, lon
-
-
-def fetch_tile(x, y, zoom, source="osm"):
-    """Fetch a single map tile from tile server."""
-    if source == "osm":
-        url = f"https://tile.openstreetmap.org/{zoom}/{x}/{y}.png"
-
-    headers = {"User-Agent": "pyplots.ai/1.0 (https://pyplots.ai; visualization demo)"}
-    req = urllib.request.Request(url, headers=headers)
-
-    with urllib.request.urlopen(req, timeout=10) as response:
-        return Image.open(io.BytesIO(response.read()))
-
-
-def get_map_tiles(lat_min, lat_max, lon_min, lon_max, zoom=10):
-    """Fetch and stitch map tiles for a bounding box."""
-    # Get tile range
-    x_min, y_max = lat_lon_to_tile(lat_min, lon_min, zoom)
-    x_max, y_min = lat_lon_to_tile(lat_max, lon_max, zoom)
-
-    # Calculate tile dimensions
-    tiles_x = x_max - x_min + 1
-    tiles_y = y_max - y_min + 1
-
-    # Create blank image
-    tile_size = 256
-    full_image = Image.new("RGB", (tiles_x * tile_size, tiles_y * tile_size))
-
-    # Fetch and stitch tiles
-    for x in range(x_min, x_max + 1):
-        for y in range(y_min, y_max + 1):
-            tile = fetch_tile(x, y, zoom)
-            pos_x = (x - x_min) * tile_size
-            pos_y = (y - y_min) * tile_size
-            full_image.paste(tile, (pos_x, pos_y))
-
-    # Calculate geographic extent of stitched image
-    nw_lat, nw_lon = tile_to_lat_lon(x_min, y_min, zoom)
-    se_lat, se_lon = tile_to_lat_lon(x_max + 1, y_max + 1, zoom)
-
-    extent = [nw_lon, se_lon, se_lat, nw_lat]
-    return np.array(full_image), extent
-
-
-# Data: Tourist attractions in Rome with visitor counts
-np.random.seed(42)
-
+# Data: Rome tourist attractions with daily visitor counts
 locations = {
     "Colosseum": (41.8902, 12.4922, 7200),
     "Vatican Museums": (41.9065, 12.4536, 6800),
@@ -92,81 +42,122 @@ locations = {
     "Campo de' Fiori": (41.8956, 12.4722, 1800),
 }
 
-lats = np.array([loc[0] for loc in locations.values()])
-lons = np.array([loc[1] for loc in locations.values()])
-visitors = np.array([loc[2] for loc in locations.values()])  # Daily visitors (thousands)
 names = list(locations.keys())
+lats = np.array([v[0] for v in locations.values()])
+lons = np.array([v[1] for v in locations.values()])
+visitors = np.array([v[2] for v in locations.values()])
 
-# Calculate bounds with padding
-lat_margin = 0.015
-lon_margin = 0.025
-lat_min, lat_max = lats.min() - lat_margin, lats.max() + lat_margin
-lon_min, lon_max = lons.min() - lon_margin, lons.max() + lon_margin
+# Bounding box with padding
+lat_min = lats.min() - 0.015
+lat_max = lats.max() + 0.015
+lon_min = lons.min() - 0.025
+lon_max = lons.max() + 0.025
 
-# Fetch map tiles
+# Theme-adaptive tile provider
 zoom = 14
-map_img, extent = get_map_tiles(lat_min, lat_max, lon_min, lon_max, zoom)
+n_tiles = 2**zoom
+if THEME == "light":
+    tile_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    attribution = "© OpenStreetMap contributors"
+else:
+    tile_url = "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+    attribution = "© OpenStreetMap contributors, © CARTO"
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Tile index range for the bounding box
+tx_min = int((lon_min + 180) / 360 * n_tiles)
+tx_max = int((lon_max + 180) / 360 * n_tiles)
+ty_min = int((1 - math.asinh(math.tan(math.radians(lat_max))) / math.pi) / 2 * n_tiles)
+ty_max = int((1 - math.asinh(math.tan(math.radians(lat_min))) / math.pi) / 2 * n_tiles)
 
-# Display map background
-ax.imshow(map_img, extent=extent, aspect="auto", zorder=0)
+# Fetch and stitch tiles into a single image
+tile_size = 256
+stitched = Image.new("RGB", ((tx_max - tx_min + 1) * tile_size, (ty_max - ty_min + 1) * tile_size))
+ua = {"User-Agent": "anyplot.ai/1.0 (https://anyplot.ai; visualization demo)"}
+for tx in range(tx_min, tx_max + 1):
+    for ty in range(ty_min, ty_max + 1):
+        req = urllib.request.Request(tile_url.format(z=zoom, x=tx, y=ty), headers=ua)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            tile = Image.open(io.BytesIO(resp.read())).convert("RGB")
+        stitched.paste(tile, ((tx - tx_min) * tile_size, (ty - ty_min) * tile_size))
 
-# Scale point sizes based on visitor counts
-min_size = 150
-max_size = 800
-sizes = min_size + (visitors - visitors.min()) / (visitors.max() - visitors.min()) * (max_size - min_size)
+# Geographic extent of the stitched image [left, right, bottom, top]
+nw_lon = tx_min / n_tiles * 360 - 180
+nw_lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * ty_min / n_tiles))))
+se_lon = (tx_max + 1) / n_tiles * 360 - 180
+se_lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (ty_max + 1) / n_tiles))))
 
-# Plot data points with Python colors
+# Plot
+title = "Rome Tourist Attractions · map-tile-background · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title)))
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+ax.imshow(np.array(stitched), extent=[nw_lon, se_lon, se_lat, nw_lat], aspect="auto", zorder=0)
+
+# Scatter: size and color both encode daily visitor count
+sizes = 60 + (visitors - visitors.min()) / (visitors.max() - visitors.min()) * 290
+
 scatter = ax.scatter(
-    lons, lats, c=visitors, s=sizes, cmap="YlOrRd", alpha=0.85, edgecolors="white", linewidth=2.5, zorder=5
+    lons,
+    lats,
+    c=visitors,
+    s=sizes,
+    cmap=imprint_seq,
+    vmin=visitors.min(),
+    vmax=visitors.max(),
+    alpha=0.9,
+    edgecolors=PAGE_BG,
+    linewidth=1.5,
+    zorder=5,
 )
 
-# Add colorbar
-cbar = plt.colorbar(scatter, ax=ax, shrink=0.75, pad=0.02)
-cbar.set_label("Daily Visitors (thousands)", fontsize=16)
-cbar.ax.tick_params(labelsize=14)
+# Attraction name labels
+for name, lon, lat in zip(names, lons, lats, strict=False):
+    ax.annotate(
+        name,
+        (lon, lat),
+        xytext=(5, 4),
+        textcoords="offset points",
+        fontsize=5,
+        color=INK,
+        bbox={"boxstyle": "round,pad=0.15", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.75},
+        zorder=8,
+    )
 
-# Set axis limits to data extent
+# Colorbar
+cbar = plt.colorbar(scatter, ax=ax, shrink=0.75, pad=0.02)
+cbar.set_label("Daily Visitors", fontsize=8, color=INK_SOFT)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+
+# Axis limits and labels
 ax.set_xlim(lon_min, lon_max)
 ax.set_ylim(lat_min, lat_max)
-
-# Labels and title
-ax.set_xlabel("Longitude", fontsize=20)
-ax.set_ylabel("Latitude", fontsize=20)
-ax.set_title("map-tile-background · matplotlib · pyplots.ai", fontsize=24, pad=15)
-ax.tick_params(axis="both", labelsize=14)
-
-# Format tick labels as coordinates
+ax.set_xlabel("Longitude", fontsize=10, color=INK)
+ax.set_ylabel("Latitude", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x:.3f}°E"))
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, p: f"{y:.3f}°N"))
 
-# Add OpenStreetMap attribution (required by license)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+# Tile attribution (required by provider license)
 ax.text(
     0.99,
     0.01,
-    "© OpenStreetMap contributors",
+    attribution,
     transform=ax.transAxes,
-    fontsize=10,
+    fontsize=6,
     ha="right",
     va="bottom",
-    bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8, edgecolor="#cccccc"),
+    color=INK_MUTED,
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.85},
     zorder=10,
 )
 
-# Add context annotation
-ax.text(
-    0.01,
-    0.99,
-    "Rome Tourist Attractions\nMarker size = visitor volume",
-    transform=ax.transAxes,
-    fontsize=12,
-    ha="left",
-    va="top",
-    bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="#cccccc"),
-    zorder=10,
-)
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
