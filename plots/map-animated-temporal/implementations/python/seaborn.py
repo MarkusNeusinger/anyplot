@@ -1,133 +1,164 @@
-""" pyplots.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
 
 
-# Set style
-sns.set_context("talk", font_scale=1.2)
-sns.set_style("whitegrid")
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Generate synthetic earthquake aftershock data over 6 time periods
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Sequential colormap for magnitude (single-polarity continuous)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Ocean tint for geographic context
+OCEAN_TINT = "#D4E8F0" if THEME == "light" else "#192830"
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Synthetic aftershock sequence — Tohoku region, Japan (off Miyagi coast)
 np.random.seed(42)
 
-# Simulate aftershock sequence spreading from epicenter (California region)
-epicenter_lat, epicenter_lon = 35.0, -120.0
-n_points_per_period = 15
+epicenter_lat, epicenter_lon = 38.1, 142.8
 n_periods = 6
+mag_min, mag_max = 2.5, 5.8
 
 data_records = []
 for period in range(n_periods):
-    # Spread increases over time (aftershocks diffuse outward)
-    spread = 0.5 + period * 0.3
-    n_points = n_points_per_period + period * 3
-
-    lats = epicenter_lat + np.random.randn(n_points) * spread
-    lons = epicenter_lon + np.random.randn(n_points) * spread
-    # Magnitude decreases over time on average
-    magnitudes = np.random.uniform(2.0, 5.5 - period * 0.4, n_points)
-
-    for i in range(n_points):
+    spread = 0.4 + period * 0.25
+    n_pts = 12 + period * 4
+    lats = epicenter_lat + np.random.randn(n_pts) * spread
+    lons = epicenter_lon + np.random.randn(n_pts) * spread
+    upper = max(mag_min + 0.5, mag_max - period * 0.4)
+    mags = np.random.uniform(mag_min, upper, n_pts)
+    for i in range(n_pts):
         data_records.append(
-            {
-                "lat": lats[i],
-                "lon": lons[i],
-                "magnitude": magnitudes[i],
-                "period": f"Day {period + 1}",
-                "period_num": period,
-            }
+            {"lat": float(lats[i]), "lon": float(lons[i]), "magnitude": float(mags[i]), "period": f"Day {period + 1}"}
         )
 
 df = pd.DataFrame(data_records)
 
-# Define California coastline approximation for geographic context
-# Simplified coordinates from north to south
-ca_coast_lons = [-124.2, -123.8, -122.5, -121.9, -121.5, -120.6, -120.2, -119.5, -118.5, -117.2, -117.0]
-ca_coast_lats = [41.5, 39.8, 38.0, 36.8, 36.2, 35.5, 34.5, 34.4, 34.0, 33.0, 32.5]
+# Simplified Tohoku coastline (Sanriku coast, Miyagi–Iwate prefectures)
+coast_lons = [141.2, 141.3, 141.5, 141.4, 141.1, 141.0, 141.1, 141.4, 141.6, 141.9]
+coast_lats = [40.5, 40.1, 39.5, 39.0, 38.5, 38.0, 37.5, 37.0, 36.8, 36.5]
 
-# Create small multiples grid showing temporal snapshots
-fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+# Small multiples grid — 2 rows × 3 cols
+fig, axes = plt.subplots(2, 3, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 axes = axes.flatten()
 
-for idx, period in enumerate(sorted(df["period"].unique(), key=lambda x: int(x.split()[1]))):
+for idx in range(n_periods):
     ax = axes[idx]
-    period_data = df[df["period"] == period].copy()
+    ax.set_facecolor(PAGE_BG)
+    period_label = f"Day {idx + 1}"
+    period_data = df[df["period"] == period_label].copy()
 
-    # Draw simplified coastline for geographic context (before plotting data)
-    ax.plot(ca_coast_lons, ca_coast_lats, color="#8B7355", linewidth=2, alpha=0.7, zorder=1)
-    ax.fill_betweenx([32, 42], -125, ca_coast_lons[0], color="#A8D5E2", alpha=0.3, zorder=0)  # Ocean hint
+    # Ocean tint east of coastline
+    ax.axvspan(141.5, epicenter_lon + 3.5, color=OCEAN_TINT, alpha=0.35, zorder=0)
 
-    # Use seaborn scatterplot for aftershocks
+    # Simplified coastline for geographic context
+    ax.plot(coast_lons, coast_lats, color=INK_SOFT, linewidth=0.8, alpha=0.65, zorder=2)
+
+    # Aftershock scatter with dual encoding: hue + size for magnitude
     sns.scatterplot(
         data=period_data,
         x="lon",
         y="lat",
         size="magnitude",
-        sizes=(50, 500),
+        sizes=(10, 110),
         hue="magnitude",
-        palette="viridis",
-        alpha=0.7,
-        edgecolor="black",
-        linewidth=0.5,
-        hue_norm=(2.0, 5.5),
+        palette=imprint_seq,
+        hue_norm=(mag_min, mag_max),
+        alpha=0.80,
+        edgecolor=PAGE_BG,
+        linewidth=0.3,
         ax=ax,
         legend=False,
     )
 
-    # Mark epicenter with distinctive star
+    # Epicenter marker (matte red — danger semantic anchor)
     ax.scatter(
-        epicenter_lon, epicenter_lat, marker="*", s=500, c="#E63946", edgecolors="white", linewidths=2, zorder=10
+        epicenter_lon, epicenter_lat, marker="*", s=90, c=ANYPLOT_PALETTE[4], edgecolors=INK, linewidths=0.5, zorder=10
     )
 
-    # Set consistent axis limits for all panels
-    ax.set_xlim(epicenter_lon - 4, epicenter_lon + 4)
-    ax.set_ylim(epicenter_lat - 4, epicenter_lat + 4)
+    ax.set_xlim(epicenter_lon - 3.5, epicenter_lon + 3.5)
+    ax.set_ylim(epicenter_lat - 3.5, epicenter_lat + 3.5)
+    ax.set_title(period_label, fontsize=7.5, fontweight="bold", color=INK)
+    ax.set_xlabel("Lon (°E)" if idx >= 3 else "", fontsize=6, color=INK)
+    ax.set_ylabel("Lat (°N)" if idx % 3 == 0 else "", fontsize=6, color=INK)
+    ax.tick_params(axis="both", labelsize=5, colors=INK_SOFT)
+    ax.grid(True, alpha=0.12, linewidth=0.5, color=INK)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
-    # Style each subplot
-    ax.set_title(period, fontsize=20, fontweight="bold")
-    ax.set_xlabel("Longitude (\u00b0W)" if idx >= 3 else "", fontsize=16)
-    ax.set_ylabel("Latitude (\u00b0N)" if idx % 3 == 0 else "", fontsize=16)
-    ax.tick_params(axis="both", labelsize=14)
-    ax.set_aspect("equal")
-    ax.grid(True, alpha=0.3, linestyle="--")
+# Overall title
+title = "map-animated-temporal · python · seaborn · anyplot.ai"
+fig.suptitle(title, fontsize=12, fontweight="medium", color=INK, y=0.98)
 
-# Create a ScalarMappable for the colorbar
-norm = plt.Normalize(vmin=2.0, vmax=5.5)
-sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
+# Shared colorbar for magnitude scale
+norm = plt.Normalize(vmin=mag_min, vmax=mag_max)
+sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
-
-# Add shared colorbar
-cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+cbar_ax = fig.add_axes([0.93, 0.20, 0.013, 0.58])
 cbar = fig.colorbar(sm, cax=cbar_ax)
-cbar.set_label("Magnitude", fontsize=18)
-cbar.ax.tick_params(labelsize=14)
+cbar.set_label("Magnitude", fontsize=6, color=INK)
+cbar.ax.tick_params(labelsize=5, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Create legend for epicenter and coastline
-epicenter_marker = plt.Line2D(
+# Legend for map context markers
+epicenter_handle = Line2D(
     [0],
     [0],
     marker="*",
     color="w",
-    markerfacecolor="#E63946",
-    markeredgecolor="white",
-    markersize=20,
+    markerfacecolor=ANYPLOT_PALETTE[4],
+    markeredgecolor=INK,
+    markersize=7,
     linestyle="None",
     label="Epicenter",
 )
-coast_line = plt.Line2D([0], [0], color="#8B7355", linewidth=2, label="Coastline")
+coast_handle = Line2D([0], [0], color=INK_SOFT, linewidth=1.2, label="Coastline")
 
 fig.legend(
-    handles=[epicenter_marker, coast_line], loc="lower right", bbox_to_anchor=(0.88, 0.02), fontsize=14, framealpha=0.9
+    handles=[epicenter_handle, coast_handle],
+    loc="lower center",
+    bbox_to_anchor=(0.46, 0.02),
+    fontsize=5.5,
+    framealpha=0.92,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    ncol=2,
+    handlelength=1.2,
 )
 
-# Overall title
-fig.suptitle("map-animated-temporal \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="bold", y=0.98)
-
-fig.subplots_adjust(left=0.07, right=0.88, top=0.90, bottom=0.08, wspace=0.25, hspace=0.3)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.07, right=0.91, top=0.87, bottom=0.13, wspace=0.32, hspace=0.42)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
