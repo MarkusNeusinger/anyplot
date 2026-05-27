@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-tile-background: Map with Tile Background
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-27
+Quality: 84/100 | Updated: 2026-05-27
 """
 
 import os

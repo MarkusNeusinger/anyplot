@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:45:34Z'
-updated: '2026-05-27T15:35:28Z'
+updated: '2026-05-27T15:48:10Z'
 generated_by: claude-sonnet
 workflow_run: 26520281820
 issue: 3756
@@ -12,142 +12,137 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Correct Web Mercator projection implemented manually from lat/lon to pixel coordinates
-  - Proper OpenStreetMap tile grid construction using mark_image for authentic tile-based
-    background
-  - Theme-adaptive chrome (title, subtitle, legend colors, page background) correctly
-    applied using INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens
-  - 'Anyplot categorical palette correctly applied to 5 landmark categories with Monument
-    as brand green #009E73'
-  - Interactive HTML output with zoom/pan via .interactive()
-  - Required OSM attribution included as a dedicated text layer
-  - PIL canvas-padding to exact 3200x1800 target without cropping
-  - Selective labeling threshold (≥10M visitors) avoids label clutter while identifying
-    standout landmarks
+  - Theme-adaptive tile provider selection (CartoDB Positron for light, Dark Matter
+    for dark) — demonstrates multi-provider knowledge
+  - Correct anyplot palette in canonical order with Monument=#009E73 as first series
+  - 'Clean layer composition: tiles → circles → labels → attribution, using mark_image
+    for tiles'
+  - White stroke (#FFFFFF) on markers provides contrast across diverse tile backgrounds
+  - Interactive zoom/pan enabled via .interactive() with HTML export
+  - Web Mercator projection implemented correctly for coordinate mapping
+  - 'Correct canvas targeting: inner view 560×320 with PIL padding to 3200×1800'
+  - Visitor size encoding effectively highlights La Rambla (37M) as dominant site
   weaknesses:
-  - Only one tile provider (OSM) implemented — spec requires multiple providers (OpenStreetMap,
-    Stamen Terrain/Toner, CartoDB, satellite). Add a second provider or at minimum
-    demonstrate the pattern with a provider switch for dark mode.
-  - 'Dark mode uses the same light-colored OSM tiles on a #1A1A17 near-black background,
-    creating a visual mismatch — light map island on dark chrome. For proper dark-mode
-    map, switch to a dark tile provider such as CartoDB Dark Matter (https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png)
-    when THEME==dark.'
-  - labels_layer and attribution_layer are missing axis=None on their x/y encodings
-    — only tile_layer and points_layer suppress axes. While the merged Vega-Lite spec
-    resolves this correctly in practice, the intent should be explicit on every layer
-    to prevent axis ticks leaking if layer order changes.
-  - 'DE-01/DE-02: The overall composition feels like a well-configured default rather
-    than a deliberately styled piece — the busy OSM color scheme competes with the
-    anyplot categorical palette. Consider using a muted/greyscale tile style (e.g.,
-    CartoDB Positron) in light mode to let the anyplot data colors pop more clearly.'
+  - 'Attribution text positioned at TOP of chart instead of bottom-right — y-axis
+    inversion bug: Vega-Lite y-scale with domain [0, chart_height] maps y=chart_height-5
+    to the top of the chart area, so attribution at (chart_width-5, chart_height-5)
+    appears near the subtitle row rather than at the lower-right corner; fix by using
+    y=5 instead of y=chart_height-5'
+  - Only two tile providers used (CartoDB Positron/Dark Matter), selected by theme
+    rather than user-selectable variety — the spec asks for demonstration of multiple
+    providers (OSM, Stamen, CartoDB, satellite); consider adding a comment or secondary
+    demonstration
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 as page background, surrounding the map tile area — correct.
-      Chrome: Title "map-tile-background · python · altair · anyplot.ai" in dark near-black INK color, clearly readable. Subtitle "European Landmarks by Annual Visitors" in INK_SOFT, also readable. No axis tick labels (appropriate for a map). Two legends at bottom corners with elevated #FFFDF6 box fill and INK_SOFT border — both readable.
-      Data: 20 European landmark circles sized by annual visitors (0.5M–37M), colored by category: Monument=#009E73 (green), Historical=#C475FD (lavender), Museum=#4467A3 (blue), Religious=#BD8233 (ochre), Street=#AE3030 (red). White stroke on all circles for definition. Two landmark text labels ("La Rambla", "Notre-Dame") in bold dark INK text. OSM tile background fills the inner chart area with colorful street-level map of Europe.
-      Legibility verdict: PASS — all title, subtitle, and legend text is clearly readable against the off-white background; data circles with white strokes are well-defined against the map tiles.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "map-tile-background · python · altair · anyplot.ai" centered, readable in dark ink; subtitle "European Landmarks by Annual Visitors" in INK_SOFT; all text readable
+      Data: CartoDB Positron tiles provide a light muted geographic basemap of Europe; 20 circular markers with white stroke (#FFFFFF, strokeWidth=2) and opacity=0.85 overlaid; size encodes annual visitors (La Rambla Barcelona at 37M is largest); colors follow anyplot palette canonical order — Monument=#009E73 (green), Historical=#C475FD (lavender), Museum=#4467A3 (blue), Religious=#BD8233 (ochre), Street=#AE3030 (red); "La Rambla" and "Notre-Dame" labeled for top-visited sites; Visitors legend (bottom-left) and Category legend (bottom-right) with ELEVATED_BG fill and INK_SOFT border
+      Notable issue: Attribution text "© CartoDB Positron | © OpenStreetMap contributors" appears at the TOP of the map tile area rather than bottom-right — y-axis inversion bug (Vega-Lite y=chart_height-5 maps to near the top, not the bottom)
+      Legibility verdict: PASS — all primary text (title, subtitle, labels, legends) is clearly readable; attribution text is readable but mispositioned
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 as page background — correct.
-      Chrome: Title and subtitle text appear in light #F0EFE8 (INK in dark theme), clearly readable against the dark background. Legend boxes use elevated #242420 background with #B8B7B0 stroke; legend text (labels and titles) is light-colored and readable. No dark-on-dark text failures observed in chrome elements.
-      Data: Categorical circle colors are identical to the light render — same #009E73, #C475FD, #4467A3, #BD8233, #AE3030 as expected. The OSM tiles remain light-colored (external provider, no dark tile variant), creating a visual contrast with the dark chrome border. Landmark labels use INK=#F0EFE8 (near-white) which shows up against the darker map tile areas but could be marginally less readable on lighter tile zones.
-      Legibility verdict: PASS for chrome elements; mild concern that near-white landmark labels on light OSM tiles have reduced contrast compared to the light render, but text remains distinguishable.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle rendered in light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background; "La Rambla" and "Notre-Dame" labels in INK (#F0EFE8 in dark mode) — readable; legend text in INK_SOFT (#B8B7B0) — readable; legend box fill uses ELEVATED_BG (#242420)
+      Data: CartoDB Dark Matter tiles provide dark geographic basemap; all data colors are IDENTICAL to light render (anyplot palette is theme-independent) — Monument green, Historical lavender, Museum blue, Religious ochre, Street red all confirmed matching; white stroke maintains marker visibility on dark tiles
+      No "dark-on-dark" failures observed — no near-black text on near-black background detected
+      Attribution: Same y-axis inversion bug places attribution text near the top of the chart
+      Legibility verdict: PASS — all text is legible against the dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, subtitle=12, labels=13,
-          legend titles=14, legend labels=12, attribution=10). Readable in both themes.
-          Minor concern: landmark label color (INK) in dark mode is near-white on
-          OSM light tiles — marginally reduced contrast in some tile zones.'
+        comment: Title, subtitle, point labels, and legends are clear in both themes.
+          Attribution text (fontSize=10) is visible but mispositioned at top of chart
+          due to y-axis inversion bug (y=chart_height-5 maps to top in Vega-Lite,
+          not bottom-right as intended). Minor deduction for placement confusion.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Only two text labels shown (La Rambla, Notre-Dame), no text overlap.
-          Minor circle overlap in clustered Western Europe areas (Paris region has
-          several close landmarks) but acceptable for geographic data.
+        comment: 20 data points spread across Europe with minimal overlap. La Rambla
+          and Notre-Dame labels placed without collision. Attribution text overlaps
+          with tile content at top of chart area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 20 landmark circles clearly visible with white stroke definition.
-          Size range (80–1200 area units) proportional to visitor counts (0.5M–37M)
-          — well-adapted to the data range.
+        comment: All markers visible with white stroke on diverse tile backgrounds.
+          Size encoding for visitors is clear and effective. Opacity=0.85 appropriate
+          for 20 sparse points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-optimized. White strokes on markers improve
-          separability against the colorful tile background.
+        comment: Anyplot palette used (colorblind-safe hybrid-v3). White stroke (#FFFFFF)
+          provides additional contrast on both light and dark tile backgrounds.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Map fills chart area well, legends positioned
-          at bottom corners without overlapping data, title/subtitle properly positioned
-          above.
+        comment: Canvas gate passed (3200x1800). Title centered and proportionate.
+          Legends well-positioned at bottom-left/right. Attribution text at wrong
+          position (top instead of bottom-right) is the main layout deduction.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (appropriate for tile map — lat/lon axes would be
-          misleading). Title is correct spec-id format. Subtitle provides descriptive
-          context.
+        comment: Title matches required format. Subtitle 'European Landmarks by Annual
+          Visitors' is descriptive. Legend titles 'Visitors (M/year)' and 'Category'
+          are informative. No axes required for map.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category (Monument) correctly uses #009E73. All 5 categories
-          use anyplot palette in canonical order. Page background is #FAF8F1 (light)
-          / #1A1A17 (dark). Chrome tokens are theme-adaptive throughout.'
+        comment: 'First series (Monument) = #009E73 (brand green). Canonical order
+          followed (green/lavender/blue/ochre/red). Light background #FAF8F1, dark
+          background #1A1A17. All chrome tokens properly theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured implementation with anyplot palette and properly
-          styled legends, but the colorful OSM street tiles compete visually with
-          the data markers. Looks like a well-configured default rather than a deliberately
-          styled piece.
+        passed: true
+        comment: Theme-adaptive tile providers (CartoDB Positron for light, Dark Matter
+          for dark) demonstrates intentional design. Size + color dual encoding is
+          professional. White stroke for marker contrast is thoughtful. Attribution
+          position bug reduces polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes/spines (appropriate for maps), legend boxes have rounded
-          corners and elevated backgrounds, attribution placed cleanly. Some visible
-          refinement beyond defaults.
+        comment: No unnecessary axes on a map (correct). Marker opacity=0.85 with
+          white stroke adds polish. Themed legend boxes with ELEVATED_BG fill and
+          INK_SOFT border. Above default (2) for clean map composition.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size encoding creates immediate visual hierarchy — La Rambla's dominant
-          circle draws the eye first. Selective labeling (≥10M threshold) guides the
-          viewer to key outliers. Category color groups add semantic meaning without
-          requiring a data key.
+        comment: La Rambla visually dominates as the most-visited site (37M) — size
+          encoding creates clear focal point. Geographic positioning provides intuitive
+          context. Top-visited sites labeled. Above default (2) for effective use
+          of multiple encodings.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -155,61 +150,60 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tile-background map with data points overlaid. Uses OSM tile
-          provider correctly.
+        comment: Map with tile background correctly implemented using CartoDB tile
+          grid via mark_image. Data points overlaid as circles. Tile provider attribution
+          included.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Has: tile background, data point overlay, size encoding, color encoding,
-          tooltips, zoom/pan, attribution. Missing: multiple tile provider support
-          — spec explicitly requires OpenStreetMap, Stamen Terrain/Toner, CartoDB,
-          and satellite. Only OSM implemented. Also no dark-mode tile variant.'
+        passed: true
+        comment: Tile provider support shown (CartoDB Positron/Dark Matter). Zoom
+          level 5 fits all European data. Markers with sufficient contrast (white
+          stroke). Attribution included but mispositioned. Interactive zoom/pan enabled.
+          Minor deduction for attribution position bug.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly projected via Web Mercator to pixel coordinates.
-          Size encodes visitor count, color encodes category. All 20 landmarks are
-          within view bounds.
+        comment: lat/lon correctly mapped via Web Mercator projection. visitors encoded
+          as size. name/label shown for top sites via threshold-filtered text layer.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'map-tile-background · python · altair · anyplot.ai'.
-          Subtitle adds descriptive context. Category and size legends are properly
-          labeled.
+        comment: 'Title: ''map-tile-background · python · altair · anyplot.ai''. Subtitle:
+          ''European Landmarks by Annual Visitors''. Both legends present with descriptive
+          titles.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows tile background, scatter points with dual encoding (size +
-          color), tooltips, labels, attribution — all core features of tile-background
-          maps demonstrated.
+        comment: 'Shows lat/lon, size (visitors), color (category), text labels, tile
+          background, interactive zoom/pan. Missing: marker clustering demonstration
+          at lower zoom levels (spec mentions it as a consideration for dense distributions).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real European landmarks with plausible annual visitor counts. Neutral
-          tourism domain. No controversial content.
+        comment: Real European landmarks with accurate coordinates and plausible annual
+          visitor counts (Louvre 9.6M, Eiffel Tower 7M, Notre-Dame 12M). Neutral data,
+          no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitor counts in the range 0.5M–37M are plausible for major European
-          tourist attractions. Geographic coordinates are accurate. La Rambla's 37M
-          reflects Barcelona's total tourist footfall on the promenade, which is an
-          accepted figure in tourism literature.
+        comment: 20 data points appropriate for tile map density. Zoom level 5 encompasses
+          all of Europe. Size range [80, 1200] for [0.5, 40]M visitors is proportionate.
     code_quality:
       score: 10
       max: 10
@@ -219,36 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: theme setup → data definition → projection calculation
-          → tile grid → layer composition → save. No helper functions or classes.'
+        comment: No functions or classes. Linear procedural structure. Layers clearly
+          separated.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is fully deterministic (hardcoded landmark
-          list).
+        comment: np.random.seed(42) set. Data is hardcoded — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Imports: os, sys, altair, numpy, pandas, PIL.Image — all are used.
-          sys.path.pop(0) needed to avoid filename shadowing.'
+        comment: 'All imports used: os, sys (for path fix), altair, numpy, pandas,
+          PIL.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layer composition pattern. Web Mercator projection is correctly
-          implemented inline. Tile grid loop is straightforward. No over-engineering.
+        comment: Clean layer composition. Mercator projection implemented inline.
+          Theme switching clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL padding to exact
-          3200x1800 with raise on overshoot.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.1.0
+          API used. PIL padding applied.
     library_mastery:
       score: 7
       max: 10
@@ -258,20 +251,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good Altair patterns: alt.layer() for multi-source composition,
-          mark_image for tile rendering, alt.Scale with explicit domain/range, configure_*
-          for theming. Slightly below full idiomatic because labels_layer and attribution_layer
-          lack axis=None — should be explicit.'
+        comment: mark_image, mark_circle, mark_text, layer composition — all idiomatic
+          Altair patterns. Scale domain pinning for pixel coordinates is correct.
+          Tooltip encoding and .interactive() used appropriately.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: mark_image for fetching and rendering external tile URLs is a distinctively
-          Altair approach. Multi-source layer composition (separate DataFrames for
-          tiles, points, labels, attribution) demonstrates Altair's declarative multi-layer
-          pattern. Interactive HTML zoom/pan via .interactive().
-  verdict: REJECTED
+        comment: mark_image for tile grids is an advanced Altair feature rarely used.
+          4-layer composition with coordinated pixel-space scales. Theme-adaptive
+          tile provider switching demonstrates Vega-Lite flexibility.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -279,12 +270,10 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - web-mercator-projection
+  - matrix-construction
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
