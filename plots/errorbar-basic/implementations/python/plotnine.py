@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data — three lab methods measured across six samples
 data = pd.DataFrame(
@@ -93,7 +93,7 @@ plot = (
     ggplot(data, aes(x="sample", y="measurement", color="method", group="method"))
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.35, size=1.4, position=dodge)
     + geom_point(size=5, position=dodge)
-    + scale_color_manual(values=OKABE_ITO, name="Method")
+    + scale_color_manual(values=IMPRINT, name="Method")
     + labs(x="Experimental Sample", y="Measurement Value (mg/L)", title="errorbar-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

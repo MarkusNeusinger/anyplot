@@ -35,7 +35,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Energy flow from sources to sectors
 flows = pd.DataFrame(
@@ -100,7 +100,7 @@ for tgt in targets:
     current_y = current_y - height - node_gap
 
 # Okabe-Ito colors for sources; theme-adaptive neutral for targets
-source_colors_map = {"Coal": OKABE_ITO[0], "Gas": OKABE_ITO[1], "Nuclear": OKABE_ITO[2], "Renewables": OKABE_ITO[3]}
+source_colors_map = {"Coal": IMPRINT[0], "Gas": IMPRINT[1], "Nuclear": IMPRINT[2], "Renewables": IMPRINT[3]}
 target_colors_map = {"Industrial": INK_SOFT, "Commercial": INK_SOFT, "Residential": INK_SOFT}
 
 # Build node rectangles dataframe

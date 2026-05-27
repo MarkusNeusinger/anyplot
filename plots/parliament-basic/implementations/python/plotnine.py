@@ -32,13 +32,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
 ]
 
 # Data - fictional parliament with neutral party names
@@ -53,7 +53,7 @@ parties = [
 
 # Assign Okabe-Ito colors to parties
 for i, party in enumerate(parties):
-    party["color"] = OKABE_ITO[i % len(OKABE_ITO)]
+    party["color"] = IMPRINT[i % len(IMPRINT)]
 
 total_seats = sum(p["seats"] for p in parties)
 

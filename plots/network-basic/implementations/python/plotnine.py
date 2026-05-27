@@ -58,7 +58,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: social network with 20 people in 4 communities
 np.random.seed(42)
@@ -181,7 +181,7 @@ edge_df = pd.DataFrame(
     ]
 )
 
-group_colors = {"Team A": OKABE_ITO[0], "Team B": OKABE_ITO[1], "Team C": OKABE_ITO[2], "Team D": OKABE_ITO[3]}
+group_colors = {"Team A": IMPRINT[0], "Team B": IMPRINT[1], "Team C": IMPRINT[2], "Team D": IMPRINT[3]}
 
 # Hub nodes for emphasis — top 20% by degree
 hub_threshold = node_df["degree"].quantile(0.8)

@@ -40,7 +40,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Software development project milestones with varied timing
 data = {
@@ -103,10 +103,10 @@ df_below = df[df["y_offset"] == -1].copy()
 
 # Category colors - using Okabe-Ito palette
 category_colors = {
-    "Planning": OKABE_ITO[0],
-    "Development": OKABE_ITO[1],
-    "Testing": OKABE_ITO[2],
-    "Release": OKABE_ITO[3],
+    "Planning": IMPRINT[0],
+    "Development": IMPRINT[1],
+    "Testing": IMPRINT[2],
+    "Release": IMPRINT[3],
 }
 
 # Create timeline plot

@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for frequency tiers
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Word frequency data - technology survey responses
 np.random.seed(42)
@@ -111,13 +111,13 @@ df["y"] = [p[1] for p in positions]
 colors = []
 for freq in df["frequency"]:
     if freq >= 65:
-        colors.append(OKABE_ITO[0])  # Bluish green (brand) - highest
+        colors.append(IMPRINT[0])  # Bluish green (brand) - highest
     elif freq >= 35:
-        colors.append(OKABE_ITO[1])  # Vermillion - medium-high
+        colors.append(IMPRINT[1])  # Vermillion - medium-high
     elif freq >= 15:
-        colors.append(OKABE_ITO[2])  # Blue - medium-low
+        colors.append(IMPRINT[2])  # Blue - medium-low
     else:
-        colors.append(OKABE_ITO[3])  # Reddish purple - lowest
+        colors.append(IMPRINT[3])  # Reddish purple - lowest
 
 df["color"] = colors
 
@@ -127,7 +127,7 @@ legend_df = pd.DataFrame(
         "x": [92, 92, 92, 92],
         "y": [46, 42, 38, 34],
         "label": ["High (65+)", "Medium (35-64)", "Low-Med (15-34)", "Low (<15)"],
-        "color": OKABE_ITO,
+        "color": IMPRINT,
     }
 )
 

@@ -34,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-DRAWDOWN_COLOR = "#B71D27"  # anyplot red — semantic: losses / drawdown
+DRAWDOWN_COLOR = "#AE3030"  # anyplot red — semantic: losses / drawdown
 RECOVERY_COLOR = "#009E73"  # anyplot green — semantic: recovery / new high
 # Higher alpha in dark mode so ribbon remains visible over near-black background
 RIBBON_ALPHA = 0.30 if THEME == "light" else 0.55

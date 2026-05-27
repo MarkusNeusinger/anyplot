@@ -36,7 +36,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
+SECONDARY = "#C475FD"
 
 # Data - Product performance dashboard
 np.random.seed(42)
@@ -72,7 +72,7 @@ margin = 20 + 0.03 * units + np.random.randn(60) * 5
 df_scatter = pd.DataFrame({"units": units, "margin": margin})
 
 # Okabe-Ito palette for categorical data
-okabe_ito = [BRAND, SECONDARY, "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+okabe_ito = [BRAND, SECONDARY, "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Shared theme for all plots - sized for 4800x2700 canvas
 base_theme = theme_minimal() + theme(

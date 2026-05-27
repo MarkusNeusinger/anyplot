@@ -41,7 +41,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 COLOR_GENE = "#009E73"  # Okabe-Ito position 1
-COLOR_DISEASE = "#0072B2"  # Okabe-Ito position 3
+COLOR_DISEASE = "#4467A3"  # Okabe-Ito position 3
 
 # Data: gene–disease association network in bioinformatics
 genes = ["BRCA1", "TP53", "PTEN", "EGFR", "KRAS", "PIK3CA", "APC", "RB1", "VHL", "CDKN2A", "MLH1", "ERBB2"]

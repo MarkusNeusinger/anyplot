@@ -42,7 +42,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 LABEL_ON_WEDGE = "#F0EFE8"
 
 # Okabe-Ito palette (first segment is always the brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Annual budget allocation by department (USD thousands)
 categories = ["Engineering", "Marketing", "Operations", "Sales", "Support"]
@@ -61,7 +61,7 @@ label_rows = []
 pct_rows = []
 
 start_angle = math.pi / 2  # Start at 12 o'clock
-for category, value, color in zip(categories, values, OKABE_ITO, strict=True):
+for category, value, color in zip(categories, values, IMPRINT, strict=True):
     sweep = (value / total) * 2 * math.pi
     end_angle = start_angle - sweep  # Clockwise
 

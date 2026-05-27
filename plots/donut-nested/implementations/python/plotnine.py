@@ -51,9 +51,9 @@ data = {
 # Color families - first parent uses Okabe-Ito brand (#009E73), then positions 2-4
 color_families = {
     "Engineering": ("#009E73", ["#009E73", "#2FA88A", "#59B5A1"]),  # Okabe-Ito pos 1
-    "Marketing": ("#D55E00", ["#D55E00", "#DC7925", "#E5934A"]),  # Okabe-Ito pos 2
-    "Operations": ("#0072B2", ["#0072B2", "#3589C8", "#5BA0DE"]),  # Okabe-Ito pos 3
-    "Sales": ("#CC79A7", ["#CC79A7", "#D98FB8", "#E6A5C9"]),  # Okabe-Ito pos 4
+    "Marketing": ("#C475FD", ["#C475FD", "#DC7925", "#E5934A"]),  # Okabe-Ito pos 2
+    "Operations": ("#4467A3", ["#4467A3", "#3589C8", "#5BA0DE"]),  # Okabe-Ito pos 3
+    "Sales": ("#BD8233", ["#BD8233", "#D98FB8", "#E6A5C9"]),  # Okabe-Ito pos 4
 }
 
 # Calculate totals for each parent

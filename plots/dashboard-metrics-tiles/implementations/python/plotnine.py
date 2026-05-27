@@ -34,11 +34,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 SPARKLINE_BG = "#EDEAE0" if THEME == "light" else "#2A2A26"
 
-# Okabe-Ito status colors
+# imprint semantic anchors
 STATUS_COLORS = {
-    "good": "#009E73",  # Okabe-Ito 1: bluish green
-    "warning": "#E69F00",  # Okabe-Ito 5: orange
-    "critical": "#D55E00",  # Okabe-Ito 2: vermillion
+    "good": "#009E73",  # green
+    "warning": "#DDCC77",  # amber
+    "critical": "#AE3030",  # red
 }
 
 np.random.seed(42)
@@ -91,9 +91,9 @@ for metric in metrics:
 
     # Context-aware change color: for error rate, up = bad
     if metric["name"] == "Error Rate":
-        change_color = "#D55E00" if change >= 0 else "#009E73"
+        change_color = "#C475FD" if change >= 0 else "#009E73"
     else:
-        change_color = "#009E73" if change >= 0 else "#D55E00"
+        change_color = "#009E73" if change >= 0 else "#C475FD"
 
     label_data.append(
         {

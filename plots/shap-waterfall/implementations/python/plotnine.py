@@ -46,8 +46,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#C8C7C0" if THEME == "light" else "#2E2E2B"
 
-COLOR_POS = "#D55E00"  # Okabe-Ito vermillion — positive SHAP contributions
-COLOR_NEG = "#0072B2"  # Okabe-Ito blue — negative SHAP contributions
+COLOR_POS = "#AE3030"  # imprint red — positive SHAP contributions
+COLOR_NEG = "#4467A3"  # imprint blue — negative SHAP contributions
 
 # Data: credit scoring model — explaining a single loan approval prediction
 np.random.seed(42)

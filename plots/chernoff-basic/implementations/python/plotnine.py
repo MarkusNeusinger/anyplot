@@ -127,7 +127,7 @@ for idx in range(len(sample_df)):
 plot_df = pd.DataFrame(all_data)
 
 # Okabe-Ito palette
-category_colors = {"Compact": "#009E73", "Sedan": "#D55E00", "SUV": "#0072B2"}
+category_colors = {"Compact": "#009E73", "Sedan": "#C475FD", "SUV": "#4467A3"}
 
 anyplot_theme = theme(
     figure_size=(16, 9),

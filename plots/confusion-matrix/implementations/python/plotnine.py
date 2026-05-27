@@ -73,7 +73,7 @@ plot = (
     + geom_text(aes(label="Count", color="text_color"), size=20, fontweight="bold", show_legend=False)
     + scale_fill_gradient(
         low="#e8f4f8" if THEME == "light" else "#2a3f4f",
-        high="#08519c" if THEME == "light" else "#56b4e9",
+        high="#08519c" if THEME == "light" else "#2ABCCD",
         name="Sample Count",
     )
     + scale_color_identity()

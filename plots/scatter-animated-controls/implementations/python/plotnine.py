@@ -36,7 +36,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 REFERENCE_LINE = "#CCB8B0" if THEME == "light" else "#3A3935"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 np.random.seed(42)
 
@@ -87,7 +87,7 @@ plot = (
     + geom_hline(aes(yintercept=median_life), color=REFERENCE_LINE, size=0.5, alpha=0.4, linetype="dashed")
     + geom_path(aes(group="entity"), color=INK_SOFT, size=0.3, alpha=0.15, linetype="solid")
     + geom_point(alpha=0.7, stroke=0.8)
-    + scale_color_manual(values=OKABE_ITO, name="Region")
+    + scale_color_manual(values=IMPRINT, name="Region")
     + scale_size_continuous(range=(2.5, 9), name="Population\n(millions)")
     + facet_wrap("~year", nrow=2, ncol=3)
     + labs(

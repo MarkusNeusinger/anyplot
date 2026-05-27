@@ -61,7 +61,7 @@ source_order = ["Organic Search", "Direct", "Referral", "Social Media"]
 df["Source"] = pd.Categorical(df["Source"], categories=source_order, ordered=True)
 
 # Okabe-Ito palette
-colors = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Theme
 anyplot_theme = theme(

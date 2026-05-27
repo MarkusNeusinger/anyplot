@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Stock prices over 10 years with highlighted periods
 np.random.seed(42)
@@ -62,8 +62,8 @@ spans = pd.DataFrame(
 plot = (
     ggplot()
     + geom_rect(data=spans, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="label"), alpha=0.25)
-    + geom_line(data=df, mapping=aes(x="year", y="price"), color=OKABE_ITO[0], size=1.5)
-    + scale_fill_manual(values={"Recession Period": OKABE_ITO[1], "Risk Zone": OKABE_ITO[4]}, name="Highlighted Region")
+    + geom_line(data=df, mapping=aes(x="year", y="price"), color=IMPRINT[0], size=1.5)
+    + scale_fill_manual(values={"Recession Period": IMPRINT[1], "Risk Zone": IMPRINT[4]}, name="Highlighted Region")
     + labs(x="Year", y="Price ($)", title="span-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

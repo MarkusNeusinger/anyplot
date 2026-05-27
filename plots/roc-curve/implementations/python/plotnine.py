@@ -41,7 +41,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Simulate ROC curve from good and moderate classifiers
 np.random.seed(42)
@@ -94,7 +94,7 @@ plot = (
     ggplot(df, aes(x="fpr", y="tpr", color="Model"))
     + geom_abline(intercept=0, slope=1, linetype="dashed", color=INK_SOFT, size=1, alpha=0.5)
     + geom_line(size=2.5, alpha=0.9)
-    + scale_color_manual(values=OKABE_ITO[:2])
+    + scale_color_manual(values=IMPRINT[:2])
     + scale_x_continuous(limits=(0, 1), breaks=np.arange(0, 1.1, 0.2))
     + scale_y_continuous(limits=(0, 1), breaks=np.arange(0, 1.1, 0.2))
     + coord_fixed(ratio=1)

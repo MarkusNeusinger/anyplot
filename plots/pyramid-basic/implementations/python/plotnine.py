@@ -35,7 +35,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data
 age_groups = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"]
@@ -86,7 +86,7 @@ plot = (
     + geom_text(
         data=df_peak, mapping=aes(x="age_group", y="label_y", label="label"), color=INK_SOFT, size=13, inherit_aes=False
     )
-    + scale_fill_manual(values={"Male": OKABE_ITO[0], "Female": OKABE_ITO[1]})
+    + scale_fill_manual(values={"Male": IMPRINT[0], "Female": IMPRINT[1]})
     + scale_y_continuous(labels=lambda breaks: [f"{abs(int(b)):,}" for b in breaks])
     + labs(
         x="Age Group",

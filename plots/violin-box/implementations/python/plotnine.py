@@ -24,7 +24,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data
 np.random.seed(42)
@@ -73,7 +73,7 @@ plot = (
     + plotnine.geom_boxplot(
         width=0.25, alpha=0.9, color=INK_SOFT, fill=ELEVATED_BG, size=0.6, outlier_size=4, outlier_alpha=0.7
     )
-    + plotnine.scale_fill_manual(values=OKABE_ITO, name="Product", guide=plotnine.guide_legend(nrow=1))
+    + plotnine.scale_fill_manual(values=IMPRINT, name="Product", guide=plotnine.guide_legend(nrow=1))
     + plotnine.labs(title="violin-box · plotnine · anyplot.ai", x="Product Category", y="Satisfaction Score (points)")
     + anyplot_theme
     + plotnine.theme(legend_position="top", legend_direction="horizontal")

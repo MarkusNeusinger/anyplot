@@ -138,7 +138,7 @@ plot = (
     ggplot()
     # Draw edges with thickness mapped to trade weight
     + geom_segment(
-        data=edges, mapping=aes(x="x", y="y", xend="xend", yend="yend", size="weight"), color="#0072B2", alpha=0.55
+        data=edges, mapping=aes(x="x", y="y", xend="xend", yend="yend", size="weight"), color="#4467A3", alpha=0.55
     )
     # Draw nodes with size mapped to weighted degree - larger for better visibility
     + geom_point(

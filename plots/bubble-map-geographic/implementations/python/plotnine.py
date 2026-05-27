@@ -272,7 +272,7 @@ df_continents = pd.DataFrame(continents)
 
 # Okabe-Ito canonical order mapped to regions alphabetically:
 # Africa, Asia, Europe, N. America, Oceania, S. America
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Create the bubble map
 plot = (
@@ -290,7 +290,7 @@ plot = (
     + geom_point(aes(x="longitude", y="latitude", color="region", size="population"), data=df, alpha=0.7, stroke=0.5)
     # Scale size by area for accurate perception (bubble area proportional to value)
     + scale_size_area(max_size=20, name="Population (M)")
-    + scale_color_manual(values=OKABE_ITO, name="Region")
+    + scale_color_manual(values=IMPRINT, name="Region")
     + coord_fixed(ratio=1.0, xlim=(-180, 180), ylim=(-60, 80))
     + labs(
         title="World City Populations · bubble-map-geographic · python · plotnine · anyplot.ai",
