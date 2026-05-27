@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: a 50-node organisational network with three communities
 np.random.seed(42)
@@ -128,7 +128,7 @@ nodes_chart = (
         size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[200, 900])),
         color=alt.Color(
             "community:N",
-            scale=alt.Scale(domain=community_names, range=OKABE_ITO),
+            scale=alt.Scale(domain=community_names, range=IMPRINT),
             legend=alt.Legend(title="Team", titleFontSize=18, labelFontSize=16, symbolSize=400),
         ),
         tooltip=[alt.Tooltip("community:N", title="Team"), alt.Tooltip("degree:Q", title="Connections")],

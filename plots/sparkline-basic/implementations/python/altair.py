@@ -18,8 +18,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7",
-             "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
+             "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - 75 consecutive business days: a product's launch-to-maturity user trend
 # with viral spike, long-tail stabilization, and recovery — a classic adoption curve
@@ -47,7 +47,7 @@ highlights["type"] = ["min", "max"]
 # Semi-transparent area fill — Altair's layered chart pattern
 fill = (
     alt.Chart(df)
-    .mark_area(color=OKABE_ITO[0], opacity=0.15)
+    .mark_area(color=IMPRINT[0], opacity=0.15)
     .encode(
         x=alt.X("day:Q", axis=None),
         y=alt.Y("users:Q", axis=None, scale=alt.Scale(zero=False)),
@@ -57,7 +57,7 @@ fill = (
 # Main line
 line = (
     alt.Chart(df)
-    .mark_line(color=OKABE_ITO[0], strokeWidth=3)
+    .mark_line(color=IMPRINT[0], strokeWidth=3)
     .encode(
         x=alt.X("day:Q", axis=None),
         y=alt.Y("users:Q", axis=None, scale=alt.Scale(zero=False)),
@@ -74,7 +74,7 @@ points = (
         color=alt.Color(
             "type:N",
             scale=alt.Scale(domain=["min", "max"],
-                            range=[OKABE_ITO[1], OKABE_ITO[3]]),
+                            range=[IMPRINT[1], IMPRINT[3]]),
             legend=None,
         ),
     )

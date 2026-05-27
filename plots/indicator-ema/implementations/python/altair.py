@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -46,7 +46,7 @@ df_ema26["series"] = "EMA 26"
 df_long = pd.concat([df_price, df_ema12, df_ema26], ignore_index=True)
 
 # Scales
-color_scale = alt.Scale(domain=["Close Price", "EMA 12", "EMA 26"], range=OKABE_ITO)
+color_scale = alt.Scale(domain=["Close Price", "EMA 12", "EMA 26"], range=IMPRINT)
 stroke_scale = alt.Scale(domain=["Close Price", "EMA 12", "EMA 26"], range=[3.5, 2.5, 2.5])
 
 # Line chart layer
@@ -69,7 +69,7 @@ lines = (
 # Crossover markers (diamond points where EMA 12 crosses EMA 26)
 crossover_markers = (
     alt.Chart(crossover_df)
-    .mark_point(size=300, shape="diamond", filled=True, color="#CC79A7", opacity=0.85)
+    .mark_point(size=300, shape="diamond", filled=True, color="#BD8233", opacity=0.85)
     .encode(
         x=alt.X("date:T"), y=alt.Y("value:Q"), tooltip=[alt.Tooltip("date:T", title="EMA Crossover", format="%Y-%m-%d")]
     )

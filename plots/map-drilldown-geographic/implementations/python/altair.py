@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 REGIONS = ["West", "South", "Midwest", "Northeast"]
 
 # Data — US state-level sales ($K), Region → State → City hierarchy
@@ -336,7 +336,7 @@ region_bars = (
         x=alt.X("total_value:Q", title="Sales ($K)", axis=alt.Axis(grid=True, gridOpacity=0.10)),
         color=alt.Color(
             "region:N",
-            scale=alt.Scale(domain=REGIONS, range=ANYPLOT_PALETTE),
+            scale=alt.Scale(domain=REGIONS, range=IMPRINT),
             legend=alt.Legend(title="Region", titleFontSize=10, labelFontSize=11, orient="right", direction="vertical"),
         ),
         opacity=alt.condition(region_select, alt.value(1.0), alt.value(0.55)),
@@ -357,7 +357,7 @@ state_bars = (
     .encode(
         y=alt.Y("state:N", sort="-x", title=None),
         x=alt.X("value:Q", title="Sales ($K)", axis=alt.Axis(grid=True, gridOpacity=0.10)),
-        color=alt.Color("region:N", scale=alt.Scale(domain=REGIONS, range=ANYPLOT_PALETTE), legend=None),
+        color=alt.Color("region:N", scale=alt.Scale(domain=REGIONS, range=IMPRINT), legend=None),
         opacity=alt.condition(state_select, alt.value(1.0), alt.value(0.55)),
         tooltip=[
             alt.Tooltip("state:N", title="State"),
@@ -373,7 +373,7 @@ state_bars = (
 # City bars — ③ State → Cities (filtered by selected state; CA, TX, NY, FL have data)
 city_bars = (
     alt.Chart(cities_data)
-    .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4, color=ANYPLOT_PALETTE[0])
+    .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4, color=IMPRINT[0])
     .encode(
         y=alt.Y("city:N", sort="-x", title=None),
         x=alt.X("value:Q", title="Sales ($K)", axis=alt.Axis(grid=True, gridOpacity=0.10)),

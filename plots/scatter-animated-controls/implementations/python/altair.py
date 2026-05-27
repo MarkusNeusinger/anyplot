@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: Simulated country development metrics over years
 np.random.seed(42)
@@ -92,7 +92,7 @@ for i, country in enumerate(countries):
 df = pd.DataFrame(data)
 
 # Color scale for regions
-color_scale = alt.Scale(domain=["Region 1", "Region 2", "Region 3"], range=OKABE_ITO[:3])
+color_scale = alt.Scale(domain=["Region 1", "Region 2", "Region 3"], range=IMPRINT[:3])
 
 # Create base scatter plot
 scatter = (

@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)
@@ -90,7 +90,7 @@ violin_df["x_left"] = violin_df["x"] - violin_df["width"]
 violin_df["x_right"] = violin_df["x"] + violin_df["width"]
 
 # Color scale using Okabe-Ito palette
-color_scale = alt.Scale(domain=conditions, range=OKABE_ITO)
+color_scale = alt.Scale(domain=conditions, range=IMPRINT)
 
 # Y axis scale
 y_scale = alt.Scale(domain=[y_min - 10, y_max + 10])

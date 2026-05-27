@@ -30,7 +30,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Generate clustered data for brush selection demonstration
 np.random.seed(42)
@@ -61,7 +61,7 @@ df["id"] = range(len(df))
 brush = alt.selection_interval()
 
 # Define color scale using Okabe-Ito palette
-color_scale = alt.Scale(domain=["Sensor A", "Sensor B", "Sensor C", "Sensor D"], range=OKABE_ITO)
+color_scale = alt.Scale(domain=["Sensor A", "Sensor B", "Sensor C", "Sensor D"], range=IMPRINT)
 
 # Create the scatter plot with brush selection
 points = (

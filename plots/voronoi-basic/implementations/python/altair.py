@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Generate seed points for weather stations
 np.random.seed(42)
@@ -81,7 +81,7 @@ for point_idx in range(n_points):
     sorted_x = clipped_x[sorted_indices]
     sorted_y = clipped_y[sorted_indices]
 
-    color = OKABE_ITO[point_idx % len(OKABE_ITO)]
+    color = IMPRINT[point_idx % len(IMPRINT)]
     station = labels[point_idx]
 
     # Add vertices for filled polygon
@@ -110,7 +110,7 @@ df_points = pd.DataFrame(
         "y": y_points,
         "label": labels,
         "station": labels,
-        "color": [OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_points)],
+        "color": [IMPRINT[i % len(IMPRINT)] for i in range(n_points)],
     }
 )
 
@@ -123,7 +123,7 @@ voronoi_cells = (
         y=alt.Y("y:Q", scale=alt.Scale(domain=[y_min - 2, y_max + 2]), title="Y Coordinate"),
         color=alt.Color(
             "station:N",
-            scale=alt.Scale(domain=labels, range=OKABE_ITO[:n_points]),
+            scale=alt.Scale(domain=labels, range=IMPRINT[:n_points]),
             legend=alt.Legend(
                 title="Weather Stations",
                 titleFontSize=16,
@@ -147,7 +147,7 @@ points_layer = (
     .encode(
         x="x:Q",
         y="y:Q",
-        color=alt.Color("station:N", scale=alt.Scale(domain=labels, range=OKABE_ITO[:n_points]), legend=None),
+        color=alt.Color("station:N", scale=alt.Scale(domain=labels, range=IMPRINT[:n_points]), legend=None),
         tooltip=[
             alt.Tooltip("label:N", title="Station"),
             alt.Tooltip("x:Q", format=".1f", title="X"),

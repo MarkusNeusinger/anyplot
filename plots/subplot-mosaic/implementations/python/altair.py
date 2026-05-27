@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Create diverse datasets for dashboard-style mosaic layout
 np.random.seed(42)
@@ -62,7 +62,7 @@ df_area = pd.DataFrame(
 # Chart A: Wide time series (spans 2 columns at top)
 chart_a = (
     alt.Chart(df_timeseries)
-    .mark_line(strokeWidth=4, color=OKABE_ITO[0])
+    .mark_line(strokeWidth=4, color=IMPRINT[0])
     .encode(
         x=alt.X("date:T", title="Date", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         y=alt.Y("value:Q", title="Revenue ($K)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
@@ -80,14 +80,14 @@ chart_b_value = (
         outerRadius=80,
         theta=3.14159,
         theta2=alt.expr("3.14159 - (datum.value / datum.max_value) * 3.14159"),
-        color=OKABE_ITO[0],
+        color=IMPRINT[0],
     )
     .encode()
 )
 
 chart_b_text = (
     alt.Chart(df_gauge)
-    .mark_text(fontSize=32, fontWeight="bold", color=OKABE_ITO[0])
+    .mark_text(fontSize=32, fontWeight="bold", color=IMPRINT[0])
     .encode(text=alt.Text("value:Q", format=".0f"))
 )
 
@@ -98,7 +98,7 @@ chart_b = alt.layer(chart_b_bg, chart_b_value, chart_b_text).properties(
 # Chart C: Bar chart (middle left)
 chart_c = (
     alt.Chart(df_bars)
-    .mark_bar(color=OKABE_ITO[1], cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
+    .mark_bar(color=IMPRINT[1], cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
     .encode(
         x=alt.X("region:N", title="Region", axis=alt.Axis(labelFontSize=16, titleFontSize=20, labelAngle=0)),
         y=alt.Y("sales:Q", title="Sales ($K)", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
@@ -131,7 +131,7 @@ chart_d = (
 # Chart E: Small bar chart (bottom left)
 chart_e = (
     alt.Chart(df_categories)
-    .mark_bar(color=OKABE_ITO[4])
+    .mark_bar(color=IMPRINT[4])
     .encode(
         x=alt.X("type:N", title=None, axis=alt.Axis(labelFontSize=14)),
         y=alt.Y("count:Q", title="Count", axis=alt.Axis(labelFontSize=14, titleFontSize=18)),
@@ -143,7 +143,7 @@ chart_e = (
 # Chart F: Area chart (bottom middle)
 chart_f = (
     alt.Chart(df_area)
-    .mark_area(color=OKABE_ITO[2], opacity=0.7, line={"color": OKABE_ITO[2], "strokeWidth": 3})
+    .mark_area(color=IMPRINT[2], opacity=0.7, line={"color": IMPRINT[2], "strokeWidth": 3})
     .encode(
         x=alt.X("hour:Q", title="Hour", axis=alt.Axis(labelFontSize=14, titleFontSize=18)),
         y=alt.Y("traffic:Q", title="Traffic", axis=alt.Axis(labelFontSize=14, titleFontSize=18)),

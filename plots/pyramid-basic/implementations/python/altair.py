@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data — population pyramid with pronounced gender gap in older age groups
 age_groups = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"]
@@ -61,7 +61,7 @@ chart = (
         ),
         color=alt.Color(
             "Gender:N",
-            scale=alt.Scale(domain=["Male", "Female"], range=[OKABE_ITO[0], OKABE_ITO[1]]),
+            scale=alt.Scale(domain=["Male", "Female"], range=[IMPRINT[0], IMPRINT[1]]),
             legend=alt.Legend(title="Gender", titleFontSize=20, labelFontSize=18, orient="bottom"),
         ),
         opacity=alt.condition(selection, alt.value(0.9), alt.value(0.25)),

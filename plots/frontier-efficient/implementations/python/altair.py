@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Portfolio simulation with efficient frontier
 np.random.seed(42)
@@ -149,7 +149,7 @@ frontier_line = (
 # Capital market line
 cml_line = (
     alt.Chart(cml_df)
-    .mark_line(strokeWidth=3, strokeDash=[8, 4], color=OKABE_ITO[1])
+    .mark_line(strokeWidth=3, strokeDash=[8, 4], color=IMPRINT[1])
     .encode(x="Risk (Std Dev):Q", y="Expected Return:Q")
 )
 
@@ -162,7 +162,7 @@ special_points = (
         y="Expected Return:Q",
         color=alt.Color(
             "Portfolio:N",
-            scale=alt.Scale(domain=["Minimum Variance", "Maximum Sharpe Ratio"], range=[OKABE_ITO[1], OKABE_ITO[2]]),
+            scale=alt.Scale(domain=["Minimum Variance", "Maximum Sharpe Ratio"], range=[IMPRINT[1], IMPRINT[2]]),
             legend=alt.Legend(title="Key Portfolios", titleFontSize=16, labelFontSize=14),
         ),
         tooltip=["Portfolio", "Risk (Std Dev)", "Expected Return"],

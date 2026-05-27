@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Generate realistic response time data for different server tiers
 np.random.seed(42)
@@ -54,7 +54,7 @@ violin = (
             title=None,
             axis=alt.Axis(labels=False, values=[0], grid=False, ticks=False),
         ),
-        color=alt.Color("Server Tier:N", scale=alt.Scale(domain=groups, range=OKABE_ITO)),
+        color=alt.Color("Server Tier:N", scale=alt.Scale(domain=groups, range=IMPRINT)),
     )
 )
 
