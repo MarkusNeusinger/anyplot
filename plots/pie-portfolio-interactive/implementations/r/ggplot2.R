@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-05-27
+#' Quality: 79/100 | Created: 2026-05-27
 
 library(ggplot2)
 library(dplyr)
