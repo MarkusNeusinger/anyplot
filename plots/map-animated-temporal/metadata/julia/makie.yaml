@@ -1,0 +1,259 @@
+library: makie
+language: julia
+specification_id: map-animated-temporal
+created: '2026-05-27T09:50:34Z'
+updated: '2026-05-27T10:09:10Z'
+generated_by: claude-sonnet
+workflow_run: 26502994944
+issue: 3769
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Perfect code quality and data quality — both score maximum points
+  - Dual encoding (color=event age, size=magnitude) adds meaningful information density
+    to each panel
+  - Cumulative rendering approach correctly shows aftershock growth dynamics across
+    the temporal sequence
+  - Fully theme-adaptive chrome with all tokens correctly applied to both renders
+    — dark render passes all legibility checks with no dark-on-dark failures
+  - Shared colorbar with descriptive label cleanly replaces per-panel legends
+  - Geophysically realistic synthetic data (Omori-law-like decay, realistic magnitudes
+    and spatial spread)
+  - Edge-only tick/label visibility idiomatically avoids clutter in a 12-panel grid
+  weaknesses:
+  - 'Missing basemap: the spec explicitly requires a basemap with geographic context
+    (country boundaries, coastlines, or terrain). The implementation shows only bare
+    lat/lon coordinate axes. Use GeoMakie''s GeoAxis for geographic projection and
+    coastlines, or add a simplified Japan/region outline using polygon data.'
+  - 'Minor colorbar/scatter data range mismatch: scatter color uses normalized 0-1
+    fractions (time_frac) while the colorbar limits are set to (1, 12). Fix by passing
+    days_cum directly as the scatter color values (1-12 range) so colorbar tick labels
+    precisely match the data colors.'
+  - 'Small text in dense grid: axis label sizes of 8pt (effective 16pt) and panel
+    titles of 11pt (effective 22pt) are borderline small for the 12-panel layout,
+    especially when scaled to mobile width.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Bold centered title "map-animated-temporal · julia · makie · anyplot.ai" in dark ink clearly visible. Subplot titles "Day N" in small dark text readable. Axis labels "Longitude" and "Latitude" on bottom row / left column respectively. Colorbar label and tick labels in dark ink readable.
+      Data: Green-to-blue sequential gradient (ANYPLOT_SEQ: #009E73 -> #4467A3) encoding event age. Point size encodes magnitude (2-11pt). Red star (#AE3030) marks mainshock epicenter in each panel. 12 cumulative panels showing aftershock growth.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all labels flip to light text (#F0EFE8 / #B8B7B0). Grid lines faintly visible in light tone. All tick labels, axis labels, subplot titles, and colorbar labels are clearly readable in light text on dark background. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — same green-to-blue gradient with same magnitude sizing. Red star epicenter with light stroke remains visible. No color drift between themes.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; theme adaptation complete
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; proportional and readable in both
+          themes; axis-level text at 8pt (16pt effective) borderline small for dense
+          12-panel grid but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; edge-only tick/label visibility prevents crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points visible with alpha=0.7 and magnitude-scaled sizes; dense later
+          panels adequately handled but markers could be slightly larger in sparse
+          early panels
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe sequential colormap; redundant encoding via shape and size
+          for mainshock
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed 3200x1800; balanced layout with title, grid, colorbar;
+          proper gaps
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; Longitude/Latitude self-describing; colorbar
+          has descriptive label
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ANYPLOT_SEQ correctly used as imprint_seq; #AE3030 for mainshock
+          is semantic red; backgrounds #FAF8F1/#1A1A17; full theme-adaptive chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above configured-default level; dual encoding with custom sequential
+          colormap and size; star marker as focal anchor; not publication-ready due
+          to missing geographic context
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; 10% opacity grid; edge-only tick labels;
+          shared colorbar; explicit panel gaps
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Cumulative approach creates compelling temporal narrative; dual encoding
+          adds depth; persistent mainshock star provides reference anchor
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Small multiples is correct fallback for static CairoMakie; 12-panel
+          grid well-implemented
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Day labels satisfy timestamp display; cumulative temporal data present;
+          but spec-required basemap with geographic context (coastlines/country boundaries)
+          is completely absent
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Longitude, Y=Latitude correctly assigned; color=time, size=magnitude;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; colorbar serves as descriptive
+          legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows spatial distribution, temporal accumulation, magnitude variation,
+          temporal progression within panels, mainshock vs aftershocks
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Earthquake aftershock sequence in central Japan; M7.2 mainshock realistic;
+          non-controversial science domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitudes 2.5-5.7 realistic; Omori-law-like decay; plausible geographic
+          spread
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → constants → data → figure → save; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia; broadcasting used appropriately; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Makie layout grammar; fig[row, col] positioning; limits!;
+          rowsize!/colgap!/rowgap!; edge-only tick visibility idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Makie composable layout (colon spanning), Fixed row sizes, shared
+          colorbar spanning columns, cgrad() for custom colormap, RGBAf for alpha-composited
+          grid colors — distinctively Makie
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - faceting
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
