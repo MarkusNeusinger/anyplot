@@ -1,200 +1,248 @@
 library: matplotlib
+language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:39:11Z'
-updated: '2026-01-20T22:42:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21189771539
+updated: '2026-05-27T15:36:14Z'
+generated_by: claude-sonnet
+workflow_run: 26519817993
 issue: 3756
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent tile fetching implementation with proper OSM User-Agent and attribution
-  - Good use of dual encoding (size + color) for visitor data
-  - Proper coordinate formatting with degree symbols
-  - Well-positioned context annotation and attribution
-  - Good contrast with white marker edges against map background
+  - Theme-adaptive tile provider (OSM light / CARTO dark) makes both renders visually
+    coherent on their respective surfaces
+  - 'Perfect spec compliance: tile attribution, auto-fit bounds, contrast marker edges,
+    multiple tile providers'
+  - Dual encoding (size x color via imprint_seq) effectively communicates visitor-count
+    hierarchy at a glance
+  - 'Flawless code quality: KISS structure, clean imports, deterministic data, no
+    bbox_inches=tight'
+  - imprint_seq correctly applied for continuous data; theme tokens consistent throughout
+    colorbar, spines, annotation boxes, and attribution
   weaknesses:
-  - Helper functions violate KISS principle (should be flat script structure)
-  - No grid overlay (though acceptable for map visualization)
-  - Tick label font size slightly below recommended 16pt
-  image_description: 'The plot displays a map of Rome, Italy with OpenStreetMap tile
-    background showing street-level detail including roads, parks (green areas), and
-    the Tiber River. Twelve tourist attractions are plotted as circular markers with
-    both size and color encoding: marker size represents visitor volume, and color
-    uses a YlOrRd (yellow-orange-red) sequential colormap indicating daily visitors
-    in thousands (ranging from ~2000 to ~7000). The largest/reddest markers appear
-    at the Colosseum (bottom right) and Vatican area (left side). A colorbar on the
-    right shows the color scale labeled "Daily Visitors (thousands)". The top-left
-    contains an annotation box explaining "Rome Tourist Attractions / Marker size
-    = visitor volume". The bottom-right shows required OSM attribution "© OpenStreetMap
-    contributors". Axis labels show "Longitude" and "Latitude" with coordinate formatting
-    (e.g., 12.450°E, 41.900°N). Title follows the required format "map-tile-background
-    · matplotlib · pyplots.ai".'
+  - Label crowding in the dense central Rome cluster — Vatican Museums, Castel Sant'Angelo,
+    Piazza Navona, St. Peter's Basilica, and Campo de' Fiori annotation boxes overlap
+    in both renders; consider reducing to top 8 by visitor count and/or increasing
+    offset magnitudes for clustered central landmarks
+  - 'DE-03 limited: dual encoding creates hierarchy but no focal emphasis — a single
+    highlight (text annotation on the #1 landmark or distinct edge on top-3 markers)
+    would lift storytelling'
+  - Annotation labels at 6pt are at the readable floor; 7pt with tighter bbox padding
+    would improve legibility without increasing crowding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: title "Rome Tourist Attractions · map-tile-background · python · matplotlib · anyplot.ai" readable in dark ink; axis labels "Longitude" / "Latitude" at 10pt dark; tick labels with degree notation (12.430°E, 41.880°N) at 8pt; colorbar label "Daily Visitors" and ticks in INK_SOFT; all text dark on light — no light-on-light issues
+      Data: 12 scatter markers sized 60–350 sq pts and colored via imprint_seq (green #009E73 → blue #4467A3) by daily visitor count; Colosseum and Vatican Museums markers are largest; semi-transparent annotation label boxes (6pt) with per-attraction directional offsets; OSM tile background provides street-level geographic context; attribution box bottom-right
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: all text switches to light colors (INK/INK_SOFT tokens); title, axis labels, tick labels, colorbar label all clearly readable against dark background; annotation label boxes use ELEVATED_BG (#242420) fill; attribution correctly shows CARTO copyright; no dark-on-dark failures detected
+      Data: data colors identical to light render — imprint_seq green-to-blue at same sizes and positions; CARTO dark tile replaces OSM (theme-adaptive provider swap); markers with PAGE_BG (#1A1A17) edge color remain distinguishable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 14pt - all readable
-          but tick labels slightly smaller than recommended 16pt
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or markers
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Markers well-sized (150-800 range) with good alpha (0.85), white
-          edge outlines provide contrast against map; slight overlap at Vatican cluster
+        comment: All sizes explicitly set; title computed via formula; axis labels
+          10pt; ticks 8pt; annotation labels 6pt (appropriate for dense map, at readable
+          floor)
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Label crowding in central Rome cluster (Vatican Museums, Castel Sant'Angelo,
+          Piazza Navona, St. Peter's Basilica, Campo de' Fiori); directional offsets
+          help but don't fully resolve overlap for 12 landmarks in small geographic
+          area
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 sparse points with markers sized 60-350 sq pts; dual encoding
+          (size + color) ensures all landmarks clearly visible against both tile backgrounds
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd is colorblind-safe sequential palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well, balanced margins, colorbar well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive Longitude and Latitude with degree formatting
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: imprint_seq is CVD-safe; PAGE_BG edge color on markers provides good
+          separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; 16:9 landscape appropriate for map; colorbar
+          fits comfortably; proportions well-balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid (acceptable for map), but no point labels showing attraction
-          names
+        passed: true
+        comment: Longitude/Latitude labels; FuncFormatter adds degree notation; title
+          in correct format with descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq for continuous visitor data; #FAF8F1 light / #1A1A17
+          dark backgrounds; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive tile provider (OSM light / CARTO dark) is thoughtful;
+          dual encoding adds visual interest; semi-transparent annotation boxes add
+          polish; functional rather than curated
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; no grid (correct for tile-backed map);
+          colorbar styled with INK_SOFT tokens; annotation boxes rounded with themed
+          fill and alpha
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Dual encoding creates visual hierarchy where high-traffic landmarks
+          are prominent; no explicit narrative emphasis or focal annotation
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct map with tile background
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly mapped, value encoded in size and color
-      - id: SC-03
+        comment: 'Correct: scatter overlay on tile-based background'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has tile provider, attribution, auto-fit bounds, marker contrast
-          with outlines; missing marker clustering but data density is low
-      - id: SC-04
-        name: Data Range
+        comment: Multiple tile providers (OSM + CARTO dark); auto-fit bounding box;
+          contrast marker edges; tile attribution included
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X, latitude on Y; axis limits auto-fitted; all 12 points
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses map-tile-background · matplotlib · pyplots.ai
+        comment: Title 'Rome Tourist Attractions · map-tile-background · python ·
+          matplotlib · anyplot.ai' correct; colorbar labeled 'Daily Visitors'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied visitor counts, geographic spread across Rome; could
-          show more variety in clustering scenarios
+        comment: Tile background, overlay scatter, color encoding, size encoding,
+          label annotations, colorbar, attribution all demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real Rome tourist attractions with plausible visitor counts
+        comment: Rome tourist attractions with plausible daily visitor counts; neutral
+          real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Visitor counts (1800-7200 thousands) seem high but plausible for
-          major attractions
+        comment: Visitor counts align with publicly reported figures; geographic extent
+          covers central Rome at appropriate zoom
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses helper functions (lat_lon_to_tile, tile_to_lat_lon, fetch_tile,
-          get_map_tiles) instead of flat structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) and deterministic location data
+        comment: 'Flat: tokens → data → tile fetch → stitch → plot → save; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (io, math, urllib, matplotlib, numpy, PIL)
+        comment: 'All 8 imports used: io, math, os, urllib.request, matplotlib.pyplot,
+          numpy, LinearSegmentedColormap, PIL.Image'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean, idiomatic; tile-fetching loop concise; no fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; no deprecated
+          APIs
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib imshow for tile display, FuncFormatter for coordinate
-          labels, proper zorder layering, colorbar integration
+        comment: ax.imshow for tile layer, ax.scatter with c/cmap/s, ax.annotate with
+          bbox, FuncFormatter for degree ticks — all correct matplotlib idioms
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: PIL for tile stitching, custom Mercator math for tile coordinate
+          conversion, ax.imshow as geographic background canvas — distinctive matplotlib
+          image-handling capabilities
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -204,8 +252,10 @@ impl_tags:
   - annotations
   - manual-ticks
   patterns:
-  - data-generation
-  dataprep: []
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
