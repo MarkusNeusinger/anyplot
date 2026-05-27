@@ -1,163 +1,195 @@
 library: seaborn
+language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:16:53Z'
-updated: '2026-01-20T21:27:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21187394647
+updated: '2026-05-27T13:39:40Z'
+generated_by: claude-sonnet
+workflow_run: 26513184979
 issue: 3767
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent use of seaborn jointplot for hexbin visualization - very idiomatic
-  - Well-designed synthetic data with realistic NYC clustering patterns (Manhattan,
-    Downtown, Brooklyn)
-  - Good geographic context through simplified map overlays and annotations
-  - Clean, readable code structure following KISS principle
-  - Appropriate colormap choice (YlOrRd) with proper colorbar
+  - Correct use of seaborn's jointplot(kind='hex') with marginal histograms — showcases
+    a seaborn-distinctive feature not easily replicated in other libraries
+  - imprint_seq colormap applied correctly and consistently for density/richness continuous
+    data
+  - Full theme-adaptive chrome — both light and dark renders pass legibility checks
+    with no dark-on-dark or light-on-light failures
+  - Geographic reference layer (coastline, US-Canada border, WA-OR border, state labels)
+    adds meaningful spatial context for a geographic hexbin plot
+  - City label boxes with ELEVATED_BG fill and no edge border are a polished readability
+    solution over hexbins
+  - Perfect spec compliance — all required features present (hexbins, sequential cmap,
+    colorbar, geographic context, transparency, mean aggregation)
+  - Clean reproducible code with seed; no bbox_inches='tight' canvas drift
   weaknesses:
-  - 'Title format should start with spec-id: hexbin-map-geographic · seaborn · pyplots.ai
-    not NYC Taxi Pickups'
-  - Some low-density peripheral hexagons are quite faint and hard to see
-  image_description: 'The plot shows a hexagonal binning map of NYC taxi pickup locations
-    using seaborn''s jointplot with kind="hex". The main visualization displays hexagons
-    colored with a YlOrRd (yellow-orange-red) colormap on a light blue water-like
-    background. Two distinct high-density clusters are visible: one in Midtown Manhattan
-    (around latitude 40.78, longitude -73.97) and another in the Financial District/Downtown
-    area (around latitude 40.71, longitude -74.01). Simplified geographic context
-    is provided through blue line segments representing water boundaries (Hudson River,
-    East River) and rounded rectangles outlining Manhattan and Brooklyn areas. Text
-    annotations label "Manhattan", "Brooklyn", and "Hudson River" in appropriate colors.
-    Marginal histograms on the top and right edges show the univariate distributions
-    of longitude and latitude respectively. A colorbar on the right shows the "Pickup
-    Count" scale ranging from approximately 20 to 180. The title follows the required
-    format: "NYC Taxi Pickups · hexbin-map-geographic · seaborn · pyplots.ai". Axis
-    labels include degree symbols: "Longitude (°W)" and "Latitude (°N)".'
+  - Canada annotation uses fontsize=7 which is at the lower legibility floor — increase
+    to 8pt to match city labels
+  - Colorbar placed with ax=ax (joint axis) and shrink=0.65, resulting in tight right-side
+    layout where colorbar and marginal-y histogram compete for horizontal space; consider
+    fig.subplots_adjust(right=0.82) or a dedicated cax
+  - 'DQ-01 minor gap: the spec advertises count, sum, and mean aggregation — only
+    mean is live-demonstrated; implementation could default to count and document
+    the switch'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "hexbin-map-geographic · python · seaborn · anyplot.ai" in dark INK (#1A1A17) readable at top. Axis labels "Longitude (°W)" and "Latitude (°N)" at 10pt in INK, clearly visible. Tick labels at 8pt in INK_SOFT, readable. Colorbar label "Mean Species Richness" at 9pt in INK, readable. Geographic text annotations ("Canada", "WA", "OR") in INK_MUTED, readable. City labels "Seattle" and "Portland" at 8pt with ELEVATED_BG boxes, clearly readable over hexbins.
+      Data: imprint_seq colormap (green #009E73 → blue #4467A3) applied to hexbins; marginal histograms in #009E73 brand green. Seattle hotspot shows highest richness (dark blue), Portland cluster moderate, background areas green. 7000 points hexbinned at gridsize=28, alpha=0.88, mincnt=1.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title in light INK (#F0EFE8) clearly readable. Axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0), colorbar label in INK — all clearly visible against the dark background. No dark-on-dark failures observed. Geographic annotations and city labels flip to light tokens correctly. ELEVATED_BG city label boxes use #242420 for contrast.
+      Data: Hexbin colormap identical to light render — same imprint_seq green-to-blue gradient, same #009E73 marginal histogram bars, same hotspot pattern with Seattle in dark blue. Data colors are theme-invariant as required.
+      Legibility verdict: PASS — all text readable, brand green #009E73 clearly visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text elements; annotations, labels, and title all
-          clearly separated
+        comment: Title 12pt, axis labels 10pt, ticks 8pt, city labels 8pt, colorbar
+          label 9pt — all readable in both themes. Canada label at 7pt is at lower
+          legibility floor.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant overlaps. Colorbar placement slightly tight relative
+          to right marginal histogram but non-overlapping.
       - id: VQ-03
         name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 7000 points hexbinned at gridsize=28, alpha=0.88, mincnt=1. Density
+          representation clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correct for jointplot. Slightly cramped right
+          side with colorbar+marginal-y sharing horizontal space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (W) / Latitude (N) with units. Colorbar labeled Mean Species
+          Richness. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used for continuous richness data. Marginals in #009E73.
+          Backgrounds #FAF8F1 / #1A1A17 correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 6
         max: 8
         passed: true
-        comment: Hexagons are well-sized with appropriate alpha (0.85); density patterns
-          clearly visible, but some peripheral low-count hexagons are quite faint
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
+        comment: 'Above default 4: geographic reference layer, city label boxes with
+          ELEVATED_BG, custom imprint_seq colormap, themed colorbar. Simplified geographic
+          lines limit score.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: YlOrRd is a sequential colorblind-safe colormap with good luminance
-          progression
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        comment: Top/right spines removed, hexbin edges in PAGE_BG, geographic lines
+          at 55% alpha, marginal bars with PAGE_BG edgecolor. Above default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Jointplot includes marginal histograms which consume space; the main
-          plot area is reasonably utilized but the square aspect ratio with marginals
-          creates some wasted vertical space
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Longitude (°W) and Latitude (°N)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle whitegrid style, colorbar well-placed with appropriate label
+        comment: 'Clear visual hierarchy: Seattle hotspot (dark blue) vs background
+          (green). Geographic labels guide spatial understanding. Marginals add distributional
+          insight.'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hexbin map visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Longitude on X, Latitude on Y, count aggregated in hexagons
-      - id: SC-03
+        comment: Correct hexagonal binning map using seaborn jointplot kind=hex.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has hexagonal binning, sequential colormap (YlOrRd), colorbar, geographic
-          context (simplified). Missing true base map overlay
-      - id: SC-04
-        name: Data Range
+        comment: Hexagonal binning, sequential colormap with colorbar, mean aggregation,
+          geographic context layer, transparency all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X, Latitude on Y, Mean Species Richness on color. Geographic
+          bounds explicitly set.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled Pickup Count
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title starts with NYC Taxi Pickups instead of spec-id; format should
-          be {spec-id} · {library} · pyplots.ai
+        comment: Title is exactly hexbin-map-geographic · python · seaborn · anyplot.ai.
+          Colorbar legend present and labeled.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple density clusters (Manhattan, Downtown, Brooklyn),
-          demonstrates hexbin aggregation well
+        comment: Demonstrates hexagonal binning, mean aggregation, geographic clustering,
+          marginal distributions, continuous richness variable. Count and sum aggregation
+          noted in comments only.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: NYC taxi data is a perfect, neutral, comprehensible scenario for
-          geographic hexbin visualization
+        comment: Pacific Northwest bird observations with plausible hotspots at Seattle,
+          Portland, Cascade Range, Olympic Peninsula. Richness 1-5 is standard ecological
+          metric.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Coordinates are realistic for NYC area; 5000 points is appropriate
-          for demonstrating hexbin
+        comment: 7000 points, lat 43-51N, lon -126.5 to -116.5W covers Pacific Northwest
+          correctly. Richness clipped to [1, 5].
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,57 +197,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save, no functions/classes'
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, matplotlib, seaborn, mpatches)
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
+          LinearSegmentedColormap.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity, code comments document
+          aggregation alternatives.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but uses strict=True in zip which is Python 3.10+
-          specific
-    library_features:
-      score: 5
-      max: 5
+        comment: plt.savefig with f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG.
+          No bbox_inches='tight', no bare plot.png.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of seaborn's jointplot with kind=hex - this is seaborn's
-          idiomatic approach for 2D density/hexbin visualization, includes marginal
-          histograms automatically, uses sns.set_theme for consistent styling
+        comment: sns.jointplot(kind='hex') is the correct idiomatic seaborn API. joint_kws
+          and marginal_kws used correctly. sns.set_theme with rc dict is canonical
+          seaborn practice.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: seaborn's jointplot providing marginal distributions alongside the
+          hexbin is a genuinely distinctive seaborn feature. Combination of geographic
+          overlay + jointplot marginals is creative and library-native.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - patches
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - publication-ready
