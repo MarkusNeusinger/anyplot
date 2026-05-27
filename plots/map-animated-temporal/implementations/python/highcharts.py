@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -11,56 +12,59 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data: Simulated sensor readings spreading across Europe over time
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data: PM2.5 air quality readings spreading across Europe over 10 days
 np.random.seed(42)
 
-# Create time steps (10 days)
 n_days = 10
-base_date = pd.Timestamp("2024-01-01")
+base_date = pd.Timestamp("2024-03-01")
 timestamps = [base_date + pd.Timedelta(days=i) for i in range(n_days)]
 
-# Starting points in Western Europe, gradually spreading eastward
-start_lons = [2.3, -0.1, 4.9, 7.4, 12.5]  # Paris, London, Brussels, Zurich, Rome
+# Seed monitoring stations in Western Europe
+start_lons = [2.3, -0.1, 4.9, 7.4, 12.5]
 start_lats = [48.9, 51.5, 50.8, 47.4, 41.9]
 cities = ["Paris", "London", "Brussels", "Zurich", "Rome"]
 
-# Build data with temporal spread pattern
+# Build data with temporal spread: more stations report as event develops
 data_records = []
 for day_idx, ts in enumerate(timestamps):
-    # More points appear as time progresses
-    n_points = 5 + day_idx * 3  # 5 to 32 points
+    n_points = 5 + day_idx * 3
     for i in range(n_points):
         if i < len(start_lons):
-            # Original cities
             lon = start_lons[i] + np.random.randn() * 0.5
             lat = start_lats[i] + np.random.randn() * 0.5
             label = cities[i]
         else:
-            # New spreading points - drift eastward over time
             base_lon = np.random.choice(start_lons) + day_idx * 0.8 + np.random.randn() * 2
             base_lat = np.random.choice(start_lats) + np.random.randn() * 2
             lon = np.clip(base_lon, -10, 40)
             lat = np.clip(base_lat, 35, 60)
-            label = f"Sensor {i + 1}"
-        value = 50 + day_idx * 5 + np.random.randn() * 15
-        data_records.append({"timestamp": ts, "lon": lon, "lat": lat, "value": max(10, value), "label": label})
+            label = f"Station {i + 1}"
+        pm25 = 20 + day_idx * 8 + np.random.randn() * 12
+        data_records.append({"timestamp": ts, "lon": lon, "lat": lat, "value": max(5.0, pm25), "label": label})
 
 df = pd.DataFrame(data_records)
 
-# Prepare data grouped by timestamp for animation frames
 frames_data = {}
 for ts in timestamps:
     frame_df = df[df["timestamp"] == ts]
     frames_data[ts.strftime("%Y-%m-%d")] = frame_df[["lon", "lat", "value", "label"]].to_dict("records")
 
-# Download Highcharts JS and Highmaps modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-highmaps_url = "https://code.highcharts.com/maps/modules/map.js"
-europe_map_url = "https://code.highcharts.com/mapdata/custom/europe.topo.json"
+# Download Highcharts JS, Highmaps module, and Europe map topology
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
+highmaps_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/map.js"
+europe_map_url = "https://cdn.jsdelivr.net/npm/@highcharts/map-collection/custom/europe.topo.json"
 
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
@@ -71,14 +75,12 @@ with urllib.request.urlopen(highmaps_url, timeout=30) as response:
 with urllib.request.urlopen(europe_map_url, timeout=30) as response:
     europe_map_json = response.read().decode("utf-8")
 
-# Build JavaScript for animated map
 dates_list = list(frames_data.keys())
+
 all_frames_js = []
 for date_str, points in frames_data.items():
-    points_js = []
-    for p in points:
-        points_js.append(f"{{lon: {p['lon']:.2f}, lat: {p['lat']:.2f}, z: {p['value']:.1f}, name: '{p['label']}'}}")
-    all_frames_js.append(f"'{date_str}': [{', '.join(points_js)}]")
+    pts = [f"{{lon: {p['lon']:.2f}, lat: {p['lat']:.2f}, z: {p['value']:.1f}, name: '{p['label']}'}}" for p in points]
+    all_frames_js.append(f"'{date_str}': [{', '.join(pts)}]")
 
 frames_js_str = "{" + ", ".join(all_frames_js) + "}"
 
@@ -94,76 +96,74 @@ var initialData = frameData[dates[0]];
 var chart = Highcharts.mapChart('container', {{
     chart: {{
         map: topology,
-        width: 4800,
-        height: 2700,
-        backgroundColor: '#ffffff',
-        marginBottom: 200
+        width: 3200,
+        height: 1800,
+        backgroundColor: '{PAGE_BG}',
+        marginBottom: 250,
+        style: {{ fontFamily: 'Arial, sans-serif' }}
     }},
     title: {{
-        text: 'map-animated-temporal · highcharts · pyplots.ai',
-        style: {{ fontSize: '48px', fontWeight: 'bold' }}
+        text: 'map-animated-temporal · python · highcharts · anyplot.ai',
+        style: {{ fontSize: '66px', fontWeight: 'bold', color: '{INK}' }}
     }},
     subtitle: {{
         text: 'Date: ' + dates[0],
-        style: {{ fontSize: '36px' }}
+        style: {{ fontSize: '44px', color: '{INK_SOFT}' }}
     }},
     mapNavigation: {{
         enabled: false
     }},
     colorAxis: {{
-        min: 10,
-        max: 120,
+        min: 5,
+        max: 115,
         stops: [
-            [0, '#306998'],
-            [0.5, '#17BECF'],
-            [1, '#9467BD']
+            [0, '#009E73'],
+            [1, '#4467A3']
         ],
         labels: {{
-            style: {{ fontSize: '24px' }},
-            format: '{{value}}'
+            style: {{ fontSize: '36px', color: '{INK_SOFT}' }}
         }},
         title: {{
-            text: 'Sensor Value',
-            style: {{ fontSize: '28px' }}
-        }},
-        showInLegend: true
+            text: 'PM2.5 (µg/m³)',
+            style: {{ fontSize: '40px', color: '{INK}' }}
+        }}
     }},
     legend: {{
         enabled: true,
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle',
-        floating: false,
-        borderWidth: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        padding: 20,
-        itemStyle: {{ fontSize: '24px' }},
-        symbolHeight: 400,
-        symbolWidth: 30,
-        y: -50
+        layout: 'horizontal',
+        align: 'center',
+        verticalAlign: 'bottom',
+        y: -148,
+        symbolWidth: 620,
+        symbolHeight: 26,
+        itemStyle: {{ fontSize: '36px', color: '{INK_SOFT}' }},
+        backgroundColor: 'none',
+        borderWidth: 0,
+        padding: 4
     }},
     series: [{{
         name: 'Europe',
-        borderColor: '#606060',
-        nullColor: 'rgba(230, 230, 230, 0.5)',
+        borderColor: '{INK_SOFT}',
+        borderWidth: 0.5,
+        nullColor: '{ELEVATED_BG}',
         showInLegend: false
     }}, {{
         type: 'mapbubble',
-        name: 'Sensor Readings',
+        name: 'PM2.5',
         data: initialData,
-        minSize: 40,
-        maxSize: 120,
+        minSize: 30,
+        maxSize: 100,
         colorKey: 'z',
         marker: {{
             fillOpacity: 0.85,
             lineWidth: 2,
-            lineColor: '#333333'
+            lineColor: '{INK}'
         }},
         dataLabels: {{
             enabled: false
         }},
         tooltip: {{
-            pointFormat: '{{point.name}}<br>Value: {{point.z:.1f}}'
+            pointFormat: '{{point.name}}<br>PM2.5: {{point.z:.1f}} µg/m³'
         }},
         showInLegend: false
     }}]
@@ -217,49 +217,51 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highmaps_js}</script>
     <style>
-        body {{ margin: 0; font-family: Arial, sans-serif; }}
-        #container {{ width: 4800px; height: 2700px; }}
+        body {{ margin: 0; background: {PAGE_BG}; font-family: Arial, sans-serif; }}
+        #container {{ width: 3200px; height: 1800px; }}
         #controls {{
             position: absolute;
-            bottom: 40px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: 30px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px 50px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            background: {ELEVATED_BG};
+            padding: 18px 48px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.10);
             z-index: 100;
         }}
         #playBtn {{
-            font-size: 32px;
-            padding: 15px 40px;
+            font-size: 36px;
+            padding: 12px 40px;
             cursor: pointer;
-            background: #306998;
+            background: #009E73;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
+            font-weight: bold;
         }}
-        #playBtn:hover {{ background: #254c73; }}
+        #playBtn:hover {{ opacity: 0.85; }}
         #slider {{
-            width: 600px;
+            width: 700px;
             height: 20px;
             cursor: pointer;
+            accent-color: #009E73;
         }}
         #dateDisplay {{
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
-            min-width: 200px;
-            color: #306998;
+            min-width: 220px;
+            color: {INK};
         }}
     </style>
 </head>
 <body>
     <div id="container"></div>
     <div id="controls">
-        <button id="playBtn" onclick="playAnimation()">▶ Play</button>
+        <button id="playBtn" onclick="playAnimation()">&#9654; Play</button>
         <input type="range" id="slider" min="0" max="{len(dates_list) - 1}" value="0"
                onchange="onSliderChange(this.value)" oninput="onSliderChange(this.value)">
         <span id="dateDisplay">{dates_list[0]}</span>
@@ -268,26 +270,37 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Generate PNG screenshot using Selenium
+# Generate PNG via Selenium with CDP viewport override for exact 3200×1800
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(8)  # Wait for map and chart to render fully
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact 3200×1800 to satisfy post-render gate
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
