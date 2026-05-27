@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-27
@@ -67,8 +67,8 @@ main_plot.add_tools(hover)
 # Theme-adaptive chrome — main plot
 main_plot.background_fill_color = PAGE_BG
 main_plot.border_fill_color = PAGE_BG
-main_plot.outline_line_color = INK_SOFT
-main_plot.title.text_font_size = "50pt"
+main_plot.outline_line_color = None
+main_plot.title.text_font_size = "65pt"
 main_plot.title.text_color = INK
 main_plot.xaxis.axis_label_text_font_size = "42pt"
 main_plot.yaxis.axis_label_text_font_size = "42pt"
@@ -82,9 +82,7 @@ main_plot.xaxis.axis_line_color = INK_SOFT
 main_plot.yaxis.axis_line_color = INK_SOFT
 main_plot.xaxis.major_tick_line_color = INK_SOFT
 main_plot.yaxis.major_tick_line_color = INK_SOFT
-main_plot.xgrid.grid_line_color = INK
 main_plot.ygrid.grid_line_color = INK
-main_plot.xgrid.grid_line_alpha = 0.15
 main_plot.ygrid.grid_line_alpha = 0.15
 
 # Navigator — shows full data extent at reduced scale
@@ -111,7 +109,7 @@ navigator.add_tools(range_tool)
 # Theme-adaptive chrome — navigator
 navigator.background_fill_color = PAGE_BG
 navigator.border_fill_color = PAGE_BG
-navigator.outline_line_color = INK_SOFT
+navigator.outline_line_color = None
 navigator.xaxis.major_label_text_font_size = "28pt"
 navigator.xaxis.major_label_text_color = INK_SOFT
 navigator.xaxis.axis_line_color = INK_SOFT
