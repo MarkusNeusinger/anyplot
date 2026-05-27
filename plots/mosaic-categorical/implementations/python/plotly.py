@@ -42,7 +42,7 @@ survival_categories = contingency.index.tolist()
 class_categories = contingency.columns.tolist()
 
 # Okabe-Ito palette: Survived = brand green (first series), Did Not Survive = vermillion
-colors = {"Survived": "#009E73", "Did Not Survive": "#D55E00"}
+colors = {"Survived": "#009E73", "Did Not Survive": "#C475FD"}
 
 # Gap between rectangles
 gap = 0.015

@@ -22,7 +22,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 GRID_LIGHT = "rgba(26,26,23,0.05)" if THEME == "light" else "rgba(240,239,232,0.05)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Using Iris dataset for multivariate exploration
 iris = sns.load_dataset("iris")
@@ -36,7 +36,7 @@ iris["species"] = iris["species"].str.capitalize()
 
 # Species info
 species_list = ["Setosa", "Versicolor", "Virginica"]
-color_map = {s: OKABE_ITO[i] for i, s in enumerate(species_list)}
+color_map = {s: IMPRINT[i] for i, s in enumerate(species_list)}
 
 # Create 4x4 subplot grid
 n = len(cols)

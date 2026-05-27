@@ -31,13 +31,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"  # Okabe-Ito position 1 — close price
-OKABE_ITO = [
-    "#D55E00",  # position 2 — upper/lower bands
-    "#0072B2",  # position 3 — SMA
-    "#CC79A7",
-    "#E69F00",
-    "#56B4E9",
-    "#F0E442",
+IMPRINT = [
+    "#C475FD",  # position 2 — upper/lower bands
+    "#4467A3",  # position 3 — SMA
+    "#BD8233",
+    "#AE3030",
+    "#2ABCCD",
+    "#954477",
 ]
 
 # Data - Generate realistic stock price data with Bollinger Bands
@@ -78,7 +78,7 @@ fig.add_trace(
         mode="lines",
         line={"width": 0},
         fill="tonexty",
-        fillcolor=f"rgba({int(OKABE_ITO[0][1:3], 16)}, {int(OKABE_ITO[0][3:5], 16)}, {int(OKABE_ITO[0][5:7], 16)}, 0.15)",
+        fillcolor=f"rgba({int(IMPRINT[0][1:3], 16)}, {int(IMPRINT[0][3:5], 16)}, {int(IMPRINT[0][5:7], 16)}, 0.15)",
         name="Bollinger Bands (2σ)",
         hoverinfo="skip",
     )
@@ -90,7 +90,7 @@ fig.add_trace(
         x=df["date"],
         y=df["upper_band"],
         mode="lines",
-        line={"color": OKABE_ITO[0], "width": 2, "dash": "solid"},
+        line={"color": IMPRINT[0], "width": 2, "dash": "solid"},
         name="Upper Band (+2σ)",
         hovertemplate="Upper: $%{y:.2f}<extra></extra>",
     )
@@ -102,7 +102,7 @@ fig.add_trace(
         x=df["date"],
         y=df["lower_band"],
         mode="lines",
-        line={"color": OKABE_ITO[0], "width": 2, "dash": "solid"},
+        line={"color": IMPRINT[0], "width": 2, "dash": "solid"},
         name="Lower Band (-2σ)",
         hovertemplate="Lower: $%{y:.2f}<extra></extra>",
     )
@@ -114,7 +114,7 @@ fig.add_trace(
         x=df["date"],
         y=df["sma"],
         mode="lines",
-        line={"color": OKABE_ITO[1], "width": 3, "dash": "dash"},
+        line={"color": IMPRINT[1], "width": 3, "dash": "dash"},
         name="20-day SMA",
         hovertemplate="SMA: $%{y:.2f}<extra></extra>",
     )

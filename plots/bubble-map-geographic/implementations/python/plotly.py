@@ -26,11 +26,11 @@ COUNTRY_COLOR = "#C8C4B4" if THEME == "light" else "#3A3A34"
 # Okabe-Ito palette for regions (canonical order, first = #009E73)
 REGION_COLORS = {
     "Asia": "#009E73",
-    "Europe": "#D55E00",
-    "North America": "#0072B2",
-    "South America": "#CC79A7",
-    "Africa": "#E69F00",
-    "Oceania": "#56B4E9",
+    "Europe": "#C475FD",
+    "North America": "#4467A3",
+    "South America": "#BD8233",
+    "Africa": "#AE3030",
+    "Oceania": "#2ABCCD",
 }
 REGION_ORDER = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania"]
 

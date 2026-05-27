@@ -20,10 +20,10 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # position 1 — Basquin fit line
-C2 = "#D55E00"  # position 2 — test data markers
-C3 = "#0072B2"  # position 3 — ultimate strength
-C4 = "#CC79A7"  # position 4 — yield strength
-C5 = "#E69F00"  # position 5 — endurance limit
+C2 = "#C475FD"  # position 2 — test data markers
+C3 = "#4467A3"  # position 3 — ultimate strength
+C4 = "#BD8233"  # position 4 — yield strength
+C5 = "#AE3030"  # position 5 — endurance limit
 
 # Data: Steel fatigue test data (Basquin model)
 np.random.seed(42)

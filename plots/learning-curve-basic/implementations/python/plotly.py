@@ -31,7 +31,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
 TRAIN_COLOR = "#009E73"  # bluish green
-VAL_COLOR = "#D55E00"  # vermillion
+VAL_COLOR = "#C475FD"  # vermillion
 
 # Data - Simulate learning curve data from cross-validation
 np.random.seed(42)

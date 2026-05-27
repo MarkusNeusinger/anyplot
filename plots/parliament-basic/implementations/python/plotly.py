@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (positions 1→6, first is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Fictional parliament with neutral party names
 parties = [
@@ -43,7 +43,7 @@ parties = [
 
 # Assign Okabe-Ito colors to parties
 for i, party in enumerate(parties):
-    party["color"] = OKABE_ITO[i % len(OKABE_ITO)]
+    party["color"] = IMPRINT[i % len(IMPRINT)]
 
 total_seats = sum(p["seats"] for p in parties)
 majority_threshold = total_seats // 2 + 1

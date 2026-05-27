@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - heights by gender (realistic scenario showing overlapping distributions)
 np.random.seed(42)
@@ -32,7 +32,7 @@ fig.add_trace(
     go.Histogram(
         x=male_heights,
         name="Male",
-        marker=dict(color=OKABE_ITO[0], line=dict(color=INK_SOFT, width=1)),
+        marker=dict(color=IMPRINT[0], line=dict(color=INK_SOFT, width=1)),
         opacity=0.5,
         xbins=dict(size=3),
     )
@@ -42,7 +42,7 @@ fig.add_trace(
     go.Histogram(
         x=female_heights,
         name="Female",
-        marker=dict(color=OKABE_ITO[1], line=dict(color=INK_SOFT, width=1)),
+        marker=dict(color=IMPRINT[1], line=dict(color=INK_SOFT, width=1)),
         opacity=0.5,
         xbins=dict(size=3),
     )
