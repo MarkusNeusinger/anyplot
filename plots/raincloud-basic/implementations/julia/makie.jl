@@ -25,7 +25,6 @@ const ANYPLOT_PALETTE = [
 ]
 
 # --- Data: Page load times (ms) across 4 A/B test variants ------------------
-const CATEGORIES = ["Baseline", "Variant A", "Variant B", "Variant C"]
 const N_PER_CAT  = 110
 const N_HALF     = N_PER_CAT ÷ 2
 
@@ -34,13 +33,21 @@ const N_HALF     = N_PER_CAT ÷ 2
 #   Variant A: bimodal — cache hit vs cache miss
 #   Variant B: fastest, tighter spread
 #   Variant C: moderate mean with a heavier right tail
-const DATA_BY_CAT = [
+const RAW_CATEGORIES = ["Baseline", "Variant A", "Variant B", "Variant C"]
+const RAW_DATA = [
     720.0 .+ 110.0 .* randn(N_PER_CAT) .+ 60.0 .* abs.(randn(N_PER_CAT)),
     vcat(380.0 .+  60.0 .* randn(N_HALF),
          620.0 .+  70.0 .* randn(N_PER_CAT - N_HALF)),
     460.0 .+  75.0 .* randn(N_PER_CAT) .+ 25.0 .* abs.(randn(N_PER_CAT)),
     590.0 .+  95.0 .* randn(N_PER_CAT) .+ 90.0 .* abs.(randn(N_PER_CAT)),
 ]
+
+# Sort categories by median ascending — fastest at bottom, slowest at top —
+# so the eye reads the A/B-test winners from the baseline upward.
+const _ORDER     = sortperm(median.(RAW_DATA))
+const CATEGORIES = RAW_CATEGORIES[_ORDER]
+const DATA_BY_CAT = RAW_DATA[_ORDER]
+const PALETTE_BY_CAT = [ANYPLOT_PALETTE[findfirst(==(c), RAW_CATEGORIES)] for c in CATEGORIES]
 
 # --- Figure -----------------------------------------------------------------
 fig = Figure(
@@ -59,7 +66,7 @@ ax = Axis(
     xlabelcolor       = INK,
     xlabelsize        = 14,
     xticklabelsize    = 12,
-    yticklabelsize    = 13,
+    yticklabelsize    = 12,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK,
     xtickcolor        = INK_SOFT,
@@ -67,7 +74,7 @@ ax = Axis(
     backgroundcolor   = PAGE_BG,
     topspinevisible   = false,
     rightspinevisible = false,
-    leftspinecolor    = INK_SOFT,
+    leftspinevisible  = false,
     bottomspinecolor  = INK_SOFT,
     yticks            = (1:length(CATEGORIES), CATEGORIES),
     xgridvisible      = true,
@@ -80,14 +87,14 @@ ax = Axis(
 # --- Raincloud layout knobs (y-units, category spacing = 1) -----------------
 cloud_gap    = 0.05   # gap between baseline and start of cloud
 cloud_height = 0.45   # max height of cloud above baseline
-box_height   = 0.14   # full vertical extent of the box (centered on baseline)
-rain_gap     = 0.08   # gap between baseline and start of rain
+box_height   = 0.12   # full vertical extent of the box (centered on baseline)
+rain_gap     = 0.14   # gap between baseline and start of rain
 rain_spread  = 0.18   # vertical spread of jittered rain points
 
 # --- Plot cloud + box + rain for each category ------------------------------
 for (i, vals) in enumerate(DATA_BY_CAT)
     baseline = Float64(i)
-    color    = ANYPLOT_PALETTE[i]
+    color    = PALETTE_BY_CAT[i]
     n        = length(vals)
 
     # Summary statistics — drive both boxplot and KDE bandwidth
