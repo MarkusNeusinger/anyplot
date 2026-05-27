@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-21
+Library: pygal | Python 3.13
+Quality: pending | Updated: 2026-05-27
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,72 +12,68 @@ import pygal
 from pygal.style import Style
 
 
-# Set seed for reproducibility
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Generate stock price data (simulating ~180 trading days)
-start_date = pd.Timestamp("2024-01-02")
-trading_days = pd.bdate_range(start=start_date, periods=180)
-
-# Generate realistic stock price movement
-initial_price = 150.0
-returns = np.random.normal(0.0005, 0.018, len(trading_days))
+# Data — seed 999, Jul 2023 start differentiates from sibling implementations
+np.random.seed(999)
+start_date = pd.Timestamp("2023-07-03")
+trading_days = pd.bdate_range(start=start_date, periods=200)
+initial_price = 240.0
+returns = np.random.normal(0.0004, 0.016, len(trading_days))
 prices = initial_price * np.cumprod(1 + returns)
-
-# Create price dataframe
 df = pd.DataFrame({"date": trading_days, "close": prices})
 
-# Define events with their dates, types, and labels
+# Events — corporate actions for a tech company over the period
 events = [
+    {"date": pd.Timestamp("2023-07-27"), "type": "earnings", "label": "Q2 Beat"},
+    {"date": pd.Timestamp("2023-08-17"), "type": "dividend", "label": "$0.22"},
+    {"date": pd.Timestamp("2023-09-14"), "type": "news", "label": "Partnership"},
+    {"date": pd.Timestamp("2023-10-26"), "type": "earnings", "label": "Q3 Miss"},
+    {"date": pd.Timestamp("2023-11-16"), "type": "dividend", "label": "$0.24"},
+    {"date": pd.Timestamp("2023-12-05"), "type": "news", "label": "FDA Approval"},
     {"date": pd.Timestamp("2024-01-25"), "type": "earnings", "label": "Q4 Beat"},
-    {"date": pd.Timestamp("2024-02-15"), "type": "dividend", "label": "$0.25"},
-    {"date": pd.Timestamp("2024-03-12"), "type": "news", "label": "Launch"},
-    {"date": pd.Timestamp("2024-04-18"), "type": "earnings", "label": "Q1"},
-    {"date": pd.Timestamp("2024-05-10"), "type": "dividend", "label": "$0.28"},
-    {"date": pd.Timestamp("2024-06-05"), "type": "split", "label": "3:1"},
-    {"date": pd.Timestamp("2024-07-22"), "type": "earnings", "label": "Q2"},
-    {"date": pd.Timestamp("2024-08-08"), "type": "dividend", "label": "$0.30"},
+    {"date": pd.Timestamp("2024-02-15"), "type": "dividend", "label": "$0.26"},
+    {"date": pd.Timestamp("2024-03-11"), "type": "split", "label": "2:1 Split"},
 ]
 
-# Event colors by type - distinct and accessible
+# Event colors from anyplot palette (positions 2-5; position 1 reserved for price line)
 event_type_colors = {
-    "earnings": "#2E86AB",  # teal
-    "dividend": "#28A745",  # green
-    "news": "#E74C3C",  # red
-    "split": "#9B59B6",  # purple
+    "earnings": "#C475FD",  # lavender
+    "dividend": "#4467A3",  # blue — steady income
+    "news": "#BD8233",  # ochre — announcements
+    "split": "#AE3030",  # red — significant corporate action
 }
 
-# Build color list: price line + 8 connector lines (matching event order) + 4 flag series
+# Build full color sequence for pygal's cycling: price line + connectors + flag groups
 connector_colors = [event_type_colors[e["type"]] for e in events]
-flag_colors = [event_type_colors[t] for t in ["earnings", "dividend", "split", "news"]]
-all_colors = ["#306998"] + connector_colors + flag_colors
+flag_colors = [event_type_colors[t] for t in ["earnings", "dividend", "news", "split"]]
+all_colors = tuple(["#009E73"] + connector_colors + flag_colors)
 
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#888888",
-    colors=tuple(all_colors),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=40,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=all_colors,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    stroke_width=4,
-    value_label_font_size=32,
-    tooltip_font_size=36,
-    guide_stroke_color="#CCCCCC",
-    guide_stroke_dasharray="5,5",
+    stroke_width=3,
 )
 
-# Use XY chart for precise coordinate control
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="stock-event-flags · pygal · pyplots.ai",
-    x_title="Trading Day Index (2024)",
+    title="Tech Stock 2023 · stock-event-flags · python · pygal · anyplot.ai",
+    x_title="Trading Day Index",
     y_title="Stock Price ($)",
     show_x_guides=False,
     show_y_guides=True,
@@ -87,55 +85,47 @@ chart = pygal.XY(
     dots_size=3,
     truncate_label=-1,
     truncate_legend=-1,
-    margin=50,
+    margin=60,
     spacing=30,
-    x_labels_major_every=20,
-    show_minor_x_labels=False,
 )
 
-# Add main stock price line
+# Main stock price line (first series → #009E73 brand green)
 price_points = [(i, df.iloc[i]["close"]) for i in range(len(df))]
-chart.add("Stock Price", price_points, dots_size=0, stroke_style={"width": 5})
+chart.add("Price", price_points, dots_size=0, stroke_style={"width": 4})
 
-# Calculate y-axis range for flag positioning
+# Flag positioning above the price range
 min_price = df["close"].min()
 max_price = df["close"].max()
 price_range = max_price - min_price
 
-# Flag heights for different event types (above max price)
-event_heights = {"earnings": 0.12, "dividend": 0.20, "split": 0.28, "news": 0.36}
+event_heights = {"earnings": 0.12, "dividend": 0.20, "news": 0.28, "split": 0.36}
 
-# Add all connector lines first (one series per event for clean vertical lines)
+# Connector lines — dashed verticals from price level to flag position
 for event in events:
     idx = df["date"].searchsorted(event["date"])
     if idx < len(df):
-        event_type = event["type"]
-        height_offset = event_heights[event_type]
-        flag_y = max_price + (price_range * height_offset)
+        flag_y = max_price + price_range * event_heights[event["type"]]
         price_at_event = df.iloc[idx]["close"]
+        chart.add(
+            None,
+            [(idx, price_at_event), (idx, flag_y)],
+            stroke=True,
+            stroke_style={"width": 2, "dasharray": "6,4"},
+            show_dots=False,
+        )
 
-        # Single vertical connector line
-        connector_points = [
-            (idx, price_at_event),  # Bottom at price level
-            (idx, flag_y),  # Top at flag position
-        ]
-        chart.add(None, connector_points, stroke=True, stroke_style={"width": 2, "dasharray": "6,4"}, show_dots=False)
-
-# Add flag markers grouped by type (for legend)
-for event_type in ["earnings", "dividend", "split", "news"]:
+# Flag markers grouped by event type (drives legend)
+for event_type in ["earnings", "dividend", "news", "split"]:
     type_events = [e for e in events if e["type"] == event_type]
-    height_offset = event_heights[event_type]
-    flag_y = max_price + (price_range * height_offset)
+    flag_y = max_price + price_range * event_heights[event_type]
+    flag_points = [
+        {"value": (df["date"].searchsorted(e["date"]), flag_y), "label": f"{event_type.upper()}: {e['label']}"}
+        for e in type_events
+        if df["date"].searchsorted(e["date"]) < len(df)
+    ]
+    chart.add(event_type.capitalize(), flag_points, stroke=False, show_dots=True, dots_size=18)
 
-    flag_points = []
-    for event in type_events:
-        idx = df["date"].searchsorted(event["date"])
-        if idx < len(df):
-            flag_points.append({"value": (idx, flag_y), "label": f"{event_type.upper()}: {event['label']}"})
-
-    type_label = event_type.capitalize()
-    chart.add(type_label, flag_points, stroke=False, show_dots=True, dots_size=25)
-
-# Render to PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
