@@ -1,15 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Portfolio data with asset class categories
-data = pd.DataFrame(
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]
+
+# Portfolio data
+holdings = pd.DataFrame(
     {
         "asset": [
             "Apple Inc.",
@@ -39,69 +51,115 @@ data = pd.DataFrame(
     }
 )
 
-# Calculate category totals for drill-down
-category_totals = data.groupby("category")["weight"].sum().reset_index()
-category_totals.columns = ["category", "total_weight"]
-
-# Merge category totals back to main data
-data = data.merge(category_totals, on="category")
-
-# Color scheme by category (Python-inspired colors)
-category_colors = alt.Scale(
-    domain=["Equities", "Fixed Income", "Alternatives"], range=["#306998", "#FFD43B", "#4B8BBE"]
+# Category totals for outer ring
+category_totals = (
+    holdings.groupby("category").agg(total_weight=("weight", "sum"), num_holdings=("asset", "count")).reset_index()
 )
 
-# Selection for interactivity
-selection = alt.selection_point(fields=["category"], bind="legend")
+# Color scale using anyplot palette (green=equities growth, purple=fixed income, blue=alternatives)
+category_domain = ["Equities", "Fixed Income", "Alternatives"]
+color_scale = alt.Scale(domain=category_domain, range=ANYPLOT_PALETTE)
 
-# Main donut chart with individual holdings
-base = (
-    alt.Chart(data)
+# Category selection drives drill-down of the inner ring
+category_sel = alt.selection_point(fields=["category"], empty=True)
+
+# Outer ring: category-level totals — click to drill down
+outer_ring = (
+    alt.Chart(category_totals)
+    .mark_arc(innerRadius=195, outerRadius=275, stroke=PAGE_BG, strokeWidth=3)
     .encode(
-        theta=alt.Theta("weight:Q", stack=True),
+        theta=alt.Theta("total_weight:Q", stack=True),
         color=alt.Color(
             "category:N",
-            scale=category_colors,
-            legend=alt.Legend(title="Asset Class", titleFontSize=20, labelFontSize=18, orient="right", symbolSize=300),
+            scale=color_scale,
+            legend=alt.Legend(
+                title="Asset Class",
+                titleFontSize=14,
+                labelFontSize=12,
+                orient="right",
+                symbolSize=200,
+                titleColor=INK,
+                labelColor=INK_SOFT,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+            ),
         ),
-        opacity=alt.condition(selection, alt.value(1), alt.value(0.3)),
+        opacity=alt.condition(category_sel, alt.value(1.0), alt.value(0.25)),
         tooltip=[
-            alt.Tooltip("asset:N", title="Holding"),
-            alt.Tooltip("weight:Q", title="Weight (%)", format=".1f"),
             alt.Tooltip("category:N", title="Asset Class"),
-            alt.Tooltip("total_weight:Q", title="Category Total (%)", format=".1f"),
+            alt.Tooltip("total_weight:Q", title="Allocation (%)", format=".1f"),
+            alt.Tooltip("num_holdings:Q", title="Holdings"),
         ],
     )
-    .add_params(selection)
+    .add_params(category_sel)
 )
 
-# Donut chart with arc marks
-donut = base.mark_arc(innerRadius=180, outerRadius=350, stroke="white", strokeWidth=3)
-
-# Text labels for holdings (show weight percentages)
-text_labels = base.mark_text(radius=420, fontSize=16, fontWeight="bold").encode(text=alt.Text("weight:Q", format=".1f"))
-
-# Center text showing total
-center_text = (
-    alt.Chart(pd.DataFrame({"text": ["Portfolio\nAllocation"]}))
-    .mark_text(fontSize=24, fontWeight="bold", align="center", baseline="middle", lineBreak="\n", color="#333333")
-    .encode(text="text:N")
+# Inner ring: individual holdings filtered by selection (drill-down detail view)
+# When no category selected → shows all 10 holdings; click outer ring → shows only that category
+inner_ring = (
+    alt.Chart(holdings)
+    .transform_filter(category_sel)
+    .mark_arc(innerRadius=90, outerRadius=190, stroke=PAGE_BG, strokeWidth=2)
+    .encode(
+        theta=alt.Theta("weight:Q", stack=True),
+        color=alt.Color("category:N", scale=color_scale, legend=None),
+        opacity=alt.value(0.85),
+        tooltip=[
+            alt.Tooltip("asset:N", title="Holding"),
+            alt.Tooltip("weight:Q", title="Portfolio Weight (%)", format=".1f"),
+            alt.Tooltip("category:N", title="Asset Class"),
+        ],
+    )
 )
 
-# Combine layers
+# Center text — more informative: shows total allocation and holding count
+center_data = pd.DataFrame({"label": ["100%\n10 Holdings"]})
+center = (
+    alt.Chart(center_data)
+    .mark_text(fontSize=20, fontWeight="bold", align="center", baseline="middle", lineBreak="\n", color=INK)
+    .encode(text="label:N")
+)
+
+# Title — canonical format with language token
+title_str = "pie-portfolio-interactive · python · altair · anyplot.ai"
+subtitle_str = "Click outer ring to drill into category holdings · click again to reset"
+
 chart = (
-    alt.layer(donut, text_labels, center_text)
+    alt.layer(outer_ring, inner_ring, center)
     .properties(
-        width=1600,
-        height=900,
+        width=400,
+        height=420,
+        background=PAGE_BG,
         title=alt.Title(
-            "pie-portfolio-interactive \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle", color="#333333"
+            title_str,
+            fontSize=16,
+            subtitle=subtitle_str,
+            subtitleFontSize=11,
+            anchor="middle",
+            color=INK,
+            subtitleColor=INK_SOFT,
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(labelFontSize=18, titleFontSize=22)
+    .configure_view(stroke=None, fill=PAGE_BG)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.15, labelColor=INK_SOFT, titleColor=INK
+    )
 )
 
-# Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# PAD to exact 2400×2400 (square target for pie/donut charts)
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
