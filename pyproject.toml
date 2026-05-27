@@ -89,6 +89,11 @@ plotting = [
     "scipy>=1.14.0",
     "scikit-learn>=1.6.0",
     "statsmodels>=0.14.0",
+    # matplotlib add-ons required by individual specs (cartopy: map-projections,
+    # wordcloud: wordcloud-basic, matplotlib-venn: venn-basic)
+    "cartopy>=0.24.0",
+    "wordcloud>=1.9.0",
+    "matplotlib-venn>=1.1.0",
 ]
 # Per-library dependencies for CI (minimal installs)
 lib-matplotlib = ["matplotlib>=3.10.9", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
