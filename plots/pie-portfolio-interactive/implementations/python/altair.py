@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-27
@@ -17,6 +17,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# Use INK_SOFT in dark mode so ring gaps remain visible against dark arc segments
+RING_STROKE = PAGE_BG if THEME == "light" else INK_SOFT
 
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]
 
@@ -51,10 +53,11 @@ holdings = pd.DataFrame(
     }
 )
 
-# Category totals for outer ring
+# Category totals for outer ring — is_dominant flags Equities (45%) for visual emphasis
 category_totals = (
     holdings.groupby("category").agg(total_weight=("weight", "sum"), num_holdings=("asset", "count")).reset_index()
 )
+category_totals["is_dominant"] = (category_totals["category"] == "Equities").astype(int)
 
 # Color scale using anyplot palette (green=equities growth, purple=fixed income, blue=alternatives)
 category_domain = ["Equities", "Fixed Income", "Alternatives"]
@@ -64,9 +67,10 @@ color_scale = alt.Scale(domain=category_domain, range=ANYPLOT_PALETTE)
 category_sel = alt.selection_point(fields=["category"], empty=True)
 
 # Outer ring: category-level totals — click to drill down
+# Equities (dominant at 45%) gets a thicker stroke for subtle visual emphasis
 outer_ring = (
     alt.Chart(category_totals)
-    .mark_arc(innerRadius=195, outerRadius=275, stroke=PAGE_BG, strokeWidth=3)
+    .mark_arc(innerRadius=175, outerRadius=248, stroke=RING_STROKE)
     .encode(
         theta=alt.Theta("total_weight:Q", stack=True),
         color=alt.Color(
@@ -82,8 +86,12 @@ outer_ring = (
                 labelColor=INK_SOFT,
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
+                padding=8,
+                cornerRadius=4,
+                symbolStrokeWidth=0,
             ),
         ),
+        strokeWidth=alt.condition(alt.datum.is_dominant == 1, alt.value(5), alt.value(2)),
         opacity=alt.condition(category_sel, alt.value(1.0), alt.value(0.25)),
         tooltip=[
             alt.Tooltip("category:N", title="Asset Class"),
@@ -99,7 +107,7 @@ outer_ring = (
 inner_ring = (
     alt.Chart(holdings)
     .transform_filter(category_sel)
-    .mark_arc(innerRadius=90, outerRadius=190, stroke=PAGE_BG, strokeWidth=2)
+    .mark_arc(innerRadius=81, outerRadius=170, stroke=RING_STROKE, strokeWidth=2)
     .encode(
         theta=alt.Theta("weight:Q", stack=True),
         color=alt.Color("category:N", scale=color_scale, legend=None),
@@ -112,11 +120,15 @@ inner_ring = (
     )
 )
 
-# Center text — more informative: shows total allocation and holding count
-center_data = pd.DataFrame({"label": ["100%\n10 Holdings"]})
-center = (
-    alt.Chart(center_data)
-    .mark_text(fontSize=20, fontWeight="bold", align="center", baseline="middle", lineBreak="\n", color=INK)
+# Center text — typographic hierarchy: large primary stat + smaller supporting label
+center_pct = (
+    alt.Chart(pd.DataFrame({"label": ["100%"]}))
+    .mark_text(fontSize=28, fontWeight="bold", align="center", baseline="middle", color=INK, dy=-16)
+    .encode(text="label:N")
+)
+center_sub = (
+    alt.Chart(pd.DataFrame({"label": ["10 Holdings"]}))
+    .mark_text(fontSize=14, fontWeight="normal", align="center", baseline="middle", color=INK_SOFT, dy=14)
     .encode(text="label:N")
 )
 
@@ -125,22 +137,23 @@ title_str = "pie-portfolio-interactive · python · altair · anyplot.ai"
 subtitle_str = "Click outer ring to drill into category holdings · click again to reset"
 
 chart = (
-    alt.layer(outer_ring, inner_ring, center)
+    alt.layer(outer_ring, inner_ring, center_pct, center_sub)
     .properties(
-        width=400,
-        height=420,
+        width=366,
+        height=406,
         background=PAGE_BG,
         title=alt.Title(
             title_str,
             fontSize=16,
             subtitle=subtitle_str,
-            subtitleFontSize=11,
+            subtitleFontSize=12,
             anchor="middle",
             color=INK,
             subtitleColor=INK_SOFT,
         ),
     )
     .configure_view(stroke=None, fill=PAGE_BG)
+    .configure_legend(padding=8, cornerRadius=4, symbolStrokeWidth=0)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.15, labelColor=INK_SOFT, titleColor=INK
     )
