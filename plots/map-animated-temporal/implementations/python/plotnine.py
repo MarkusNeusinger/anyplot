@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-27
@@ -16,6 +16,7 @@ import pandas as pd
 from plotnine import (
     aes,
     coord_fixed,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -40,7 +41,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Data - Simulated earthquake aftershock sequence across California region
 np.random.seed(42)
 
-n_timesteps = 6
+n_timesteps = 12
 timestamps = pd.date_range("2024-03-01", periods=n_timesteps, freq="D")
 
 california_coast = pd.DataFrame(
@@ -103,15 +104,17 @@ california_coast = pd.DataFrame(
 )
 
 epicenter_lat, epicenter_lon = 36.0, -118.5
+epicenter_df = pd.DataFrame({"lon": [epicenter_lon], "lat": [epicenter_lat]})
+
 data_rows = []
 
 for i, ts in enumerate(timestamps):
     n_points = int(30 + 20 * np.sin(np.pi * i / (n_timesteps - 1)))
-    spread = 0.5 + i * 0.3
+    spread = 0.5 + i * 0.15
     for _ in range(n_points):
         lat = epicenter_lat + np.random.normal(0, spread)
         lon = epicenter_lon + np.random.normal(0, spread * 1.2)
-        magnitude = max(1.0, 5.5 - i * 0.3 + np.random.exponential(0.8))
+        magnitude = max(1.0, 5.5 - i * 0.15 + np.random.exponential(0.8))
         data_rows.append(
             {
                 "lat": lat,
@@ -136,13 +139,14 @@ title_fontsize = max(8, round(12 * 67 / n)) if n > 67 else 12
 plot = (
     ggplot(df, aes(x="lon", y="lat"))
     + geom_path(data=california_coast, mapping=aes(x="lon", y="lat"), color=INK_MUTED, size=0.6, inherit_aes=False)
-    + geom_point(aes(color="magnitude"), size=3.0, alpha=0.75)
-    + facet_wrap("~day", ncol=3)
+    + geom_point(aes(color="magnitude"), size=2.5, alpha=0.75)
+    + geom_point(data=epicenter_df, mapping=aes(x="lon", y="lat"), color=INK, shape="*", size=5, inherit_aes=False)
+    + facet_wrap("~day", ncol=4)
     + scale_color_gradient(low="#009E73", high="#4467A3", name="Magnitude")
     + coord_fixed(ratio=1.0)
     + labs(
         title=title,
-        subtitle="Spatial spread of aftershocks over 6 days following M5.5 main event",
+        subtitle="Spatial spread of aftershocks over 12 days following M5.5 main event (★ = epicenter)",
         x="Longitude (°)",
         y="Latitude (°)",
     )
@@ -153,10 +157,11 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
-        axis_title=element_text(color=INK, size=8),
-        axis_text=element_text(color=INK_SOFT, size=6),
-        strip_text=element_text(color=INK, size=7, weight="bold"),
+        panel_border=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
+        strip_text=element_text(color=INK, size=6, weight="bold"),
         plot_title=element_text(color=INK, size=title_fontsize, weight="bold"),
         plot_subtitle=element_text(color=INK_SOFT, size=7),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
