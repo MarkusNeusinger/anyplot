@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-27
@@ -15,8 +15,10 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
+    geom_area,
     geom_line,
     geom_point,
+    geom_rect,
     geom_segment,
     geom_text,
     ggplot,
@@ -27,6 +29,7 @@ from lets_plot import (
     scale_color_manual,
     scale_shape_manual,
     scale_x_datetime,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -78,10 +81,19 @@ for event_date in df_events["date"]:
 df_events["price"] = event_prices
 df_events["date_matched"] = event_dates_matched
 
-# Three-tier staggered flag heights with wider spacing to reduce label overlap
+# Three-tier staggered flag heights — wider spacing reduces Jan/Feb crowding
 price_range = close_prices.max() - close_prices.min()
-tier_offsets = [price_range * 0.15, price_range * 0.29, price_range * 0.43]
+tier_offsets = [price_range * 0.18, price_range * 0.36, price_range * 0.54]
 df_events["flag_y"] = [p + tier_offsets[i % 3] for i, p in enumerate(event_prices)]
+
+# Y axis limits: give 10% headroom above highest flag and 5% below price floor
+y_min = close_prices.min() - price_range * 0.05
+y_max = df_events["flag_y"].max() + price_range * 0.12
+
+# Shaded band for Q2 Miss period — connects the earnings event to the price drop
+df_q2_band = pd.DataFrame(
+    {"xmin": [pd.Timestamp("2024-06-25")], "xmax": [pd.Timestamp("2024-08-10")], "ymin": [y_min], "ymax": [y_max]}
+)
 
 # Plot
 title = "stock-event-flags · python · letsplot · anyplot.ai"
@@ -111,11 +123,20 @@ anyplot_theme = theme(
 
 plot = (
     ggplot()
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        data=df_q2_band,
+        fill="#AE3030",
+        alpha=0.07,
+        color="#AE3030",
+        size=0,
+    )
+    + geom_area(aes(x="date", y="close"), data=df_price, fill=INK_SOFT, alpha=0.12)
     + geom_line(
         aes(x="date", y="close"),
         data=df_price,
         color=INK_SOFT,
-        size=1.0,
+        size=1.3,
         tooltips=layer_tooltips().line("@date").line("Price: $@close"),
     )
     + geom_segment(
@@ -136,6 +157,7 @@ plot = (
     + scale_color_manual(values=event_color_map, name="Event Type")
     + scale_shape_manual(values=event_shape_map, name="Event Type")
     + scale_x_datetime(format="%b %Y")
+    + scale_y_continuous(limits=[y_min, y_max])
     + labs(x="Date", y="Stock Price ($)", title=title)
     + theme_minimal()
     + anyplot_theme
