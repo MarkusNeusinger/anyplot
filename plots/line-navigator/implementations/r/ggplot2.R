@@ -4,8 +4,6 @@
 #' Quality: 86/100 | Created: 2026-05-27
 
 library(ggplot2)
-library(dplyr)
-library(scales)
 library(ragg)
 library(gridExtra)
 
@@ -22,7 +20,8 @@ ANYPLOT_PALETTE <- c(
   "#009E73", "#C475FD", "#4467A3", "#BD8233",
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
 )
-LINE_COLOR <- ANYPLOT_PALETTE[1]
+LINE_COLOR  <- ANYPLOT_PALETTE[1]
+SEL_ALPHA   <- if (THEME == "light") 0.22 else 0.38
 
 # --- Data -------------------------------------------------------------------
 # Daily temperature sensor over 2 years (730 data points)
@@ -43,7 +42,7 @@ df_main   <- df[df$date >= sel_start & df$date <= sel_end, ]
 # --- Title ------------------------------------------------------------------
 TITLE      <- "line-navigator · r · ggplot2 · anyplot.ai"
 title_len  <- nchar(TITLE)
-title_size <- max(8, round(12 * 67 / title_len))
+title_size <- min(12, max(8, round(12 * 67 / title_len)))
 
 # --- Shared theme -----------------------------------------------------------
 base_theme <- theme_minimal(base_size = 8) +
@@ -85,7 +84,8 @@ p_main <- ggplot(df_main, aes(x = date, y = temperature)) +
   ) +
   base_theme +
   theme(
-    axis.text.x = element_text(angle = 30, hjust = 1, size = 7)
+    panel.grid.major.x = element_blank(),
+    axis.text.x        = element_text(angle = 30, hjust = 1, size = 8)
   )
 
 # --- Navigator: full history with selection window highlighted --------------
@@ -94,7 +94,7 @@ p_nav <- ggplot(df, aes(x = date, y = temperature)) +
     "rect",
     xmin = sel_start, xmax = sel_end,
     ymin = -Inf,      ymax = Inf,
-    fill  = LINE_COLOR, alpha = 0.22
+    fill  = LINE_COLOR, alpha = SEL_ALPHA
   ) +
   geom_line(color = LINE_COLOR, linewidth = 0.45, alpha = 0.75) +
   scale_x_date(
