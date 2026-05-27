@@ -60,8 +60,8 @@ ax = Axis(
 )
 hidedecorations!(ax)
 hidespines!(ax)
-xlims!(ax, -1.58, 1.58)
-ylims!(ax, -1.58, 1.58)
+xlims!(ax, -1.42, 1.42)
+ylims!(ax, -1.42, 1.42)
 
 # Donut slices and percentage labels
 for i in 1:length(categories)
@@ -74,11 +74,15 @@ for i in 1:length(categories)
           strokecolor = PAGE_BG)
 
     mid_θ = (cum_angles[i] + cum_angles[i + 1]) / 2
+    abs_val = Int(round(weights[i]))   # $1M per percentage point of $100M total
+    label_text = string(abs_val) * "%\n\$" * string(abs_val) * "M"
+    # Slightly larger label for the dominant slice to create focal-point emphasis
+    label_size = i == 1 ? 17 : 15
     text!(ax, cos(mid_θ) * r_label, sin(mid_θ) * r_label;
-          text    = string(Int(round(weights[i]))) * "%",
-          fontsize = 16,
-          color   = INK,
-          align   = (:center, :center))
+          text     = label_text,
+          fontsize  = label_size,
+          color    = INK,
+          align    = (:center, :center))
 end
 
 # Center labels in the donut hole
@@ -95,7 +99,7 @@ text!(ax, 0.0, -0.10;
 
 # Horizontal legend below the chart
 legend_entries = [PolyElement(color = ANYPLOT_PALETTE[i], strokewidth = 0) for i in 1:length(categories)]
-legend_labels  = [categories[i] * "  " * string(Int(round(weights[i]))) * "%" for i in 1:length(categories)]
+legend_labels  = [categories[i] * "  " * string(Int(round(weights[i]))) * "%  \$" * string(Int(round(weights[i]))) * "M" for i in 1:length(categories)]
 
 Legend(
     fig[2, 1], legend_entries, legend_labels;
