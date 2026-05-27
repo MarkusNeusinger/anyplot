@@ -1,7 +1,7 @@
 # anyplot.ai
 # map-animated-temporal: Animated Map over Time
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-05-27
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 83/100 | Created: 2026-05-27
 
 using CairoMakie
 using Colors
