@@ -1,46 +1,63 @@
-""" pyplots.ai
+""" anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-27
 """
+
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Change to script directory for consistent file saving
+script_dir = Path(__file__).parent.absolute()
+os.chdir(script_dir)
+
+# Remove current directory from sys.path to avoid shadowing the bokeh package
+sys.path = [p for p in sys.path if p != str(script_dir) and p != ""]
+if __name__ in sys.modules:
+    del sys.modules[__name__]
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.layouts import column, row
 from bokeh.models import Button, ColumnDataSource, CustomJS, HoverTool, Label, Slider
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated earthquake aftershock sequence over 20 days
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # anyplot palette position 1 — always first series
+EPICENTER_COLOR = "#AE3030"  # matte red — semantic anchor for hazard
+
+# Data — earthquake aftershock sequence, Japan region, 20-day simulation
 np.random.seed(42)
 
-# Create epicenter and spreading aftershocks
 n_days = 20
 points_per_day = 25
-total_points = n_days * points_per_day
-
-# Main earthquake location (simulated Pacific region)
 epicenter_lat = 35.0
 epicenter_lon = 140.0
 
-timestamps = []
-latitudes = []
-longitudes = []
-magnitudes = []
+timestamps, latitudes, longitudes, magnitudes = [], [], [], []
 
 for day in range(n_days):
-    # Aftershocks spread outward over time with decreasing magnitude
-    spread = 0.5 + day * 0.15  # Increasing spread radius
-    base_magnitude = 5.0 - day * 0.15  # Decreasing average magnitude
-
+    spread = 0.5 + day * 0.15
+    base_mag = 5.0 - day * 0.15
     for _ in range(points_per_day):
         angle = np.random.uniform(0, 2 * np.pi)
-        distance = np.random.exponential(spread)
-        lat = epicenter_lat + distance * np.sin(angle)
-        lon = epicenter_lon + distance * np.cos(angle)
-        mag = max(2.0, base_magnitude + np.random.normal(0, 0.5))
-
+        dist = np.random.exponential(spread)
+        lat = epicenter_lat + dist * np.sin(angle)
+        lon = epicenter_lon + dist * np.cos(angle)
+        mag = max(2.0, base_mag + np.random.normal(0, 0.5))
         timestamps.append(day)
         latitudes.append(lat)
         longitudes.append(lon)
@@ -48,161 +65,204 @@ for day in range(n_days):
 
 df = pd.DataFrame({"day": timestamps, "lat": latitudes, "lon": longitudes, "magnitude": magnitudes})
 
-# Create sources for each day
-all_sources = {}
+# Cumulative frames for JS animation
+all_frames = {}
 for day in range(n_days):
-    day_data = df[df["day"] <= day]  # Cumulative: show all points up to this day
-    all_sources[day] = {
+    day_data = df[df["day"] <= day]
+    all_frames[day] = {
         "lat": day_data["lat"].tolist(),
         "lon": day_data["lon"].tolist(),
         "magnitude": day_data["magnitude"].tolist(),
-        "size": (day_data["magnitude"] * 4).tolist(),  # Size based on magnitude
-        "alpha": [0.3 + 0.7 * (1 - (day - d) / n_days) for d in day_data["day"]],  # Fade older
+        "size": (day_data["magnitude"] * 4).tolist(),
+        "alpha": [0.35 + 0.65 * (1.0 - (day - d) / n_days) for d in day_data["day"]],
     }
+
+# Title with scaled fontsize
+title_str = "Earthquake Aftershocks · map-animated-temporal · python · bokeh · anyplot.ai"
+n_chars = len(title_str)
+title_pt = max(34, round(50 * 67 / n_chars)) if n_chars > 67 else 50
+title_fontsize = f"{title_pt}pt"
 
 # Initial data source (day 0)
 source = ColumnDataSource(
     data={
-        "lat": all_sources[0]["lat"],
-        "lon": all_sources[0]["lon"],
-        "magnitude": all_sources[0]["magnitude"],
-        "size": all_sources[0]["size"],
-        "alpha": all_sources[0]["alpha"],
+        "lat": all_frames[0]["lat"],
+        "lon": all_frames[0]["lon"],
+        "magnitude": all_frames[0]["magnitude"],
+        "size": all_frames[0]["size"],
+        "alpha": all_frames[0]["alpha"],
     }
 )
+all_data_source = ColumnDataSource(data={"frames": [all_frames]})
 
-# Store all data in a separate source for JS access
-all_data_source = ColumnDataSource(data={"all_sources": [all_sources]})
-
-# Create figure with geographic bounds
+# Figure — 3200×1800 landscape canvas
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     x_range=(130, 150),
     y_range=(28, 42),
-    x_axis_label="Longitude",
-    y_axis_label="Latitude",
-    title="Earthquake Aftershock Sequence · map-animated-temporal · bokeh · pyplots.ai",
-    tools="pan,wheel_zoom,box_zoom,reset",
+    x_axis_label="Longitude (°E)",
+    y_axis_label="Latitude (°N)",
+    title=title_str,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Style the figure for large canvas
-p.title.text_font_size = "32pt"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+# Font sizing
+p.title.text_font_size = title_fontsize
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 
-# Draw simple coastline approximation (Japan region)
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+p.title.text_color = INK
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
+
+# Coastline approximation (Japan region)
 coast_lon = [130, 131, 132, 134, 135, 136, 137, 139, 140, 141, 142, 144, 146, 148, 150]
 coast_lat = [33, 34, 34.5, 35, 35.5, 36, 37, 38, 40, 41, 42, 42, 41, 40, 39]
-p.line(coast_lon, coast_lat, line_width=3, line_color="#888888", alpha=0.5)
+p.line(coast_lon, coast_lat, line_width=4, line_color=INK_SOFT, alpha=0.45)
 
-# Draw grid lines for geographic reference
-for lat in range(28, 43, 2):
-    p.line([130, 150], [lat, lat], line_width=1, line_color="#CCCCCC", alpha=0.3)
-for lon in range(130, 151, 2):
-    p.line([lon, lon], [28, 42], line_width=1, line_color="#CCCCCC", alpha=0.3)
-
-# Mark epicenter - larger star marker for better visibility in legend
-p.scatter(
-    [epicenter_lon],
-    [epicenter_lat],
-    size=40,
-    color="#FFD43B",
-    marker="star",
-    line_color="#B8860B",
-    line_width=2,
-    legend_label="Epicenter",
-)
-
-# Plot aftershocks
+# Aftershocks (drawn first so epicenter renders on top)
 aftershocks = p.scatter(
     x="lon",
     y="lat",
     size="size",
-    fill_color="#306998",
+    fill_color=BRAND,
     fill_alpha="alpha",
-    line_color="#1a3a5c",
-    line_width=2,
+    line_color=PAGE_BG,
+    line_width=1,
     source=source,
     legend_label="Aftershocks",
 )
 
-# Add hover tool
-hover = HoverTool(tooltips=[("Location", "(@lon, @lat)"), ("Magnitude", "@magnitude{0.1}")], renderers=[aftershocks])
+# Epicenter marker (drawn on top of aftershocks)
+p.scatter(
+    [epicenter_lon],
+    [epicenter_lat],
+    size=55,
+    color=EPICENTER_COLOR,
+    marker="star",
+    line_color=INK,
+    line_width=2,
+    legend_label="Epicenter (M7.2)",
+)
+
+hover = HoverTool(
+    tooltips=[("Position", "(@lon{0.2f}°E, @lat{0.2f}°N)"), ("Magnitude", "@magnitude{0.1f}")], renderers=[aftershocks]
+)
 p.add_tools(hover)
 
-# Time label
-time_label = Label(x=131, y=41, text="Day: 0", text_font_size="28pt", text_color="#306998", text_font_style="bold")
+# Day label overlay
+time_label = Label(
+    x=131,
+    y=40.2,
+    text="Day 0",
+    text_font_size="38pt",
+    text_color=INK,
+    text_font_style="bold",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.85,
+)
 p.add_layout(time_label)
 
-# Legend styling - position near the data area for better integration
-p.legend.location = "top_right"
-p.legend.label_text_font_size = "20pt"
-p.legend.background_fill_alpha = 0.9
-p.legend.glyph_height = 35
-p.legend.glyph_width = 35
-p.legend.padding = 15
-p.legend.spacing = 10
-p.legend.margin = 15
+# Legend
+p.legend.location = "bottom_right"
+p.legend.label_text_font_size = "34pt"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK_SOFT
+p.legend.glyph_height = 40
+p.legend.glyph_width = 40
+p.legend.padding = 20
+p.legend.spacing = 15
+p.legend.margin = 20
 
-# Create slider
-slider = Slider(start=0, end=n_days - 1, value=0, step=1, title="Day", width=800)
+# Slider and play button
+slider = Slider(start=0, end=n_days - 1, value=0, step=1, title="Day", width=1000)
+play_button = Button(label="▶ Play", button_type="success", width=200)
 
-# Play button
-play_button = Button(label="▶ Play", button_type="success", width=150)
-
-# JavaScript callback for slider
 slider_callback = CustomJS(
     args={"source": source, "all_data": all_data_source, "time_label": time_label, "n_days": n_days},
     code="""
     const day = cb_obj.value;
-    const all_sources = all_data.data['all_sources'][0];
-    const day_data = all_sources[day];
+    const frames = all_data.data['frames'][0];
+    const frame = frames[day];
 
-    source.data['lon'] = day_data['lon'];
-    source.data['lat'] = day_data['lat'];
-    source.data['magnitude'] = day_data['magnitude'];
-    source.data['size'] = day_data['size'];
-    source.data['alpha'] = day_data['alpha'];
+    source.data['lon'] = frame['lon'];
+    source.data['lat'] = frame['lat'];
+    source.data['magnitude'] = frame['magnitude'];
+    source.data['size'] = frame['size'];
+    source.data['alpha'] = frame['alpha'];
     source.change.emit();
 
-    time_label.text = 'Day: ' + day;
-""",
+    time_label.text = 'Day ' + day;
+    """,
 )
 slider.js_on_change("value", slider_callback)
 
-# JavaScript callback for play button (animation)
 play_callback = CustomJS(
     args={"slider": slider, "button": play_button, "n_days": n_days},
     code="""
     if (button.label.includes('Play')) {
         button.label = '⏸ Pause';
         button.button_type = 'warning';
-
         window.animation_interval = setInterval(function() {
-            let current = slider.value;
-            if (current < n_days - 1) {
-                slider.value = current + 1;
-            } else {
-                slider.value = 0;
-            }
+            const cur = slider.value;
+            slider.value = cur < n_days - 1 ? cur + 1 : 0;
         }, 500);
     } else {
         button.label = '▶ Play';
         button.button_type = 'success';
         clearInterval(window.animation_interval);
     }
-""",
+    """,
 )
 play_button.js_on_click(play_callback)
 
-# Layout
 controls = row(play_button, slider)
 layout = column(p, controls)
 
-# Save outputs
-output_file("plot.html", title="Animated Temporal Map")
+# Save interactive HTML — figure (1800 px) is at the top; controls sit below the fold
+output_file(f"plot-{THEME}.html", title="Earthquake Aftershock Animation")
 save(layout)
-export_png(p, filename="plot.png")
+
+# Screenshot: CDP override locks viewport to exact figure dimensions,
+# so save_screenshot() captures only the 3200×1800 figure area
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
