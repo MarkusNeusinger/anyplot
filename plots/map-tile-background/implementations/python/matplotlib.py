@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-27
@@ -26,20 +26,36 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Continuous colormap (imprint_seq: brand green → blue) for visitor density
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Data: Rome tourist attractions with daily visitor counts
+# Data: Rome tourist attractions with daily visitor counts (realistic scale)
 locations = {
-    "Colosseum": (41.8902, 12.4922, 7200),
-    "Vatican Museums": (41.9065, 12.4536, 6800),
-    "Trevi Fountain": (41.9009, 12.4833, 5500),
-    "Pantheon": (41.8986, 12.4769, 4800),
-    "Roman Forum": (41.8925, 12.4853, 4200),
-    "St. Peter's Basilica": (41.9022, 12.4539, 6500),
-    "Spanish Steps": (41.9060, 12.4828, 3800),
-    "Piazza Navona": (41.8992, 12.4730, 3200),
-    "Castel Sant'Angelo": (41.9031, 12.4663, 2800),
-    "Villa Borghese": (41.9137, 12.4855, 2400),
-    "Trastevere": (41.8867, 12.4692, 2100),
-    "Campo de' Fiori": (41.8956, 12.4722, 1800),
+    "Colosseum": (41.8902, 12.4922, 21000),
+    "Vatican Museums": (41.9065, 12.4536, 20500),
+    "St. Peter's Basilica": (41.9022, 12.4539, 19500),
+    "Trevi Fountain": (41.9009, 12.4833, 18000),
+    "Pantheon": (41.8986, 12.4769, 15000),
+    "Roman Forum": (41.8925, 12.4853, 13000),
+    "Spanish Steps": (41.9060, 12.4828, 12000),
+    "Piazza Navona": (41.8992, 12.4730, 10000),
+    "Castel Sant'Angelo": (41.9031, 12.4663, 8500),
+    "Villa Borghese": (41.9137, 12.4855, 7000),
+    "Trastevere": (41.8867, 12.4692, 6500),
+    "Campo de' Fiori": (41.8956, 12.4722, 5500),
+}
+
+# Per-attraction label offsets (directional spread to reduce crowding)
+label_offsets = {
+    "Colosseum": (8, -8),
+    "Vatican Museums": (-5, 8),
+    "St. Peter's Basilica": (-5, -12),
+    "Trevi Fountain": (8, 5),
+    "Pantheon": (8, -10),
+    "Roman Forum": (8, -8),
+    "Spanish Steps": (8, 5),
+    "Piazza Navona": (-5, 8),
+    "Castel Sant'Angelo": (8, 8),
+    "Villa Borghese": (8, 4),
+    "Trastevere": (-5, -10),
+    "Campo de' Fiori": (-5, 8),
 }
 
 names = list(locations.keys())
@@ -112,14 +128,15 @@ scatter = ax.scatter(
     zorder=5,
 )
 
-# Attraction name labels
+# Attraction name labels with per-attraction directional offsets
 for name, lon, lat in zip(names, lons, lats, strict=False):
+    dx, dy = label_offsets.get(name, (6, 4))
     ax.annotate(
         name,
         (lon, lat),
-        xytext=(5, 4),
+        xytext=(dx, dy),
         textcoords="offset points",
-        fontsize=5,
+        fontsize=6,
         color=INK,
         bbox={"boxstyle": "round,pad=0.15", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.75},
         zorder=8,
