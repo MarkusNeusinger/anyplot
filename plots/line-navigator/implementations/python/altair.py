@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-27
@@ -26,6 +26,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
 HIGHLIGHT = "#DDCC77"  # amber — selection window indicator
 
@@ -90,7 +91,7 @@ range_start_label = (
     alt.Chart(df)
     .transform_filter(brush)
     .transform_aggregate(min_date="min(date)")
-    .mark_text(align="left", baseline="top", fontSize=9, color=INK_SOFT)
+    .mark_text(align="left", baseline="top", fontSize=11, color=INK_SOFT)
     .encode(text=alt.Text("min_date:T", format="%Y-%m-%d"), x=alt.value(4), y=alt.value(2))
 )
 
@@ -98,7 +99,7 @@ range_end_label = (
     alt.Chart(df)
     .transform_filter(brush)
     .transform_aggregate(max_date="max(date)")
-    .mark_text(align="right", baseline="top", fontSize=9, color=INK_SOFT)
+    .mark_text(align="right", baseline="top", fontSize=11, color=INK_SOFT)
     .encode(text=alt.Text("max_date:T", format="%Y-%m-%d"), x=alt.value(616), y=alt.value(2))
 )
 
@@ -114,8 +115,8 @@ combined = (
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
-        gridColor=INK,
-        gridOpacity=0.12,
+        gridColor=RULE,
+        gridOpacity=1.0,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         labelColor=INK_SOFT,
