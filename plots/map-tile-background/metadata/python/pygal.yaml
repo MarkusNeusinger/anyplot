@@ -1,153 +1,198 @@
 library: pygal
+language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:46:06Z'
-updated: '2026-01-20T23:08:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21189771645
+updated: '2026-05-27T15:45:35Z'
+generated_by: claude-sonnet
+workflow_run: 26520515097
 issue: 3756
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/pygal/plot.html
-quality_score: 55
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Clean, well-structured code with proper KISS pattern
-  - Good use of pygal Custom Style to simulate map-like appearance
-  - Colorblind-accessible palette (orange, teal, purple)
-  - Meaningful data grouping by visitor count ranges
-  - Proper canvas sizing (4800x2700) with appropriate margins
-  - Good axis labels with degree notation
+  - Theme adaptation is excellent — both light (#FAF8F1 page bg + warm LAND_BG) and
+    dark (#1A1A17) renders are clearly readable with fully theme-adaptive chrome
+  - 'Semantic color exception for temperature correctly applied: cool→blue (#4467A3),
+    mild→green (#009E73), warm→red (#AE3030) — a reader would immediately expect these
+    mappings'
+  - Redundant size encoding (cooler=16px, mild=20px, warm=24px dots) reinforces the
+    color gradient and aids CVD accessibility
+  - Interactive HTML export generated alongside PNG — pygal's key differentiator from
+    static libraries, enabling tooltip hover with city name and temperature
+  - Title font size correctly scaled with the length formula, keeping the mandated
+    title within the plot without overflow
+  - 'Data is realistic and accurate: real US cities with plausible annual mean temperatures
+    (Seattle 11°C, Miami 27°C, Phoenix 28.5°C)'
   weaknesses:
-  - 'Fundamental limitation: Pygal cannot render actual tile-based map backgrounds
-    - the spec requires OpenStreetMap/Stamen/satellite tiles which pygal has no capability
-    to display'
-  - This implementation is essentially a scatter plot with map-inspired colors, not
-    a true tile map
-  image_description: 'The plot displays a scatter chart on a 4800×2700 canvas with
-    an OSM-inspired color scheme: light blue (#aad3df) background representing ocean
-    and beige (#f2efe9) plot area representing land. Fifteen European landmark locations
-    are plotted using longitude (X-axis, -3° to 26°) and latitude (Y-axis, 35° to
-    55°). Data points are grouped into three color-coded series by visitor count:
-    orange dots for 1,300K-2,999K visitors/year, teal/green dots for 3,000K-5,999K
-    visitors/year, and purple dots for 6,000K-9,600K visitors/year. Dot sizes vary
-    by category (16, 22, 28 respectively). The title "map-tile-background · pygal
-    · pyplots.ai" appears at the top. Axis labels include units. A legend at the bottom
-    identifies the three visitor categories. Subtle beige/tan grid lines are visible.
-    The plot uses good canvas utilization with proper margins.'
+  - 'plot_background uses custom #eae6df (LAND_BG) for the light render instead of
+    the mandated #FAF8F1 — the map-metaphor intent is clear but deviates from the
+    VQ-07 palette compliance rule for plot backgrounds'
+  - No actual tile background layer — spec requires OpenStreetMap/Stamen/CartoDB tile
+    imagery; pygal is an SVG chart library with no tile-map capability, so the implementation
+    is a coordinate scatter only
+  - Tile provider attribution omitted — spec requires attribution for tile provider
+    terms of use; while no actual tiles are loaded, a note explaining the library
+    limitation would improve transparency
+  - DQ-01 feature coverage limited by the absence of tile layers, zoom-level auto-fit,
+    and clustering for dense points — the visualization demonstrates geographic scatter
+    but not the full tile-map interaction model the spec describes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Outer page area is warm off-white #FAF8F1; plot area uses LAND_BG #eae6df (slightly darker warm beige simulating geographic land surface). NOT pure white.
+      Chrome: Title "map-tile-background · python · pygal · anyplot.ai" clearly visible in dark ink at top, spanning ~70% of plot width. X-axis label "Longitude (°)" and Y-axis label "Latitude (°)" readable in dark text. Tick labels (-128° to -68° on X, 24° to 49° on Y) are readable in muted dark tone. Legend at bottom shows three categories with clear dark text.
+      Data: 25 scatter dots grouped in three categories — blue (#4467A3) for Cool (<12°C), green (#009E73) for Mild (12–22°C), red (#AE3030) for Warm (>22°C). Dot sizes vary by category (16/20/24px). Geographic clustering clearly shows warm cities in the south (red, Florida/Texas coast) and cool cities in the north (blue, Pacific Northwest/Upper Midwest).
+      Legibility verdict: PASS — all text clearly readable against the warm light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 throughout (page bg and plot bg are identical in dark mode as LAND_BG=#1A1A17=PAGE_BG). NOT pure black.
+      Chrome: Title clearly visible in light (#F0EFE8) text. Axis labels "Longitude (°)" and "Latitude (°)" readable in light text. Tick labels readable in muted light tone. Legend at bottom readable with light text. No dark-on-dark failures detected.
+      Data: Blue/green/red dot colors are identical to the light render — only chrome (background, text, grid) flipped to dark theme. The three temperature categories remain clearly distinguishable.
+      Legibility verdict: PASS — all text clearly readable against the near-black background. Data colors unchanged from light render as required.
   criteria_checklist:
     visual_quality:
-      score: 30
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable; tick labels could be slightly
-          larger
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set via Style object; title scaled with
+          length formula; all text readable in both themes at full and mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers visible with appropriate sizing for data density
+        comment: 25 data points with varying dot sizes (16/20/24px) well-visible against
+          both backgrounds
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Orange, teal, purple palette is colorblind-safe
+        comment: All three temperature colors from anyplot palette; size redundant
+          encoding aids CVD accessibility
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization but some empty space in corners
+        comment: 3200x1800 canvas, good margins, plot occupies 60-70% of canvas area,
+          legend at bottom cleanly placed
       - id: VQ-06
-        name: Axis Labels
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Labels present but East/West notation is confusing for mostly-Eastern
-          data
+        passed: true
+        comment: Longitude (°) and Latitude (°) with degree units; correct mandated
+          title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Legend text is small relative to canvas size
+        comment: 'Data colors use anyplot palette with valid semantic exception (temp:
+          blue/green/red). BUT light plot_background is #eae6df instead of mandated
+          #FAF8F1 — minor deviation for geographic map metaphor'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: semantic temperature color exception shows design
+          thinking; size gradient reinforces color story; map-inspired LAND_BG adds
+          geographic context'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid guides, generous margins, legend at bottom for clean
+          layout; above default refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Temperature gradient story clearly visible: southern cities cluster
+          in red/warm, northern in blue/cool; size+color redundant encoding creates
+          hierarchy'
     spec_compliance:
-      score: 10
-      max: 25
+      score: 11
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
-        max: 8
+        score: 3
+        max: 5
         passed: false
-        comment: 'CRITICAL: Spec requires tile-based map backgrounds (OpenStreetMap,
-          Stamen, satellite). Pygal cannot render actual tiles - this is a color-inspired
-          simulation only'
+        comment: Geographic coordinate scatter is correct adaptation for pygal; no
+          actual tile background possible (library limitation) — best achievable analog
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lon/Lat correctly mapped to X/Y axes
-      - id: SC-03
         name: Required Features
-        score: 0
-        max: 5
+        score: 2
+        max: 4
         passed: false
-        comment: 'Missing: actual tile backgrounds, proper attribution for tile providers'
-      - id: SC-04
-        name: Data Range
+        comment: 'Data markers with geographic coordinates: YES; Axis auto-fit to
+          data bounds: YES; Tile providers: NO (library cannot); Attribution: NO;
+          Interactive HTML: YES (pygal native)'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Longitude, Y=Latitude correctly mapped; all 25 stations visible
+          with temperature encoding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies visitor count ranges
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: spec-id · library · pyplots.ai'
+        comment: 'Title: ''map-tile-background · python · pygal · anyplot.ai'' matches
+          required format. Legend shows Cool/Mild/Warm categories with temperature
+          ranges'
     data_quality:
-      score: 15
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Shows variety of visitor counts across Europe
+        comment: Shows geographic distribution across US with temperature variation;
+          lacks tile-map exploration, clustering, zoom levels due to library constraints
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
+        max: 5
         passed: true
-        comment: European landmarks with visitor counts is plausible
+        comment: Real US cities (Seattle, Miami, Phoenix, etc.) with accurate annual
+          mean temperatures; non-controversial scientific data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Visitor counts in thousands per year are realistic
+        comment: Temperature values factually correct (Seattle 11°C, Miami 27°C, Phoenix
+          28.5°C, Boston 10°C); lat/lon coordinates accurate for named cities
     code_quality:
       score: 10
       max: 10
@@ -157,50 +202,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → chart → save'
+        comment: No functions or classes; project-standard dynamic import at top,
+          then theme tokens → data → chart config → data grouping → labels → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: Fully deterministic hardcoded data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: importlib, os, sys all required for project-standard dynamic import
+          pattern
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current pygal API
+        comment: Clean data structure (list of dicts), simple categorization loop,
+          well-commented semantic exception rationale
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for interactive
+          pygal library
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY for scatter coordinates, Style object with all theme tokens,
+          per-series dots_size parameter, range/xrange axis bounds — idiomatic pygal
+          patterns
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY with custom Style, legend_at_bottom, explicit sizing
+        comment: Generates interactive HTML with hover tooltips showing city+temperature
+          (pygal's key differentiator from matplotlib/seaborn); per-series dots_size
+          varies by category; dict-format data points enable tooltip labels
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - html-export
   - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []

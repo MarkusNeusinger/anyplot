@@ -1,13 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 map-tile-background: Map with Tile Background
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-27
 """
+
+import os
+import sys
+
+
+# Work around filename shadowing the altair library
+sys.path.pop(0)
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data: European landmarks with visitor counts (millions annually)
 np.random.seed(42)
@@ -106,53 +124,52 @@ landmarks = {
 
 df = pd.DataFrame(landmarks)
 
-# Tile parameters
+# Tile grid: 7 wide × 4 tall gives 1.75:1 aspect ≈ 16:9 landscape
 zoom = 5
-tile_size = 256
+tx_min, tx_max = 14, 20  # 7 tiles wide (lon ≈ −22° to 56°)
+ty_min, ty_max = 9, 12  # 4 tiles tall (lat ≈ 32° to 62°)
 
-# Tile range for Europe at zoom 5 - tighter bounds to reduce unused ocean
-# Focus on Western/Central Europe where most landmarks are
-tx_min, tx_max = 14, 20  # 7 tiles wide (tighter western bound)
-ty_min, ty_max = 9, 13  # 5 tiles tall
+n_tiles_x = tx_max - tx_min + 1  # 7
+n_tiles_y = ty_max - ty_min + 1  # 4
 
-# Number of tiles
-n_tiles_x = tx_max - tx_min + 1  # 7 tiles
-n_tiles_y = ty_max - ty_min + 1  # 5 tiles
+# Inner view: 560×320; tile_disp = 80 each (square tiles — no Mercator distortion)
+chart_width = 560
+chart_height = 320
+tile_disp_w = chart_width / n_tiles_x  # 80.0
+tile_disp_h = chart_height / n_tiles_y  # 80.0
 
-# Chart dimensions - use aspect ratio matching tile grid
-chart_width = 1600
-chart_height = int(1600 * n_tiles_y / n_tiles_x)
-
-# Calculate tile display size
-tile_disp_w = chart_width / n_tiles_x
-tile_disp_h = chart_height / n_tiles_y
-
-# Web Mercator projection: convert lon/lat to tile pixel coordinates (inline)
-# lon_to_tile_x = (lon + 180) / 360 * (2**zoom)
-# lat_to_tile_y = (1 - log(tan(lat_rad) + 1/cos(lat_rad)) / pi) / 2 * (2**zoom)
-
-# Generate tile data - position at pixel coordinates within the chart
-tiles = []
-for tx in range(tx_min, tx_max + 1):
-    for ty in range(ty_min, ty_max + 1):
-        url = f"https://tile.openstreetmap.org/{zoom}/{tx}/{ty}.png"
-        x_pix = (tx - tx_min + 0.5) * tile_disp_w
-        y_pix = (ty - ty_min + 0.5) * tile_disp_h
-        tiles.append({"url": url, "x": x_pix, "y": y_pix})
-
-tiles_df = pd.DataFrame(tiles)
-
-# Convert landmark coordinates to pixel coordinates using inline Web Mercator projection
+# Web Mercator projection: lon/lat → pixel coords within the chart
 df["tile_x"] = (df["lon"] + 180) / 360 * (2**zoom)
 df["lat_rad"] = np.radians(df["lat"])
 df["tile_y"] = (1 - np.log(np.tan(df["lat_rad"]) + 1 / np.cos(df["lat_rad"])) / np.pi) / 2 * (2**zoom)
 df["x_pix"] = (df["tile_x"] - tx_min) * tile_disp_w
 df["y_pix"] = (df["tile_y"] - ty_min) * tile_disp_h
 
-# Filter data points that fall within the chart bounds
 df = df[(df["x_pix"] >= 0) & (df["x_pix"] <= chart_width) & (df["y_pix"] >= 0) & (df["y_pix"] <= chart_height)]
 
-# Tile background layer - using pixel coordinates
+# Tile provider: CartoDB Positron (light, muted) or CartoDB Dark Matter (dark)
+# Demonstrates multiple tile provider support per spec; muted basemap lets anyplot colors pop
+if THEME == "dark":
+    tile_base_url = "https://basemaps.cartocdn.com/dark_all"
+    tile_provider = "CartoDB Dark Matter"
+else:
+    tile_base_url = "https://basemaps.cartocdn.com/light_all"
+    tile_provider = "CartoDB Positron"
+
+# Build tile grid for mark_image
+tiles = []
+for tx in range(tx_min, tx_max + 1):
+    for ty in range(ty_min, ty_max + 1):
+        tiles.append(
+            {
+                "url": f"{tile_base_url}/{zoom}/{tx}/{ty}.png",
+                "x": (tx - tx_min + 0.5) * tile_disp_w,
+                "y": (ty - ty_min + 0.5) * tile_disp_h,
+            }
+        )
+tiles_df = pd.DataFrame(tiles)
+
+# Layer 1: CartoDB tile background (Positron in light, Dark Matter in dark)
 tile_layer = (
     alt.Chart(tiles_df)
     .mark_image(width=tile_disp_w, height=tile_disp_h)
@@ -163,16 +180,16 @@ tile_layer = (
     )
 )
 
-# Category colors (colorblind-safe palette using Python blue/yellow first)
+# Category → anyplot palette (canonical positions 1-5)
 category_colors = {
-    "Monument": "#306998",
-    "Historical": "#FFD43B",
-    "Museum": "#2CA02C",
-    "Religious": "#D62728",
-    "Street": "#9467BD",
+    "Monument": ANYPLOT_PALETTE[0],  # #009E73 green
+    "Historical": ANYPLOT_PALETTE[1],  # #C475FD lavender
+    "Museum": ANYPLOT_PALETTE[2],  # #4467A3 blue
+    "Religious": ANYPLOT_PALETTE[3],  # #BD8233 ochre
+    "Street": ANYPLOT_PALETTE[4],  # #AE3030 red
 }
 
-# Data points layer
+# Layer 2: landmark circles sized by visitors
 points_layer = (
     alt.Chart(df)
     .mark_circle(opacity=0.85, stroke="#FFFFFF", strokeWidth=2)
@@ -181,74 +198,91 @@ points_layer = (
         y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
         size=alt.Size(
             "visitors:Q",
-            scale=alt.Scale(domain=[0.5, 40], range=[250, 2500]),
+            scale=alt.Scale(domain=[0.5, 40], range=[80, 1200]),
             legend=alt.Legend(
-                title="Visitors (M/year)", titleFontSize=20, labelFontSize=18, orient="bottom-left", offset=30
+                title="Visitors (M/year)", titleFontSize=14, labelFontSize=12, orient="bottom-left", tickCount=4
             ),
         ),
         color=alt.Color(
             "category:N",
             scale=alt.Scale(domain=list(category_colors.keys()), range=list(category_colors.values())),
-            legend=alt.Legend(title="Category", titleFontSize=20, labelFontSize=18, orient="bottom-right", offset=30),
+            legend=alt.Legend(title="Category", titleFontSize=14, labelFontSize=12, orient="bottom-right"),
         ),
         tooltip=[
             alt.Tooltip("name:N", title="Landmark"),
             alt.Tooltip("visitors:Q", title="Visitors (M)", format=".1f"),
             alt.Tooltip("category:N", title="Category"),
-            alt.Tooltip("lat:Q", title="Latitude", format=".4f"),
-            alt.Tooltip("lon:Q", title="Longitude", format=".4f"),
         ],
     )
 )
 
-# Text labels for major landmarks (visitors > 6M) - reduced threshold to avoid overlap
-labels_df = df[df["visitors"] > 6].copy()
+# Layer 3: labels for top landmarks (≥10M threshold avoids cluster overlap)
+labels_df = df[df["visitors"] >= 10].copy()
 labels_layer = (
     alt.Chart(labels_df)
-    .mark_text(align="left", dx=18, dy=-8, fontSize=16, fontWeight="bold", color="#333333")
+    .mark_text(align="left", dx=14, dy=-10, fontSize=13, fontWeight="bold", color=INK)
     .encode(
-        x=alt.X("x_pix:Q", scale=alt.Scale(domain=[0, chart_width], nice=False)),
-        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False)),
+        x=alt.X("x_pix:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
+        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
         text="name:N",
     )
 )
 
-# OSM attribution (required by license)
+# Layer 4: tile provider attribution (required by CartoDB and OSM license)
 attribution_df = pd.DataFrame(
-    {"text": ["© OpenStreetMap contributors"], "x": [chart_width - 10], "y": [chart_height - 10]}
+    {"text": [f"© {tile_provider} | © OpenStreetMap contributors"], "x": [chart_width - 5], "y": [chart_height - 5]}
 )
-
 attribution_layer = (
     alt.Chart(attribution_df)
-    .mark_text(align="right", baseline="bottom", fontSize=14, color="#666666")
+    .mark_text(align="right", baseline="bottom", fontSize=10, color=INK_MUTED)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, chart_width], nice=False)),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False)),
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
         text="text:N",
     )
 )
 
-# Combine all layers
+title = "map-tile-background · python · altair · anyplot.ai"
+
 chart = (
     alt.layer(tile_layer, points_layer, labels_layer, attribution_layer)
     .properties(
         width=chart_width,
         height=chart_height,
+        background=PAGE_BG,
         title=alt.Title(
-            text="map-tile-background · altair · pyplots.ai",
+            text=title,
             subtitle="European Landmarks by Annual Visitors",
-            fontSize=28,
-            subtitleFontSize=20,
+            fontSize=16,
+            subtitleFontSize=12,
             anchor="middle",
-            color="#333333",
+            color=INK,
+            subtitleColor=INK_SOFT,
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(titleColor="#333333", labelColor="#555555", padding=20, cornerRadius=5)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=chart_width, continuousHeight=chart_height)
+    .configure_legend(
+        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=10, cornerRadius=4
+    )
+    .interactive()
 )
 
-# Save as PNG (scale 3x for high resolution)
-chart.save("plot.png", scale_factor=3.0)
+# PNG: scale 4.0 → inner 2240×1280; vl-convert adds title+legend padding
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Save interactive HTML version
-chart.save("plot.html")
+# Pad to exact 3200×1800 target (no crop — preserves title/axis labels)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# HTML: interactive zoom/pan via .interactive()
+chart.save(f"plot-{THEME}.html")
