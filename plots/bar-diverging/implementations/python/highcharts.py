@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 POSITIVE = "#009E73"  # bluish green (brand, position 1)
-NEGATIVE = "#D55E00"  # vermillion (position 2)
+NEGATIVE = "#AE3030"  # imprint red — negative
 
 # Data - Customer satisfaction survey results by department
 categories = [

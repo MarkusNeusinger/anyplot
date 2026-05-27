@@ -151,9 +151,9 @@ station_lookup = {s["id"]: s for s in stations}
 
 # Route type colors - Okabe-Ito palette: first series brand green, then orange, blue, purple
 route_colors = {
-    "EX": "#0072B2",  # Express - Okabe-Ito blue
-    "RE": "#D55E00",  # Regional - Okabe-Ito orange
-    "LC": "#CC79A7",  # Local - Okabe-Ito reddish purple
+    "EX": "#4467A3",  # Express - Okabe-Ito blue
+    "RE": "#C475FD",  # Regional - Okabe-Ito orange
+    "LC": "#BD8233",  # Local - Okabe-Ito reddish purple
 }
 
 # Build series data for routes
@@ -186,7 +186,7 @@ for route in routes:
     ty = target["y"] + perp_y
 
     route_prefix = route["route_id"].split()[0]
-    color = route_colors.get(route_prefix, "#E69F00")
+    color = route_colors.get(route_prefix, "#AE3030")
     label_text = f"{route['route_id']} | {route['departure_time']} → {route['arrival_time']}"
 
     route_series_list.append(
@@ -264,10 +264,10 @@ for route in routes:
     mid_y = (sy + ty) / 2
 
     route_prefix = route["route_id"].split()[0]
-    color = route_colors.get(route_prefix, "#E69F00")
+    color = route_colors.get(route_prefix, "#AE3030")
 
     # Determine text color based on background brightness
-    text_color = "#1A1A17" if color not in ["#0072B2"] else "#FFFDF6"
+    text_color = "#1A1A17" if color not in ["#4467A3"] else "#FFFDF6"
 
     label_text = f"{route['route_id']} | {route['departure_time']} → {route['arrival_time']}"
 
@@ -347,7 +347,7 @@ chart_options = {
         "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
     },
     "subtitle": {
-        "text": 'Regional Rail Network - 12 Stations, 19 Routes<br/><span style="font-size:20px;"><span style="color:#0072B2;">■</span> Express (EX) &nbsp;&nbsp;&nbsp; <span style="color:#D55E00;">■</span> Regional (RE) &nbsp;&nbsp;&nbsp; <span style="color:#CC79A7;">■</span> Local (LC)</span>',
+        "text": 'Regional Rail Network - 12 Stations, 19 Routes<br/><span style="font-size:20px;"><span style="color:#4467A3;">■</span> Express (EX) &nbsp;&nbsp;&nbsp; <span style="color:#C475FD;">■</span> Regional (RE) &nbsp;&nbsp;&nbsp; <span style="color:#BD8233;">■</span> Local (LC)</span>',
         "useHTML": True,
         "style": {"fontSize": "22px", "color": INK_SOFT},
     },

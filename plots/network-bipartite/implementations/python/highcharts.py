@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 COLOR_A = "#009E73"  # Students — Okabe-Ito position 1
-COLOR_B = "#0072B2"  # Courses — Okabe-Ito position 3
+COLOR_B = "#4467A3"  # Courses — Okabe-Ito position 3
 EDGE_COLOR = "rgba(74,74,68,0.22)" if THEME == "light" else "rgba(184,183,176,0.25)"
 
 # Data — student course enrollment network

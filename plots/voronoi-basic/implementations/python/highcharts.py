@@ -26,14 +26,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first color is always brand green
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
 ]
 
 # Data - Generate seed points for Voronoi diagram
@@ -142,7 +142,7 @@ for idx in range(n_points):
     # Close the polygon
     clipped.append(clipped[0])
 
-    color = OKABE_ITO[idx % len(OKABE_ITO)]
+    color = IMPRINT[idx % len(IMPRINT)]
 
     polygon_series.append(
         {

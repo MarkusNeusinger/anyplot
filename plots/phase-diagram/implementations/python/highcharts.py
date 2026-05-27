@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Damped harmonic oscillator: d²x/dt² + 2*gamma*dx/dt + omega²*x = 0
 np.random.seed(42)
@@ -116,7 +116,7 @@ chart.options.legend = {
     "padding": 15,
 }
 
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 chart.options.credits = {"enabled": False}
 
@@ -125,7 +125,7 @@ for i, (x, dx_dt) in enumerate(trajectories):
     series = ScatterSeries()
     series.data = [{"x": float(xi), "y": float(dxi)} for xi, dxi in zip(x, dx_dt, strict=False)]
     series.name = names[i]
-    series.color = OKABE_ITO[i]
+    series.color = IMPRINT[i]
     series.line_width = 2
     series.marker = {"radius": 4, "enabled": True}
     chart.add_series(series)

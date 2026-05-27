@@ -178,8 +178,8 @@ Highcharts.chart('container', {{
         max: 1,
         stops: [
             [0, '{BRAND}'],
-            [0.5, '#D55E00'],
-            [1, '#0072B2']
+            [0.5, '#C475FD'],
+            [1, '#4467A3']
         ],
         showInLegend: true
     }},

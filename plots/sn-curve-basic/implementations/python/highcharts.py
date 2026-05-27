@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito #1 — test data scatter
-FIT_COLOR = "#D55E00"  # Okabe-Ito #2 — Basquin fit line
+FIT_COLOR = "#C475FD"  # Okabe-Ito #2 — Basquin fit line
 
 # Data: Simulated fatigue test results for structural steel specimens
 np.random.seed(42)
@@ -96,7 +96,7 @@ region_bands = [
     {
         "from": 100,
         "to": 10000,
-        "color": "rgba(213,94,0,0.07)",
+        "color": "rgba(196, 117, 253, 0.07)",
         "label": {
             "text": "Low-Cycle Fatigue",
             "style": {"fontSize": "36px", "color": INK_SOFT},
@@ -108,7 +108,7 @@ region_bands = [
     {
         "from": 10000,
         "to": 1000000,
-        "color": "rgba(0,114,178,0.05)",
+        "color": "rgba(68, 103, 163, 0.05)",
         "label": {
             "text": "High-Cycle Fatigue",
             "style": {"fontSize": "36px", "color": INK_SOFT},
@@ -162,13 +162,13 @@ chart.options.y_axis = {
     "plotLines": [
         {
             "value": ultimate_strength,
-            "color": "#CC79A7",
+            "color": "#BD8233",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Ultimate Strength ({ultimate_strength} MPa)",
                 "align": "left",
-                "style": {"fontSize": "34px", "color": "#CC79A7", "fontWeight": "bold"},
+                "style": {"fontSize": "34px", "color": "#BD8233", "fontWeight": "bold"},
                 "x": 10,
                 "y": -10,
             },
@@ -176,13 +176,13 @@ chart.options.y_axis = {
         },
         {
             "value": yield_strength,
-            "color": "#E69F00",
+            "color": "#AE3030",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Yield Strength ({yield_strength} MPa)",
                 "align": "left",
-                "style": {"fontSize": "34px", "color": "#E69F00", "fontWeight": "bold"},
+                "style": {"fontSize": "34px", "color": "#AE3030", "fontWeight": "bold"},
                 "x": 10,
                 "y": -10,
             },
@@ -190,13 +190,13 @@ chart.options.y_axis = {
         },
         {
             "value": endurance_limit,
-            "color": "#56B4E9",
+            "color": "#2ABCCD",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Endurance Limit ({endurance_limit} MPa)",
                 "align": "left",
-                "style": {"fontSize": "34px", "color": "#56B4E9", "fontWeight": "bold"},
+                "style": {"fontSize": "34px", "color": "#2ABCCD", "fontWeight": "bold"},
                 "x": 10,
                 "y": -10,
             },

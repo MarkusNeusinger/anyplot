@@ -31,8 +31,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette positions
 BRAND = "#009E73"  # position 1 — main histogram bars
-COLOR_2 = "#D55E00"  # position 2 — tail regions
-COLOR_3 = "#0072B2"  # position 3 — normal distribution curve
+COLOR_2 = "#C475FD"  # position 2 — tail regions
+COLOR_3 = "#4467A3"  # position 3 — normal distribution curve
 
 # Data
 np.random.seed(42)

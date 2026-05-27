@@ -29,7 +29,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (position 1 for first series, position 2 for second)
 COLOR_PRIMARY = "#009E73"  # First series - brand green
-COLOR_SECONDARY = "#D55E00"  # Second series - vermillion
+COLOR_SECONDARY = "#C475FD"  # Second series - vermillion
 
 # Generate synthetic clinical trial survival data
 np.random.seed(42)

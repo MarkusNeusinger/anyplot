@@ -204,7 +204,7 @@ arrow_stem_path = [[arrow_base_x, arrow_base_y], [arrow_tip_x, arrow_tip_y]]
 # Bold yellow arrow with dark outline for contrast on both themes
 for path in [arrow_left_path, arrow_right_path, arrow_stem_path]:
     series_data.append(
-        {"type": "line", "data": path, "color": "#E69F00", "lineWidth": 22, "marker": {"enabled": False}}
+        {"type": "line", "data": path, "color": "#AE3030", "lineWidth": 22, "marker": {"enabled": False}}
     )
     series_data.append(
         {"type": "line", "data": path, "color": wall_color, "lineWidth": 6, "marker": {"enabled": False}}

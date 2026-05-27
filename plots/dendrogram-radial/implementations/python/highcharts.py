@@ -24,7 +24,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: simulated gene expression clustering (40 genes, 5 functional groups)
 np.random.seed(42)
@@ -80,7 +80,7 @@ def get_merge_cluster(x_left, x_right):
 
 
 def cluster_color(cl):
-    return OKABE_ITO[cl - 1] if cl > 0 else INK_SOFT
+    return IMPRINT[cl - 1] if cl > 0 else INK_SOFT
 
 
 # Build Cartesian line segments grouped by cluster (0=neutral, 1-5=clusters)
@@ -119,7 +119,7 @@ for i, leaf_idx in enumerate(leaves):
     a = to_angle_rad(5 + 10 * i)
     cl = int(cluster_ids[leaf_idx])
     x, y = p2c(a, max_d * 0.995)
-    leaf_data.append({"x": round(x, 5), "y": round(y, 5), "color": OKABE_ITO[cl - 1]})
+    leaf_data.append({"x": round(x, 5), "y": round(y, 5), "color": IMPRINT[cl - 1]})
 
 cluster_names = ["Cross-cluster", "Cluster A", "Cluster B", "Cluster C", "Cluster D", "Cluster E"]
 

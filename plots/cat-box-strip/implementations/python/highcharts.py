@@ -28,7 +28,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 — always first series
-OI_SECONDARY = "#D55E00"  # Position 2
+OI_SECONDARY = "#C475FD"  # Position 2
 
 # Data - Plant growth measurements under different light conditions
 np.random.seed(42)

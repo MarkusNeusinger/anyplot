@@ -26,7 +26,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot palette
 LAND_COLOR = "#009E73"  # position 1 — brand green (land masses)
-GRATICULE_COLOR = "#9418DB"  # position 2 — purple (lat/lon grid)
+GRATICULE_COLOR = "#C475FD"  # position 2 — purple (lat/lon grid)
 
 W, H = 3200, 1800
 
@@ -79,7 +79,7 @@ for proj in projections:
                 "nullColor": LAND_COLOR,
                 "borderColor": PAGE_BG,
                 "borderWidth": 1.5,
-                "states": {"hover": {"color": "#B71D27"}, "inactive": {"opacity": 1}},
+                "states": {"hover": {"color": "#AE3030"}, "inactive": {"opacity": 1}},
             },
             {
                 "type": "mapline",

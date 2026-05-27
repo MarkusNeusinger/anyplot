@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Build hierarchical data using Sankey diagram (alternative to organization chart)
 # Nodes for each level
@@ -44,23 +44,23 @@ managers = {
 
 # Build nodes list with colors by level
 nodes_list = [ceo]
-node_colors = [OKABE_ITO[0]]  # CEO is level 0
+node_colors = [IMPRINT[0]]  # CEO is level 0
 
 for vp in vps:
     nodes_list.append(vp)
-    node_colors.append(OKABE_ITO[1])
+    node_colors.append(IMPRINT[1])
 
 for vp in vps:
     for director in directors[vp]:
         if director not in nodes_list:
             nodes_list.append(director)
-            node_colors.append(OKABE_ITO[2])
+            node_colors.append(IMPRINT[2])
 
 for directors_group in managers.values():
     for mgr in directors_group:
         if mgr not in nodes_list:
             nodes_list.append(mgr)
-            node_colors.append(OKABE_ITO[3])
+            node_colors.append(IMPRINT[3])
 
 # Build links (from-to pairs with equal weight)
 links_list = []

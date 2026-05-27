@@ -24,8 +24,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — baseline & prediction bars
-POSITIVE_COLOR = "#D55E00"  # Okabe-Ito pos 2 — positive SHAP (pushes risk up)
-NEGATIVE_COLOR = "#0072B2"  # Okabe-Ito pos 3 — negative SHAP (pushes risk down)
+POSITIVE_COLOR = "#AE3030"  # imprint red — positive SHAP (pushes risk up)
+NEGATIVE_COLOR = "#4467A3"  # Okabe-Ito pos 3 — negative SHAP (pushes risk down)
 
 # Data — credit scoring model explaining a single loan application
 # Features sorted by absolute SHAP value (largest contribution first = top of chart)

@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Employee performance scores by department
 np.random.seed(42)
@@ -121,19 +121,19 @@ chart.add_series(
         "type": "column",
         "name": "Engineering (n=150)",
         "data": eng_counts.tolist(),
-        "color": OKABE_ITO[0],
+        "color": IMPRINT[0],
         "opacity": 0.55,
     }
 )
 
 # Sales (Okabe-Ito vermillion) - middle layer
 chart.add_series(
-    {"type": "column", "name": "Sales (n=150)", "data": sales_counts.tolist(), "color": OKABE_ITO[1], "opacity": 0.55}
+    {"type": "column", "name": "Sales (n=150)", "data": sales_counts.tolist(), "color": IMPRINT[1], "opacity": 0.55}
 )
 
 # Marketing (Okabe-Ito blue) - back layer
 chart.add_series(
-    {"type": "column", "name": "Marketing (n=150)", "data": mkt_counts.tolist(), "color": OKABE_ITO[2], "opacity": 0.55}
+    {"type": "column", "name": "Marketing (n=150)", "data": mkt_counts.tolist(), "color": IMPRINT[2], "opacity": 0.55}
 )
 
 # Tooltip

@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: Titanic survival by Class → Sex → Age Group → Survival
 flows = [
@@ -175,17 +175,17 @@ column_map = {
 node_colors = {}
 for node in display_names:
     if "Survived" in node:
-        node_colors[node] = OKABE_ITO[0]  # green
+        node_colors[node] = IMPRINT[0]  # green
     elif "Died" in node:
-        node_colors[node] = OKABE_ITO[1]  # orange
+        node_colors[node] = IMPRINT[1]  # orange
     elif node.startswith("1st") or node.startswith("2nd") or node.startswith("3rd"):
-        node_colors[node] = OKABE_ITO[2]  # blue
+        node_colors[node] = IMPRINT[2]  # blue
     elif display_names[node] == "Male":
-        node_colors[node] = OKABE_ITO[3]  # purple
+        node_colors[node] = IMPRINT[3]  # purple
     elif display_names[node] == "Female":
-        node_colors[node] = OKABE_ITO[4]  # yellow-ish
+        node_colors[node] = IMPRINT[4]  # yellow-ish
     else:
-        node_colors[node] = OKABE_ITO[5]  # sky blue
+        node_colors[node] = IMPRINT[5]  # sky blue
 
 # Build nodes list
 nodes_set = set()
@@ -198,7 +198,7 @@ nodes_data = [
         "id": node,
         "name": display_names.get(node, node),
         "column": column_map.get(node, 0),
-        "color": node_colors.get(node, OKABE_ITO[0]),
+        "color": node_colors.get(node, IMPRINT[0]),
     }
     for node in nodes_set
 ]

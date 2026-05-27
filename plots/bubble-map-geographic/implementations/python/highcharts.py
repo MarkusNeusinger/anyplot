@@ -26,10 +26,10 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Okabe-Ito palette — continents in canonical order, first is always #009E73
 CONTINENT_COLORS = {
     "Asia": "#009E73",
-    "Africa": "#D55E00",
-    "Europe": "#0072B2",
-    "Americas": "#CC79A7",
-    "Oceania": "#E69F00",
+    "Africa": "#C475FD",
+    "Europe": "#4467A3",
+    "Americas": "#BD8233",
+    "Oceania": "#AE3030",
 }
 
 # Data — major world cities, metropolitan population (millions)

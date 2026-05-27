@@ -30,9 +30,9 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series - ALWAYS
-COLOR2 = "#D55E00"
-COLOR3 = "#0072B2"
-COLOR4 = "#CC79A7"
+COLOR2 = "#C475FD"
+COLOR3 = "#4467A3"
+COLOR4 = "#BD8233"
 
 # Data - Financial dashboard with price, volume, returns
 np.random.seed(42)

@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Generate random portfolios and efficient frontier
 np.random.seed(42)
@@ -189,21 +189,21 @@ chart.options.plot_options = {
 low_sharpe_series = ScatterSeries()
 low_sharpe_series.data = low_sharpe
 low_sharpe_series.name = "Low Sharpe Ratio"
-low_sharpe_series.color = OKABE_ITO[1]
+low_sharpe_series.color = IMPRINT[1]
 low_sharpe_series.marker = {"symbol": "circle", "radius": 8}
 chart.add_series(low_sharpe_series)
 
 mid_sharpe_series = ScatterSeries()
 mid_sharpe_series.data = mid_sharpe
 mid_sharpe_series.name = "Medium Sharpe Ratio"
-mid_sharpe_series.color = OKABE_ITO[2]
+mid_sharpe_series.color = IMPRINT[2]
 mid_sharpe_series.marker = {"symbol": "circle", "radius": 8}
 chart.add_series(mid_sharpe_series)
 
 high_sharpe_series = ScatterSeries()
 high_sharpe_series.data = high_sharpe
 high_sharpe_series.name = "High Sharpe Ratio"
-high_sharpe_series.color = OKABE_ITO[0]
+high_sharpe_series.color = IMPRINT[0]
 high_sharpe_series.marker = {"symbol": "circle", "radius": 8}
 chart.add_series(high_sharpe_series)
 
@@ -214,7 +214,7 @@ frontier_data = [
 frontier_series = LineSeries()
 frontier_series.data = frontier_data
 frontier_series.name = "Efficient Frontier"
-frontier_series.color = OKABE_ITO[3]
+frontier_series.color = IMPRINT[3]
 frontier_series.line_width = 8
 frontier_series.marker = {"enabled": False}
 frontier_series.z_index = 5
@@ -224,7 +224,7 @@ chart.add_series(frontier_series)
 min_var_series = ScatterSeries()
 min_var_series.data = [{"x": round(min_var_risk * 100, 2), "y": round(min_var_return * 100, 2)}]
 min_var_series.name = "Minimum Variance"
-min_var_series.color = OKABE_ITO[4]
+min_var_series.color = IMPRINT[4]
 min_var_series.marker = {"symbol": "square", "radius": 14, "lineWidth": 3, "lineColor": INK}
 min_var_series.z_index = 10
 chart.add_series(min_var_series)
@@ -233,7 +233,7 @@ chart.add_series(min_var_series)
 tangency_series = ScatterSeries()
 tangency_series.data = [{"x": round(tangency_risk * 100, 2), "y": round(tangency_return * 100, 2)}]
 tangency_series.name = "Maximum Sharpe Ratio"
-tangency_series.color = OKABE_ITO[5]
+tangency_series.color = IMPRINT[5]
 tangency_series.marker = {"symbol": "triangle", "radius": 16, "lineWidth": 3, "lineColor": INK}
 tangency_series.z_index = 10
 chart.add_series(tangency_series)
@@ -248,7 +248,7 @@ cml_data = [
 cml_series = LineSeries()
 cml_series.data = cml_data
 cml_series.name = "Capital Market Line"
-cml_series.color = OKABE_ITO[6]
+cml_series.color = IMPRINT[6]
 cml_series.dash_style = "Dash"
 cml_series.line_width = 5
 cml_series.marker = {"enabled": False}

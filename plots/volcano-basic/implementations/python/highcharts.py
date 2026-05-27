@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 COLOR_NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 np.random.seed(42)
@@ -124,14 +124,14 @@ chart.add_series(series_ns)
 series_down = ScatterSeries()
 series_down.name = f"Down-regulated ({np.sum(sig_down)})"
 series_down.data = [[float(x), float(y)] for x, y in zip(log2_fc[sig_down], neg_log10_p[sig_down], strict=True)]
-series_down.color = OKABE_ITO[2]
+series_down.color = IMPRINT[2]
 series_down.marker = {"radius": 10, "symbol": "circle"}
 chart.add_series(series_down)
 
 series_up = ScatterSeries()
 series_up.name = f"Up-regulated ({np.sum(sig_up)})"
 series_up.data = [[float(x), float(y)] for x, y in zip(log2_fc[sig_up], neg_log10_p[sig_up], strict=True)]
-series_up.color = OKABE_ITO[1]
+series_up.color = IMPRINT[1]
 series_up.marker = {"radius": 10, "symbol": "circle"}
 chart.add_series(series_up)
 

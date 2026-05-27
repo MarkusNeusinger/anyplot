@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Drawdown uses red — semantic exception (loss/down) → anyplot palette position 3
-DRAWDOWN_COLOR = "#B71D27"
+DRAWDOWN_COLOR = "#AE3030"
 
 # Data — simulated portfolio (geometric Brownian motion)
 np.random.seed(42)
@@ -167,7 +167,7 @@ chart.options.series = [
         "color": DRAWDOWN_COLOR,
         "fillColor": {
             "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-            "stops": [[0, "rgba(183, 29, 39, 0.05)"], [1, "rgba(183, 29, 39, 0.55)"]],
+            "stops": [[0, "rgba(174, 48, 48, 0.05)"], [1, "rgba(174, 48, 48, 0.55)"]],
         },
         "lineColor": DRAWDOWN_COLOR,
         "lineWidth": 4,

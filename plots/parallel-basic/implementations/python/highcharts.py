@@ -67,9 +67,9 @@ series_config = []
 for i, row in enumerate(setosa_data):
     series_config.append({"name": "Setosa", "data": row, "color": "rgba(0,158,115,0.65)", "showInLegend": i == 0})
 for i, row in enumerate(versicolor_data):
-    series_config.append({"name": "Versicolor", "data": row, "color": "rgba(213,94,0,0.65)", "showInLegend": i == 0})
+    series_config.append({"name": "Versicolor", "data": row, "color": "rgba(196, 117, 253, 0.65)", "showInLegend": i == 0})
 for i, row in enumerate(virginica_data):
-    series_config.append({"name": "Virginica", "data": row, "color": "rgba(0,114,178,0.65)", "showInLegend": i == 0})
+    series_config.append({"name": "Virginica", "data": row, "color": "rgba(68, 103, 163, 0.65)", "showInLegend": i == 0})
 
 # Load Highcharts modules from local npm install (CDN blocked in headless Chrome on file://)
 hc_base = Path("/tmp/hc/node_modules/highcharts")

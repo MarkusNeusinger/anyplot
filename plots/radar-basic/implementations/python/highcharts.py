@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Employee performance metrics comparison
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]
@@ -67,8 +67,8 @@ chart_config = {
         "backgroundColor": ELEVATED_BG,
     },
     "series": [
-        {"type": "area", "name": "Employee A", "data": employee_a_values, "color": OKABE_ITO[0], "fillOpacity": 0.25},
-        {"type": "area", "name": "Employee B", "data": employee_b_values, "color": OKABE_ITO[1], "fillOpacity": 0.25},
+        {"type": "area", "name": "Employee A", "data": employee_a_values, "color": IMPRINT[0], "fillOpacity": 0.25},
+        {"type": "area", "name": "Employee B", "data": employee_b_values, "color": IMPRINT[1], "fillOpacity": 0.25},
     ],
     "credits": {"enabled": False},
 }

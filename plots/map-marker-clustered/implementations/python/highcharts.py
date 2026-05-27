@@ -29,9 +29,9 @@ MAP_BORDER = "#B0AC9F" if THEME == "light" else "#4A4A44"
 # anyplot palette for the four store categories
 CATEGORY_COLORS = {
     "Grocery": "#009E73",  # position 1 — brand green
-    "Electronics": "#9418DB",  # position 2 — purple
-    "Clothing": "#B71D27",  # position 3 — red
-    "Home Goods": "#16B8F3",  # position 4 — sky blue
+    "Electronics": "#C475FD",  # position 2 — purple
+    "Clothing": "#AE3030",  # position 3 — red
+    "Home Goods": "#4467A3",  # position 4 — sky blue
 }
 
 # Data: retail stores clustered around 15 major US cities

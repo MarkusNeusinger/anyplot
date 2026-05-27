@@ -27,8 +27,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # anyplot palette
 COLOR_PRICE = "#009E73"  # position 1 — brand green
-COLOR_VOLUME = "#9418DB"  # position 2
-COLOR_RSI = "#B71D27"  # position 3
+COLOR_VOLUME = "#C475FD"  # position 2
+COLOR_RSI = "#AE3030"  # position 3
 
 # Data — stock-like price, volume, RSI over 150 trading days
 np.random.seed(42)
@@ -257,7 +257,7 @@ html_content = f"""<!DOCTYPE html>
                 }}, {{
                     from: 70,
                     to: 100,
-                    color: 'rgba(183,29,39,0.10)',
+                    color: 'rgba(174, 48, 48, 0.10)',
                     label: {{
                         text: 'Overbought',
                         style: {{ fontSize: '40px', color: '{COLOR_RSI}' }}

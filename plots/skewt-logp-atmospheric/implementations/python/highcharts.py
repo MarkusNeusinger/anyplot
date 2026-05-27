@@ -29,10 +29,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
 TEMP_COLOR = "#009E73"  # green — temperature profile (first/primary)
-DEW_COLOR = "#D55E00"  # vermillion — dewpoint profile
-DRY_AD_COLOR = "#0072B2"  # blue — dry adiabats
-MOIST_AD_COLOR = "#CC79A7"  # pink — moist adiabats
-MIX_COLOR = "#E69F00"  # orange — mixing ratio lines
+DEW_COLOR = "#C475FD"  # vermillion — dewpoint profile
+DRY_AD_COLOR = "#4467A3"  # blue — dry adiabats
+MOIST_AD_COLOR = "#BD8233"  # pink — moist adiabats
+MIX_COLOR = "#AE3030"  # orange — mixing ratio lines
 
 # Pressure/temperature extents
 TEMP_MIN, TEMP_MAX = -80, 50
@@ -279,7 +279,7 @@ temp_series.marker = {
 temp_series.z_index = 10
 chart.add_series(temp_series)
 
-# 6. Dewpoint profile — #D55E00, dashed thick
+# 6. Dewpoint profile — #C475FD, dashed thick
 x_dew = dewpoint - (1 - yfrac_s) * SKEW_FACTOR
 dew_data = [[float(x), float(p)] for x, p in zip(x_dew, pressure, strict=False)]
 dew_series = LineSeries()

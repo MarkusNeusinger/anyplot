@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Load Iris dataset
 iris = load_iris()
@@ -36,7 +36,7 @@ value = iris.data[:, 2]  # Petal length
 categories = [str(iris.target_names[t]) for t in iris.target]
 
 # Category colors from Okabe-Ito palette
-category_colors = {"setosa": OKABE_ITO[0], "versicolor": OKABE_ITO[1], "virginica": OKABE_ITO[2]}
+category_colors = {"setosa": IMPRINT[0], "versicolor": IMPRINT[1], "virginica": IMPRINT[2]}
 
 # Prepare data as JavaScript-friendly format
 data_points = []
@@ -113,7 +113,7 @@ html_content = f"""<!DOCTYPE html>
         .reset-btn {{
             padding: 16px 48px;
             font-size: 24px;
-            background: {OKABE_ITO[0]};
+            background: {IMPRINT[0]};
             color: white;
             border: none;
             border-radius: 8px;
@@ -151,9 +151,9 @@ html_content = f"""<!DOCTYPE html>
         // Data points
         const allData = {json.dumps(data_points)};
         const categoryColors = {{
-            "setosa": "{OKABE_ITO[0]}",
-            "versicolor": "{OKABE_ITO[1]}",
-            "virginica": "{OKABE_ITO[2]}"
+            "setosa": "{IMPRINT[0]}",
+            "versicolor": "{IMPRINT[1]}",
+            "virginica": "{IMPRINT[2]}"
         }};
         const categoryList = ["setosa", "versicolor", "virginica"];
         const pageColor = "{PAGE_BG}";

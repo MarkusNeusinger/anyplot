@@ -24,14 +24,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: Company organizational structure across 3 hierarchy levels
 # Root (Company) -> Departments -> Teams -> Team Members (40+ nodes total)
 series_data = [
     {
         "name": "Engineering",
-        "color": OKABE_ITO[0],
+        "color": IMPRINT[0],
         "data": [
             {"name": "Frontend", "value": 8},
             {"name": "  - React Team", "value": 5},
@@ -49,7 +49,7 @@ series_data = [
     },
     {
         "name": "Product",
-        "color": OKABE_ITO[1],
+        "color": IMPRINT[1],
         "data": [
             {"name": "Product Management", "value": 5},
             {"name": "  - Platform PM", "value": 2},
@@ -64,7 +64,7 @@ series_data = [
     },
     {
         "name": "Operations",
-        "color": OKABE_ITO[2],
+        "color": IMPRINT[2],
         "data": [
             {"name": "Sales", "value": 9},
             {"name": "  - Enterprise", "value": 5},

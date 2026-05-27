@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Market share evolution over time (2018-2025)
 years = ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"]
@@ -115,25 +115,25 @@ chart.options.tooltip = {
 }
 
 # Color palette - Okabe-Ito
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 # Add series
 series_a = AreaSeries()
 series_a.name = "Product A"
 series_a.data = product_a
-series_a.color = OKABE_ITO[0]
+series_a.color = IMPRINT[0]
 chart.add_series(series_a)
 
 series_b = AreaSeries()
 series_b.name = "Product B"
 series_b.data = product_b
-series_b.color = OKABE_ITO[1]
+series_b.color = IMPRINT[1]
 chart.add_series(series_b)
 
 series_c = AreaSeries()
 series_c.name = "Product C"
 series_c.data = product_c
-series_c.color = OKABE_ITO[2]
+series_c.color = IMPRINT[2]
 chart.add_series(series_c)
 
 # Download Highcharts JS for inline embedding

@@ -140,8 +140,8 @@ median_series = {
     "name": "Median",
     "type": "scatter",
     "data": median_data,
-    "color": "#E69F00",
-    "marker": {"symbol": "diamond", "radius": 12, "fillColor": "#E69F00", "lineColor": colors[0], "lineWidth": 3},
+    "color": "#AE3030",
+    "marker": {"symbol": "diamond", "radius": 12, "fillColor": "#AE3030", "lineColor": colors[0], "lineWidth": 3},
     "zIndex": 10,
 }
 js_series.append(median_series)
@@ -151,8 +151,8 @@ outlier_series = {
     "name": "Outliers",
     "type": "scatter",
     "data": outlier_data,
-    "color": "#D55E00",
-    "marker": {"radius": 8, "symbol": "circle", "fillColor": "#D55E00", "lineColor": colors[0], "lineWidth": 2},
+    "color": "#C475FD",
+    "marker": {"radius": 8, "symbol": "circle", "fillColor": "#C475FD", "lineColor": colors[0], "lineWidth": 2},
     "tooltip": {"pointFormat": "Response time: {point.y:.1f} ms"},
 }
 js_series.append(outlier_series)

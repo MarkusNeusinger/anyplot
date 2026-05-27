@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1
-ACCENT = "#D55E00"  # Position 2
+ACCENT = "#C475FD"  # Position 2
 BRAND_SEMI = "rgba(0, 158, 115, 0.5)"
 
 # Data - Daily temperature readings with 7-day rolling average

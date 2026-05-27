@@ -24,14 +24,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito categorical palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Sales funnel: visitors progressing from initial awareness through purchase.
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
 values = [1000, 600, 400, 200, 100]
 
 funnel_data = [
-    {"name": stage, "y": value, "color": OKABE_ITO[i]}
+    {"name": stage, "y": value, "color": IMPRINT[i]}
     for i, (stage, value) in enumerate(zip(stages, values, strict=True))
 ]
 

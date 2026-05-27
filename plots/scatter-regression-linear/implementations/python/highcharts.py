@@ -28,13 +28,13 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # Brand green (primary)
-    "#D55E00",  # Vermillion
-    "#0072B2",  # Blue
-    "#CC79A7",  # Reddish purple
-    "#E69F00",  # Orange
-    "#56B4E9",  # Sky blue
+    "#C475FD",  # Vermillion
+    "#4467A3",  # Blue
+    "#BD8233",  # Reddish purple
+    "#AE3030",  # Orange
+    "#2ABCCD",  # Sky blue
 ]
 
 # Data: Advertising spend vs sales revenue
@@ -148,7 +148,7 @@ line_data = [[float(x_sorted[i]), float(y_fit[i])] for i in range(len(x_sorted))
 line_series = LineSeries()
 line_series.data = line_data
 line_series.name = "Regression Line"
-line_series.color = OKABE_ITO[2]  # Blue
+line_series.color = IMPRINT[2]  # Blue
 chart.add_series(line_series)
 
 # Series 3: Scatter points (using brand green)
@@ -156,11 +156,11 @@ scatter_data = [[float(x[i]), float(y[i])] for i in range(n_points)]
 scatter_series = ScatterSeries()
 scatter_series.data = scatter_data
 scatter_series.name = "Data Points"
-scatter_series.color = OKABE_ITO[0]  # Brand green
+scatter_series.color = IMPRINT[0]  # Brand green
 chart.add_series(scatter_series)
 
 # Set colors for the chart
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 # Credits
 chart.options.credits = {"enabled": False}

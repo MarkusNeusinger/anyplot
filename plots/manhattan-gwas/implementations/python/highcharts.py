@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for alternating chromosomes
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Simulated GWAS data with random p-values and significant peaks
 np.random.seed(42)
@@ -99,8 +99,8 @@ series_data = []
 for chrom in range(1, 23):
     chrom_points = [[d["x"], d["y"]] for d in all_data if d["chr"] == chrom]
     # Use alternating Okabe-Ito colors
-    color_idx = (chrom - 1) % len(OKABE_ITO)
-    color = OKABE_ITO[color_idx]
+    color_idx = (chrom - 1) % len(IMPRINT)
+    color = IMPRINT[color_idx]
     series_data.append(
         {
             "name": f"Chr {chrom}",

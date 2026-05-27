@@ -138,7 +138,7 @@ scatter_series.opacity = 0.65
 regression_series = SplineSeries()
 regression_series.data = [[float(xi), float(yi)] for xi, yi in zip(x_fit, y_fit, strict=True)]
 regression_series.name = f"Polynomial Fit (R² = {r_squared:.3f})"
-regression_series.color = "#D55E00"
+regression_series.color = "#C475FD"
 regression_series.lineWidth = 3
 regression_series.marker = {"enabled": False}
 
@@ -147,7 +147,7 @@ chart.add_series(scatter_series)
 chart.add_series(regression_series)
 
 # Color palette
-chart.options.colors = [BRAND, "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+chart.options.colors = [BRAND, "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Download Highcharts JS from alternative CDN
 highcharts_urls = [

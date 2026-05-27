@@ -26,7 +26,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - first series
-ORANGE = "#D55E00"  # Position 2
+ORANGE = "#C475FD"  # Position 2
 
 # Data - Simulated learning curve from a classification model
 np.random.seed(42)

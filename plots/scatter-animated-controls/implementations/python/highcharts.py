@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Simulated country data over 20 years (Gapminder-style)
 np.random.seed(42)
@@ -62,7 +62,7 @@ countries = [
 # Region assignment for color coding
 regions = ["Region 1", "Region 2", "Region 3", "Region 4"]
 country_regions = [regions[i % 4] for i in range(n_countries)]
-region_colors = {regions[i]: OKABE_ITO[i % len(OKABE_ITO)] for i in range(len(regions))}
+region_colors = {regions[i]: IMPRINT[i % len(IMPRINT)] for i in range(len(regions))}
 
 # Generate time-series data for each country
 # GDP per capita (x): starts between 1000-50000, grows with some noise

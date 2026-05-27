@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for departments (positions 1-4)
-DEPT_COLORS = {"engineering": "#009E73", "sales": "#D55E00", "operations": "#0072B2", "hr": "#CC79A7"}
+DEPT_COLORS = {"engineering": "#009E73", "sales": "#C475FD", "operations": "#4467A3", "hr": "#BD8233"}
 
 # Hierarchical data: Company organizational structure
 # Format: [id, parent, label, value]

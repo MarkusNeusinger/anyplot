@@ -30,7 +30,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)
@@ -70,7 +70,7 @@ for i, cat in enumerate(categories):
             "y_grid": y_grid,
             "density": density_norm,
             "raw_data": data,
-            "color": OKABE_ITO[i],
+            "color": IMPRINT[i],
         }
     )
 

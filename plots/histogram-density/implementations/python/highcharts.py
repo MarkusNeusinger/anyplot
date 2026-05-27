@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Generate right-skewed response time data
 np.random.seed(42)
@@ -110,7 +110,7 @@ chart.options.plot_options = {
 }
 
 # Colors
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 # Add histogram series (using column chart)
 histogram_series = ColumnSeries()
@@ -124,7 +124,7 @@ chart.add_series(histogram_series)
 pdf_series = AreaSplineSeries()
 pdf_series.name = "Gamma PDF"
 pdf_series.data = [[float(x), float(y)] for x, y in zip(x_pdf, y_pdf, strict=True)]
-pdf_series.color = "#D55E00"
+pdf_series.color = "#C475FD"
 
 chart.add_series(pdf_series)
 
