@@ -41,7 +41,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Training loss (first series)
-ACCENT = "#D55E00"  # Validation loss (second series)
+ACCENT = "#C475FD"  # Validation loss (second series)
 OPTIMAL = "#DC2626"  # Optimal epoch marker
 
 # Data - Simulated neural network training loss over 100 epochs

@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -83,9 +83,9 @@ df_curves = pd.DataFrame(curves_data)
 
 # Map species to Okabe-Ito colors
 species_colors = {
-    target_names[0]: OKABE_ITO[0],  # setosa: #009E73 (brand green)
-    target_names[1]: OKABE_ITO[1],  # versicolor: #D55E00 (vermillion)
-    target_names[2]: OKABE_ITO[2],  # virginica: #0072B2 (blue)
+    target_names[0]: IMPRINT[0],  # setosa: #009E73 (brand green)
+    target_names[1]: IMPRINT[1],  # versicolor: #C475FD (vermillion)
+    target_names[2]: IMPRINT[2],  # virginica: #4467A3 (blue)
 }
 
 # Create plot

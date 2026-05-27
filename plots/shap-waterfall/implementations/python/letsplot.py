@@ -21,8 +21,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-POS_COLOR = "#D55E00"  # Okabe-Ito vermillion — positive SHAP (increases predicted risk)
-NEG_COLOR = "#0072B2"  # Okabe-Ito blue — negative SHAP (decreases predicted risk)
+POS_COLOR = "#AE3030"  # imprint red — positive SHAP (increases predicted risk)
+NEG_COLOR = "#4467A3"  # Okabe-Ito blue — negative SHAP (decreases predicted risk)
 
 # Data — loan default risk model explaining one applicant's prediction
 # Features already sorted by absolute SHAP magnitude (largest at top)

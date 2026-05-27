@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 INK_GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 ALPHA_95 = 0.24 if THEME == "light" else 0.35
 ALPHA_80 = 0.38 if THEME == "light" else 0.55
@@ -64,11 +64,11 @@ plot = (
     ggplot()
     # 95% CI (outer, lighter)
     + geom_ribbon(
-        aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[1], alpha=ALPHA_95, color=None
+        aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=IMPRINT[1], alpha=ALPHA_95, color=None
     )
     # 80% CI (inner, darker)
     + geom_ribbon(
-        aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=OKABE_ITO[1], alpha=ALPHA_80, color=None
+        aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=IMPRINT[1], alpha=ALPHA_80, color=None
     )
     # Historical solid line (brand green) — tooltips show value on hover in HTML
     + geom_line(
@@ -92,7 +92,7 @@ plot = (
     )
     # Vertical marker at forecast boundary
     + geom_vline(xintercept=forecast_start.timestamp() * 1000, color=INK_MUTED, size=0.6, linetype="dotted")
-    + scale_color_manual(values={"Historical": OKABE_ITO[0], "Forecast": OKABE_ITO[1]}, name="")
+    + scale_color_manual(values={"Historical": IMPRINT[0], "Forecast": IMPRINT[1]}, name="")
     + labs(
         x="Date",
         y="Energy Demand (MWh)",

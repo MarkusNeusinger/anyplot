@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly sales by product category
 categories = ["Q1", "Q2", "Q3", "Q4"]
@@ -72,7 +72,7 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="Quarter", y="Revenue", fill="Product"))
     + geom_bar(stat="identity", position="dodge", width=0.7, alpha=0.9)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(x="Quarter", y="Revenue ($ thousands)", title="bar-grouped · letsplot · anyplot.ai", fill="Product Category")
     + anyplot_theme
     + ggsize(1600, 900)

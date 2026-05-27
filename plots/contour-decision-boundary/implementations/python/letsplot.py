@@ -39,7 +39,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data
 np.random.seed(42)
@@ -70,8 +70,8 @@ plot = (
     ggplot()
     + geom_tile(aes(x="X1", y="X2", fill="Predicted"), data=mesh_df, alpha=0.4)
     + geom_point(aes(x="X1", y="X2", color="Class", shape="Correct"), data=train_df, size=5, stroke=1.5)
-    + scale_fill_manual(values=[OKABE_ITO[0], OKABE_ITO[1]], name="Predicted Class")
-    + scale_color_manual(values=[OKABE_ITO[0], OKABE_ITO[1]], name="True Class")
+    + scale_fill_manual(values=[IMPRINT[0], IMPRINT[1]], name="Predicted Class")
+    + scale_color_manual(values=[IMPRINT[0], IMPRINT[1]], name="True Class")
     + scale_shape_manual(values=[16, 4], name="Classification")
     + labs(title="contour-decision-boundary · letsplot · anyplot.ai", x="Feature X1", y="Feature X2")
     + theme_minimal()

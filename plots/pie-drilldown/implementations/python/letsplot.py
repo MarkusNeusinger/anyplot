@@ -23,11 +23,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (using position 1 as first series)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Hierarchical data: Company budget breakdown by department
@@ -75,10 +75,10 @@ hierarchy_data = {
 
 # Color scheme: Okabe-Ito for main departments, with shade variations for subcategories
 colors = {
-    "Engineering": OKABE_ITO[0],  # #009E73
-    "Marketing": OKABE_ITO[1],  # #D55E00
-    "Operations": OKABE_ITO[2],  # #0072B2
-    "Human Resources": OKABE_ITO[3],  # #CC79A7
+    "Engineering": IMPRINT[0],  # #009E73
+    "Marketing": IMPRINT[1],  # #C475FD
+    "Operations": IMPRINT[2],  # #4467A3
+    "Human Resources": IMPRINT[3],  # #BD8233
     # Engineering sub-colors (green shades)
     "Salaries": "#4A8BBE",
     "Tools & Software": "#6BA3D6",
@@ -185,7 +185,7 @@ for level_id in ["root", "engineering", "marketing", "operations", "hr"]:
             "categories": cats,
             "values": vals,
             "percentages": pcts,
-            "colors": [colors.get(cat, OKABE_ITO[0]) for cat in cats],
+            "colors": [colors.get(cat, IMPRINT[0]) for cat in cats],
             "children": hierarchy_data[level_id].get("children", []),
             "parent": hierarchy_data[level_id].get("parent"),
         }
@@ -250,7 +250,7 @@ html_content = f"""<!DOCTYPE html>
             gap: 10px;
         }}
         .back-btn {{
-            background: {OKABE_ITO[0]};
+            background: {IMPRINT[0]};
             color: white;
             border: none;
             padding: 8px 16px;
@@ -357,7 +357,7 @@ html_content = f"""<!DOCTYPE html>
         }}
         .total-display .amount {{
             font-weight: 700;
-            color: {OKABE_ITO[0]};
+            color: {IMPRINT[0]};
             font-size: 24px;
         }}
     </style>

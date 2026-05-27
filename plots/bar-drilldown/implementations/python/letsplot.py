@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Hierarchical data: regional sales breakdown (region → quarterly)
 hierarchy_data = {
@@ -91,10 +91,10 @@ hierarchy_data = {
 }
 
 region_color_map = {
-    "North Region": OKABE_ITO[0],
-    "South Region": OKABE_ITO[1],
-    "East Region": OKABE_ITO[2],
-    "West Region": OKABE_ITO[3],
+    "North Region": IMPRINT[0],
+    "South Region": IMPRINT[1],
+    "East Region": IMPRINT[2],
+    "West Region": IMPRINT[3],
 }
 
 # Root-level dataframe for static PNG
@@ -122,10 +122,10 @@ plot = (
         label="★ highest",
         vjust=-2.0,
         size=7,
-        color=OKABE_ITO[2],
+        color=IMPRINT[2],
         fontface="bold",
     )
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + scale_y_continuous(format="${,.0f}", limits=[0, 730000], expand=[0, 0])
     + labs(
         title="bar-drilldown · python · letsplot · anyplot.ai",
@@ -162,9 +162,9 @@ for level_id in ["root", "north", "south", "east", "west"]:
         cats = [hierarchy_data[cid]["name"] for cid in children_ids]
         vals = [hierarchy_data[cid]["value"] for cid in children_ids]
         if level_id == "root":
-            level_colors = [region_color_map.get(cat, OKABE_ITO[0]) for cat in cats]
+            level_colors = [region_color_map.get(cat, IMPRINT[0]) for cat in cats]
         else:
-            base_color = region_color_map.get(hierarchy_data[level_id]["name"], OKABE_ITO[0])
+            base_color = region_color_map.get(hierarchy_data[level_id]["name"], IMPRINT[0])
             level_colors = [base_color] * len(cats)
         levels_data[level_id] = {
             "name": hierarchy_data[level_id]["name"],
@@ -183,7 +183,7 @@ html_text_soft = INK_SOFT
 html_grid = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 html_tooltip_bg = "rgba(0,0,0,0.88)" if THEME == "light" else "rgba(36,36,32,0.95)"
 html_back_btn_border = INK_SOFT
-html_brand = OKABE_ITO[0]
+html_brand = IMPRINT[0]
 
 html_content = f"""<!DOCTYPE html>
 <html>

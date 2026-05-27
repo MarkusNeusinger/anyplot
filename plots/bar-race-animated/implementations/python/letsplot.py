@@ -18,7 +18,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 np.random.seed(42)
 
@@ -39,7 +39,7 @@ for i, platform in enumerate(platforms):
 
 df = pd.DataFrame(data_rows)
 
-platform_colors = dict(zip(platforms, OKABE_ITO))
+platform_colors = dict(zip(platforms, IMPRINT))
 snapshot_years = [2016, 2018, 2021, 2023]
 
 anyplot_theme = theme(

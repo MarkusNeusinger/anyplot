@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 
 # Simulated K-means inertia values showing typical elbow curve pattern
 # Data represents clustering analysis on customer segmentation dataset

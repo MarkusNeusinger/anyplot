@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito colors for Close Price, EMA 12, EMA 26
-COLORS = {"Close Price": "#009E73", "EMA 12": "#D55E00", "EMA 26": "#0072B2"}
+COLORS = {"Close Price": "#009E73", "EMA 12": "#C475FD", "EMA 26": "#4467A3"}
 
 # Data
 np.random.seed(42)
@@ -107,7 +107,7 @@ plot = (
 for x in bullish_crosses:
     plot = plot + geom_vline(xintercept=x, color="#009E73", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
 for x in bearish_crosses:
-    plot = plot + geom_vline(xintercept=x, color="#D55E00", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
+    plot = plot + geom_vline(xintercept=x, color="#C475FD", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
 
 # Save
 export_ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)

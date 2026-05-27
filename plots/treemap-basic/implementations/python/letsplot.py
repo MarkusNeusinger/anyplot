@@ -35,7 +35,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for consistent color mapping across categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Budget allocation with two-level hierarchy
 # Departments (main) and projects/teams (sub) for realistic budget breakdown
@@ -214,7 +214,7 @@ rect_df["label"] = rect_df.apply(make_label, axis=1)
 
 # Map categories to Okabe-Ito colors
 unique_categories = df_data["category"].unique().tolist()
-category_colors = {cat: OKABE_ITO[i % len(OKABE_ITO)] for i, cat in enumerate(unique_categories)}
+category_colors = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(unique_categories)}
 color_values = [category_colors[cat] for cat in unique_categories]
 
 # Determine text color based on theme for better contrast

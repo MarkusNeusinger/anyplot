@@ -36,7 +36,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: customer churn by subscription tier
 tiers = ["Basic", "Standard", "Premium", "Enterprise"]
@@ -110,7 +110,7 @@ plot = (
     ggplot(df)
     + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="status"), color=PAGE_BG, size=1.2)
     + geom_text(data=df_labels, mapping=aes(x="x_mid", y="y_mid", label="label"), color="#FAFAFA", size=14)
-    + scale_fill_manual(values={"Retained": OKABE_ITO[0], "Churned": OKABE_ITO[1]}, name="Status")
+    + scale_fill_manual(values={"Retained": IMPRINT[0], "Churned": IMPRINT[1]}, name="Status")
     + scale_x_continuous(expand=[0, 0], breaks=list(x_mids), labels=tiers)
     + scale_y_continuous(expand=[0, 0], breaks=[0.0, 0.25, 0.5, 0.75, 1.0], labels=["0%", "25%", "50%", "75%", "100%"])
     + labs(x="Subscription Tier", y="Customer Proportion", title="bar-spine · letsplot · anyplot.ai")

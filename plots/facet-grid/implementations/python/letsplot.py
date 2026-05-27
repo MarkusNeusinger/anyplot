@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (categorical)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - sales analysis by category and region
 np.random.seed(42)
@@ -93,7 +93,7 @@ plot = (
     + geom_point(size=3, alpha=0.7)
     + geom_smooth(method="lm", se=False, size=1.5)
     + facet_grid(x="Region", y="Category")
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + labs(title="facet-grid · letsplot · anyplot.ai", x="Unit Price ($)", y="Units Sold")
     + theme_minimal()
     + anyplot_theme

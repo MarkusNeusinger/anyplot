@@ -136,7 +136,7 @@ for node in nodes:
     y_pos[node["id"]] = 1 - (node["level"] / max_level)
 
 # Okabe-Ito palette: first level always #009E73, then follow canonical order
-okabe_ito = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+okabe_ito = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 level_names = ["Executive", "VP", "Manager", "Staff"]
 
 # Create edges dataframe

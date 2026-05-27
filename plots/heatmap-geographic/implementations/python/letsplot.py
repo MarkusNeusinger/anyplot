@@ -100,10 +100,10 @@ plot = (
     + geom_point(
         aes(x="longitude", y="latitude", size="magnitude"),
         data=df,
-        color="#0072B2",
+        color="#4467A3",
         alpha=0.5,
         shape=21,
-        fill="#E69F00",
+        fill="#AE3030",
         stroke=0.5,
         tooltips=layer_tooltips()
         .line("Lat: @latitude{.2f}")

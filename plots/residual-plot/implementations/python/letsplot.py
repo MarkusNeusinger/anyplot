@@ -25,7 +25,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1: bluish green (normal points)
-OUTLIER_COLOR = "#D55E00"  # Position 2: vermillion (outliers)
+OUTLIER_COLOR = "#AE3030"  # imprint red — outliers (>2σ)
 
 # Data: Generate realistic regression scenario with deliberate pattern in residuals
 np.random.seed(42)

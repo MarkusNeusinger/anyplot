@@ -39,7 +39,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -81,7 +81,7 @@ plot = (
         size=8,
         fontface="bold",
     )
-    + scale_color_manual(values=ANYPLOT_PALETTE, name="Symbol")
+    + scale_color_manual(values=IMPRINT, name="Symbol")
     + labs(title="line-stock-comparison · python · letsplot · anyplot.ai", x="Date", y="Performance (rebased to 100)")
     + theme_minimal()
     + theme(
