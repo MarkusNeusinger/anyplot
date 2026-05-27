@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-27
 """
 
 # When run directly (python seaborn.py), this directory is prepended to
