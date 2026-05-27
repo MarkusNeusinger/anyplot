@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for clusters
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Simulated silhouette scores for 3-cluster solution
 np.random.seed(42)
@@ -114,7 +114,7 @@ chart.options.x_axis = {
         {
             "from": 0 if i == 0 else cluster_boundaries[i - 1] + 0.5,
             "to": cluster_boundaries[i] + 0.5,
-            "color": f"rgba({int(OKABE_ITO[i][1:3], 16)}, {int(OKABE_ITO[i][3:5], 16)}, {int(OKABE_ITO[i][5:7], 16)}, 0.08)",
+            "color": f"rgba({int(IMPRINT[i][1:3], 16)}, {int(IMPRINT[i][3:5], 16)}, {int(IMPRINT[i][5:7], 16)}, 0.08)",
             "label": {
                 "text": f"Cluster {i}<br>Avg: {np.mean(cluster_data[i]):.3f}",
                 "style": {"fontSize": "20px", "color": INK},
@@ -193,7 +193,7 @@ for cluster_id in range(n_clusters):
     series = BarSeries()
     series.name = f"Cluster {cluster_id} (n={len(cluster_data[cluster_id])})"
     series.data = all_series_data[cluster_id]
-    series.color = OKABE_ITO[cluster_id]
+    series.color = IMPRINT[cluster_id]
     chart.add_series(series)
 
 # Export to PNG via Selenium

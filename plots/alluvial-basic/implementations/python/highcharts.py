@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Voter migration between political parties across 3 elections
 # Format: [from_node, to_node, flow_count]
@@ -52,9 +52,9 @@ flows = [
 
 # Party colors using Okabe-Ito palette
 party_colors = {
-    "Democratic": OKABE_ITO[0],  # #009E73
-    "Independent": OKABE_ITO[1],  # #D55E00
-    "Republican": OKABE_ITO[2],  # #0072B2
+    "Democratic": IMPRINT[0],  # #009E73
+    "Independent": IMPRINT[1],  # #C475FD
+    "Republican": IMPRINT[2],  # #4467A3
 }
 
 # Column positions for time ordering
@@ -212,15 +212,15 @@ legend_html = f"""
 <div id="custom-legend" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
      display: flex; gap: 60px; font-family: Arial, sans-serif; font-size: 18px; color: {INK_SOFT};">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 30px; background-color: {OKABE_ITO[0]};"></div>
+        <div style="width: 40px; height: 30px; background-color: {IMPRINT[0]};"></div>
         <span>Democratic</span>
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 30px; background-color: {OKABE_ITO[1]};"></div>
+        <div style="width: 40px; height: 30px; background-color: {IMPRINT[1]};"></div>
         <span>Independent</span>
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 30px; background-color: {OKABE_ITO[2]};"></div>
+        <div style="width: 40px; height: 30px; background-color: {IMPRINT[2]};"></div>
         <span>Republican</span>
     </div>
 </div>

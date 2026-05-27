@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Total budget for center focal point annotation
 TOTAL_BUDGET = 1240  # Engineering 720 + Marketing 310 + Operations 210 ($K)
@@ -34,9 +34,9 @@ data = [
     # Root (center circle) — background-colored so it appears as text-only focal point
     {"id": "root", "name": f"${TOTAL_BUDGET:,}K", "color": PAGE_BG},
     # Level 1: Departments (innermost ring) — Okabe-Ito in canonical order
-    {"id": "engineering", "name": "Engineering", "parent": "root", "color": OKABE_ITO[0]},
-    {"id": "marketing", "name": "Marketing", "parent": "root", "color": OKABE_ITO[1]},
-    {"id": "operations", "name": "Operations", "parent": "root", "color": OKABE_ITO[2]},
+    {"id": "engineering", "name": "Engineering", "parent": "root", "color": IMPRINT[0]},
+    {"id": "marketing", "name": "Marketing", "parent": "root", "color": IMPRINT[1]},
+    {"id": "operations", "name": "Operations", "parent": "root", "color": IMPRINT[2]},
     # Level 2: Teams within each department
     {"id": "frontend", "name": "Frontend", "parent": "engineering", "value": 280},
     {"id": "backend", "name": "Backend", "parent": "engineering", "value": 350},

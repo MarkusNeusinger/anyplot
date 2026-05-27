@@ -177,7 +177,7 @@ chart.add_series(h_axis_series)
 
 # VSWR circles — Okabe-Ito positions 2, 3, 4
 vswr_values = [1.5, 2.0, 3.0]
-vswr_colors = ["#D55E00", "#0072B2", "#CC79A7"]
+vswr_colors = ["#C475FD", "#4467A3", "#BD8233"]
 for i, vswr in enumerate(vswr_values):
     gm = (vswr - 1) / (vswr + 1)
     v_theta = np.linspace(0, 2 * np.pi, 200)
@@ -200,7 +200,7 @@ match_series.marker = {
     "enabled": True,
     "radius": 16,
     "symbol": "diamond",
-    "fillColor": "#E69F00",
+    "fillColor": "#AE3030",
     "lineColor": INK,
     "lineWidth": 2,
 }

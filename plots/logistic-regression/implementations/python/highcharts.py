@@ -32,8 +32,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Semantic color mapping: Pass→green (good), Fail→red (bad)
 COLOR_PASS = "#009E73"  # anyplot position 1 — semantic: pass/good
-COLOR_FAIL = "#B71D27"  # anyplot position 3 — semantic: fail/bad
-COLOR_CURVE = "#9418DB"  # anyplot position 2 — logistic curve
+COLOR_FAIL = "#AE3030"  # anyplot position 3 — semantic: fail/bad
+COLOR_CURVE = "#C475FD"  # anyplot position 2 — logistic curve
 
 # Data — exam pass/fail as a function of study hours
 np.random.seed(42)
@@ -185,7 +185,7 @@ chart.add_series(curve_series)
 scatter_fail = ScatterSeries()
 scatter_fail.data = [[x_fail[i], y_fail[i]] for i in range(len(x_fail))]
 scatter_fail.name = "Fail (0)"
-scatter_fail.color = "rgba(183, 29, 39, 0.6)"  # #B71D27 at 0.6 alpha
+scatter_fail.color = "rgba(174, 48, 48, 0.6)"  # #AE3030 at 0.6 alpha
 scatter_fail.marker = {"radius": 8, "symbol": "circle"}
 chart.add_series(scatter_fail)
 

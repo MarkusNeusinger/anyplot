@@ -28,11 +28,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # position 1 (brand green - ALWAYS first series)
-    "#D55E00",  # position 2
-    "#0072B2",  # position 3
-    "#CC79A7",  # position 4
+    "#C475FD",  # position 2
+    "#4467A3",  # position 3
+    "#BD8233",  # position 4
 ]
 
 # Data - Simulated word embeddings after dimensionality reduction
@@ -131,10 +131,10 @@ chart.options.legend = {
 
 # Create data with text labels
 categories = {
-    "Programming Languages": (programming_words, OKABE_ITO[0], 0),
-    "Data Science": (data_words, OKABE_ITO[1], len(programming_words)),
-    "Web Frameworks": (web_words, OKABE_ITO[2], len(programming_words) + len(data_words)),
-    "Databases": (database_words, OKABE_ITO[3], len(programming_words) + len(data_words) + len(web_words)),
+    "Programming Languages": (programming_words, IMPRINT[0], 0),
+    "Data Science": (data_words, IMPRINT[1], len(programming_words)),
+    "Web Frameworks": (web_words, IMPRINT[2], len(programming_words) + len(data_words)),
+    "Databases": (database_words, IMPRINT[3], len(programming_words) + len(data_words) + len(web_words)),
 }
 
 for cat_name, (words, color, start_idx) in categories.items():

@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data
 np.random.seed(42)
@@ -127,7 +127,7 @@ chart.options.plot_options = {
 price_series = LineSeries()
 price_series.name = "Close Price"
 price_series.data = [[t, round(p, 2)] for t, p in zip(timestamps, df["close"], strict=True)]
-price_series.color = OKABE_ITO[0]
+price_series.color = IMPRINT[0]
 price_series.line_width = 5
 price_series.z_index = 3
 chart.add_series(price_series)
@@ -136,7 +136,7 @@ chart.add_series(price_series)
 ema12_series = LineSeries()
 ema12_series.name = "EMA 12"
 ema12_series.data = [[t, round(e, 2)] for t, e in zip(timestamps, df["ema_12"], strict=True)]
-ema12_series.color = OKABE_ITO[1]
+ema12_series.color = IMPRINT[1]
 ema12_series.line_width = 3
 ema12_series.z_index = 2
 chart.add_series(ema12_series)
@@ -145,7 +145,7 @@ chart.add_series(ema12_series)
 ema26_series = LineSeries()
 ema26_series.name = "EMA 26"
 ema26_series.data = [[t, round(e, 2)] for t, e in zip(timestamps, df["ema_26"], strict=True)]
-ema26_series.color = OKABE_ITO[2]
+ema26_series.color = IMPRINT[2]
 ema26_series.line_width = 3
 ema26_series.dash_style = "ShortDash"
 ema26_series.z_index = 1
@@ -155,7 +155,7 @@ chart.add_series(ema26_series)
 crossover_series = ScatterSeries()
 crossover_series.name = "Crossover"
 crossover_series.data = [[t, round(e, 2)] for t, e in zip(crossover_timestamps, crossover_df["ema_12"], strict=True)]
-crossover_series.color = OKABE_ITO[3]
+crossover_series.color = IMPRINT[3]
 crossover_series.marker = {"symbol": "diamond", "radius": 14}
 crossover_series.z_index = 4
 chart.add_series(crossover_series)

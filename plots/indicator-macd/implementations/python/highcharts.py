@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for lines
 MACD_COLOR = "#009E73"  # Position 1 - brand
-SIGNAL_COLOR = "#D55E00"  # Position 2 - vermillion
+SIGNAL_COLOR = "#BD8233"  # imprint ochre — signal line (categorical contrast)
 HISTOGRAM_POS_COLOR = "#22C55E"  # Green for positive histogram
 HISTOGRAM_NEG_COLOR = "#EF4444"  # Red for negative histogram
 

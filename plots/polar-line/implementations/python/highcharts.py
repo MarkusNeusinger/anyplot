@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Monthly temperature pattern (cyclical, degrees around year)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -95,8 +95,8 @@ chart.options.legend = {
 
 # Add series data with Okabe-Ito colors
 chart.options.series = [
-    {"type": "line", "name": "Continental City", "data": city_a, "color": OKABE_ITO[0], "marker": {"symbol": "circle"}},
-    {"type": "line", "name": "Oceanic City", "data": city_b, "color": OKABE_ITO[1], "marker": {"symbol": "diamond"}},
+    {"type": "line", "name": "Continental City", "data": city_a, "color": IMPRINT[0], "marker": {"symbol": "circle"}},
+    {"type": "line", "name": "Oceanic City", "data": city_b, "color": IMPRINT[1], "marker": {"symbol": "diamond"}},
 ]
 
 # Download Highcharts JS and Highcharts More for polar charts

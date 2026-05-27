@@ -28,7 +28,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 # Okabe-Ito palette (positions 1-4)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — employee performance scores by department
 np.random.seed(42)
@@ -140,7 +140,7 @@ chart.options.tooltip = {
 for cat_idx, cat in enumerate(categories):
     series = ScatterSeries()
     series.name = cat
-    series.color = OKABE_ITO[cat_idx]
+    series.color = IMPRINT[cat_idx]
     cat_data = swarm_by_cat[cat]
     series.data = [
         {"x": float(cat_idx + x_off), "y": float(val)}
@@ -149,7 +149,7 @@ for cat_idx, cat in enumerate(categories):
     series.marker = {
         "radius": 14,
         "symbol": "circle",
-        "fillColor": OKABE_ITO[cat_idx],
+        "fillColor": IMPRINT[cat_idx],
         "lineWidth": 2,
         "lineColor": PAGE_BG,
     }

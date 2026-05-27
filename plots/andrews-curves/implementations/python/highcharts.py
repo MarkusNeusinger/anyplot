@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 iris = load_iris()
 X = StandardScaler().fit_transform(iris.data)
@@ -125,7 +125,7 @@ for species_idx in range(3):
         series = SplineSeries()
         series.data = data_points
         series.name = species_names[species_idx]
-        series.color = OKABE_ITO[species_idx]
+        series.color = IMPRINT[species_idx]
         series.opacity = 0.5
         series.show_in_legend = i == 0
         series.line_width = 2

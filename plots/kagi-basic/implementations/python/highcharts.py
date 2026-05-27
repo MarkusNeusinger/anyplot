@@ -28,7 +28,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 YANG_COLOR = "#009E73"  # Green (bullish) - first series
-YIN_COLOR = "#D55E00"  # Vermillion (bearish) - second series
+YIN_COLOR = "#AE3030"  # imprint red — bearish
 
 # Generate realistic stock price data
 np.random.seed(42)

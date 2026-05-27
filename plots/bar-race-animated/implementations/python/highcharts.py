@@ -31,12 +31,12 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 # Okabe-Ito palette (positions 1–7) + adaptive neutral for 8 entities
 OI_COLORS = [
     "#009E73",  # position 1: bluish green
-    "#D55E00",  # position 2: vermillion
-    "#0072B2",  # position 3: blue
-    "#CC79A7",  # position 4: reddish purple
-    "#E69F00",  # position 5: orange
-    "#56B4E9",  # position 6: sky blue
-    "#F0E442",  # position 7: yellow
+    "#C475FD",  # position 2: vermillion
+    "#4467A3",  # position 3: blue
+    "#BD8233",  # position 4: reddish purple
+    "#AE3030",  # position 5: orange
+    "#2ABCCD",  # position 6: sky blue
+    "#954477",  # position 7: yellow
     "#1A1A1A" if THEME == "light" else "#E8E8E0",  # position 8: adaptive neutral
 ]
 

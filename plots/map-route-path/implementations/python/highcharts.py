@@ -195,7 +195,7 @@ html_inline = f"""<!DOCTYPE html>
                 marker: {{
                     symbol: 'triangle',
                     radius: 14,
-                    fillColor: '#0072B2',
+                    fillColor: '#4467A3',
                     lineWidth: 2,
                     lineColor: '{PAGE_BG}',
                     rotation: 90 - pt.angle
@@ -220,7 +220,7 @@ html_inline = f"""<!DOCTYPE html>
             marker: {{
                 symbol: 'circle',
                 radius: 8,
-                fillColor: '#E69F00',
+                fillColor: '#AE3030',
                 lineWidth: 2,
                 lineColor: '{PAGE_BG}'
             }},
@@ -260,12 +260,12 @@ html_inline = f"""<!DOCTYPE html>
             type: 'mappoint',
             name: 'End (6 hrs)',
             showInLegend: true,
-            color: '#D55E00',
+            color: '#C475FD',
             zIndex: 20,
             marker: {{
                 symbol: 'square',
                 radius: 18,
-                fillColor: '#D55E00',
+                fillColor: '#C475FD',
                 lineWidth: 4,
                 lineColor: '{PAGE_BG}'
             }},
@@ -275,7 +275,7 @@ html_inline = f"""<!DOCTYPE html>
                 style: {{
                     fontSize: '38px',
                     fontWeight: 'bold',
-                    color: '#D55E00',
+                    color: '#C475FD',
                     textOutline: '3px {PAGE_BG}'
                 }},
                 y: -50
@@ -400,7 +400,7 @@ html_cdn = f"""<!DOCTYPE html>
                 var arrowData = arrowPoints.map(function(pt) {{
                     return {{
                         lat: pt.lat, lon: pt.lon,
-                        marker: {{ symbol: 'triangle', radius: 7, fillColor: '#0072B2',
+                        marker: {{ symbol: 'triangle', radius: 7, fillColor: '#4467A3',
                                    lineWidth: 1, lineColor: '#fff', rotation: 90 - pt.angle }}
                     }};
                 }});
@@ -408,7 +408,7 @@ html_cdn = f"""<!DOCTYPE html>
                                zIndex: 16, enableMouseTracking: false, data: arrowData }});
                 series.push({{ type: 'mappoint', name: 'Waypoints', showInLegend: false,
                                zIndex: 15, marker: {{ symbol: 'circle', radius: 4,
-                               fillColor: '#E69F00', lineWidth: 1, lineColor: '#fff' }},
+                               fillColor: '#AE3030', lineWidth: 1, lineColor: '#fff' }},
                                data: waypointData }});
                 series.push({{
                     type: 'mappoint', name: 'Start (0 hrs)', showInLegend: true,
@@ -422,12 +422,12 @@ html_cdn = f"""<!DOCTYPE html>
                 }});
                 series.push({{
                     type: 'mappoint', name: 'End (6 hrs)', showInLegend: true,
-                    color: '#D55E00', zIndex: 20,
-                    marker: {{ symbol: 'square', radius: 9, fillColor: '#D55E00',
+                    color: '#C475FD', zIndex: 20,
+                    marker: {{ symbol: 'square', radius: 9, fillColor: '#C475FD',
                                lineWidth: 2, lineColor: '#fff' }},
                     dataLabels: {{ enabled: true, format: 'END',
                                    style: {{ fontSize: '13px', fontWeight: 'bold',
-                                             color: '#D55E00', textOutline: '2px #fff' }}, y: -22 }},
+                                             color: '#C475FD', textOutline: '2px #fff' }}, y: -22 }},
                     data: [{{ lat: endPoint.lat, lon: endPoint.lon }}]
                 }});
                 Highcharts.mapChart('container', {{

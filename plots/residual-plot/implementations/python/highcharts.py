@@ -28,7 +28,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # bluish green — ALWAYS first series
-ACCENT_1 = "#D55E00"  # vermillion
+ACCENT_1 = "#C475FD"  # vermillion
 
 # Data: Linear regression example with housing price predictions
 np.random.seed(42)

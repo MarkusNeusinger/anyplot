@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — simulate scRNA-seq cell types, project to 2D via t-SNE
 np.random.seed(42)
@@ -140,7 +140,7 @@ chart.options.plot_options = {
 }
 
 # One series per immune cell type
-for i, (label, color) in enumerate(zip(cell_types, OKABE_ITO, strict=True)):
+for i, (label, color) in enumerate(zip(cell_types, IMPRINT, strict=True)):
     series = ScatterSeries()
     series.name = label
     series.color = color

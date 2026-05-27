@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Simulating trade flows between 8 chromosomes with expression tracks
 np.random.seed(42)
@@ -56,7 +56,7 @@ for i in range(n_chrs):
             connections.append([chromosomes[i], chromosomes[j], float(round(flow_matrix[i, j], 1))])
 
 # Use Okabe-Ito palette for chromosomes (cycling through palette)
-chr_colors = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_chrs)]
+chr_colors = [IMPRINT[i % len(IMPRINT)] for i in range(n_chrs)]
 
 # Create nodes with colors
 nodes = [{"id": chromosomes[i], "color": chr_colors[i]} for i in range(n_chrs)]
@@ -105,7 +105,7 @@ chart_config = {
         "title": {"text": "Chromosomes", "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK}},
     },
     "plotOptions": {"dependencywheel": {"showInLegend": False}, "pie": {"showInLegend": False}},
-    "colors": OKABE_ITO,
+    "colors": IMPRINT,
     "series": [
         {
             "type": "dependencywheel",

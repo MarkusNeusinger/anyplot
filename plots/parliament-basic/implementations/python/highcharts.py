@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Legislative assembly with 6 parties (neutral context, no real politics)
 parties = [
@@ -146,7 +146,7 @@ chart.options.tooltip = {
 }
 
 # Set color palette
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 # Add a series for each party
 for idx, party in enumerate(parties):
@@ -156,7 +156,7 @@ for idx, party in enumerate(parties):
     series = ScatterSeries()
     series.name = f"{party['name']} ({party['seats']} seats)"
     series.data = party_seats
-    series.color = OKABE_ITO[idx % len(OKABE_ITO)]
+    series.color = IMPRINT[idx % len(IMPRINT)]
     series.marker = {"radius": 8, "symbol": "circle", "lineWidth": 1, "lineColor": PAGE_BG}
 
     chart.add_series(series)

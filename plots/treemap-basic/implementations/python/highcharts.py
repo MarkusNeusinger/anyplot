@@ -25,16 +25,16 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (positions 1-7)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Budget allocation by department and project
 data = [
     # Parent categories (level 1) with Okabe-Ito colors
-    {"id": "engineering", "name": "Engineering", "color": OKABE_ITO[0]},
-    {"id": "marketing", "name": "Marketing", "color": OKABE_ITO[1]},
-    {"id": "operations", "name": "Operations", "color": OKABE_ITO[2]},
-    {"id": "sales", "name": "Sales", "color": OKABE_ITO[3]},
-    {"id": "hr", "name": "HR", "color": OKABE_ITO[4]},
+    {"id": "engineering", "name": "Engineering", "color": IMPRINT[0]},
+    {"id": "marketing", "name": "Marketing", "color": IMPRINT[1]},
+    {"id": "operations", "name": "Operations", "color": IMPRINT[2]},
+    {"id": "sales", "name": "Sales", "color": IMPRINT[3]},
+    {"id": "hr", "name": "HR", "color": IMPRINT[4]},
     # Engineering subcategories
     {"name": "Backend Dev", "parent": "engineering", "value": 45000},
     {"name": "Frontend Dev", "parent": "engineering", "value": 38000},
@@ -96,7 +96,7 @@ series_config = {
     "name": "Budget",
     "layoutAlgorithm": "squarified",
     "allowDrillToNode": True,
-    "colors": OKABE_ITO,
+    "colors": IMPRINT,
     "dataLabels": {"enabled": True, "style": {"fontSize": "20px", "color": INK}},
     "levels": [
         {

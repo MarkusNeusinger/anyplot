@@ -28,7 +28,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Training loss (first series)
-SECONDARY = "#D55E00"  # Validation loss
+SECONDARY = "#C475FD"  # Validation loss
 
 # Data - Simulate training and validation loss over epochs
 np.random.seed(42)

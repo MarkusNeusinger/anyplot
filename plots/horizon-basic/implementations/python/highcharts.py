@@ -49,8 +49,8 @@ n_bands = 3
 # Color scheme: Okabe-Ito green shades for positive, orange shades for negative
 # Positive: from light to dark shades of #009E73 (Okabe-Ito position 1)
 colors_pos = ["#6FD8C0", "#009E73", "#004A3A"]  # Light to dark green
-# Negative: from light to dark shades of #D55E00 (Okabe-Ito position 2)
-colors_neg = ["#F4B3A0", "#D55E00", "#6B2F00"]  # Light to dark orange
+# Negative: from light to dark shades of imprint red
+colors_neg = ["#E07070", "#AE3030", "#7A1F1F"]  # imprint red ramp
 
 # Calculate global max for consistent band sizing
 all_values = np.concatenate([np.array(d["values"]) for d in data])

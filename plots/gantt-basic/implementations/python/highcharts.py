@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Project tasks with start/end dates and categories
 tasks = [
@@ -49,10 +49,10 @@ tasks = [
 
 # Map categories to Okabe-Ito colors
 category_colors = {
-    "Planning": OKABE_ITO[0],  # #009E73
-    "Development": OKABE_ITO[1],  # #D55E00
-    "Testing": OKABE_ITO[2],  # #0072B2
-    "Deployment": OKABE_ITO[3],  # #CC79A7
+    "Planning": IMPRINT[0],  # #009E73
+    "Development": IMPRINT[1],  # #C475FD
+    "Testing": IMPRINT[2],  # #4467A3
+    "Deployment": IMPRINT[3],  # #BD8233
 }
 
 task_names = [t["name"] for t in tasks]
@@ -120,7 +120,7 @@ html_content = f"""<!DOCTYPE html>
                 marginLeft: 360,
                 marginTop: 150,
             }},
-            colors: ['{OKABE_ITO[0]}', '{OKABE_ITO[1]}', '{OKABE_ITO[2]}', '{OKABE_ITO[3]}'],
+            colors: ['{IMPRINT[0]}', '{IMPRINT[1]}', '{IMPRINT[2]}', '{IMPRINT[3]}'],
             title: {{
                 text: 'gantt-basic · highcharts · anyplot.ai',
                 style: {{fontSize: '28px', fontWeight: 'bold', color: '{INK}'}},
@@ -199,22 +199,22 @@ html_content = f"""<!DOCTYPE html>
                 {{
                     name: 'Planning',
                     data: {str(series_data_planning)},
-                    color: '{OKABE_ITO[0]}'
+                    color: '{IMPRINT[0]}'
                 }},
                 {{
                     name: 'Development',
                     data: {str(series_data_development)},
-                    color: '{OKABE_ITO[1]}'
+                    color: '{IMPRINT[1]}'
                 }},
                 {{
                     name: 'Testing',
                     data: {str(series_data_testing)},
-                    color: '{OKABE_ITO[2]}'
+                    color: '{IMPRINT[2]}'
                 }},
                 {{
                     name: 'Deployment',
                     data: {str(series_data_deployment)},
-                    color: '{OKABE_ITO[3]}'
+                    color: '{IMPRINT[3]}'
                 }}
             ],
             credits: {{enabled: false}}

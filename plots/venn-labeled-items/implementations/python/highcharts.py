@@ -25,8 +25,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical palette: first series is brand green
-CIRCLE_COLORS = ["#009E73", "#D55E00", "#0072B2"]
-CIRCLE_FILLS = ["rgba(0,158,115,0.22)", "rgba(213,94,0,0.22)", "rgba(0,114,178,0.22)"]
+CIRCLE_COLORS = ["#009E73", "#C475FD", "#4467A3"]
+CIRCLE_FILLS = ["rgba(0,158,115,0.22)", "rgba(196, 117, 253, 0.22)", "rgba(68, 103, 163, 0.22)"]
 
 # Editorial Chartgeist-style commentary on tech/culture
 circles = [{"name": "Overhyped"}, {"name": "Actually Useful"}, {"name": "Secretly Loved"}]

@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"  # Okabe-Ito position 1
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Monthly temperature data for 4 cities
 np.random.seed(42)
@@ -105,7 +105,7 @@ chart.options.plot_options = {"line": {"lineWidth": 6, "marker": {"enabled": Tru
 series1 = LineSeries()
 series1.name = "Madrid"
 series1.data = [round(float(v), 1) for v in madrid]
-series1.color = OKABE_ITO[0]
+series1.color = IMPRINT[0]
 series1.dash_style = "Solid"
 chart.add_series(series1)
 
@@ -113,7 +113,7 @@ chart.add_series(series1)
 series2 = LineSeries()
 series2.name = "Berlin"
 series2.data = [round(float(v), 1) for v in berlin]
-series2.color = OKABE_ITO[1]
+series2.color = IMPRINT[1]
 series2.dash_style = "Dash"
 chart.add_series(series2)
 
@@ -121,7 +121,7 @@ chart.add_series(series2)
 series3 = LineSeries()
 series3.name = "Edinburgh"
 series3.data = [round(float(v), 1) for v in edinburgh]
-series3.color = OKABE_ITO[2]
+series3.color = IMPRINT[2]
 series3.dash_style = "Dot"
 chart.add_series(series3)
 
@@ -129,7 +129,7 @@ chart.add_series(series3)
 series4 = LineSeries()
 series4.name = "Oslo"
 series4.data = [round(float(v), 1) for v in oslo]
-series4.color = OKABE_ITO[3]
+series4.color = IMPRINT[3]
 series4.dash_style = "DashDot"
 chart.add_series(series4)
 

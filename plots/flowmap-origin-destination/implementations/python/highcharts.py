@@ -170,7 +170,7 @@ chart_config = {
             "color": BRAND,
             "fillColor": {
                 "linearGradient": {"x1": 0, "y1": 0, "x2": 1, "y2": 0},
-                "stops": [[0, "rgba(0, 158, 115, 0.60)"], [1, "rgba(0, 114, 178, 0.60)"]],
+                "stops": [[0, "rgba(0, 158, 115, 0.60)"], [1, "rgba(68, 103, 163, 0.60)"]],
             },
         },
     ],

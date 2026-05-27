@@ -42,19 +42,19 @@ flows = [
 ]
 
 # Node colors - Okabe-Ito palette (canonical order for source nodes)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 node_colors = {
-    "Coal": OKABE_ITO[0],
-    "Natural Gas": OKABE_ITO[1],
-    "Nuclear": OKABE_ITO[2],
-    "Petroleum": OKABE_ITO[3],
-    "Renewable": OKABE_ITO[4],
-    "Electricity": OKABE_ITO[5],
-    "Transportation": OKABE_ITO[6],
-    "Industrial": OKABE_ITO[0],
-    "Residential": OKABE_ITO[1],
-    "Commercial": OKABE_ITO[2],
+    "Coal": IMPRINT[0],
+    "Natural Gas": IMPRINT[1],
+    "Nuclear": IMPRINT[2],
+    "Petroleum": IMPRINT[3],
+    "Renewable": IMPRINT[4],
+    "Electricity": IMPRINT[5],
+    "Transportation": IMPRINT[6],
+    "Industrial": IMPRINT[0],
+    "Residential": IMPRINT[1],
+    "Commercial": IMPRINT[2],
 }
 
 nodes_set = set()
@@ -62,7 +62,7 @@ for source, target, _ in flows:
     nodes_set.add(source)
     nodes_set.add(target)
 
-nodes_data = [{"id": node, "name": node, "color": node_colors.get(node, OKABE_ITO[0])} for node in nodes_set]
+nodes_data = [{"id": node, "name": node, "color": node_colors.get(node, IMPRINT[0])} for node in nodes_set]
 links_data = [{"from": source, "to": target, "weight": value} for source, target, value in flows]
 
 # Chart

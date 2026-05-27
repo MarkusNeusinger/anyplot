@@ -82,8 +82,8 @@ ohlc_data = []
 volume_data = []
 
 # Colorblind-friendly colors: blue for up, orange for down
-UP_COLOR = "#0072B2"  # Blue (Okabe-Ito position 3)
-DOWN_COLOR = "#E69F00"  # Orange (Okabe-Ito position 5)
+UP_COLOR = "#4467A3"  # Blue (Okabe-Ito position 3)
+DOWN_COLOR = "#AE3030"  # Orange (Okabe-Ito position 5)
 
 for i in range(n_days):
     ohlc_data.append(

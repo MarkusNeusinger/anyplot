@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 # Warm accent for tail-deviation bands — Okabe-Ito orange, theme-adaptive opacity
-BAND_COLOR = "rgba(213,94,0,0.12)" if THEME == "light" else "rgba(230,159,0,0.22)"
+BAND_COLOR = "rgba(196, 117, 253, 0.12)" if THEME == "light" else "rgba(174, 48, 48, 0.22)"
 
 # Data - mixed normal to demonstrate Q-Q characteristics (slight right skew)
 np.random.seed(42)

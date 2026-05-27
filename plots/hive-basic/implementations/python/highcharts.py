@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Software module dependency network
 # Nodes assigned to 3 axes by module type: Core, Utility, Interface (deterministic data)
@@ -116,7 +116,7 @@ for axis_idx in range(num_axes):
     y1 = center_y + inner_radius * math.sin(angle)
     x2 = center_x + (outer_radius + 50) * math.cos(angle)
     y2 = center_y + (outer_radius + 50) * math.sin(angle)
-    color = OKABE_ITO[axis_idx]
+    color = IMPRINT[axis_idx]
 
     renderer_commands.append(
         f"chart.renderer.path(['M', {x1:.0f}, {y1:.0f}, 'L', {x2:.0f}, {y2:.0f}], null)"
@@ -143,7 +143,7 @@ for edge in edges:
     mid_y = (y1 + y2) / 2
     ctrl_x = center_x + (mid_x - center_x) * 0.15
     ctrl_y = center_y + (mid_y - center_y) * 0.15
-    edge_color = OKABE_ITO[source["axis"]]
+    edge_color = IMPRINT[source["axis"]]
     stroke_width = 3 + weight * 2
 
     renderer_commands.append(
@@ -160,7 +160,7 @@ renderer_commands.append(
 # Draw nodes as circles
 for node in nodes:
     x, y = node_coords[node["id"]]
-    color = OKABE_ITO[node["axis"]]
+    color = IMPRINT[node["axis"]]
 
     renderer_commands.append(
         f"chart.renderer.circle({x:.0f}, {y:.0f}, 32).attr({{fill: '{color}', stroke: '{PAGE_BG}', 'stroke-width': 5, zIndex: 10}}).add();"
@@ -193,7 +193,7 @@ legend_items = (
 for i, label in enumerate(axis_labels):
     legend_items += f"""
             <div style="display: flex; align-items: center; margin-bottom: 24px;">
-                <div style="width: 50px; height: 50px; border-radius: 50%; background: {OKABE_ITO[i]}; margin-right: 24px; border: 3px solid {PAGE_BG}; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: {IMPRINT[i]}; margin-right: 24px; border: 3px solid {PAGE_BG}; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
                 <span style="font-size: 34px; color: {INK};">{label}</span>
             </div>"""
 legend_items += f"""

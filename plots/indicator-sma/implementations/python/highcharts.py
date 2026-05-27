@@ -29,9 +29,9 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito colors (canonical order)
 CLOSE_COLOR = "#009E73"  # position 1 — brand green — close price
-SMA20_COLOR = "#D55E00"  # position 2 — vermillion — SMA 20
-SMA50_COLOR = "#0072B2"  # position 3 — blue — SMA 50
-SMA200_COLOR = "#CC79A7"  # position 4 — reddish purple — SMA 200
+SMA20_COLOR = "#C475FD"  # position 2 — vermillion — SMA 20
+SMA50_COLOR = "#4467A3"  # position 3 — blue — SMA 50
+SMA200_COLOR = "#BD8233"  # position 4 — reddish purple — SMA 200
 
 # Data: stock price with mean-reverting (Ornstein-Uhlenbeck) dynamics
 np.random.seed(42)

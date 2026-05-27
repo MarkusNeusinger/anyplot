@@ -26,7 +26,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 CONNECTOR = "rgba(26,26,23,0.40)" if THEME == "light" else "rgba(240,239,232,0.40)"
 
 BEFORE_COLOR = "#009E73"  # Okabe-Ito 1 — brand
-AFTER_COLOR = "#D55E00"  # Okabe-Ito 2
+AFTER_COLOR = "#C475FD"  # Okabe-Ito 2
 
 # Employee satisfaction scores (0-100) before and after policy changes.
 # Mix of strong gains, modest gains, and two declines for full coverage.

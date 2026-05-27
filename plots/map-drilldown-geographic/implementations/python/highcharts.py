@@ -40,9 +40,9 @@ chart_config = f"""
 
     var REGION_COLORS = {{
         'west': '#009E73',
-        'south': '#9418DB',
-        'midwest': '#B71D27',
-        'northeast': '#16B8F3'
+        'south': '#C475FD',
+        'midwest': '#AE3030',
+        'northeast': '#4467A3'
     }};
 
     var stateRegions = {{

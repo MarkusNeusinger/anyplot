@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Wind measurements with prevailing directions
 np.random.seed(42)
@@ -62,9 +62,9 @@ speeds = np.array(speeds)
 
 # Colors for categories using Okabe-Ito palette
 colors = {
-    "Morning": OKABE_ITO[0],  # #009E73
-    "Afternoon": OKABE_ITO[1],  # #D55E00
-    "Evening": OKABE_ITO[2],  # #0072B2
+    "Morning": IMPRINT[0],  # #009E73
+    "Afternoon": IMPRINT[1],  # #C475FD
+    "Evening": IMPRINT[2],  # #4467A3
 }
 
 # Build series data for each category

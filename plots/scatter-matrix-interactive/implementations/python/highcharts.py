@@ -27,8 +27,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first color is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
-COLORS = OKABE_ITO[:3]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+COLORS = IMPRINT[:3]
 
 # Data - Iris dataset (4 variables for a 4x4 matrix)
 iris = load_iris()

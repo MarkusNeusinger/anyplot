@@ -27,7 +27,7 @@ regions = ["North America", "Europe", "Asia Pacific", "Latin America", "Middle E
 region_sizes = [450, 380, 520, 180, 120]  # Market size in millions USD
 
 products = ["Enterprise", "SMB", "Consumer", "Government"]
-colors = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]  # Okabe-Ito positions 1-4
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]  # Okabe-Ito positions 1-4
 
 market_share = {
     "North America": [42, 28, 22, 8],

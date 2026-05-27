@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always position 1)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Generate multi-cluster dataset for demonstrating brush selection
 np.random.seed(42)
@@ -39,22 +39,22 @@ clusters = []
 # Cluster 1: Lower-left (Batch A) - Okabe-Ito position 1 (brand green)
 x1 = np.random.normal(25, 6, n_per_cluster)
 y1 = np.random.normal(30, 7, n_per_cluster)
-clusters.append(("Batch A", x1, y1, OKABE_ITO[0]))
+clusters.append(("Batch A", x1, y1, IMPRINT[0]))
 
 # Cluster 2: Upper-right (Batch B) - Okabe-Ito position 2 (vermillion)
 x2 = np.random.normal(75, 8, n_per_cluster)
 y2 = np.random.normal(80, 6, n_per_cluster)
-clusters.append(("Batch B", x2, y2, OKABE_ITO[1]))
+clusters.append(("Batch B", x2, y2, IMPRINT[1]))
 
 # Cluster 3: Center (Batch C) - Okabe-Ito position 3 (blue)
 x3 = np.random.normal(50, 10, n_per_cluster)
 y3 = np.random.normal(50, 10, n_per_cluster)
-clusters.append(("Batch C", x3, y3, OKABE_ITO[2]))
+clusters.append(("Batch C", x3, y3, IMPRINT[2]))
 
 # Cluster 4: Upper-left (Batch D) - Okabe-Ito position 4 (reddish purple)
 x4 = np.random.normal(20, 5, n_per_cluster)
 y4 = np.random.normal(75, 6, n_per_cluster)
-clusters.append(("Batch D", x4, y4, OKABE_ITO[3]))
+clusters.append(("Batch D", x4, y4, IMPRINT[3]))
 
 # Create chart with container
 chart = Chart(container="container")
@@ -73,8 +73,8 @@ chart.options.chart = {
     "resetZoomButton": {
         "position": {"align": "right", "verticalAlign": "top", "x": -60, "y": 30},
         "theme": {
-            "fill": OKABE_ITO[0],
-            "stroke": OKABE_ITO[0],
+            "fill": IMPRINT[0],
+            "stroke": IMPRINT[0],
             "style": {"color": PAGE_BG, "fontSize": "22px", "fontWeight": "bold"},
             "r": 10,
             "padding": 16,

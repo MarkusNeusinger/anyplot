@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first color always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Generate three groups with different distributions
 np.random.seed(42)
@@ -110,17 +110,17 @@ chart.options.legend = {
 series_a = ColumnSeries()
 series_a.data = [int(c) for c in counts_a]
 series_a.name = "Group A"
-series_a.color = OKABE_ITO[0]
+series_a.color = IMPRINT[0]
 
 series_b = ColumnSeries()
 series_b.data = [int(c) for c in counts_b]
 series_b.name = "Group B"
-series_b.color = OKABE_ITO[1]
+series_b.color = IMPRINT[1]
 
 series_c = ColumnSeries()
 series_c.data = [int(c) for c in counts_c]
 series_c.name = "Group C"
-series_c.color = OKABE_ITO[2]
+series_c.color = IMPRINT[2]
 
 chart.add_series(series_a)
 chart.add_series(series_b)

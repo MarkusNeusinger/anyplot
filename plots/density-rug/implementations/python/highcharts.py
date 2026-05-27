@@ -120,8 +120,8 @@ chart.add_series(kde_series)
 rug_series = ScatterSeries()
 rug_series.name = "Rug (Individual Points)"
 rug_series.data = [[float(v), rug_y_position] for v in values]
-rug_series.color = "#D55E00"  # Okabe-Ito position 2
-rug_series.marker = {"symbol": "diamond", "radius": 8, "fillColor": "#D55E00", "lineWidth": 1, "lineColor": INK_SOFT}
+rug_series.color = "#C475FD"  # Okabe-Ito position 2
+rug_series.marker = {"symbol": "diamond", "radius": 8, "fillColor": "#C475FD", "lineWidth": 1, "lineColor": INK_SOFT}
 
 chart.add_series(rug_series)
 
