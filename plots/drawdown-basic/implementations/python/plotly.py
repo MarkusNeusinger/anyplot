@@ -70,7 +70,7 @@ fig.add_trace(
         x=dates,
         y=drawdown,
         fill="tozeroy",
-        fillcolor="rgba(183,29,39,0.30)",
+        fillcolor="rgba(174, 48, 48,0.30)",
         line=dict(color=LOSS_RED, width=2),
         name="Drawdown",
         hovertemplate="Date: %{x|%Y-%m-%d}<br>Drawdown: %{y:.2f}%<extra></extra>",
