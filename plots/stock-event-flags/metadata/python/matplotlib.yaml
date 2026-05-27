@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:17:05Z'
-updated: '2026-05-27T22:50:38Z'
+updated: '2026-05-27T22:59:14Z'
 generated_by: claude-sonnet
 workflow_run: 26542808181
 issue: 3749
@@ -12,54 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Brand green (#009E73) correctly used as the primary price line; palette positions
-    2-5 applied to event types with thoughtful semantic mapping and inline comments
-    explaining the rationale
-  - 'Full theme support: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens wired through
-    to all chrome elements (title, axis labels, ticks, spines, legend frame, annotation
-    edge-color) — both renders are readable in their respective theme'
-  - 'Professional flag annotation design: rounded bbox with colored background and
-    white text, dashed connector lines, and scatter marker dots at the price level
-    precisely align each flag with its date'
-  - Alternating three-level flag heights (height_level = idx % 3) effectively prevents
-    overlap among the nine events
-  - Subtle area fill under the price line (alpha=0.08) adds depth without obscuring
-    data
-  - 'Complete spec compliance: four distinct event types (earnings, dividend, split,
-    news) with letter-coded markers, correct title format, and well-styled legend'
+  - Brand green price line (#009E73) correctly used as the primary data element with
+    a subtle fill area beneath for depth
+  - Alternating 3-level flag heights cleanly separates events in crowded date ranges
+    with no label collisions
+  - Semantic palette assignments are thoughtful — blue for earnings (financial analysis),
+    ochre for dividends (commodity/value), red for news (alert), lavender for split
+    (corporate action)
+  - 'Both themes fully theme-adaptive: background, text, legend frame, spine colors
+    all correctly flip; data colors identical across renders'
+  - Custom legend with mpatches.Patch properly lists all event types alongside the
+    price line handle
+  - 'Spec coverage is complete: connector dashed lines, price-level scatter dots,
+    flag annotation boxes, multi-type events, realistic 9-month tech-company scenario'
+  - Tick marks removed (length=0) and spines cleaned to L-shape for a professional
+    minimal look
+  - Reproducible via np.random.seed(42)
   weaknesses:
-  - 'The ''E Q4'' earnings flag at 2025-01-28 (idx=0, height_level=0, flag_y≈171)
-    is partially obscured by the legend box placed at ''upper left'' in both renders
-    — the ''E Q'' portion of the label is hidden behind the legend frame, leaving
-    only ''..4'' readable. Fix: move legend to ''lower right'' or ''upper right'',
-    or add zorder=10 to the annotation so it always renders above the legend frame'
-  - 'VQ-02 penalty: legend-flag overlap is moderate; other flags are clear but this
-    first event is effectively illegible'
-  - 'DE-01 could be elevated further: the annotation boxes use flat colored fills;
-    a very subtle gradient or shadow (ax.annotate with a slightly offset twin annotation
-    in a darker shade) would push towards publication-ready polish'
-  - 'DE-02: tick marks are visible (not removed); removing minor tick lines via ax.tick_params(which=''both'',
-    length=0) while keeping labels would reduce visual noise'
+  - Flag annotation fontsize=8 is at the minimum readable threshold; consider bumping
+    to 9pt so the letter-prefix (E/D/S/!) and label text remain comfortable at mobile
+    widths
+  - 'DE-01: Design is a polished configured default rather than publication-ready
+    — the layout is tidy but lacks a distinctive typographic or spacing flourish that
+    would lift it above ''well-set matplotlib'''
+  - 'DE-02: Legend uses a visible box frame; removing the frame edge or using a fully
+    frameless legend would add a cleaner magazine-editorial feel'
+  - 'DE-03: No explicit emphasis (e.g., shaded region around earnings dates, or an
+    annotated % change after each earnings event) that would help the viewer extract
+    an insight beyond ''events happened here'''
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "stock-event-flags · python · matplotlib · anyplot.ai" in dark ink at ~65% canvas width — readable and well-proportioned. Y-axis label "Price (USD)" and X-axis label "Date" in dark ink at 10pt — appropriate sizes. Tick labels at 8pt with x-axis rotated 30° — readable. Y-axis-only subtle grid (alpha≈0.15) — correct. Top/right spines removed; left/bottom spines in INK_SOFT.
-      Data: Price line in brand green #009E73 — dominant, clear. Subtle green fill under the line (alpha=0.08). Nine event flags with dashed connector lines and dot markers in palette colors: earnings=#4467A3 (blue), dividend=#BD8233 (ochre), split=#C475FD (lavender), news=#AE3030 (red). White text in rounded colored annotation boxes identifies each event. Legend (upper left) shows line + 4 patch entries, styled with ELEVATED_BG frame.
-      Issue: The "E Q4" earnings flag at 2025-01-28 is partially hidden behind the legend box — only "..4" is readable in the light render. Other flags are fully clear.
-      Legibility verdict: PASS overall, with one annotation (E Q4) partially obscured by legend overlap.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "stock-event-flags · python · matplotlib · anyplot.ai" in dark ink at 12pt spans ~75% of canvas width — readable and non-overflowing. Y-axis label "Price (USD)" and X-axis label "Date" both in dark ink at 10pt, well-proportioned. X-axis tick dates rotated 30° at 8pt — readable. Y-axis price ticks at 8pt — readable.
+      Data: Brand green #009E73 close price line (linewidth=2.5) is the clear focal point with a subtle semi-transparent green fill underneath. Nine event flags rendered as colored annotation boxes above the price data at alternating heights (3 levels): Earnings in blue (#4467A3), Dividend in ochre (#BD8233), News in red (#AE3030), Split in lavender (#C475FD). Each flag has a dashed connector line and a colored scatter dot at the price level. Legend in lower-right with styled ELEVATED_BG frame listing Close Price + four event types.
+      Legibility verdict: PASS — all text clearly readable on the warm off-white background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title, axis labels, and tick labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures detected. Grid lines are subtle and visible. Spines in INK_SOFT (light tone on dark). Legend frame correctly uses ELEVATED_BG (#242420) dark variant with light text.
-      Data: Price line remains #009E73 — identical to light render. Fill under price line appears as a dark-tinted green region (very subtle). All event annotation boxes render with the same palette colors as the light render — data colors are perfectly preserved across themes. White text in flags remains readable.
-      Issue: Same "E Q4" overlap with legend as in the light render — the first earnings flag is partially hidden behind the legend box, rendering approximately "E Q4" with the beginning partially obscured.
-      Legibility verdict: PASS overall with the same E Q4 annotation overlap as in the light render.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title, axis labels, and tick labels all render in light ink (F0EFE8/B8B7B0 range) — fully readable against the dark background. No dark-on-dark failures observed. Legend frame switches to ELEVATED_BG (#242420) with lighter border and light legend text.
+      Data: Price line #009E73, flag colors (blue, ochre, red, lavender) and flag annotation white text all identical to the light render — data colors are unchanged as required; only chrome flips. The subtle green area fill is barely visible on dark background (alpha=0.08) but this is acceptable as a secondary decorative element.
+      Legibility verdict: PASS — all text readable on the near-black background. Tick labels, axis labels, and title are all light-colored. No dark-on-dark text issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,57 +65,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (12pt title, 10pt axis labels, 8pt
-          ticks/legend/flags). Light and dark renders both fully readable. Minor:
-          E Q4 flag text partially occluded by legend reduces full legibility of that
-          annotation.'
+        comment: All font sizes explicitly set (title=12, axes=10, ticks/legend=8).
+          Readable in both themes. Flag annotation text at fontsize=8 is at the minimum
+          threshold — all pixels visible but tight at mobile widths.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: E Q4 earnings flag at 2025-01-28 is partially obscured by the legend
-          box placed at 'upper left' in both renders — the label appears as '..4'.
-          All other flags are clearly positioned. Moderate overlap.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Price line prominent (linewidth=2.5), scatter markers at s=80 clearly
-          visible at event dates, fill under line subtle (alpha=0.08). All flags visible
-          except E Q4 (legend overlap). Density appropriate.
+        comment: Three-level alternating flag heights prevent label collisions. Legend
+          in lower-right does not overlap price data. No overlap detected in either
+          render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Price line at linewidth=2.5 is prominent. Price-level scatter dots
+          at s=80 with PAGE_BG edge are clearly visible. Connector dashed lines at
+          alpha=0.7 are appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'White text on colored flag boxes provides excellent contrast. Multiple
-          redundant encodings: color + letter marker for event types. No red-green
-          as sole signal.'
+        comment: anyplot palette is CVD-optimised. White text on colored flag boxes
+          provides high contrast. Legend uses redundant text labels for all event
+          types.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (8x4.5 @400dpi) — gate passed. No bbox_inches='tight'.
-          fig.subplots_adjust properly used. Good flag/price headroom via set_ylim.
-          No clipping.
+        comment: Plot fills ~70% of canvas with generous flag zone above price data.
+          subplots_adjust provides well-balanced margins. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''stock-event-flags · python · matplotlib · anyplot.ai''
-          correct format. X: ''Date'', Y: ''Price (USD)'' with units.'
+        comment: 'Y-axis: ''Price (USD)'' with units. X-axis: ''Date'' appropriate
+          for time-series. Title in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Price line = #009E73 (first series = brand green). Event colors
-          from palette positions 1-5 with semantic reasoning in comments. Light bg
-          #FAF8F1, dark bg #1A1A17. Data colors identical across themes.'
+        comment: 'Price line uses brand green #009E73. Event colors use anyplot palette
+          positions 2-5 with semantic intent. Background #FAF8F1 (light) / #1A1A17
+          (dark). All theme-adaptive chrome correctly applied in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -127,28 +123,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4). Professional financial chart aesthetic: styled
-          annotation boxes with white text, subtle area fill, color-coded events with
-          letter markers, clean layout. Not publication-ready (flat fills, no shadow/gradient
-          effects).'
+        comment: 'Above a configured default: intentional semantic palette assignments,
+          subtle fill under price line, styled annotation boxes with white text. Not
+          quite publication-ready — lacks a distinctive typographic flourish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Well above default (2). Top/right spines removed, y-axis-only subtle
-          grid (alpha=0.15), dashed connector lines (alpha=0.7), very subtle fill
-          (alpha=0.08), legend frame styled with ELEVATED_BG/INK_SOFT. Tick marks
-          still visible — could be removed for extra polish.
+        comment: Top/right spines removed, tick marks set to length=0, subtle y-axis
+          grid at alpha=0.15, legend frame styled with ELEVATED_BG. Good refinement.
+          Legend box frame edge could be removed for a cleaner look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2). Clear visual hierarchy: price line is primary
-          (thick green), events are secondary (colored flags). Alternating heights
-          create visual rhythm. Fill under price emphasizes trend. Color coding enables
-          instant event-type recognition.'
+        comment: 'Clear visual hierarchy: brand green price line is the focal point;
+          colored flags above draw attention to events; connector lines tie events
+          to price levels. Viewer can immediately see price trajectory and event timing.
+          No explicit emphasis (e.g., shaded earning windows or % annotation) to reveal
+          deeper insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -158,30 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: stock line chart with flag-style event markers, connector
-          lines, and colored annotations.'
+        comment: Stock price line chart with event flag annotations — exactly matches
+          the spec description.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: flag-style markers, 4 distinct event types, dashed
-          connector lines, scatter dots at price level, alternating heights, color-coded
-          by type.'
+        comment: Price line, event flags with distinct colors per type, dashed vertical
+          connector lines, price-level marker dots, alternating heights, legend, 4
+          event types (earnings/dividend/split/news) all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: trading dates, Y: close price. 180 business days (spec: 60-250).
-          9 events (spec: 3-15). All events mapped to their correct dates.'
+        comment: 'X-axis: trading dates. Y-axis: closing price in USD. All 9 events
+          positioned at correct dates with flags reaching above price range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''stock-event-flags · python · matplotlib · anyplot.ai''.
-          Legend: Close Price + Earnings, Dividend, Split, News.'
+        comment: 'Title: ''stock-event-flags · python · matplotlib · anyplot.ai''
+          — correct format. Legend: Close Price + Earnings, Dividend, Split, News
+          — matches all event types in data.'
     data_quality:
       score: 15
       max: 15
@@ -191,24 +187,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four event types shown. Price trends up then down then recovers
-          — shows market behavior. Dividend increases (0.50 → 0.55) adds realism.
-          Stock split included.
+        comment: All four event types shown with multiple instances. Price shows realistic
+          ups and downs. 180 business days covers ~9 months. Multiple instances of
+          earnings (3), dividends (3), and news (2) plus one split.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology stock over ~9 months with quarterly earnings, semi-annual
-          dividends, 2:1 split, product launch, and CEO interview. Neutral, realistic
-          financial scenario.
+        comment: Technology company stock over 2025 with Q1-Q4 quarterly earnings,
+          realistic dividend amounts ($0.50-$0.55), 2:1 stock split, product launch
+          news and analyst interview — fully plausible corporate calendar.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $115-165 realistic for tech company. $0.50/$0.55 dividends
-          appropriate. 2:1 split plausible. 180 business days ≈ 9 months.
+        comment: Price range ~$115-$165 is realistic for a mid-cap tech stock. Dividend
+          yield of $0.50/quarter is plausible. 2:1 split ratio is common. Price volatility
+          (daily σ=2%) is within normal equity range.
     code_quality:
       score: 10
       max: 10
@@ -218,8 +215,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.
-          Small loop for event iteration is appropriate.'
+        comment: 'Clean flat layout: imports → theme tokens → data → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -231,22 +228,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All five imports used: os, matplotlib.patches, matplotlib.pyplot,
-          numpy, pandas.'
+        comment: All 5 imports (os, matplotlib.patches, matplotlib.pyplot, numpy,
+          pandas) are actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Event dicts in a list with pd.DataFrame is idiomatic.
-          No over-engineering, no fake interactivity.
+        comment: Loop over events is appropriate complexity for this pattern. No over-engineering,
+          no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
-          functions.
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct;
+          no bbox_inches='tight'.
     library_mastery:
       score: 7
       max: 10
@@ -256,18 +253,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout (ax.plot, ax.scatter, ax.annotate, ax.fill_between).
-          ax.annotate with bbox dict. fig.subplots_adjust for layout. mpatches.Patch
-          for custom legend. Good matplotlib patterns.
+        comment: Uses ax.* methods throughout (not plt.*). ax.annotate with bbox,
+          ax.fill_between, ax.scatter with edgecolors — all idiomatic patterns. subplots_adjust
+          for explicit layout control.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses mpatches.Patch for custom legend handles (beyond basic proxy
-          artists), ax.annotate with full bbox styling for flag boxes, ax.fill_between
-          for area emphasis. Above default (1) — these are distinctly matplotlib features.
-  verdict: REJECTED
+        comment: mpatches.Patch for custom legend handles mixing Line2D and Patch
+          types, ax.fill_between for area shading, ax.annotate with styled bbox for
+          flag boxes — these are matplotlib-specific patterns not trivially portable
+          to other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
