@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-27
@@ -80,16 +80,29 @@ activity_bins = [
     ("Extreme (80+)", 80, 101),
 ]
 
+# Pre-compute binned data once — shared by both PNG and HTML render passes
+binned_by_time = []
+for time_idx in range(6):
+    data = activity_by_time[time_idx]
+    binned = {label: {} for label, _, _ in activity_bins}
+    for country, value in data.items():
+        for label, low, high in activity_bins:
+            if low <= value < high:
+                binned[label][country] = value
+                break
+    binned_by_time.append(binned)
+
 # Canvas layout: 3200×1800 (landscape)
 CANVAS_W = 3200
 CANVAS_H = 1800
 TITLE_H = 110
+SUBTITLE_H = 60
 LEGEND_H = 130
-GRID_H = CANVAS_H - TITLE_H - LEGEND_H  # 1560
+GRID_H = CANVAS_H - TITLE_H - SUBTITLE_H - LEGEND_H  # 1500
 GRID_ROWS = 2
 GRID_COLS = 3
 CELL_W = CANVAS_W // GRID_COLS  # 1066
-CELL_H = GRID_H // GRID_ROWS  # 780
+CELL_H = GRID_H // GRID_ROWS  # 750
 
 # Pygal style for individual map panels (no per-panel legend)
 map_style = Style(
@@ -109,20 +122,11 @@ map_style = Style(
 # Render 6 world map panels as PNG bytes
 map_images = []
 for time_idx in range(6):
-    data = activity_by_time[time_idx]
-
-    binned = {label: {} for label, _, _ in activity_bins}
-    for country, value in data.items():
-        for label, low, high in activity_bins:
-            if low <= value < high:
-                binned[label][country] = value
-                break
-
+    binned = binned_by_time[time_idx]
     worldmap = World(style=map_style, width=CELL_W, height=CELL_H, title=time_periods[time_idx], show_legend=False)
     for label, _, _ in activity_bins:
         if binned[label]:
             worldmap.add(label, binned[label])
-
     png_bytes = worldmap.render_to_png()
     map_images.append(Image.open(BytesIO(png_bytes)))
 
@@ -133,9 +137,11 @@ draw = ImageDraw.Draw(combined)
 # Load fonts (fall back to PIL default if DejaVu not available)
 try:
     font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 64)
+    font_subtitle = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 42)
     font_legend = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
 except OSError:
     font_title = ImageFont.load_default()
+    font_subtitle = ImageFont.load_default()
     font_legend = ImageFont.load_default()
 
 # Draw centered title
@@ -147,13 +153,22 @@ title_x = max(20, (CANVAS_W - text_w) // 2)
 title_y = (TITLE_H - text_h) // 2
 draw.text((title_x, title_y), title_str, fill=INK, font=font_title)
 
+# Draw subtitle (data-storytelling context, muted tone beneath the title)
+subtitle_str = "Pacific Ring of Fire — 72-hour seismic spread from epicenter in Japan"
+sbbox = draw.textbbox((0, 0), subtitle_str, font=font_subtitle)
+sub_w = sbbox[2] - sbbox[0]
+sub_h = sbbox[3] - sbbox[1]
+sub_x = max(20, (CANVAS_W - sub_w) // 2)
+sub_y = TITLE_H + (SUBTITLE_H - sub_h) // 2
+draw.text((sub_x, sub_y), subtitle_str, fill=INK_SOFT, font=font_subtitle)
+
 # Paste resized map panels into grid
 for idx, img in enumerate(map_images):
     row = idx // GRID_COLS
     col = idx % GRID_COLS
     img_resized = img.resize((CELL_W, CELL_H), Image.Resampling.LANCZOS)
     x = col * CELL_W
-    y = TITLE_H + row * CELL_H
+    y = TITLE_H + SUBTITLE_H + row * CELL_H
     combined.paste(img_resized, (x, y))
 
 # Draw single shared legend at bottom (replaces per-panel legends)
@@ -167,7 +182,7 @@ for lbl, _, _ in activity_bins:
     total_leg_w += box_sz + gap + (lbbox[2] - lbbox[0]) + padding
 
 leg_x = max(20, (CANVAS_W - total_leg_w) // 2)
-leg_y_center = TITLE_H + GRID_H + LEGEND_H // 2
+leg_y_center = TITLE_H + SUBTITLE_H + GRID_H + LEGEND_H // 2
 leg_y = leg_y_center - box_sz // 2
 
 for (lbl, _, _), color in zip(activity_bins, seq_colors, strict=True):
@@ -180,7 +195,7 @@ for (lbl, _, _), color in zip(activity_bins, seq_colors, strict=True):
 
 combined.save(f"plot-{THEME}.png")
 
-# Interactive HTML: all 6 time steps with tab navigation
+# Interactive HTML: all 6 time steps with tab navigation + auto-play + fade transitions
 html_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -198,13 +213,7 @@ html_style = Style(
 # Render all 6 time steps as embeddable SVG strings
 svg_frames = []
 for time_idx in range(6):
-    data = activity_by_time[time_idx]
-    binned = {label: {} for label, _, _ in activity_bins}
-    for country, value in data.items():
-        for label, low, high in activity_bins:
-            if low <= value < high:
-                binned[label][country] = value
-                break
+    binned = binned_by_time[time_idx]
     html_map = World(
         style=html_style,
         width=1600,
@@ -219,14 +228,17 @@ for time_idx in range(6):
             html_map.add(label, binned[label])
     svg_frames.append(html_map.render().decode("utf-8"))
 
-# Build tabbed HTML with JavaScript slider navigation
+# Build tabbed HTML: frames use CSS opacity transitions; Play/Pause auto-cycles at 1.2s
 tab_buttons = ""
 svg_divs = ""
 for i, (period, svg) in enumerate(zip(time_periods, svg_frames, strict=True)):
     active_btn = " active" if i == 0 else ""
-    active_div = "" if i == 0 else ' style="display:none"'
+    if i == 0:
+        frame_attrs = ' class="frame active" style="opacity:1"'
+    else:
+        frame_attrs = ' class="frame" style="opacity:0"'
     tab_buttons += f'<button class="tab-btn{active_btn}" onclick="showFrame({i})">{period}</button>\n'
-    svg_divs += f'<div class="frame" id="frame-{i}"{active_div}>{svg}</div>\n'
+    svg_divs += f'<div{frame_attrs} id="frame-{i}">{svg}</div>\n'
 
 html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -236,6 +248,7 @@ html_content = f"""<!DOCTYPE html>
 <style>
   body {{ margin: 0; background: {PAGE_BG}; font-family: DejaVu Sans, sans-serif; color: {INK}; }}
   h1 {{ text-align: center; font-size: 1.6em; padding: 0.6em 1em 0.3em; margin: 0; }}
+  p.subtitle {{ text-align: center; font-size: 1em; color: {INK_SOFT}; margin: 0 0 0.4em; }}
   .tabs {{ display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0.4em 1em; }}
   .tab-btn {{
     background: {PAGE_BG}; color: {INK}; border: 2px solid {INK_SOFT};
@@ -244,34 +257,69 @@ html_content = f"""<!DOCTYPE html>
   }}
   .tab-btn:hover {{ background: {INK_SOFT}; color: {PAGE_BG}; }}
   .tab-btn.active {{ background: #009E73; color: #FAF8F1; border-color: #009E73; }}
+  .frames-container {{ position: relative; height: 960px; overflow: hidden; }}
+  .frame {{
+    position: absolute; top: 0; left: 0; width: 100%;
+    transition: opacity 0.35s ease-in-out; pointer-events: none;
+  }}
+  .frame.active {{ pointer-events: auto; }}
   .frame svg {{ display: block; margin: 0 auto; max-width: 100%; }}
-  #progress {{ display: flex; justify-content: center; align-items: center; gap: 12px; padding: 0.3em 1em; }}
+  #controls {{ display: flex; justify-content: center; align-items: center; gap: 12px; padding: 0.5em 1em; }}
+  #play-btn {{
+    background: #009E73; color: #FAF8F1; border: none;
+    border-radius: 6px; padding: 8px 24px; cursor: pointer; font-size: 1em;
+    min-width: 90px;
+  }}
+  #play-btn:hover {{ background: #007A59; }}
   #slider {{ width: 300px; accent-color: #009E73; }}
 </style>
 </head>
 <body>
 <h1>Seismic Activity · map-animated-temporal · python · pygal · anyplot.ai</h1>
+<p class="subtitle">Pacific Ring of Fire — 72-hour seismic spread from epicenter in Japan</p>
 <div class="tabs">
 {tab_buttons}
 </div>
-<div id="progress">
+<div id="controls">
+  <button id="play-btn" onclick="togglePlay()">&#9654; Play</button>
   <span style="font-size:0.9em;color:{INK_SOFT}">Step:</span>
   <input id="slider" type="range" min="0" max="5" value="0" oninput="showFrame(this.value)">
   <span id="step-label" style="min-width:80px;font-size:0.9em;color:{INK_SOFT}">{time_periods[0]}</span>
 </div>
+<div class="frames-container">
 {svg_divs}
+</div>
 <script>
 var labels = {json.dumps(time_periods)};
+var currentFrame = 0;
+var playInterval = null;
+
 function showFrame(idx) {{
   idx = parseInt(idx);
   document.querySelectorAll('.frame').forEach(function(d, i) {{
-    d.style.display = i === idx ? '' : 'none';
+    d.style.opacity = i === idx ? '1' : '0';
+    d.classList.toggle('active', i === idx);
   }});
   document.querySelectorAll('.tab-btn').forEach(function(b, i) {{
     b.classList.toggle('active', i === idx);
   }});
   document.getElementById('slider').value = idx;
   document.getElementById('step-label').textContent = labels[idx];
+  currentFrame = idx;
+}}
+
+function togglePlay() {{
+  var btn = document.getElementById('play-btn');
+  if (playInterval) {{
+    clearInterval(playInterval);
+    playInterval = null;
+    btn.innerHTML = '&#9654; Play';
+  }} else {{
+    playInterval = setInterval(function() {{
+      showFrame((currentFrame + 1) % labels.length);
+    }}, 1200);
+    btn.innerHTML = '&#9646;&#9646; Pause';
+  }}
 }}
 </script>
 </body>
