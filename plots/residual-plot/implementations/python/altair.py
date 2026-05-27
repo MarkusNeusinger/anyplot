@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 OKABE_ITO_1 = "#009E73"  # Brand green for main data
-OKABE_ITO_2 = "#C475FD"  # Vermillion for outliers
+OUTLIER_COLOR = "#AE3030"  # imprint red — outliers (>2σ)
 
 # Data: Simulate a linear regression scenario with some non-linearity
 np.random.seed(42)
@@ -61,7 +61,7 @@ scatter = (
         y=alt.Y("Residuals ($):Q", title="Residuals ($)", scale=alt.Scale(nice=True)),
         color=alt.Color(
             "Outlier:N",
-            scale=alt.Scale(domain=["Normal", "Outlier (>2σ)"], range=[OKABE_ITO_1, OKABE_ITO_2]),
+            scale=alt.Scale(domain=["Normal", "Outlier (>2σ)"], range=[OKABE_ITO_1, OUTLIER_COLOR]),
             legend=alt.Legend(title="Point Type", titleFontSize=18, labelFontSize=16),
         ),
         tooltip=["Fitted Values ($):Q", "Residuals ($):Q", "Outlier:N"],
