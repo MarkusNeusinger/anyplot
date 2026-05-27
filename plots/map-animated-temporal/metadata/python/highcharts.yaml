@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:44:54Z'
-updated: '2026-05-27T09:36:06Z'
+updated: '2026-05-27T09:45:34Z'
 generated_by: claude-sonnet
 workflow_run: 26502702243
 issue: 3769
@@ -12,91 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-anima
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - 'Full animated temporal map matching spec: play/pause button, time slider, date
-    display updating per frame, smooth 800ms transitions'
-  - Correct imprint_seq color gradient (#009E73→#4467A3) on the colorAxis; brand green
-    applied to all bubbles
-  - Both light and dark themes correctly implemented with all chrome tokens (title,
-    subtitle, colorbar labels, controls) adapting correctly
-  - Well-styled controls bar (rounded corners, brand-green button, subtle shadow)
-    — above-average UI polish for an interactive map
-  - PIL pinning ensures exact 3200×1800 output; CDP override + window-size flags both
-    set correctly
+  - 'Complete spec implementation: play/pause button, time slider, animated transitions,
+    timestamp display, and Europe basemap all present and functional'
+  - 'Excellent palette compliance: correct imprint_seq colormap (#009E73 → #4467A3),
+    proper theme backgrounds (#FAF8F1/#1A1A17), all chrome adaptive in both renders'
+  - 'Real geospatial animation: uses Highmaps module with actual topology data from
+    @highcharts/map-collection for authentic map rendering with lat/lon coordinate
+    mapping'
+  - Both HTML artifacts (plot-light.html, plot-dark.html) properly saved for website
+    interactive use alongside the PNG snapshots
+  - 'Professional control panel styling: brand green play button, rounded corners,
+    shadow, and responsive slider with accent-color matching brand green'
   weaknesses:
-  - Colorbar axis labels set at 36px, below the recommended 44px minimum for tick
-    labels — raise colorAxis.labels.style.fontSize to '44px' for consistency
-  - Optional point trails (showing movement paths of stations across frames) not implemented
-    — consider adding ghost bubbles for recent N frames to reinforce temporal narrative
+  - 'Colorbar tick labels are crowded/overlapping in both renders — the 44px label
+    font size combined with auto-step of ~10 on a 620px symbolWidth produces more
+    labels than can fit without overlap; increase symbolWidth to 900+ or reduce colorAxis
+    label fontSize to 32px and set tickInterval: 20 explicitly'
+  - Notable empty canvas area to the right of Western Europe — consider adjusting
+    the map projection/center or widening the rendered extent to reduce dead space
+    and improve canvas utilization
+  - 'First-frame data storytelling is weak: on day 0 all bubbles are near the green
+    end of the colorbar since PM2.5 values start low (~20 µg/m³), making the visualization
+    look uniform at screenshot time; consider starting animation on a later day (day
+    5-6) for the static PNG snapshot to show more color variation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "map-animated-temporal · python · highcharts · anyplot.ai" in bold dark #1A1A17, fully readable. Subtitle "Date: 2024-03-01" in secondary ink (#4A4A44), readable. Colorbar label "PM2.5 (µg/m³)" and axis tick labels (36px — slightly below 44px standard but still legible). Controls bar with "▶ Play" button in brand green, slider, and date display — all readable.
-      Data: Mapbubbles in brand green #009E73 over Western Europe; 5-6 bubbles on frame 1 representing PM2.5 monitoring stations. Colorbar gradient runs #009E73 → #4467A3 (imprint_seq, correct). Map basemap in light cream/gray.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 surface confirmed — no pure white visible
+      Chrome: Title "map-animated-temporal · python · highcharts · anyplot.ai" renders in dark ink, clearly readable; subtitle "Date: 2024-03-01" in secondary ink; colorbar title "PM2.5 (µg/m³)" readable; date display and play button text readable
+      Data: Europe basemap with cream/white country fills and subtle grey borders; 6 mapbubble markers in the first frame clustered over Western Europe (Paris, London, Brussels, Zurich, Rome + 1 additional point near Italy). All bubbles appear near the green (#009E73) end of the colorbar since day-0 PM2.5 values are low (~20 µg/m³). Colorbar shows green-to-blue (imprint_seq) gradient correctly. Play button in brand green.
+      Controls: Play button and time slider visible at bottom in a styled panel with elevated background
+      Colorbar tick labels: Crowded/overlapping at bottom of colorbar — labels appear concatenated ("0102030405060708090") indicating insufficient spacing between auto-generated tick values at 44px font size
+      Legibility verdict: PASS overall (all text readable in light theme), but colorbar tick labels overlap is a notable issue
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title and subtitle in light cream text (#F0EFE8 range), clearly readable against dark background. Colorbar labels and tick labels in secondary light ink, readable. Play button remains brand-green with white text. Date display in light ink, readable. Map basemap in dark gray. No dark-on-dark failures observed.
-      Data: Mapbubbles retain identical teal-green #009E73 colors — data colors are unchanged from light render (only chrome flips). Colorbar gradient identical. Bubbles clearly distinguishable against dark basemap.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 surface confirmed — no pure black visible
+      Chrome: Title and subtitle render in light cream text, clearly readable against the dark background. No dark-on-dark failures observed. Colorbar title readable in light text. Date display and play button readable.
+      Data: Data colors are identical to the light render — same green (#009E73) bubbles over Western Europe, same green-to-blue colorbar gradient. Map country fills now render in dark grey, providing good contrast with the light teal bubbles. Country borders visible as subtle lighter outlines.
+      Controls: Play button (green background, white text) and slider visible at bottom
+      Colorbar tick labels: Same crowding issue as light render
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable in dark theme
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Colorbar labels at 36px slightly below 44px standard; all other text
-          correctly sized and readable in both themes
+        comment: Font sizes explicitly set throughout (66px title, 44px colorbar labels,
+          36px controls). All text readable in both themes. Colorbar tick labels are
+          crowded at 44px on a 620px colorbar, slightly reducing score.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: Colorbar tick labels overlap in both renders — auto-step of ~10 on
+          min=5/max=115 scale produces ~11 labels at 44px in 620px width, causing
+          visible crowding. Main plot content has no overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Mapbubbles clearly visible with appropriate size variation; distinguishable
-          in both themes
+        comment: 'Bubbles clearly visible with appropriate sizing (minSize 30, maxSize
+          100) and opacity 0.85. Map basemap and colorbar visible. Minor deduction:
+          first-frame bubbles all near green end of scale, limiting visual differentiation
+          in the static PNG.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq gradient (#009E73→#4467A3); colorblind-safe CVD-compliant
-          palette
+        comment: Green-to-blue sequential colormap is colorblind-safe. Bubble borders
+          provide additional definition. Brand green play button on white text is
+          accessible.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; play controls and colorbar well-positioned; no
-          overflow
+        comment: 'Canvas gate passed. Europe map occupies a good central area. Notable
+          empty space to the right (Eastern Europe/Russia). Controls panel integrates
+          well at bottom with marginBottom: 250. Minor deduction for canvas under-utilization.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; colorbar labeled PM2.5 (µg/m³) with
-          units
+        comment: Title correct format. Colorbar labeled 'PM2.5 (µg/m³)' with units.
+          No traditional axes needed for a map.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73; imprint_seq gradient on colorAxis;
-          backgrounds #FAF8F1 light / #1A1A17 dark'
+        comment: 'imprint_seq colormap: stops at [0, ''#009E73''] and [1, ''#4467A3'']
+          — correct. Background #FAF8F1 (light) and #1A1A17 (dark) — correct. All
+          chrome adaptive. Data colors identical in both renders.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -104,22 +124,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: branded play controls in brand green, transparent
-          legend, clean map basemap. No distinct country fills or advanced layering.'
+        comment: 'Above defaults: dual-encoded bubbles (size + color), professional
+          control panel with shadows and rounded corners, brand green button, subtle
+          0.5px country borders, appropriate bubble opacity. Not publication-ready
+          but clearly above generic defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Controls bar has rounded corners, subtle shadow, generous padding;
-          legend border removed, background transparent
+        comment: mapNavigation disabled for cleaner look. fillOpacity 0.85. Very thin
+          country borders (0.5px). Legend with no border or background. HTML controls
+          styled with elevation shadow. Refinement visible above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: PM2.5 temporal spread narrative clear; date displayed in subtitle
-          updates per frame; full story emerges during animation
+        comment: Animation tells temporal story of PM2.5 spreading across Europe over
+          10 days. Date shown prominently. Bubble size + color provides dual encoding
+          of magnitude. However, the static screenshot captures day 0 where all bubbles
+          look similar — the story only emerges interactively.
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +154,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Animated geographic map (mapbubble on Highmaps Europe topology) —
-          correct
+        comment: Animated geographic map with mapbubble series on Europe topology
+          — correct plot type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Play/pause controls, time slider, current date display, smooth 800ms
-          transitions, configurable animation speed, Europe basemap — all present
+        comment: 'All required: play/pause button, time slider, timestamp display
+          (subtitle + dateDisplay span), Europe basemap, smooth 800ms transitions,
+          1500ms animation interval.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped; PM2.5 encoded as both bubble size and color;
-          10 time steps expanding from 5 to 32 points
+        comment: lat/lon correctly mapped, PM2.5 encoded in colorAxis and bubble size,
+          timestamps drive animation frames.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'map-animated-temporal · python · highcharts · anyplot.ai';
-          colorbar legend labeled correctly
+        comment: Title 'map-animated-temporal · python · highcharts · anyplot.ai'
+          — correct format. Colorbar labeled 'PM2.5 (µg/m³)'.
     data_quality:
       score: 14
       max: 15
@@ -161,22 +187,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Size and color encoding combined; all required controls implemented.
-          Optional point trails not included.
+        comment: '10 time steps, growing number of stations (5 to 32), spreading geographic
+          pattern from city seeds, dual encoding of magnitude. Minor deduction: day
+          0 shows limited visual variation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: PM2.5 air quality across European cities (Paris, London, Brussels,
-          Zurich, Rome); values 5–115 µg/m³ match real-world ranges
+        comment: PM2.5 air quality event spreading across European cities. Paris,
+          London, Brussels, Zurich, Rome — realistic locations. Scientific, neutral
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 days, 5→32 monitoring stations; within spec recommended 50-500
-          pts / 10-50 time steps
+        comment: PM2.5 starting at ~20 µg/m³ and rising to ~100+ µg/m³ over 10 days
+          reflects a realistic pollution event. Geographic coordinates correct for
+          European cities.
     code_quality:
       score: 10
       max: 10
@@ -186,33 +215,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat Python script; JS interaction functions are required, not over-abstracted
+        comment: 'Linear structure: imports → data generation → HTML/JS build → Selenium
+          capture. No classes or unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used
+        comment: 'All imports used: os, tempfile, time, urllib.request, Path, numpy,
+          pandas, PIL.Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean JS template string construction; appropriate complexity for
-          animated map
+        comment: Clean code. JavaScript animation is real (Highcharts interactive),
+          not fake UI. Appropriate complexity for an animated geospatial visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PIL pinning to exact
-          3200×1800
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL pinning to exact
+          3200x1800.
     library_mastery:
       score: 8
       max: 10
@@ -222,16 +253,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses mapChart with Highmaps module, correct inline JS embedding for
-          headless Chrome, CDP viewport override, PIL safety net. Uses raw JS config
-          rather than highcharts_core Python SDK.
+        comment: Uses Highcharts.mapChart(), mapbubble series, colorAxis, setData()
+          with transition, downloads topology from @highcharts/map-collection, embeds
+          JS inline for headless rendering. Very idiomatic Highmaps usage.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses mapbubble series type, colorAxis for continuous encoding, Europe
-          topology JSON, mapNavigation, setData with animation duration — all Highcharts-distinctive
+        comment: Highmaps module with real topology data, mapbubble series with lat/lon
+          projection, setData() animation with 800ms transitions, chart.setTitle()
+          for subtitle updates, JavaScript play/pause state machine. Features unique
+          to Highcharts/Highmaps.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -247,5 +280,6 @@ impl_tags:
   dataprep:
   - time-series
   styling:
-  - custom-colormap
   - alpha-blending
+  - edge-highlighting
+  - custom-colormap
