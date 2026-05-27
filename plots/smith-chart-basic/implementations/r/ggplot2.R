@@ -11,8 +11,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Smith chart grid -------------------------------------------------------
 theta <- seq(0, 2 * pi, length.out = 361)
@@ -101,26 +101,26 @@ p <- ggplot() +
                color = INK_SOFT, linewidth = 0.3) +
   # VSWR = 2 reference circle
   geom_path(data = vswr_circle, aes(x = x, y = y),
-            color = OKABE_ITO[3], linewidth = 0.5, linetype = "dashed") +
+            color = IMPRINT[3], linewidth = 0.5, linetype = "dashed") +
   annotate("text", x = -0.38, y = 0.06,
-           label = "VSWR = 2", size = 3.0, color = OKABE_ITO[3]) +
+           label = "VSWR = 2", size = 3.0, color = IMPRINT[3]) +
   # Matched-load centre marker
   geom_point(aes(x = 0, y = 0),
              color = INK_SOFT, size = 1.8, shape = 3) +
   # Impedance locus
   geom_path(data = locus, aes(x = gre, y = gim),
-            color = OKABE_ITO[1], linewidth = 1.4) +
+            color = IMPRINT[1], linewidth = 1.4) +
   # Directional arrow at 3 GHz end showing sweep direction
   annotate("segment",
            x = arr_x0, xend = locus$gre[n_loc],
            y = arr_y0, yend = locus$gim[n_loc],
-           color = OKABE_ITO[1], linewidth = 1.4,
+           color = IMPRINT[1], linewidth = 1.4,
            arrow = arrow(length = unit(0.1, "inches"), type = "closed")) +
   # Start (1 GHz) and end (3 GHz) markers
   geom_point(data = locus[1, ], aes(x = gre, y = gim),
-             color = OKABE_ITO[1], size = 3.5, shape = 16) +
+             color = IMPRINT[1], size = 3.5, shape = 16) +
   geom_point(data = locus[nrow(locus), ], aes(x = gre, y = gim),
-             color = OKABE_ITO[2], size = 3.5, shape = 17) +
+             color = IMPRINT[2], size = 3.5, shape = 17) +
   # Frequency labels
   geom_text(data = label_pts, aes(x = gre, y = gim, label = lbl),
             color = INK, size = 3.2, hjust = -0.15, lineheight = 0.9) +

@@ -14,8 +14,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data -------------------------------------------------------------------
 df <- tibble::tibble(
@@ -32,13 +32,13 @@ df <- tibble::tibble(
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = condition, y = reaction_time)) +
   geom_violin(
-    fill = OKABE_ITO[1],
+    fill = IMPRINT[1],
     alpha = 0.4,
     color = INK_SOFT,
     linewidth = 0.8
   ) +
   geom_jitter(
-    color = OKABE_ITO[1],
+    color = IMPRINT[1],
     size = 2.5,
     alpha = 0.7,
     width = 0.2,

@@ -13,8 +13,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 # On dark backgrounds, orange at low alpha reads as muddy brown; use higher
 # alpha so the hue stays clearly orange rather than blending to near-black.
 ALPHA_95    <- if (THEME == "light") 0.10 else 0.30
@@ -65,11 +65,11 @@ p <- ggplot(df, aes(x = date)) +
   geom_vline(xintercept = dates_hist[36] + 15.5, linetype = "dashed",
              color = INK_SOFT, linewidth = 0.8, alpha = 0.6) +
   scale_color_manual(
-    values = c("Historical" = OKABE_ITO[1], "Forecast" = OKABE_ITO[2]),
+    values = c("Historical" = IMPRINT[1], "Forecast" = IMPRINT[2]),
     breaks = c("Historical", "Forecast")
   ) +
   scale_fill_manual(
-    values = c("80% CI" = OKABE_ITO[2], "95% CI" = OKABE_ITO[2]),
+    values = c("80% CI" = IMPRINT[2], "95% CI" = IMPRINT[2]),
     breaks = c("95% CI", "80% CI")
   ) +
   scale_x_date(expand = expansion(mult = c(0.02, 0.05))) +

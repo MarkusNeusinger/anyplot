@@ -17,7 +17,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 OCEAN_BG    <- if (THEME == "light") "#D6E8F2" else "#182530"
 GRID_COLOR  <- if (THEME == "light") "#AACCDC" else "#2C4455"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD")
 
 # Data: Major world cities with population (millions, 2023 estimates)
 cities <- tibble(
@@ -82,12 +82,12 @@ region_labels <- tibble(
 
 # Color mapping by continent (Okabe-Ito order, Asia first = #009E73)
 continent_colors <- c(
-  "Asia"       = OKABE_ITO[1],
-  "Africa"     = OKABE_ITO[2],
-  "N. America" = OKABE_ITO[3],
-  "S. America" = OKABE_ITO[4],
-  "Europe"     = OKABE_ITO[5],
-  "Oceania"    = OKABE_ITO[6]
+  "Asia"       = IMPRINT[1],
+  "Africa"     = IMPRINT[2],
+  "N. America" = IMPRINT[3],
+  "S. America" = IMPRINT[4],
+  "Europe"     = IMPRINT[5],
+  "Oceania"    = IMPRINT[6]
 )
 
 LABEL_COLOR <- if (THEME == "light") "#7A8C96" else "#4A6070"

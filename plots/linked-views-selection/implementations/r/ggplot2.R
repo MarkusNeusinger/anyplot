@@ -16,8 +16,8 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID        <- if (THEME == "light") "#D4D4D0" else "#3A3A36"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data -------------------------------------------------------------------
 # Create coordinated dataset: multivariate iris with clear groupings
@@ -77,7 +77,7 @@ df_views <- rbind(
 # --- Main plot: Multiple linked views ----------------------------------------
 p <- ggplot(df_views, aes(x = x_val, y = y_val, color = Species)) +
   geom_point(size = 5, alpha = 0.75) +
-  scale_color_manual(values = OKABE_ITO[1:3]) +
+  scale_color_manual(values = IMPRINT[1:3]) +
   facet_wrap(~view_name, scales = "free", ncol = 3) +
   labs(
     title = "linked-views-selection · ggplot2 · anyplot.ai",
