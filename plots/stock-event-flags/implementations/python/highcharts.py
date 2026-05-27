@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: highcharts unknown | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-27
@@ -117,7 +117,7 @@ for etype, flags in flags_by_type.items():
             "shape": style["shape"],
             "color": style["color"],
             "fillColor": style["color"],
-            "style": {"color": style["text_color"], "fontSize": "24px", "fontWeight": "bold"},
+            "style": {"color": style["text_color"], "fontSize": "34px", "fontWeight": "bold"},
             "width": 76,
             "height": 46,
             "y": y_offsets.get(etype, -80),
@@ -131,6 +131,13 @@ for etype, flags in flags_by_type.items():
 ohlc_json = json.dumps(ohlc_data)
 flag_series_json = json.dumps(flag_series)
 
+# Vertical dashed connector lines from each flag to the price level
+event_plot_lines = [
+    {"value": int(event["date"].timestamp() * 1000), "color": INK_SOFT, "dashStyle": "Dash", "width": 2, "zIndex": 1}
+    for event in events
+]
+event_plot_lines_json = json.dumps(event_plot_lines)
+
 chart_js = f"""
 Highcharts.stockChart('container', {{
     chart: {{
@@ -141,7 +148,7 @@ Highcharts.stockChart('container', {{
         spacingBottom: 100,
         spacingLeft: 60,
         spacingRight: 60,
-        marginBottom: 220,
+        marginBottom: 280,
         style: {{
             fontFamily: 'Arial, sans-serif',
             color: '{INK}'
@@ -254,9 +261,11 @@ Highcharts.stockChart('container', {{
                 color: '{INK_SOFT}'
             }},
             format: '{{value:%b %d}}',
-            y: 28,
-            rotation: 0
+            rotation: -45,
+            align: 'right',
+            y: 18
         }},
+        plotLines: {event_plot_lines_json},
         tickInterval: 14 * 24 * 3600 * 1000,
         crosshair: {{
             width: 1,
