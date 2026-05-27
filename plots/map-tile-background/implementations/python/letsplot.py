@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
@@ -28,7 +30,21 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
-# Data: European city landmarks with annual visitor counts (thousands)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
+
+# Tile and land polygon colors adapt to theme
+TILE_BG = "#E8E8E6" if THEME == "light" else "#2A2A27"
+TILE_BORDER = "#D0D0CE" if THEME == "light" else "#3A3A37"
+LAND_FILL = "#D5D1C8" if THEME == "light" else "#38382F"
+LAND_BORDER = "#B5B1A4" if THEME == "light" else "#4A4A40"
+
+# Data: European cities with annual visitor counts (thousands)
 cities_data = {
     "city": [
         "Paris",
@@ -119,58 +135,50 @@ cities_data = {
         5500,
     ],
 }
-
 df = pd.DataFrame(cities_data)
 
-# ============================================================
-# INTERACTIVE HTML VERSION: Uses geom_livemap with real tiles
-# ============================================================
-# Configure CARTO Positron tiles for clean basemap
+TITLE = "map-tile-background · python · letsplot · anyplot.ai"
+
+# Interactive HTML version — geom_livemap with real tile provider
+map_tiles = tilesets.LETS_PLOT_DARK if THEME == "dark" else tilesets.CARTO_POSITRON
+
 plot_interactive = (
     ggplot()
-    + geom_livemap(
-        location=[-12, 35, 32, 72],  # Europe bounding box [lon_min, lat_min, lon_max, lat_max]
-        zoom=4,
-        tiles=tilesets.CARTO_POSITRON,  # Real tile provider
-    )
+    + geom_livemap(location=[-12, 35, 32, 72], zoom=4, tiles=map_tiles)
     + geom_point(
         aes(x="lon", y="lat", size="visitors"),
         data=df,
-        color="#306998",
-        fill="#FFD43B",
+        fill=BRAND,
+        color=PAGE_BG,
         alpha=0.85,
         shape=21,
-        stroke=1.5,
+        stroke=2,
         tooltips=layer_tooltips().title("@city").line("Visitors|@visitors K/year"),
     )
     + scale_size(range=[6, 22], name="Visitors (thousands)")
-    + labs(title="European Tourism · map-tile-background · letsplot · pyplots.ai")
-    + ggsize(1600, 900)
+    + labs(title=TITLE)
+    + ggsize(800, 450)
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_title=element_text(size=16, color=INK),
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_position="right",
-        plot_inset=0,  # Remove livemap border inset
     )
 )
 
-# Save interactive HTML with real tile background
-ggsave(plot_interactive, "plot.html", path=".")
+ggsave(plot_interactive, f"plot-{THEME}.html", path=".")
 
-# ============================================================
-# STATIC PNG VERSION: Simulated tile appearance for export
-# ============================================================
-# Tile-style basemap: Create grid cells to simulate map tile appearance
-tiles = []
-tile_size = 5  # 5-degree tiles
-for lon in range(-15, 35, tile_size):
-    for lat in range(35, 75, tile_size):
-        tiles.append({"xmin": lon, "xmax": lon + tile_size, "ymin": lat, "ymax": lat + tile_size})
-df_tiles = pd.DataFrame(tiles)
+# Static PNG version — simulated tile-style background for raster export
+tiles_rows = []
+tile_size = 5
+for lon_val in range(-15, 35, tile_size):
+    for lat_val in range(35, 75, tile_size):
+        tiles_rows.append({"xmin": lon_val, "xmax": lon_val + tile_size, "ymin": lat_val, "ymax": lat_val + tile_size})
+df_tiles = pd.DataFrame(tiles_rows)
 
-# European coastline approximation (styled like vector tiles)
-# Mainland Europe
+# Approximate European landmass polygons (CARTO Positron–style outlines)
 europe_main = pd.DataFrame(
     {
         "lon": [
@@ -250,8 +258,6 @@ europe_main = pd.DataFrame(
         "region": ["Europe_Main"] * 35,
     }
 )
-
-# Scandinavia (Norway/Sweden/Finland)
 scandinavia = pd.DataFrame(
     {
         "lon": [5, 8, 10, 12, 15, 18, 22, 25, 28, 30, 28, 25, 22, 18, 15, 12, 10, 8, 5],
@@ -259,8 +265,6 @@ scandinavia = pd.DataFrame(
         "region": ["Scandinavia"] * 19,
     }
 )
-
-# British Isles (Great Britain)
 britain = pd.DataFrame(
     {
         "lon": [-6, -5, -4, -3, -1, 0, 1, 2, 1, 0, -1, -3, -4, -5, -6],
@@ -268,13 +272,9 @@ britain = pd.DataFrame(
         "region": ["Britain"] * 15,
     }
 )
-
-# Ireland
 ireland = pd.DataFrame(
     {"lon": [-10, -9, -7, -6, -6, -7, -9, -10], "lat": [52, 53, 55, 54, 52, 51, 51, 52], "region": ["Ireland"] * 8}
 )
-
-# Italy
 italy = pd.DataFrame(
     {
         "lon": [8, 10, 12, 14, 16, 18, 18, 16, 14, 12, 10, 8],
@@ -282,8 +282,6 @@ italy = pd.DataFrame(
         "region": ["Italy"] * 12,
     }
 )
-
-# Greece/Balkans
 balkans = pd.DataFrame(
     {
         "lon": [20, 22, 24, 26, 28, 28, 26, 24, 22, 20],
@@ -291,57 +289,44 @@ balkans = pd.DataFrame(
         "region": ["Balkans"] * 10,
     }
 )
-
 df_land = pd.concat([europe_main, scandinavia, britain, ireland, italy, balkans], ignore_index=True)
 
-# Create static map with tile-simulated background for PNG export
 plot_static = (
     ggplot()
-    # Layer 1: Tile grid background (simulates tile mosaic like CARTO Positron)
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         data=df_tiles,
-        fill="#F2F2F0",  # Light gray - CARTO Positron style
-        color="#E0E0E0",  # Subtle tile borders
+        fill=TILE_BG,
+        color=TILE_BORDER,
         size=0.2,
         alpha=0.9,
     )
-    # Layer 2: Land mass polygons (styled like vector tiles)
     + geom_polygon(
-        aes(x="lon", y="lat", group="region"),
-        data=df_land,
-        fill="#E8E5DB",  # Tan/beige for land (tile style)
-        color="#C0B8A8",  # Darker outline
-        size=0.6,
-        alpha=0.95,
+        aes(x="lon", y="lat", group="region"), data=df_land, fill=LAND_FILL, color=LAND_BORDER, size=0.6, alpha=0.95
     )
-    # Layer 3: City markers with visitor data
     + geom_point(
         aes(x="lon", y="lat", size="visitors"),
         data=df,
-        color="#306998",
-        fill="#FFD43B",
+        fill=BRAND,
+        color=PAGE_BG,
         alpha=0.85,
         shape=21,
-        stroke=1.5,
+        stroke=2,
         tooltips=layer_tooltips().title("@city").line("Visitors|@visitors K/year"),
     )
     + scale_size(range=[6, 22], name="Visitors (thousands)")
-    + labs(
-        title="European Tourism · map-tile-background · letsplot · pyplots.ai",
-        caption="Map tiles simulated (CARTO Positron style) | © OpenStreetMap contributors",
-    )
-    + ggsize(1600, 900)
+    + labs(title=TITLE, caption="Tile-style basemap (CARTO Positron style) | © OpenStreetMap contributors")
+    + ggsize(800, 450)
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        plot_caption=element_text(size=12, color="#666666"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_title=element_text(size=16, color=INK),
+        plot_caption=element_text(size=8, color=INK_MUTED),
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
-        plot_background=element_rect(fill="#F8F8F6"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
-# Save PNG (scale 3x for 4800 x 2700 px)
-ggsave(plot_static, "plot.png", path=".", scale=3)
+ggsave(plot_static, f"plot-{THEME}.png", path=".", scale=4)
