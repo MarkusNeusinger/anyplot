@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-27
 """
 
 import io
@@ -17,7 +16,6 @@ _here = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
@@ -31,14 +29,29 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # imprint_seq colormap for temperature (single-polarity continuous data)
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Apply seaborn theme
-sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-# Data: Weather stations in the San Francisco Bay Area
-np.random.seed(42)
+# Data: SF Bay Area weather stations
 stations_data = {
     "name": [
         "SF Downtown",
@@ -96,14 +109,17 @@ stations_data = {
 df = pd.DataFrame(stations_data)
 
 # Map bounds with padding
-lat_margin = 0.15
-lon_margin = 0.2
+lat_margin, lon_margin = 0.15, 0.2
 min_lat = df["lat"].min() - lat_margin
 max_lat = df["lat"].max() + lat_margin
 min_lon = df["lon"].min() - lon_margin
 max_lon = df["lon"].max() + lon_margin
 
-# Tile parameters (Web Mercator, zoom=10)
+# Tile URL — swap to CartoDB Light/Dark, Stamen Terrain, or satellite providers
+# CartoDB Light:   "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{zoom}/{tx}/{ty}.png"
+# Stamen Terrain:  "https://stamen-tiles.a.ssl.fastly.net/terrain/{zoom}/{tx}/{ty}.png"
+TILE_URL = "https://tile.openstreetmap.org/{zoom}/{tx}/{ty}.png"
+
 zoom = 10
 tile_size = 256
 n_tiles = 2**zoom
@@ -116,22 +132,19 @@ y_max = int((1.0 - math.asinh(math.tan(math.radians(min_lat))) / math.pi) / 2.0 
 tiles_x = x_max - x_min + 1
 tiles_y = y_max - y_min + 1
 
-# Fetch and stitch tiles from OpenStreetMap
+# Fetch and stitch OSM tiles
 stitched = Image.new("RGB", (tiles_x * tile_size, tiles_y * tile_size))
 headers = {"User-Agent": "anyplot.ai/1.0 (educational visualization)"}
-
 for tx in range(x_min, x_max + 1):
     for ty in range(y_min, y_max + 1):
-        url = f"https://tile.openstreetmap.org/{zoom}/{tx}/{ty}.png"
+        url = TILE_URL.format(zoom=zoom, tx=tx, ty=ty)
         req = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=10) as response:
                 tile = Image.open(io.BytesIO(response.read()))
         except Exception:
             tile = Image.new("RGB", (256, 256), (220, 220, 220))
-        px = (tx - x_min) * tile_size
-        py = (ty - y_min) * tile_size
-        stitched.paste(tile, (px, py))
+        stitched.paste(tile, ((tx - x_min) * tile_size, (ty - y_min) * tile_size))
 
 # Actual bounds of stitched tiles
 actual_min_lon = x_min / n_tiles * 360.0 - 180.0
@@ -139,9 +152,8 @@ actual_max_lon = (x_max + 1) / n_tiles * 360.0 - 180.0
 actual_max_lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y_min / n_tiles))))
 actual_min_lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y_max + 1) / n_tiles))))
 
-# Convert station coordinates to pixel positions (Web Mercator projection)
-pixel_x_list = []
-pixel_y_list = []
+# Convert lat/lon → pixel positions (Web Mercator projection)
+pixel_x_list, pixel_y_list = [], []
 for _, row in df.iterrows():
     x_pct = (row["lon"] - actual_min_lon) / (actual_max_lon - actual_min_lon)
     lat_rad = math.radians(row["lat"])
@@ -154,17 +166,19 @@ for _, row in df.iterrows():
 
 df["pixel_x"] = pixel_x_list
 df["pixel_y"] = pixel_y_list
-
 t_min, t_max = df["temperature"].min(), df["temperature"].max()
 
-# Plot — canonical 3200×1800 canvas
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Composite layout: tile map (wide) + seaborn temperature distribution (right panel)
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+gs = fig.add_gridspec(1, 2, width_ratios=[3.6, 1.4])
+ax = fig.add_subplot(gs[0])
+ax_dist = fig.add_subplot(gs[1])
 
-# Display tile background
+# ── Map panel ────────────────────────────────────────────────────────────────
+ax.set_facecolor(PAGE_BG)
 ax.imshow(stitched, extent=[0, stitched.width, stitched.height, 0], aspect="auto", zorder=0)
 
-# Plot weather stations: dual encoding (size + color) for temperature
+# Dual encoding (hue + size) via seaborn scatterplot
 sns.scatterplot(
     data=df,
     x="pixel_x",
@@ -182,7 +196,7 @@ sns.scatterplot(
     zorder=2,
 )
 
-# Station labels with per-station offsets to prevent overlap in dense clusters
+# Station labels with per-station anti-collision offsets
 label_offsets = {
     "Mountain View": (-70, -14),
     "Sunnyvale": (8, -14),
@@ -194,7 +208,6 @@ label_offsets = {
     "Livermore": (8, 8),
 }
 default_offset = (8, -8)
-
 for _, row in df.iterrows():
     offx, offy = label_offsets.get(row["name"], default_offset)
     ax.annotate(
@@ -213,12 +226,11 @@ for _, row in df.iterrows():
 norm = plt.Normalize(vmin=t_min, vmax=t_max)
 sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
-cbar = plt.colorbar(sm, ax=ax, shrink=0.55, pad=0.02, aspect=20)
-cbar.set_label("Temperature (°C)", fontsize=10, color=INK, labelpad=10)
-cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar = plt.colorbar(sm, ax=ax, shrink=0.50, pad=0.015, aspect=20)
+cbar.set_label("Temperature (°C)", fontsize=9, color=INK, labelpad=8)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-# Hide map axes and spines
 ax.set_xticks([])
 ax.set_yticks([])
 ax.set_xlabel("")
@@ -226,11 +238,9 @@ ax.set_ylabel("")
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-# Title — fontsize scaled for 79-char string: round(12 * 67/79) = 10pt
 title = "Bay Area Weather Stations · map-tile-background · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=10, fontweight="medium", color=INK, pad=10)
 
-# OSM attribution (required by license)
 ax.text(
     0.99,
     0.01,
@@ -244,5 +254,35 @@ ax.text(
     zorder=4,
 )
 
-plt.tight_layout()
+# ── Temperature distribution panel (seaborn-native) ──────────────────────────
+ax_dist.set_facecolor(PAGE_BG)
+
+# Filled KDE showing the temperature distribution shape across stations
+sns.kdeplot(
+    data=df,
+    y="temperature",
+    fill=True,
+    color=ANYPLOT_PALETTE[0],
+    alpha=0.40,
+    ax=ax_dist,
+    linewidth=1.5,
+    cut=0.5,
+    bw_adjust=0.9,
+)
+
+# Rug marks at each individual station's temperature value
+sns.rugplot(data=df, y="temperature", ax=ax_dist, color=INK_SOFT, height=0.06, linewidth=1.0, alpha=0.8)
+
+ax_dist.set_title("Temp.\nDistribution", fontsize=9, color=INK, pad=8, fontweight="medium")
+ax_dist.set_xlabel("Density", fontsize=8, color=INK_SOFT, labelpad=4)
+ax_dist.set_ylabel("Temperature (°C)", fontsize=8, color=INK, labelpad=6)
+ax_dist.tick_params(axis="y", labelsize=7, colors=INK_SOFT)
+ax_dist.tick_params(axis="x", labelsize=7, colors=INK_SOFT)
+ax_dist.set_ylim(t_min - 1.5, t_max + 1.5)
+ax_dist.yaxis.grid(True, alpha=0.2, linewidth=0.6)
+sns.despine(ax=ax_dist, top=True, right=True)
+ax_dist.spines["left"].set_color(INK_SOFT)
+ax_dist.spines["bottom"].set_color(INK_SOFT)
+
+fig.subplots_adjust(left=0.02, right=0.97, top=0.91, bottom=0.05, wspace=0.08)
 plt.savefig(os.path.join(_here, f"plot-{THEME}.png"), dpi=400)
