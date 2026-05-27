@@ -19,14 +19,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # brand green
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
 )
 
 # Data - Simulated stock returns showing realistic distribution with tails
@@ -69,7 +69,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -98,7 +98,7 @@ chart = pygal.XY(
 # Add histogram as filled step area (first series uses #009E73)
 chart.add("Histogram", hist_xy, fill=True, stroke_style={"width": 2})
 
-# Add KDE curve with prominent stroke for visibility (second series uses #D55E00)
+# Add KDE curve with prominent stroke for visibility (second series uses #C475FD)
 kde_data = [(float(x), float(y)) for x, y in zip(x_range, kde, strict=True)]
 chart.add("KDE Curve", kde_data, fill=False, stroke_style={"width": 4})
 

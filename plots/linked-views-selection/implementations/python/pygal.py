@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+IMPRINT = ("#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233")
 
 # Canvas layout (3200 × 1800 exact)
 CANVAS_W, CANVAS_H = 3200, 1800
@@ -44,7 +44,7 @@ sub_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=ANYPLOT_PALETTE,
+    colors=IMPRINT,
     title_font_size=54,
     label_font_size=44,
     major_label_font_size=36,
@@ -153,8 +153,8 @@ html_open = (
     "              transition: opacity 0.2s; }\n"
     "    .sp-btn.dim { opacity: 0.35; }\n"
     "    .sp-btn[data-idx='0'] { background: #009E73; }\n"
-    "    .sp-btn[data-idx='1'] { background: #9418DB; }\n"
-    "    .sp-btn[data-idx='2'] { background: #B71D27; }\n"
+    "    .sp-btn[data-idx='1'] { background: #C475FD; }\n"
+    "    .sp-btn[data-idx='2'] { background: #AE3030; }\n"
     "    .reset-btn { background: none; border: 1px solid " + INK_MUTED + ";\n"
     "                 color: " + INK + "; border-radius: 20px; padding: 6px 18px;\n"
     "                 font-size: 14px; cursor: pointer; margin-left: auto; }\n"

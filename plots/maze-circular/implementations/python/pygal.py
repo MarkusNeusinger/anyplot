@@ -152,14 +152,14 @@ wing2_x = tip_x + 0.13 * np.cos(mid_angle + np.pi + 0.45)
 wing2_y = tip_y + 0.13 * np.sin(mid_angle + np.pi + 0.45)
 chart.add("", [(wing1_x, wing1_y), (tip_x, tip_y), (wing2_x, wing2_y)], stroke_style=entry_stroke)
 
-# Goal star (Okabe-Ito vermillion #D55E00) at center — named for pygal interactive HTML tooltips
+# Goal star (Okabe-Ito vermillion #C475FD) at center — named for pygal interactive HTML tooltips
 star_pts = []
 for i in range(10):
     a_s = i * np.pi / 5 - np.pi / 2
     r_s = 0.12 if i % 2 == 0 else 0.048
     star_pts.append((r_s * np.cos(a_s), r_s * np.sin(a_s)))
 star_pts.append(star_pts[0])
-chart.add("Goal ★", star_pts, stroke_style={"width": 10, "linecap": "round", "linejoin": "round", "color": "#D55E00"})
+chart.add("Goal ★", star_pts, stroke_style={"width": 10, "linecap": "round", "linejoin": "round", "color": "#C475FD"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")

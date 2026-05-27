@@ -25,16 +25,16 @@ if THEME == "light":
     band_color_a = "#A0E0BB"
     center_color_a = "#009E73"
     band_color_b = "#F0C68A"
-    center_color_b = "#D55E00"
+    center_color_b = "#C475FD"
     band_color_c = "#7FC4E8"
-    center_color_c = "#0072B2"
+    center_color_c = "#4467A3"
 else:
     band_color_a = "#1FA862"
     center_color_a = "#009E73"
     band_color_b = "#C64500"
-    center_color_b = "#D55E00"
+    center_color_b = "#C475FD"
     band_color_c = "#0058A3"
-    center_color_c = "#0072B2"
+    center_color_c = "#4467A3"
 
 np.random.seed(42)
 quarters = ["Q1'24", "Q2'24", "Q3'24", "Q4'24", "Q1'25", "Q2'25", "Q3'25", "Q4'25"]

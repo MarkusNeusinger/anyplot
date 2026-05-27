@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette — Setosa=brand green, Versicolor=vermillion, Virginica=blue
-SPECIES_COLORS = {"Setosa": "#009E73", "Versicolor": "#D55E00", "Virginica": "#0072B2"}
+SPECIES_COLORS = {"Setosa": "#009E73", "Versicolor": "#C475FD", "Virginica": "#4467A3"}
 
 # Data - Iris dataset, 15 samples per species across 4 dimensions
 iris_data = {

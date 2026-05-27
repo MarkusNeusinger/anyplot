@@ -18,7 +18,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
 
 # Data - Generate response times for different server configurations
 np.random.seed(42)
@@ -70,7 +70,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -134,7 +134,7 @@ notch_indent = box_width * 0.15
 # Draw each notched box
 for i, category in enumerate(categories):
     s = stats[category]
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     x_center = plot_left + box_spacing * (i + 0.5)
     x_left = x_center - box_width / 2
     x_right = x_center + box_width / 2

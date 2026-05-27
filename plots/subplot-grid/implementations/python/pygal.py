@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"
-COLOR_2 = "#D55E00"
+COLOR_2 = "#C475FD"
 
 # Data - Business performance dashboard with multiple metrics
 np.random.seed(42)

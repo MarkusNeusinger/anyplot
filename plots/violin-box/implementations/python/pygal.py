@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette - use first 4 colors for violin categories
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # Data - Generate distributions for different categories with scores constrained to 0-100
 np.random.seed(42)
@@ -43,7 +43,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -83,7 +83,7 @@ whisker_stroke_style = {"width": 3, "dasharray": ""}
 # Add violins with embedded box plots for each category
 for i, (category, values) in enumerate(data.items()):
     center_x = i + 1.5
-    violin_color = OKABE_ITO[i]
+    violin_color = IMPRINT[i]
 
     # Compute KDE using Silverman's rule
     n = len(values)

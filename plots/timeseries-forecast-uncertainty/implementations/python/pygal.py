@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 BRAND = "#009E73"
-FORECAST_COLOR = "#D55E00"
+FORECAST_COLOR = "#C475FD"
 
 np.random.seed(42)
 months = 42
@@ -48,7 +48,7 @@ lower_80 = forecast_values - 100
 x_labels = [d.strftime("%b %y") for d in dates]
 
 CI_ALPHA = "0.25" if THEME == "dark" else "0.20"
-CI_95_FILL = f"rgba(213, 94, 0, {CI_ALPHA})"
+CI_95_FILL = f"rgba(196, 117, 253, {CI_ALPHA})"
 
 # Series order is driven by the background-erase CI technique: upper_95 fill
 # (orange) then lower_95 fill (PAGE_BG) produces the CI band; BRAND historical

@@ -26,7 +26,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito data colors (theme-independent)
 BEFORE = "#009E73"  # position 1 — brand
-AFTER = "#D55E00"  # position 2
+AFTER = "#C475FD"  # position 2
 CONNECTOR = INK_SOFT  # neutral chrome that adapts to theme
 
 # Data — Employee satisfaction scores before and after policy changes.

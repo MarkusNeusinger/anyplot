@@ -23,7 +23,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
 
 custom_style = Style(
     background=PAGE_BG,
@@ -31,7 +31,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=18,
     major_label_font_size=16,
@@ -58,11 +58,11 @@ tasks = [
 reference_date = date(2025, 1, 1)
 
 category_colors = {
-    "Planning": OKABE_ITO[0],
-    "Design": OKABE_ITO[1],
-    "Development": OKABE_ITO[2],
-    "Testing": OKABE_ITO[3],
-    "Deployment": OKABE_ITO[4],
+    "Planning": IMPRINT[0],
+    "Design": IMPRINT[1],
+    "Development": IMPRINT[2],
+    "Testing": IMPRINT[3],
+    "Deployment": IMPRINT[4],
 }
 
 all_dates = []

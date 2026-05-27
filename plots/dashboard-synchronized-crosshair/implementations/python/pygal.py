@@ -28,7 +28,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+IMPRINT = ("#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233")
 
 # Data: 200 trading days with price, volume, and RSI
 np.random.seed(42)
@@ -58,7 +58,7 @@ price_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=ANYPLOT_PALETTE,
+    colors=IMPRINT,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -87,14 +87,14 @@ price_chart = pygal.Line(
 price_chart.add("Price", price.tolist())
 price_chart.x_labels = dates
 
-# Volume chart — pos-2 purple (#9418DB)
+# Volume chart — pos-2 purple (#C475FD)
 volume_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#9418DB", "#009E73", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"),
+    colors=("#C475FD", "#009E73", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233"),
     title_font_size=60,
     label_font_size=56,
     major_label_font_size=44,
@@ -123,7 +123,7 @@ volume_chart = pygal.Line(
 volume_chart.add("Volume", (volume / 1e6).tolist())
 volume_chart.x_labels = dates
 
-# RSI chart — pos-3 red (#B71D27), x-axis visible on bottom panel
+# RSI chart — pos-3 red (#AE3030), x-axis visible on bottom panel
 # Reference lines at 30 (oversold) and 70 (overbought) use INK_MUTED
 rsi_style = Style(
     background=PAGE_BG,
@@ -131,7 +131,7 @@ rsi_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#B71D27", INK_MUTED, INK_MUTED, "#16B8F3", "#99B314", "#D359A7", "#BA843E"),
+    colors=("#AE3030", INK_MUTED, INK_MUTED, "#4467A3", "#99B314", "#954477", "#BD8233"),
     title_font_size=60,
     label_font_size=56,
     major_label_font_size=44,
@@ -234,16 +234,16 @@ body {{ background: {PAGE_BG}; font-family: sans-serif; }}
     }}
     var idx = Math.min(Math.floor((x - pl) / (pr - pl) * n), n - 1);
     var rsiVal = rsis[idx];
-    var rsiCtx = rsiVal > 70 ? ' <em style="color:#B71D27">(OVERBOUGHT)</em>' :
-                 rsiVal < 30 ? ' <em style="color:#16B8F3">(OVERSOLD)</em>' : '';
+    var rsiCtx = rsiVal > 70 ? ' <em style="color:#AE3030">(OVERBOUGHT)</em>' :
+                 rsiVal < 30 ? ' <em style="color:#4467A3">(OVERSOLD)</em>' : '';
     ch.style.left = x + 'px';
     ch.style.height = r.height + 'px';
     ch.style.display = 'block';
     tip.innerHTML =
       '<strong>' + dates[idx] + ' 2024</strong><br>' +
       '<span style="color:#009E73">■</span> Price: <strong>$' + prices[idx].toFixed(2) + '</strong><br>' +
-      '<span style="color:#9418DB">■</span> Volume: <strong>' + vols[idx].toFixed(2) + 'M</strong><br>' +
-      '<span style="color:#B71D27">■</span> RSI: <strong>' + rsiVal.toFixed(1) + '</strong>' + rsiCtx;
+      '<span style="color:#C475FD">■</span> Volume: <strong>' + vols[idx].toFixed(2) + 'M</strong><br>' +
+      '<span style="color:#AE3030">■</span> RSI: <strong>' + rsiVal.toFixed(1) + '</strong>' + rsiCtx;
     tip.style.left = (e.clientX + 16) + 'px';
     tip.style.top = (e.clientY + 16) + 'px';
     tip.style.display = 'block';

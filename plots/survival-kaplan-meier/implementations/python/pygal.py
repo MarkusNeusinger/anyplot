@@ -19,7 +19,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series = brand green, second = vermillion)
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
+SECONDARY = "#C475FD"
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -200,8 +200,8 @@ for ct in censored_times_exp:
 # Custom style with theme-adaptive colors
 brand_ci_light = "rgba(0, 158, 115, 0.15)"  # Brand green, light alpha
 brand_ci_dark = "rgba(0, 158, 115, 0.15)"
-secondary_ci_light = "rgba(213, 94, 0, 0.15)"  # Secondary orange, light alpha
-secondary_ci_dark = "rgba(213, 94, 0, 0.15)"
+secondary_ci_light = "rgba(196, 117, 253, 0.15)"  # Secondary orange, light alpha
+secondary_ci_dark = "rgba(196, 117, 253, 0.15)"
 
 # CI band colors match data colors with transparency
 ci_colors = (
