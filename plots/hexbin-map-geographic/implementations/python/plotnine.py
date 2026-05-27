@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-27
@@ -15,6 +15,7 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_label,
     geom_polygon,
     ggplot,
     labs,
@@ -35,24 +36,37 @@ WATER_COLOR = "#C5D9EF" if THEME == "light" else "#1A2535"
 LAND_COLOR = "#DEDAD2" if THEME == "light" else "#2C2C27"
 LAND_EDGE = "#9A9A92" if THEME == "light" else "#4A4A42"
 
-# Data — NYC-like taxi pickup clusters
+# Data — NYC taxi pickup clusters (denser hotspots for full gradient utilization)
 np.random.seed(42)
-n_points = 5000
 
-downtown_lon = np.random.normal(-73.99, 0.02, n_points // 3)
-downtown_lat = np.random.normal(40.75, 0.015, n_points // 3)
+downtown_lon = np.random.normal(-73.99, 0.012, 2500)
+downtown_lat = np.random.normal(40.75, 0.010, 2500)
 
-midtown_lon = np.random.normal(-73.97, 0.025, n_points // 4)
-midtown_lat = np.random.normal(40.78, 0.02, n_points // 4)
+midtown_lon = np.random.normal(-73.97, 0.015, 2200)
+midtown_lat = np.random.normal(40.78, 0.012, 2200)
 
-airport_lon = np.random.normal(-73.79, 0.015, n_points // 5)
-airport_lat = np.random.normal(40.65, 0.012, n_points // 5)
+airport_lon = np.random.normal(-73.79, 0.010, 1500)
+airport_lat = np.random.normal(40.65, 0.008, 1500)
 
-residential_lon = np.random.uniform(-74.05, -73.70, n_points // 4)
-residential_lat = np.random.uniform(40.60, 40.85, n_points // 4)
+brooklyn_lon = np.random.normal(-73.95, 0.015, 900)
+brooklyn_lat = np.random.normal(40.67, 0.010, 900)
 
-lon = np.concatenate([downtown_lon, midtown_lon, airport_lon, residential_lon])
-lat = np.concatenate([downtown_lat, midtown_lat, airport_lat, residential_lat])
+scatter_lon = np.random.uniform(-74.05, -73.70, 400)
+scatter_lat = np.random.uniform(40.60, 40.85, 400)
+
+lon = np.concatenate([downtown_lon, midtown_lon, airport_lon, brooklyn_lon, scatter_lon])
+lat = np.concatenate([downtown_lat, midtown_lat, airport_lat, brooklyn_lat, scatter_lat])
+
+# Optional value: simulated trip duration (min) — airport trips notably longer
+value = np.concatenate(
+    [
+        np.random.normal(11, 3, 2500),  # downtown — short rides
+        np.random.normal(13, 3, 2200),  # midtown
+        np.random.normal(38, 6, 1500),  # airport — long rides
+        np.random.normal(10, 3, 900),  # brooklyn
+        np.random.normal(15, 5, 400),  # scattered
+    ]
+)
 
 # Hexagonal bin polygon construction
 gridsize = 30
@@ -89,6 +103,7 @@ for cx, cy in centers:
     )
     count = np.sum(in_hex)
     if count > 0:
+        mean_value = np.mean(value[in_hex])  # mean aggregation of optional value field
         angles = np.arange(6) * np.pi / 3 + np.pi / 6
         for angle in angles:
             records.append(
@@ -97,11 +112,17 @@ for cx, cy in centers:
                     "lat": cy + hex_radius * np.sin(angle),
                     "hex_id": hex_id,
                     "count": count,
+                    "mean_value": mean_value,
                 }
             )
         hex_id += 1
 
 hex_df = pd.DataFrame(records)
+
+# Hotspot label positions for direct annotation
+labels_df = pd.DataFrame(
+    {"lon": [-73.99, -73.97, -73.79], "lat": [40.762, 40.793, 40.661], "label": ["Downtown", "Midtown", "JFK Airport"]}
+)
 
 # NYC-like coastline boundary
 coast_lon = [
@@ -156,7 +177,8 @@ df_coastline = pd.DataFrame({"region": "land", "order": range(len(coast_lon)), "
 
 title = "hexbin-map-geographic · python · plotnine · anyplot.ai"
 
-# Plot
+# sqrt transform spreads color across the right-skewed count distribution —
+# a ggplot2 grammar-of-graphics feature that replaces manual data normalization
 plot = (
     ggplot()
     + geom_polygon(
@@ -165,7 +187,16 @@ plot = (
     + geom_polygon(
         aes(x="lon", y="lat", group="hex_id", fill="count"), data=hex_df, color=PAGE_BG, size=0.15, alpha=0.88
     )
-    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pickups")
+    + geom_label(
+        aes(x="lon", y="lat", label="label"),
+        data=labels_df,
+        color=INK,
+        fill=ELEVATED_BG,
+        size=3,
+        label_padding=0.2,
+        label_size=0.3,
+    )
+    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pickups", trans="sqrt")
     + coord_fixed(ratio=1.0, xlim=(-74.20, -73.55), ylim=(40.52, 40.92))
     + labs(title=title, x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
