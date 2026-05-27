@@ -1,12 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: plotnine | Python
+Quality: pending | Created: 2026-01-20
 """
+
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import (
+
+
+# Work around naming conflict with plotnine.py script and plotnine package
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+if "" in sys.path:
+    sys.path.remove("")
+if "." in sys.path:
+    sys.path.remove(".")
+
+from plotnine import (  # noqa: E402
     aes,
     annotate,
     coord_fixed,
@@ -27,7 +41,15 @@ from plotnine import (
 )
 
 
-# Seed for reproducibility
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 np.random.seed(42)
 
 # San Francisco Bay Area landmarks with visitor counts (thousands per year)
@@ -106,26 +128,25 @@ landmarks_data = {
 df = pd.DataFrame(landmarks_data)
 
 # Simulated tile-style background using grid rectangles
-# This creates a visual effect similar to map tiles
 lon_min, lon_max = -122.52, -122.36
 lat_min, lat_max = 37.755, 37.84
 
-# Create grid cells that simulate map tiles (10x8 grid)
 n_tiles_x = 10
 n_tiles_y = 8
 tile_width = (lon_max - lon_min) / n_tiles_x
 tile_height = (lat_max - lat_min) / n_tiles_y
 
-# Generate tile background with terrain-like coloring
+# Theme-adaptive terrain colors
+water_color = "#B8D4E8" if THEME == "light" else "#1D2E3A"
+land_color = "#E8E4D8" if THEME == "light" else "#2B2820"
+coast_color = "#8A7A6B" if THEME == "light" else "#7A7268"
+
 tiles = []
-tile_id = 0
 for i in range(n_tiles_x):
     for j in range(n_tiles_y):
         x_center = lon_min + tile_width * (i + 0.5)
         y_center = lat_min + tile_height * (j + 0.5)
 
-        # Determine terrain type based on position (simulating land/water)
-        # Water on east side (bay) and portions of north (golden gate strait)
         is_water = (
             (x_center > -122.39 and y_center < 37.79)
             or (x_center > -122.44 and y_center > 37.825)
@@ -139,14 +160,12 @@ for i in range(n_tiles_x):
                 "ymin": lat_min + tile_height * j,
                 "ymax": lat_min + tile_height * (j + 1),
                 "terrain": "water" if is_water else "land",
-                "tile_id": tile_id,
             }
         )
-        tile_id += 1
 
 df_tiles = pd.DataFrame(tiles)
 
-# Coastline polygon (San Francisco peninsula outline for visible area)
+# Coastline polygon (San Francisco peninsula outline)
 coast_coords = [
     (-122.52, 37.755),
     (-122.48, 37.755),
@@ -165,94 +184,79 @@ coast_coords = [
 coastline = [{"region": "sf", "order": i, "lon": c[0], "lat": c[1]} for i, c in enumerate(coast_coords)]
 df_coast = pd.DataFrame(coastline)
 
-# Category color palette (colorblind-safe)
-category_colors = {
-    "Cultural": "#9467BD",
-    "Historic": "#8C564B",
-    "Landmark": "#306998",
-    "Museum": "#2CA02C",
-    "Shopping": "#FFD43B",
-    "Sports": "#D62728",
-    "Tourism": "#17BECF",
-    "Transport": "#FF7F0E",
-}
+# anyplot palette assigned alphabetically by category
+categories_sorted = sorted(df["category"].unique())
+category_colors = {cat: ANYPLOT_PALETTE[i] for i, cat in enumerate(categories_sorted)}
 
-# Prepare label data with individual position adjustments to avoid overlap
-# Select top attractions by visitor count
-top_attractions = df[df["visitors"] >= 10000].copy()
-
-# Create label positions with nudge offsets to prevent overlap
-# Labels positioned with significant separation to avoid any touching
+# Labels for top 3 most-visited landmarks (well-separated geographically)
+top3 = df.nlargest(3, "visitors")  # Union Square, Fisherman's Wharf, Golden Gate Bridge
 label_positions = {
-    "Golden Gate Bridge": {"nudge_x": 0.01, "nudge_y": 0.016},
-    "Fisherman's Wharf": {"nudge_x": -0.055, "nudge_y": 0.02},
-    "Pier 39": {"nudge_x": 0.045, "nudge_y": -0.025},
-    "Union Square": {"nudge_x": 0.025, "nudge_y": 0.015},
+    "Union Square": {"nudge_x": 0.025, "nudge_y": 0.012},
+    "Fisherman's Wharf": {"nudge_x": -0.035, "nudge_y": 0.014},
+    "Golden Gate Bridge": {"nudge_x": 0.015, "nudge_y": 0.014},
 }
 
-# Build label dataframe with adjusted positions
 label_records = []
-for _, row in top_attractions.iterrows():
+for _, row in top3.iterrows():
     pos = label_positions.get(row["name"], {"nudge_x": 0, "nudge_y": 0.012})
     label_records.append({"name": row["name"], "lon": row["lon"] + pos["nudge_x"], "lat": row["lat"] + pos["nudge_y"]})
 label_df = pd.DataFrame(label_records)
 
-# Create the map visualization
+title = "map-tile-background · python · plotnine · anyplot.ai"
+
 plot = (
     ggplot()
-    # Layer 1: Tile background rectangles
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="terrain"),
         data=df_tiles,
-        color="#AAAAAA",
-        size=0.15,
-        alpha=0.8,
+        color=INK_MUTED,
+        size=0.1,
+        alpha=0.85,
     )
-    + scale_fill_manual(values={"water": "#B8D4E8", "land": "#E8E4D8"}, guide=None)
-    # Layer 2: Coastline outline for geographic context
-    + geom_polygon(
-        aes(x="lon", y="lat", group="region"), data=df_coast, fill="none", color="#444444", size=1.2, alpha=1.0
-    )
-    # Layer 3: Data points with size encoding for visitor counts
-    + geom_point(aes(x="lon", y="lat", color="category", size="visitors"), data=df, alpha=0.85, stroke=1.2)
-    + scale_size_continuous(range=(5, 20), name="Visitors\n(thousands/yr)")
+    + scale_fill_manual(values={"water": water_color, "land": land_color}, guide=None)
+    + geom_polygon(aes(x="lon", y="lat", group="region"), data=df_coast, fill="none", color=coast_color, size=0.8)
+    + geom_point(aes(x="lon", y="lat", color="category", size="visitors"), data=df, alpha=0.88, stroke=0.4)
+    + scale_size_continuous(range=(2, 10), name="Visitors\n(K/yr)")
     + scale_color_manual(values=category_colors, name="Category")
-    # Layer 4: Labels for top landmarks (positions pre-adjusted in label_df)
     + geom_label(
-        aes(x="lon", y="lat", label="name"), data=label_df, size=9, alpha=0.9, fill="white", label_padding=0.25
+        aes(x="lon", y="lat", label="name"),
+        data=label_df,
+        size=3,
+        alpha=0.92,
+        fill=ELEVATED_BG,
+        color=INK,
+        label_padding=0.2,
     )
-    # Attribution for simulated tile background (spec requirement)
     + annotate(
         "text",
-        x=lon_max - 0.01,
-        y=lat_min + 0.005,
-        label="Simulated tiles | Data: SF landmarks",
-        size=7,
+        x=lon_max - 0.003,
+        y=lat_min + 0.003,
+        label="Simulated tiles · SF landmarks",
+        size=2.5,
         ha="right",
         va="bottom",
-        color="#666666",
-        alpha=0.8,
+        color=INK_MUTED,
     )
-    # Coordinate system with proper aspect ratio for geographic accuracy
-    + coord_fixed(ratio=1.3, xlim=(lon_min, lon_max), ylim=(lat_min, lat_max))
-    + labs(title="SF Landmarks · map-tile-background · plotnine · pyplots.ai", x="Longitude (°)", y="Latitude (°)")
+    + coord_fixed(ratio=1.06, xlim=(lon_min, lon_max), ylim=(lat_min, lat_max))
+    + labs(title=title, x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=20, weight="bold", ha="center"),
-        axis_title=element_text(size=18),
-        axis_text=element_text(size=14),
-        legend_title=element_text(size=14),
-        legend_text=element_text(size=11),
-        legend_position="right",
-        legend_box_spacing=0.1,
-        legend_key_size=16,
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="none"),
-        plot_margin=0.02,
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        plot_title=element_text(size=12, weight="bold", ha="center", color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
+        legend_key_size=10,
+        plot_margin=0.01,
     )
 )
 
-# Save at 300 DPI for 4800x2700 px output
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
