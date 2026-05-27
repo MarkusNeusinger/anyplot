@@ -16,8 +16,8 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 BORDER_COL  <- if (THEME == "light") "#D0CEC4" else "#3F3D37"
 GRID_COL    <- if (THEME == "light") "#E8E6DC" else "#2A2824"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data: Realistic stock prices over 50 trading days ----------------------
 dates <- seq(as.Date("2024-01-01"), by = "1 day", length.out = 50)
@@ -39,7 +39,7 @@ ohlc_data <- data.frame(
 ) %>%
   mutate(
     direction = ifelse(close > open, "up", "down"),
-    color_val = if_else(direction == "up", OKABE_ITO[1], OKABE_ITO[2]),
+    color_val = if_else(direction == "up", "#009E73", "#AE3030"),  # imprint green / red
     x_pos = as.numeric(date),
     volatility = (high - low) / low,
     opacity_val = 0.6 + 0.4 * min(volatility / max(volatility), 1.0)
@@ -113,7 +113,7 @@ p <- ggplot() +
     show.legend = FALSE
   ) +
   scale_color_manual(
-    values = c("up" = OKABE_ITO[1], "down" = OKABE_ITO[2])
+    values = c("up" = "#009E73", "down" = "#AE3030")  # imprint semantic anchors
   ) +
   scale_alpha_identity() +
   scale_x_continuous(

@@ -15,9 +15,9 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 OCEAN_BG    <- if (THEME == "light") "#C4DCF0" else "#152030"
 LAND_BG     <- if (THEME == "light") "#D4C9A8" else "#2A3020"
 
-ANYPLOT_PALETTE <- c(
-    "#009E73", "#9418DB", "#B71D27", "#16B8F3",
-    "#99B314", "#D359A7", "#BA843E"
+IMPRINT <- c(
+    "#009E73", "#C475FD", "#AE3030", "#4467A3",
+    "#99B314", "#954477", "#BD8233"
 )
 
 # --- Mollweide projection math -----------------------------------------------
@@ -138,7 +138,7 @@ p <- ggplot() +
     # Tissot indicatrices — anyplot brand green (position 1)
     geom_polygon(
         data = tissot, aes(x = x, y = y, group = group),
-        fill = ANYPLOT_PALETTE[1], color = PAGE_BG,
+        fill = IMPRINT[1], color = PAGE_BG,
         linewidth = 0.06, alpha = 0.78
     ) +
     # Ellipse outline

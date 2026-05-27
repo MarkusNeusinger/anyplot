@@ -15,7 +15,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 BULL_COLOR  <- "#009E73"   # Okabe-Ito #1 — bullish X columns
-BEAR_COLOR  <- "#D55E00"   # Okabe-Ito #2 — bearish O columns
+BEAR_COLOR  <- "#AE3030"   # imprint red — bearish O columns
 
 # --- Synthetic daily close prices (ACME Corp., 300 trading days) ---
 n_days <- 300

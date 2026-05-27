@@ -15,8 +15,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data -------------------------------------------------------------------
 # Medical diagnostic context: biomarker level predicts disease probability
@@ -50,10 +50,10 @@ plot_data <- data.frame(
 p <- ggplot() +
   # Confidence interval band
   geom_ribbon(data = pred_data, aes(x = biomarker, ymin = lower, ymax = upper),
-              fill = OKABE_ITO[1], alpha = 0.15) +
+              fill = IMPRINT[1], alpha = 0.15) +
   # Fitted curve
   geom_line(data = pred_data, aes(x = biomarker, y = probability),
-            color = OKABE_ITO[1], linewidth = 1.2) +
+            color = IMPRINT[1], linewidth = 1.2) +
   # Data points colored by class
   geom_point(data = plot_data, aes(x = biomarker, y = y_jittered, color = disease),
              size = 3, alpha = 0.65) +
@@ -61,7 +61,7 @@ p <- ggplot() +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = INK_SOFT,
              linewidth = 0.7) +
   # Scales
-  scale_color_manual(values = c(OKABE_ITO[1], OKABE_ITO[2])) +
+  scale_color_manual(values = c(IMPRINT[1], IMPRINT[2])) +
   scale_y_continuous(limits = c(-0.15, 1.15), breaks = seq(0, 1, 0.25)) +
   # Labels
   labs(
