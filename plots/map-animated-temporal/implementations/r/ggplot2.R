@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' map-animated-temporal: Animated Map over Time
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-05-27
+#' Quality: 90/100 | Created: 2026-05-27
 
 library(ggplot2)
 library(ragg)
