@@ -42,7 +42,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Generate clustered data for demonstrating brush selection
 np.random.seed(42)
@@ -89,7 +89,7 @@ p.toolbar.active_drag = box_select
 p.toolbar.active_scroll = wheel_zoom
 
 # Color mapping with Okabe-Ito palette
-color_map = factor_cmap("category", palette=OKABE_ITO, factors=labels)
+color_map = factor_cmap("category", palette=IMPRINT, factors=labels)
 
 # Scatter plot with selection styling
 p.scatter(
@@ -144,7 +144,7 @@ p.border_fill_color = PAGE_BG
 # Legend
 legend_items = []
 for i, label in enumerate(labels):
-    r = p.scatter([], [], fill_color=OKABE_ITO[i], line_color=PAGE_BG, size=15)
+    r = p.scatter([], [], fill_color=IMPRINT[i], line_color=PAGE_BG, size=15)
     legend_items.append(LegendItem(label=label, renderers=[r]))
 
 legend = Legend(items=legend_items, location="top_right")

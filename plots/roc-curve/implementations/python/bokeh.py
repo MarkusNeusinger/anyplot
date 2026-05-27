@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Simulated ROC curves for three classifiers with different performance levels
 np.random.seed(42)
@@ -81,9 +81,9 @@ random_line = p.line(
 )
 
 # Plot ROC curves with Okabe-Ito colors
-line_1 = p.line(x="fpr", y="tpr", source=source_1, line_width=5, line_color=OKABE_ITO[0], alpha=0.9)
-line_2 = p.line(x="fpr", y="tpr", source=source_2, line_width=5, line_color=OKABE_ITO[1], alpha=0.9)
-line_3 = p.line(x="fpr", y="tpr", source=source_3, line_width=5, line_color=OKABE_ITO[2], alpha=0.9)
+line_1 = p.line(x="fpr", y="tpr", source=source_1, line_width=5, line_color=IMPRINT[0], alpha=0.9)
+line_2 = p.line(x="fpr", y="tpr", source=source_2, line_width=5, line_color=IMPRINT[1], alpha=0.9)
+line_3 = p.line(x="fpr", y="tpr", source=source_3, line_width=5, line_color=IMPRINT[2], alpha=0.9)
 
 # Add HoverTool for interactivity
 hover = HoverTool(tooltips=[("FPR", "@fpr{0.00}"), ("TPR", "@tpr{0.00}")])

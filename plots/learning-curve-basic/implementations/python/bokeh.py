@@ -31,7 +31,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 TRAIN_COLOR = "#009E73"  # Position 1: brand green
-VAL_COLOR = "#D55E00"  # Position 2: vermillion
+VAL_COLOR = "#C475FD"  # Position 2: vermillion
 
 # Data - Simulate learning curve for a classification model
 np.random.seed(42)

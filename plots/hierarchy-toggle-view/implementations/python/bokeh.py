@@ -35,7 +35,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors for top-level departments; derived shades for sub-departments
-DEPT_COLORS = {"engineering": "#009E73", "marketing": "#D55E00", "operations": "#0072B2", "hr": "#CC79A7"}
+DEPT_COLORS = {"engineering": "#009E73", "marketing": "#C475FD", "operations": "#4467A3", "hr": "#BD8233"}
 SUB_COLORS = {
     "frontend": "#00C48D",
     "backend": "#007A58",
