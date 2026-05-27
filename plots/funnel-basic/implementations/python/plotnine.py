@@ -35,10 +35,11 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Okabe-Ito palette — first stage is brand green (#009E73)
+# imprint palette — first stage is brand green (#009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
-# Light orange (#AE3030) needs dark text for contrast; others use white.
-TEXT_ON_FILL = ["white", "white", "white", "white", INK]
+# Slot 1 (lavender) is the lightest hue and needs dark text; the others are
+# saturated/dark enough for white.
+TEXT_ON_FILL = ["white", INK, "white", "white", "white"]
 
 # Data — sales funnel example from specification
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]

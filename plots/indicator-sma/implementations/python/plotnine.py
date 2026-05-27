@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-GOLDEN_COLOR = "#AE3030"  # amber — Okabe-Ito position 5, "golden" signal
+GOLDEN_COLOR = "#DDCC77"  # imprint amber — "golden cross" semantic
 DEATH_COLOR = INK_SOFT  # muted gray — "death" signal, theme-adaptive
 
 # Data — bull market (days 1–150) followed by bear market (days 150–300),

@@ -60,13 +60,13 @@ frequencies = {
 }
 
 # Colors for wind speed bins: cool (calm) to warm (strong) progression
-# Using perceptually-uniform colors appropriate for wind speed ranges
+# imprint anchors arranged to keep the intensity ramp monotonic
 speed_colors = {
-    "0-5": "#4467A3",  # Okabe-Ito blue (calm)
-    "5-10": "#2ABCCD",  # Okabe-Ito sky blue
-    "10-15": "#009E73",  # Okabe-Ito green
-    "15-20": "#AE3030",  # Okabe-Ito orange
-    "20+": "#C475FD",  # Okabe-Ito red-orange (strong)
+    "0-5": "#4467A3",  # imprint blue (calm)
+    "5-10": "#2ABCCD",  # imprint cyan
+    "10-15": "#009E73",  # imprint green (mid)
+    "15-20": "#DDCC77",  # imprint amber (caution)
+    "20+": "#AE3030",   # imprint red (strong, hottest)
 }
 
 # Calculate direction angles (N=top, clockwise)
