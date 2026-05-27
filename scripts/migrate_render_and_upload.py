@@ -241,7 +241,9 @@ def render(spec: str, language: str, library: str) -> tuple[Path, Path]:
                 )
                 if check.returncode == 0:
                     continue  # tracked → leave it alone
-            except Exception:
+            except FileNotFoundError:
+                # git not on PATH (very unlikely in this repo) — fall through and
+                # move the file as before; better than aborting the whole run.
                 pass
             stray.rename(target)
 

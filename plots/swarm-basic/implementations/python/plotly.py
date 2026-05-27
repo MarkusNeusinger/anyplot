@@ -23,10 +23,10 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-FILL_COLORS = ["rgba(0,158,115,0.18)", "rgba(196, 117, 253,0.18)", "rgba(68, 103, 163,0.18)", "rgba(189, 130, 51,0.18)"]
+FILL_COLORS = ["rgba(0, 158, 115, 0.18)", "rgba(196, 117, 253, 0.18)", "rgba(68, 103, 163, 0.18)", "rgba(189, 130, 51, 0.18)"]
 
 # Data - student test scores across 4 classrooms with varied distributions
 np.random.seed(42)

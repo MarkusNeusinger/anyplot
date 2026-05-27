@@ -44,7 +44,7 @@ cy = [distance * np.sin(a) for a in angles]
 
 # Okabe-Ito palette with transparency
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
-fill_colors = ["rgba(0,158,115,0.45)", "rgba(196,117,253,0.45)", "rgba(68,103,163,0.45)"]
+fill_colors = ["rgba(0, 158, 115, 0.45)", "rgba(196, 117, 253, 0.45)", "rgba(68, 103, 163, 0.45)"]
 
 hover_texts = [
     f"<b>Python</b><br>Total: {set_sizes[0]}<br>Only Python: {only_a}<br>Python ∩ JS: {only_ab}<br>Python ∩ SQL: {only_ac}",

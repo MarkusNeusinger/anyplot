@@ -16,16 +16,16 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — temperature profile
 C_DEWPT = "#C475FD"  # Okabe-Ito pos 2 — dewpoint profile
 
 # Reference line colors: subtle, theme-adaptive
-C_ISO = "rgba(80,80,80,0.22)" if THEME == "light" else "rgba(180,180,180,0.28)"
-C_DRY = "rgba(196, 117, 253,0.22)" if THEME == "light" else "rgba(196, 117, 253,0.38)"
-C_MOIST = "rgba(68, 103, 163,0.22)" if THEME == "light" else "rgba(68, 103, 163,0.38)"
-C_MIX = "rgba(0,158,115,0.22)" if THEME == "light" else "rgba(0,158,115,0.38)"
+C_ISO = "rgba(80, 80, 80, 0.22)" if THEME == "light" else "rgba(180, 180, 180, 0.28)"
+C_DRY = "rgba(196, 117, 253, 0.22)" if THEME == "light" else "rgba(196, 117, 253, 0.38)"
+C_MOIST = "rgba(68, 103, 163, 0.22)" if THEME == "light" else "rgba(68, 103, 163, 0.38)"
+C_MIX = "rgba(0, 158, 115, 0.22)" if THEME == "light" else "rgba(0, 158, 115, 0.38)"
 
 # Skew-T transform: °C shift per log10 decade of pressure from 1000 hPa
 SKEW = 30.0

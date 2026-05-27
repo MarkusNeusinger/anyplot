@@ -143,7 +143,11 @@ def _substitute_rgba(text: str) -> tuple[str, int]:
             return match.group(0)
         count += 1
         nr, ng, nb = new_rgb
-        return f"rgba({nr}, {ng}, {nb},{alpha})"
+        # Match the source's spacing style — if the original had a space after
+        # the third comma, preserve it (most "well-formatted" callers do);
+        # otherwise stay compact. Avoids ending up with mixed "a, b, c,d" output.
+        alpha_str = alpha if alpha.startswith(" ") else " " + alpha.lstrip()
+        return f"rgba({nr}, {ng}, {nb},{alpha_str})"
 
     new_text = RGBA_RE.sub(repl, text)
     return new_text, count
