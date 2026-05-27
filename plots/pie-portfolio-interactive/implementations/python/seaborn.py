@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-27
@@ -72,20 +72,24 @@ portfolio_data = pd.DataFrame(
 
 category_data = portfolio_data.groupby("category").agg({"weight": "sum", "value": "sum"}).reset_index()
 
-# Build per-category color gradients using seaborn palette tools and anyplot base colors
-category_rgb = {cat: sns.color_palette([hex_c])[0] for cat, hex_c in CATEGORY_BASES.items()}
+# Build per-category gradient palettes using seaborn palette tools and anyplot base colors
+# Fixed n_colors=3 for endpoints → wider light↔dark contrast range on all wedge sizes
+cat_palettes = {}
+category_rgb = {}
+for cat, base_hex in CATEGORY_BASES.items():
+    base_rgb = sns.color_palette([base_hex])[0]
+    category_rgb[cat] = base_rgb
+    n = len(portfolio_data[portfolio_data["category"] == cat])
+    light = sns.light_palette(base_rgb, n_colors=3)[1]
+    dark = sns.dark_palette(base_rgb, n_colors=3, reverse=True)[1]
+    cat_palettes[cat] = sns.blend_palette([dark, base_rgb, light], n_colors=n)
 
+cat_counters = dict.fromkeys(CATEGORY_BASES, 0)
 asset_colors = []
 for _, row in portfolio_data.iterrows():
-    base_rgb = category_rgb[row["category"]]
-    cat_mask = portfolio_data["category"] == row["category"]
-    cat_assets = portfolio_data[cat_mask]
-    pos = list(cat_assets.index).index(cat_assets[cat_assets["asset"] == row["asset"]].index[0])
-    n = len(cat_assets)
-    light = sns.light_palette(base_rgb, n_colors=n + 2)[1]
-    dark = sns.dark_palette(base_rgb, n_colors=n + 2, reverse=True)[1]
-    blend = sns.blend_palette([light, base_rgb, dark], n_colors=n + 2)
-    asset_colors.append(blend[pos + 1])
+    cat = row["category"]
+    asset_colors.append(cat_palettes[cat][cat_counters[cat]])
+    cat_counters[cat] += 1
 
 # Canvas — square for symmetric donut chart
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
@@ -155,7 +159,7 @@ for _, row in portfolio_data.nlargest(4, "weight").iterrows():
         f"{row['asset']}\n${row['value']:,.0f}  ({row['weight']:.0f}%)",
         xy=(0.97 * np.cos(theta), 0.97 * np.sin(theta)),
         xytext=(x_t + dx, y_t),
-        fontsize=6,
+        fontsize=7,
         ha=ha,
         va="center",
         color=INK,
@@ -181,8 +185,8 @@ legend = ax.legend(
     title="Asset Classes",
     loc="lower center",
     bbox_to_anchor=(0.5, -0.05),
-    fontsize=6,
-    title_fontsize=7,
+    fontsize=7,
+    title_fontsize=8,
     frameon=True,
     fancybox=True,
     ncol=3,
@@ -201,7 +205,7 @@ ax.set_aspect("equal")
 ax.set_xlim(-1.65, 1.65)
 ax.set_ylim(-1.35, 1.35)
 
-fig.subplots_adjust(bottom=0.13)
+fig.subplots_adjust(bottom=0.08)
 
 # Save — no bbox_inches="tight" to preserve exact 2400×2400 canvas
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
