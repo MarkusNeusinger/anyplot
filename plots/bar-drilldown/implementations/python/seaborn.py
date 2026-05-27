@@ -16,7 +16,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GOLD = "#AE3030"
+AMBER = "#DDCC77"  # imprint amber — accent edge (was meant as a gold highlight)
 
 BRAND = "#009E73"
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
@@ -67,7 +67,7 @@ fig.suptitle(
 sns.barplot(data=df_top, x="Region", y="Revenue", color=BRAND, edgecolor=PAGE_BG, linewidth=0.5, errorbar=None, ax=ax1)
 for i, p in enumerate(ax1.patches):
     if i == 2:  # East is the top-performing region — gold accent edge as focal point
-        p.set_edgecolor(GOLD)
+        p.set_edgecolor(AMBER)
         p.set_linewidth(1.5)
     ax1.text(
         p.get_x() + p.get_width() / 2.0,
