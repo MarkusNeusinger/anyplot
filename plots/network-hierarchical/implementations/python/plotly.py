@@ -19,9 +19,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Okabe-Ito palette for hierarchy levels (position 1 is brand, then positions 2-4)
 LEVEL_COLORS = {
     0: "#009E73",  # Position 1 - brand green (CEO)
-    1: "#D55E00",  # Position 2 - vermillion (VPs)
-    2: "#0072B2",  # Position 3 - blue (Directors)
-    3: "#CC79A7",  # Position 4 - reddish purple (Leads)
+    1: "#C475FD",  # Position 2 - vermillion (VPs)
+    2: "#4467A3",  # Position 3 - blue (Directors)
+    3: "#BD8233",  # Position 4 - reddish purple (Leads)
 }
 
 # Data: Organizational chart with 22 employees across 4 levels - asymmetric structure

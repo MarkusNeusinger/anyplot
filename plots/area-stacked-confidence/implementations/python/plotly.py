@@ -21,8 +21,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (positions 1-3 for three series)
 HYDRO_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
-WIND_COLOR = "#D55E00"  # Okabe-Ito position 2 (vermillion)
-SOLAR_COLOR = "#0072B2"  # Okabe-Ito position 3 (blue)
+WIND_COLOR = "#C475FD"  # Okabe-Ito position 2 (vermillion)
+SOLAR_COLOR = "#4467A3"  # Okabe-Ito position 3 (blue)
 
 # Data - Quarterly energy consumption forecast by source with uncertainty bands
 np.random.seed(42)

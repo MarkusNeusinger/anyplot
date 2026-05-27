@@ -19,14 +19,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (colorblind-safe)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
 ]
 
 # Data - Data science and analytics tools (distinct from programming languages)
@@ -125,7 +125,7 @@ for i, (word, freq) in enumerate(zip(words, freqs, strict=False)):
 
     # Scale frequency to font size
     font_size = min_size + (freq - min_freq) / (max_freq - min_freq) * (max_size - min_size)
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
 
     fig.add_trace(
         go.Scatter(

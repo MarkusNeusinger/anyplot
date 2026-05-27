@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Response times (ms) by service type
 np.random.seed(42)
@@ -64,9 +64,9 @@ for i, service in enumerate(services_sorted):
             x=service_data,
             name=service,
             orientation="h",
-            marker=dict(color=OKABE_ITO[i % len(OKABE_ITO)], size=8, outliercolor=OKABE_ITO[i % len(OKABE_ITO)]),
-            line=dict(color=OKABE_ITO[i % len(OKABE_ITO)], width=2),
-            fillcolor=OKABE_ITO[i % len(OKABE_ITO)],
+            marker=dict(color=IMPRINT[i % len(IMPRINT)], size=8, outliercolor=IMPRINT[i % len(IMPRINT)]),
+            line=dict(color=IMPRINT[i % len(IMPRINT)], width=2),
+            fillcolor=IMPRINT[i % len(IMPRINT)],
             opacity=0.7,
             boxmean=False,
             hovertemplate="<b>%{name}</b><br>Value: %{x:.1f} ms<extra></extra>",

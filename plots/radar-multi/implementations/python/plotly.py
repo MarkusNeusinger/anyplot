@@ -18,7 +18,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Product comparison across multiple attributes
 categories = ["Performance", "Reliability", "Price Value", "Support", "Ease of Use", "Features"]
@@ -44,7 +44,7 @@ fig.add_trace(
         theta=categories_closed,
         fill="toself",
         fillcolor="rgba(0, 158, 115, 0.25)",
-        line={"color": OKABE_ITO[0], "width": 3},
+        line={"color": IMPRINT[0], "width": 3},
         name="Product A (Premium)",
         marker={"size": 10},
     )
@@ -57,7 +57,7 @@ fig.add_trace(
         theta=categories_closed,
         fill="toself",
         fillcolor="rgba(213, 94, 0, 0.25)",
-        line={"color": OKABE_ITO[1], "width": 3},
+        line={"color": IMPRINT[1], "width": 3},
         name="Product B (Budget)",
         marker={"size": 10},
     )
@@ -70,7 +70,7 @@ fig.add_trace(
         theta=categories_closed,
         fill="toself",
         fillcolor="rgba(0, 114, 178, 0.25)",
-        line={"color": OKABE_ITO[2], "width": 3},
+        line={"color": IMPRINT[2], "width": 3},
         name="Product C (Pro)",
         marker={"size": 10},
     )

@@ -20,8 +20,8 @@ GRID = "rgba(26,26,23,0.2)" if THEME == "light" else "rgba(240,239,232,0.2)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
-OKABE_VERMILLION = "#D55E00"  # Okabe-Ito position 2
-OKABE_BLUE = "#0072B2"  # Okabe-Ito position 3
+OKABE_VERMILLION = "#C475FD"  # Okabe-Ito position 2
+OKABE_BLUE = "#4467A3"  # Okabe-Ito position 3
 
 # Data - Reaction times (ms) for three experimental conditions
 np.random.seed(42)

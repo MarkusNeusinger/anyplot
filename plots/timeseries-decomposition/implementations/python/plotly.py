@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Monthly airline passengers (classic time series)
 np.random.seed(42)
@@ -53,7 +53,7 @@ fig.add_trace(
         x=dates,
         y=ts.values,
         mode="lines",
-        line=dict(color=OKABE_ITO[0], width=2.5),
+        line=dict(color=IMPRINT[0], width=2.5),
         name="Original",
         hovertemplate="<b>Original</b><br>Date: %{x|%Y-%m}<br>Value: %{y:.1f}<extra></extra>",
     ),
@@ -66,7 +66,7 @@ fig.add_trace(
         x=dates,
         y=decomposition.trend,
         mode="lines",
-        line=dict(color=OKABE_ITO[1], width=3),
+        line=dict(color=IMPRINT[1], width=3),
         name="Trend",
         hovertemplate="<b>Trend</b><br>Date: %{x|%Y-%m}<br>Value: %{y:.1f}<extra></extra>",
     ),
@@ -79,7 +79,7 @@ fig.add_trace(
         x=dates,
         y=decomposition.seasonal,
         mode="lines",
-        line=dict(color=OKABE_ITO[2], width=2.5),
+        line=dict(color=IMPRINT[2], width=2.5),
         name="Seasonal",
         hovertemplate="<b>Seasonal</b><br>Date: %{x|%Y-%m}<br>Value: %{y:.1f}<extra></extra>",
     ),
@@ -92,7 +92,7 @@ fig.add_trace(
         x=dates,
         y=decomposition.resid,
         mode="lines",
-        line=dict(color=OKABE_ITO[3], width=2),
+        line=dict(color=IMPRINT[3], width=2),
         name="Residual",
         hovertemplate="<b>Residual</b><br>Date: %{x|%Y-%m}<br>Value: %{y:.1f}<extra></extra>",
     ),

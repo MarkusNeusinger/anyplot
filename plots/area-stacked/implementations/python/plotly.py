@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Monthly revenue by product category over 2 years
 np.random.seed(42)
@@ -48,9 +48,9 @@ fig.add_trace(
         y=software,
         name="Software",
         mode="lines",
-        line=dict(width=0.5, color=OKABE_ITO[0]),
+        line=dict(width=0.5, color=IMPRINT[0]),
         fill="tozeroy",
-        fillcolor=OKABE_ITO[0],
+        fillcolor=IMPRINT[0],
         stackgroup="one",
         hovertemplate="<b>Software</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
@@ -62,9 +62,9 @@ fig.add_trace(
         y=services,
         name="Services",
         mode="lines",
-        line=dict(width=0.5, color=OKABE_ITO[1]),
+        line=dict(width=0.5, color=IMPRINT[1]),
         fill="tonexty",
-        fillcolor=OKABE_ITO[1],
+        fillcolor=IMPRINT[1],
         stackgroup="one",
         hovertemplate="<b>Services</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
@@ -76,9 +76,9 @@ fig.add_trace(
         y=enterprise,
         name="Enterprise",
         mode="lines",
-        line=dict(width=0.5, color=OKABE_ITO[2]),
+        line=dict(width=0.5, color=IMPRINT[2]),
         fill="tonexty",
-        fillcolor=OKABE_ITO[2],
+        fillcolor=IMPRINT[2],
         stackgroup="one",
         hovertemplate="<b>Enterprise</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
@@ -90,9 +90,9 @@ fig.add_trace(
         y=consulting,
         name="Consulting",
         mode="lines",
-        line=dict(width=0.5, color=OKABE_ITO[3]),
+        line=dict(width=0.5, color=IMPRINT[3]),
         fill="tonexty",
-        fillcolor=OKABE_ITO[3],
+        fillcolor=IMPRINT[3],
         stackgroup="one",
         hovertemplate="<b>Consulting</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )

@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series - bluish green
-ACCENT = "#D55E00"  # Second series - vermillion
+ACCENT = "#C475FD"  # Second series - vermillion
 
 # Data - medical biomarker vs disease diagnosis
 np.random.seed(42)

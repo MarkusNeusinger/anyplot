@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 FILL_COLORS = ["rgba(0,158,115,0.18)", "rgba(213,94,0,0.18)", "rgba(0,114,178,0.18)", "rgba(204,121,167,0.18)"]
 
 # Data - student test scores across 4 classrooms with varied distributions
@@ -44,7 +44,7 @@ all_scores = [scores_a, scores_b, scores_c, scores_d]
 fig = go.Figure()
 
 for i, (classroom, scores) in enumerate(zip(classrooms, all_scores, strict=False)):
-    color = OKABE_ITO[i]
+    color = IMPRINT[i]
     fig.add_trace(
         go.Box(
             y=scores,

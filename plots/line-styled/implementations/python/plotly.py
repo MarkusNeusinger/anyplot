@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito colors (position 1 is always brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Temperature readings from different environments over 24 hours
 np.random.seed(42)
@@ -41,7 +41,7 @@ fig.add_trace(
         y=sensor_a,
         mode="lines",
         name="Outdoor Sensor",
-        line=dict(dash="solid", width=4, color=OKABE_ITO[0]),
+        line=dict(dash="solid", width=4, color=IMPRINT[0]),
         hovertemplate="<b>Outdoor</b><br>Hour: %{x}<br>Temp: %{y:.1f}°C<extra></extra>",
     )
 )
@@ -52,7 +52,7 @@ fig.add_trace(
         y=sensor_b,
         mode="lines",
         name="Indoor Sensor",
-        line=dict(dash="dash", width=4, color=OKABE_ITO[1]),
+        line=dict(dash="dash", width=4, color=IMPRINT[1]),
         hovertemplate="<b>Indoor</b><br>Hour: %{x}<br>Temp: %{y:.1f}°C<extra></extra>",
     )
 )
@@ -63,7 +63,7 @@ fig.add_trace(
         y=sensor_c,
         mode="lines",
         name="Greenhouse Sensor",
-        line=dict(dash="dot", width=4, color=OKABE_ITO[2]),
+        line=dict(dash="dot", width=4, color=IMPRINT[2]),
         hovertemplate="<b>Greenhouse</b><br>Hour: %{x}<br>Temp: %{y:.1f}°C<extra></extra>",
     )
 )
@@ -74,7 +74,7 @@ fig.add_trace(
         y=sensor_d,
         mode="lines",
         name="Storage Sensor",
-        line=dict(dash="dashdot", width=4, color=OKABE_ITO[3]),
+        line=dict(dash="dashdot", width=4, color=IMPRINT[3]),
         hovertemplate="<b>Storage</b><br>Hour: %{x}<br>Temp: %{y:.1f}°C<extra></extra>",
     )
 )

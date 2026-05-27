@@ -271,7 +271,7 @@ spotlight = [
     ),
     (
         sorted_by_total[-1],
-        "#B71D27",
+        "#AE3030",
         "triangle-down",
         12,
         f"▼ Low: {us_states_data[sorted_by_total[-1]]['abbrev']} ${state_totals[sorted_by_total[-1]]:,}K",

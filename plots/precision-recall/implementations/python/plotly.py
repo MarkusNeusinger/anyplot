@@ -21,7 +21,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1, first series
-SECONDARY = "#E69F00"  # Position 5, orange
+SECONDARY = "#AE3030"  # Position 5, orange
 
 # Data - Simulate a binary classification scenario (fraud detection)
 np.random.seed(42)

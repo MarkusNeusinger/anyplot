@@ -19,7 +19,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (theme-independent data colors)
 BEFORE_COLOR = "#009E73"  # position 1 — first categorical series
-AFTER_COLOR = "#D55E00"  # position 2 — second series
+AFTER_COLOR = "#C475FD"  # position 2 — second series
 
 # Data — Employee satisfaction scores before and after policy changes.
 # Deterministic, hand-picked values (no RNG): one department (Legal) shows a

@@ -86,9 +86,9 @@ fig.add_trace(
 fig.add_trace(go.Scatter(x=dates, y=rsi, mode="lines", name="RSI (14)", line={"color": BRAND, "width": 3}))
 
 # Add reference lines
-fig.add_hline(y=70, line_dash="dash", line_color="#D55E00", line_width=2)
+fig.add_hline(y=70, line_dash="dash", line_color="#AE3030", line_width=2)  # imprint red overbought
 fig.add_hline(y=50, line_dash="dot", line_color=INK_SOFT, line_width=1.5)
-fig.add_hline(y=30, line_dash="dash", line_color="#0072B2", line_width=2)
+fig.add_hline(y=30, line_dash="dash", line_color="#4467A3", line_width=2)
 
 # Annotations for threshold lines
 fig.add_annotation(
@@ -98,7 +98,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 16, "color": "#D55E00"},
+    font={"size": 16, "color": "#AE3030"},
 )
 fig.add_annotation(
     x=dates[-1],
@@ -116,7 +116,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 16, "color": "#0072B2"},
+    font={"size": 16, "color": "#4467A3"},
 )
 
 # Layout

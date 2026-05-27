@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — temperature profile
-C_DEWPT = "#D55E00"  # Okabe-Ito pos 2 — dewpoint profile
+C_DEWPT = "#C475FD"  # Okabe-Ito pos 2 — dewpoint profile
 
 # Reference line colors: subtle, theme-adaptive
 C_ISO = "rgba(80,80,80,0.22)" if THEME == "light" else "rgba(180,180,180,0.28)"

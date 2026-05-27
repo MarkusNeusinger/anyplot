@@ -21,7 +21,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 COLOR_HISTORICAL = "#009E73"  # Position 1 - brand green
-COLOR_FORECAST = "#D55E00"  # Position 2 - vermillion
+COLOR_FORECAST = "#C475FD"  # Position 2 - vermillion
 
 # Data generation
 np.random.seed(42)

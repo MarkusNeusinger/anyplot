@@ -21,7 +21,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series — always
 BASELINE = "#888888"  # Neutral for reference
-PERFECT = "#E69F00"  # Orange for perfect model
+PERFECT = "#AE3030"  # Orange for perfect model
 
 # Data - Customer response model evaluation
 np.random.seed(42)

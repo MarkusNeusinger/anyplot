@@ -173,7 +173,7 @@ fig.add_trace(
         y=sol_y,
         mode="lines",
         name="Show Solution",
-        line={"color": "#D55E00", "width": 4, "dash": "dot"},
+        line={"color": "#C475FD", "width": 4, "dash": "dot"},
         opacity=0.85,
         visible="legendonly",
     )
@@ -198,7 +198,7 @@ fig.add_trace(
         x=[0.0],
         y=[0.0],
         mode="markers",
-        marker={"symbol": "star", "size": 20, "color": "#F0E442", "line": {"color": ACCENT, "width": 2}},
+        marker={"symbol": "star", "size": 20, "color": "#954477", "line": {"color": ACCENT, "width": 2}},
         showlegend=False,
         hoverinfo="skip",
     )

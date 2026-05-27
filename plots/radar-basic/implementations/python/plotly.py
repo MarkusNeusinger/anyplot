@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Employee performance comparison across competencies
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]
@@ -38,8 +38,8 @@ fig.add_trace(
         theta=categories_closed,
         fill="toself",
         fillcolor="rgba(0, 158, 115, 0.25)",
-        line={"color": OKABE_ITO[0], "width": 3},
-        marker={"size": 12, "color": OKABE_ITO[0]},
+        line={"color": IMPRINT[0], "width": 3},
+        marker={"size": 12, "color": IMPRINT[0]},
         name="Senior Developer",
         hovertemplate="<b>Senior Developer</b><br>%{theta}: %{r}<extra></extra>",
     )
@@ -51,8 +51,8 @@ fig.add_trace(
         theta=categories_closed,
         fill="toself",
         fillcolor="rgba(213, 94, 0, 0.25)",
-        line={"color": OKABE_ITO[1], "width": 3},
-        marker={"size": 12, "color": OKABE_ITO[1]},
+        line={"color": IMPRINT[1], "width": 3},
+        marker={"size": 12, "color": IMPRINT[1]},
         name="Junior Developer",
         hovertemplate="<b>Junior Developer</b><br>%{theta}: %{r}<extra></extra>",
     )

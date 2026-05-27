@@ -19,11 +19,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # Brand green (entry point)
-    "#D55E00",  # Vermillion (core)
-    "#0072B2",  # Blue (data)
-    "#CC79A7",  # Reddish purple (helpers)
+    "#C475FD",  # Vermillion (core)
+    "#4467A3",  # Blue (data)
+    "#BD8233",  # Reddish purple (helpers)
 ]
 
 # Data: Software module dependencies (arrows show import direction)
@@ -212,7 +212,7 @@ for idx, edge_data in enumerate(edges):
 
 # Add nodes by group
 group_names = ["Entry", "Core", "Data", "Helpers"]
-for group_idx in range(len(OKABE_ITO)):
+for group_idx in range(len(IMPRINT)):
     group_nodes = [n for n in nodes if n["group"] == group_idx]
     group_x = [node_x[n["id"]] for n in group_nodes]
     group_y = [node_y[n["id"]] for n in group_nodes]
@@ -223,7 +223,7 @@ for group_idx in range(len(OKABE_ITO)):
             x=group_x,
             y=group_y,
             mode="markers+text",
-            marker=dict(size=18, color=OKABE_ITO[group_idx], line=dict(width=1.5, color=INK_SOFT)),
+            marker=dict(size=18, color=IMPRINT[group_idx], line=dict(width=1.5, color=INK_SOFT)),
             text=group_labels,
             textposition="middle center",
             textfont=dict(size=14, color=INK, family="monospace"),

@@ -42,7 +42,7 @@ for w in widths:
 outcome_props = {k: [cnt / m for cnt, m in zip(v, channel_sizes)] for k, v in outcome_counts.items()}
 
 # Okabe-Ito palette: Active=green(1), On Trial=orange(5), Cancelled=vermillion(2)
-COLORS = {"Active": "#009E73", "On Trial": "#E69F00", "Cancelled": "#D55E00"}
+COLORS = {"Active": "#009E73", "On Trial": "#AE3030", "Cancelled": "#C475FD"}
 
 # Plot
 fig = go.Figure()

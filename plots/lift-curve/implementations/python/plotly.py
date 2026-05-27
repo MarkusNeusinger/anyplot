@@ -20,7 +20,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series, always
-ACCENT = "#D55E00"  # Second series
+ACCENT = "#C475FD"  # Second series
 
 # Data: Simulate customer response model predictions
 np.random.seed(42)

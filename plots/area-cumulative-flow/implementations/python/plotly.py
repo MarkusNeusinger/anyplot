@@ -22,12 +22,12 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 # Okabe-Ito palette — first series is always #009E73
 FILL_COLORS = [
     "rgba(0,158,115,0.80)",  # #009E73 Done
-    "rgba(213,94,0,0.80)",  # #D55E00 Testing
-    "rgba(0,114,178,0.80)",  # #0072B2 Development
-    "rgba(204,121,167,0.80)",  # #CC79A7 Analysis
-    "rgba(230,159,0,0.80)",  # #E69F00 Backlog
+    "rgba(213,94,0,0.80)",  # #C475FD Testing
+    "rgba(0,114,178,0.80)",  # #4467A3 Development
+    "rgba(204,121,167,0.80)",  # #BD8233 Analysis
+    "rgba(230,159,0,0.80)",  # #AE3030 Backlog
 ]
-LINE_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+LINE_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — Kanban board for a software team over 90 days
 np.random.seed(42)

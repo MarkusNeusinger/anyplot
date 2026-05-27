@@ -39,7 +39,7 @@ dir_labels = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 # Define speed bins (m/s)
 speed_bins = [0, 3, 6, 9, 12, np.inf]
 speed_labels = ["0-3 m/s", "3-6 m/s", "6-9 m/s", "9-12 m/s", ">12 m/s"]
-speed_colors = ["#4A90E2", "#0072B2", "#FFD43B", "#FF9F40", "#FF5252"]
+speed_colors = ["#4A90E2", "#4467A3", "#FFD43B", "#FF9F40", "#FF5252"]
 
 # Bin the data
 dir_indices = np.digitize(directions, dir_bins[:-1]) - 1
