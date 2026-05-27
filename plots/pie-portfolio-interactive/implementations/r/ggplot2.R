@@ -43,13 +43,14 @@ holdings <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Pre-compute angular midpoints for label placement
+# Pre-compute angular midpoints and absolute dollar values (assumes $1M portfolio)
 holdings <- holdings |>
   arrange(category) |>
   mutate(
     cum_end   = cumsum(weight),
     cum_start = lag(cum_end, default = 0),
-    midpoint  = (cum_start + cum_end) / 2
+    midpoint  = (cum_start + cum_end) / 2,
+    dollar    = paste0("$", weight * 10, "k")
   )
 
 # Asset class summary for the inner ring
@@ -94,38 +95,30 @@ p <- ggplot() +
     color      = "white",
     size       = 3.5,
     fontface   = "bold",
-    lineheight = 0.82
+    lineheight = 0.75
   ) +
-  # Second-largest holding (Intl Developed, 18%): show name + percentage
-  # US Large Cap (20%) starts at 12 o'clock and its midpoint lands near the
-  # right canvas edge, so it gets a percentage-only label like the rest.
+  # Outer ring labels: placed outside the ring at x=4.0 using INK so text
+  # always lands on PAGE_BG and remains readable in both light and dark themes.
+  # Shows holding name, percentage, and absolute value (assumes $1M portfolio).
+  # Only segments >= 10% are labeled to avoid crowding.
   geom_text(
-    data       = filter(holdings, weight >= 15 & weight < 20),
-    aes(x = 3.2, y = midpoint,
-        label  = paste0(holding, "\n", weight, "%")),
-    color      = "white",
-    size       = 3.0,
+    data       = filter(holdings, weight >= 10),
+    aes(x = 4.0, y = midpoint,
+        label  = paste0(holding, "\n", weight, "% · ", dollar)),
+    color      = INK,
+    size       = 2.6,
     fontface   = "bold",
     lineheight = 0.85
   ) +
-  # All other large outer ring segments (>= 10%): show percentage only
-  geom_text(
-    data     = filter(holdings, weight >= 10 & (weight < 15 | weight >= 20)),
-    aes(x = 3.2, y = midpoint,
-        label = paste0(weight, "%")),
-    color    = "white",
-    size     = 3.5,
-    fontface = "bold"
-  ) +
   coord_polar(theta = "y", start = 0, clip = "off") +
-  xlim(c(0.7, 4.2)) +
+  xlim(c(0.7, 5.0)) +
   scale_fill_manual(
     values = cat_colors,
     name   = "Asset Class"
   ) +
   labs(
     title    = title_str,
-    subtitle = "Model Portfolio · 10 Holdings · Inner ring: asset class  |  Outer ring: individual holding"
+    subtitle = "Model Portfolio ($1M) · 10 Holdings · Inner ring: asset class  |  Outer ring: individual holding"
   ) +
   theme_void(base_size = 8) +
   theme(
