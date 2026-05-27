@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Created: 2026-05-27
@@ -78,6 +78,18 @@ tilemap_data = sorted(
     [{"x": col, "y": row, "value": count} for (col, row), count in bins.items()], key=lambda d: (d["x"], d["y"])
 )
 
+# Geographic context: state borders converted to tilemap grid coordinates
+# Grid x = (lon - LON_MIN) / COL_SPACING, grid y = (lat - LAT_MIN) / ROW_SPACING
+GRID_X_MAX = (LON_MAX - LON_MIN) / COL_SPACING
+GRID_Y_MAX = (LAT_MAX - LAT_MIN) / ROW_SPACING
+MT_WY_BORDER_Y = (45.0 - LAT_MIN) / ROW_SPACING  # Montana–Wyoming: 45°N
+ID_WY_BORDER_X = (-111.054 - LON_MIN) / COL_SPACING  # Idaho–Wyoming: ~111.054°W
+
+# Subtle state-region fill colors (drawn under hexagons as base map layer)
+BAND_WY = "rgba(0,158,115,0.08)"  # brand green tint — Wyoming
+BAND_MT = "rgba(68,103,163,0.08)"  # brand blue tint — Montana
+BAND_ID = "rgba(44,188,205,0.08)"  # brand cyan tint — Idaho
+
 # Title
 TITLE = "Yellowstone Sightings · hexbin-map-geographic · python · highcharts · anyplot.ai"
 TITLE_FONTSIZE = round(66 * min(1.0, 67 / len(TITLE)))
@@ -103,6 +115,7 @@ chart_options = {
         "marginBottom": 190,
         "marginLeft": 210,
         "marginRight": 230,
+        "plotBorderWidth": 0,
     },
     "title": {
         "text": TITLE,
@@ -115,30 +128,109 @@ chart_options = {
         "margin": 18,
     },
     "xAxis": {
-        "title": {"text": "Longitude (°W)", "style": {"fontSize": "52px", "color": INK}, "margin": 14},
-        "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}},
+        "title": {"text": "Longitude (°W)", "style": {"fontSize": "56px", "color": INK}, "margin": 14},
+        "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
         "lineColor": INK_SOFT,
         "tickColor": INK_SOFT,
+        "tickLength": 0,
         "gridLineColor": GRID,
         "gridLineWidth": 1,
+        # Base map: Idaho region west of the WY border
+        "plotBands": [
+            {
+                "from": 0,
+                "to": ID_WY_BORDER_X,
+                "color": BAND_ID,
+                "zIndex": 0,
+                "label": {
+                    "text": "Idaho",
+                    "style": {"fontSize": "34px", "color": INK_SOFT, "fontStyle": "italic"},
+                    "align": "center",
+                    "y": 30,
+                },
+            }
+        ],
+        # Dashed state border line (ID | WY)
+        "plotLines": [
+            {
+                "value": ID_WY_BORDER_X,
+                "color": INK_SOFT,
+                "width": 2,
+                "dashStyle": "ShortDash",
+                "zIndex": 3,
+                "label": {
+                    "text": "ID | WY",
+                    "style": {"fontSize": "30px", "color": INK_SOFT},
+                    "align": "center",
+                    "y": -12,
+                },
+            }
+        ],
     },
     "yAxis": {
-        "title": {"text": "Latitude (°N)", "style": {"fontSize": "52px", "color": INK}, "margin": 14},
-        "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}},
+        "title": {"text": "Latitude (°N)", "style": {"fontSize": "56px", "color": INK}, "margin": 14},
+        "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
         "lineColor": INK_SOFT,
         "tickColor": INK_SOFT,
+        "tickLength": 0,
         "gridLineColor": GRID,
         "gridLineWidth": 1,
+        # Base map: Wyoming (south) and Montana (north) state regions
+        "plotBands": [
+            {
+                "from": 0,
+                "to": MT_WY_BORDER_Y,
+                "color": BAND_WY,
+                "zIndex": 0,
+                "label": {
+                    "text": "Wyoming",
+                    "style": {"fontSize": "34px", "color": INK_SOFT, "fontStyle": "italic"},
+                    "align": "right",
+                    "x": -8,
+                    "y": 20,
+                },
+            },
+            {
+                "from": MT_WY_BORDER_Y,
+                "to": GRID_Y_MAX + 0.5,
+                "color": BAND_MT,
+                "zIndex": 0,
+                "label": {
+                    "text": "Montana",
+                    "style": {"fontSize": "34px", "color": INK_SOFT, "fontStyle": "italic"},
+                    "align": "right",
+                    "x": -8,
+                    "y": 20,
+                },
+            },
+        ],
+        # Dashed state border line (MT | WY)
+        "plotLines": [
+            {
+                "value": MT_WY_BORDER_Y,
+                "color": INK_SOFT,
+                "width": 2,
+                "dashStyle": "ShortDash",
+                "zIndex": 3,
+                "label": {
+                    "text": "MT | WY border · 45°N",
+                    "style": {"fontSize": "30px", "color": INK_SOFT},
+                    "align": "right",
+                    "x": -6,
+                    "y": -6,
+                },
+            }
+        ],
     },
     "colorAxis": {
         "minColor": CMAP_START,
         "maxColor": CMAP_END,
-        "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}},
+        "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
         "title": {"text": "Sightings per cell", "style": {"fontSize": "44px", "color": INK_SOFT}},
     },
     "legend": {
         "enabled": True,
-        "itemStyle": {"color": INK_SOFT, "fontSize": "40px"},
+        "itemStyle": {"color": INK_SOFT, "fontSize": "44px"},
         "backgroundColor": ELEVATED_BG,
         "borderColor": INK_SOFT,
         "borderWidth": 1,
