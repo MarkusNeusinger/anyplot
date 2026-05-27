@@ -1,15 +1,15 @@
-""" pyplots.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
 
+import os
 import sys
 
 
-sys.path = [p for p in sys.path if not p.endswith("implementations")]
-
-import math  # noqa: E402
+_here = __file__.replace("\\", "/").rsplit("/", 1)[0]
+sys.path = [p for p in sys.path if p not in ("", ".", _here)]
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -32,262 +32,188 @@ from plotnine import (  # noqa: E402
 )
 
 
-# Portfolio allocation data - top-level asset classes and holdings
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# anyplot categorical palette — hybrid-v3 order
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Portfolio data — anyplot palette with semantic assignments
 np.random.seed(42)
 
-# Main asset classes with holdings breakdown
-portfolio_data = {
-    "Equities": {
-        "weight": 45,
-        "color": "#306998",
-        "holdings": [
-            {"name": "Tech Stocks", "weight": 18},
-            {"name": "Healthcare", "weight": 12},
-            {"name": "Financials", "weight": 10},
-            {"name": "Energy", "weight": 5},
-        ],
-    },
-    "Fixed Income": {
-        "weight": 30,
-        "color": "#FFD43B",
-        "holdings": [
-            {"name": "Treasury Bonds", "weight": 15},
-            {"name": "Corporate Bonds", "weight": 10},
-            {"name": "Municipal Bonds", "weight": 5},
-        ],
-    },
-    "Alternatives": {
-        "weight": 15,
-        "color": "#2ECC71",
-        "holdings": [
-            {"name": "Real Estate", "weight": 8},
-            {"name": "Commodities", "weight": 4},
-            {"name": "Private Equity", "weight": 3},
-        ],
-    },
-    "Cash": {
-        "weight": 10,
-        "color": "#9B59B6",
-        "holdings": [{"name": "Money Market", "weight": 7}, {"name": "Short-term T-Bills", "weight": 3}],
-    },
+MAIN_COLORS = {
+    "Equities": ANYPLOT_PALETTE[0],  # #009E73 green  — growth / equities
+    "Fixed Income": ANYPLOT_PALETTE[2],  # #4467A3 blue   — stability / bonds
+    "Alternatives": ANYPLOT_PALETTE[1],  # #C475FD lavender — non-standard assets
+    "Cash": ANYPLOT_PALETTE[3],  # #BD8233 ochre  — value / currency
 }
+MAIN_WEIGHTS = {"Equities": 45, "Fixed Income": 30, "Alternatives": 15, "Cash": 10}
 
+# Equities sub-holdings — semantic colors within holding categories
+HOLDINGS = [
+    {"name": "Tech Stocks", "weight": 18, "color": ANYPLOT_PALETTE[5]},  # #2ABCCD cyan  — tech
+    {"name": "Healthcare", "weight": 12, "color": ANYPLOT_PALETTE[6]},  # #954477 rose  — health
+    {"name": "Financials", "weight": 10, "color": ANYPLOT_PALETTE[2]},  # #4467A3 blue  — finance
+    {"name": "Energy", "weight": 5, "color": ANYPLOT_PALETTE[3]},  # #BD8233 ochre — commodity
+]
 
-def create_donut_segment(start_angle, end_angle, inner_radius, outer_radius, cx, cy, n_points=50):
-    """Create polygon points for a donut segment."""
-    gap = 0.02
-    start_angle += gap
-    end_angle -= gap
+# Geometry constants
+OUTER_R = 80
+INNER_R = 40
+OUTER_R_D = 62
+INNER_R_D = 30
+CX_MAIN = -95
+CX_DETAIL = 90
+CY = 0
+GAP = 0.025
+N_PTS = 50
 
-    points = []
-    # Outer arc
-    angles = np.linspace(start_angle, end_angle, n_points)
-    for angle in angles:
-        x = cx + outer_radius * math.cos(angle)
-        y = cy + outer_radius * math.sin(angle)
-        points.append((x, y))
-    # Inner arc (reversed)
-    for angle in reversed(angles):
-        x = cx + inner_radius * math.cos(angle)
-        y = cy + inner_radius * math.sin(angle)
-        points.append((x, y))
-    # Close
-    points.append(points[0])
-    return points
+# Build main donut polygons (asset classes) — inline, no function
+rows_main = []
+label_rows_main = []
+angle = np.pi / 2
 
+for asset_class, weight in MAIN_WEIGHTS.items():
+    color = MAIN_COLORS[asset_class]
+    sweep = (weight / 100) * 2 * np.pi
+    end_angle = angle - sweep
+    arcs = np.linspace(end_angle + GAP, angle - GAP, N_PTS)
+    outer_pts = list(zip(CX_MAIN + OUTER_R * np.cos(arcs), CY + OUTER_R * np.sin(arcs), strict=False))
+    inner_pts = list(zip(CX_MAIN + INNER_R * np.cos(arcs[::-1]), CY + INNER_R * np.sin(arcs[::-1]), strict=False))
+    all_pts = outer_pts + inner_pts + [outer_pts[0]]
+    for order, (x, y) in enumerate(all_pts):
+        rows_main.append({"x": x, "y": y, "segment": asset_class, "order": order, "fill": color})
+    mid_a = (angle + end_angle) / 2
+    mid_r = (INNER_R + OUTER_R) / 2
+    label_rows_main.append(
+        {"x": CX_MAIN + mid_r * float(np.cos(mid_a)), "y": CY + mid_r * float(np.sin(mid_a)), "label": f"{weight}%"}
+    )
+    angle = end_angle
 
-# Donut chart parameters
-outer_radius = 100
-inner_radius = 55  # Creates donut hole
-center_x_main = -70
-center_y = 0
+main_df = pd.DataFrame(rows_main)
+main_label_df = pd.DataFrame(label_rows_main)
 
-# Build main donut chart (left side - asset classes)
-rows = []
-label_rows = []
-current_angle = math.pi / 2  # Start at top
+# Build detail donut polygons (Equities breakdown) — inline, no function
+rows_detail = []
+label_rows_detail = []
+angle = np.pi / 2
+equities_total = MAIN_WEIGHTS["Equities"]
 
-for asset_class, data in portfolio_data.items():
-    weight = data["weight"]
-    color = data["color"]
-    sweep = (weight / 100) * 2 * math.pi
-    end_angle = current_angle - sweep
-
-    # Create donut segment
-    points = create_donut_segment(end_angle, current_angle, inner_radius, outer_radius, center_x_main, center_y)
-    for order, (x, y) in enumerate(points):
-        rows.append({"x": x, "y": y, "segment": asset_class, "order": order, "fill": color})
-
-    # Label position (middle of segment, middle of donut thickness)
-    mid_angle = (current_angle + end_angle) / 2
-    label_radius = (inner_radius + outer_radius) / 2
-    label_x = center_x_main + label_radius * math.cos(mid_angle)
-    label_y = center_y + label_radius * math.sin(mid_angle)
-    label_rows.append({"x": label_x, "y": label_y, "label": f"{weight}%", "segment": asset_class})
-
-    current_angle = end_angle
-
-main_df = pd.DataFrame(rows)
-main_label_df = pd.DataFrame(label_rows)
-
-# Build detail donut chart (right side - Equities breakdown as drill-down example)
-detail_center_x = 110
-detail_outer_radius = 80
-detail_inner_radius = 40
-detail_rows = []
-detail_label_rows = []
-
-equities_data = portfolio_data["Equities"]
-equities_total = equities_data["weight"]
-base_color = equities_data["color"]
-
-# Generate shades of blue for holdings
-blue_shades = ["#1A3D5C", "#2A5F8F", "#4B8BBE", "#7FB3D5"]
-
-current_angle = math.pi / 2
-for i, holding in enumerate(equities_data["holdings"]):
+for holding in HOLDINGS:
     name = holding["name"]
     weight = holding["weight"]
-    color = blue_shades[i % len(blue_shades)]
-    sweep = (weight / equities_total) * 2 * math.pi
-    end_angle = current_angle - sweep
-
-    points = create_donut_segment(
-        end_angle, current_angle, detail_inner_radius, detail_outer_radius, detail_center_x, center_y
+    color = holding["color"]
+    sweep = (weight / equities_total) * 2 * np.pi
+    end_angle = angle - sweep
+    arcs = np.linspace(end_angle + GAP, angle - GAP, N_PTS)
+    outer_pts = list(zip(CX_DETAIL + OUTER_R_D * np.cos(arcs), CY + OUTER_R_D * np.sin(arcs), strict=False))
+    inner_pts = list(zip(CX_DETAIL + INNER_R_D * np.cos(arcs[::-1]), CY + INNER_R_D * np.sin(arcs[::-1]), strict=False))
+    all_pts = outer_pts + inner_pts + [outer_pts[0]]
+    for order, (x, y) in enumerate(all_pts):
+        rows_detail.append({"x": x, "y": y, "segment": name, "order": order, "fill": color})
+    mid_a = (angle + end_angle) / 2
+    mid_r = (INNER_R_D + OUTER_R_D) / 2
+    label_rows_detail.append(
+        {"x": CX_DETAIL + mid_r * float(np.cos(mid_a)), "y": CY + mid_r * float(np.sin(mid_a)), "label": f"{weight}%"}
     )
-    for order, (x, y) in enumerate(points):
-        detail_rows.append({"x": x, "y": y, "segment": name, "order": order, "fill": color})
+    angle = end_angle
 
-    # Label position
-    mid_angle = (current_angle + end_angle) / 2
-    label_radius = (detail_inner_radius + detail_outer_radius) / 2
-    label_x = detail_center_x + label_radius * math.cos(mid_angle)
-    label_y = center_y + label_radius * math.sin(mid_angle)
-    pct_of_total = weight  # percentage of total portfolio
-    detail_label_rows.append({"x": label_x, "y": label_y, "label": f"{pct_of_total}%", "segment": name})
+detail_df = pd.DataFrame(rows_detail)
+detail_label_df = pd.DataFrame(label_rows_detail)
 
-    current_angle = end_angle
+# Connecting arrow — drill-down indicator from main to detail donut
+arrow_df = pd.DataFrame([{"x": CX_MAIN + OUTER_R + 7, "y": 16, "xend": CX_DETAIL - OUTER_R_D - 7, "yend": 16}])
 
-detail_df = pd.DataFrame(detail_rows)
-detail_label_df = pd.DataFrame(detail_label_rows)
-
-# Arrow connecting main chart to detail (drill-down indicator)
-arrow_data = pd.DataFrame(
-    [{"x": center_x_main + outer_radius + 10, "y": 30, "xend": detail_center_x - detail_outer_radius - 10, "yend": 10}]
-)
-
-# Section titles
-section_titles = pd.DataFrame(
+# Section titles — identical y for vertical symmetry
+titles_df = pd.DataFrame(
     [
-        {"x": center_x_main, "y": 130, "label": "Portfolio Allocation"},
-        {"x": detail_center_x, "y": 115, "label": "Equities Breakdown"},
+        {"x": CX_MAIN, "y": 108, "label": "Portfolio Allocation"},
+        {"x": CX_DETAIL, "y": 108, "label": "Equities Breakdown"},
     ]
 )
 
-# Instruction text (simulating interactivity)
-instruction_text = pd.DataFrame(
-    [{"x": 20, "y": -140, "label": "Click segment to drill down (interactive feature shown as static example)"}]
-)
-
-# Center labels for donut holes
-center_labels = pd.DataFrame(
+# Center hole labels — both donuts at CY=0
+center_df = pd.DataFrame(
     [
-        {"x": center_x_main, "y": 8, "label": "Total"},
-        {"x": center_x_main, "y": -12, "label": "$1.2M"},
-        {"x": detail_center_x, "y": 5, "label": "45%"},
-        {"x": detail_center_x, "y": -12, "label": "Equities"},
+        {"x": CX_MAIN, "y": 7, "label": "Total"},
+        {"x": CX_MAIN, "y": -10, "label": "$1.2M"},
+        {"x": CX_DETAIL, "y": 5, "label": "45%"},
+        {"x": CX_DETAIL, "y": -10, "label": "Equities"},
     ]
 )
 
-# Legend data (positioned at bottom)
-legend_rows = []
-legend_x_start = -150
-legend_y = -115
-legend_spacing = 85
+# Legend at bottom — color boxes + text labels
+leg_items = list(MAIN_WEIGHTS.keys())
+LEG_X_START = -152
+LEG_Y = -112
+LEG_SPACING = 80
+BOX_SIZE = 10
 
-for i, (asset_class, data) in enumerate(portfolio_data.items()):
-    legend_rows.append(
-        {"x": legend_x_start + i * legend_spacing, "y": legend_y, "label": asset_class, "fill": data["color"]}
-    )
+legend_text_df = pd.DataFrame(
+    [{"x": LEG_X_START + i * LEG_SPACING + BOX_SIZE + 3, "y": LEG_Y, "label": name} for i, name in enumerate(leg_items)]
+)
 
-legend_df = pd.DataFrame(legend_rows)
-
-# Legend color boxes
-legend_box_rows = []
-box_size = 12
-for i, (asset_class, data) in enumerate(portfolio_data.items()):
-    x_pos = legend_x_start + i * legend_spacing - 18
-    y_pos = legend_y
-    box_points = [
-        (x_pos, y_pos - box_size / 2),
-        (x_pos + box_size, y_pos - box_size / 2),
-        (x_pos + box_size, y_pos + box_size / 2),
-        (x_pos, y_pos + box_size / 2),
-        (x_pos, y_pos - box_size / 2),
+box_rows = []
+for i, name in enumerate(leg_items):
+    x0 = LEG_X_START + i * LEG_SPACING
+    y0 = LEG_Y
+    pts = [
+        (x0, y0 - BOX_SIZE / 2),
+        (x0 + BOX_SIZE, y0 - BOX_SIZE / 2),
+        (x0 + BOX_SIZE, y0 + BOX_SIZE / 2),
+        (x0, y0 + BOX_SIZE / 2),
+        (x0, y0 - BOX_SIZE / 2),
     ]
-    for order, (x, y) in enumerate(box_points):
-        legend_box_rows.append(
-            {"x": x, "y": y, "segment": f"legend_{asset_class}", "order": order, "fill": data["color"]}
-        )
+    for order, (x, y) in enumerate(pts):
+        box_rows.append({"x": x, "y": y, "segment": f"box_{name}", "order": order, "fill": MAIN_COLORS[name]})
+legend_box_df = pd.DataFrame(box_rows)
 
-legend_box_df = pd.DataFrame(legend_box_rows)
+# Title — scale fontsize if longer than 67-char baseline
+title_str = "pie-portfolio-interactive · python · plotnine · anyplot.ai"
+n_chars = len(title_str)
+title_fs = max(8, round(12 * (67 / n_chars if n_chars > 67 else 1.0)))
 
 # Plot
 plot = (
     ggplot()
-    # Main donut chart
-    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=main_df, color="#FFFFFF", size=1.2, alpha=0.95)
-    # Detail donut chart
-    + geom_polygon(
-        aes(x="x", y="y", group="segment", fill="fill"), data=detail_df, color="#FFFFFF", size=1.0, alpha=0.95
-    )
-    # Labels on main donut
-    + geom_text(aes(x="x", y="y", label="label"), data=main_label_df, size=14, fontweight="bold", color="#FFFFFF")
-    # Labels on detail donut
-    + geom_text(aes(x="x", y="y", label="label"), data=detail_label_df, size=12, fontweight="bold", color="#FFFFFF")
-    # Arrow for drill-down
+    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=main_df, color=PAGE_BG, size=0.8, alpha=0.97)
+    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=detail_df, color=PAGE_BG, size=0.8, alpha=0.97)
+    + geom_text(aes(x="x", y="y", label="label"), data=main_label_df, size=3.5, fontweight="bold", color="#FFFFFF")
+    + geom_text(aes(x="x", y="y", label="label"), data=detail_label_df, size=3.2, fontweight="bold", color="#FFFFFF")
     + geom_segment(
         aes(x="x", xend="xend", y="y", yend="yend"),
-        data=arrow_data,
-        color="#666666",
-        size=1.5,
+        data=arrow_df,
+        color=INK_SOFT,
+        size=1.0,
         linetype="dashed",
-        arrow=arrow(length=0.15, type="closed"),
+        arrow=arrow(length=0.10, type="closed"),
     )
-    # Section titles
-    + geom_text(aes(x="x", y="y", label="label"), data=section_titles, size=16, fontweight="bold", color="#306998")
-    # Center labels
-    + geom_text(aes(x="x", y="y", label="label"), data=center_labels, size=12, color="#333333")
-    # Instruction text
-    + geom_text(aes(x="x", y="y", label="label"), data=instruction_text, size=10, color="#888888", fontstyle="italic")
-    # Legend boxes
-    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=legend_box_df, color="#333333", size=0.5)
-    # Legend text
-    + geom_text(aes(x="x", y="y", label="label"), data=legend_df, size=12, ha="left", color="#333333")
-    # Fill colors directly
+    + geom_text(aes(x="x", y="y", label="label"), data=titles_df, size=4.8, fontweight="bold", color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=center_df, size=3.2, color=INK_SOFT)
+    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=legend_box_df, color=INK_SOFT, size=0.3)
+    + geom_text(aes(x="x", y="y", label="label"), data=legend_text_df, size=2.8, ha="left", color=INK_SOFT)
     + scale_fill_identity()
-    # Fixed aspect ratio
     + coord_fixed(ratio=1)
-    # Axis limits
-    + scale_x_continuous(limits=(-220, 220))
-    + scale_y_continuous(limits=(-160, 160))
-    # Title
-    + labs(title="pie-portfolio-interactive · plotnine · pyplots.ai")
-    # Clean theme
+    + scale_x_continuous(limits=(-195, 185))
+    + scale_y_continuous(limits=(-130, 130))
+    + labs(title=title_str)
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", color="#306998"),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=title_fs, ha="center", color=INK, weight="bold"),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#FAFAFA"),
-        plot_background=element_rect(fill="#FAFAFA"),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_position="none",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
