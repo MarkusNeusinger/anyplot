@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:07:33Z'
-updated: '2026-05-27T17:42:40Z'
+updated: '2026-05-27T17:52:20Z'
 generated_by: claude-sonnet
 workflow_run: 26527248023
 issue: 3754
@@ -12,50 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Excellent interactive hover tooltips via layer_tooltips() with category name,
-    allocation %, holdings count, and holdings preview — rich multi-line tooltip design
-    distinctive to lets-plot
-  - Semantic color mapping (green=equities/growth, blue=conservative/fixed income)
-    shows design thinking documented in code comments
-  - Clean donut with center Portfolio 100% label provides portfolio-total context
-    at a glance
-  - Correct and complete theme adaptation — PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens
-    applied throughout both renders
-  - Creative use of ggbunch() to deliver overview + 4 drill-down panels in a single
-    interactive HTML file
-  - Realistic institutional portfolio data with named assets and realistic allocation
-    proportions summing to 100%
-  - Perfect Code Quality and near-perfect Library Mastery
+  - Semantic color assignment (Equities=green, Fixed Income=blue, Alternatives=purple,
+    Cash=ochre) is well-reasoned and documented in code comments, aligning with strong
+    financial color conventions
+  - ggbunch() composite layout is an excellent use of a letsplot-specific feature
+    for the drill-down HTML panels
+  - layer_tooltips() with multi-line formatted content (category name, weight%, holdings
+    count, holdings preview) provides rich interactive information per slice
+  - Suppressing labels below 5% (pct_label logic) prevents cramped text on the tiny
+    Cash slice — thoughtful UX decision
+  - Caption directly calls out the dominant insight in brand blue (#4467A3), elevating
+    data storytelling above default
+  - theme_void() combined with custom chart_theme tokens produces a very clean pie
+    presentation with no unnecessary chrome
   weaknesses:
-  - Canvas underutilized — donut ring occupies ~55-60% of 2400x2400 square with notable
-    empty whitespace above and below; increase geom_pie(size=38) to approximately
-    45 to expand the donut and fill the canvas better
-  - The 4% Cash slice is a very narrow sliver with a cramped 4.0% label; consider
-    a callout label or suppressing labels below a threshold (e.g. weight < 5%)
-  - True click-to-drill-down navigation not achievable — HTML layout shows all 4 drill-down
-    panels simultaneously via ggbunch rather than click-based navigation; SC-02 partial
-    miss
-  - Design Excellence ceiling not reached — add a bold annotation calling out the
-    dominant Fixed Income 38% allocation to create visual focal point and push DE-03
-    to 6
+  - Spec requests 'display both percentage and absolute values where applicable' —
+    only percentages are shown; no portfolio dollar value context (e.g. '$380K of
+    $1M') in tooltips or labels
+  - Click-to-drill-down navigation is not implemented; instead all panels are shown
+    simultaneously via ggbunch — the navigational interactivity described in the spec
+    is absent (subtitle is honest about this limitation)
+  - Slice labels (size=7mm) may be slightly small when the chart is scaled to mobile
+    thumbnails (~400px)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
-      Chrome: Bold title "pie-portfolio-interactive · python · letsplot · anyplot.ai" in dark ink, clearly readable. Subtitle "Hover for details · Drill-down panels in HTML" in INK_SOFT. Legend "Asset Class" with elevated (#FFFDF6) background box and dark text — all readable. Center "Portfolio 100%" label in dark ink on elevated box.
-      Data: Equities 37% (#009E73 brand green), Fixed Income 38% (#4467A3 blue), Alternatives 21% (#C475FD lavender), Cash 4% (#BD8233 ochre). Slice percentage labels in white/light color on each segment. 4% Cash slice is a narrow sliver.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "pie-portfolio-interactive · python · letsplot · anyplot.ai" in dark ink, clearly readable. Subtitle "Hover for details · Drill-down panels in HTML" in secondary ink. Legend "Asset Class" with all four category labels readable. Caption in #4467A3 blue at bottom.
+      Data: Four donut segments — Equities 37% (#009E73 brand green), Fixed Income 38% (#4467A3 blue), Alternatives 21% (#C475FD lavender), Cash 4% (#BD8233 ochre, no label). Center label "Portfolio / 100%" on elevated off-white box. Percentage labels 38.0%, 37.0%, 21.0% visible on slices.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and subtitle in light (#F0EFE8) ink, clearly readable. Legend background switches to elevated dark (#242420) with light text. Center "Portfolio 100%" shows white text on dark-elevated box. No dark-on-dark failures detected.
-      Data: Colors identical to light render — Equities #009E73, Fixed Income #4467A3, Alternatives #C475FD, Cash #BD8233. White slice percentage labels remain legible against segment colors. Brand green #009E73 clearly visible on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title and subtitle rendered in light cream text, clearly legible against dark surface. Legend text is light-colored, no dark-on-dark failure. Center label uses elevated dark background (#242420) with white text. Caption in #4467A3 blue remains readable.
+      Data: Colors identical to light render — green, blue, lavender, ochre segments unchanged. Only chrome (background, text, legend box) flips between themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,9 +59,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; all text readable in both themes.
-          Minor: center label slightly small relative to donut opening; 4% Cash slice
-          label cramped on narrow arc.'
+        comment: 'All font sizes explicitly set (title=13, subtitle=10, legend=10-11,
+          caption=9, slice labels=7mm). Readable in both themes. Minor: slice labels
+          slightly small at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -74,39 +70,40 @@ review:
         comment: No overlapping text or element collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Four segments clearly visible. 4% Cash sliver is technically visible
-          but very thin — marginal at mobile scale.
+        comment: Pie slices clearly visible with distinct colors; donut hole and center
+          label well-proportioned; Cash segment small but correctly unlabeled.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette, colorblind-safe. Adequate contrast between segments.
+        comment: Semantic anyplot palette is CVD-safe; pie stroke provides boundary
+          definition.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate for donut. Donut+legend occupies ~55-60%
-          of 2400x2400 canvas with notable empty zones above and below.
+        comment: Square 2400x2400 canvas correct for pie; chart fills canvas well;
+          legend properly positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (theme_void, appropriate for pie). Legend title 'Asset
-          Class' descriptive. Mandatory title format correct.
+        comment: No axis labels needed (pie chart); title in correct spec format;
+          subtitle and insight caption add context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Equities) = #009E73. Semantic ordering: Fixed Income→blue,
-          Alternatives→lavender, Cash→ochre — all anyplot palette members with documented
-          rationale. Background #FAF8F1/#1A1A17 correct.'
+        comment: 'Equities=#009E73 (brand green first); Fixed Income=#4467A3; Alternatives=#C475FD;
+          Cash=#BD8233. Semantic exception justified for finance domain. Backgrounds
+          #FAF8F1/#1A1A17 correct. Data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -116,24 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured-default baseline: semantic color mapping with rationale,
-          donut with center label, theme-adaptive chrome. Not yet exceptional; lacks
-          visual emphasis annotation.'
+        comment: Thoughtful semantic color assignment with documented reasoning; donut
+          center summary; insight caption in brand blue; above configured-default
+          but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void appropriate. Legend box styled with elevated background.
-          Clean whitespace. Could tighten bottom margin and enlarge donut.
+        comment: theme_void() perfectly suits pie; stroke on slices for clean segment
+          definition; elevated background for legend and center label.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Semantic color encoding (green=growth, blue=safe) creates immediate
-          visual inference. Donut composition shows Fixed Income+Equities dominance
-          (~75%). An annotation on the dominant segment would push this to 6.
+        comment: Caption explicitly names key insight (Fixed Income leads at 38%);
+          center label anchors total; subtitle guides interactive exploration.
     spec_compliance:
       score: 14
       max: 15
@@ -143,57 +139,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Donut chart (pie with hole=0.35) — exactly per spec.
+        comment: Donut chart as specified; drill-down panels in HTML via ggbunch.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Hover tooltips with weights and holdings ✓, color-code by asset
-          class ✓, legend ✓, drill-down panels ✓. Missing: true click-to-drill-down
-          navigation and return-to-overview (shown simultaneously via ggbunch instead).'
+        comment: 'Hover tooltips, category grouping, color-coding, legend, HTML drill-down
+          panels all present. Minor omissions: no absolute dollar values, no click-to-navigate
+          drill-down (ggbunch shows all panels simultaneously).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Slice size = weight percentage. Category→color mapping correct. All
-          4 asset classes and 11 holdings represented.
+        comment: Weight mapped correctly; categories properly grouped; weights sum
+          to 100%.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''pie-portfolio-interactive · python · letsplot · anyplot.ai''
-          ✓. Legend title ''Asset Class'' ✓. Labels match data ✓.'
+        comment: 'Title: ''pie-portfolio-interactive · python · letsplot · anyplot.ai''.
+          Legend labeled ''Asset Class'' with all four categories.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Hierarchical portfolio structure (category overview + individual
-          holdings drill-down), varied allocations, realistic asset mix. Minor: absolute
-          dollar values not shown alongside percentages.'
+        comment: 'Shows all aspects: four asset classes with varying weights (4%-38%),
+          11 individual holdings, diversity of asset types, drill-down panels exposing
+          sub-allocations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Institutional multi-asset portfolio with named real assets (Apple
-          Inc., US Treasury 10Y, Municipal Bonds, Gold ETF, Private Equity). Realistic
-          and neutral.
+        comment: Institutional multi-asset portfolio with named real-world holdings
+          (AAPL, MSFT, AMZN, NVDA, US Treasury, AAA Corporate Bonds, Municipal Bonds,
+          Gold ETF, REIF, Private Equity, Cash). Neutral financial scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights sum to 100% exactly. Allocation proportions (Equities 37%,
-          Fixed Income 38%, Alternatives 21%, Cash 4%) realistic for institutional
-          balanced portfolio.
+        comment: Weights sum exactly to 100%; individual allocations realistic for
+          diversified institutional portfolio.
     code_quality:
       score: 10
       max: 10
@@ -203,63 +198,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports→Data→Plot→Save flow. No functions/classes. Drill-down
-          loop is appropriate complexity.
+        comment: Imports -> tokens -> data -> plots -> save. Loop for drill-down panels
+          is appropriate complexity for the spec.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded/deterministic. No random generation.
+        comment: Fully deterministic hardcoded portfolio data; no random generation
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used. os, pandas, lets_plot components all
-          referenced.
+        comment: All imports used; no unused symbols.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, Pythonic, no over-engineering. ggbunch regions loop
-          is clean. No fake UI elements.
+        comment: Clean, well-commented with documented reasoning for semantic color
+          choices; no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (2400x2400) and plot-{THEME}.html. Current
-          API usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API used.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of geom_pie(hole=, stroke=), layer_tooltips() with multi-line
-          @variable references, layer_labels() with format control, ggbunch() for
-          composite HTML, scale_fill_manual(limits=) for ordered legend.
+        comment: 'Proper grammar-of-graphics usage: geom_pie with aes(slice, fill),
+          layer_tooltips(), layer_labels(), scale_fill_manual(), theme_void()+theme().
+          High-level API throughout.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Rich layer_tooltips() with .title()/.line()/.format() chains is
-          strongly distinctive to lets-plot. ggbunch() for multi-plot HTML dashboard
-          is unique to this library. One point held: drill-down interactivity doesn''t
-          fully leverage lets-plot HTML interactive capabilities.'
-  verdict: REJECTED
+        comment: layer_tooltips() with multi-line formatted tooltips, layer_labels()
+          for slice annotations, ggbunch() for composite multi-panel layout, dual
+          PNG+HTML export — all letsplot-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - layer-composition
+  - annotations
+  - subplots
   patterns:
   - groupby-aggregation
   - iteration-over-groups
