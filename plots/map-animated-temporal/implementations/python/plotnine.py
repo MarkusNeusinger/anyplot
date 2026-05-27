@@ -1,14 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-27
 """
+
+import os
+import sys
+
+
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _here]
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     coord_fixed,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -17,21 +25,25 @@ from plotnine import (
     geom_point,
     ggplot,
     labs,
-    scale_color_cmap,
-    scale_size_continuous,
+    scale_color_gradient,
     theme,
     theme_minimal,
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
 # Data - Simulated earthquake aftershock sequence across California region
 np.random.seed(42)
 
-# Time steps (6 days of aftershocks for small multiples grid)
-n_timesteps = 6
+n_timesteps = 12
 timestamps = pd.date_range("2024-03-01", periods=n_timesteps, freq="D")
 
-# Simplified California coastline coordinates for geographic context
 california_coast = pd.DataFrame(
     {
         "lon": [
@@ -91,21 +103,18 @@ california_coast = pd.DataFrame(
     }
 )
 
-# Generate earthquake aftershock data spreading from epicenter
 epicenter_lat, epicenter_lon = 36.0, -118.5
+epicenter_df = pd.DataFrame({"lon": [epicenter_lon], "lat": [epicenter_lat]})
+
 data_rows = []
 
 for i, ts in enumerate(timestamps):
-    # Number of points increases then decreases (aftershock pattern)
     n_points = int(30 + 20 * np.sin(np.pi * i / (n_timesteps - 1)))
-    # Spread increases over time
-    spread = 0.5 + i * 0.3
-
+    spread = 0.5 + i * 0.15
     for _ in range(n_points):
         lat = epicenter_lat + np.random.normal(0, spread)
         lon = epicenter_lon + np.random.normal(0, spread * 1.2)
-        # Magnitude decreases over time (aftershocks get weaker)
-        magnitude = max(1.0, 5.5 - i * 0.3 + np.random.exponential(0.8))
+        magnitude = max(1.0, 5.5 - i * 0.15 + np.random.exponential(0.8))
         data_rows.append(
             {
                 "lat": lat,
@@ -118,41 +127,48 @@ for i, ts in enumerate(timestamps):
 
 df = pd.DataFrame(data_rows)
 
-# Order factor for facets
 day_order = [f"Day {i + 1}: {ts.strftime('%b %d')}" for i, ts in enumerate(timestamps)]
 df["day"] = pd.Categorical(df["day"], categories=day_order, ordered=True)
 
-# Create small multiples visualization with coastline for geographic context
+# Title fontsize scaled for length
+title = "Earthquake Aftershocks · map-animated-temporal · python · plotnine · anyplot.ai"
+n = len(title)
+title_fontsize = max(8, round(12 * 67 / n)) if n > 67 else 12
+
+# Plot
 plot = (
     ggplot(df, aes(x="lon", y="lat"))
-    + geom_path(data=california_coast, mapping=aes(x="lon", y="lat"), color="#5A5A5A", size=0.8, inherit_aes=False)
-    + geom_point(aes(color="magnitude", size="magnitude"), alpha=0.7)
-    + facet_wrap("~day", ncol=3)
-    + scale_color_cmap(cmap_name="viridis", name="Magnitude")
-    + scale_size_continuous(range=(2, 8), name="Magnitude")
+    + geom_path(data=california_coast, mapping=aes(x="lon", y="lat"), color=INK_MUTED, size=0.6, inherit_aes=False)
+    + geom_point(aes(color="magnitude"), size=2.5, alpha=0.75)
+    + geom_point(data=epicenter_df, mapping=aes(x="lon", y="lat"), color=INK, shape="*", size=5, inherit_aes=False)
+    + facet_wrap("~day", ncol=4)
+    + scale_color_gradient(low="#009E73", high="#4467A3", name="Magnitude")
     + coord_fixed(ratio=1.0)
     + labs(
-        title="Earthquake Aftershock Sequence · map-animated-temporal · plotnine · pyplots.ai",
-        subtitle="Small multiples showing spatial spread of aftershocks over 6 days",
+        title=title,
+        subtitle="Spatial spread of aftershocks over 12 days following M5.5 main event (★ = epicenter)",
         x="Longitude (°)",
         y="Latitude (°)",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 10),
-        plot_title=element_text(size=22, weight="bold"),
-        plot_subtitle=element_text(size=16),
-        axis_title=element_text(size=16),
-        axis_text=element_text(size=12),
-        strip_text=element_text(size=14, weight="bold"),
-        legend_title=element_text(size=14),
-        legend_text=element_text(size=12),
-        panel_background=element_rect(fill="#F5F5F0"),
-        plot_background=element_rect(fill="white"),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.3, alpha=0.4),
-        panel_grid_minor=element_line(color="#DDDDDD", size=0.2, alpha=0.3),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
+        strip_text=element_text(color=INK, size=6, weight="bold"),
+        plot_title=element_text(color=INK, size=title_fontsize, weight="bold"),
+        plot_subtitle=element_text(color=INK_SOFT, size=7),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT, size=7),
+        legend_title=element_text(color=INK, size=8),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
