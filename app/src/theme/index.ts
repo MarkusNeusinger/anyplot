@@ -1,9 +1,11 @@
 /**
  * Theme constants for anyplot frontend.
  *
- * Editorial/paper aesthetic with Okabe-Ito colorblind-safe palette.
- * Brand color: #009E73 (bluish green).
- * Warm off-white backgrounds, three font families.
+ * Editorial/paper aesthetic with the anyplot imprint palette — a
+ * colorblind-safe 8-hue categorical palette plus 3 semantic anchors
+ * (amber for warning, theme-adaptive neutral and muted).
+ * Brand color: #009E73 (bluish green, slot 0 — always first series).
+ * Full design rationale: docs/reference/palette-variants-v3/decision-rationale.md
  */
 
 export const typography = {
@@ -15,19 +17,23 @@ export const typography = {
 } as const;
 
 export const colors = {
-  // Brand — Okabe-Ito palette
-  primary: '#009E73', // Bluish green — brand anchor
-  accent: '#E69F00', // Orange — badges, highlights
+  // Brand — imprint palette
+  primary: '#009E73', // Brand green — slot 0, always first series
+  accent: '#BD8233', // Ochre — badges, highlights (warm-neutral, plays well with brand green)
 
-  // Okabe-Ito full palette (for direct reference)
-  okabe: {
-    green: '#009E73',
-    vermillion: '#D55E00',
-    blue: '#0072B2',
-    purple: '#CC79A7',
-    orange: '#E69F00',
-    sky: '#56B4E9',
-    yellow: '#F0E442',
+  // imprint full palette — 8 categorical hues in hybrid-v3 sort order
+  imprint: {
+    green: '#009E73',   // slot 0 — brand
+    lavender: '#C475FD', // slot 1
+    blue: '#4467A3',    // slot 2
+    ochre: '#BD8233',   // slot 3
+    red: '#AE3030',     // slot 4 — deferred semantic anchor for bad / loss / error
+    cyan: '#2ABCCD',    // slot 5
+    rose: '#954477',    // slot 6
+    lime: '#99B314',    // slot 7
+    // Semantic anchors outside the categorical pool
+    amber: '#DDCC77',   // warning / caution (fixed hex)
+    // neutral + muted are theme-adaptive — exposed as CSS vars below
   },
 
   // Gray scale — warm-tinted
@@ -44,11 +50,11 @@ export const colors = {
     900: '#121210',
   },
 
-  // Semantic colors — Okabe-Ito mapped
-  success: '#009E73', // Green
-  error: '#D55E00', // Vermillion
-  warning: '#E69F00', // Orange
-  info: '#0072B2', // Blue
+  // Semantic colors — imprint mapped
+  success: '#009E73', // brand green
+  error: '#AE3030',   // matte red (slot 4 — the deferred semantic anchor)
+  warning: '#DDCC77', // amber (semantic anchor, outside pool)
+  info: '#4467A3',    // blue (slot 2)
 
   // Background — warm off-white
   background: '#F5F3EC',
@@ -62,7 +68,7 @@ export const colors = {
     bg: 'rgba(0, 158, 115, 0.12)', // Green-tinted highlight bg
     text: '#007A59', // Dark green text for highlighted chips
   },
-  tooltipLight: '#56B4E9', // Sky blue on dark tooltip backgrounds
+  tooltipLight: '#2ABCCD', // Cyan on dark tooltip backgrounds
 
   // Code blocks — values come from CSS vars so they adapt with [data-theme]
   codeBlock: {

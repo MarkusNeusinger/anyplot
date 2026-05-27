@@ -1,26 +1,34 @@
-""" pyplots.ai
+""" anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-27
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_rect,
     element_text,
+    facet_wrap,
+    geom_livemap,
     geom_point,
     geom_polygon,
-    gggrid,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
+    guide_legend,
+    guides,
     labs,
     scale_color_gradient,
     scale_size,
     theme,
     theme_void,
+    tilesets,
     xlim,
     ylim,
 )
@@ -28,59 +36,50 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+MAP_FILL = "#E0DDD5" if THEME == "light" else "#2A2A26"
+MAP_BORDER = "#B0ADA5" if THEME == "light" else "#4A4A44"
+
+# Data: earthquake aftershock sequence spreading outward over 6 weeks
 np.random.seed(42)
 
-# Data: Simulated seismic activity spreading across a region over 6 weeks
-# Earthquake aftershock sequence radiating outward from an epicenter
-
-# Epicenter location (central California)
 epicenter_lon, epicenter_lat = -119.5, 36.0
-
-# Generate 200 events over 6 weeks with spreading pattern
-n_events = 200
-weeks = 6
-events_per_week = [20, 45, 50, 40, 30, 15]  # Decay pattern typical of aftershocks
+events_per_week = [20, 45, 50, 40, 30, 15]
 
 data_rows = []
-cumulative_events = 0
-
-for week in range(weeks):
+for week in range(6):
     n_week = events_per_week[week]
-    # Events spread outward over time (radius increases each week)
-    max_radius = 0.5 + week * 0.4  # Degrees, starting small and expanding
-
+    max_radius = 0.5 + week * 0.4
     for _ in range(n_week):
-        # Random angle and distance from epicenter
         angle = np.random.uniform(0, 2 * np.pi)
-        distance = np.random.exponential(max_radius * 0.4)  # Clustered near center
-        distance = min(distance, max_radius * 1.5)  # Cap maximum distance
-
+        distance = min(np.random.exponential(max_radius * 0.4), max_radius * 1.5)
         lon = epicenter_lon + distance * np.cos(angle)
-        lat = epicenter_lat + distance * np.sin(angle) * 0.8  # Slightly compressed latitude
-
-        # Magnitude decreases over time on average (main shock first)
-        base_mag = 4.5 - week * 0.3
-        magnitude = max(2.0, base_mag + np.random.normal(0, 0.8))
-
-        data_rows.append(
-            {"week": week + 1, "lon": lon, "lat": lat, "magnitude": round(magnitude, 1), "event_id": cumulative_events}
-        )
-        cumulative_events += 1
+        lat = epicenter_lat + distance * np.sin(angle) * 0.8
+        magnitude = max(2.0, 4.5 - week * 0.3 + np.random.normal(0, 0.8))
+        data_rows.append({"week": week + 1, "lon": lon, "lat": lat, "magnitude": round(magnitude, 1)})
 
 df = pd.DataFrame(data_rows)
 
-# Create cumulative data for each week (show all events up to that point)
+# Build cumulative snapshots for 4 key time steps
+snapshot_weeks = [1, 2, 4, 6]
 df_snapshots = []
-for week in range(1, weeks + 1):
+for week in snapshot_weeks:
     week_data = df[df["week"] <= week].copy()
-    week_data["snapshot_week"] = week
-    # Mark recent events (current week) differently
-    week_data["is_recent"] = week_data["week"] == week
+    week_data["week_label"] = f"Week {week}"
     df_snapshots.append(week_data)
 
-df_all = pd.concat(df_snapshots, ignore_index=True)
+df_facet = pd.concat(df_snapshots, ignore_index=True)
 
-# Simplified California outline for basemap
+# Epicenter marker shown across all panels
+epicenter_df = pd.DataFrame([{"lon": epicenter_lon, "lat": epicenter_lat, "label": "Epicenter"}])
+
+# Simplified California outline basemap
 ca_coords = [
     (-124.4, 42.0),
     (-124.2, 40.0),
@@ -113,63 +112,78 @@ ca_coords = [
     (-124.0, 41.5),
     (-124.4, 42.0),
 ]
-
 df_ca = pd.DataFrame(ca_coords, columns=["x", "y"])
 df_ca["group"] = 0
 
-# Select 4 key time snapshots (weeks 1, 2, 4, 6)
-snapshot_weeks = [1, 2, 4, 6]
+title = "Seismic Activity Spread · map-animated-temporal · python · letsplot · anyplot.ai"
+n_chars = len(title)
+title_fontsize = max(11, round(16 * (67 / n_chars if n_chars > 67 else 1.0)))
 
-# Build individual plots for each snapshot
-plots = []
-for week in snapshot_weeks:
-    week_data = df_all[df_all["snapshot_week"] == week].copy()
+mag_name = "Magnitude (M)"
+# Use matching breaks on both scales to produce a single merged legend — no limits to avoid
+# a lets-plot rendering failure when xlim clips a data point outside scale limits
+mag_breaks = [2, 3, 4, 5, 6]
+caption = "Cumulative aftershock sequence radiating from epicenter (×) | Central California region"
 
-    # Count events for subtitle
-    n_events_week = len(week_data)
-
-    plot = (
-        ggplot()
-        # California background
-        + geom_polygon(data=df_ca, mapping=aes(x="x", y="y", group="group"), fill="#E8E8E8", color="#AAAAAA", size=0.5)
-        # All events up to this week
-        + geom_point(
-            data=week_data, mapping=aes(x="lon", y="lat", size="magnitude", color="magnitude"), alpha=0.7, stroke=0.3
-        )
-        # Scales
-        + scale_color_gradient(low="#FFD43B", high="#DC2626", name="Magnitude")
-        + scale_size(range=[3, 12], name="Magnitude")
-        # Labels
-        + labs(title=f"Week {week}", subtitle=f"{n_events_week} events")
-        # Theme
-        + theme_void()
-        + theme(
-            plot_title=element_text(size=24, face="bold", hjust=0.5),
-            plot_subtitle=element_text(size=16, hjust=0.5, color="#666666"),
-            legend_position="none",
-        )
-        # Limits (focus on affected area)
-        + xlim(-122.5, -116.5)
-        + ylim(33.5, 38.5)
-    )
-    plots.append(plot)
-
-# Create 2x2 grid with overall title
-grid = (
-    gggrid(plots, ncol=2)
-    + labs(
-        title="Seismic Activity Spread · map-animated-temporal · letsplot · pyplots.ai",
-        caption="Aftershock sequence spreading from epicenter over 6 weeks | Central California region",
-    )
+# PNG: polygon basemap renders cleanly via SVG export
+plot_png = (
+    ggplot(data=df_facet, mapping=aes(x="lon", y="lat"))
+    + geom_polygon(data=df_ca, mapping=aes(x="x", y="y", group="group"), fill=MAP_FILL, color=MAP_BORDER, size=0.5)
+    + geom_point(aes(size="magnitude", color="magnitude"), alpha=0.75)
+    + geom_point(data=epicenter_df, mapping=aes(x="lon", y="lat"), shape=4, size=7, color=INK, stroke=2)
+    + geom_text(data=epicenter_df, mapping=aes(x="lon", y="lat", label="label"), nudge_y=0.22, size=3.5, color=INK)
+    + scale_color_gradient(low="#009E73", high="#4467A3", name=mag_name, breaks=mag_breaks)
+    + scale_size(range=[2, 9], name=mag_name, breaks=mag_breaks)
+    + guides(color=guide_legend(nrow=5), size=guide_legend(nrow=5))
+    + facet_wrap("week_label", ncol=2)
+    + xlim(-122.5, -116.5)
+    + ylim(33.5, 38.5)
+    + labs(x="Longitude", y="Latitude", title=title, caption=caption)
+    + theme_void()
     + theme(
-        plot_title=element_text(size=28, face="bold", hjust=0.5),
-        plot_caption=element_text(size=14, hjust=0.5, color="#666666"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, size=0.3),
+        plot_title=element_text(size=title_fontsize, color=INK, face="bold", hjust=0.5),
+        plot_caption=element_text(size=9, color=INK_MUTED, hjust=0.5),
+        strip_text=element_text(size=13, color=INK, face="bold"),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
+        axis_title=element_text(size=10, color=INK_SOFT),
+        axis_text=element_text(size=8, color=INK_MUTED),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale=3 for 4800x2700 px output)
-ggsave(grid, "plot.png", path=".", scale=3)
+# HTML: geom_livemap tile basemap — letsplot's distinctive interactive mapping feature
+tiles = tilesets.CARTO_POSITRON if THEME == "light" else tilesets.CARTO_MIDNIGHT_COMMANDER
+plot_html = (
+    ggplot(data=df_facet, mapping=aes(x="lon", y="lat"))
+    + geom_livemap(tiles=tiles)
+    + geom_point(aes(size="magnitude", color="magnitude"), alpha=0.75)
+    + geom_point(data=epicenter_df, mapping=aes(x="lon", y="lat"), shape=4, size=7, color=INK, stroke=2)
+    + scale_color_gradient(low="#009E73", high="#4467A3", name=mag_name, breaks=mag_breaks)
+    + scale_size(range=[2, 9], name=mag_name, breaks=mag_breaks)
+    + guides(color=guide_legend(nrow=5), size=guide_legend(nrow=5))
+    + facet_wrap("week_label", ncol=2)
+    + xlim(-122.5, -116.5)
+    + ylim(33.5, 38.5)
+    + labs(x="Longitude", y="Latitude", title=title, caption=caption)
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=title_fontsize, color=INK, face="bold", hjust=0.5),
+        plot_caption=element_text(size=9, color=INK_MUTED, hjust=0.5),
+        strip_text=element_text(size=13, color=INK, face="bold"),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
+    )
+    + ggsize(800, 450)
+)
 
-# Save interactive HTML version
-ggsave(grid, "plot.html", path=".")
+# Save — PNG uses polygon basemap (SVG-compatible), HTML uses geom_livemap (interactive tiles)
+ggsave(plot_png, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot_html, f"plot-{THEME}.html", path=".")

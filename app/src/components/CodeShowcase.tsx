@@ -27,7 +27,7 @@ export function CodeShowcase() {
             mb: 3,
             m: 0,
             color: 'var(--ink)',
-            '& em': { fontStyle: 'italic', color: 'var(--ok-green)' },
+            '& em': { fontStyle: 'italic', color: 'var(--imprint-green)' },
           }}>
             Same palette,<br /><em>every library</em>.
           </Box>
@@ -39,7 +39,7 @@ export function CodeShowcase() {
             color: 'var(--ink-soft)',
             mb: 2.5,
           }}>
-            every example in the catalogue uses the same Okabe-Ito palette. switch libraries
+            every example in the catalogue uses the same imprint palette. switch libraries
             without losing your color grammar — a <em style={{ fontStyle: 'italic' }}>gentoo penguin</em> is always blue,
             whether you draw it in matplotlib or plotly.
           </Box>
@@ -79,40 +79,40 @@ export function CodeShowcase() {
             <Box component="span" sx={{ color: '#666', fontStyle: 'italic' }}>
               {'# pick any library. the palette travels with you.\n'}
             </Box>
-            <Box component="span" sx={{ color: '#56B4E9' }}>import</Box>{' anyplot '}
-            <Box component="span" sx={{ color: '#56B4E9' }}>as</Box>{' ap\n\n'}
+            <Box component="span" sx={{ color: '#2ABCCD' }}>import</Box>{' anyplot '}
+            <Box component="span" sx={{ color: '#2ABCCD' }}>as</Box>{' ap\n\n'}
             {'data = ap.'}
-            <Box component="span" sx={{ color: '#E69F00' }}>load</Box>
+            <Box component="span" sx={{ color: '#99B314' }}>load</Box>
             {'('}
-            <Box component="span" sx={{ color: '#009E73' }}>"penguins"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"penguins"</Box>
             {')\n\n'}
             <Box component="span" sx={{ color: '#666', fontStyle: 'italic' }}>
               {'# matplotlib\n'}
             </Box>
             {'ap.'}
-            <Box component="span" sx={{ color: '#E69F00' }}>mpl</Box>
+            <Box component="span" sx={{ color: '#99B314' }}>mpl</Box>
             {'.'}
-            <Box component="span" sx={{ color: '#E69F00' }}>scatter</Box>
+            <Box component="span" sx={{ color: '#99B314' }}>scatter</Box>
             {'(data, x='}
-            <Box component="span" sx={{ color: '#009E73' }}>"bill"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"bill"</Box>
             {', y='}
-            <Box component="span" sx={{ color: '#009E73' }}>"flipper"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"flipper"</Box>
             {',\n               hue='}
-            <Box component="span" sx={{ color: '#009E73' }}>"species"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"species"</Box>
             {')\n\n'}
             <Box component="span" sx={{ color: '#666', fontStyle: 'italic' }}>
               {'# plotly — same colors, interactive\n'}
             </Box>
             {'ap.'}
-            <Box component="span" sx={{ color: '#E69F00' }}>plotly</Box>
+            <Box component="span" sx={{ color: '#99B314' }}>plotly</Box>
             {'.'}
-            <Box component="span" sx={{ color: '#E69F00' }}>scatter</Box>
+            <Box component="span" sx={{ color: '#99B314' }}>scatter</Box>
             {'(data, x='}
-            <Box component="span" sx={{ color: '#009E73' }}>"bill"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"bill"</Box>
             {', y='}
-            <Box component="span" sx={{ color: '#009E73' }}>"flipper"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"flipper"</Box>
             {',\n                  hue='}
-            <Box component="span" sx={{ color: '#009E73' }}>"species"</Box>
+            <Box component="span" sx={{ color: '#DDCC77' }}>"species"</Box>
             {')'}
           </Box>
         </Box>

@@ -15,24 +15,29 @@ Frontend tokens: `app/src/theme/index.ts` + `app/src/main.tsx` (MUI theme).
 - **Exception**: ErrorBoundary uses raw `'monospace'` (crash-safe fallback).
 - `fontSize.micro` (0.5rem) and `fontSize.xxs` (0.625rem) restricted to data-dense pages (StatsPage, DebugPage). Public pages: `fontSize.xs` (0.75rem) minimum.
 
-## Color — Okabe-Ito palette
-Colorblind-safe categorical palette; first 7 fixed across themes, 8th is adaptive neutral.
+## Color — imprint palette
+Colourblind-safe categorical palette (8 hues, hybrid-v3 sort) plus 3 semantic anchors outside the pool. All 8 categorical slots stay fixed across themes; the neutral and muted anchors flip per theme. Full rationale: `docs/reference/palette-variants-v3/decision-rationale.md`.
 
 ```
-1 #009E73 bluish green   ★ brand
-2 #D55E00 vermillion      (errors, destructive)
-3 #0072B2 blue            (info links, footnotes)
-4 #CC79A7 reddish purple  PLOT-ONLY
-5 #E69F00 orange          ("new" badges, secondary hover)
-6 #56B4E9 sky blue        PLOT-ONLY
-7 #F0E442 yellow          PLOT-ONLY
-8 adaptive neutral: #1A1A1A light / #E8E8E0 dark
+slot 0 #009E73 brand green   ★ first series — logo, primary CTAs
+slot 1 #C475FD lavender       (creative / artistic)         PLOT-ONLY
+slot 2 #4467A3 blue            (info links, footnotes)
+slot 3 #BD8233 ochre           (hover accent, earth / commodity)
+slot 4 #AE3030 matte red       (errors, destructive — deferred semantic anchor)
+slot 5 #2ABCCD cyan            (sky / tech-cool)            PLOT-ONLY
+slot 6 #954477 rose            (wellness / health)          PLOT-ONLY
+slot 7 #99B314 lime            (growth / nature)            PLOT-ONLY
+
+semantic anchors (outside the categorical pool):
+  amber   #DDCC77             warning / caution (fixed)
+  neutral #1A1A17 / #F0EFE8   totals / baseline / outline (theme-adaptive)
+  muted   #6B6A63 / #A8A79F   other / rest / disabled    (theme-adaptive)
 ```
 
-**Brand green `#009E73` appears in UI ONLY in 8 contexts:** logo dot, italic accent words in headlines, hero terminal cursor, active nav item (dot prefix + underline), code-action button hover, code-block syntax (strings), palette strip, small status indicators.
+**Brand green `#009E73` appears in UI ONLY in 8 contexts:** logo dot, italic accent words in headlines, hero terminal cursor, active nav item (dot prefix + underline), code-action button hover, code-block syntax (comments), palette strip, small status indicators.
 **Never**: backgrounds, regular card borders, body text emphasis, non-logo icons, static decorative dots.
 
-**Plot-only colors** (purple/sky/yellow) must never appear in UI chrome.
+**Plot-only colours** (lavender, cyan, rose, lime) must never appear in UI chrome — they are reserved for data marks so categorical plots retain visual impact.
 
 ## Surfaces — warm, not clinical
 Pure `#FFFFFF` is out — makes saturated palette colors look harsh.
@@ -70,15 +75,15 @@ Highlight treatments: `colors.highlight.bg`/`colors.highlight.text`, `colors.too
 
 ## Section-header pattern (shell-prompt prefixes)
 - `❯` navigation/categorical · `$` action/list · `~/path/` hierarchical/about
-- Title in italic + ss02 (script), `--ok-green`, underlined with 1px `--rule`.
+- Title in italic + ss02 (script), `--imprint-green`, underlined with 1px `--rule`.
 
 ## Buttons — method-call doctrine
-- **Action** (primary affordance): `.copy()`, `.open()`, `.download()` — `::before { content: "." }`, hover flips to `--ok-green`.
+- **Action** (primary affordance): `.copy()`, `.open()`, `.download()` — `::before { content: "." }`, hover flips to `--imprint-green`.
 - **Hero CTA** (filled, landing only): dark pill, 4px radius, hover → green.
 - **Ghost** (rare): transparent, `--rule` border.
 
 ## Logo `any.plot()`
-MonoLisa Bold, letters `--ink`, `.` `--ok-green` scaled 1.3× (circle), `()` `--ink` weight 400 at 45% opacity. Favicon reduces to `a.p`. Clear space `1em`.
+MonoLisa Bold, letters `--ink`, `.` `--imprint-green` scaled 1.3× (circle), `()` `--ink` weight 400 at 45% opacity. Favicon reduces to `a.p`. Clear space `1em`.
 
 ## Voice
 Precise · understated · curious · respectful · slightly playful · code-native · AI-honest.
@@ -92,6 +97,6 @@ Gradients (esp. purple-blue SaaS), glass/backdrop-blur, isometric illustrations,
 ## Plot defaults
 - First series **always** `#009E73`.
 - Neutral (pos 8) reserved for aggregates/residuals/reference lines.
-- Yellow `#F0E442` poor on white — position 7+ only, never thin lines/small markers.
-- Non-categorical: sequential → `viridis`/`cividis`; diverging → `BrBG`; heatmaps → `viridis` or single-polarity `Reds`/`Blues`.
+- 5 lighter members (lavender, ochre, cyan, lime, amber) fall under WCAG 3:1 on cream bg. Add a 1px ink stroke on affected series when the chart is small or accessibility-strict — see outline pattern in `docs/reference/palette-variants-v3/decision-rationale.md`.
+- Non-categorical: sequential → `imprint_seq` (green→blue); diverging → `imprint_div` (red↔theme-adaptive-midpoint↔blue). Never substitute viridis/cividis/BrBG/jet/hsv/rainbow — palette identity is part of the brand.
 - Plot-internal typography (ticks/labels/legends): MonoLisa, 10–13px.

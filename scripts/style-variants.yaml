@@ -265,13 +265,14 @@ variants:
         - {regex: 'stroke_width\s*=\s*3\b',           replace: "stroke_width=9"}
 
   palette_tableau:
-    description: "Tableau-10 categorical palette in place of the anyplot palette (visual sanity check, not a real proposal)."
+    description: "Tableau-10 categorical palette in place of the anyplot imprint palette (visual sanity check, not a real proposal)."
     patches:
       "*":
         - {find: "#009E73", replace: "#4E79A7"}
-        - {find: "#9418DB", replace: "#F28E2B"}
-        - {find: "#B71D27", replace: "#59A14F"}
-        - {find: "#16B8F3", replace: "#E15759"}
-        - {find: "#99B314", replace: "#B07AA1"}
-        - {find: "#D359A7", replace: "#76B7B2"}
-        - {find: "#BA843E", replace: "#EDC948"}
+        - {find: "#C475FD", replace: "#F28E2B"}
+        - {find: "#4467A3", replace: "#59A14F"}
+        - {find: "#BD8233", replace: "#E15759"}
+        - {find: "#AE3030", replace: "#B07AA1"}
+        - {find: "#2ABCCD", replace: "#76B7B2"}
+        - {find: "#954477", replace: "#EDC948"}
+        - {find: "#99B314", replace: "#FF9DA7"}

@@ -37,7 +37,7 @@ You MUST use the Read tool to open **both** `plot_images/plot-light.png` AND `pl
 
 ### 5b. Consult the Style Guide for Palette + Theme Rules
 
-Read `prompts/default-style-guide.md` — the "Categorical Palette" (anyplot palette), "Continuous Data" (`anyplot_seq` / `anyplot_div` only), and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring.
+Read `prompts/default-style-guide.md` — the "Categorical Palette" (anyplot palette), "Continuous Data" (`imprint_seq` / `imprint_div` only), and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring.
 
 ### 5c. MANDATORY: Theme-Readability Check (both renders)
 
@@ -150,7 +150,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
-| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses anyplot palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Continuous data uses `anyplot_seq` (single-polarity) or `anyplot_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
+| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses anyplot palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 
 #### Design Excellence (20 pts)
 | ID | Criterion | Max | Check |

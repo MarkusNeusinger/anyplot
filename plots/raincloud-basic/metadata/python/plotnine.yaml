@@ -1,61 +1,89 @@
 library: plotnine
+language: python
 specification_id: raincloud-basic
 created: '2025-12-25T07:17:07Z'
-updated: '2026-02-14T20:40:33Z'
-generated_by: claude-opus-4-6
-workflow_run: 20500986130
-issue: 0
-python_version: '3.14'
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/plotnine/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-26T23:21:51Z'
+generated_by: claude-opus
+workflow_run: 26480088235
+issue: 1876
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of plotnine stage() function with after_scale for precise positional
-    nudging of cloud and rain layers — a distinctive grammar-of-graphics technique
-  - 'Strong data storytelling with two well-placed annotations: bimodal distribution
-    callout with dashed leader lines, and treatment comparison note'
-  - Bimodal distribution in Treatment B is a smart data design choice that demonstrates
-    the raincloud plot key advantage over boxplots
-  - Clean publication-quality aesthetic with custom color palette, refined typography
-    hierarchy, and minimal chrome
-  - 'Perfect raincloud metaphor: cloud (half-violin) rises above, rain (jitter) falls
-    below each category baseline'
+  - Correct raincloud anatomy in both renders — half-violin clouds rise above each
+    category baseline (cloud_shift=+0.15 via stage after_scale), narrow boxplots sit
+    on the baseline, and jittered rain falls below (-0.18 nudge), perfectly matching
+    the spec's 'cloud rises, rain falls' visual metaphor
+  - Title fontsize raised from 12pt to 14pt and the dashed callout arrows now anchor
+    inside Treatment B's two violin humps (y=350 and y=500) — both previous-review
+    weaknesses addressed; the bimodal annotation is also moved further from the rain
+    (x=0.35) and simplified to a single line for cleaner reading
+  - Boxplot stroke upgraded from INK_SOFT to INK so the median and quartile markers
+    carry stronger contrast inside the cloud's coverage area in both themes — directly
+    addresses the prior 'box outline reads close to background' weakness
+  - 'Palette compliance is exact: Control=#009E73 (brand green, reference group),
+    Treatment A=#C475FD, Treatment B=#4467A3 — anyplot palette positions 1/2/3 with
+    semantic assignment, and the data colors are pixel-identical between light and
+    dark renders (only chrome flips)'
+  - Theme tokens (PAGE_BG/INK/INK_SOFT/INK_MUTED/ELEVATED_BG) threaded through plot_background,
+    panel_background, axis_line, text, grid, boxplot fill, annotation text, and arrow
+    color — both renders cleanly pass the dark-on-dark / light-on-light readability
+    checks
+  - Treatment B's synthesized bimodal distribution (mixture of N(350,40) and N(500,45))
+    showcases the unique value of raincloud plots over plain boxplots; the two clusters
+    are clearly visible in the half-violin shape and the rain dots, then explicitly
+    annotated for the reader
+  - 'Clean, idiomatic plotnine: no functions/classes, seeded RNG (np.random.seed(42)),
+    no unused imports, advanced use of stage(after_scale=...) for category-axis nudges,
+    correct PNG output as plot-{THEME}.png at the mandated 8x4.5in @ dpi=400 (3200x1800)'
   weaknesses:
-  - Annotation text sizes (10-11pt) are slightly small relative to the axis text (16pt);
-    increasing to 12-13pt would improve readability at full resolution
-  - The jittered points could be marginally larger (size 2.5-3.0) for better visibility,
-    especially for Treatment B where points are more spread out
-  image_description: 'The plot displays a horizontal raincloud plot with three experimental
-    conditions (Control, Treatment A, Treatment B) on the y-axis and Reaction Time
-    (ms) on the x-axis, rendered on a light gray (#FAFAFA) background. Each condition
-    has three layered components: a half-violin (cloud) extending upward from the
-    category baseline, a thin white boxplot centered on the baseline, and jittered
-    scatter points (rain) below the baseline. Control uses a deep blue (#2B5B8A) with
-    a unimodal distribution centered around 450ms. Treatment A uses golden amber (#E8A838),
-    shifted left to ~380ms. Treatment B uses muted green (#3A8A5C) with a visible
-    bimodal shape showing peaks near 350ms and 500ms. Two italic annotations provide
-    narrative: "Faster responses vs. Control →" near Treatment A, and "← Bimodal:
-    two distinct response clusters" near Treatment B with dashed guide lines pointing
-    to both peaks. Title reads "raincloud-basic · plotnine · pyplots.ai" in bold at
-    the top. Axis labels are bold: "Experimental Condition" (y) and "Reaction Time
-    (ms)" (x). Grid shows only subtle horizontal lines. Overall layout is clean, well-proportioned,
-    and publication-ready.'
+  - The two dashed callout arrows pointing into Treatment B's bimodal humps cross
+    directly through Treatment B's boxplot row (y-extent of the box and rain) before
+    reaching the cloud — visually the lines pass over the box and median tick. Consider
+    either thinning the lines further (size=0.3), increasing alpha softening (e.g.
+    add alpha=0.5 to annotate('segment',...)), or anchoring the arrow start position
+    to the side of the boxplot (e.g. xend at the cloud's left edge instead of straight
+    up through the box) so the arrows read as guides rather than as overlays cutting
+    through the data.
+  - The 'Faster responses vs. Control →' callout sits at pre-flip (x=1.55, y=290),
+    which lands in the gap between Treatment A and Control rows but the leftmost rain
+    dots of Treatment A and the leftmost cloud edge of Control crowd the text — a
+    couple of jittered Treatment A points appear close enough to clip the descenders
+    of 'Faster responses'. Either raise x to ~1.7 (further from Treatment A's rain)
+    or move the annotation entirely outside the panel (e.g. as a subtitle / caption-style
+    label) so it cannot collide with any individual rain point.
+  - Base text size in theme(text=element_text(size=7)) is small enough that on the
+    400-px scaled mobile preview the inherited base size (anything not explicitly
+    resized — geom defaults, legend strings, etc.) hovers near the lower readability
+    bound. Raising the base text size to ~9pt (and keeping axis_text=8 as the explicit
+    override) would lift mobile legibility without changing the desktop look.
+  - The Treatment A annotation reads 'Faster responses vs. Control →' but the arrow
+    glyph is part of the text string rather than an actual annotate('segment',...)
+    — a small dashed line pointing from the text to Treatment A's median (~380 ms)
+    would make the comparative claim graphically explicit and consistent with the
+    Bimodal callout's use of real arrows for the bimodal humps.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page and panel — passes the warm-not-pure-white check.
+      Chrome: Title "raincloud-basic · python · plotnine · anyplot.ai" centered at top in dark INK at 14pt, fully readable. Y-axis label "Experimental Condition" (rotated 90°), x-axis label "Reaction Time (ms)" with explicit units, x-axis ticks at 300/400/500/600 — all in soft dark ink, all clearly readable. Subtle vertical-only grid lines (panel_grid_major_y blanked, x-grid at alpha 0.15). Single thin axis line in INK_SOFT. No legend (categories on y-axis so legend correctly hidden).
+      Data: Three horizontal raincloud rows top-to-bottom: Control (green #009E73), Treatment A (purple #C475FD), Treatment B (blue #4467A3) — first series is brand green ✓. Each row shows a half-violin cloud above the baseline (style="right" + stage after_scale x+0.15), a narrow boxplot on the baseline (off-white #FFFDF6 fill, dark INK edges, median tick visible), and jittered alpha=0.6 scatter rain below the baseline (stage after_scale x-0.18). Treatment B's bimodality is clearly visible in the cloud shape and the rain distribution.
+      Annotations: "Faster responses vs. Control →" sits in the gap between Treatment A and Control rows in italic INK_SOFT; "Bimodal: two distinct response clusters" sits below Treatment B in italic INK_SOFT with two dashed segment arrows pointing up into Treatment B's two cloud humps at y=350 and y=500.
+      Legibility verdict: PASS — all chrome, annotations, and tick labels render cleanly on the off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) page and panel — passes the warm-not-pure-black check.
+      Chrome: Title in light INK (#F0EFE8) at 14pt, fully readable. Axis labels, tick labels, and the y-axis title are all in INK_SOFT (#B8B7B0), comfortably readable against the dark background — NO dark-on-dark text observed. Vertical grid lines in INK at alpha 0.15 are visible but subtle. Axis line in INK_SOFT visible. No legend.
+      Data: Identical layout and colors to the light render — Control green #009E73, Treatment A purple #C475FD, Treatment B blue #4467A3. The data colors are pixel-identical to the light render; only chrome flips. Boxplot fill is ELEVATED_BG (#242420) with light INK (#F0EFE8) edges — strong contrast inside each cloud. Rain points retain alpha=0.6.
+      Annotations: Same positions as light render; italic text reads in INK_SOFT against the warm-dark surface, dashed arrows in INK_MUTED visible.
+      Legibility verdict: PASS — title, axis text, tick labels, annotations all readable on the warm-dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -63,67 +91,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis titles 20pt bold,
-          tick labels 16pt). Annotation text at size 10-11 is slightly small but still
-          legible.
+        comment: All chrome text readable in both themes. Title raised to 14pt, axis_title
+          10pt, axis_text 8pt. Base text=7pt is borderline for mobile (400px) but
+          all explicitly-sized elements pass.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal annotation moved to x=0.35 (below Treatment B rain) — improved
+          from prior attempt. Dashed callout arrows still pass through Treatment B's
+          boxplot before reaching cloud humps. 'Faster responses' annotation sits
+          in gap but a few Treatment A rain dots crowd the text.
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations, labels, and data are well
-          separated.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Violins, boxplots, and jittered points all clearly visible. Points
-          at size 2.2 could be slightly more prominent.
+        comment: Half-violins clearly outlined, boxplot edges now in INK (raised from
+          INK_SOFT) so median ticks pop, rain dots at size=3 with alpha=0.6 — sparse-data-appropriate
+          density.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/amber/green palette is colorblind-safe with strong contrast
-          differentiation.
+        comment: Anyplot palette is CVD-safe; green/purple/blue are easily distinguishable
+          in both themes.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well, balanced margins.
+        comment: Canvas gate file absent — gate passed. 8x4.5 in @ dpi=400 = 3200x1800
+          ✓. No clipping, balanced axes. scale_x_discrete expand adds bottom padding
+          so the Bimodal annotation has breathing room.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Reaction Time (ms) includes units, Experimental Condition is descriptive.
+        comment: '''Experimental Condition'' (descriptive) and ''Reaction Time (ms)''
+          (with units). Title matches the mandated format exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Control=#009E73 (brand green, position 1) — first categorical series
+          matches. Treatment A=#C475FD, Treatment B=#4467A3 (positions 2 and 3). PAGE_BG/ELEVATED_BG/INK
+          tokens correct in both themes. Data colors identical between renders.
     design_excellence:
-      score: 17
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom refined palette, intentional typographic hierarchy, light
-          background. Approaching publication quality.
+        comment: Custom palette, semantic color assignment (Control=brand green as
+          reference), intentional hierarchy from cloud (loud) → boxplot (anchor) →
+          rain (texture). Polished but not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid lines, customized panel background, generous
-          whitespace.
+        comment: panel_border removed, panel_grid_major_y blanked (vertical-only grid),
+          generous whitespace via figure_size and scale expand. Could push further
+          on chrome refinement (e.g. lighter axis_line).
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Two annotations guide interpretation: bimodal callout with leader
-          lines, and treatment comparison note.'
+        comment: 'Two annotations call out the key features: bimodality of Treatment
+          B (with dashed pointers to both humps) and the leftward shift of Treatment
+          A vs. Control. Story is clear; the ''Faster responses'' arrow could be a
+          real annotate(''segment'',...) for full consistency.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +179,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct raincloud plot with half-violin, boxplot, and jittered points
-          in horizontal orientation.
+        comment: 'Correct raincloud structure: half-violin cloud + boxplot + jittered
+          rain, each in the right vertical position per spec.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half-violin clipped, moderate jitter, transparency on points, boxplot
-          with median/quartiles, correct spatial layout.
+        comment: HORIZONTAL orientation via coord_flip ✓, half-violin (style='right')
+          ✓, cloud above baseline (after_scale x+0.15) ✓, box on baseline ✓, rain
+          below (after_scale x-0.18) ✓, jitter width 0.06 within spec's 0.05-0.1 range
+          ✓, alpha=0.6 within spec's 0.5-0.7 range ✓, median/quartiles via geom_boxplot
+          ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, reaction time values on x-axis. All data visible.
+        comment: Categories on y-axis (Control/Treatment A/Treatment B), reaction
+          time on x-axis. Ordered factor places Control at top, Treatment B at bottom.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend appropriately hidden since category
-          labels serve the purpose.
+        comment: Title is exactly 'raincloud-basic · python · plotnine · anyplot.ai'.
+          Legend correctly suppressed (single-dimension categorical axis already names
+          the groups).
     data_quality:
       score: 15
       max: 15
@@ -164,22 +215,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Three conditions with distinct distributions: unimodal, shifted
-          unimodal, and bimodal.'
+        comment: Bimodal Treatment B distribution (mixture of two normals) showcases
+          what raincloud plots reveal that boxplots hide. Treatment A's leftward shift
+          vs. Control demonstrates location difference. Control's wider unimodal cloud
+          shows the baseline variance.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction times in a psychology experiment — real, neutral scientific
-          scenario.
+        comment: Reaction times in ms for control vs. two treatments — directly drawn
+          from the spec's psychology example. Neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 250-600ms for reaction times are realistic. 80 observations
-          per group.
+        comment: ~300-600 ms reaction times match real human RT studies (250-600 ms
+          is the typical band). Sample sizes 80/80/80 sit comfortably in the spec's
+          20-300 range.
     code_quality:
       score: 10
       max: 10
@@ -189,47 +243,72 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save flow. No functions or classes.
+        comment: Linear script, no functions or classes. Theme tokens declared once
+          at top.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start.
+        comment: np.random.seed(42) before all sampling.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All plotnine symbols imported are used (aes, annotate, coord_flip,
+          element_blank/line/rect/text, geom_boxplot/jitter/violin, ggplot, labs,
+          scale_color_manual, scale_fill_manual, scale_x_discrete, scale_y_continuous,
+          stage, theme, theme_minimal). No dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. The stage() usage for position nudging is elegant.
+        comment: Clever use of stage(after_scale=...) avoids manual coordinate arithmetic.
+          No fake UI / no AR-08 violation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct filename pattern, no bare plot.png. plotnine is PNG-only so no
+          HTML required.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use of plotnine grammar of graphics: layered geoms, aesthetic
-          mappings, coord_flip(), theme customization.'
+        comment: 'Pure plotnine grammar: ggplot + aes + geom_* + scale_* + coord_flip
+          + labs + theme/theme_minimal, layered with ''+''. No matplotlib fallback.
+          Uses theme_minimal as base then overrides individual elements rather than
+          fighting the framework.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses stage() with after_scale for position shifting, geom_violin(style=right)
-          for half-violins.
+        comment: stage(aesthetic='condition', after_scale='x+0.15' / 'x-0.18') is
+          a distinctive ggplot2/plotnine idiom for transforming the mapped aesthetic
+          AFTER the scale resolves the categorical position — lets the violin nudge
+          up and the jitter nudge down without manual numeric encoding. geom_violin(style='right')
+          is the canonical half-violin trick. coord_flip() for horizontal orientation
+          is the idiomatic alternative to swapping aesthetics.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - minimal-chrome

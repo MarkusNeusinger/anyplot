@@ -132,8 +132,8 @@ The script MUST:
   - Julia: `get(ENV, "ANYPLOT_THEME", "light")`
 - Save output as `plot-{THEME}.png` (theme-suffixed, based on the env var).
 - For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant.
-- Use `#009E73` (anyplot palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#9418DB`, `#B71D27`, `#16B8F3`, `#99B314`, `#D359A7`, `#BA843E`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→tan, blood→red) — see `prompts/default-style-guide.md` "Semantic exception".
-- For continuous data: build `anyplot_seq` (single-polarity, `["#009E73", "#003D94"]`) or `anyplot_div` (diverging, `["#BB0D22", "#A2A598", "#007AD9"]`) from the anyplot palette. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
+- Use `#009E73` (anyplot palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue) — see `prompts/default-style-guide.md` "Semantic exception". Three semantic anchors outside the categorical pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest).
+- For continuous data: build `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark) from the anyplot palette. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Plot backgrounds: `#FAF8F1` (light) / `#1A1A17` (dark). Never pure `#FFFFFF` or `#000000`.
 - Theme-adaptive chrome (title, axis labels, tick labels, grid, spines, legend frames, annotation boxes) — see `prompts/default-style-guide.md` "Theme-adaptive Chrome" and the library-specific mapping in `prompts/library/{LIBRARY}.md`.
 

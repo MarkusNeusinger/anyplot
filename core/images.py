@@ -22,6 +22,31 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+# anyplot categorical palette — "imprint" (v3 hybrid-v3 ordering).
+# Defined as a separate module so the project's named-API (palette.green,
+# palette.semantic.bad, etc.) plus sequential / diverging cmaps live in one
+# place. Full design rationale:
+#   docs/reference/palette-variants-v3/decision-rationale.md
+from .palette import AMBER as ANYPLOT_AMBER  # noqa: F401  (re-exported public API)
+from .palette import BLUE as ANYPLOT_BLUE
+from .palette import CYAN as ANYPLOT_CYAN
+from .palette import GREEN as ANYPLOT_GREEN
+from .palette import IMPRINT as ANYPLOT_PALETTE  # noqa: F401  (re-exported public API)
+from .palette import LAVENDER as ANYPLOT_LAVENDER
+from .palette import LIME as ANYPLOT_LIME
+from .palette import OCHRE as ANYPLOT_OCHRE
+from .palette import RED as ANYPLOT_RED
+from .palette import ROSE as ANYPLOT_ROSE
+from .palette import palette  # noqa: F401  (re-exported named API)
+
+
+# Note: imprint_seq / imprint_div_{light,dark} are NOT auto-registered with
+# matplotlib when this module is imported — core/images.py is PIL-only and
+# importing it should not pull matplotlib in as a side effect. Callers that
+# render with matplotlib should call
+# ``from core.palette import register_with_matplotlib; register_with_matplotlib()``
+# themselves before referring to the cmaps by string name.
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,25 +67,9 @@ FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
 #
 # Theme dicts so OG images can be rendered light or dark from the same code.
 # Token names mirror the CSS custom properties defined in the React app
-# (`--bg-page`, `--ink`, `--ok-green`, etc.) so the OG cards read as a direct
-# translation of the in-product surfaces.
-
-# anyplot categorical palette — variant D ("balanced") from the palette
-# exploration in #5817. Position 1 (#009E73) carries the same bluish green
-# as Okabe-Ito's first slot so the brand identity (`any.plot()` dot, first
-# series) is preserved; positions 2–7 are selected via Petroff-style
-# max-min ΔE search in the CAM02-UCS paper-ink corridor (J' ∈ [45,72],
-# C ∈ [22,36]). See docs/reference/palette-variants/D-balanced.html for
-# the derivation and CVD analysis.
-ANYPLOT_GREEN = "#009E73"  # brand anchor — the dot in any.plot(); ALWAYS first series
-ANYPLOT_PURPLE = "#9418DB"
-ANYPLOT_RED = "#B71D27"
-ANYPLOT_SKY = "#16B8F3"
-ANYPLOT_LIME = "#99B314"
-ANYPLOT_PINK = "#D359A7"
-ANYPLOT_TAN = "#BA843E"
-
-ANYPLOT_PALETTE = [ANYPLOT_GREEN, ANYPLOT_PURPLE, ANYPLOT_RED, ANYPLOT_SKY, ANYPLOT_LIME, ANYPLOT_PINK, ANYPLOT_TAN]
+# (`--bg-page`, `--ink`, `--imprint-green`, etc.) so the OG cards read as a direct
+# translation of the in-product surfaces. The imprint palette itself is
+# re-exported from core/palette at the top of this module.
 
 LIGHT_THEME: dict[str, str] = {
     "bg_page": "#F5F3EC",  # warm cream — matches `--bg-page` in app/src/styles/tokens.css
@@ -68,7 +77,7 @@ LIGHT_THEME: dict[str, str] = {
     "ink": "#1A1A17",  # primary text — `--ink`
     "ink_soft": "#4A4A44",  # secondary text — `--ink-soft`
     "ink_muted": "#6B6A63",  # tertiary / meta — `--ink-muted`
-    "rule": "#DFDDD6",  # ~rgba(26,26,23,0.10) flattened on bg_page
+    "rule": "#D4D2CC",  # ~rgba(26,26,23,0.15) flattened on bg_page
     "card_shadow": "#D9D5C8",
 }
 
@@ -78,24 +87,26 @@ DARK_THEME: dict[str, str] = {
     "ink": "#F0EFE8",
     "ink_soft": "#B8B7B0",
     "ink_muted": "#A8A79F",
-    "rule": "#1E1E1B",  # ~rgba(240,239,232,0.10) flattened on bg_page
+    "rule": "#33332F",  # ~rgba(240,239,232,0.15) flattened on bg_page
     "card_shadow": "#000000",
 }
 
 # Library → anyplot palette accent color used for the colored 8x8 chip square
 # next to library.method() callouts. Falls back to brand green for unknowns.
-# Mapping is preserved by palette position from the original Okabe-Ito assignment.
+# Mapping picks the imprint hue that best matches each library's own brand
+# identity rather than a fixed slot position — so plotly stays blue-ish,
+# bokeh stays purple-ish, matplotlib keeps its red accent, etc.
 LIBRARY_COLORS: dict[str, str] = {
-    "matplotlib": ANYPLOT_RED,  # pos 3
-    "seaborn": ANYPLOT_PINK,  # pos 6
-    "plotly": ANYPLOT_SKY,  # pos 4
-    "bokeh": ANYPLOT_PURPLE,  # pos 2
-    "altair": ANYPLOT_GREEN,  # pos 1
-    "plotnine": ANYPLOT_LIME,  # pos 5
-    "pygal": ANYPLOT_TAN,  # pos 7
-    "highcharts": ANYPLOT_RED,  # pos 3
-    "letsplot": ANYPLOT_GREEN,  # pos 1
-    "lets-plot": ANYPLOT_GREEN,  # pos 1
+    "matplotlib": ANYPLOT_RED,  # matplotlib logo's red accent
+    "seaborn": ANYPLOT_ROSE,  # warm statistical-plot mood
+    "plotly": ANYPLOT_BLUE,  # plotly's brand blue
+    "bokeh": ANYPLOT_LAVENDER,  # bokeh's purple brand
+    "altair": ANYPLOT_GREEN,  # altair has green, also brand anchor
+    "plotnine": ANYPLOT_LIME,  # ggplot/plotnine green family
+    "pygal": ANYPLOT_OCHRE,  # pygal's warm yellow logo
+    "highcharts": ANYPLOT_CYAN,  # highcharts cyan-blue brand — distinct from plotly
+    "letsplot": ANYPLOT_GREEN,
+    "lets-plot": ANYPLOT_GREEN,
 }
 
 # Library → typical method call hint shown inside `library.method()` chips.
@@ -472,7 +483,7 @@ def _draw_anyplot_wordmark(
 
     - `any` and `plot` in `--ink`, MonoLisa Bold
     - `.` is the actual MonoLisa period glyph recolored to brand green (matches
-      the website where the dot is a `.` character with `color: var(--ok-green)`)
+      the website where the dot is a `.` character with `color: var(--imprint-green)`)
     - `()` in `--ink` at 45% opacity, normal weight (not bold)
 
     Args:
@@ -500,7 +511,7 @@ def _draw_anyplot_wordmark(
     cursor_x += _text_advance(draw, "any", bold_font)
 
     # "." — the actual MonoLisa period glyph, recolored brand green. Matches the
-    # website where the dot is a `.` character with `color: var(--ok-green)` and
+    # website where the dot is a `.` character with `color: var(--imprint-green)` and
     # a 1.3× scale, NOT a filled circle (which used to read way too heavy).
     draw.text((cursor_x, y), ".", fill=ANYPLOT_GREEN, font=bold_font)
     cursor_x += _text_advance(draw, ".", bold_font)

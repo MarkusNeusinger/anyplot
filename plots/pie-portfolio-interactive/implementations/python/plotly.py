@@ -1,72 +1,96 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-20
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-27
 """
+
+import os
 
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data - Sample investment portfolio with asset classes and holdings
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# anyplot palette — semantic color mapping for ESG portfolio categories
+# Sustainable Equities → brand green (environmental)
+# Technology → blue (tech/stability)
+# Green Fixed Income → lavender (debt markets, calm)
+# Real Assets → ochre (earth, tangible)
+CATEGORY_COLORS = {
+    "Sustainable Equities": "#009E73",
+    "Technology": "#4467A3",
+    "Green Fixed Income": "#C475FD",
+    "Real Assets": "#BD8233",
+}
+
+# Data — ESG-focused portfolio (technology-forward, climate-aligned)
 portfolio_data = {
     "asset": [
-        # Equities
-        "Apple Inc.",
+        # Sustainable Equities
+        "Ørsted A/S",
+        "NextEra Energy",
+        "Vestas Wind",
+        "Brookfield Renewable",
+        # Technology
         "Microsoft Corp.",
-        "Amazon.com",
-        "NVIDIA Corp.",
-        # Fixed Income
-        "US Treasury 10Y",
-        "Corporate Bonds AAA",
-        "Municipal Bonds",
-        # Alternatives
-        "Gold ETF",
-        "Real Estate REIT",
-        # Cash
-        "Money Market Fund",
+        "Alphabet Inc.",
+        "Schneider Electric",
+        # Green Fixed Income
+        "Green Bonds AAA",
+        "Climate Bonds",
+        # Real Assets
+        "Clean Water ETF",
+        "Timber REIT",
     ],
-    "weight": [15.0, 12.0, 8.0, 10.0, 18.0, 12.0, 8.0, 7.0, 6.0, 4.0],
+    "weight": [9.0, 11.0, 7.0, 8.0, 10.0, 8.0, 7.0, 15.0, 12.0, 8.0, 5.0],
     "category": [
-        "Equities",
-        "Equities",
-        "Equities",
-        "Equities",
-        "Fixed Income",
-        "Fixed Income",
-        "Fixed Income",
-        "Alternatives",
-        "Alternatives",
-        "Cash",
+        "Sustainable Equities",
+        "Sustainable Equities",
+        "Sustainable Equities",
+        "Sustainable Equities",
+        "Technology",
+        "Technology",
+        "Technology",
+        "Green Fixed Income",
+        "Green Fixed Income",
+        "Real Assets",
+        "Real Assets",
     ],
 }
 
 df = pd.DataFrame(portfolio_data)
+colors = [CATEGORY_COLORS[cat] for cat in df["category"]]
 
-# Color palette by asset class
-category_colors = {
-    "Equities": "#306998",  # Python Blue
-    "Fixed Income": "#FFD43B",  # Python Yellow
-    "Alternatives": "#4CAF50",  # Green
-    "Cash": "#9E9E9E",  # Gray
-}
+# Category summary for "By Category" toggle view
+category_summary = df.groupby("category")["weight"].sum().reset_index()
+category_summary = category_summary.sort_values("weight", ascending=False).reset_index(drop=True)
+category_summary_colors = [CATEGORY_COLORS[cat] for cat in category_summary["category"]]
 
-# Assign colors based on category
-colors = [category_colors[cat] for cat in df["category"]]
+# Title — length 56 chars, under 67-char baseline → no scaling needed
+title_text = "pie-portfolio-interactive · python · plotly · anyplot.ai"
+title_fontsize = 16
 
-# Create main donut chart with all holdings
+# Figure
 fig = go.Figure()
 
-# Add pie trace with pull effect for visual separation
+# Main donut trace — all individual holdings
 fig.add_trace(
     go.Pie(
         labels=df["asset"],
         values=df["weight"],
-        hole=0.4,
-        marker=dict(colors=colors, line=dict(color="white", width=3)),
-        textinfo="label+percent",
-        textposition="outside",
-        textfont=dict(size=16),
+        hole=0.42,
+        marker=dict(colors=colors, line=dict(color=PAGE_BG, width=3)),
+        textinfo="percent",
+        textposition="inside",
+        textfont=dict(size=13, color=PAGE_BG),
+        insidetextorientation="horizontal",
         hovertemplate=("<b>%{label}</b><br>Weight: %{value:.1f}%<br>Category: %{customdata}<br><extra></extra>"),
         customdata=df["category"],
         pull=[0.02] * len(df),
@@ -74,23 +98,17 @@ fig.add_trace(
     )
 )
 
-# Add center annotation showing portfolio type
-fig.add_annotation(
-    text="<b>Portfolio</b><br>Allocation", x=0.5, y=0.5, font=dict(size=24, color="#333333"), showarrow=False
-)
+# Center annotation
+fig.add_annotation(text="<b>ESG</b><br>Portfolio", x=0.5, y=0.5, font=dict(size=22, color=INK), showarrow=False)
 
-# Create category summary for secondary view
-category_summary = df.groupby("category")["weight"].sum().reset_index()
-category_summary_colors = [category_colors[cat] for cat in category_summary["category"]]
-
-# Add buttons for switching between views
+# Toggle buttons — All Holdings vs By Category
 fig.update_layout(
     updatemenus=[
         dict(
             type="buttons",
             direction="right",
             x=0.5,
-            y=1.12,
+            y=1.10,
             xanchor="center",
             buttons=[
                 dict(
@@ -100,10 +118,10 @@ fig.update_layout(
                         {
                             "labels": [df["asset"].tolist()],
                             "values": [df["weight"].tolist()],
-                            "marker": [dict(colors=colors, line=dict(color="white", width=3))],
+                            "marker": [dict(colors=colors, line=dict(color=PAGE_BG, width=3))],
                             "customdata": [df["category"].tolist()],
                         },
-                        {"annotations[0].text": "<b>Portfolio</b><br>Allocation"},
+                        {"annotations[0].text": "<b>ESG</b><br>Portfolio"},
                     ],
                 ),
                 dict(
@@ -113,66 +131,64 @@ fig.update_layout(
                         {
                             "labels": [category_summary["category"].tolist()],
                             "values": [category_summary["weight"].tolist()],
-                            "marker": [dict(colors=category_summary_colors, line=dict(color="white", width=3))],
+                            "marker": [dict(colors=category_summary_colors, line=dict(color=PAGE_BG, width=3))],
                             "customdata": [category_summary["category"].tolist()],
                         },
                         {"annotations[0].text": "<b>Asset Class</b><br>Overview"},
                     ],
                 ),
             ],
-            font=dict(size=16),
-            bgcolor="#f0f0f0",
-            bordercolor="#cccccc",
+            font=dict(size=13, color=INK),
+            bgcolor=ELEVATED_BG,
+            bordercolor=INK_SOFT,
         )
     ]
 )
 
-# Layout configuration
+# Layout
 fig.update_layout(
-    title=dict(
-        text="pie-portfolio-interactive · plotly · pyplots.ai",
-        font=dict(size=28, color="#333333"),
-        x=0.5,
-        y=0.95,
-        xanchor="center",
-    ),
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    title=dict(text=title_text, font=dict(size=title_fontsize, color=INK), x=0.5, y=0.97, xanchor="center"),
     showlegend=True,
     legend=dict(
-        title=dict(text="Asset Class", font=dict(size=18)),
-        font=dict(size=16),
-        orientation="v",
-        yanchor="middle",
-        y=0.5,
-        xanchor="left",
-        x=1.02,
+        title=dict(text="Asset Class", font=dict(size=13, color=INK)),
+        font=dict(size=12, color=INK_SOFT),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+        orientation="h",
+        yanchor="top",
+        y=-0.04,
+        xanchor="center",
+        x=0.5,
         itemsizing="constant",
     ),
-    template="plotly_white",
-    margin=dict(t=150, b=50, l=50, r=200),
-    paper_bgcolor="white",
-    plot_bgcolor="white",
+    margin=dict(t=140, b=160, l=60, r=60),
     xaxis=dict(visible=False),
     yaxis=dict(visible=False),
 )
 
-# Create custom legend entries for asset classes (since pie doesn't group by category)
-for category, color in category_colors.items():
+# Custom legend entries — asset classes with total weights
+for category, color in CATEGORY_COLORS.items():
     category_weight = df[df["category"] == category]["weight"].sum()
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            marker=dict(size=20, color=color),
+            marker=dict(size=18, color=color),
             name=f"{category} ({category_weight:.1f}%)",
             showlegend=True,
             hoverinfo="skip",
         )
     )
 
-# Hide the pie's individual legend entries and show only category legend
+# Hide individual pie legend entries — only category legend shows
 fig.update_traces(showlegend=False, selector=dict(type="pie"))
 
-# Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — square canvas for symmetric pie chart
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

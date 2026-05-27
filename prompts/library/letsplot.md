@@ -49,6 +49,8 @@ plot = plot + theme(
 + geom_line(size=1.0)    # line width
 ```
 
+> `geom_text(size=N)` is in mm (× 2.845 ≈ pt), unlike `element_text(size=N)` which is pt. Annotation `size` should be ~3–5, never the same numeric scale as the theme.
+
 See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Save (PNG + HTML)
@@ -99,10 +101,10 @@ geom_density()     # Density
 + scale_fill_manual(values=ANYPLOT_PALETTE)
 
 # Continuous — only the two anyplot palette-derived cmaps are allowed:
-+ scale_color_gradient(low='#009E73', high='#003D94')                              # sequential
-+ scale_fill_gradient(low='#009E73',  high='#003D94')
-+ scale_color_gradient2(low='#BB0D22', mid='#A2A598', high='#007AD9', midpoint=0)  # diverging
-+ scale_fill_gradient2(low='#BB0D22',  mid='#A2A598', high='#007AD9', midpoint=0)
++ scale_color_gradient(low='#009E73', high='#4467A3')                              # sequential
++ scale_fill_gradient(low='#009E73',  high='#4467A3')
++ scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)  # diverging
++ scale_fill_gradient2(low='#AE3030',  mid='#FAF8F1', high='#4467A3', midpoint=0)
 # Forbidden: scale_color_viridis / scale_fill_viridis or any non-anyplot stops.
 
 # Axis scales
@@ -137,8 +139,9 @@ geom_density()     # Density
 Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
-                   '#99B314', '#D359A7', '#BA843E']
+ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+                   '#AE3030', '#2ABCCD', '#954477', '#99B314']
+ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 + geom_point(color=ANYPLOT_PALETTE[0])
