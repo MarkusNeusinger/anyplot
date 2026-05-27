@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: pie-portfolio-interactive
 created: '2026-05-27T17:37:04Z'
-updated: '2026-05-27T18:06:18Z'
+updated: '2026-05-27T18:18:22Z'
 generated_by: claude-sonnet
 workflow_run: 26527356861
 issue: 3754
@@ -12,135 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 86
 review:
   strengths:
-  - Correct double-donut using nested geom_col layers at different polar x positions
-    (x=2.0 inner, x=3.2 outer) — idiomatic and non-trivial ggplot2 technique
-  - Anyplot palette applied in canonical order with semantically appropriate mapping
-    (green=#009E73 for Equities as primary asset class)
-  - Both themes correctly implemented with proper chrome token usage (PAGE_BG, INK,
-    INK_SOFT, INK_MUTED, ELEVATED_BG)
-  - Square 2400x2400 canvas — correct orientation for a pie/donut chart
-  - 'Smart label filtering (inner ring: segments >=8% labeled; outer ring: prominent
-    segments only) to avoid crowding'
-  - Realistic, professionally plausible portfolio data — 10 holdings, 4 asset classes,
-    weights summing to 100%
-  - 'Perfect code quality: clean, reproducible, no fake interactivity'
-  - title_size scaling formula handles the long mandated title gracefully
+  - Double-donut design using coord_polar with nested x-positions is idiomatic and
+    visually clean
+  - Anyplot palette applied correctly — Equities=brand green, Fixed Income=lavender,
+    Alternatives=blue, Cash=ochre in canonical order
+  - Theme-adaptive chrome works perfectly in both renders — warm backgrounds, light/dark
+    INK tokens, no dark-on-dark failures
+  - Realistic $1M model portfolio data with 10 holdings and 4 asset classes, weights
+    sum exactly to 100
+  - Inner ring labels (asset class) + outer ring labels (holding name, %, $) give
+    both macro and micro context
+  - 'KISS code structure: flat, no functions, deterministic data, clean imports'
+  - Title fontsize scales dynamically with string length — no overflow at the 2400×2400
+    canvas
   weaknesses:
-  - 'Light render label readability failure: color = ''white'' is hardcoded for outer
-    ring geom_text labels. At the ~1:45 o''clock position (Intl Developed segment
-    at 104 degrees polar), the label ''Intl Developed\n18%'' has its first word ''Intl
-    '' extending outside the green segment into the off-white #FAF8F1 background,
-    making white text on white background invisible. Fix: place labels at x=4.0 (outside
-    the outer ring entirely) using INK as the text color so labels always fall on
-    the background surface and are readable in both themes.'
-  - 'Absolute values missing: Spec says ''Display both percentage and absolute values
-    where applicable'' but implementation shows only percentages. Add dollar-value
-    scale to largest holding labels (e.g. assuming $1M portfolio: 20% = $200K).'
-  - 'Inner ring label crowding: ''Fixed\nIncome\n30%'' in the 108-degree inner ring
-    wedge is small and slightly cramped. Consider increasing minimum weight threshold
-    from 8% to 10% or reducing lineheight for better fit.'
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
-      Chrome: Title "pie-portfolio-interactive · r · ggplot2 · anyplot.ai" bold dark text, readable. Subtitle "Model Portfolio · 10 Holdings · Inner ring: asset class | Outer ring: individual holding" in muted INK_MUTED color, readable. Legend "Asset Class" title and 4 category labels (Equities, Fixed Income, Alternatives, Cash) with color swatches — readable.
-      Data: Inner ring (x=2.0): Equities green (#009E73) 55%, Fixed Income lavender (#C475FD) 30%, Alternatives blue (#4467A3) 10%, Cash ochre (#BD8233) 5%. Outer ring (x=3.2): 10 individual holdings in same category colors. White segment dividers. Labels "20%", "12%", "10%" in white on segments — readable. "Fixed\nIncome\n30%", "Equities\n55%", "Alternatives\n10%" inner ring labels in white — readable.
-      FAILURE: "Intl Developed\n18%" outer ring label has hardcoded color="white". At ~104 degrees polar (1:45 o'clock position), the first word "Intl " extends outside the green outer ring segment into the #FAF8F1 off-white background — white text on white background is invisible. Only "Develop..." and "18%" visible.
-      Legibility verdict: FAIL — "Intl " prefix invisible (white on white), all other text readable.
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
-      Chrome: Title in light #F0EFE8 text — clearly readable. Subtitle in INK_MUTED light text — readable. Legend with light-colored text on elevated dark background (#242420) — readable. No dark-on-dark failures found.
-      Data: Colors identical to light render — Equities #009E73, Fixed Income #C475FD, Alternatives #4467A3, Cash #BD8233. At the same ~104 degrees polar position, "Intl Developed\n18%" is now fully visible — white text readable on dark background (#1A1A17) where it extends outside the green segment. All other labels also readable.
-      Legibility verdict: PASS — all text readable in dark render, including the "Intl Developed" label that failed in light render.
+  - Inner ring label for Alternatives (10% slice) is tight — white text is cramped
+    in the narrow wedge; consider dropping to weight >= 12 threshold or reducing to
+    single-line label
+  - Outer ring floating labels at size=2.6 are readable at full resolution but may
+    be marginal at mobile thumbnail scale (~400px) — consider bumping to size=3.0
+  - DE-01 design is correct but not exceptional — still reads as a well-configured
+    library default rather than FiveThirtyEight-level polish
+  - Bottom label cluster (US Treasuries + Emerging Mkts) sit close together at similar
+    angular positions — minimal risk of crowding
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ #FAF8F1 — correct surface color, not pure white.\n  Chrome: Bold title \"pie-portfolio-interactive\
+    \ · r · ggplot2 · anyplot.ai\" in dark INK, \n    reads well. Subtitle in muted\
+    \ INK_MUTED at 7pt — legible. Legend at bottom with \n    \"Asset Class\" title\
+    \ (bold, INK) and four color swatches (INK_SOFT text), framed \n    with a subtle\
+    \ ELEVATED_BG box.\n  Data: Double-donut. Inner ring — Equities (#009E73, large\
+    \ green segment), Fixed Income \n    (#C475FD, lavender), Alternatives (#4467A3,\
+    \ small blue), Cash (#BD8233, tiny ochre). \n    Outer ring — same colors, subdivided\
+    \ into 10 individual holdings with white \n    1px separators. External labels\
+    \ (INK) for the 5 largest holdings show holding name, \n    %, and $k value. Inner\
+    \ ring labels in white show category name + %.\n  Legibility verdict: PASS — all\
+    \ text readable. Outer labels at size=2.6 are small but \n    legible at full\
+    \ canvas. Inner \"Alternatives\\n10%\" is slightly cramped in the \n    narrow\
+    \ slice but visible.\n\nDark render (plot-dark.png):\n  Background: Warm near-black\
+    \ #1A1A17 — correct, not pure black.\n  Chrome: Title and subtitle use INK=#F0EFE8\
+    \ (light cream) — clearly readable against \n    dark surface. Legend text uses\
+    \ INK_SOFT=#B8B7B0. Legend box uses ELEVATED_BG=#242420 \n    with INK_SOFT border\
+    \ — well-defined against the dark background.\n  Data: Data colors are IDENTICAL\
+    \ to light render — same #009E73 green, #C475FD lavender, \n    #4467A3 blue,\
+    \ #BD8233 ochre. Only chrome flips. External holding labels use INK \n    (#F0EFE8)\
+    \ which reads well on the dark surface. Inner ring white labels remain \n    legible\
+    \ on the colored segments.\n  Legibility verdict: PASS — no dark-on-dark failures.\
+    \ No elements invisible against \n    the dark background. Brand green #009E73\
+    \ is clearly visible."
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: 'Most text explicitly sized and readable. FAIL: hardcoded color=''white''
-          for outer ring geom_text makes ''Intl '' of ''Intl Developed\n18%'' invisible
-          in light render where label extends outside colored segment into off-white
-          background.'
+        passed: true
+        comment: All sizes explicitly set (title dynamic, subtitle=7pt, inner labels=3.5mm,
+          outer labels=2.6mm). Readable in both themes. Outer ring labels slightly
+          small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No hard overlaps. Minor crowding in inner ring 'Fixed Income 30%'
-          in 108-degree wedge.
+        comment: No significant overlap. Minor crowding in Alternatives inner ring
+          label (10% slice, narrow wedge). Bottom label cluster (US Treasuries + Emerging
+          Mkts) sits close but non-overlapping.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Donut segments, white dividers, and labels all clearly visible. Segment
-          sizes well-proportioned.
+        comment: Donut segments clearly visible in both themes. White separators define
+          segment boundaries. Colors well-contrasted.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette. White labels on colored segments have adequate
-          contrast.
+        comment: Anyplot CVD-safe palette. Four categories easily distinguished by
+          hue across deuteranopia/protanopia simulations.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Square 2400x2400 correct. Donut well-centered. Minor issue: label
-          placement extends text outside segments causing white-on-background legibility
-          failure in light theme.'
+        comment: Double-donut fills the square canvas well. Balanced margins. Legend
+          positioned cleanly at bottom. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. Subtitle descriptive. theme_void appropriate
-          for donut chart.
+        comment: Pie chart — no axes needed. Title correct. Subtitle provides context
+          (portfolio size, holdings count, ring explanation).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Equities) = #009E73. Full canonical palette order
-          (green, lavender, blue, ochre). Backgrounds #FAF8F1 light / #1A1A17 dark.
-          Data colors identical across themes.'
+        comment: 'Equities=#009E73 (brand green first) ✓. Remaining in canonical order:
+          #C475FD, #4467A3, #BD8233. Backgrounds #FAF8F1/#1A1A17 ✓. Data colors identical
+          across themes ✓.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default: double-donut hierarchy is deliberate, white segment
-          dividers clean, anyplot palette with semantic assignment. Not publication-ready
-          but clearly thoughtful.'
+        passed: false
+        comment: Well-configured — correct palette, clean layout, good typography
+          hierarchy — but reads as a polished library default rather than FiveThirtyEight-level
+          design. Not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_void() for clean minimal look, white dividers with appropriate
-          linewidth, legend box with elevated background and border. Above minimal
-          defaults.
+        comment: theme_void() appropriate for donut, white segment separators, subtle
+          legend border, clean subtitle. Refinement clearly above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dual-ring hierarchy communicates portfolio structure. Subtitle explains
-          inner/outer ring roles. Percentage labels reduce cognitive lookup. No specific
-          focal point emphasis.
+        comment: Two-ring structure guides viewer from macro (asset class) to micro
+          (individual holding). Dollar values make it actionable. Subtitle explains
+          structure. Good hierarchy.
     spec_compliance:
       score: 14
       max: 15
@@ -150,57 +155,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Double-donut chart correctly implemented as a donut/pie variant.
+        comment: Double donut chart — correct primary visualization type per spec.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Static-feasible features implemented: donut, color-coding, legend,
-          % labels, hierarchical inner/outer rings. Interactive features legitimately
-          omitted. Minor: spec says ''percentage and absolute values'' but only percentages
-          shown.'
+        comment: Color-code by asset class ✓, legend ✓, % and $ values ✓, grouped
+          by category ✓. Interactive features (hover, drill-down, navigation) correctly
+          omitted per ggplot2 static-only rules.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 10 holdings correctly mapped. Weights sum to 100%. Asset class hierarchy
-          correct.
+        comment: Weights sum to 100 ✓. Category groupings correct ✓. Dollar values
+          computed from $1M portfolio assumption ✓.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'pie-portfolio-interactive · r · ggplot2 · anyplot.ai' correct.
-          Legend 'Asset Class' with 4 correct category entries.
+        comment: 'Title: ''pie-portfolio-interactive · r · ggplot2 · anyplot.ai''
+          ✓. Legend: ''Asset Class'' with correct color swatches ✓.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows both individual holdings and asset class groupings. 4 asset
-          classes, 10 holdings, full 100% allocation. Minor: no absolute values per
-          spec.'
+        comment: 'Shows all plot aspects: nested structure, 4 asset classes, 10 holdings,
+          varying weights from 4% to 20%, both % and $ values.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real investment portfolio with standard asset classes and plausible
-          holdings (US Large Cap, Intl Developed, Emerging Mkts, US Treasuries, etc.).
-          Neutral business context.
+        comment: Real-world $1M model portfolio — neutral finance domain. Asset allocation
+          (55% equities, 30% fixed income) is realistic and professionally credible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights sum to 100%. Equities 55%, Fixed Income 30%, Alternatives
-          10%, Cash 5% — realistic balanced portfolio. Individual holdings 4%-20%.
+        comment: Typical growth-oriented allocation proportions. Individual holding
+          weights are realistic (20% largest position, 4% smallest). Dollar values
+          correctly derived.
     code_quality:
       score: 10
       max: 10
@@ -210,36 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: tokens -> data -> angular midpoints -> category summary
-          -> plot layers -> save. No functions or classes.'
+        comment: Flat script, no functions/classes. Clear Imports→Tokens→Data→Plot→Save
+          flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data (fixed holdings and weights). No randomness,
-          no seed needed.
+        comment: Fully deterministic — hardcoded holdings data, no random generation
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2 (plotting), dplyr (data manipulation), ragg (device). All
-          used.
+        comment: ggplot2, dplyr, ragg — all three actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic R. Title-size scaling formula is thoughtful. No fake
-          interactivity.
+        comment: Clean R with native pipe (|>), dplyr idioms, no fake interactivity,
+          appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png using current ggsave API with ragg::agg_png
-          device.
+        comment: Saves as plot-{THEME}.png via ragg::agg_png. Correct canvas 2400×2400
+          at 6in×400dpi.
     library_mastery:
       score: 7
       max: 10
@@ -249,26 +251,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Expert use of geom_col + coord_polar for donut, xlim for hole, scale_fill_manual,
-          theme_void, labs. dplyr pipeline for data prep is idiomatic R.
+        comment: coord_polar(theta='y') for donut, geom_col() at different x positions
+          for concentric rings, xlim() for hole, theme_void(). Correct ggplot2 donut
+          pattern. dplyr groupby/cumsum for angular midpoints.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Distinctive ggplot2 technique: nested geom_col layers at different
-          x positions (x=2.0 inner, x=3.2 outer) in polar coordinates to create double-donut.
-          Angular midpoint calculation for label placement.'
-  verdict: REJECTED
+        comment: Double-donut via nested x-position offsets in coord_polar is a ggplot2-specific
+          grammar-of-graphics technique — assigning different x values to two geom_col
+          layers creates concentric rings. Not easily replicated in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - annotations
   - layer-composition
+  - annotations
   patterns:
   - groupby-aggregation
-  - data-generation
   dataprep:
   - cumulative-sum
   styling:
