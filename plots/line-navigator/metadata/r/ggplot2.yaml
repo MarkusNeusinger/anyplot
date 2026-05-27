@@ -1,0 +1,272 @@
+library: ggplot2
+language: r
+specification_id: line-navigator
+created: '2026-05-27T11:37:05Z'
+updated: '2026-05-27T11:44:08Z'
+generated_by: claude-sonnet
+workflow_run: 26508525153
+issue: 3785
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Two-panel layout cleanly implements the navigator concept in a static context:
+    detail view on top, full-history overview strip below'
+  - Selection window correctly implemented with annotate("rect") — idiomatic ggplot2
+    idiom for rectangular highlights
+  - Subtitle shows the selected date range as human-readable text, satisfying the
+    spec's 'show selected range as labels' requirement
+  - Navigator height ratio c(5,1) gives ~17% to the overview strip, squarely within
+    the spec's 15–20% guidance
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) correctly wired throughout both panels —
+    both renders are fully readable
+  - 'Synthetic data is realistic: daily temperatures with seasonal variation, trend,
+    and cumulative noise over 2 years (730 points)'
+  - Dynamic title-size formula adapts the title fontsize to fill appropriate width
+  - Navigator grid correctly disabled (panel.grid.major = element_blank()), keeping
+    the overview strip clean and uncluttered
+  - Canvas exactly 3200×1800 px via ragg::agg_png at 8×4.5 in / 400 dpi
+  weaknesses:
+  - Main chart has both X and Y major grid lines; style guide recommends Y-axis grid
+    only for line charts — vertical grid lines add clutter without aiding reading
+  - dplyr is imported but not actually used (base R subsetting is used instead); scales
+    may also be an unused import
+  - Title size formula inflates to 19pt for a 42-char spec-id when 12pt would be appropriate;
+    formula is designed to shrink long titles, not enlarge short ones
+  - 'Dark render selection window appears as a nearly-opaque dark green block (alpha=0.22
+    of #009E73 over #1A1A17) — harder to read as a ''highlighted range'' than in the
+    light render; consider a slightly higher alpha or a different fill approach for
+    dark mode'
+  - No spine removal beyond theme_minimal defaults; removing top spine explicitly
+    and relying on the L-shaped axis.line would be cleaner
+  - Library Mastery could be elevated by using grid.arrange more expressively (e.g.,
+    shared x-axis alignment annotations or explicit panel spacing)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "line-navigator · r · ggplot2 · anyplot.ai" in bold dark ink (~19pt), prominently readable. Subtitle "Detail view: Jun 01, 2023 – Aug 31, 2023" in softer gray (INK_SOFT). Y-axis label "Temperature (°C)" in dark ink. X-axis tick labels rotated 30° at size 7pt — small but readable at full resolution. Navigator strip x-axis label "Full history – Jan 2022 to Dec 2023" in INK_SOFT, readable.
+      Data: Brand green (#009E73) line in the main chart showing a summer 2023 temperature arc (33–38°C). Navigator strip shows full 2-year history as a thin green line with a semi-transparent green rectangle highlighting the Jun–Aug 2023 selection window.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light near-white (#F0EFE8), clearly readable. Subtitle in lighter gray (#B8B7B0), readable. Y-axis and axis labels in appropriate light tokens. Tick labels in INK_SOFT (#B8B7B0). No dark-on-dark failures observed.
+      Data: Brand green (#009E73) data line is identical to the light render — same hue, same weight, confirming palette constancy. Selection window in the navigator renders as a darker solid green block (alpha=0.22 of #009E73 over near-black) — recognizable but less visually prominent than in the light render.
+      Legibility verdict: PASS — all text readable against the dark background; no near-black text on near-black background observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, axis labels all readable in both themes. X-axis
+          tick labels in main chart use size=7pt (slightly below recommended 8pt).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Both panels well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main line clearly visible at linewidth=1.0. Navigator line thinner
+          (0.45, alpha=0.75) — appropriate for overview context. Selection window
+          visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series using brand green — no CVD conflict. No red-green pairing.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Canvas gate passed (3200x1800). Two-panel layout proportionate:
+          navigator ~17% of total height (within spec''s 15-20%). No overflow or clipping
+          observed.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Temperature (°C)'' with units. Navigator x-axis: ''Full
+          history – Jan 2022 to Dec 2023''. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 used as first (only) series. PAGE_BG correctly
+          #FAF8F1 light / #1A1A17 dark. INK/INK_SOFT tokens correctly applied.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful navigator concept realized with annotate rect highlight,
+          compact overview strip, subtitle date range display. Above generic defaults
+          but not highly refined.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Navigator grid disabled (clean). Main chart grid subtle (linewidth=0.15).
+          However, both X and Y grid lines present in main chart — style guide recommends
+          Y-only for line charts.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear two-level hierarchy: detail on top, context below. Selection
+          window highlights focal range. Subtitle anchors the selected period. Good
+          viewer guidance.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: line chart with miniature navigator pane. Two-panel
+          layout correctly implements the spec concept.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Detail view, full-history navigator, selection window, date text
+          labels, shared styling, proportional navigator height all present. Resize
+          handles and animated transitions omitted — not possible in static ggplot2,
+          acceptable limitation.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=temperature correctly mapped in both panels. Navigator
+          shows full extent; main chart shows selected range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-navigator · r · ggplot2 · anyplot.ai' matches required
+          format. No legend needed for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 730 daily data points, large enough to make navigation meaningful.
+          Both detail and overview views showcase the navigator concept fully.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily temperature sensor over 2 years with trend, seasonal variation,
+          and cumulative noise — realistic and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 29–38°C over summer months is plausible. 2-year span
+          is appropriate for demonstrating navigator utility.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Clean linear procedural structure. Well-organized
+          sections.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: dplyr is imported but not used (base R subsetting used throughout).
+          scales may also be an implicit dependency only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Dynamic title size formula is appropriate. No fake interactivity.
+          Sectioned comments aid readability.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ragg::agg_png. Correct device usage.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of theme layering, scale_x_date with date_labels/date_breaks,
+          expansion(), annotate('rect'), and element_blank(). gridExtra::grid.arrange
+          for multi-panel. Modern linewidth= not size=.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: gridExtra::grid.arrange with heights= for proportional panel sizing;
+          annotate('rect') for selection window; scale_y_continuous(labels=NULL) to
+          suppress navigator y-ticks cleanly.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - gridextra
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - cumulative-sum
+  styling:
+  - alpha-blending
