@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:48:01Z'
-updated: '2026-05-27T09:25:01Z'
+updated: '2026-05-27T09:39:24Z'
 generated_by: claude-sonnet
 workflow_run: 26502015015
 issue: 3769
@@ -12,122 +12,138 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-anima
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: correctly chooses small-multiples static fallback as
-    the spec mandates for matplotlib; no fake controls or simulated animation'
-  - 'Excellent theme adaptation: both ocean/land colours AND all chrome elements flip
-    correctly; dark render is fully readable with no dark-on-dark issues'
-  - Dual encoding of anomaly (colour + size) enhances the story without cluttering
-    a small-panel layout
-  - Clean, readable code with no dead imports, correct seed, and precise subplots_adjust/colorbar
-    placement
-  - imprint_div diverging colormap with theme-adaptive midpoint applied correctly
-    for signed deviation data
+  - Custom ocean/land theme-adaptive colors that adapt correctly across both light
+    and dark renders
+  - Dual-encoding (diverging colormap + variable marker size) effectively communicates
+    both anomaly direction and magnitude, providing redundant CVD-safe encoding
+  - ScalarMappable with shared Normalize for cross-panel colorbar is idiomatic and
+    sophisticated matplotlib usage
+  - Correctly uses imprint_div with theme-adaptive midpoint matching the page background,
+    with documented climate-convention pole reversal
+  - 'Clean KISS structure: linear imports → data → plot → save, with np.random.seed(42)
+    for full reproducibility'
+  - Temporal warming narrative is clearly visible across the 6-panel sequence with
+    peak annotation in the final frame drawing viewer attention
   weaknesses:
-  - Tick labels (5pt) and axis labels (5.5pt) are below the style-guide minimums (8pt
-    / 10pt); at mobile display widths the sub-panel text becomes very difficult to
-    read — increase tick labels to at least 6pt and axis labels to at least 7pt within
-    the 6-panel constraint
-  - 'DE-03 limited by no annotative storytelling element — a brief text annotation
-    on the Nov panel (e.g. ''Peak anomaly: +3.2°C in Lisbon'') or a subtle highlight
-    of the hottest station each month would lift the visual narrative'
-  - 'imprint_div colour order is reversed from the canonical definition (code: blue->neutral->red;
-    canonical: red->neutral->blue) — semantically correct for temperature but deviates
-    from the style-guide; document the intentional reversal or flip vmin/vmax to align
-    with the canonical direction'
+  - Annotation text at fontsize=5.5pt (~31px at 400dpi) is very small and likely unreadable
+    when the image is scaled to mobile width (~400px) - increase annotation fontsize
+    to at least 6.5-7pt
+  - Minimum scatter marker size of s=60 is below the recommended 200-400 for sparse
+    data (<30 points per panel) - near-zero anomaly stations have small, less prominent
+    markers; consider a minimum of s=80-100 and wider size range
+  - DE scores slightly limited by standard small-multiples approach - consider adding
+    visual emphasis elements like a thin highlight ring on the most anomalous station
+    per frame to further guide the viewer's eye
+  - 'LM-02: Polygon-based coastline is a rough approximation with some irregular shapes
+    that may not clearly convey European geography to unfamiliar viewers - the technique
+    is distinctive but the result is visually rough'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 page background; ocean panels in #C8DDF0 soft blue; land in #E8E4D8 warm grey
-      Chrome: Title "map-animated-temporal · python · matplotlib · anyplot.ai" in dark ink at top — readable; axis labels "Latitude (°)" / "Longitude (°)" in dark INK at 5.5pt — small but readable at full resolution; tick labels at 5pt — readable at full res, small when scaled to mobile; month callout labels in bold 7pt with ELEVATED_BG box — clear; colorbar label "Temp. Anomaly (°C)" at 7pt — readable
-      Data: 25 scatter points per panel; cold anomalies in blue (#4467A3), warm in red (#AE3030), near-neutral at midpoint (#FAF8F1); size encoding (larger = stronger anomaly); warming trend clearly visible Jan→Nov
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) page background — correct.
+      Layout: 2×3 grid of small map panels covering Europe (lon -15 to 35, lat 33 to 72). Ocean areas rendered in light blue (#C8DDF0), land polygons in warm beige (#E8E4D8). A shared vertical colorbar sits on the right edge labeled "Temp. Anomaly (°C)".
+      Chrome: Title "map-animated-temporal · python · matplotlib · anyplot.ai" at the top in dark ink, clearly readable. "Latitude (°)" and "Longitude (°)" axis labels on the left column and bottom row in dark ink. Tick labels at 6pt — small but readable at full resolution; borderline for mobile. Month labels (bold, semi-transparent box) in each panel's top-left corner (Jan 2025, Mar 2025, May 2025, Jul 2025, Sep 2025, Nov 2025) — readable. Nov panel has a "+3.6°C / [station name]" annotation with an arrow — text at 5.5pt is very small.
+      Data: Scatter points colored with imprint_div (blue=cold, red=warm) and size-encoded by anomaly magnitude. January shows mostly neutral-to-slightly-warm stations; by November most stations appear distinctly red with larger markers. First series uses #009E73 — N/A (continuous colormap data). Brand green not applicable here; imprint_div used correctly for diverging data.
+      Legibility verdict: PASS — all text readable at full resolution; minor concern about 5.5pt annotation and 6pt ticks at mobile scale.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 page background; ocean in #1E3A4A dark teal; land in #2E2E28 dark grey
-      Chrome: Title in light #F0EFE8 ink — clearly readable; axis labels and tick labels in light INK_SOFT (#B8B7B0) — readable against dark surface; month callout boxes use #242420 elevated dark background with light bold text — no dark-on-dark; colorbar label and ticks in light ink — legible; no dark-on-dark failures detected anywhere
-      Data: Scatter point colours identical to light render — blue for cold anomaly, red for warm anomaly; colour data is unchanged between themes; only chrome (background, text, ocean/land fills) adapts
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) page background — correct.
+      Layout: Same 2×3 grid. Ocean areas in dark teal-blue (#1E3A4A), land polygons in dark warm-grey (#2E2E28). Colorbar remains on right side.
+      Chrome: Title, axis labels, and tick labels all appear in light-colored text (INK token #F0EFE8 for primary, INK_SOFT #B8B7B0 for ticks) — clearly readable against the near-black background. Month labels in semi-transparent elevated boxes (#242420) with INK text — readable. Annotation in Nov panel uses INK color on elevated background — consistent with dark theme. Spine colors use INK_SOFT. Dotted graticule lines visible but subtle.
+      Data: Scatter colors are identical to the light render — same blue-to-red diverging palette with size encoding. The midpoint (#1A1A17) of imprint_div matches the dark page background, making near-zero anomaly markers blend slightly with the background, but edge colors (INK) provide visible outlines. Warming progression still clearly visible across panels.
+      No "dark-on-dark" failures observed — all chrome correctly uses light tokens on the dark background.
+      Legibility verdict: PASS — all text readable; near-zero anomaly markers have slightly reduced fill contrast against dark background (midpoint=page_bg) but edge outlines preserve visibility.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Title 11pt ok; tick labels 5pt and axis labels 5.5pt below recommended
-          8pt/10pt — workable at full res but small at mobile widths
+        comment: All font sizes explicitly set; readable at full resolution in both
+          themes. Multi-panel layout requires small text (6pt ticks, 5.5pt annotation)
+          that limits mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-data overlaps; panel spacing avoids inter-panel label
-          collisions
+        comment: No text overlap. Minor expected marker overlap in denser map regions;
+          month labels in corner boxes clear of data.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 25 scatter points per panel clearly visible; size encoding (s=60+|anomaly|*50)
-          adds magnitude; edgecolors=INK sharpens markers
+        comment: Dual size+color encoding works well. Minimum marker size s=60 is
+          below recommended 200+ for <30-point sparse data; edge colors mitigate but
+          near-zero anomaly stations are smaller than ideal.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_div diverging cmap is CVD-safe; edge strokes improve low-contrast
-          markers
+        comment: Size encoding provides redundant channel alongside color, making
+          the visualization accessible to CVD viewers. imprint_div uses perceptually-uniform
+          blue/red poles.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: figsize=(8,4.5) dpi=400 = exact 3200x1800; no bbox_inches tight;
-          subplots_adjust and fig.add_axes for precise colorbar
+        comment: Canvas gate passed. Correct 3200x1800px landscape. 6-panel layout
+          fills canvas well with shared colorbar on right. subplots_adjust controls
+          margins precisely.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude (deg), Longitude (deg), Temp. Anomaly (C) all carry units;
-          title matches required format exactly
+        comment: Title follows exact format. Axis labels 'Latitude (°)' and 'Longitude
+          (°)' include units. Colorbar labeled 'Temp. Anomaly (°C)' with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_div used for continuous diverging data; theme-adaptive midpoint
-          (#FAF8F1 light/#1A1A17 dark); correct backgrounds both themes
+        comment: 'imprint_div used for diverging temperature anomaly data. Pole reversal
+          (blue-cold, red-warm) documented as intentional climate science convention.
+          Midpoint is theme-adaptive (#FAF8F1 light / #1A1A17 dark). Backgrounds correct
+          in both renders.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Theme-adaptive ocean/land colours; size encoding for magnitude; warming
-          trend designed into data; above-default effort
+        comment: 'Strong design: custom theme-adaptive ocean/land palette, dual encoding
+          (color+size), semi-transparent callout boxes, edge-outlined markers, annotated
+          peak station. Clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Graticule lines subtle (alpha=0.55, lw=0.5); month labels in frameless
-          elevated callout boxes; colorbar outline theme-adapted
+        comment: 'Good refinement: custom spine colors via INK_SOFT, subplots_adjust
+          for precise margins, theme-adaptive elevated boxes, dotted graticule lines
+          instead of grid. All spines retained (appropriate for map plots).'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Jan-Nov sequence reveals warming pattern; no explicit annotation
-          or focal-point callout to highlight peak findings
+        comment: Warming narrative is clear across the temporal sequence. Size+color
+          dual encoding creates natural focal points in later panels where anomalies
+          are large. Peak annotation in Nov draws viewer attention. Could be stronger
+          with per-panel emphasis on the most anomalous station.
     spec_compliance:
       score: 15
       max: 15
@@ -137,53 +153,63 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct small-multiples static fallback as spec mandates for libraries
-          without animation support
+        comment: 'Correct approach: small-multiples grid per matplotlib library rules
+          for animated specs. Spec explicitly notes ''For libraries without animation
+          support, implement a small multiples grid showing key time snapshots''.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Timestamp per panel; basemap with coastline/ocean/land; value encoded
-          as colour; N/A items (play/pause, slider) correctly omitted
+        comment: 'All applicable features implemented: basemap with geographic context
+          (simplified Europe coastline), timestamp display (month labels per panel),
+          geographic point data with value encoding. Animation-specific features (play/pause,
+          slider, transitions) are N/A for static library.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon to x/y; timestamp to panel; value to colour+size
+        comment: lat/lon correctly mapped to Y/X axes. Temperature anomaly mapped
+          to color (imprint_div). Anomaly magnitude mapped to marker size. Time dimension
+          represented via faceting.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact required title format; colorbar as continuous-data legend with
-          units
+        comment: Title exactly 'map-animated-temporal · python · matplotlib · anyplot.ai'.
+          Colorbar labeled 'Temp. Anomaly (°C)'. No categorical legend needed for
+          continuous colormap.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Spatial distribution, temporal progression, diverging anomaly magnitude
-          all represented
+        comment: 'Good coverage: 25 European weather stations, 12-month temporal sequence
+          (6 key snapshots shown), both cold and warm anomalies visible, geographic
+          spread across latitudes, dual encoding. Simplified coastline limits geographic
+          context slightly.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 25 real European city coordinates; plausible climate-science scenario;
-          neutral scientific data
+        comment: European weather station temperature anomaly monitoring — realistic,
+          scientifically neutral scenario. Named capital cities as stations. Warming
+          trend over 12 months is plausible climate scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomaly range -1 to 3.5 C matches real climate data; 25 stations
-          and 12 months within spec guidance
+        comment: Temperature anomaly range -1 to 3.5°C is physically realistic. European
+          coordinate range (35-72°N, -15-35°E) correct. 25 stations per panel appropriate
+          for map density.
     code_quality:
       score: 10
       max: 10
@@ -193,33 +219,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: 'Linear: imports → theme tokens → data generation → plot loop → colorbar
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 8 imports used; no dead imports
+        comment: 'All 8 imports used: os, matplotlib.pyplot, numpy, pandas, ScalarMappable,
+          LinearSegmentedColormap, Normalize, Polygon.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear section comments; no fake interactivity; strict=False on zip
-          is a good detail
+        comment: Clean, Pythonic. zip() with strict=False for axes/month_idx iteration.
+          No fake functionality. Appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG); no
-          bbox_inches=tight
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. dpi=400. facecolor=PAGE_BG
+          passed to savefig.
     library_mastery:
       score: 7
       max: 10
@@ -229,29 +257,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout; fig.add_axes for colorbar; ScalarMappable
-          correctly used; proper subplots pattern
+        comment: 'Very idiomatic: axes methods throughout (scatter, text, annotate,
+          axhline, axvline, add_patch), fig.subplots_adjust for layout, fig.add_axes
+          for colorbar, fig.colorbar with cax parameter.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap for custom diverging palette; Polygon patches
-          for geographic boundary; ScalarMappable+fig.add_axes for standalone shared
-          colorbar
+        comment: 'Distinctive matplotlib patterns: matplotlib.patches.Polygon for
+          geographic coastline rendering, ScalarMappable with shared Normalize for
+          cross-panel colorbar synchronization, LinearSegmentedColormap.from_list
+          for custom diverging colormap with theme-adaptive midpoint.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - subplots
+  - colorbar
   - annotations
   - patches
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
-  - explicit-figure
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
