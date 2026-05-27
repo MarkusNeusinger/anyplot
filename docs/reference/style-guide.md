@@ -20,11 +20,11 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 |-------|------|--------|
 | **Brand** | Identity, voice, logo, tone of communication | Lowercase default; `any.plot()` wordmark with green dot |
 | **Frontend** | Website visual language: typography, layout, components | Editorial-scientific paper × terminal/code-editor overlay |
-| **Plots** | Color palette for every visualization across all 11 libraries (9 Python + R/ggplot2 + Julia/Makie) | Okabe-Ito 8-color categorical, brand `#009E73` first |
+| **Plots** | Color palette for every visualization across all 11 libraries (9 Python + R/ggplot2 + Julia/Makie) | imprint 8-color categorical, brand `#009E73` first |
 
 **Aesthetic direction:** `arXiv paper` × `tmux/lazygit` rather than `SaaS dashboard` or `AI startup`. The reader should feel they're browsing a curated journal that happens to live inside a terminal — section headers carry shell prompts (`❯`, `$`, `~/plots/`), hero text types itself with a blinking cursor, action buttons read as method calls (`.copy()`, `.open()`, `.download()`).
 
-**Color discipline:** `#009E73` (Okabe-Ito Bluish Green) appears only in small, deliberate moments — logo dot, italic accents, hover states, active navigation, terminal cursor. Everything else is warm grayscale, so when a chart appears its colors land with full impact.
+**Color discipline:** `#009E73` (brand green) appears only in small, deliberate moments — logo dot, italic accents, hover states, active navigation, terminal cursor. Everything else is warm grayscale, so when a chart appears its colors land with full impact.
 
 **Pipeline transparency:** AI is part of the story, not a hidden production detail. Humans submit ideas (plot requests as GitHub issues); AI drafts the spec from the idea; humans approve the spec before any code runs; AI generates the implementations and reviews them; on rejection AI retries and humans tune the rules or refine the spec. Communicated openly in copy and methodology pages.
 
@@ -34,9 +34,9 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 ### 2.1 Visual principles (frontend)
 
-**1. Reserve color for moments that earn it.** The Okabe-Ito palette has seven saturated colors. If the website itself uses them liberally — brightly colored buttons, banners, hero backgrounds — the actual plots lose their visual punch. We treat the palette as **precious**: the brand green appears in maybe five to ten places on a given page (logo, one italic headline accent, terminal cursor, primary CTA hover, active nav indicator, a handful of link underlines). Everything else is one of the seven gray tones.
+**1. Reserve color for moments that earn it.** The imprint palette has eight categorical colours. If the website itself uses them liberally — brightly colored buttons, banners, hero backgrounds — the actual plots lose their visual punch. We treat the palette as **precious**: the brand green appears in maybe five to ten places on a given page (logo, one italic headline accent, terminal cursor, primary CTA hover, active nav indicator, a handful of link underlines). Everything else is one of the eight gray tones.
 
-**2. Warmth over clinical.** Pure `#FFFFFF` backgrounds make palette colors look harsh and the layout feel like a banking app. We use a warm off-white (`#F5F3EC`) as the base, with slightly lighter surfaces (`#FAF8F1`) for cards. This gives the page a paper-like quality and makes the saturated plot colors look **intentional** rather than loud. Dark mode mirrors this: `#121210` rather than pure black, with a subtle warm undertone.
+**2. Warmth over clinical.** Pure `#FFFFFF` backgrounds make palette colors look harsh and the layout feel like a banking app. We use a warm off-white (`#FAF8F1`) as the base, with slightly lighter surfaces (`#FAF8F1`) for cards. This gives the page a paper-like quality and makes the saturated plot colors look **intentional** rather than loud. Dark mode mirrors this: `#121210` rather than pure black, with a subtle warm undertone.
 
 **3. Code is the native register.** Section headers carry shell prompts (`❯ libraries`, `$ plots`, `~/anyplot/`), action buttons read as method calls (`.copy()`, `.open()`, `.download()`), the hero headline types itself with a blinking cursor. The site speaks the dialect of its visitors. This is not skinning — it's the framing device. Removing the editorial paper underneath would over-tip into "developer toy"; removing the terminal layer would feel sterile and product-marketing-y. The two layers depend on each other.
 
@@ -103,7 +103,7 @@ any.plot()
 Specifically:
 
 - `any` in `--ink` (near-black on light, near-white on dark)
-- `.` in `--ok-green` (`#009E73`), scaled to 145% with 2–3px horizontal margin
+- `.` in `--imprint-green` (`#009E73`), scaled to 145% with 2–3px horizontal margin
 - `plot` in `--ink`
 - `()` in `--ink` at 45% opacity, normal weight (not bold)
 
@@ -276,7 +276,7 @@ The second version is shorter, says what's actually happening (humans submit ide
 
 - A **reference catalogue**, like a cookbook or an atlas. You come for specific examples.
 - **Library-agnostic**, showing the same chart types across matplotlib, seaborn, plotly, and others.
-- **Colorblind-safe by default**. Every example uses the Okabe-Ito palette. This isn't a feature, it's a baseline.
+- **Colorblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
 - **Curated**. We don't aggregate every plot on the internet — we maintain a considered collection.
 - **AI-built, human-shaped.** Plot ideas come from humans (GitHub issues). Everything else — drafting the spec, generating code per library, reviewing it — runs on AI. Humans approve specs before any code is generated, and when something repeatedly fails review we either refine the spec or tune the AI rules. We never patch generated code by hand. The pipeline is documented and visible.
@@ -295,7 +295,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 
 **The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, R for ggplot2 — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
 
-**The palette story:** Every plot uses the Okabe-Ito palette, peer-reviewed for colorblind safety and designed for scientific publications in 2008. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
+**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
 
 **The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
 
@@ -311,7 +311,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 - **Package name**: `anyplot` (lowercase, one word)
 - **Import convention**: `import anyplot as ap`
 - **Sub-modules**: `anyplot.mpl`, `anyplot.plotly`, `anyplot.bokeh`, etc. — one sub-module per supported library
-- **Palettes**: `anyplot.palettes.okabe_ito`, `anyplot.palettes.viridis`, etc.
+- **Palette**: `anyplot.palette` (the imprint palette — categorical + semantic anchors + cmap helpers).
 - **Datasets**: `anyplot.load("penguins")`, `anyplot.load("iris")` — not `load_penguins()`; consistent loader signature
 
 **Domain:**
@@ -331,60 +331,64 @@ Slugs are the canonical identifier. They're used in URLs, filenames, and `ap.loa
 
 ## 4. Color System
 
-### 4.1 The Okabe-Ito Palette
+### 4.1 The imprint Palette
 
-The Okabe-Ito palette was published in 2008 by Masataka Okabe (Jikei Medical School) and Kei Ito (University of Tokyo) as part of their research on accessible color design for scientific figures. It was optimized empirically for three types of color vision deficiency (CVD) — deuteranopia, protanopia, and tritanopia — which together affect roughly 8% of men and 0.5% of women of Northern European descent.
+anyplot's **imprint** palette is a bespoke, colourblind-safe categorical palette tuned for warm-paper rendering. 8 hues in a hybrid sort order plus 3 semantic anchors (amber for warning, theme-adaptive neutral, theme-adaptive muted). It sits in the academic-publishing family — same neighbourhood as Okabe-Ito, Paul Tol "muted", and ColorBrewer Set2 — and was validated against deuteranopia, protanopia, and tritanopia at full simulation severity. Full design rationale: [`palette-variants-v3/decision-rationale.md`](palette-variants-v3/decision-rationale.md).
 
-Three properties make it the right choice for a multi-library plotting catalogue:
+Why this palette over a one-shot import of Okabe-Ito:
 
-**Peer-reviewed and widely trusted.** ggplot2, seaborn, and many scientific R/Python toolkits offer it as a built-in option. Using it means our examples are immediately credible in academic and publication contexts.
+**Closes the hue-coverage gap of the 7-hue Okabe-Ito layout.** With 7 categorical slots you have to choose either lime or cyan, either lavender or rosé. imprint ships all six primary hue families (red / yellow / green / cyan / blue / purple) plus two tertiary tones.
 
-**Stable across backgrounds.** Every color has enough luminance contrast to remain distinguishable on both white and near-black backgrounds.
+**Stable across backgrounds and CVD modes.** Every hue holds worst-pair ΔE above the 10-point discrimination floor through n=6 under simulated CVD. The semantic-red anchor is deferred to slot 4 so it stays a free named anchor for bad/loss/error roles instead of being burned on slot 2 of every chart.
 
-**Eight colors is the right cap.** Research by Ware, Glasbey, and Miller on distinguishable categorical colors converges on 7 ± 2 as the practical limit before viewers start confusing categories.
+**Eight is the practical cap.** Research by Ware, Glasbey, and Miller on distinguishable categorical colours converges on 7 ± 2 as the practical limit. imprint stops at 8 — and recommends adding a marker shape or linestyle from n=6 upward.
 
 ```python
-anyplot_palette = [
-    "#009E73",  # 01 · bluish green   ★ brand
-    "#D55E00",  # 02 · vermillion
-    "#0072B2",  # 03 · blue
-    "#CC79A7",  # 04 · reddish purple
-    "#E69F00",  # 05 · orange
-    "#56B4E9",  # 06 · sky blue
-    "#F0E442",  # 07 · yellow
-    # 08 · neutral — adaptive: #1A1A1A on light, #E8E8E0 on dark
+imprint_palette = [
+    "#009E73",  # slot 0 · brand green   ★ always first series
+    "#C475FD",  # slot 1 · lavender      — creative / artistic
+    "#4467A3",  # slot 2 · blue          — cool / water / info
+    "#BD8233",  # slot 3 · ochre         — earth / commodity
+    "#AE3030",  # slot 4 · matte red     — semantic anchor: bad / loss / error
+    "#2ABCCD",  # slot 5 · cyan          — sky / tech-cool
+    "#954477",  # slot 6 · rose          — wellness / health
+    "#99B314",  # slot 7 · lime          — growth / nature
 ]
+
+# Semantic anchors outside the categorical pool — never returned by palette[:n]
+ANYPLOT_AMBER   = "#DDCC77"  # warning / caution (fixed hex)
+ANYPLOT_NEUTRAL = "#1A1A17"  # totals / baseline / outline — flips to #F0EFE8 on dark theme
+ANYPLOT_MUTED   = "#6B6A63"  # other / rest / disabled    — flips to #A8A79F on dark theme
 ```
 
-**The colors:**
+**The colours:**
 
-| # | Role          | Hex        | Semantic Use                                                  |
-|---|---------------|------------|---------------------------------------------------------------|
-| 1 | Brand         | `#009E73`  | Logo dot, first category in any plot, primary CTAs            |
-| 2 | Secondary     | `#D55E00`  | Second category, warm contrast, warnings                      |
-| 3 | Tertiary      | `#0072B2`  | Third category, cool anchor, informational links              |
-| 4 | Quaternary    | `#CC79A7`  | Fourth category, soft, distinctive                            |
-| 5 | Accent warm   | `#E69F00`  | Fifth category, highlights, hover states                      |
-| 6 | Accent cool   | `#56B4E9`  | Sixth category, info states, secondary links                  |
-| 7 | Highlight     | `#F0E442`  | Seventh category — use sparingly, poor on white backgrounds   |
-| 8 | Neutral       | adaptive   | Text, gridlines, "other", totals                              |
+| Slot | Hex        | Name          | Role                                                  |
+|------|------------|---------------|-------------------------------------------------------|
+| 0    | `#009E73`  | brand green   | Logo dot, first category in any plot, primary CTAs    |
+| 1    | `#C475FD`  | lavender      | Second category, creative / artistic                  |
+| 2    | `#4467A3`  | blue          | Third category, cool / water / info                   |
+| 3    | `#BD8233`  | ochre         | Fourth category, earth / commodity                    |
+| 4    | `#AE3030`  | matte red     | Deferred semantic anchor — bad / loss / error         |
+| 5    | `#2ABCCD`  | cyan          | Sky / tech-cool                                       |
+| 6    | `#954477`  | rose          | Wellness / health                                     |
+| 7    | `#99B314`  | lime          | Growth / nature                                       |
 
-**The adaptive neutral.** Position 8 is not a fixed color but a **role** that switches based on the theme:
+**Semantic anchors** (outside the categorical pool — never returned by `palette[:n]`, reached only by name):
 
-- **Light theme** → `#1A1A1A` (near-black, softer than pure `#000`)
-- **Dark theme** → `#E8E8E0` (near-white, softer than pure `#FFF`)
+| Anchor   | Hex (light → dark)            | Role                                          |
+|----------|-------------------------------|-----------------------------------------------|
+| amber    | `#DDCC77`                     | warning / caution (single fixed hex)          |
+| neutral  | `#1A1A17` → `#F0EFE8`         | totals / baseline / outline (theme-adaptive)  |
+| muted    | `#6B6A63` → `#A8A79F`         | other / rest / disabled (theme-adaptive)      |
 
-This follows the `semantic tokens` pattern used in Apple HIG, Material Design, and GitHub Primer. The first seven colors stay identical across themes so that a category retains its identity; only the neutral flips.
+The neutral pattern follows the semantic-tokens convention used in Apple HIG, Material Design, and GitHub Primer — the categorical hues stay identical across themes so a category keeps its identity; only the structural neutrals flip.
 
-**Order matters.** The color order is **not scientifically prescribed** — the Okabe-Ito paper lists the colors but doesn't mandate a sequence. We've chosen an order optimized for two goals:
-
-1. **Brand consistency.** Position 1 is always `#009E73`. The first data series in every plot is automatically our brand color.
-2. **Maximum early contrast.** Positions 1–4 alternate between warm and cool, saturated hues to guarantee maximum distinguishability for plots with few categories. Orange (`#E69F00`) and Yellow (`#F0E442`) — which share the yellow-orange region — are separated by four positions.
+**Order matters.** Slots are picked by the **hybrid-v3** sort: brand green pinned at slot 0; slots 1..3 filled by greedy max-min worst-CVD ΔE constrained to distinct hue families (red / yellow / green / cyan / blue / purple); semantic red deferred past slot 3 so it stays a free anchor; slots 4..7 filled by unconstrained CVD-greedy on the remainder.
 
 ```
-green → vermillion → blue → purple → orange → sky → yellow → neutral
-warm?   warm         cool    warm     warm      cool   warm    neutral
-sat.    sat.         sat.    sat.     sat.      soft   soft
+green → lavender → blue → ochre → matte red → cyan → rose → lime
+slot 0  slot 1     slot 2 slot 3  slot 4      slot 5 slot 6 slot 7
 ```
 
 ### 4.2 Surfaces
@@ -393,11 +397,11 @@ Plots and content sit inside **surface containers** with consistent styling:
 
 | Surface     | Light          | Dark           | Use                         |
 |-------------|----------------|----------------|-----------------------------|
-| `bg-page`   | `#F5F3EC`      | `#121210`      | Outer page background       |
+| `bg-page`   | `#FAF8F1`      | `#121210`      | Outer page background       |
 | `bg-surface`| `#FAF8F1`      | `#1A1A17`      | Cards, plot containers      |
 | `bg-elevated`| `#FFFDF6`     | `#242420`      | Modals, tooltips            |
 
-The warm off-white (`#F5F3EC`) is the foundation — pure white would make the saturated palette colors look harsh.
+The warm off-white (`#FAF8F1`) is the foundation — pure white would make the saturated palette colors look harsh.
 
 ### 4.3 Warm-tinted Grayscale
 
@@ -412,13 +416,13 @@ A warm-tinted grayscale (reddish-brown undertone instead of blue-gray) matches t
 
 All three text tokens pass **WCAG 2.1 AA contrast** (≥ 4.5:1 for normal text) against both `--bg-page` surfaces:
 
-| Token         | on `--bg-page` light (`#F5F3EC`) | on `--bg-page` dark (`#121210`) |
+| Token         | on `--bg-page` light (`#FAF8F1`) | on `--bg-page` dark (`#121210`) |
 |---------------|-----------------------------------|----------------------------------|
 | `--ink`       | 16.7 : 1 (AAA)                    | 16.5 : 1 (AAA)                   |
 | `--ink-soft`  | 7.79 : 1 (AAA)                    | 9.42 : 1 (AAA)                   |
 | `--ink-muted` | 5.07 : 1 (AA)                     | 7.95 : 1 (AAA)                   |
 
-Verified with [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/). Never use Okabe-Ito palette colors as body-text colors — they are reserved for plot data marks (and a few documented chrome accents like `#009E73` in §4.4).
+Verified with [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/). Never use imprint palette colours as body-text colors — they are reserved for plot data marks (and a few documented chrome accents like `#009E73` in §4.4).
 
 ### 4.4 UI Color Application
 
@@ -442,7 +446,7 @@ It does **not** appear in:
 - Static (non-cursor, non-status) decorative dots or glyphs
 - **Default colour on in-prose links** (see below)
 
-**In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--ok-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/index.ts` as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
+**In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--imprint-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/index.ts` as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
 
 ```ts
 import { proseLinkStyle } from '../theme';
@@ -453,15 +457,16 @@ Method-call CTAs (`.copy()`, `subject.verb()`, hero buttons) keep their own hove
 
 ### 4.5 Status Colors
 
-The remaining Okabe-Ito palette colors have reserved UI roles:
+The imprint palette and its semantic anchors map onto UI status roles:
 
-- `#D55E00` (Vermillion) — destructive actions, error states
-- `#E69F00` (Orange) — "new" badges, hover highlights on secondary elements
-- `#0072B2` (Blue) — informational links in prose, footnotes
+- `#AE3030` (matte red, slot 4) — destructive actions, error states
+- `#DDCC77` (amber anchor) — "new" badges, warning highlights
+- `#4467A3` (blue, slot 2) — informational links in prose, footnotes
+- `#BD8233` (ochre, slot 3) — accent for hover highlights on secondary elements
 
 ### 4.6 Plot-only Colors
 
-**Purple (`#CC79A7`), Sky (`#56B4E9`), and Yellow (`#F0E442`) are plot-only and do not appear in the UI at all.** This preserves their visual impact for the data visualizations.
+**Lavender (`#C475FD`), cyan (`#2ABCCD`), rose (`#954477`), and lime (`#99B314`) are plot-only and do not appear in the UI chrome.** This preserves their visual impact for the data visualizations.
 
 Using them in navigation or buttons breaks the color hierarchy.
 
@@ -530,12 +535,12 @@ steal like an artist._▌             │                             │
 ```
 
 **H1 construction (two lines):**
-- Line 1: `any.plot()` — MonoLisa Bold (700), upright, with `.` in `--ok-green` (circle via `scale(1.3)`), ghosted `()` at opacity 0.45. This matches the NavBar logo exactly for brand consistency.
+- Line 1: `any.plot()` — MonoLisa Bold (700), upright, with `.` in `--imprint-green` (circle via `scale(1.3)`), ghosted `()` at opacity 0.45. This matches the NavBar logo exactly for brand consistency.
 - Line 2: `— any library.` — MonoLisa italic + `ss02`, weight 400, same 0.75em size as `any.plot()` so heights align. The script variant reads as the editorial subline.
 - Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
 **Layer hierarchy (top to bottom, left column):**
-1. **Eyebrow** — `— the open plot catalogue`, lowercase, 11px MonoLisa upright, `--ok-green`, tracked `.08em`, preceded by 18×1px green rule.
+1. **Eyebrow** — `— the open plot catalogue`, lowercase, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule.
 2. **H1** — see above.
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
 4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss02 script accent inline.
@@ -554,7 +559,7 @@ CSS sketch:
   color: var(--ink);
 }
 .hero-h1 .wordmark  { font-weight: 700; font-size: 0.75em; letter-spacing: -0.02em; }
-.hero-h1 .dot       { background: var(--ok-green); border-radius: 50%; /* circle */ }
+.hero-h1 .dot       { background: var(--imprint-green); border-radius: 50%; /* circle */ }
 .hero-h1 .parens    { font-weight: 400; opacity: 0.45; }
 .hero-h1 .accent    {
   font-style: italic;
@@ -564,7 +569,7 @@ CSS sketch:
   white-space: nowrap;
 }
 .hero-tagline       { font-style: italic; font-feature-settings: "ss02"; }
-.hero-cursor        { width: 0.55em; background: var(--ok-green); animation: blink 1s steps(2) infinite; transition: opacity 0.6s; }
+.hero-cursor        { width: 0.55em; background: var(--imprint-green); animation: blink 1s steps(2) infinite; transition: opacity 0.6s; }
 @keyframes blink { 50% { opacity: 0; } }
 ```
 
@@ -646,7 +651,7 @@ $ plots
 
 - **Prefix glyph**: `❯` is the default everywhere (navigation, list, editorial). `$` may be used for explicit action/list sections if it adds meaning; `~/path/` for hierarchical/about/meta sections. Earlier drafts used `§` in places (landing, about, libraries) — those have all been migrated to `❯`. No new glyph enters the system.
 - **Prefix font**: MonoLisa weight 500, color `--ink-muted`, scaled to ~0.6× the title size
-- **Title font**: MonoLisa italic + `ss02` stylistic set, 1.6–2rem weight 400; the `<em>` child is rendered in `--ok-green` (script accent), the rest of the h2 stays `--ink`
+- **Title font**: MonoLisa italic + `ss02` stylistic set, 1.6–2rem weight 400; the `<em>` child is rendered in `--imprint-green` (script accent), the rest of the h2 stays `--ink`
 - **Spacing**: header wrapper is `pt: 2.5` (20px), `pb: 1.5` (12px) to sit the underline close to the baseline, `mb: 4` (32px) under the rule before content resumes. Sections wrap in `<Box component="section" sx={{ py: { xs: 2, md: 3 } }}>` so the page rhythm is uniform across editorial pages.
 - **Underline**: 1px solid `--rule`, full container width
 - **Component**: reuse `app/src/components/SectionHeader.tsx` — it encodes the pt/pb/mb/border rules above. Do not re-implement.
@@ -763,7 +768,7 @@ Used in the catalogue grid. Similar to plot card but with specific additions:
 - Mini-plot thumbnail uses SVG at fixed 120px height
 - Library name in mono-bold, example count in mono-muted (`matplotlib · 142 plots`)
 
-The color of the accent bar is a subtle way to give each library a personality without breaking the shared palette system — every library gets one of the Okabe-Ito colors as its accent.
+The color of the accent bar is a subtle way to give each library a personality without breaking the shared palette system — every library gets one of the imprint colours as its accent.
 
 ### 7.4 Buttons
 
@@ -787,10 +792,10 @@ Three variants. All buttons read as method calls in mono — there is no ambigui
 }
 .btn-action::before { content: "."; color: var(--ink-muted); }
 .btn-action:hover {
-  color: var(--ok-green);
+  color: var(--imprint-green);
   background: var(--bg-elevated);
 }
-.btn-action:hover::before { color: var(--ok-green); }
+.btn-action:hover::before { color: var(--imprint-green); }
 ```
 
 Examples: `.copy()`, `.open()`, `.download()`, `.preview()`, `.share()`, `.fork()`, `.raw()`. The leading `.` is part of the visual language — it signals "this is a method on the thing in front of you" without saying so. No icons needed for common actions.
@@ -829,7 +834,7 @@ Pluralisation: prefer the natural plural for collections (`plots.browse()`, `lib
 }
 .btn-cta::before { content: "."; opacity: 0.6; }
 .btn-cta:hover {
-  background: var(--ok-green);
+  background: var(--imprint-green);
   color: #FFF;
 }
 .btn-cta:hover::before { opacity: 1; }
@@ -893,7 +898,7 @@ box-shadow: 0 24px 48px -16px rgba(0,0,0,0.2);
 
 The fake macOS window-controls (`● ● ●` in 10% opacity) are rendered via a `::before` pseudo-element at the top-left. Playful but not distracting. They also subtly communicate "this is a screenshot of real code running somewhere" which fits the developer-tool framing.
 
-**Syntax highlighting** uses the Okabe-Ito palette:
+**Syntax highlighting** uses the imprint palette:
 
 - Keywords → sky blue
 - Strings → brand green
@@ -912,7 +917,7 @@ Horizontal text links, no icons, no boxes. On hover, a 1px green underline anima
   content: '';
   position: absolute; bottom: 0; left: 0; right: 0;
   height: 1px;
-  background: var(--ok-green);
+  background: var(--imprint-green);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -990,7 +995,7 @@ The block cursor at the end of `make it yours._▌` blinks indefinitely:
   display: inline-block;
   width: 0.6em;
   height: 1em;
-  background: var(--ok-green);
+  background: var(--imprint-green);
   vertical-align: -0.1em;
   animation: blink 1s steps(2) infinite;
 }
@@ -1064,18 +1069,17 @@ The palette strip at the bottom responds to hover: normal state is even distribu
 ### 9.1 Color Defaults
 
 - **First series = brand color (`#009E73`)**. Always. This is the single most important consistency rule.
-- **Neutral (position 8) is reserved** for aggregates, residuals, and reference lines. Don't use it for a normal category unless you've exhausted the other seven.
-- **Yellow (`#F0E442`) on white backgrounds** has poor contrast. Use it only for position 7 or later, never for thin lines or small markers.
+- **Neutral (semantic anchor)** is reserved for aggregates, totals, reference lines. Don't use it for a normal category — it sits outside the categorical pool by design.
+- **Light-bg WCAG caveat:** lavender, ochre, cyan, lime, and amber all fall below WCAG 2.1 SC 1.4.11's 3:1 minimum against cream `#FAF8F1`. Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants-v3/decision-rationale.md](palette-variants-v3/decision-rationale.md#contrast-caveats--the-outline-pattern).
 
 ### 9.2 Non-categorical Data
 
-Okabe-Ito is a **categorical** palette — it's for distinct categories, not ordered or continuous data. For other data types:
+imprint is a **categorical** palette — it's for distinct categories, not ordered or continuous data. For other data types, anyplot ships two palette-derived cmaps:
 
-- **Sequential (single-variable magnitude)**: use `viridis` or `cividis`. Both are perceptually uniform and colorblind-safe. `cividis` is additionally optimized for print.
-- **Diverging (two-sided, midpoint-anchored)**: use `BrBG` (brown-to-bluish-green) from ColorBrewer, or construct one centered on a neutral tone.
-- **Heatmaps**: use `viridis` for general-purpose, `Reds`/`Blues` for single-polarity intensity.
+- **`imprint_seq` (sequential)**: brand green → blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps).
+- **`imprint_div` (diverging)**: matte red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations). The midpoint flips per theme — `#FAF8F1` on cream bg, `#1A1A17` on dark bg.
 
-Don't reach for Okabe-Ito for these cases — a categorical palette on continuous data produces misleading banding artifacts.
+Don't reach for the categorical palette on continuous data — a categorical palette on continuous data produces misleading banding artifacts. And don't substitute viridis/cividis/BrBG/jet/hsv/rainbow either; palette identity is part of the brand.
 
 ### 9.3 Plot Container Surfaces
 
@@ -1096,49 +1100,58 @@ Recommended tools:
 - [Sim Daltonism](https://michelf.ca/projects/sim-daltonism/) — macOS system-wide CVD simulator
 - [Colour Science for Python](https://www.colour-science.org/) — programmatic access to Machado et al. (2009) simulation matrices
 
-For algorithmic palette generation beyond Okabe-Ito, see Petroff (2021) — a more recent palette optimized with numerical solvers in the CAM02-UCS perceptual color space.
+For algorithmic palette generation beyond imprint, see Petroff (2021) — a more recent palette optimized with numerical solvers in the CAM02-UCS perceptual color space.
 
 ### 9.5 Implementation Reference
 
 The palette is exposed in the Python library as:
 
 ```python
-import anyplot as ap
+from core.palette import palette, IMPRINT
 
-# full palette as list
-ap.palettes.okabe_ito              # returns list of 8 hex strings
+# full categorical pool as list
+IMPRINT                         # ["#009E73", "#C475FD", "#4467A3", "#BD8233", ...]
 
-# by role name
-ap.palettes.okabe_ito.brand        # "#009E73"
-ap.palettes.okabe_ito.vermillion   # "#D55E00"
-ap.palettes.okabe_ito.blue         # "#0072B2"
+# by hue name
+palette.green                   # "#009E73"  (slot 0, brand)
+palette.lavender                # "#C475FD"  (slot 1)
+palette.blue                    # "#4467A3"  (slot 2)
+palette.red                     # "#AE3030"  (slot 4, deferred semantic anchor)
 # ...
 
-# theme-aware neutral
-ap.palettes.okabe_ito.neutral("light")   # "#1A1A1A"
-ap.palettes.okabe_ito.neutral("dark")    # "#E8E8E0"
+# semantic anchors outside the categorical pool
+palette.amber                   # "#DDCC77"  (warning / caution)
+palette.neutral("light")        # "#1A1A17"  (totals / baseline — adaptive)
+palette.neutral("dark")         # "#F0EFE8"
+palette.muted("light")          # "#6B6A63"  (other / rest — adaptive)
+palette.muted("dark")           # "#A8A79F"
 
-# as matplotlib cycler
-import matplotlib.pyplot as plt
-plt.rcParams['axes.prop_cycle'] = ap.palettes.okabe_ito.cycler()
+# semantic-role aliases
+palette.semantic.bad            # → red
+palette.semantic.warning        # → amber
+palette.semantic.info           # → cyan
+
+# matplotlib + cmap registration
+from core.palette import imprint_seq, register_with_matplotlib
+register_with_matplotlib()      # registers imprint_seq + imprint_div_light/dark
 ```
 
 For CSS:
 
 ```css
 :root {
-  --ap-green:      #009E73;
-  --ap-vermillion: #D55E00;
-  --ap-blue:       #0072B2;
-  --ap-purple:     #CC79A7;
-  --ap-orange:     #E69F00;
-  --ap-sky:        #56B4E9;
-  --ap-yellow:     #F0E442;
-  --ap-neutral:    #1A1A1A;  /* adaptive */
-}
+  --imprint-green:    #009E73; /* slot 0 — brand */
+  --imprint-lavender: #C475FD; /* slot 1 */
+  --imprint-blue:     #4467A3; /* slot 2 */
+  --imprint-ochre:    #BD8233; /* slot 3 */
+  --imprint-red:      #AE3030; /* slot 4 — semantic anchor */
+  --imprint-cyan:     #2ABCCD; /* slot 5 */
+  --imprint-rose:     #954477; /* slot 6 */
+  --imprint-lime:     #99B314; /* slot 7 */
 
-@media (prefers-color-scheme: dark) {
-  :root { --ap-neutral: #E8E8E0; }
+  /* semantic anchors */
+  --imprint-amber:    #DDCC77; /* warning (fixed) */
+  /* neutral + muted are aliased to --ink and --ink-muted which flip per theme */
 }
 ```
 
@@ -1169,9 +1182,9 @@ For CSS:
 
 ### 10.3 Color
 
-- **Purple (`#CC79A7`), Sky (`#56B4E9`), or Yellow (`#F0E442`) in UI chrome.** These are plot-only colors. Using them in navigation or buttons breaks the color hierarchy.
+- **Lavender (`#C475FD`), cyan (`#2ABCCD`), rose (`#954477`), or lime (`#99B314`) in UI chrome.** These are plot-only colors. Using them in navigation or buttons breaks the color hierarchy.
 - **Brand green in backgrounds, body text emphasis, or non-logo icons.** Reserve `#009E73` for the seven approved contexts (§4.4).
-- **Categorical palettes on continuous data.** Use viridis/cividis/BrBG instead — see §9.2.
+- **Categorical palettes on continuous data.** Use `imprint_seq` (single-polarity) or `imprint_div` (diverging) instead — see §9.2.
 
 ---
 
@@ -1181,7 +1194,7 @@ The design system is implemented across:
 
 - **HTML reference (full mockup)**: `mockups/landing.html` — single-file reference with all sections, SVG plots, and animations
 - **Theme tokens (frontend)**: `app/src/theme/index.ts` and `app/src/main.tsx` — MUI theme exports for colors, typography, spacing, headingStyle, subheadingStyle, textStyle, tableStyle, codeBlockStyle
-- **Palette (Python library)**: `anyplot.palettes.okabe_ito` — see §9.5
+- **Palette (Python library)**: `anyplot.palette` — see §9.5
 
 **Reference CSS skeleton:**
 
@@ -1198,17 +1211,19 @@ The design system is implemented across:
   <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/2-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      /* Okabe-Ito palette — full 7 + adaptive neutral */
-      --ok-green:      #009E73;
-      --ok-vermillion: #D55E00;
-      --ok-blue:       #0072B2;
-      --ok-purple:     #CC79A7;
-      --ok-orange:     #E69F00;
-      --ok-sky:        #56B4E9;
-      --ok-yellow:     #F0E442;
+      /* imprint palette — 8 categorical hues + 3 semantic anchors */
+      --imprint-green:    #009E73; /* slot 0 — brand */
+      --imprint-lavender: #C475FD; /* slot 1 */
+      --imprint-blue:     #4467A3; /* slot 2 */
+      --imprint-ochre:    #BD8233; /* slot 3 */
+      --imprint-red:      #AE3030; /* slot 4 — semantic anchor */
+      --imprint-cyan:     #2ABCCD; /* slot 5 */
+      --imprint-rose:     #954477; /* slot 6 */
+      --imprint-lime:     #99B314; /* slot 7 */
+      --imprint-amber:    #DDCC77; /* warning anchor (fixed) */
 
       /* Surfaces — warm off-white, not pure #fff */
-      --bg-page:     #F5F3EC;
+      --bg-page:     #FAF8F1;
       --bg-surface:  #FAF8F1;
       --bg-elevated: #FFFDF6;
 
@@ -1281,9 +1296,9 @@ Eventually, once the project is mature, consider writing a JOSS (Journal of Open
 
 **Non-web visual identity:**
 
-- **GitHub profile images**: square variant of the logo: `any.plot()` in MonoLisa Bold, centered, on warm off-white background (`#F5F3EC`). Green dot at `#009E73`. Maintain 1em padding from edges.
+- **GitHub profile images**: square variant of the logo: `any.plot()` in MonoLisa Bold, centered, on warm off-white background (`#FAF8F1`). Green dot at `#009E73`. Maintain 1em padding from edges.
 - **OG / Twitter card images**: 1200×630px. Top-left: `anyplot.ai` logo in MonoLisa Bold. Center-left: page title in MonoLisa — bold upright for the subject, italic + ss02 script for one accent word. Center-right: representative plot screenshot or palette strip. Bottom: minimal meta in mono.
-- **Presentations**: black or warm off-white backgrounds. MonoLisa throughout — upright for body, italic-script for section dividers. Brand green only for emphasis. Every plot in the deck uses Okabe-Ito.
+- **Presentations**: black or warm off-white backgrounds. MonoLisa throughout — upright for body, italic-script for section dividers. Brand green only for emphasis. Every plot in the deck uses imprint.
 - **T-shirts / merch (if ever)**: dark t-shirt, `any.plot()` in white with green dot, centered on chest. No taglines, no URLs, no GitHub handles. One variant only.
 
 ---

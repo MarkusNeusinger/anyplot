@@ -1,156 +1,185 @@
 library: plotnine
+language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:44:52Z'
-updated: '2026-01-20T20:17:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184845455
+updated: '2026-05-27T09:51:03Z'
+generated_by: claude-sonnet
+workflow_run: 26502508493
 issue: 3769
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent implementation of small multiples approach as spec explicitly allows
-    for libraries without animation support
-  - Clean grammar of graphics code structure with proper plotnine idioms
-  - Good use of California coastline for geographic context
-  - Dual encoding (color + size) for magnitude effectively communicates data
-  - Realistic earthquake aftershock scenario with appropriate temporal decay pattern
-  - Clear title following required format with informative subtitle
+  - Correct handling of animation limitation via small multiples — exactly the right
+    plotnine approach per library rules
+  - All theme-adaptive chrome correctly applied across both renders; no dark-on-dark
+    failures in the dark render
+  - 'imprint_seq continuous colormap (#009E73 → #4467A3) correctly used for magnitude
+    encoding'
+  - Ordered categorical ensures temporal facets appear in the correct sequence
+  - coord_fixed(ratio=1.0) preserves geographic proportions — important for map-like
+    visualizations
+  - Multi-layer composition (coastline path + aftershock points + epicenter star)
+    adds meaningful geographic context
   weaknesses:
-  - Dual legends for the same variable (magnitude) is slightly redundant - could consider
-    combining or using only one
-  - Some smaller data points in later days could benefit from slightly larger minimum
-    size for better visibility
-  image_description: 'The plot displays a 2x3 small multiples grid showing earthquake
-    aftershock sequences across California over 6 days (March 1-6, 2024). Each panel
-    contains scattered points representing earthquake locations, with both color and
-    size encoding magnitude (ranging from approximately 4 to 10+ on the viridis colormap).
-    A simplified California coastline is drawn in dark gray as a path through all
-    panels for geographic context. The title reads "Earthquake Aftershock Sequence
-    · map-animated-temporal · plotnine · pyplots.ai" with a subtitle explaining the
-    visualization. Axis labels show Longitude (°) on x-axis and Latitude (°) on y-axis.
-    Two legends appear on the right: a continuous color scale for magnitude and a
-    discrete size legend. The progression from Day 1 to Day 6 shows the spatial spread
-    of aftershocks expanding from the epicenter, with early days showing concentrated
-    clusters and later days showing wider geographic dispersion. Points use alpha=0.7
-    transparency.'
+  - Magnitude colorbar range extends to ~10+, which is physically impossible for aftershocks
+    of an M5.5 main event — cap magnitude values below M5.5 using min(5.0, max(1.0,
+    5.5 - i * 0.15 + np.random.exponential(0.8))) to yield a realistic 1–5 range
+  - Facet strip labels at size=6 are very small and serve as the primary timestamp
+    display required by the spec — increase strip_text size to 7 for better readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "Earthquake Aftershocks · map-animated-temporal · python · plotnine · anyplot.ai" bold and readable; subtitle at size=7 visible; axis labels "Longitude (°)" / "Latitude (°)" at 10pt readable; tick labels at 8pt readable; facet strip labels "Day N: Mon DD" at size=6 bold — small but legible at full resolution; legend "Magnitude" with colorbar visible
+      Data: 12 facets showing aftershock points colored with imprint_seq gradient #009E73 (low magnitude) → #4467A3 (high magnitude); California coastline outline in muted ink; epicenter star (★) in each panel; points size=2.5, alpha=0.75
+      Legibility verdict: PASS — all text readable against light background; strip labels are small (size=6) but explicit and readable at 3200×1800
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and all labels appear in light cream/gray tones (INK = #F0EFE8, INK_SOFT = #B8B7B0); coastline path is lighter/visible; epicenter star is white and prominent; legend background uses elevated dark token #242420; no dark-on-dark failures detected
+      Data: Data point colors (teal-to-blue gradient) are identical to light render — only chrome flipped; points remain clearly distinguishable against dark background
+      Legibility verdict: PASS — all text readable against dark background; theme-adaptive chrome correctly applied throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 22pt, subtitle at 16pt, axis titles at 16pt, axis text at
-          12pt, strip text at 14pt bold - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; facet labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Point sizes range 2-8, generally appropriate but some smaller points
-          in later panels could be slightly larger
+        comment: All font sizes explicitly set; title scaled for length; axis labels
+          10pt, tick labels 8pt, strip labels 6pt bold — small but explicit; borderline
+          for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; x-axis tick labels dense across 4 columns but
+          not overlapping; alpha=0.75 reduces overplotting
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points size=2.5 alpha=0.75 appropriate for 30-50 per panel density;
+          coastline visible; epicenter star prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe
+        comment: imprint_seq CVD-safe; no red-green sole signal
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas use but dual legends for same variable creates some redundancy
+        comment: Correct 3200x1800 canvas; 12 facets fill space well; slight x-axis
+          tick label crowding in 4-column layout
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude with degree units
+        comment: Longitude (°) and Latitude (°) with units; descriptive subtitle
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with alpha 0.3-0.4, legends well-placed
+        comment: 'imprint_seq (#009E73 → #4467A3) for continuous magnitude; background
+          #FAF8F1 light / #1A1A17 dark; all chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional layered geographic composition above configured-default;
+          coastline is simple 25-point polygon limiting visual fidelity
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel borders removed; grid subtle at alpha=0.15; legend background
+          elevated token; axis lines styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 12-panel temporal sequence creates clear spreading narrative; epicenter
+          star anchors spatial story; subtitle guides interpretation
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements small multiples for temporal map as spec allows
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: lat/lon correctly assigned, timestamp to facets, magnitude to color/size
-      - id: SC-03
+        comment: Animation spec correctly handled as small multiples per plotnine
+          library rules
+      - id: SC-02
         name: Required Features
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Small multiples valid per spec, includes coastline; no animation
-          controls as expected for plotnine
-      - id: SC-04
-        name: Data Range
+        comment: Timestamps in facet labels, geographic context via coastline, magnitude
+          color encoding; optional trails not implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate California region bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lon→x, lat→y, magnitude→color; all 12 time steps; coord_fixed preserves
+          aspect ratio
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Magnitude legends correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses required format: spec-id · library · pyplots.ai'
+        comment: Title matches {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai format; Magnitude legend correct
     data_quality:
-      score: 18
-      max: 20
+      score: 12
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows temporal progression, spatial spread, magnitude variation;
-          demonstrates aftershock decay pattern
+        comment: Shows temporal evolution, spatial spread, magnitude variation, epicenter
+          reference
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Earthquake aftershock sequence is perfect real-world scenario; California
-          location appropriate
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Magnitude values 4-10+ realistic; coordinates within California bounds
+        comment: Earthquake aftershock sequence in California — real, neutral, scientific
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        passed: false
+        comment: Magnitude colorbar reaches ~10+ for M5.5 aftershocks — physically
+          impossible; aftershocks cannot exceed main event magnitude; exponential
+          term generates unrealistic outliers
     code_quality:
       score: 10
       max: 10
@@ -160,54 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure with no functions/classes
+        comment: 'Flat script: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, organized from plotnine
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean plotnine grammar of graphics; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: facet_wrap with ordered categorical, coord_fixed, inherit_aes=False,
+          full theme() token chain
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine grammar of graphics (ggplot, aes, geoms, facet_wrap,
-          scales, themes), standard faceting usage
+        comment: facet_wrap for temporal small multiples, ordered categorical panel
+          ordering, multi-layer separate data frames
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - colorbar
   - layer-composition
-  - custom-colormap
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
+  - custom-colormap

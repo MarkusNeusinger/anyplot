@@ -164,7 +164,6 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 | `section_header` | SectionHeader.tsx | `specs.all()` / `libraries.all()` / `palette.explore()` headers |
 | `specs_more_link` | LandingPage.tsx | `+ N more in the catalogue →` |
 | `suggest_spec_link` | LandingPage.tsx | `spec.suggest()` GitHub-issue link |
-| `palette_okabe_ito` | LandingPage.tsx | external Okabe & Ito reference |
 
 **Random methods**:
 - `click`: Shuffle icon clicked

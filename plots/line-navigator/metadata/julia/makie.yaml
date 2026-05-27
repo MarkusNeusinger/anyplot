@@ -1,0 +1,267 @@
+library: makie
+language: julia
+specification_id: line-navigator
+created: '2026-05-27T11:55:50Z'
+updated: '2026-05-27T12:21:01Z'
+generated_by: claude-sonnet
+workflow_run: 26508621721
+issue: 3785
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: dual-panel design with detail chart + navigator pane,
+    selection highlight (poly + vlines!), and contextual annotation'
+  - 'Correct anyplot palette — brand green #009E73 as the single data series across
+    both themes; all chrome tokens (INK, INK_SOFT, INK_MUTED) applied to both axes'
+  - 'Proper theme-adaptive chrome throughout: titlecolor, xlabelcolor, ylabelcolor,
+    xticklabelcolor, yticklabelcolor, spinecolor all wired to theme tokens'
+  - 'Clean Makie layout: rowsize!(fig.layout, 1, Relative(0.78)) and rowgap! for proportional
+    panel sizing — idiomatic use of the Makie layout system'
+  - 'Appropriate data-density handling: alpha=0.65 for the dense 1095-point navigator
+    line vs full opacity for the 90-point detail line'
+  - ELEVATED_BG differentiates the navigator panel from the main chart, creating visual
+    hierarchy between overview and detail
+  - Annotation 'Days 450–540 of 1095 · Summer temperature peak' adds meaningful narrative
+    context to the selected range
+  - 'Flawless code quality: flat KISS script, Random.seed!(42), no unused imports,
+    saves via plot-$(THEME).png'
+  weaknesses:
+  - 'Minor axis label imbalance: xlabelsize=11 (''Day'') vs ylabelsize=14 (''Temperature
+    (°C)'') in the main chart — short label should not be significantly smaller than
+    the longer descriptive label; normalise both to 12 or 13'
+  - 'Selection highlight in dark mode has reduced visual prominence: 30% alpha #009E73
+    on ELEVATED_BG #242420 produces a dark-teal rectangle that is harder to distinguish
+    than the light-mode version — consider raising alpha to 0.40 or adding a slightly
+    brighter stroke (strokewidth=1, color=brand) on the poly! call for the dark theme'
+  - Navigator panel proportion at 22% slightly exceeds the spec target of 15–20%;
+    consider Relative(0.80) / Relative(0.20) to stay within spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface. Navigator panel slightly lighter (ELEVATED_BG #FFFDF6); the differentiation is subtle but present.
+      Chrome: Title "Sensor Data · line-navigator · julia · makie · anyplot.ai" in dark ink, centred, well-proportioned (~65% of plot width). Y-axis label "Temperature (°C)" at size 14 rotated vertically, readable. X-axis "Day" label at size 11 visible at the bottom of both panels. Tick labels at sizes 9–11 in INK_SOFT (#4A4A44), all readable. Top/right spines removed; only L-shaped frame visible.
+      Data: Main chart shows 90-day detail window (days 450–540) as a crisp #009E73 line at linewidth 2. Y-range roughly 16–27 °C with an upward summer trend. Navigator shows the full 1095-day time series in 65%-alpha green; seasonal sinusoidal pattern clearly visible. Selection window (days ~450–540) shown as a soft green filled rectangle with two vertical edge lines marking boundaries. Annotation "Days 450–540 of 1095 · Summer temperature peak" in INK_MUTED (#6B6A63) positioned in upper-left of detail pane.
+      Legibility verdict: PASS — all text readable; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface. Navigator panel in ELEVATED_BG #242420 is noticeably distinct from the main panel.
+      Chrome: Title, axis labels, tick labels all rendered in light INK (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures detected. Spines in INK_SOFT, grid lines subtle at 15% alpha.
+      Data: Line colours identical to light render — brand green #009E73 throughout. Navigator selection highlight appears as a darker teal rectangle (30% alpha green on #242420) — visible but lower-contrast than in the light theme. Vertical edge lines in full green remain clearly visible. Both the detail line and navigator line are correctly coloured.
+      Legibility verdict: PASS — all text readable. Minor concern: the selection fill in the navigator is less visually prominent in dark mode than in light mode, but the vertical boundary lines compensate.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'All text readable in both themes. Minor imbalance: xlabelsize=11
+          (''Day'') vs ylabelsize=14 (''Temperature (°C)'') in main chart; annotation
+          at fontsize=12 is small but readable; navigator x-tick labels at size 9
+          are legible.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render. Annotation
+          positioned clear of the data line.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main detail line at full opacity clearly visible. Navigator line
+          at 0.65 alpha appropriate for 1095 dense points. Selection highlight visible
+          in both themes via poly! fill and vlines! boundaries.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single data series in #009E73; good contrast on both surfaces. No
+          red-green sole-signal issue.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 px landscape canvas (canonical). Two-panel layout well-proportioned.
+          Navigator at 22% slightly over the 15-20% spec target but visually appropriate.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Temperature (°C)' descriptive with units. X-axis 'Day' clear.
+          Title follows spec format with descriptive prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73. Light bg #FAF8F1, dark bg #1A1A17.
+          Navigator uses ELEVATED_BG correctly. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful two-panel design with visual hierarchy. ELEVATED_BG panel
+          differentiation. Consistent linewidth across both axes. Above default but
+          annotation styling and panel separation could be more refined.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (L-frame), y-only grid at 15% alpha, navigator y-tick
+          labels hidden. Row gap between panels is subtle. Well above default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation clearly identifies selected range with 'Summer temperature
+          peak' context. Navigator selection visually communicates the current zoom
+          window. Strong narrative design.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with mini navigator pane. Both the main detail
+          view and the full-extent navigator are implemented.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Main chart shows selected range in detail; navigator shows full data
+          extent; selection window highlighted with filled polygon + vertical edge
+          lines (static equivalents of draggable handles per makie.md guidance); contextual
+          text label; consistent line color/width across both charts.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Day (temporal), Y=Temperature (°C). 1095 data points meets the
+          1000+ spec requirement. Selected window correctly shown in detail.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Sensor Data · line-navigator · julia · makie · anyplot.ai'
+          matches the optional {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai
+          format. No legend needed (single series).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 3-year seasonal sinusoidal temperature data with realistic noise.
+          90-day zoom window shows day-to-day detail. Navigator shows complete seasonal
+          cycles. Selection placed at summer peak — demonstrates the navigator's purpose.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily sensor temperature readings over 3 years. Range ~15-27°C is
+          plausible for a temperate climate. Seasonal pattern and noise are realistic.
+          Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1095 data points exceeds the 1000+ spec requirement. Temperature
+          scale sensible. 90-day zoom window demonstrates the navigator use case well.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes. Clear sequential structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI. Variable names clear. RGBAf used
+          correctly for alpha colors.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Current Makie API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of Axis, lines!, poly!, vlines!, text!, rowsize!, rowgap!,
+          fig.layout, Relative(). All idiomatic CairoMakie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Makie layout system (rowsize! + Relative()) for proportional panels,
+          poly! for selection highlight polygon, RGBAf for semi-transparent colors.
+          Demonstrates Makie-specific capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending

@@ -311,7 +311,7 @@ def render_sample_chart(
     ink_muted = theme["ink_muted"]
     rule = theme.get("rule", "#DFDDD6")
     is_light = bg.upper().startswith("#F")
-    grid = "rgba(26,26,23,0.06)" if is_light else "rgba(240,239,232,0.06)"
+    grid = "rgba(26,26,23,0.15)" if is_light else "rgba(240,239,232,0.15)"
 
     n_points = 48
 
@@ -384,7 +384,7 @@ def render_sample_bars(
     ink_muted = theme["ink_muted"]
     rule = theme.get("rule", "#DFDDD6")
     is_light = bg.upper().startswith("#F")
-    grid = "rgba(26,26,23,0.06)" if is_light else "rgba(240,239,232,0.06)"
+    grid = "rgba(26,26,23,0.15)" if is_light else "rgba(240,239,232,0.15)"
 
     n_groups = 4
     n_series = len(series_hexes)
@@ -459,7 +459,7 @@ def render_sample_scatter(
     ink_muted = theme["ink_muted"]
     rule = theme.get("rule", "#DFDDD6")
     is_light = bg.upper().startswith("#F")
-    grid = "rgba(26,26,23,0.06)" if is_light else "rgba(240,239,232,0.06)"
+    grid = "rgba(26,26,23,0.15)" if is_light else "rgba(240,239,232,0.15)"
 
     # Reproducible "random" jitter via a fixed sequence
     import random as _r
@@ -780,7 +780,7 @@ PAGE_CSS = """
     --ink:         #1A1A17;
     --ink-soft:    #4A4A44;
     --ink-muted:   #6B6A63;
-    --rule:        rgba(26, 26, 23, 0.10);
+    --rule:        rgba(26, 26, 23, 0.15);
     --ok-green:    #009E73;
     --ok-amber:    #E69F00;
     --ok-bad:      #D55E00;
@@ -793,7 +793,7 @@ body.theme-dark {
     --ink:         #F0EFE8;
     --ink-soft:    #B8B7B0;
     --ink-muted:   #A8A79F;
-    --rule:        rgba(240, 239, 232, 0.10);
+    --rule:        rgba(240, 239, 232, 0.15);
 }
 * { box-sizing: border-box; }
 body {

@@ -130,7 +130,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 for s in ('left', 'bottom'):
     ax.spines[s].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 plt.tight_layout()
 plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
@@ -468,9 +468,9 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 **Aesthetic requirements from style guide:**
 - Follow minimalism: every element must earn its place
 - Remove top and right spines by default
-- **Use anyplot palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order (`#9418DB`, `#B71D27`, `#16B8F3`, `#99B314`, `#D359A7`, `#BA843E`, adaptive neutral). Never invent custom hexes for categorical data.
-- Continuous data: `anyplot_seq` (single-polarity, `["#009E73", "#003D94"]`) or `anyplot_div` (diverging, `["#BB0D22", "#A2A598", "#007AD9"]`). No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
-- Color restraint: 2-3 colors ideal, 4-5 max
+- **Use anyplot palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. Plus 3 semantic anchors outside the pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest). Never invent custom hexes for categorical data.
+- Continuous data: `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark). No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
+- Color restraint: 2-3 colors ideal, 4-5 max. For n≥5, add redundant encoding (marker shape, linestyle, label) — see "Series count guidance" in default-style-guide.md.
 - **Theme-adaptive chrome** (background, text, grid, spines, legend, annotations) — read `ANYPLOT_THEME` from env, use the token palette from `prompts/default-style-guide.md`. Plot background: `#FAF8F1` light / `#1A1A17` dark. Never pure white or black.
 - Grid: prefer none for simple plots; when used, y-axis only for bar/line, both for scatter; opacity 10-15%
 - Scatter marker edge should match the page background (`PAGE_BG`), not hardcoded white — keeps definition against either theme.

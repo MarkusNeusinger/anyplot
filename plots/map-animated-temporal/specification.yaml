@@ -6,7 +6,7 @@ title: Animated Map over Time
 
 # Specification tracking
 created: 2026-01-11T22:50:31Z
-updated: 2026-01-11T22:50:31Z
+updated: 2026-05-27T09:07:12Z
 issue: 3769
 suggested: MarkusNeusinger
 
@@ -18,7 +18,7 @@ tags:
     - scatter
   data_type:
     - geospatial
-    - timeseries
+    - time-series
     - numeric
   domain:
     - general

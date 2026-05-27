@@ -1,0 +1,305 @@
+library: ggplot2
+language: r
+specification_id: raincloud-basic
+created: '2026-05-27T05:34:43Z'
+updated: '2026-05-27T05:56:55Z'
+generated_by: claude-opus
+workflow_run: 26492746834
+issue: 1876
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Spec-perfect three-band layout: half-violin ribbon rises above each category
+    baseline, boxplot sits centered on the baseline with width=0.14, and jittered
+    rain points fall ~0.18-0.38 below — the cloud/rain metaphor reads instantly in
+    both renders.'
+  - Bimodal Sleep-deprived distribution (fast subgroup ~470 ms + slow subgroup ~640
+    ms) is exactly the structure a boxplot alone would hide — the data choice turns
+    this from a generic raincloud demo into a clear storytelling argument for the
+    chart type.
+  - 'Theme tokens are threaded through every chrome element (PAGE_BG, INK, INK_SOFT,
+    INK_MUTED, GRID, BOX_FILL): both renders pass the readability check with no dark-on-dark
+    or light-on-light failures, and the box plot fill flips correctly (#FFFDF6 light
+    / #242420 dark) so the colored borders remain the focal element.'
+  - 'Palette compliance is clean — first series is brand green #009E73 (Control),
+    then lavender (Sleep-deprived) and blue (Caffeinated) in canonical anyplot order
+    — and the legend is suppressed since the y-axis category labels already identify
+    each row, removing redundant chrome.'
+  - 'Idiomatic ggplot2 grammar throughout: per-group KDE via dplyr::group_modify into
+    a geom_ribbon layer (since ggplot2 has no half-violin geom natively), geom_boxplot
+    with orientation = ''y'', and expansion(add=...) used to give each cloud headroom
+    without crashing into the next row.'
+  - Bold title weight + thin INK_MUTED gridlines (linewidth = 0.1) establish a clean
+    typographic hierarchy without competing with the data; the x-axis range extends
+    to 900 ms to cover the full Sleep-deprived tail without clipping.
+  weaknesses:
+  - 'Boxplot fill in the dark render (#242420) is so close to PAGE_BG (#1A1A17) that
+    the box interior almost disappears — only the colored border and median line remain
+    visible. Consider lifting BOX_FILL slightly (e.g. #2E2E29) or using a translucent
+    category-tinted fill so the box body reads as a distinct shape rather than a colored
+    outline on the background.'
+  - Plot title at size = 11 with the long mandated suffix (~67 chars) renders at the
+    smaller end of the readable range for a 3200x1800 canvas. The library guide suggests
+    plot.title = element_text(size = 12); bumping to 12 would give the title more
+    presence without crowding the data area.
+  - Jitter spread for the rain band uses runif(n, 0, 0.20), giving a y-range of 0.20
+    — slightly wider than the spec's suggested 0.05-0.1 'moderate jitter' guidance.
+    The current 140-per-group density tolerates it, but tightening to runif(n, 0,
+    0.12) would match the spec while still avoiding excessive overplotting.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white at #FAF8F1 as specified — no pure white anywhere.
+      Chrome: bold dark title centered across the top, "Reaction time" x-axis label
+        centered below, "300 ms"-"900 ms" tick labels in soft grey, and category
+        labels (Caffeinated, Sleep-deprived, Control) rendered at size 11 in INK
+        (#1A1A17). Vertical x-only gridlines rendered very faintly in INK_MUTED at
+        linewidth 0.1 — present but recedes behind the data. No y-axis ticks (set
+        to element_blank).
+      Data: three rows stacked bottom-to-top — Control in brand green #009E73,
+        Sleep-deprived in lavender #C475FD (clearly bimodal with a fast cluster
+        ~470 ms and a slow cluster ~640 ms), Caffeinated in blue #4467A3. Each row
+        shows a half-violin ribbon rising above the category baseline, a thin
+        boxplot (width=0.14) sitting on the baseline with a cream fill #FFFDF6
+        and a tiny visible median tick, and 140 jittered rain points spread below
+        the baseline at alpha=0.55.
+      Legibility verdict: PASS — every text element has strong contrast against
+        the off-white background, and the green/lavender/blue palette is
+        distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black at #1A1A17 as specified — no pure black.
+      Chrome: bold title in light ink #F0EFE8, axis label and tick labels in
+        light B8B7B0/F0EFE8 — all clearly readable. Vertical gridlines flipped
+        to INK_MUTED light variant #A8A79F at linewidth 0.1, still subtle.
+      Data: colors are IDENTICAL to the light render — Control green, Sleep-
+        deprived lavender, Caffeinated blue. The boxplot fill flips to #242420
+        (near-black, only one shade off PAGE_BG) so the box interior reads as
+        a faintly darker rectangle bordered by the category color; the median
+        tick remains visible. Rain points sit on the dark background at alpha
+        0.55 and remain clearly distinguishable.
+      Legibility verdict: PASS — no dark-on-dark text failure. Brand green
+        #009E73 reads cleanly on the near-black surface. Minor note: the
+        boxplot fill is *very* close to the page background (only one step
+        darker), so the box body is more outline-than-shape; flagged as a
+        weakness rather than a legibility failure since the colored border
+        and median line carry the information.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes. Title at size=11 is on the smaller
+          end of the readable range for the 3200x1800 canvas; library guide suggests
+          12.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Cloud / box / rain bands are vertically separated within each row;
+          expansion(add=c(0.45,0.55)) gives the top row enough headroom for the cloud
+          not to clip into the title area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized appropriately for 140-per-group density (size=1.1,
+          alpha=0.55); cloud ribbon at alpha=0.55, linewidth=0.5 stays readable in
+          both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Anyplot palette is CVD-safe; green/lavender/blue separate well in
+          deuteranopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). x-axis extended
+          to 905 explicitly so the Sleep-deprived tail isn't clipped. Generous plot.margin
+          (20,28,16,16).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label 'Reaction time' with ' ms' units baked into tick labels.
+          Y label suppressed since category labels are self-describing.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, others canonical anyplot order. PAGE_BG
+          #FAF8F1 / #1A1A17 correct in both themes. No prohibited cmaps.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bold title, custom palette, theme-adaptive chrome, intentional hierarchy.
+          Falls short of 8 because the boxplot fill in dark mode is almost indistinguishable
+          from PAGE_BG.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: x-only vertical grid at linewidth=0.1, no y-axis ticks, panel border
+          absent, generous margins. Box fill on dark is the lone refinement gap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sleep-deprived bimodality is a real narrative — the chart argues
+          for itself by showing exactly the structure a boxplot alone would hide.
+          Could be 6 with a subtle annotation pointing at the bimodal split.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct raincloud: half-violin + boxplot + jittered strip per category.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cloud above baseline, box on baseline, rain below baseline. Violin
+          clipped to half via geom_ribbon ymin/ymax. Median + quartile markers via
+          geom_boxplot. Alpha=0.55 within spec's 0.5-0.7 range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Horizontal orientation: categories on y-axis, values on x-axis as
+          required. Axis ranges cover all data.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Reaction Time by Condition · raincloud-basic · r · ggplot2
+          · anyplot.ai' matches the descriptive-prefix format. Legend suppressed (single
+          category per row, redundant with y labels) — acceptable.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three groups with intentional bimodality in one of them — covers
+          the full raincloud demo surface (unimodal, bimodal, narrow, wide).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Psychology reaction-time experiment across sleep conditions — plausible,
+          neutral, no controversial framing.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 300-900 ms range is realistic for sleep-deprivation RT studies; 140
+          obs per group is enough to render the bimodality clearly.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Top-to-bottom procedural script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-group KDE via group_modify is the cleanest pure-ggplot2 path
+          since there's no native half-violin geom. No fake interactivity (AR-08 clean).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{light,dark}.png via ragg::agg_png at 8x4.5 in @ 400 dpi
+          (3200x1800 canvas).
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered + operator, geom_boxplot(orientation='y'), scale_*_manual,
+          expansion() for axis padding, theme element overrides. All canonical ggplot2
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ggplot2's grammar to compose three geoms into a single raincloud
+          — the chart literally cannot exist without ggplot2's layering model. Could
+          pull more distinctive features (e.g. coord_flip-free horizontal via orientation,
+          custom labeller) for the full 5.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - minimal-chrome
