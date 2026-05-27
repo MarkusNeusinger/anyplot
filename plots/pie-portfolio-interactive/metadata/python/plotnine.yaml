@@ -1,212 +1,261 @@
 library: plotnine
+language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:08:25Z'
-updated: '2026-01-20T23:16:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21190551588
+updated: '2026-05-27T17:56:21Z'
+generated_by: claude-sonnet
+workflow_run: 26526927100
 issue: 3754
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent visualization of drill-down concept with two linked donut charts and
-    connecting arrow
-  - Realistic and meaningful portfolio data with proper asset class hierarchy
-  - Clean visual design with well-chosen colors and consistent styling
-  - Good use of plotnine grammar of graphics for complex custom shapes
-  - Proper title format and clear legend placement
+  - 'Excellent dual-panel donut design: main portfolio allocation + equities drill-down
+    with connecting dashed arrow creates a compelling static narrative of the interactive
+    concept'
+  - 'Perfect anyplot palette compliance — Equities #009E73 (brand green), Fixed Income
+    #4467A3 (blue/stability), Alternatives #C475FD (lavender), Cash #BD8233 (ochre)
+    — all semantic assignments are defensible and from the palette'
+  - 'Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with full theme-adaptive
+    chrome: title, section labels, center labels, and legend text all use INK/INK_SOFT
+    tokens'
+  - Both percentage and dollar-value labels are shown on each segment, meeting the
+    spec requirement to display both types of data
+  - 'Perfect code quality: KISS structure, np.random.seed(42), all imports used, no
+    functions/classes'
   weaknesses:
-  - Uses a function definition (create_donut_segment) which violates the KISS principle
-    of no functions/classes; consider inlining the polygon generation logic
-  - The right donut (Equities Breakdown) is positioned slightly higher than the left,
-    creating minor visual asymmetry
-  image_description: 'The plot displays two donut charts side-by-side on a light gray
-    (#FAFAFA) background. On the left is the main "Portfolio Allocation" donut showing
-    four asset classes: Equities (45%, blue #306998), Fixed Income (30%, yellow #FFD43B),
-    Alternatives (15%, green #2ECC71), and Cash (10%, purple #9B59B6). The center
-    of the left donut shows "Total" and "$1.2M". On the right is the "Equities Breakdown"
-    donut showing the breakdown of the 45% equities allocation into four holdings:
-    Tech Stocks (18%), Healthcare (12%), Financials (10%), and Energy (5%), displayed
-    in varying shades of blue. A dashed arrow connects the Equities segment on the
-    left to the breakdown donut on the right, indicating the drill-down relationship.
-    The center of the right donut shows "45%" and "Equities". A horizontal legend
-    at the bottom displays color-coded boxes for each asset class. Italic instruction
-    text below explains the interactive concept. The title uses the correct format:
-    "pie-portfolio-interactive · plotnine · pyplots.ai".'
+  - Detail donut percentage labels show portfolio-level weights (18%, 12%, 10%, 5%)
+    while the donut proportions visualize equities sub-allocation (40%, 27%, 22%,
+    11%) — the labels are inconsistent with what the donut visually encodes, which
+    can mislead viewers about how Equities is split internally
+  - Legend text (size=2.8 mm ≈ 8pt) and small-slice USD labels (size=2.8–3.0 mm) are
+    on the small side and may become hard to read at mobile width (~400px scaled);
+    increase legend text to size=3.2 and USD labels to size=3.2
+  - 'Library Mastery limited: plotnine has no native pie/donut geom, so the implementation
+    hand-crafts polygon arcs — idiomatic score is bounded by this inherent library
+    limitation'
+  - Small horizontal whitespace on left/right canvas edges (slices don't extend close
+    to the scale boundaries); could narrow x-limits slightly to center both donuts
+    more tightly and reduce empty margin
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, fills the full 3200×1800 canvas.
+      Chrome: Title "pie-portfolio-interactive · python · plotnine · anyplot.ai" in dark bold text, well-centered at top. Section titles "Portfolio Allocation" and "Equities Breakdown" in dark INK above each donut. Center hole labels ("Total", "$1.2M" in main; "$540K", "Equities" in detail) in INK_SOFT — readable against the cream background. Bottom legend shows four colored squares with "Equities", "Fixed Income", "Alternatives", "Cash" labels in INK_SOFT — small but legible. All text reads clearly against the light background.
+      Data: Left donut (main): green (#009E73) Equities 45%, blue (#4467A3) Fixed Income 30%, lavender (#C475FD) Alternatives 15%, ochre (#BD8233) Cash 10%. Right donut (detail): cyan Tech Stocks 18%, rose Healthcare 12%, blue Financials 10%, ochre Energy 5%. Dashed arrow with arrowhead connects main to detail donut. White text labels on each segment show % and $K values. First series is #009E73 as required.
+      Legibility verdict: PASS — all text readable; legend text and small-slice USD labels are slightly small but visible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title in light #F0EFE8 text — clearly visible. Section titles in light INK text — readable. Center labels in INK_SOFT (#B8B7B0) — adequately visible against the dark donut-hole center. Bottom legend text in light INK_SOFT — readable. No dark-on-dark failures observed; all text elements use theme-adaptive tokens correctly.
+      Data: Palette colors are identical to the light render — green Equities, blue Fixed Income, lavender Alternatives, ochre Cash, cyan Tech, rose Healthcare. The connecting dashed arrow in INK_SOFT is visible but slightly muted. Data color identity between themes: CONFIRMED.
+      Legibility verdict: PASS — all text readable in dark mode; no chrome failures detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is large and bold (~24pt), section titles clear, percentage
-          labels readable with bold white text
+        comment: All font sizes explicitly set; title, section labels, center labels
+          all readable in both themes. Legend text (size=2.8mm) and small-slice USD
+          labels slightly small for mobile width.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels well-positioned within segments
+        comment: Generally clean; minor concern about tight label placement on the
+          small 5% Energy slice in the detail donut.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Donut segments clearly visible; smaller segments (5%, 3%) are thin
-          but distinguishable
+        comment: All segments clearly visible with distinct anyplot palette colors;
+          labels on segments are readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, purple - distinct colors work for most color
-          blindness types
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas use; slight asymmetry with right donut positioned higher
-          than left
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for pie/donut charts - no axes needed
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom with clear color boxes and labels
+        comment: CVD-safe anyplot palette; white text on colored segments provides
+          good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good dual-panel layout with connecting arrow; slight unused horizontal
+          margin on left/right edges.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A for axis labels on donut chart. Title format correct. Section
+          titles descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 for Equities. All colors from anyplot palette
+          with defensible semantic assignments. Both backgrounds correct (#FAF8F1
+          / #1A1A17).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong dual-panel donut design with connecting arrow. Semantic color
+          assignments and multi-level data representation clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All axes and grid hidden appropriately for donut chart. Subtle segment
+          edge color using PAGE_BG. Clean whitespace around panels.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Two-panel drill-down narrative is immediately clear. Connecting arrow
+          and center labels ($1.2M / $540K) create strong narrative flow from overview
+          to detail.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct donut chart visualization for portfolio allocation
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Weights correctly mapped to segment angles; categories properly color-coded
-      - id: SC-03
+        comment: Correct donut chart implementation for portfolio allocation.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has drill-down, legend, center labels; missing hover tooltips and
-          return navigation (static example)
+        comment: Both % and $ shown; drill-down as static dual panel; legend present;
+          color-coded by asset class. Interactivity not possible in plotnine.
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: true
+        comment: Main donut correctly maps portfolio weights. Detail donut proportions
+          represent equities sub-allocation but labels show portfolio-level % — minor
+          inconsistency.
       - id: SC-04
-        name: Data Range
+        name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: All data visible; weights sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows all four asset class categories with matching
-          colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: pie-portfolio-interactive · plotnine · pyplots.ai'
+        comment: Title is exact 'pie-portfolio-interactive · python · plotnine · anyplot.ai'.
+          Legend labels match asset class categories with correct colors.
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows portfolio allocation with drill-down hierarchy; could show
-          absolute values for holdings
+        comment: Shows main portfolio allocation and equities sub-breakdown with both
+          % and $K. Only equities breakdown shown (not fixed income or alternatives
+          sub-breakdowns).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Excellent realistic portfolio scenario with plausible asset classes
-          and sub-holdings
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Weights sum to 100%, $1.2M total realistic, allocation percentages
-          reasonable
+        comment: Realistic $1.2M investment portfolio with standard asset classes
+          and named equity sub-sectors. Neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 45/30/15/10 allocation is realistic for a balanced portfolio. Sub-sector
+          weights (Tech 18%, Healthcare 12%, Financials 10%, Energy 5%) are plausible
+          equity breakdown.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses function definition (create_donut_segment) violating KISS; justified
-          for complex geometry
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set
+        comment: No functions or classes. Inline geometry construction for polygon
+          arcs.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation justified
+        comment: All imported names are used in the plot construction.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean code. No fake interactivity or UI elements. Polygon geometry
+          construction is necessarily complex for donut charts in plotnine.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: 'Good use of plotnine grammar: geom_polygon, geom_text, geom_segment
-          with arrow, coord_fixed, scale_fill_identity, comprehensive theme'
+        comment: Correct plotnine grammar-of-graphics approach. scale_fill_identity()
+          and coord_fixed() are well-chosen. Manual polygon construction is the only
+          option for donut charts in plotnine, limiting idiomatic score.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_segment with arrow() parameter (plotnine-specific), scale_fill_identity()
+          for pre-specified colors, coord_fixed() for aspect control.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - patches
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
