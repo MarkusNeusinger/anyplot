@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' hexbin-map-geographic: Hexagonal Binning Map
 #' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 89/100 | Created: 2026-05-27
 
 library(ggplot2)
 library(dplyr)
