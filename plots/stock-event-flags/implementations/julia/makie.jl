@@ -98,8 +98,17 @@ ax = Axis(fig[1, 1];
     xticks            = (month_centers, month_labels),
 )
 
-# Stock price line (neutral baseline)
-lines!(ax, 1:n_days, prices; color = INK_SOFT, linewidth = 2.0)
+# Earnings blackout windows (±5 trading days around each quarterly announcement)
+for (day, etype, _) in events
+    if etype == "earnings"
+        poly!(ax, Rect2f(day - 5.0, y_bot, 10.0, y_top - y_bot);
+              color       = RGBAf(COLOR_EARNINGS.r, COLOR_EARNINGS.g, COLOR_EARNINGS.b, 0.07),
+              strokewidth = 0)
+    end
+end
+
+# Stock price line (neutral baseline, receded behind event flags)
+lines!(ax, 1:n_days, prices; color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.8), linewidth = 1.5)
 
 # Event flags: dashed connector + price dot + flag marker + label
 for (i, (day, etype, label)) in enumerate(events)
@@ -114,7 +123,7 @@ for (i, (day, etype, label)) in enumerate(events)
     text!(ax, label;
           position = (Float64(day), flag_y + 0.04 * p_range),
           align    = (:center, :bottom),
-          fontsize = 10,
+          fontsize = 11,
           color    = INK)
 end
 
