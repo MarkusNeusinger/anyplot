@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:15:22Z'
-updated: '2026-05-27T22:59:26Z'
+updated: '2026-05-27T23:08:48Z'
 generated_by: claude-sonnet
 workflow_run: 26543055533
 issue: 3749
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - 'Full theme adaptation: all chrome tokens (background, text, grid, legend box)
-    correctly flip between light (#FAF8F1) and dark (#1A1A17) surfaces'
-  - 'Price line correctly uses brand green #009E73 at position 1; event types use
-    canonical palette positions 2-5 in order'
-  - Redundant visual encoding (color + shape) for event types ensures CVD accessibility
-  - Alternating above/below flag placement is a well-considered design decision that
-    prevents label clutter
-  - Clean GBM-based synthetic data with realistic corporate action events across a
-    plausible price trajectory
-  - Both HTML and PNG artifacts saved per Bokeh requirements
+  - 'Full spec compliance: all 4 event types, all required visual elements (dashed
+    connectors, colored markers, flag labels, hover tooltips), realistic financial
+    data'
+  - 'Excellent palette and theme compliance — identical data colors across light/dark,
+    fully adaptive chrome tokens, correct backgrounds (#FAF8F1 light / #1A1A17 dark)'
+  - Visual hierarchy between major (earnings, split) and minor (dividend, news) events
+    via both marker size (28px vs 22px) and offset distance (0.20 vs 0.13)
+  - HoverTool with ColumnDataSource field binding is the correct idiomatic Bokeh approach
+    for interactive event details
+  - Reproducible GBM price generation with realistic parameters (np.random.seed(42),
+    daily vol=1.8%), bdate_range excludes weekends correctly
   weaknesses:
-  - 'Missing HoverTool: spec explicitly requires hover/click interactions to reveal
-    full event details; Bokeh''s HoverTool with a custom tooltip template (@label,
-    @event_type) would satisfy this directly and is a flagship library feature'
-  - '4-sided plot border: outline_line_color=INK_SOFT creates a visible box around
-    the chart; setting outline_line_color=None and keeping only left/bottom axis lines
-    (L-shaped frame) would significantly improve visual refinement per style guide'
-  - Blue event labels (#4467A3) on dark background have lower contrast than other
-    event label colors; slight concern for accessibility at mobile-scaled sizes
-  - OHLC candlestick display is not used despite the spec providing open/high/low
-    fields; adding candlesticks would improve feature coverage and better demonstrate
-    the stock chart plot type
+  - 'DE-02: X-grid lines present but unnecessary for a financial time-series chart
+    — convention is y-axis horizontal guides only; fix with p.xgrid.grid_line_color
+    = None'
+  - 'DE-01: Legend glyph icon size vs. 34pt text creates visual imbalance — default
+    small Bokeh glyphs look underwhelming paired with large label text; fix by increasing
+    glyph_width/glyph_height on the legend'
+  - 'DE-03: Highlighted background shading for major event periods (earnings blackout
+    windows or colored spans around high-impact events) would strengthen the data
+    storytelling as noted in the spec'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "stock-event-flags · python · bokeh · anyplot.ai" in dark #1A1A17, bold and clearly readable. Y-axis label "Price (USD)" and X-axis label "Date" in dark ink. Tick labels in soft dark #4A4A44. Grid lines subtle (alpha=0.15). Legend box in elevated #FFFDF6 with dark soft text.
-      Data: Brand-green (#009E73) price line tracing 180 days (Jan–Sep 2024). Seven event markers in palette positions 2–5: lavender triangles (Earnings), blue circles (Dividend), matte-red diamonds (News/Partnership), ochre square (Split). Bold colored event labels at 26pt match their event type color. Dashed vertical connector lines in event color link markers to price level.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "stock-event-flags · python · bokeh · anyplot.ai" in dark ink (#1A1A17) at top — fully readable. Axis labels "Date" (x) and "Price (USD)" (y) in dark ink, tick labels in secondary ink (#4A4A44). Legend box with elevated fill (#FFFDF6) and border.
+      Data: Price line in brand green (#009E73). Event markers: lavender triangle (Earnings), blue circle (Dividend), ochre square (Split), matte red diamond (News). Dashed connector lines match marker colors. Event labels bold in matching colors, alternating above/below price line.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title in near-white #F0EFE8, clearly readable. Axis labels in near-white. Tick labels in soft light #B8B7B0. Grid lines subtle. Legend box in elevated dark #242420 with soft-light text. No dark-on-dark failures.
-      Data: All data colors identical to light render — brand-green price line, same lavender/blue/red/ochre event markers and labels. Blue (#4467A3) event labels (Dividend) have slightly lower luminance contrast on dark background but remain legible at 26pt bold.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light ink (#F0EFE8) — clearly readable. Axis labels in same light ink. Tick labels in secondary dark-theme ink (#B8B7B0). Legend box with elevated dark fill (#242420).
+      Data: Price line in same brand green (#009E73) — identical to light render. All event marker colors (lavender, blue, ochre, matte red) are identical to light render — only chrome flipped.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected. Brand green remains clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,77 +59,78 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 26pt event labels). Both themes readable. Minor: blue (#4467A3) event
-          labels have lower luminance contrast on dark background.'
+          ticks/legend, 26pt event labels). Both themes fully readable. Minor: event
+          labels intentionally smaller — appropriate hierarchy.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating above/below flag placement cleanly separates all event
-          markers and labels.
+        comment: Alternating up/down flag placement prevents label overlap. All labels
+          and price line coexist cleanly.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line (line_width=4) and markers (size 20-26) are prominent
-          and well-sized.
+        comment: Price line width=4, markers 22-28px, dashed connectors width=3. All
+          elements clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette with redundant shape encoding per event
-          type.
+        comment: Anyplot palette with redundant shape encoding (triangle/circle/square/diamond).
+          CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas; min_border settings give generous margins; no overflow
-          or clipping.
+        comment: 3200x1800 canvas, appropriate min_border reservations, balanced margins,
+          no content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price (USD) with units; title correctly formatted.
+        comment: 'X: Date, Y: Price (USD) with units. Title in correct spec format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Price line = #009E73; event types use palette positions 2-5; backgrounds
-          #FAF8F1/#1A1A17; both renders theme-correct.'
+        comment: 'Price line #009E73 (position 1). Events use positions 2-5. Backgrounds
+          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with proper palette and alternating flag positions.
-          Feels like a carefully configured default rather than a distinctive visual
-          identity.
+        passed: true
+        comment: 'Above generic defaults: major/minor event hierarchy via offset and
+          marker size, bold colored labels, outline removed. Not publication-ready
+          — legend glyph icons appear small vs 34pt text.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (alpha=0.15) and generous min_border margins. Loses points
-          for 4-sided border (outline_line_color=INK_SOFT) instead of L-shaped frame.
+        passed: true
+        comment: Plot outline removed, grid at 15% alpha, generous min_border, legend
+          styled. X-grid lines should be suppressed for financial chart convention.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Event flags with colored labels tell a clear story. Missing stronger
-          visual hierarchy to differentiate event significance.
+        passed: true
+        comment: Color-coded event types, alternating flag positions, larger markers
+          for high-impact events. Background shading for major event periods would
+          strengthen the story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,54 +138,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stock chart with flag-style event markers.
+        comment: Correct stock chart with flag-style event markers, price line, connector
+          lines, per-type coloring.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Vertical dashed connectors, distinct icons/colors, event labels present.
-          Missing HoverTool for interactive event detail display.
+        passed: true
+        comment: Alternating heights, distinct icons/colors per type, dashed connector
+          lines, HoverTool for interactive detail.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, close price on y-axis, all 180 days and 7 events
-          visible.
+        comment: 'X: trading dates (bdate_range), Y: close prices USD. All 180 days
+          and 7 events mapped correctly.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is stock-event-flags · python · bokeh · anyplot.ai. Legend
-          lists all 5 series correctly.
+        comment: 'Title exactly matches required format. Legend: Close Price, Earnings,
+          Dividend, News, Split.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: '4 distinct event categories, 7 events, above/below placement shown.
-          Minor: OHLC candlestick display not used despite spec providing open/high/low
-          fields.'
+        comment: All 4 event types demonstrated, multiple instances of recurring types,
+          realistic seasonal pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '2024 tech stock with realistic corporate actions: quarterly earnings,
-          dividends, 2:1 split, product launch, partnership. Neutral content.'
+        comment: Technology company stock, quarterly earnings, growing dividends ($0.50→$0.55),
+          product launch, partnership, 2:1 split. Neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 180 trading days (within 60-250 range), 7 events (within 3-15 range),
-          $120-$165 plausible for mid-cap tech.
+        comment: GBM daily vol=1.8%, starting $150, bdate_range excludes weekends.
+          Dividend amounts plausible for mid-cap tech.
     code_quality:
       score: 10
       max: 10
@@ -195,62 +195,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: tokens → data → figure → price line → event loop
-          → legend → save.'
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before GBM simulation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Event loop is clean. GBM data generation is idiomatic.
+        comment: Clean, Pythonic. CDP screenshot follows canonical bokeh.md pattern.
+          Per-event ColumnDataSource enables HoverTool binding.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium CDP screenshot.
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png. Current API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource per-event for HoverTool binding, segment glyphs,
+          Label annotations, LegendItem composition — all idiomatic Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, line, scatter, segment, Label, Legend,
-          LegendItem, output_file, save — all idiomatic. Missing HoverTool.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: HTML artifact (Bokeh signature output), segment renderer, Label model,
-          LegendItem construction. Would score higher with HoverTool.
-  verdict: REJECTED
+        comment: HoverTool with multi-field @-variable tooltips, HTML interactive
+          artifact alongside PNG, CDP screenshot. No Bokeh callbacks or server-side
+          interactions.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
-  - custom-legend
+  - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
