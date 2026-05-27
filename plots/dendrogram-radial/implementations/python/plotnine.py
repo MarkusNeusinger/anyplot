@@ -38,7 +38,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: species morphological traits — 3 well-separated clades
 np.random.seed(42)
@@ -59,7 +59,7 @@ leaves_order = dend["leaves"]
 # Cluster assignment (3 clades)
 cluster_assign = fcluster(Z, 3, criterion="maxclust")
 clade_names = {1: "Clade I", 2: "Clade II", 3: "Clade III"}
-clade_colors = {"Clade I": OKABE_ITO[0], "Clade II": OKABE_ITO[1], "Clade III": OKABE_ITO[2]}
+clade_colors = {"Clade I": IMPRINT[0], "Clade II": IMPRINT[1], "Clade III": IMPRINT[2]}
 
 # Radial coordinate transforms:
 #   x position → angle (θ), evenly around the circle

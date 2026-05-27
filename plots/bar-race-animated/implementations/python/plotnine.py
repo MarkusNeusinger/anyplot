@@ -37,12 +37,12 @@ NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 PALETTE = [
     "#009E73",  # TechCorp - bluish green
-    "#D55E00",  # DataFlow - vermillion
-    "#0072B2",  # CloudBase - blue
-    "#CC79A7",  # NetSys - reddish purple
-    "#E69F00",  # CodeLab - orange
-    "#56B4E9",  # AppStream - sky blue
-    "#F0E442",  # ByteWorks - yellow
+    "#C475FD",  # DataFlow - vermillion
+    "#4467A3",  # CloudBase - blue
+    "#BD8233",  # NetSys - reddish purple
+    "#AE3030",  # CodeLab - orange
+    "#2ABCCD",  # AppStream - sky blue
+    "#954477",  # ByteWorks - yellow
     NEUTRAL,  # DigiCore - adaptive neutral
 ]
 

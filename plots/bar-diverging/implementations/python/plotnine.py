@@ -75,7 +75,7 @@ plot = (
     + geom_bar(stat="identity", width=0.7)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8)
     + coord_flip()
-    + scale_fill_manual(values={"Positive": "#009E73", "Negative": "#D55E00"})
+    + scale_fill_manual(values={"Positive": "#009E73", "Negative": "#AE3030"})
     + labs(
         x="Product Category",
         y="Net Satisfaction Score (%)",

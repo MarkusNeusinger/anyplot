@@ -37,14 +37,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for categorical data
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # Brand green - first series
-    "#D55E00",  # Vermillion
-    "#0072B2",  # Blue
-    "#CC79A7",  # Reddish purple
-    "#E69F00",  # Orange
-    "#56B4E9",  # Sky blue
-    "#F0E442",  # Yellow
+    "#C475FD",  # Vermillion
+    "#4467A3",  # Blue
+    "#BD8233",  # Reddish purple
+    "#AE3030",  # Orange
+    "#2ABCCD",  # Sky blue
+    "#954477",  # Yellow
 ]
 
 # Data - Customer journey data with multiple categorical dimensions
@@ -103,8 +103,8 @@ dimensions = [
 
 # Color by outcome - using Okabe-Ito palette
 outcome_colors = {
-    "Purchased": OKABE_ITO[0],  # Brand green
-    "Abandoned": OKABE_ITO[2],  # Blue
+    "Purchased": IMPRINT[0],  # Brand green
+    "Abandoned": IMPRINT[2],  # Blue
 }
 
 # Layout parameters

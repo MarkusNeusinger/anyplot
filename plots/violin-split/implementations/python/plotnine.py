@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73 (brand)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Employee satisfaction scores before and after training program
 np.random.seed(42)
@@ -69,7 +69,7 @@ plot = (
     ggplot(df, aes(x="category", y="value", fill="split_group"))
     + geom_violin(style="left-right", alpha=0.8, size=0.8, scale="width", trim=True)
     + geom_boxplot(width=0.15, alpha=0.9, outlier_alpha=0.5, outlier_size=2, size=0.6, position="identity")
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(x="Department", y="Satisfaction Score (0-100)", fill="Period", title="violin-split · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

@@ -32,10 +32,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # Brand green (normal points)
-    "#D55E00",  # Vermillion (outliers)
-    "#0072B2",  # Blue (LOWESS line)
+    "#C475FD",  # Vermillion (outliers)
+    "#4467A3",  # Blue (LOWESS line)
 ]
 
 # Data - Generate realistic regression data with better labels
@@ -92,8 +92,8 @@ plot = (
     + geom_hline(yintercept=2 * std_resid, color=INK_SOFT, size=0.8, linetype="dashed", alpha=0.5)
     + geom_hline(yintercept=-2 * std_resid, color=INK_SOFT, size=0.8, linetype="dashed", alpha=0.5)
     + geom_point(size=4, alpha=0.7)
-    + geom_smooth(aes(group=1), method="lowess", color=OKABE_ITO[2], size=1.5, se=False, span=0.5)
-    + scale_color_manual(values={"Normal": OKABE_ITO[0], "Outlier": OKABE_ITO[1]}, name="Point Type")
+    + geom_smooth(aes(group=1), method="lowess", color=IMPRINT[2], size=1.5, se=False, span=0.5)
+    + scale_color_manual(values={"Normal": IMPRINT[0], "Outlier": IMPRINT[1]}, name="Point Type")
     + labs(x="Fitted Values ($)", y="Residuals ($)", title="residual-plot · plotnine · anyplot.ai")
     + theme_minimal()
     + anyplot_theme

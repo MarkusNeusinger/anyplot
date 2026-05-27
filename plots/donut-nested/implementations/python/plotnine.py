@@ -48,12 +48,12 @@ data = {
     "Sales": [("Commissions", 220), ("Travel", 110), ("Tools", 50)],
 }
 
-# Color families - first parent uses Okabe-Ito brand (#009E73), then positions 2-4
+# imprint families - parent + two lighter tonal shades for the outer ring
 color_families = {
-    "Engineering": ("#009E73", ["#009E73", "#2FA88A", "#59B5A1"]),  # Okabe-Ito pos 1
-    "Marketing": ("#D55E00", ["#D55E00", "#DC7925", "#E5934A"]),  # Okabe-Ito pos 2
-    "Operations": ("#0072B2", ["#0072B2", "#3589C8", "#5BA0DE"]),  # Okabe-Ito pos 3
-    "Sales": ("#CC79A7", ["#CC79A7", "#D98FB8", "#E6A5C9"]),  # Okabe-Ito pos 4
+    "Engineering": ("#009E73", ["#009E73", "#2DAE89", "#5BBFA0"]),  # imprint green
+    "Marketing": ("#C475FD", ["#C475FD", "#D195FE", "#DEB5FE"]),  # imprint lavender
+    "Operations": ("#4467A3", ["#4467A3", "#6883B6", "#8C9FC9"]),  # imprint blue
+    "Sales": ("#BD8233", ["#BD8233", "#CC9852", "#DBAE71"]),  # imprint ochre
 }
 
 # Calculate totals for each parent

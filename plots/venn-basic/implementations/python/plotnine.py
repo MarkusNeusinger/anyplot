@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first three colors for three-set Venn
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Three overlapping sets representing skills in a tech team
 # Set A: Python developers (100 people)
@@ -129,7 +129,7 @@ set_name_labels = [
 set_name_df = pd.DataFrame(set_name_labels)
 
 # Create color mapping dict for sets
-color_map = {"A": OKABE_ITO[0], "B": OKABE_ITO[1], "C": OKABE_ITO[2]}
+color_map = {"A": IMPRINT[0], "B": IMPRINT[1], "C": IMPRINT[2]}
 
 # Plot
 plot = (

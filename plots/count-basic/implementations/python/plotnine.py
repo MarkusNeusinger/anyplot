@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Netflix user ratings from a streaming dataset
 ratings = ["5 Stars"] * 285 + ["4 Stars"] * 198 + ["3 Stars"] * 142 + ["2 Stars"] * 89 + ["1 Star"] * 56
@@ -49,7 +49,7 @@ plot = (
     ggplot(df, aes(x="Rating", fill="Rating"))
     + geom_bar(width=0.7, show_legend=False)
     + geom_text(aes(x="Rating", y="Count", label="Count"), data=count_df, size=14, va="bottom", nudge_y=8)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(x="Rating", y="Number of Responses", title="count-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

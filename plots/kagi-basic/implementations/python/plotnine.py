@@ -32,9 +32,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette (green for yang/bullish, orange-red for yin/bearish)
+# imprint semantic anchors (green for yang/bullish, red for yin/bearish)
 YANG_COLOR = "#009E73"
-YIN_COLOR = "#D55E00"
+YIN_COLOR = "#AE3030"
 
 # Generate synthetic stock price data
 np.random.seed(42)

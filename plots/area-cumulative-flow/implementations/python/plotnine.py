@@ -39,7 +39,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data
 np.random.seed(42)
@@ -85,7 +85,7 @@ df["stage"] = pd.Categorical(df["stage"], categories=stage_order, ordered=True)
 
 # Colors assigned to visual layers (bottom → top): Done, Testing, Development, Analysis, Backlog
 visual_order = ["Done", "Testing", "Development", "Analysis", "Backlog"]
-stage_colors = dict(zip(visual_order, OKABE_ITO, strict=True))
+stage_colors = dict(zip(visual_order, IMPRINT, strict=True))
 
 # Annotation: pinpoint the Development bottleneck at day 55 (band midpoint in stacked space)
 idx = 55

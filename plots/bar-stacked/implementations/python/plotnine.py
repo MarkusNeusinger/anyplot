@@ -38,7 +38,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Quarterly sales by product category
 data = {
@@ -58,7 +58,7 @@ plot = (
     ggplot(df, aes(x="Quarter", y="Sales", fill="Category"))
     + geom_bar(stat="identity", position="stack", width=0.7)
     + geom_text(aes(label="Sales"), position=position_stack(vjust=0.5), size=12, color="white", fontweight="bold")
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(title="bar-stacked · plotnine · anyplot.ai", x="Quarter", y="Sales (thousands USD)", fill="Category")
     + theme_minimal()
     + theme(

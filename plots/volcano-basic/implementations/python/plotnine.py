@@ -89,9 +89,9 @@ df_labels = pd.concat([df_up, df_down])
 
 # Okabe-Ito palette (blue for down, gray for not significant, orange for up)
 color_map = {
-    "Down-regulated": "#0072B2",  # Okabe-Ito blue
+    "Down-regulated": "#4467A3",  # Okabe-Ito blue
     "Not significant": "#888888",  # neutral gray
-    "Up-regulated": "#E69F00",  # Okabe-Ito orange
+    "Up-regulated": "#AE3030",  # Okabe-Ito orange
 }
 
 # Create volcano plot

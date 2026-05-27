@@ -47,7 +47,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Wind measurements with prevailing directions
 np.random.seed(42)
@@ -121,9 +121,9 @@ radius_label_df = pd.DataFrame(radius_labels)
 
 # Color palette for time of day (Okabe-Ito colors)
 colors = {
-    "Morning": OKABE_ITO[0],  # #009E73 brand green
-    "Afternoon": OKABE_ITO[1],  # #D55E00 vermillion
-    "Evening": OKABE_ITO[2],  # #0072B2 blue
+    "Morning": IMPRINT[0],  # #009E73 brand green
+    "Afternoon": IMPRINT[1],  # #C475FD vermillion
+    "Evening": IMPRINT[2],  # #4467A3 blue
 }
 
 # Plot

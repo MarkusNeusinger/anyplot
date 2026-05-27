@@ -31,8 +31,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
-COLOR_2 = "#D55E00"
-COLOR_3 = "#0072B2"
+COLOR_2 = "#C475FD"
+COLOR_3 = "#4467A3"
 
 np.random.seed(42)
 

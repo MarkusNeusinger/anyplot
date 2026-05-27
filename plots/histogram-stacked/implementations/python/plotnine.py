@@ -29,7 +29,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Plant growth measurements across different soil types
 np.random.seed(42)
@@ -67,7 +67,7 @@ plot = (
     ggplot(df, aes(x="height", fill="soil_type"))
     + geom_histogram(bins=20, position="stack", alpha=0.85, color=PAGE_BG, size=0.4)
     + labs(x="Plant Height (cm)", y="Frequency", title="histogram-stacked · plotnine · anyplot.ai", fill="Soil Type")
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + theme_minimal()
     + anyplot_theme
 )

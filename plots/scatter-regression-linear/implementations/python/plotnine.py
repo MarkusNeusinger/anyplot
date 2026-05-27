@@ -35,7 +35,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First categorical series
-ACCENT = "#D55E00"  # Second series (for regression line)
+ACCENT = "#C475FD"  # Second series (for regression line)
 
 # Data - Study hours vs exam score relationship
 np.random.seed(42)

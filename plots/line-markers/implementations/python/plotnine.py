@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data: Monthly temperature readings from two weather stations
 np.random.seed(42)
@@ -77,7 +77,7 @@ plot = (
     ggplot(df, aes(x="Month_Num", y="Temperature", color="Station", shape="Station"))
     + geom_line(size=1.5, alpha=0.85)
     + geom_point(size=5, alpha=0.9)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + scale_shape_manual(values=["o", "s"])
     + labs(
         x="Month",

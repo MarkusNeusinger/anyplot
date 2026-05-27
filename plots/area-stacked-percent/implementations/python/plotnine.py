@@ -35,7 +35,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first position is ALWAYS #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Market share evolution with more dramatic proportion shifts
 years = list(range(2015, 2025))
@@ -70,7 +70,7 @@ df["Category"] = pd.Categorical(
 plot = (
     ggplot(df, aes(x="Year", y="Percent", fill="Category"))
     + geom_area(position="stack", alpha=0.85)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + scale_x_continuous(breaks=range(2015, 2025, 2))
     + scale_y_continuous(breaks=[0, 25, 50, 75, 100], labels=["0%", "25%", "50%", "75%", "100%"])
     + labs(

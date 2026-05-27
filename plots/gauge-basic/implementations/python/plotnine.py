@@ -39,10 +39,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito zone colors (colorblind-safe red/yellow/green)
-ZONE_BAD = "#D55E00"  # vermillion
-ZONE_WARN = "#E69F00"  # orange
-ZONE_GOOD = "#009E73"  # bluish green (brand)
+# imprint semantic anchors (red / amber / green traffic-light)
+ZONE_BAD = "#AE3030"  # matte red
+ZONE_WARN = "#DDCC77"  # amber
+ZONE_GOOD = "#009E73"  # brand green
 
 # Data
 value = 72

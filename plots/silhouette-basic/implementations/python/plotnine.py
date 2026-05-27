@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Clustering iris dataset into 3 groups
 np.random.seed(42)
@@ -107,7 +107,7 @@ plot = (
     + geom_vline(xintercept=avg_silhouette, color=INK_SOFT, linetype="dashed", size=1.2, alpha=0.6)
     + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=12, ha="right", color=INK_SOFT)
     + geom_text(aes(x="x", y="y", label="label"), data=avg_label_df, size=11, ha="left", color=INK_SOFT)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + labs(
         x="Silhouette Coefficient",
         y="Sample Index (sorted within cluster)",

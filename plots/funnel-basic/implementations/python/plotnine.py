@@ -35,10 +35,11 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Okabe-Ito palette — first stage is brand green (#009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
-# Light orange (#E69F00) needs dark text for contrast; others use white.
-TEXT_ON_FILL = ["white", "white", "white", "white", INK]
+# imprint palette — first stage is brand green (#009E73)
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Slot 1 (lavender) is the lightest hue and needs dark text; the others are
+# saturated/dark enough for white.
+TEXT_ON_FILL = ["white", INK, "white", "white", "white"]
 
 # Data — sales funnel example from specification
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
@@ -90,7 +91,7 @@ plot = (
         fontweight="bold",
         inherit_aes=False,
     )
-    + scale_fill_manual(values=OKABE_ITO[:n_stages], guide=None)
+    + scale_fill_manual(values=IMPRINT[:n_stages], guide=None)
     + scale_color_identity()
     + scale_y_reverse()
     + labs(title="funnel-basic · plotnine · anyplot.ai", x="", y="")

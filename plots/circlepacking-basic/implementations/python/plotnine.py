@@ -36,7 +36,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - for hierarchy levels
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Investment portfolio hierarchy
 # Format: (id, label, parent_id, value)
@@ -161,7 +161,7 @@ plot = (
     + geom_text(
         df_labels, aes(x="x", y="y", label="label", size="text_size"), color=INK, fontweight="bold", show_legend=False
     )
-    + scale_fill_manual(values=OKABE_ITO, labels=["Root", "Asset Classes", "Holdings"], name="Hierarchy Level")
+    + scale_fill_manual(values=IMPRINT, labels=["Root", "Asset Classes", "Holdings"], name="Hierarchy Level")
     + scale_size_identity()
     + coord_fixed(ratio=1)
     + labs(title="circlepacking-basic · plotnine · anyplot.ai")

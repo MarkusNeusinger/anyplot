@@ -302,7 +302,7 @@ plot = (
         aes(x="lon", y="lat", group="state", fill="value"), data=df_states, color=PAGE_BG, size=1.5, alpha=0.92
     )
     + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_top3, color="#99B314", fill="none", size=2.5)
-    + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_bottom3, color="#B71D27", fill="none", size=2.5)
+    + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_bottom3, color="#AE3030", fill="none", size=2.5)
     + geom_text(
         aes(x="lon", y="lat", label="label"),
         data=df_labels,
@@ -328,7 +328,7 @@ plot = (
     + coord_fixed(ratio=1.3)
     + annotate("text", x=-125, y=50, label=breadcrumb_text, size=9, color=INK, fontweight="bold", ha="left")
     + annotate("text", x=-74, y=25.5, label="▲ Top 3", size=8, color="#99B314", ha="right", fontweight="bold")
-    + annotate("text", x=-74, y=23.5, label="▼ Bottom 3", size=8, color="#B71D27", ha="right", fontweight="bold")
+    + annotate("text", x=-74, y=23.5, label="▼ Bottom 3", size=8, color="#AE3030", ha="right", fontweight="bold")
     + labs(title="map-drilldown-geographic · python · plotnine · anyplot.ai", x="Longitude", y="Latitude")
     + theme(
         figure_size=(8, 4.5),

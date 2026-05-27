@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Iris dataset for multivariate analysis
 iris = load_iris()
@@ -103,8 +103,8 @@ plot = (
     + geom_point(data=scatter_df, mapping=aes(y="y", color="Species"), size=3.5, alpha=0.7)
     + geom_ribbon(data=density_df, mapping=aes(ymin="ymin", ymax="ymax", fill="Species"), alpha=0.5)
     + facet_grid("var_y ~ var_x", scales="free")
-    + scale_color_manual(values=OKABE_ITO)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
+    + scale_fill_manual(values=IMPRINT)
     + labs(title="scatter-matrix-interactive · python · plotnine · anyplot.ai", x="", y="")
     + theme_minimal()
     + theme(

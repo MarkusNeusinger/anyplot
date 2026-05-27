@@ -191,11 +191,11 @@ pressure_labels = [str(p) for p in pressure_breaks]
 LEGEND_ORDER = ["Temperature", "Dewpoint", "Isotherms (10°C)", "Dry Adiabats", "Moist Adiabats", "Mixing Ratios"]
 LINE_COLORS = {
     "Temperature": "#009E73",
-    "Dewpoint": "#D55E00",
-    "Isotherms (10°C)": "#0072B2",
-    "Dry Adiabats": "#CC79A7",
-    "Moist Adiabats": "#E69F00",
-    "Mixing Ratios": "#56B4E9",
+    "Dewpoint": "#C475FD",
+    "Isotherms (10°C)": "#4467A3",
+    "Dry Adiabats": "#BD8233",
+    "Moist Adiabats": "#AE3030",
+    "Mixing Ratios": "#2ABCCD",
 }
 LINE_STYLES = {
     "Temperature": "solid",
@@ -249,7 +249,7 @@ plot = (
         x=skew_transform(dewpoint_profile[np.argmin(np.abs(pressure_levels - 600))], 600) - 6,
         y=600,
         label="Td",
-        color="#D55E00",
+        color="#C475FD",
         size=12,
         fontweight="bold",
     )

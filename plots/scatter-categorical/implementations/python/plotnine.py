@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (canonical order)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -69,7 +69,7 @@ df = pd.DataFrame(
 plot = (
     ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (cm/week)", color="Plant Species"))
     + geom_point(size=4, alpha=0.7)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + labs(
         x="Temperature (°C)",
         y="Growth Rate (cm/week)",

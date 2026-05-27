@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data generation
 np.random.seed(42)
@@ -176,15 +176,15 @@ plot = (
 )
 
 if median_a is not None:
-    plot = plot + geom_vline(xintercept=median_a, linetype="dashed", color=OKABE_ITO[0], alpha=0.4, size=0.8)
+    plot = plot + geom_vline(xintercept=median_a, linetype="dashed", color=IMPRINT[0], alpha=0.4, size=0.8)
 
 if median_b is not None:
-    plot = plot + geom_vline(xintercept=median_b, linetype="dashed", color=OKABE_ITO[1], alpha=0.4, size=0.8)
+    plot = plot + geom_vline(xintercept=median_b, linetype="dashed", color=IMPRINT[1], alpha=0.4, size=0.8)
 
 plot = (
     plot
-    + scale_color_manual(values=OKABE_ITO)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
+    + scale_fill_manual(values=IMPRINT)
     + scale_y_continuous(limits=(0, 1.05), breaks=[0, 0.25, 0.5, 0.75, 1.0], labels=["0%", "25%", "50%", "75%", "100%"])
     + scale_x_continuous(limits=(0, None))
     + labs(

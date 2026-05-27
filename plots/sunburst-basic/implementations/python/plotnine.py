@@ -38,7 +38,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Slightly lighter than PAGE_BG in dark mode so ring boundaries remain visible
 RING_SEP = PAGE_BG if THEME == "light" else "#2E2D2B"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: company annual budget by department → team ($M)
 hierarchy = {
@@ -63,7 +63,7 @@ for idx, (dept, teams) in enumerate(hierarchy.items()):
     pct = round(dept_total / total * 100)
     a0 = 2 * np.pi * cumsum / total - np.pi / 2
     a1 = 2 * np.pi * (cumsum + dept_total) / total - np.pi / 2
-    color = OKABE_ITO[idx]
+    color = IMPRINT[idx]
 
     # L1 arc polygon: inner arc → outer arc (reversed) → closed shape
     t = np.linspace(a0, a1, N_PTS)
