@@ -49,6 +49,8 @@ plot = plot + theme(
 + geom_line(size=1.0)    # line width
 ```
 
+> `geom_text(size=N)` is in mm (× 2.845 ≈ pt), unlike `element_text(size=N)` which is pt. Annotation `size` should be ~3–5, never the same numeric scale as the theme.
+
 See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Save (PNG + HTML)
