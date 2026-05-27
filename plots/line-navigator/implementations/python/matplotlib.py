@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-27
@@ -38,7 +38,7 @@ selected_end = 520
 
 fig, (ax_main, ax_nav) = plt.subplots(2, 1, figsize=(8, 4.5), dpi=400, height_ratios=[4, 1], sharex=False)
 fig.patch.set_facecolor(PAGE_BG)
-fig.subplots_adjust(left=0.08, right=0.97, top=0.91, bottom=0.12, hspace=0.38)
+fig.subplots_adjust(left=0.08, right=0.97, top=0.91, bottom=0.12, hspace=0.30)
 
 # --- Main chart ---
 ax_main.set_facecolor(PAGE_BG)
@@ -77,7 +77,7 @@ ax_main.annotate(
 # --- Navigator chart ---
 ax_nav.set_facecolor(PAGE_BG)
 ax_nav.plot(dates, values, linewidth=1.0, color=BRAND, alpha=0.7)
-ax_nav.fill_between(dates, values, alpha=0.1, color=BRAND)
+ax_nav.fill_between(dates, values, alpha=0.13, color=BRAND)
 
 ax_nav.set_xlabel("Date", fontsize=10, color=INK)
 ax_nav.tick_params(axis="both", labelsize=7, colors=INK_SOFT, labelcolor=INK_SOFT)
@@ -119,7 +119,7 @@ ax_nav.annotate(
     "Navigator",
     xy=(0.01, 0.90),
     xycoords="axes fraction",
-    fontsize=7,
+    fontsize=8,
     ha="left",
     va="top",
     fontweight="bold",
