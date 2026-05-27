@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: highcharts unknown | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-27
+Quality: 89/100 | Updated: 2026-05-27
 """
 
 import json
