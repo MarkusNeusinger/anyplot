@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:09:35Z'
-updated: '2026-05-27T17:30:00Z'
+updated: '2026-05-27T17:49:11Z'
 generated_by: claude-sonnet
 workflow_run: 26526820203
 issue: 3754
@@ -15,63 +15,43 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 quality_score: 89
 review:
   strengths:
-  - Excellent interactive Altair implementation using selection_point + transform_filter
-    for true click-to-drill-down on the outer category ring
-  - 'Perfect anyplot palette compliance: Equities=#009E73 (brand first), Fixed Income=#C475FD,
-    Alternatives=#4467A3 in canonical order'
-  - Full theme adaptation across light (#FAF8F1) and dark (#1A1A17) renders with INK/INK_SOFT
-    tokens correctly threaded to legend, title, subtitle, and center text
-  - 'Clean dual-ring donut architecture: outer ring shows category totals, inner ring
-    filters to individual holdings on selection — correct spec interpretation'
-  - Saves both plot-{THEME}.png and plot-{THEME}.html; canvas padded to exact 2400×2400
-    target with proper raise-on-overshoot guard
-  - 'Realistic financial dataset: 10 real-world holdings (Apple, Microsoft, US Treasury
-    10Y, etc.) across 3 asset classes summing to exactly 100%'
-  - Idiomatic use of alt.condition() for opacity-based selection feedback (25% for
-    unselected), center mark_text summary, and al.Tooltip with format strings
+  - Dual-ring concentric donut with full interactive drill-down using Altair selection
+    grammar — outer ring click filters inner holdings ring via transform_filter
+  - 'Perfect spec compliance across all required features: hover tooltips, click-to-drill-down
+    by asset class, return-to-overview toggle, legend, color-coded by category'
+  - Anyplot palette in canonical order (green=Equities, purple=Fixed Income, blue=Alternatives);
+    both light and dark themes render correctly with proper chrome adaptation
+  - Clean idiomatic Altair code using alt.selection_point + transform_filter linked-selection
+    pattern and alt.condition for conditional opacity — library strengths well demonstrated
+  - Realistic portfolio data with real asset names (Apple, Microsoft, US Treasury)
+    summing to exactly 100%, sensible allocation breakdown across three distinct asset
+    classes
   weaknesses:
-  - 'DE-01 (5/8): Design is well-structured but not yet publication-ready. The legend,
-    rings, and center text all use correct tokens but the overall aesthetic lacks
-    differentiation — the font is the browser default, the ring widths are uniform,
-    and there is no typographic hierarchy between the ''100%'' and ''10 Holdings''
-    lines in the center. Add a larger primary number (e.g. fontSize=28 for ''100%''
-    vs fontSize=16 for ''10 Holdings''), consider slightly varying ring widths, and
-    set a clean sans-serif via configure_text.'
-  - 'DE-02 (3/6): Visual refinement is present but minimal. The legend has a styled
-    box (ELEVATED_BG fill, INK_SOFT border) which is correct, but configure_legend()
-    is not called globally — some Altair-default legend padding and symbol sizing
-    remains. Explicitly set configure_legend(padding=12, cornerRadius=6, symbolStrokeWidth=0)
-    and configure_view(stroke=None) to eliminate the default view border and tighten
-    the legend box appearance.'
-  - 'DE-03 (3/6): The dual-ring structure provides hierarchical storytelling but no
-    focal point draws the eye. Add a subtle emphasis: use opacity=1.0 for the dominant
-    segment (Equities at 45%) in the default (unselected) state rather than treating
-    all segments equally, or add a thin arc annotation line marking the largest category
-    boundary. This immediately surfaces the insight that nearly half the portfolio
-    is in equities.'
-  - 'VQ-01 (7/8): subtitle at subtitleFontSize=11 is slightly small; at scale_factor=4
-    this renders at 44px which is readable but tight at mobile widths. Increase to
-    subtitleFontSize=12 for a safer mobile footprint.'
-  - 'VQ-03 (5/6): ring boundary stroke=PAGE_BG (#1A1A17 in dark mode) is nearly invisible
-    against dark arc segments, making the inner/outer ring border subtle in the dark
-    render. Use a slightly lighter stroke in dark mode, e.g. INK_SOFT (#B8B7B0), or
-    increase the gap between innerRadius=190 and outerRadius=195 to at least 8px.'
+  - Design Excellence is the limiting factor — the dual-ring donut is well-crafted
+    but reads as a sophisticated configured implementation rather than a truly publication-ready
+    design; no data-level annotations or callouts to guide the viewer directly to
+    insights
+  - Inner ring arc segments for 5% holdings (Municipal Bonds, Commodities) are thin
+    and may be hard to distinguish on mobile-scaled widths — consider slightly increasing
+    innerRadius or adding a minimum arc threshold
+  - 'VQ-05: The donut area occupies a modest fraction of the 2400×2400 canvas with
+    notable dead space in all four corners; expanding chart.properties(width=, height=)
+    by ~10% would improve canvas utilization'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white, fills the full 2400×2400 canvas
-      Chrome: Title "pie-portfolio-interactive · python · altair · anyplot.ai" in dark ink at top center, clearly readable. Subtitle "Click outer ring to drill into category holdings · click again to reset" in INK_SOFT, readable. Legend box (right side) with "Asset Class" header and three swatches (Equities/green, Fixed Income/purple, Alternatives/blue) on an elevated FFFDF6 background with INK_SOFT border — all labels readable.
-      Data: Dual-ring donut. Outer ring (category level): green ~45% (Equities), purple ~35% (Fixed Income), blue ~20% (Alternatives). Inner ring (individual holdings, 10 segments): same three colors subdivided. Center circle in PAGE_BG with bold dark text "100% / 10 Holdings". White/PAGE_BG strokes separate all segments.
-      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+      Background: Warm off-white matching #FAF8F1 — correct
+      Chrome: Title "pie-portfolio-interactive · python · altair · anyplot.ai" in dark (#1A1A17) text fills ~75% of width — fully readable. Subtitle "Click outer ring to drill into category holdings · click again to reset" in muted secondary color — legible. Legend box has elevated background with Asset Class title and three labeled swatches.
+      Data: Outer ring (category totals) and inner ring (individual holdings) both use the anyplot palette — green (#009E73) for Equities (largest arc ~45%), lavender (#C475FD) for Fixed Income (~35%), blue (#4467A3) for Alternatives (~20%). Center shows "100%" bold and "10 Holdings" in softer text. Ring-gap strokes are PAGE_BG (white/cream), clearly separating segments.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, fills full canvas. NOT pure black.
-      Chrome: Title in near-white F0EFE8, clearly readable against dark background. Subtitle in B8B7B0 (INK_SOFT), readable. Legend box with elevated #242420 fill and INK_SOFT border — "Asset Class" in light text, swatch labels readable.
-      Data: Same three arc colors (#009E73 green, #C475FD lavender, #4467A3 blue) are IDENTICAL to light render — only chrome flipped. Center circle is near-black #1A1A17 with bold white text "100% / 10 Holdings" — readable. Minor observation: ring boundary strokes (stroke=PAGE_BG = #1A1A17 in dark mode) blend into dark arc colors, making the inner/outer ring boundary subtly less defined than in light mode.
-      No dark-on-dark text failures observed — all labels, title, subtitle, legend text are light-colored.
-      Legibility verdict: PASS — all text elements are clearly readable against the dark background.
+      Background: Near-black matching #1A1A17 — correct
+      Chrome: Title and subtitle render in light text (INK → #F0EFE8) — clearly visible against the dark surface. Legend box has elevated dark background (#242420) with light text labels. Ring-gap strokes switch to INK_SOFT (#B8B7B0) in dark mode — correctly adapted so gaps remain visible against dark arc segments.
+      Data: Green, purple, and blue arcs are identical in hue and arrangement to the light render — only chrome flips. Center "100%" text is light and bold, "10 Holdings" in softer secondary. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text clearly readable against the near-black background; the RING_STROKE INK_SOFT adaptation is correct and visible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -79,55 +59,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title, center text, legend all readable
-          in both themes. Minor: subtitle at subtitleFontSize=11 is slightly tight
-          at mobile scale.'
+        comment: 'All font sizes explicitly set (title 16, subtitle 12, center 28+14,
+          legend 14/12). Well-proportioned and readable in both themes. Minor: subtitle
+          is compact at the canvas scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend sits outside chart area; no
-          collision between rings.
+        comment: No overlapping elements — donut chart has no axis ticks; center text
+          sits cleanly in the hole; legend floats clear of the arcs.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Arc segments clearly visible by color; minor: dark-mode ring boundary
-          stroke (stroke=PAGE_BG=#1A1A17) blends into dark arcs making inner/outer
-          ring boundary subtle.'
+        comment: Both rings clearly visible. 5% allocation arcs (Municipal Bonds,
+          Commodities) are thin in the inner ring — borderline at mobile widths.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette, 3 hues with high perceptual separation;
-          strokes add distinction.
+        comment: Three anyplot palette colors with good perceptual separation; CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400); donut fills canvas well with balanced
-          margins; legend properly positioned.
+        comment: Canvas gate passed (2400x2400). Donut occupies a reasonable area
+          but dead corner space is notable for a square canvas. Legend well placed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for donut; title in correct format; legend
-          labeled 'Asset Class' with correct category names.
+        comment: No axes (donut chart). Title in canonical format. Legend title 'Asset
+          Class' is descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Equities=#009E73 (brand green); Fixed Income=#C475FD,
-          Alternatives=#4467A3 in canonical order; backgrounds #FAF8F1/#1A1A17 correct;
-          all chrome theme-adaptive.'
+        comment: 'Equities=#009E73 (first, correct), Fixed Income=#C475FD (slot 2),
+          Alternatives=#4467A3 (slot 3). Canonical order. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome adapts correctly in both themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -135,28 +113,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default design: interactive opacity states, styled legend
-          box, dual-ring hierarchy, meaningful center text. Not yet publication-ready:
-          uniform ring widths, default browser font, no typographic hierarchy between
-          ''100%'' and ''10 Holdings''.'
+        comment: Thoughtful concentric dual-ring design with typographic center hierarchy
+          and is_dominant stroke-width emphasis. Above configured-default (4) but
+          not FiveThirtyEight publication level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: no view border (configure_view stroke=None), styled
-          legend box (ELEVATED_BG fill, INK_SOFT border), arc strokes for clean segment
-          separation. Global configure_legend() not called; some default padding/symbol
-          sizing remains.'
+        comment: No grid, no spines. Legend styled with elevated background, rounded
+          corners, symbolic stroke. Theme-adaptive ring gap strokes. Genuine refinement
+          beyond defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dual-ring hierarchy tells the portfolio composition story at two
-          levels. Interactive drill-down adds exploratory depth. No visual emphasis
-          on the dominant Equities position (45%) — all segments equal visual weight
-          by default.
+        comment: Dual-ring structure creates clear visual hierarchy — outer=asset
+          class, inner=holdings. Equities dominance (45%) immediately visible. Subtitle
+          communicates interaction model.
     spec_compliance:
       score: 15
       max: 15
@@ -166,30 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Dual-ring donut correctly implements spec requirement for pie/donut
-          chart with category grouping and drill-down.
+        comment: Dual-ring interactive donut chart — exactly the specified visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: hover tooltips (both rings), click-to-drill-down
-          (selection_point + transform_filter), color coding by asset class, legend
-          with categories, return-to-overview (empty=True resets on second click).'
+        comment: 'All spec features present: pie/donut, hover tooltips with weights,
+          click drill-down by asset class, legend, color-coding, return-to-overview
+          via toggle.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Weight correctly mapped to theta (arc angle), category to color;
-          category totals in outer ring, individual holdings in inner ring.
+        comment: Theta encodes weight correctly for both rings. Tooltips expose asset,
+          weight %, category, num_holdings.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''pie-portfolio-interactive · python · altair · anyplot.ai''
-          — correct format. Legend ''Asset Class'' with correct category labels.'
+        comment: Title is exact canonical format. Legend 'Asset Class' with correct
+          category labels.
     data_quality:
       score: 15
       max: 15
@@ -199,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both category-level (3 classes) and individual holding level
-          (10 assets) with realistic allocation distribution.
+        comment: 'All chart features covered: three asset classes, 10 holdings, two-level
+          drill-down, dominant and minor allocations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world financial assets: Apple, Microsoft, Amazon, Nvidia, US
-          Treasury 10Y, Corporate Bonds, etc. Neutral business/finance context.'
+        comment: Real security names (Apple, Microsoft, US Treasury 10Y, Gold ETF).
+          Finance/investment context is neutral and business-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights sum exactly to 100%; individual holdings 5-18% are realistic
-          portfolio allocations for a diversified fund.
+        comment: Weights sum to exactly 100%. Allocation split (45% Equities, 35%
+          Fixed Income, 20% Alternatives) is realistic for a balanced growth portfolio.
     code_quality:
       score: 10
       max: 10
@@ -224,36 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level script: tokens → data → chart components → layer
-          → properties → save. No functions or classes.'
+        comment: 'No functions or classes. Clean linear flow: imports → tokens → data
+          → charts → layer → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded and deterministic; no random elements.
+        comment: Fully deterministic static data — no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL.Image — all imports are used.
+        comment: 'All imports used: os, altair, pandas, PIL.Image.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Altair code. Real interactivity (not faked). No
-          over-engineering.
+        comment: Clean, Pythonic. Appropriate complexity for a dual-ring interactive
+          donut. PIL padding logic follows canonical altair.md pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API
-          used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API usage.
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -261,19 +234,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses alt.layer(), alt.selection_point(), transform_filter,
-          alt.condition() for conditional encoding, alt.Tooltip with format strings,
-          and alt.Title with subtitle — all idiomatic Altair/Vega-Lite patterns.
+        comment: Expertly uses alt.layer(), alt.selection_point(), transform_filter(),
+          alt.condition() for conditional encoding — all hallmark Altair patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Linked selection + declarative transform_filter is a hallmark Altair
-          capability that cannot be replicated in static libraries. The alt.condition()
-          opacity encoding is uniquely declarative. The entire interactivity model
-          is Altair-native.
-  verdict: REJECTED
+        comment: The linked selection between outer and inner ring via transform_filter(category_sel)
+          is distinctly Altair — this cross-mark interaction grammar cannot be replicated
+          easily in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -286,4 +257,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
