@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-27
@@ -21,12 +21,12 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Event type colors — anyplot palette positions 1→4 in canonical order
+# Event type colors — anyplot palette positions 0→3 in canonical order
 event_colors = {
     "Earnings": ANYPLOT_PALETTE[0],  # #009E73 brand green
-    "Dividend": ANYPLOT_PALETTE[2],  # #4467A3 blue
-    "News": ANYPLOT_PALETTE[3],  # #BD8233 ochre
-    "Split": ANYPLOT_PALETTE[1],  # #C475FD purple
+    "Dividend": ANYPLOT_PALETTE[1],  # #C475FD lavender
+    "News": ANYPLOT_PALETTE[2],  # #4467A3 blue
+    "Split": ANYPLOT_PALETTE[3],  # #BD8233 ochre
 }
 event_symbols = {"Earnings": "star", "Dividend": "diamond", "News": "triangle-up", "Split": "square"}
 
@@ -163,6 +163,8 @@ fig.update_layout(
         "rangeslider": {"visible": False},
         "gridcolor": GRID,
         "showgrid": True,
+        "showline": True,
+        "mirror": False,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
     },
@@ -172,14 +174,16 @@ fig.update_layout(
         "tickformat": "$.0f",
         "gridcolor": GRID,
         "showgrid": True,
+        "showline": True,
+        "mirror": False,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
     },
     legend={
         "yanchor": "top",
         "y": 0.99,
-        "xanchor": "left",
-        "x": 0.01,
+        "xanchor": "right",
+        "x": 0.99,
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
