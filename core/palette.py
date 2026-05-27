@@ -32,8 +32,14 @@ Layout
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 
-from matplotlib.colors import LinearSegmentedColormap
+
+# matplotlib is a heavy optional dep — import lazily inside the cmap helpers so
+# that callers who only need the hex constants (core/images.py, R/Julia helper
+# scripts, etc.) don't pay for it. Type-check imports still get the real type.
+if TYPE_CHECKING:
+    from matplotlib.colors import LinearSegmentedColormap
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -137,9 +143,10 @@ palette = SimpleNamespace(
 # Sequential + diverging cmaps
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Sequential: brand-green → blue. Endpoints picked so the warm end is the
-# brand identity and the cool end is the deepest blue in the palette.
-imprint_seq: LinearSegmentedColormap = LinearSegmentedColormap.from_list("imprint_seq", [GREEN, BLUE])
+# Sequential + diverging cmaps. Constructed lazily on attribute access via
+# ``__getattr__`` below — keeps ``import core.palette`` matplotlib-free for
+# callers that only need the hex constants. Public names preserved:
+#   core.palette.imprint_seq, .imprint_div_light, .imprint_div_dark
 
 
 def diverging(theme: str = "light") -> LinearSegmentedColormap:
@@ -154,12 +161,30 @@ def diverging(theme: str = "light") -> LinearSegmentedColormap:
         On light bg, midpoint = warm cream #FAF8F1; on dark bg, midpoint
         = warm near-black #1A1A17.
     """
+    from matplotlib.colors import LinearSegmentedColormap
+
     midpoint = "#FAF8F1" if theme == "light" else "#1A1A17"
     return LinearSegmentedColormap.from_list(f"imprint_div_{theme}", [RED, midpoint, BLUE])
 
 
-imprint_div_light: LinearSegmentedColormap = diverging("light")
-imprint_div_dark: LinearSegmentedColormap = diverging("dark")
+def __getattr__(name: str):
+    # Lazy-construct the cmap module attributes on first access so importing
+    # this module does not require matplotlib.
+    if name == "imprint_seq":
+        from matplotlib.colors import LinearSegmentedColormap
+
+        cm = LinearSegmentedColormap.from_list("imprint_seq", [GREEN, BLUE])
+        globals()[name] = cm
+        return cm
+    if name == "imprint_div_light":
+        cm = diverging("light")
+        globals()[name] = cm
+        return cm
+    if name == "imprint_div_dark":
+        cm = diverging("dark")
+        globals()[name] = cm
+        return cm
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -172,9 +197,14 @@ def register_with_matplotlib() -> None:
 
     Idempotent — re-registering an existing cmap is silently skipped.
     """
+    # Resolve via module globals so the lazy ``__getattr__`` builds each cmap
+    # on first access (avoids a top-level matplotlib import here too).
+    import sys
+
     import matplotlib
 
-    for cm in (imprint_seq, imprint_div_light, imprint_div_dark):
+    mod = sys.modules[__name__]
+    for cm in (mod.imprint_seq, mod.imprint_div_light, mod.imprint_div_dark):
         try:
             matplotlib.colormaps.register(cm)
         except ValueError:
@@ -202,10 +232,11 @@ __all__ = [
     "muted_for",
     # named API
     "palette",
-    # cmaps
-    "imprint_seq",
-    "imprint_div_light",
-    "imprint_div_dark",
+    # cmaps — resolved lazily via module __getattr__ (avoids module-level
+    # matplotlib import; see explanation at top of file)
+    "imprint_seq",  # noqa: F822
+    "imprint_div_light",  # noqa: F822
+    "imprint_div_dark",  # noqa: F822
     "diverging",
     # mpl integration
     "register_with_matplotlib",
