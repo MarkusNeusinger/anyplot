@@ -83,8 +83,8 @@ for i in 1:N_STEPS
         rightspinevisible  = false,
         leftspinecolor     = INK_SOFT,
         bottomspinecolor   = INK_SOFT,
-        xticklabelsize     = 7,
-        yticklabelsize     = 7,
+        xticklabelsize     = 8,
+        yticklabelsize     = 8,
         xticklabelcolor    = INK_SOFT,
         yticklabelcolor    = INK_SOFT,
         xtickcolor         = INK_SOFT,
@@ -93,6 +93,14 @@ for i in 1:N_STEPS
         ygridcolor         = GRID_COLOR,
         xticklabelsvisible = (row == N_ROWS),
         yticklabelsvisible = (col == 1),
+        xlabel             = "Longitude",
+        ylabel             = "Latitude",
+        xlabelcolor        = INK_SOFT,
+        ylabelcolor        = INK_SOFT,
+        xlabelsize         = 8,
+        ylabelsize         = 8,
+        xlabelvisible      = (row == N_ROWS),
+        ylabelvisible      = (col == 1),
     )
     limits!(ax, LON_LO, LON_HI, LAT_LO, LAT_HI)
 
@@ -111,6 +119,7 @@ for i in 1:N_STEPS
         colormap    = ANYPLOT_SEQ,
         markersize  = sizes_pt,
         strokewidth = 0,
+        alpha       = 0.7,
     )
 
     # Mainshock star marker (M7.2 epicentre)
@@ -131,7 +140,7 @@ Colorbar(fig[N_ROWS + 1, 1:N_COLS];
     labelcolor     = INK,
     tickcolor      = INK_SOFT,
     ticklabelcolor = INK_SOFT,
-    ticklabelsize  = 9,
+    ticklabelsize  = 10,
     labelsize      = 10,
     vertical       = false,
     height         = 14,
