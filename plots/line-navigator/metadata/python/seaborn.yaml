@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: line-navigator
 created: '2026-01-20T20:58:20Z'
-updated: '2026-05-27T11:30:08Z'
+updated: '2026-05-27T11:43:10Z'
 generated_by: claude-sonnet
 workflow_run: 26507772652
 issue: 3785
@@ -12,102 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Single-series line chart with correct brand green (#009E73) in both themes
-  - Full theme-adaptive chrome with all tokens correctly applied — warm off-white/near-black
-    backgrounds, no dark-on-dark failures
-  - Navigator pane correctly sized at 20% height with all feasible static features
-    (selection window, edge handles, shaded non-selected regions, date range annotation)
-  - Clean flat script with seed=42 for reproducibility, no bbox_inches=tight, correct
-    figsize/dpi for 3200×1800 output
-  - Realistic CPU utilization data with trend, weekly cycle, seasonal variation, and
-    spikes — justifies navigator need
+  - 'Excellent navigator design: non-selected regions dimmed with INK_MUTED overlay,
+    orange (ochre, palette-consistent #BD8233) selection handles clearly delineate
+    the visible window'
+  - 'Seaborn-distinctive use of statistical aggregation in navigator: sns.lineplot
+    with estimator=''mean'' and errorbar=''sd'' shows weekly mean ± SD bands — uniquely
+    seaborn, not replicable in plain matplotlib'
+  - 'Strong data storytelling: peak annotation with arrow, mean reference dashed line,
+    and date range label in top-right corner all guide the reader through the CPU
+    utilization story'
+  - 'Correct theme adaptation across both renders: all chrome tokens (PAGE_BG, INK,
+    INK_SOFT, INK_MUTED, ELEVATED_BG) properly applied, no dark-on-dark or light-on-light
+    failures'
+  - 'Clean code structure: np.random.seed(42) ensures reproducibility, no functions/classes,
+    all imports used, gridspec layout clearly separates main chart from navigator'
   weaknesses:
-  - 'DE-01: Design is competent but not exceptional — the two-panel layout is functional,
-    but typography, color hierarchy, and focal emphasis stay at the configured-default
-    level. To push past 6/8, add at least one intentional design choice: e.g. a subtle
-    reference line marking the dataset mean, a soft gradient fill under the main line,
-    or stronger visual differentiation between the detail view and the overview.'
-  - 'DE-03: The CPU utilization story is not told — viewer sees the wiggle but cannot
-    identify the interesting event in the selected window. Annotate at least one feature
-    (peak CPU day, trend direction, or weekly pattern label) to create a focal point.'
-  - 'LM-02: The navigator visualization relies entirely on matplotlib primitives (axvspan,
-    axvline, gridspec). Seaborn contributes only sns.lineplot and sns.set_theme. Consider
-    using seaborn-specific conveniences (sns.despine, sns.set_context) and emphasise
-    the lineplot confidence interval or statistical layer to differentiate from raw
-    matplotlib.'
+  - 'Dataset has 730 data points but spec requires 1000+ (spec: ''Size: 1000+ data
+    points (designed for large datasets where navigation is essential)'') — increase
+    periods to at least 1095 (3 years of daily data) and adjust selection window indices
+    accordingly'
+  - Selection window green fill inside navigator (alpha=0.08, color=BRAND) is nearly
+    invisible in both renders, especially in dark mode — increase alpha to 0.15-0.20
+    so the selected region is visually distinct from the non-selected areas
+  - Main chart x-axis has no label (ax_main.set_xlabel('')) — while common for linked
+    charts, the navigator carries 'Date' label; this slight asymmetry is acceptable
+    but adding a subtle date range label or a light x-axis label to the main chart
+    would improve context
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, no pure white.
-      Chrome: Title "line-navigator · python · seaborn · anyplot.ai" at 12pt, dark ink, clearly readable. Y-axis label "CPU Usage (%)" at 10pt, readable. X-axis label "Date" on navigator at 10pt, readable. Tick labels on main chart at 8pt (Apr 2024, May 2024, Jun 2024, Jul 2024 and 25–50%) — all legible. Navigator year ticks (2023, 2024, 2025) at 7pt — small but readable at canvas resolution. Date range annotation "Mar 2024 – Jun 2024" in muted ink top-right.
-      Data: Main chart shows a green (#009E73) line of CPU utilization from ~Mar 2024 to Jul 2024 with realistic weekly oscillation (25–52%). Navigator shows the full 2-year overview in the same green but thinner (linewidth=0.8, alpha=0.6). Non-selected regions shaded with semi-transparent gray overlays. Selection window has a very faint green fill (alpha=0.08, barely visible). Two ochre (#BD8233) vertical lines mark selection edges. Subtle Y-axis grid lines in main chart (alpha=0.15).
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color
+      Chrome: Title "line-navigator · python · seaborn · anyplot.ai" at fontsize=12 in dark ink, clearly readable. Y-axis label "CPU Usage (%)" at fontsize=10 readable. Tick labels at 7-8pt readable. Date range annotation "Mar 2024 – Jun 2024" in top-right corner readable. Mean reference annotation "mean XX%" readable. Peak annotation with arrow readable.
+      Data: Brand green #009E73 line showing CPU utilization over selected 3-month window (Mar–Jun 2024). Subtle fill under the line adds visual depth. Dashed gray mean reference line. Orange (#BD8233) selection handles in navigator. Non-selected navigator regions shaded in muted gray. Weekly aggregation (mean ± SD) shown via seaborn errorbar bands in navigator.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, no pure black.
-      Chrome: Title and all labels rendered in light ink (#F0EFE8) — clearly readable. Tick labels in lighter secondary ink (#B8B7B0). Date annotation in tertiary ink (#A8A79F). Grid lines subtle against dark background. Top/right spines removed; remaining spines in INK_SOFT. No dark-on-dark failures observed.
-      Data: Data series color is identical to light render — #009E73 brand green in both charts, same line widths and alphas. Selection handles (ochre) and shaded regions appear with the same relative contrast against the dark surface. The very faint selection window fill (alpha=0.08) is marginally less distinguishable in dark but acceptable since the orange handles define the boundary clearly.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. Axis labels, tick labels, date range annotation, mean annotation all rendered in light theme-adaptive tokens and readable. No dark-on-dark text failures observed.
+      Data: Brand green #009E73 line is identical to light render — only chrome (background, text, grid colors) has flipped. Orange selection handles (#BD8233) remain visible. Non-selected navigator regions show a lighter gray overlay against the dark background, creating appropriate visual contrast.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=12pt, axis labels=10pt, main
-          ticks=8pt, nav ticks=7pt, annotation=8pt. Readable in both themes at full
-          and mobile resolution.'
+        comment: Title at 12pt, axis labels at 10pt, tick labels at 7-8pt — all readable
+          in both themes. Mean and peak annotations at 7pt are on the smaller side
+          but still legible at full resolution.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: Annotations are well-placed with no collisions. The mean text near
+          the right edge and peak annotation with offset arrow avoid overlap with
+          the line data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main line at linewidth=2.0 for ~95-point detail view; navigator at
-          linewidth=0.8 alpha=0.6 appropriate for 730-point overview. Selection handles
-          visible.
+        comment: Main line at linewidth=2.0 appropriate for 95-point detail view.
+          Navigator uses linewidth=0.8 with weekly aggregation for dense 730-point
+          overview. Selection handles (orange) clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) on warm surfaces — CVD-safe. Ochre handles
-          distinctive from green. No red-green sole-signal issue.
+        comment: 'Brand green #009E73 for primary series, ochre #BD8233 for selection
+          handles — both from anyplot palette, CVD-safe combination.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). No bbox_inches='tight'. Height ratios
-          [4,1] give navigator ~20% — within spec's 15-20% guideline. Balanced margins.
+        comment: figsize=(8, 4.5) dpi=400 → 3200×1800 px. Navigator at height_ratio
+          1:4 (20% of chart height) within spec 15-20%. No overflow or clipping observed.
+          Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''CPU Usage (%)'' with units. X-axis: ''Date''. Title: correct
-          anyplot.ai format.'
+        comment: Title correctly formatted as 'line-navigator · python · seaborn ·
+          anyplot.ai'. Y-axis 'CPU Usage (%)' with units. X-axis 'Date' on navigator.
+          Main chart omits x-label for linked-chart convention.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/only data series: #009E73. Background light=#FAF8F1, dark=#1A1A17.
-          All chrome tokens theme-adaptive. Ochre (#BD8233) used semantically for
-          selection handles (palette position 4, not data series).'
+        comment: 'First series #009E73 (brand green). Selection handles use #BD8233
+          (ochre, palette position 4) — semantically appropriate for a selection indicator.
+          Backgrounds #FAF8F1/#1A1A17 correct for light/dark.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -115,28 +122,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): deliberate two-panel composition, semantic color
-          for selection handles, date annotation. Not at ''strong design'' level —
-          no typography differentiation, no focal emphasis beyond layout structure.'
+        comment: 'Above default (4). Intentional design: fill under line for depth,
+          muted overlay for non-selected regions, orange handles for selection boundaries,
+          clean two-panel layout.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed from main chart, navigator
-          has only bottom spine, y-axis-only grid (alpha=0.15), yticks hidden on navigator,
-          alpha-blended line and region fills, generous hspace.'
+        comment: Above default (2). sns.despine on both axes, subtle y-grid on main
+          chart, navigator uses left=True despine. Consistent theme-adaptive chrome
+          throughout.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Detail+overview concept inherently provides context vs. detail hierarchy.
-          Shaded non-selected regions draw focus. Date range label provides context.
-          Missing: no annotation of interesting events, no peak/trend callout, no
-          story told about the CPU pattern.'
+        comment: Above default (2). Peak annotation with arrow, mean reference dashed
+          line, date range label in corner, navigator contextualizes the selected
+          window within the full 2-year history.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -144,58 +150,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: line chart with mini navigator pane below.'
+        comment: 'Correct: line chart with mini navigator pane. Main detail view +
+          overview navigator exactly as specified.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Main chart shows selected range; mini chart shows full extent; selection
-          window indicator; edge handles (orange vlines); date range label; both charts
-          share line color/style. Interactive features (drag, resize, animation) are
-          not feasible in seaborn — correctly omitted per library rules.
+        comment: 'Selection window highlighting ✓, selection handles ✓, shared styling
+          ✓, date range text ✓, navigator proportional height ✓. Minor miss: 730 data
+          points vs spec-required 1000+.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, CPU% on Y, both correct. Navigator shows full 2-year range;
-          main shows selection. 730 data points (daily for 2 years) meets the spirit
-          of the 1000+ guidance.
+        comment: X=date, Y=CPU%, main chart shows selected window, navigator shows
+          full 2-year extent. Correct mapping throughout.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-navigator · python · seaborn · anyplot.ai' — correct
-          format. Single series, no legend needed.
+        comment: 'Title: ''line-navigator · python · seaborn · anyplot.ai'' correct.
+          Single series — no legend needed (correctly omitted).'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all navigator aspects: detail view + overview + selection
-          window. Data has trend, weekly cycle, seasonal variation, and random spikes
-          — full coverage of time-series patterns.'
+        comment: 'Covers: detail view, full overview, selection window, handles, fill,
+          mean reference, peak annotation. Slightly below full coverage because dataset
+          is 730 not 1000+ points.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Production server CPU utilization over 2 years — neutral, realistic,
-          comprehensible scenario.
+        comment: Production server CPU utilization over 2 years is a realistic, neutral,
+          widely-understood domain. Values (32-95% range with weekly cycles and trend)
+          are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CPU 8–95% with realistic baseline ~35-45%, weekly oscillation ±6%,
-          seasonal variation ±5%, rare exponential spikes. All values plausible for
-          a production server.
+        comment: Daily data points over 2 years, CPU % in 8-95 range clipped to reasonable
+          bounds, weekly periodicity and seasonal trend make the dataset realistic
+          and appropriate for navigator demonstration.
     code_quality:
       score: 10
       max: 10
@@ -205,69 +211,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens → data → figure/layout → main chart → navigator
-          → save. No functions or classes.'
+        comment: No functions or classes. Linear procedural code with clear section
+          comments.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.dates, matplotlib.pyplot, numpy,
-          pandas, seaborn.'
+        comment: All 6 imports (os, matplotlib.dates, matplotlib.pyplot, numpy, pandas,
+          seaborn) are actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI elements. No interactivity simulation.
-          GridSpec layout is the right tool.
+        comment: Appropriate complexity. gridspec for layout, no fake UI. axvspan/axvline
+          for selection visualization is data marks, not fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', current seaborn
-          API.
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          output name, no bbox_inches='tight'.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes-level API (sns.lineplot with ax=), sns.set_theme for theming,
+          sns.despine for spine removal — all idiomatic seaborn patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses axes-level sns.lineplot() with ax= parameter (recommended seaborn
-          pattern), sns.set_theme() with rc dict for theme control. Missing seaborn
-          conveniences: sns.despine() not used, sns.set_context() not used, stat layers
-          not leveraged.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: The navigator visualization uses matplotlib primitives (axvspan,
-          axvline, gridspec). Seaborn's contribution is primarily sns.lineplot and
-          sns.set_theme — the same plot could be recreated in matplotlib with minimal
-          change. No seaborn-distinctive features (e.g., confidence intervals, statistical
-          aggregation, FacetGrid).
-  verdict: REJECTED
+        comment: 'Notable seaborn-distinctive use: sns.lineplot with estimator=''mean'',
+          errorbar=''sd'' for weekly aggregation in navigator produces mean ± SD confidence
+          bands automatically — this requires manual calculation in plain matplotlib
+          and is a genuine seaborn strength.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - time-series
+  - groupby-aggregation
   styling:
   - alpha-blending
   - grid-styling
