@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-21
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-27
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -10,16 +12,26 @@ import numpy as np
 import pandas as pd
 
 
-# Data - Generate 180 trading days of stock price data
-np.random.seed(42)
-dates = pd.date_range("2025-01-01", periods=180, freq="B")  # Business days
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Generate realistic stock price data with trend and volatility
+# anyplot palette — canonical order; first series is always brand green
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = ANYPLOT_PALETTE[0]
+
+# Data
+np.random.seed(42)
+dates = pd.date_range("2025-01-01", periods=180, freq="B")
+
 initial_price = 150.0
-returns = np.random.normal(0.0005, 0.02, size=180)  # Small daily returns
+returns = np.random.normal(0.0005, 0.02, size=180)
 prices = initial_price * np.cumprod(1 + returns)
 
-# Create OHLC-like data
 close = prices
 high = close * (1 + np.abs(np.random.normal(0, 0.01, size=180)))
 low = close * (1 - np.abs(np.random.normal(0, 0.01, size=180)))
@@ -27,7 +39,6 @@ open_price = (close + np.random.normal(0, 1, size=180)).clip(low, high)
 
 df = pd.DataFrame({"date": dates, "open": open_price, "high": high, "low": low, "close": close})
 
-# Define events with their dates, types, and labels
 events = [
     {"date": "2025-01-28", "type": "earnings", "label": "Q4"},
     {"date": "2025-02-14", "type": "dividend", "label": "0.50"},
@@ -43,103 +54,109 @@ events = [
 events_df = pd.DataFrame(events)
 events_df["date"] = pd.to_datetime(events_df["date"])
 
-# Event type styling
+# Event colors — palette positions 2-5 (position 1 used by price line)
 event_colors = {
-    "earnings": "#306998",  # Python Blue for earnings
-    "dividend": "#2E8B57",  # Sea green for dividends
-    "split": "#FFD43B",  # Python Yellow for splits
-    "news": "#DC143C",  # Crimson for news
+    "earnings": ANYPLOT_PALETTE[2],  # #4467A3 blue — financial analytics
+    "dividend": ANYPLOT_PALETTE[3],  # #BD8233 ochre — value/commodity
+    "split": ANYPLOT_PALETTE[1],  # #C475FD lavender — corporate action
+    "news": ANYPLOT_PALETTE[4],  # #AE3030 red — alert semantic fit
 }
 
-event_markers = {
-    "earnings": "E",  # Chart icon represented by E (Earnings)
-    "dividend": "D",  # D for dividends (avoid $ as it triggers math mode)
-    "split": "S",  # S for split
-    "news": "!",  # Exclamation for news
-}
+event_markers = {"earnings": "E", "dividend": "D", "split": "S", "news": "!"}
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot price line
-ax.plot(df["date"], df["close"], color="#306998", linewidth=2.5, label="Close Price", zorder=2)
+# Price line — first series, brand green
+(price_line,) = ax.plot(df["date"], df["close"], color=BRAND, linewidth=2.5, label="Close Price", zorder=2)
 
-# Add a light fill under the price line
-ax.fill_between(df["date"], df["close"].min() * 0.95, df["close"], alpha=0.1, color="#306998", zorder=1)
+# Light fill under price line
+ax.fill_between(df["date"], df["close"].min() * 0.95, df["close"], alpha=0.08, color=BRAND, zorder=1)
 
-# Determine price range for flag positioning
 price_min = df["close"].min()
 price_max = df["close"].max()
 price_range = price_max - price_min
 
-# Plot event flags with alternating heights to avoid overlap
+# Event flags with alternating heights to avoid overlap
 for idx, event in events_df.iterrows():
     event_date = event["date"]
     event_type = event["type"]
     event_label = event["label"]
 
-    # Find the price at this date
-    price_at_date = df.loc[df["date"] == event_date, "close"]
-    if len(price_at_date) == 0:
-        # Find nearest date
+    price_row = df.loc[df["date"] == event_date, "close"]
+    if len(price_row) == 0:
         nearest_idx = np.abs(df["date"] - event_date).argmin()
         price_at_date = df.iloc[nearest_idx]["close"]
     else:
-        price_at_date = price_at_date.values[0]
+        price_at_date = price_row.values[0]
 
-    color = event_colors.get(event_type, "#888888")
+    color = event_colors.get(event_type, INK_SOFT)
     marker_text = event_markers.get(event_type, "?")
 
-    # Alternate flag heights using 3 levels to avoid overlap
     height_level = idx % 3
     flag_y = price_max + price_range * (0.12 + height_level * 0.12)
 
-    # Draw vertical dashed line from flag to price point
+    # Connector line from price point up to flag
     ax.plot(
         [event_date, event_date],
         [price_at_date, flag_y],
         color=color,
         linestyle="--",
-        linewidth=1.5,
+        linewidth=1.2,
         alpha=0.7,
         zorder=3,
     )
 
-    # Draw a small circle at the price point
-    ax.scatter([event_date], [price_at_date], color=color, s=100, zorder=4, edgecolors="white", linewidth=1.5)
+    # Marker dot at price level
+    ax.scatter([event_date], [price_at_date], color=color, s=80, zorder=4, edgecolors=PAGE_BG, linewidth=1.0)
 
-    # Draw flag box with marker
-    bbox_props = {"boxstyle": "round,pad=0.4", "facecolor": color, "edgecolor": "white", "linewidth": 2, "alpha": 0.9}
+    # Flag annotation box
     ax.annotate(
         f"{marker_text} {event_label}",
         xy=(event_date, flag_y),
-        fontsize=12,
+        fontsize=8,
         fontweight="bold",
         color="white",
         ha="center",
         va="center",
-        bbox=bbox_props,
-        zorder=5,
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": color,
+            "edgecolor": ELEVATED_BG,
+            "linewidth": 1.5,
+            "alpha": 0.92,
+        },
+        zorder=10,
     )
 
-# Create legend for event types
-legend_patches = [
-    mpatches.Patch(color=color, label=event_type.capitalize()) for event_type, color in event_colors.items()
-]
-ax.legend(handles=legend_patches, loc="upper left", fontsize=14, framealpha=0.9)
+# Legend — price line + all four event types
+legend_handles = [price_line] + [mpatches.Patch(color=c, label=et.capitalize()) for et, c in event_colors.items()]
+legend_labels = ["Close Price"] + [et.capitalize() for et in event_colors]
+leg = ax.legend(handles=legend_handles, labels=legend_labels, loc="lower right", fontsize=8, framealpha=0.9)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Labels and styling
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.set_title("stock-event-flags · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", zorder=0)
+# Style
+title = "stock-event-flags · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Date", fontsize=10, color=INK)
+ax.set_ylabel("Price (USD)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, labelcolor=INK_SOFT, color=INK_SOFT)
+ax.tick_params(which="both", length=0)
 
-# Format x-axis dates
-fig.autofmt_xdate(rotation=30)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
-# Set y-axis limits to accommodate flags
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_ylim(price_min * 0.95, price_max + price_range * 0.55)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
+
+fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.15)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
