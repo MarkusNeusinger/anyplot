@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-27
@@ -19,6 +19,7 @@ from lets_plot import (
     geom_line,
     geom_rect,
     geom_text,
+    geom_vline,
     gggrid,
     ggplot,
     ggsize,
@@ -113,7 +114,7 @@ main_theme = theme_minimal() + theme(
 
 nav_theme = theme_minimal() + theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=ELEVATED_BG),
     axis_title=element_text(size=10, color=INK),
     axis_text=element_text(size=8, color=INK_SOFT),
     panel_grid_major=element_line(color=RULE_FAINT, size=0.3),
@@ -127,7 +128,7 @@ main_chart = (
     + geom_area(fill=BRAND, alpha=0.15)
     + geom_line(color=BRAND, size=1.5, tooltips=main_tooltips)
     + geom_text(
-        aes(x="x", y="y", label="label"), data=range_label_df, inherit_aes=False, size=3.5, color=BRAND, fontface="bold"
+        aes(x="x", y="y", label="label"), data=range_label_df, inherit_aes=False, size=4.5, color=BRAND, fontface="bold"
     )
     + labs(x="", y="Temperature (°C)")
     + scale_x_datetime(format="%b %Y")
@@ -135,6 +136,12 @@ main_chart = (
     + main_theme
     + ggsize(800, 360)
 )
+
+# Yearly break points for navigator x-axis — one label per calendar year
+yearly_breaks = pd.date_range("2023-01-01", "2026-01-01", freq="YS").tolist()
+
+# Resize-handle indicators at left/right edges of selection window
+handle_df = pd.DataFrame({"x": [select_xmin, select_xmax]})
 
 # Navigator mini chart — full data overview with selection window
 navigator = (
@@ -149,10 +156,11 @@ navigator = (
         linetype="solid",
         size=2.5,
     )
+    + geom_vline(aes(xintercept="x"), data=handle_df, inherit_aes=False, color=BRAND, size=2)
     + geom_area(fill=BRAND, alpha=0.12, tooltips="none")
     + geom_line(color=BRAND, size=0.8, tooltips="none")
     + labs(x="Date", y="")
-    + scale_x_datetime(format="%Y")
+    + scale_x_datetime(breaks=yearly_breaks, format="%Y")
     + scale_y_continuous(limits=[nav_y_min, nav_y_max])
     + nav_theme
     + ggsize(800, 90)
