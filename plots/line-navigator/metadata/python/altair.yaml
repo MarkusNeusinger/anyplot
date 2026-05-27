@@ -1,153 +1,199 @@
 library: altair
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:58:10Z'
-updated: '2026-01-20T21:01:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878082
+updated: '2026-05-27T19:13:40Z'
+generated_by: claude-sonnet
+workflow_run: 26508053384
 issue: 3785
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-navigator/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of the navigator pattern using Altair declarative grammar
-  - Clean, readable code structure following KISS principles
-  - Realistic sensor data with trend, seasonality, and noise components
-  - Proper use of interval selection linked between charts
-  - Visual consistency between main chart and navigator (same line color)
-  - Correct title format and axis labeling with units
+  - Excellent use of Altair linked brushing — selection_interval with transform_filter
+    and scale=domain=brush is the most idiomatic Altair pattern for overview+detail
+    navigation
+  - 'Perfect theme adaptation in both renders: warm off-white light background, warm
+    near-black dark background, all chrome tokens correctly applied'
+  - Pre-initialized selection window (H1 2023) with amber highlight clearly demonstrates
+    navigator functionality
+  - Date range labels computed via transform_aggregate show the selected window start/end
+    dates informatively
+  - Navigator proportionally smaller (~18% of main height, within spec 15-20%), with
+    year-only x-axis labels reducing redundancy
+  - Clean KISS structure, reproducible (seed=42), all required outputs (PNG + HTML)
+    correctly saved
+  - Sensor data with trend + seasonality + noise creates realistic, feature-rich time
+    series that showcases navigation well
   weaknesses:
-  - No grid lines on either chart would help with value reading
-  - The selection highlight starts covering the full range - would be more demonstrative
-    with a partial selection
-  - Could benefit from .interactive() on main chart for additional zoom/pan capability
+  - Main chart in static PNG shows the full 2022-2024 range rather than the pre-selected
+    H1 2023 range — scale=alt.Scale(domain=brush) with the initialized brush value
+    does not appear to constrain the main chart x-axis domain in the vl-convert static
+    export (works correctly in interactive HTML)
+  - Altair default selection-box outline renders as a thin light rectangle around
+    the amber area in the dark navigator — consider hiding or styling the brush outline
+    (configure_selection or strokeWidth=0 on the brush) for a cleaner dark-theme appearance
+  - Navigator green line (strokeWidth=1) is very faint at the small height — barely
+    distinguishable from baseline in both renders; could use strokeWidth=1.5 or a
+    slightly higher navigator height to improve visibility
   image_description: |-
-    The plot displays a line chart with a mini navigator pane, implementing the specification for a line-navigator visualization. The main chart (top) shows daily sensor temperature readings from early 2022 to late 2024, rendered as a blue line (#306998) against a white background. Values range from approximately 10°C to 45°C, showing clear yearly seasonal patterns (higher in summer, lower in winter) with an overall upward trend. The Y-axis is labeled "Sensor Reading (°C)" and the X-axis shows "Date" with year and month labels. The title "line-navigator · altair · pyplots.ai" appears at the top.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "line-navigator · python · altair · anyplot.ai" in dark bold text, clearly readable. Y-axis label "Sensor Reading (°C)" readable. X-axis label "Date" readable. Tick labels readable in soft dark color. All text passes legibility on light background.
+      Main chart: Brand green (#009E73) line showing 3 years of sensor data (2022–2024). Subtle horizontal grid with ~15% opacity. Good proportions.
+      Navigator: Small pane at bottom (~18% of main height). Brand green thin line. Amber (#DDCC77) filled area highlights selected H1 2023 range. Date range labels "2023-01-01" (left) and "2023-07-01" (right) visible. Year-only x-axis (2022, 2023, 2024).
+      Legibility verdict: PASS — all elements readable on warm off-white background.
 
-    Below the main chart is a smaller navigator pane (approximately 15% of main chart height) displaying the entire 3-year dataset at reduced scale. A yellow/gold highlighted area (#FFD43B with 30% opacity) shows the currently selected range, which appears to cover the full extent. Both charts use consistent blue line styling. The X-axis ticks show years and months (2022, 2023, 2024 with monthly markers).
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and axis labels render in light-colored text (#F0EFE8 / #B8B7B0 tokens), clearly readable against dark background. No dark-on-dark failures observed. Grid lines subtle (light opacity).
+      Data: Brand green (#009E73) line identical to light render — palette positions unchanged. Amber selection in navigator appears slightly more muted/olive on dark background but still visible. Light border (Altair default brush outline) visible around the selection box.
+      Legibility verdict: PASS — all text readable, correct light text on dark background throughout. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'Title and axis labels clearly readable. Font sizes appropriate (28pt
-          title, 22pt axis titles, 18pt labels). Minor: some month labels slightly
-          cramped.'
+        comment: All font sizes explicitly set (title=16, axis=12, labels=10, range-labels=11).
+          All text readable in both light and dark renders. Proportions good.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. Date labels well-spaced.
+        comment: No overlapping text or data elements. Date range labels well-positioned
+          at navigator corners.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line thickness appropriate for data density (1095 points). strokeWidth=2
-          main, strokeWidth=1 navigator works well.
+        comment: Main line (strokeWidth=2) clearly visible for 1095-point density.
+          Navigator line thin but appropriate for 40px height.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with yellow highlight (#FFD43B). Good
-          contrast, colorblind-safe.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good proportions with main chart and navigator. Minor: could use
-          slightly more padding.'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Sensor Reading (°C) with units, Date is descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single green series + amber selection anchor — both colorblind-safe.
+          Good contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'No canvas gate. Layout well-proportioned: main chart + navigator
+          with proper spacing. Plot fills canvas well, centered margins balanced.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No visible grid in the plot which would help readability of dense
-          time series.
+        passed: true
+        comment: 'Y: ''Sensor Reading (°C)'' (with units). X: ''Date''. Title: correct
+          mandated format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Amber (#DDCC77) used as semantic
+          selection anchor — correct usage. Background #FAF8F1 light / #1A1A17 dark.
+          All chrome theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured defaults: amber selection highlight, date range
+          labels, proportional navigator, semantic color choices. Not yet exceptional
+          design, but thoughtful.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: strokeWidth=0 removes view borders, subtle grid (15% opacity), navigator
+          strips y-axis chrome, year-only x-axis on navigator reduces redundancy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Overview+detail pattern provides strong visual hierarchy. Pre-selected
+          H1 2023 demonstrates the navigator feature. Seasonal patterns in data naturally
+          visible.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct chart type: line chart with mini navigator pane.'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, numeric values on Y-axis correctly mapped.
-      - id: SC-03
+        comment: Line chart with mini navigator — correct type with all sub-components.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Main chart with detail view, mini navigator with selection window,
-          draggable selection via interval selection. Minor: resize handles implicit.'
-      - id: SC-04
-        name: Data Range
+        comment: Navigator with draggable selection (selection_interval), main chart
+          linked to brush, amber highlight fills selected range, date range labels,
+          proportional navigator height, shared line styling.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 3-year range visible in navigator, axes show all data.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x-axis (temporal), sensor value on y-axis (quantitative).
+          Both charts correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A - single series, no legend needed.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: line-navigator · altair · pyplots.ai'
+        comment: Title 'line-navigator · python · altair · anyplot.ai' — correct format.
+          Single series, no legend needed.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows trend, seasonality (yearly + weekly), noise. Minor: selection
-          could start with subset to showcase navigation.'
+        comment: 1095 data points covering 3 years, demonstrates navigation across
+          long time series. Trend + seasonal + noise creates realistic variability.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Daily sensor temperature readings over 3 years is realistic. Neutral
-          scientific context.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range (10-45°C) realistic for sensor readings with seasonal
-          variation.
+        comment: Daily sensor readings — plausible real-world scenario, neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 10-45°C with seasonal amplitude ~8°C and gradual
+          trend — physically plausible sensor data.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,53 +201,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data generation → chart components →
-          combine → save.'
+        comment: 'Linear structure: imports → data → chart components → combine →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (altair, numpy, pandas).
+        comment: 'All imports used: altair, numpy, pandas, PIL.Image, os, sys.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Altair declarative style. Layer composition and vconcat are
+          idiomatic. No fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair 5 API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html (correct), but HTML may be more appropriate
-          primary for interactive chart.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (with padding to 3200x1800) and plot-{THEME}.html.
+          Altair 6.1.0 API.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses selection_interval, transform_filter, vconcat, Scale(domain=brush).
-          Good but could add .interactive() for zoom/pan.
+        comment: Expertly uses selection_interval, transform_filter, transform_aggregate,
+          vconcat, layer, alt.Scale(domain=brush) — the canonical Altair patterns
+          for linked interactive charts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Linked brushing with overview+detail is Altair's signature declarative
+          interaction pattern. The combination of scale=domain=brush + transform_filter(brush)
+          + transform_aggregate for range labels is distinctly Altair.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - alpha-blending
