@@ -1,151 +1,207 @@
 library: seaborn
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:58:20Z'
-updated: '2026-01-20T21:00:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878115
+updated: '2026-05-27T11:43:10Z'
+generated_by: claude-sonnet
+workflow_run: 26507772652
 issue: 3785
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of the navigator pattern with clear visual separation
-    between detail and overview panels
-  - Clean visual design with consistent Python blue color theme and subtle yellow
-    selection highlight
-  - Good use of GridSpec for precise layout control with appropriate 4:1 height ratio
-  - Realistic sensor data with trend, seasonality, and noise components
-  - Date range annotation provides clear context for the selected period
+  - 'Excellent navigator design: non-selected regions dimmed with INK_MUTED overlay,
+    orange (ochre, palette-consistent #BD8233) selection handles clearly delineate
+    the visible window'
+  - 'Seaborn-distinctive use of statistical aggregation in navigator: sns.lineplot
+    with estimator=''mean'' and errorbar=''sd'' shows weekly mean ± SD bands — uniquely
+    seaborn, not replicable in plain matplotlib'
+  - 'Strong data storytelling: peak annotation with arrow, mean reference dashed line,
+    and date range label in top-right corner all guide the reader through the CPU
+    utilization story'
+  - 'Correct theme adaptation across both renders: all chrome tokens (PAGE_BG, INK,
+    INK_SOFT, INK_MUTED, ELEVATED_BG) properly applied, no dark-on-dark or light-on-light
+    failures'
+  - 'Clean code structure: np.random.seed(42) ensures reproducibility, no functions/classes,
+    all imports used, gridspec layout clearly separates main chart from navigator'
   weaknesses:
-  - Navigator y-axis ticks removed but line appears slightly compressed; consider
-    maintaining y-limits consistency
-  - Grid styling could be improved - currently no legend but not strictly needed for
-    single series
-  image_description: 'The plot displays a two-panel visualization for a line chart
-    with navigator. The main upper panel shows detailed sensor readings from February
-    2023 to July 2023, with values ranging approximately 53-78 units. The line is
-    rendered in Python blue (#306998) with clear oscillating patterns. A white text
-    box in the upper right corner displays "Selected Range: 2023-02-05 to 2023-07-05".
-    The lower navigator panel shows the full 3-year dataset (2022-01 to 2025-01) at
-    reduced scale with gray shading outside the selected region. A yellow rectangular
-    border highlights the selected time range, and vertical yellow lines mark the
-    selection boundaries. The navigator uses the same blue line color with slight
-    transparency. Text is legible with appropriate font sizes, and both panels share
-    a clean, minimal aesthetic with subtle grid lines.'
+  - 'Dataset has 730 data points but spec requires 1000+ (spec: ''Size: 1000+ data
+    points (designed for large datasets where navigation is essential)'') — increase
+    periods to at least 1095 (3 years of daily data) and adjust selection window indices
+    accordingly'
+  - Selection window green fill inside navigator (alpha=0.08, color=BRAND) is nearly
+    invisible in both renders, especially in dark mode — increase alpha to 0.15-0.20
+    so the selected region is visually distinct from the non-selected areas
+  - Main chart x-axis has no label (ax_main.set_xlabel('')) — while common for linked
+    charts, the navigator carries 'Date' label; this slight asymmetry is acceptable
+    but adding a subtle date range label or a light x-axis label to the main chart
+    would improve context
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color
+      Chrome: Title "line-navigator · python · seaborn · anyplot.ai" at fontsize=12 in dark ink, clearly readable. Y-axis label "CPU Usage (%)" at fontsize=10 readable. Tick labels at 7-8pt readable. Date range annotation "Mar 2024 – Jun 2024" in top-right corner readable. Mean reference annotation "mean XX%" readable. Peak annotation with arrow readable.
+      Data: Brand green #009E73 line showing CPU utilization over selected 3-month window (Mar–Jun 2024). Subtle fill under the line adds visual depth. Dashed gray mean reference line. Orange (#BD8233) selection handles in navigator. Non-selected navigator regions shaded in muted gray. Weekly aggregation (mean ± SD) shown via seaborn errorbar bands in navigator.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. Axis labels, tick labels, date range annotation, mean annotation all rendered in light theme-adaptive tokens and readable. No dark-on-dark text failures observed.
+      Data: Brand green #009E73 line is identical to light render — only chrome (background, text, grid colors) has flipped. Orange selection handles (#BD8233) remain visible. Non-selected navigator regions show a lighter gray overlay against the dark background, creating appropriate visual contrast.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, Y-label 20pt, ticks 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line thickness appropriate; navigator slightly compressed but visible
+        comment: Title at 12pt, axis labels at 10pt, tick labels at 7-8pt — all readable
+          in both themes. Mean and peak annotations at 7pt are on the smaller side
+          but still legible at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations are well-placed with no collisions. The mean text near
+          the right edge and peak annotation with offset arrow avoid overlap with
+          the line data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main line at linewidth=2.0 appropriate for 95-point detail view.
+          Navigator uses linewidth=0.8 with weekly aggregation for dense 730-point
+          overview. Selection handles (orange) clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Python blue is colorblind-safe, yellow selection clearly visible
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 4:1 height ratio; minor empty space on right of main chart
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units, X-axis labeled Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Brand green #009E73 for primary series, ochre #BD8233 for selection
+          handles — both from anyplot palette, CVD-safe combination.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: figsize=(8, 4.5) dpi=400 → 3200×1800 px. Navigator at height_ratio
+          1:4 (20% of chart height) within spec 15-20%. No overflow or clipping observed.
+          Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid subtle but no legend present
+        passed: true
+        comment: Title correctly formatted as 'line-navigator · python · seaborn ·
+          anyplot.ai'. Y-axis 'CPU Usage (%)' with units. X-axis 'Date' on navigator.
+          Main chart omits x-label for linked-chart convention.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Selection handles use #BD8233
+          (ochre, palette position 4) — semantically appropriate for a selection indicator.
+          Backgrounds #FAF8F1/#1A1A17 correct for light/dark.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4). Intentional design: fill under line for depth,
+          muted overlay for non-selected regions, orange handles for selection boundaries,
+          clean two-panel layout.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). sns.despine on both axes, subtle y-grid on main
+          chart, navigator uses left=True despine. Consistent theme-adaptive chrome
+          throughout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Peak annotation with arrow, mean reference dashed
+          line, date range label in corner, navigator contextualizes the selected
+          window within the full 2-year history.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart with mini navigator pattern
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X, values on Y correctly mapped
-      - id: SC-03
+        comment: 'Correct: line chart with mini navigator pane. Main detail view +
+          overview navigator exactly as specified.'
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has detail view, navigator, selection window, date range label; interactive
-          features limited by static output
-      - id: SC-04
-        name: Data Range
+        comment: 'Selection window highlighting ✓, selection handles ✓, shared styling
+          ✓, date range text ✓, navigator proportional height ✓. Minor miss: 730 data
+          points vs spec-required 1000+.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible in navigator, selected range in detail view
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X=date, Y=CPU%, main chart shows selected window, navigator shows
+          full 2-year extent. Correct mapping throughout.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend but date range text box present
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: line-navigator · seaborn · pyplots.ai'
+        comment: 'Title: ''line-navigator · python · seaborn · anyplot.ai'' correct.
+          Single series — no legend needed (correctly omitted).'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, noise; good variety but could show more
-          dramatic features
+        comment: 'Covers: detail view, full overview, selection window, handles, fill,
+          mean reference, peak annotation. Slightly below full coverage because dataset
+          is 730 not 1000+ points.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sensor readings scenario is neutral, realistic, and comprehensible
+        comment: Production server CPU utilization over 2 years is a realistic, neutral,
+          widely-understood domain. Values (32-95% range with weekly cycles and trend)
+          are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 50-78 units are plausible; 3 years of daily data appropriate
+        comment: Daily data points over 2 years, CPU % in 8-95 range clipped to reasonable
+          bounds, weekly periodicity and seasonal trend make the dataset realistic
+          and appropriate for navigator demonstration.
     code_quality:
       score: 10
       max: 10
@@ -155,54 +211,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: No functions or classes. Linear procedural code with clear section
+          comments.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, seaborn, matplotlib)
+        comment: All 6 imports (os, matplotlib.dates, matplotlib.pyplot, numpy, pandas,
+          seaborn) are actively used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Appropriate complexity. gridspec for layout, no fake UI. axvspan/axvline
+          for selection visualization is data marks, not fake interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          output name, no bbox_inches='tight'.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot appropriately with matplotlib GridSpec; good integration
-          but no advanced seaborn features
+        comment: Axes-level API (sns.lineplot with ax=), sns.set_theme for theming,
+          sns.despine for spine removal — all idiomatic seaborn patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Notable seaborn-distinctive use: sns.lineplot with estimator=''mean'',
+          errorbar=''sd'' for weekly aggregation in navigator produces mean ± SD confidence
+          bands automatically — this requires manual calculation in plain matplotlib
+          and is a genuine seaborn strength.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - patches
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - time-series
+  - groupby-aggregation
   styling:
   - alpha-blending
   - grid-styling

@@ -1,146 +1,184 @@
 library: matplotlib
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:57:35Z'
-updated: '2026-01-20T21:00:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878065
+updated: '2026-05-27T11:32:39Z'
+generated_by: claude-sonnet
+workflow_run: 26507680506
 issue: 3785
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent visual representation of the navigator concept with clear main/navigator
-    separation
-  - Selection window with yellow highlight and gray-out of non-selected regions is
-    intuitive
-  - Date range annotation provides clear context for the selected period
-  - Realistic synthetic data with trend, seasonality, and noise patterns
-  - Proper 4:1 height ratio between main chart and navigator
+  - 'Navigator concept executed fully in static matplotlib: gray-masked non-selected
+    regions, amber selection rectangle and vertical handles, and date-range annotation
+    all communicate the interactive navigator idea as a static snapshot'
+  - 'Perfect palette compliance: brand green as sole data color, amber used correctly
+    as semantic anchor (selection/warning role), theme-adaptive chrome throughout
+    both renders'
+  - Full spec coverage with 1000+ realistic data points, correct proportional navigator
+    height (~18%), and shared styling between panels
+  - 'Clean code: flat structure, seed set, all imports used, no bbox_inches=''tight'',
+    correct subplots_adjust usage'
   weaknesses:
-  - Navigator panel lacks grid lines, breaking visual consistency with main chart
-  - Navigator y-axis label "Temp" could match main chart's "Temperature (°C)" for
-    consistency
-  - Could benefit from more descriptive title context
+  - 'Design excellence could be pushed further: the navigator panel label (''Navigator'')
+    is functional but small; the fill-under in the main chart could use a gradient
+    or slightly richer alpha for more visual depth'
+  - Navigator tick labels at 7pt are the minimum legible size; at mobile display widths
+    (~400px) they become very tight — consider 8pt to match the main chart
   image_description: |-
-    The plot displays a line chart with a mini navigator at the bottom. The main chart (upper panel, ~80% height) shows temperature readings in °C over approximately 4 months (Feb 2023 to Jun 2023), with values ranging from 24°C to 34°C. The line is rendered in blue (#306998) with a light blue fill below it. A dashed gray grid provides visual reference. The title "line-navigator · matplotlib · pyplots.ai" appears at the top. In the upper right corner, a white box with blue border displays "Selected: 2023-02-05 to 2023-06-04".
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "line-navigator · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), fully readable. Y-axis label "Temperature (°C)" and X-axis label "Date" in dark ink at 10pt, readable. Tick labels in soft dark (#4A4A44) at 8pt (main) and 7pt (navigator), readable. Date annotation box on elevated #FFFDF6 background with dark border, readable. "Navigator" label in INK_MUTED, readable.
+      Data: Brand green #009E73 line (linewidth=2.5) with subtle fill-under in main chart. Same green at linewidth=1.0 alpha=0.7 in navigator. Gray axvspan overlays on non-selected regions. Amber #DDCC77 selection rectangle + two vertical handle lines.
+      Legibility verdict: PASS
 
-    The navigator panel (lower, ~20% height) shows the full 3-year dataset (2022-01 to 2024-12) with the complete temperature time series. The selected region is highlighted with a yellow (#FFD43B) semi-transparent rectangle and yellow vertical lines marking the selection edges. Non-selected regions are grayed out. A "Navigator" label appears in the upper left of this panel. The x-axis shows "Date" and the y-axis shows "Temp".
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light #F0EFE8, clearly visible. Axis labels in light ink, readable. Tick labels in #B8B7B0 (INK_SOFT dark), readable — no dark-on-dark failures. Date annotation box on elevated #242420 background with light-ink border, readable. "Navigator" label in INK_MUTED dark (#A8A79F), readable.
+      Data: Brand green #009E73 line and fill — identical to light render. Gray overlays and amber handles render correctly on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt/14pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Line width 2.5 for main, 1.5 for navigator - well adapted
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line with yellow selection highlight is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 80/20 split, slight excess whitespace in some areas
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Temperature (°C) and Date with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Navigator lacks grid for consistency with main chart
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart with mini navigator
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, temperature on Y
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Main chart, navigator, selection window, resize handles, date range
-          label
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, navigator shows full extent
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Navigator label present, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: line-navigator · matplotlib · pyplots.ai format correct
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
         score: 7
         max: 8
         passed: true
-        comment: Shows trend, seasonality, and noise; selection demonstrates navigation
-      - id: DQ-02
-        name: Realistic Context
+        comment: All font sizes explicitly set; readable in both themes. Navigator
+          tick labels at 7pt are functional but tight at mobile scale.
+      - id: VQ-02
+        name: No Overlap
         score: 6
-        max: 7
+        max: 6
         passed: true
-        comment: Temperature sensor readings - plausible scenario, minor deduction
-          for generic context
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: No text or element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 1095-point navigator at linewidth=1.0 alpha=0.7 is density-appropriate.
+          Main line at 2.5 is prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single data series green, amber as semantic anchor. No red-green
+          conflict.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). height_ratios=[4,1] gives ~18% navigator
+          height matching spec. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) with units, Date for x-axis, correct mandated title.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, amber #DDCC77 as semantic anchor, backgrounds
+          #FAF8F1/#1A1A17 correct in both themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Deliberate axvspan gray-out creates visual focus; amber handles are
+          thoughtful; fill-under adds dimension. Above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed; navigator strips left spine; subtle grid;
+          rounded annotation box.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Gray-masked navigator communicates selection window concept clearly;
+          date annotation confirms context; amber handles suggest interactivity boundary.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: 20-35°C range realistic for environmental sensors
+        comment: Line chart with mini navigator at bottom — matches spec exactly.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: detail main chart, full-extent mini chart,
+          selection window, resize handles, shared styling, proportional navigator
+          height, date range label.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = datetime, Y = temperature. Main chart zooms [400:520]; navigator
+          shows all 1095 points.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'line-navigator · python · matplotlib · anyplot.ai'.
+          No legend (single series — correct omission).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All navigator aspects demonstrated: zoom view, overview, selection
+          highlight, grayout, handles, date label.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily temperature readings over 3 years with realistic trend+seasonal+noise.
+          Neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature ~20-35°C, 1095 daily data points — perfectly sized for
+          the navigator concept.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -148,43 +186,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas)
+        comment: All 5 imports (os, mpatches, plt, np, pd) are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Using matplotlib.patches directly is fine but mpatches alias is less
-          common
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI. Clean logical flow.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches='tight', uses fig.subplots_adjust.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses axes-level methods throughout; mpatches.Rectangle, axvspan,
+          axvline, height_ratios all idiomatic.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses subplots with height_ratios, patches, fill_between, axvspan,
-          annotations - good library usage but no advanced features like widgets/sliders
+        comment: mpatches.Rectangle for selection window, axvspan for non-selected
+          region masking, axvline for handles, height_ratios for proportional panels
+          are matplotlib-specific and well-suited.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -194,9 +239,8 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - time-series
+  - explicit-figure
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling

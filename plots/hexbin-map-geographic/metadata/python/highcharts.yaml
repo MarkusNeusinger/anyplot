@@ -1,0 +1,268 @@
+library: highcharts
+language: python
+specification_id: hexbin-map-geographic
+created: '2026-05-27T13:37:16Z'
+updated: '2026-05-27T13:59:44Z'
+generated_by: claude-sonnet
+workflow_run: 26513856977
+issue: 3767
+language_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect code quality: clean flat structure, reproducible seed, all imports used,
+    correct output filenames'
+  - Correct imprint_seq colormap (#009E73→#4467A3) for sequential density data
+  - Idiomatic Highcharts tilemap module with hexagon shape — right tool for the job
+  - Geographic state region context via plotBands/plotLines with brand-tinted fills
+    is creative and on-brand
+  - Custom JS tooltip formatter with coordinate conversion adds genuine interactivity
+    value
+  - Adaptive title fontsize and theme-adaptive chrome are correctly implemented
+  - CDP setDeviceMetricsOverride + PIL belt-and-braces ensures exact 3200×1800 canvas
+  weaknesses:
+  - Spec requires aggregation method support (count/sum/mean selectable) — only count
+    is implemented; add a configurable AGG_METHOD variable with a simple if/elif branch
+    that computes sum or mean per hex bin from the value array
+  - Subtitle fontsize (38px) sits below tick label size (44px), creating an inverted
+    hierarchy — raise to 44px or align with tick label size
+  - 'DE-03 gap: no emphasis annotation or callout highlighting the peak-density cluster(s);
+    adding a text annotation at the top-1 or top-3 hex centroids would complete the
+    storytelling arc'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Yellowstone Sightings · hexbin-map-geographic · python · highcharts · anyplot.ai" in dark #1A1A17 ink with adaptive fontsize ~58px. Subtitle in INK_SOFT at 38px. Axis labels "Longitude (°W)" and "Latitude (°N)" in dark ink at 56px. Tick labels at 44px in INK_SOFT. State region labels (Idaho, Wyoming, Montana) in italic INK_SOFT at 34px. Border labels "ID | WY" and "MT | WY border · 45°N" in INK_SOFT at 30px. Colorbar title "Sightings per cell" and labels at 44px. All text readable.
+      Data: Hexagonal cells color-coded from #009E73 (brand green, low density) to #4467A3 (blue, high density) via imprint_seq. Opacity 0.90 with PAGE_BG borders. State bands: Idaho (cyan tint 0.08), Wyoming (green tint 0.08), Montana (blue tint 0.08). Dashed plotLines mark state borders.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in #F0EFE8 (INK for dark), axis labels in #F0EFE8, tick labels and secondary text in #B8B7B0 (INK_SOFT for dark). Elevated legend background #242420. All text clearly readable against dark surface. No dark-on-dark failures detected.
+      Data: Hexagon colors identical to light render — #009E73 to #4467A3 gradient unchanged, confirming only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized (title ~58px adaptive, axis labels 56px,
+          tick labels 44px). Readable in both themes. Subtitle at 38px slightly below
+          tick label size 44px — inverted hierarchy minor issue.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: State region and border labels positioned outside dense hexagon cluster.
+          Minor potential for Wyoming label crowding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hexagonal cells clearly visible at opacity 0.90 with PAGE_BG borders.
+          Full density color gradient well-defined.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green to blue) is CVD-safe. No red-green pairing as
+          sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Generous margins. Colorbar on right
+          slightly tight but functional. PIL belt-and-braces in place.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°W) and Latitude (°N) with units. Colorbar title Sightings
+          per cell descriptive. Mandatory title format with descriptive prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly applied (minColor: #009E73, maxColor: #4467A3).
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. All chrome tokens
+          theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: State region bands use brand-color tints as geographic base layer
+          — intentional and on-brand. Dashed border lines with textual labels add
+          cartographic polish. Custom tooltip with geographic coordinate conversion.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'tickLength: 0 removes tick marks, plotBorderWidth: 0 eliminates
+          chart frame, hexagon borders use PAGE_BG, credits disabled. Subtle 15%-opacity
+          grid.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic state boundaries orient viewer spatially. Multiple density
+          clusters create realistic pattern. No explicit hotspot callout or emphasis
+          annotation for peak-density cells.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Highcharts tilemap with hexagon tileShape is the correct chart type
+          for hexagonal binning on a geographic grid.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Sequential colormap, colorbar, configurable hexagon size, transparency,
+          geographic context, hover tooltips all present. Missing: spec requires aggregation
+          method support (count/sum/mean) — only count implemented.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Custom JS formatters correctly convert tilemap grid coordinates to
+          geographic lon/lat with degree symbols. Full extent shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Yellowstone Sightings · hexbin-map-geographic · python · highcharts
+          · anyplot.ai follows mandated format with descriptive prefix. Colorbar legend
+          with descriptive title.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Hexagonal binning, color-coded density, geographic axes with formatters,
+          state boundary context, interactive tooltips demonstrated. Not shown: multiple
+          aggregation modes.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Yellowstone/Grand Teton wildlife sightings is realistic and neutral.
+          Observation zones at actual park coordinates. ~5900 synthetic points. Plausible
+          count values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lat 43.4-45.4N, Lon 111.6-109.4W covers actual Yellowstone/Grand
+          Teton area. HEX_R=0.11 degrees ~= 12 km matches spec claim. Cell counts
+          up to ~400 plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Clear top-to-bottom sections: theme tokens,
+          data generation, hex binning, chart options, JS formatters, HTML, Selenium
+          export.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before all random calls.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: json, math, os, tempfile, time, urllib.request,
+          pathlib.Path, numpy, PIL, selenium.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean implementation. Custom hex-binning algorithm necessary and
+          clearly structured. JS formatters for coordinate conversion well-formed.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of Highmaps tilemap module with hexagon shape. plotBands/plotLines
+          for geographic context is idiomatic. colorAxis with min/maxColor correctly
+          applied. Full Selenium/CDP/PIL pattern from library guide followed.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Highcharts tilemap with hexagon tileShape is a Highmaps-specific
+          feature. Custom JS formatter strings embedded in Python (Highcharts-specific
+          pattern). plotBands with tinted state regions as geographic context approach.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - custom-colormap

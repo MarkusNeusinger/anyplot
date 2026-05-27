@@ -1,0 +1,253 @@
+library: ggplot2
+language: r
+specification_id: hexbin-map-geographic
+created: '2026-05-27T13:37:31Z'
+updated: '2026-05-27T14:02:48Z'
+generated_by: claude-sonnet
+workflow_run: 26514087663
+issue: 3767
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Correct imprint_seq colormap (#009E73 to #4467A3) applied to continuous density
+    data — full palette compliance.'
+  - 'Full theme-adaptive chrome: all map colors (land, water, border), text, backgrounds,
+    and legend box flip cleanly between light and dark themes.'
+  - Smart ggplot2-native geographic base map using geom_polygon with hand-digitized
+    NYC outlines — avoids sf/ggmap dependency while staying within ggplot2 grammar.
+  - coord_fixed(ratio=1) correctly maintains geographic aspect ratio for the lat/lon
+    coordinate space.
+  - Midtown hotspot annotation with directional arrow adds genuine data storytelling.
+  - 'Full spec compliance: hexagonal binning, geographic context, color scale, transparency,
+    and count aggregation all present.'
+  weaknesses:
+  - Midtown hotspot annotation text (size=2.7 mm ~7.7pt) is slightly small on the
+    3200x1800 canvas — at mobile scale (~400px thumbnail) the text becomes borderline
+    legible. Consider size=3.5-4.0 for better robustness at small sizes.
+  - Hand-digitized geographic outlines produce rough/simplified coastlines. Hexagonal
+    bins near geographic boundaries create jagged edges where hexagons extend over
+    water. This limits visual polish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "hexbin-map-geographic · r · ggplot2 · anyplot.ai" in bold dark ink, fully readable. Axis labels "Latitude" / "Longitude" in dark INK at 10pt, tick labels in INK_SOFT at 8pt showing formatted degree values (40.80°N, 73.95°W style). "Midtown hotspot" italic annotation in dark ink with directional arrow — visible but small (size=2.7mm). Legend "Pickup Count" colorbar with dark title and secondary text, bordered box with elevated background.
+      Data: Hexagonal bins transition from #009E73 (green, low-density periphery) to #4467A3 (blue-purple, high-density Midtown core). Land polygons in light tan (#E6E0D4), water/panel in light blue (#C8DCE8), borders in muted gray.
+      Legibility verdict: PASS — all text elements readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title in #F0EFE8 near-white, fully legible. Axis labels and tick labels in #B8B7B0 light gray — readable against dark background. "Midtown hotspot" annotation in #F0EFE8 (INK in dark mode) — white text, no dark-on-dark failure. Legend box uses #242420 elevated dark background with subtle border.
+      Data: Hexbin colors identical to light render (#009E73 green periphery → #4467A3 blue-purple core). Land in dark brown (#2C2A22), water in dark navy (#1A2530), borders in muted dark gray (#58584E).
+      Legibility verdict: PASS — all text elements readable against dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set and well-proportioned. Minor deduction:
+          annotation text size=2.7mm (~7.7pt) is slightly small for mobile readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hexagonal bins well-sized (bins=38) with alpha=0.88; density gradient
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green to blue) is CVD-safe and distinguishable under
+          all CVD types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas; coord_fixed maintains geographic aspect
+          ratio; generous margins; canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Latitude/Longitude with formatted degree labels; title follows correct
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_fill_gradient(low=#009E73, high=#4467A3) is correct imprint_seq;
+          PAGE_BG is #FAF8F1/#1A1A17; full theme-adaptive chrome.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above well-configured default. Theme-adaptive geographic base map
+          shows deliberate design thinking. Annotation adds polish. Simplified outlines
+          and jagged hexbin boundaries prevent higher score.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal base; minor grid suppressed; MAP_WATER panel background;
+          legend styled with border and elevated fill; very subtle grid lines (linewidth=0.10).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Midtown hotspot annotation with directional arrow guides viewer attention.
+          Geographic context provides immediate spatial narrative. Multiple density
+          zones visible.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_hex() on lat/lon coordinates is correct hexagonal binning for
+          geographic data.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Hexagonal grid, sequential color scale with legend, geographic base
+          map, transparency (alpha=0.88), count aggregation.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon->x, lat->y, count->fill; coord_fixed(ratio=1) maintains geographic
+          aspect ratio.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title hexbin-map-geographic · r · ggplot2 · anyplot.ai correct; Pickup
+          Count colorbar legend with comma-formatted labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates hexagonal binning, geographic base map overlay, multi-cluster
+          density variation, transparency, and colorbar legend.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NYC taxi pickup density is a well-known neutral real-world use case.
+          Named clusters ground the data in recognizable geography.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~18,200 simulated GPS points; valid NYC coordinate bounds; hexbin
+          counts peaking ~400-500 are realistic for the bin granularity.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean procedural flow: theme tokens -> data -> map polygons -> plot
+          -> save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, scales, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear and readable; comment explains sf-free geographic approach;
+          no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ragg::agg_png; correct API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_hex(), geom_polygon(), coord_fixed(), guide_colorbar(), scale_fill_gradient()
+          are all idiomatic ggplot2 patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ggplot2-specific stat_bin_hex through geom_hex() and grammar-of-graphics
+          layer composition. Solid but doesn't reach more advanced stat/layer territory.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
