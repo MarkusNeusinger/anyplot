@@ -47,7 +47,8 @@ day_labels_full <- paste0("Day ", seq_len(n_days), " (n=", day_counts, ")")
 levels(quakes$day_label) <- day_labels_full
 
 # --- Plot -------------------------------------------------------------------
-title_text <- "map-animated-temporal · r · ggplot2 · anyplot.ai"
+title_text    <- "map-animated-temporal · r · ggplot2 · anyplot.ai"
+subtitle_text <- "Tohoku aftershock sequence: aftershock frequency decays via Omori law as spatial spread grows"
 
 p <- ggplot(quakes, aes(x = lon, y = lat)) +
   geom_point(
@@ -63,7 +64,7 @@ p <- ggplot(quakes, aes(x = lon, y = lat)) +
     low = "#009E73", high = "#4467A3",
     name = "Mag", limits = c(2.5, 7.5)
   ) +
-  scale_size_continuous(range = c(0.5, 3.2), guide = "none") +
+  scale_size_continuous(range = c(0.8, 4.5), guide = "none") +
   scale_x_continuous(
     limits = c(139.5, 145.5),
     breaks = c(140, 142, 144),
@@ -76,7 +77,8 @@ p <- ggplot(quakes, aes(x = lon, y = lat)) +
   ) +
   facet_wrap(~ day_label, nrow = 3) +
   labs(
-    title = title_text,
+    title    = title_text,
+    subtitle = subtitle_text,
     x = "Longitude", y = "Latitude"
   ) +
   theme_minimal(base_size = 7) +
@@ -87,17 +89,19 @@ p <- ggplot(quakes, aes(x = lon, y = lat)) +
     panel.grid.minor  = element_blank(),
     panel.border      = element_rect(color = INK_SOFT,  fill = NA, linewidth = 0.25),
     axis.title        = element_text(color = INK,       size = 9),
-    axis.text         = element_text(color = INK_SOFT,  size = 5),
+    axis.text         = element_text(color = INK_SOFT,  size = 8),
     axis.text.x       = element_text(angle = 45,        hjust = 1),
     plot.title        = element_text(color = INK,       size = 12, hjust = 0.5,
+                                     margin = margin(b = 4)),
+    plot.subtitle     = element_text(color = INK_SOFT,  size = 8,  hjust = 0.5,
                                      margin = margin(b = 6)),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                      linewidth = 0.25),
-    legend.text       = element_text(color = INK_SOFT,  size = 7),
+    legend.text       = element_text(color = INK_SOFT,  size = 8),
     legend.title      = element_text(color = INK,       size = 9),
     legend.key.height = unit(0.5, "cm"),
     strip.background  = element_rect(fill = ELEVATED_BG, color = NA),
-    strip.text        = element_text(color = INK,       size = 6.5, face = "bold"),
+    strip.text        = element_text(color = INK,       size = 8,  face = "bold"),
     plot.margin       = margin(8, 8, 8, 8)
   )
 
