@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-27
@@ -81,12 +81,33 @@ for idx in range(n_periods):
     ax.set_facecolor(PAGE_BG)
     period_label = f"Day {idx + 1}"
     period_data = df[df["period"] == period_label].copy()
+    cumulative_data = df[df["period"].isin([f"Day {i + 1}" for i in range(idx + 1)])].copy()
 
     # Ocean tint east of coastline
     ax.axvspan(141.5, epicenter_lon + 3.5, color=OCEAN_TINT, alpha=0.35, zorder=0)
 
     # Simplified coastline for geographic context
     ax.plot(coast_lons, coast_lats, color=INK_SOFT, linewidth=0.8, alpha=0.65, zorder=2)
+
+    # Cumulative KDE density contours (seaborn-distinctive): show where aftershocks cluster
+    if idx >= 1:
+        sns.kdeplot(
+            data=cumulative_data,
+            x="lon",
+            y="lat",
+            ax=ax,
+            color=INK_SOFT,
+            alpha=0.30,
+            fill=False,
+            levels=3,
+            linewidths=0.7,
+            zorder=1,
+        )
+
+    # Ghost trail: previous periods' scatter points (temporal history)
+    if idx > 0:
+        trail_data = df[df["period"].isin([f"Day {i + 1}" for i in range(idx)])].copy()
+        ax.scatter(trail_data["lon"], trail_data["lat"], s=3, c=INK_SOFT, alpha=0.15, zorder=2, linewidths=0)
 
     # Aftershock scatter with dual encoding: hue + size for magnitude
     sns.scatterplot(
@@ -112,13 +133,26 @@ for idx in range(n_periods):
 
     ax.set_xlim(epicenter_lon - 3.5, epicenter_lon + 3.5)
     ax.set_ylim(epicenter_lat - 3.5, epicenter_lat + 3.5)
-    ax.set_title(period_label, fontsize=7.5, fontweight="bold", color=INK)
-    ax.set_xlabel("Lon (°E)" if idx >= 3 else "", fontsize=6, color=INK)
-    ax.set_ylabel("Lat (°N)" if idx % 3 == 0 else "", fontsize=6, color=INK)
-    ax.tick_params(axis="both", labelsize=5, colors=INK_SOFT)
+    ax.set_title(period_label, fontsize=9, fontweight="bold", color=INK)
+    ax.set_xlabel("Lon (°E)" if idx >= 3 else "", fontsize=8, color=INK)
+    ax.set_ylabel("Lat (°N)" if idx % 3 == 0 else "", fontsize=8, color=INK)
+    ax.tick_params(axis="both", labelsize=6.5, colors=INK_SOFT)
     ax.grid(True, alpha=0.12, linewidth=0.5, color=INK)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+
+    # Point count annotation per panel
+    ax.text(
+        0.97,
+        0.04,
+        f"n={len(period_data)}",
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=6.5,
+        color=INK_SOFT,
+        style="italic",
+    )
 
 # Overall title
 title = "map-animated-temporal · python · seaborn · anyplot.ai"
@@ -130,8 +164,8 @@ sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
 cbar_ax = fig.add_axes([0.93, 0.20, 0.013, 0.58])
 cbar = fig.colorbar(sm, cax=cbar_ax)
-cbar.set_label("Magnitude", fontsize=6, color=INK)
-cbar.ax.tick_params(labelsize=5, colors=INK_SOFT)
+cbar.set_label("Magnitude", fontsize=7.5, color=INK)
+cbar.ax.tick_params(labelsize=6.5, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
 # Legend for map context markers
@@ -152,7 +186,7 @@ fig.legend(
     handles=[epicenter_handle, coast_handle],
     loc="lower center",
     bbox_to_anchor=(0.46, 0.02),
-    fontsize=5.5,
+    fontsize=7,
     framealpha=0.92,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
@@ -160,5 +194,5 @@ fig.legend(
     handlelength=1.2,
 )
 
-fig.subplots_adjust(left=0.07, right=0.91, top=0.87, bottom=0.13, wspace=0.32, hspace=0.42)
+fig.subplots_adjust(left=0.08, right=0.91, top=0.88, bottom=0.14, wspace=0.38, hspace=0.50)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
