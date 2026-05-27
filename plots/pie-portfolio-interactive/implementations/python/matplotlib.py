@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-27
@@ -22,6 +22,8 @@ PCT_COLOR = "#FFFDF6" if THEME == "light" else "#F0EFE8"
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — diversified balanced fund allocation
+PORTFOLIO_TOTAL = 1_000_000
+
 categories = {
     "Equities": {"US Large Cap": 25.0, "International": 15.0, "Emerging Markets": 8.0},
     "Fixed Income": {"Government Bonds": 18.0, "Corporate Bonds": 12.0},
@@ -48,7 +50,7 @@ holding_colors = [cat_colors[i] for i in holding_cat_idx]
 # Plot — square canvas for pie/donut chart
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
-fig.subplots_adjust(left=0.0, right=0.60, top=0.88, bottom=0.06)
+fig.subplots_adjust(left=0.0, right=0.52, top=0.92, bottom=0.02)
 
 # Inner ring — asset class totals
 inner_wedges, _, inner_pcts = ax.pie(
@@ -90,21 +92,23 @@ legend_handles = []
 legend_labels = []
 for i, cat in enumerate(cat_labels):
     legend_handles.append(Patch(facecolor=cat_colors[i], edgecolor=INK_MUTED, linewidth=0.8))
-    legend_labels.append(f"{cat}  {cat_weights[i]:.0f}%")
+    cat_value = cat_weights[i] / 100 * PORTFOLIO_TOTAL
+    legend_labels.append(f"{cat}  {cat_weights[i]:.0f}%  ${cat_value:,.0f}")
     for j in range(len(holdings)):
         if holding_cat_idx[j] == i:
             legend_handles.append(Patch(facecolor=cat_colors[i], alpha=0.60, edgecolor=INK_MUTED, linewidth=0.5))
-            legend_labels.append(f"  {holdings[j]}  {holding_weights[j]:.0f}%")
+            holding_value = holding_weights[j] / 100 * PORTFOLIO_TOTAL
+            legend_labels.append(f"  {holdings[j]}  {holding_weights[j]:.0f}%  ${holding_value:,.0f}")
 
 leg = ax.legend(
     legend_handles,
     legend_labels,
     loc="center left",
     bbox_to_anchor=(1.06, 0.5),
-    fontsize=6,
+    fontsize=8,
     frameon=True,
     title="Asset Allocation",
-    title_fontsize=7,
+    title_fontsize=8,
     borderpad=1.0,
     labelspacing=0.55,
 )
@@ -118,4 +122,4 @@ title = "pie-portfolio-interactive · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 fig.text(0.50, 0.96, title, ha="center", va="top", fontsize=title_fontsize, fontweight="medium", color=INK)
 
-plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
