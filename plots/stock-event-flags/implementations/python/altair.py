@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-27
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-27
 """
 
 import os
