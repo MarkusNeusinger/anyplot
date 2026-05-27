@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-27
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-27
 """
 
 import importlib.util
