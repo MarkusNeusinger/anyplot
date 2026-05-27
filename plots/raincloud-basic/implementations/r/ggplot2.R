@@ -16,7 +16,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
-GRID        <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+GRID        <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 BOX_FILL    <- if (THEME == "light") "#FFFDF6" else "#242420"
 
 ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
@@ -93,9 +93,10 @@ p <- ggplot() +
         expand = expansion(add = c(0.45, 0.55))
     ) +
     scale_x_continuous(
-        breaks = seq(300, 800, by = 100),
+        breaks = seq(300, 900, by = 100),
         labels = function(x) paste0(x, " ms"),
-        expand = expansion(mult = c(0.02, 0.02))
+        limits = c(NA, 905),
+        expand = expansion(mult = c(0.02, 0.01))
     ) +
     labs(
         title = "Reaction Time by Condition · raincloud-basic · r · ggplot2 · anyplot.ai",
@@ -107,7 +108,7 @@ p <- ggplot() +
     theme(
         plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG, color = NA),
-        panel.grid.major.x = element_line(color = GRID, linewidth = 0.15),
+        panel.grid.major.x = element_line(color = GRID, linewidth = 0.1),
         panel.grid.major.y = element_blank(),
         panel.grid.minor   = element_blank(),
         axis.title.x       = element_text(color = INK, size = 10,
@@ -119,7 +120,7 @@ p <- ggplot() +
         axis.ticks         = element_blank(),
         plot.title         = element_text(color = INK, size = 11,
                                           margin = margin(b = 14),
-                                          face = "plain"),
+                                          face = "bold"),
         plot.margin        = margin(20, 28, 16, 16)
     )
 
