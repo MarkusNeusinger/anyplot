@@ -1,153 +1,203 @@
 library: seaborn
+language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:14:35Z'
-updated: '2026-01-21T13:17:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21210864197
+updated: '2026-05-27T23:13:32Z'
+generated_by: claude-sonnet
+workflow_run: 26542890403
 issue: 3749
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent flag positioning with alternating heights to avoid overlap
-  - Distinct markers and colors for each event type make it easy to identify events
-    at a glance
-  - Realistic stock price data with appropriate volatility and a clear price narrative
-  - Clean annotation boxes with rounded corners and colored borders matching event
-    types
-  - Good use of vertical dashed connector lines for precise date alignment
+  - 'Proper seaborn API usage: sns.lineplot for price, sns.regplot with ci=95 for
+    confidence-interval trend bands — genuinely seaborn-distinctive statistical visualization'
+  - 'Excellent spec compliance: all four event types (earnings, dividend, split, news)
+    with distinct marker shapes plus anyplot palette colors, vertical dashed connector
+    lines, and alternating flag heights'
+  - 'Correct theme adaptation in both renders: theme tokens wired to every chrome
+    element (background, spines, tick colors, legend, annotation boxes), data colors
+    identical across themes'
+  - 'Strong data storytelling: 2:1 split creates a clear narrative inflection point,
+    two separate regression segments reveal pre/post-split trend phases'
+  - Clean KISS code structure with seed set, explicit font sizes throughout, and no
+    bbox_inches=tight violation
   weaknesses:
-  - Legend position overlaps with the beginning of the price line and first event
-    flag area
-  - The stock split event should ideally show the price adjustment that occurs during
-    a real split
-  image_description: 'The plot displays a stock price time series from January 2025
-    to September 2025, rendered as a blue line chart with a light blue area fill beneath.
-    The stock price ranges approximately from $115 to $165, with realistic volatility
-    showing a downtrend from ~$150 to ~$122 in the first half, followed by a recovery
-    to ~$148 by the end. Eight event flags are displayed with distinct markers and
-    colors: blue squares for earnings (Q4, Q1, Q2 Earnings), green diamonds for dividends
-    (Div $0.50, Div $0.55), purple triangle for split (2:1 Split), and orange circles
-    for news (Product Launch, Partnership). Each event has a vertical dashed connector
-    line linking the marker on the price line to a text label in a rounded box positioned
-    above or below the price. The flags alternate positions to avoid overlap. A legend
-    in the upper left clearly identifies event types. The title follows the required
-    format "stock-event-flags · seaborn · pyplots.ai".'
+  - 'DE-01 not at 6/8: the busy annotation area (8 colorful flag boxes) reduces overall
+    aesthetic cohesion — consider reducing annotation box opacity or using a single
+    unified annotation style to let the price line breathe more'
+  - 'DE-02 at 4/6: the implementation is well-refined but could reach 6/6 with tighter
+    margins (fig.subplots_adjust) and slightly smaller event marker sizes (s=50 instead
+    of s=70) to reduce visual density in the crowded pre-split segment'
+  - 'VQ-02 minor: flags in the Jan–Apr 2025 window (Q4 Earnings, Div $0.50, Product
+    Launch, Q1 Earnings) are closely spaced; though no actual overlap, the visual
+    density makes the left half of the chart harder to read at mobile widths — stagger
+    offsets more aggressively or use longer alternating pct multipliers'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, no pure white
+      Chrome: Title "stock-event-flags · python · seaborn · anyplot.ai" at fontsize=12 is fully visible in dark ink; x-axis label "Date" and y-axis label "Stock Price ($)" at fontsize=10 both readable; tick labels at fontsize=8 readable; all text dark against light background
+      Data: Primary stock price line in brand green #009E73 with matching semi-transparent area fill (alpha=0.12); 8 event flags in anyplot palette colors — earnings=lavender #C475FD, dividend=blue #4467A3, split=ochre #BD8233, news=red #AE3030; two dotted trend-line segments with 95% CI bands in muted gray; legend in lower right with elevated background box
+      Legibility verdict: PASS — all text readable; flags in the pre-split Jan–Apr window are closely spaced but no actual overlap; flag boxes use colored borders with elevated background fill
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title and all axis/tick labels render in light ink (#F0EFE8 / #B8B7B0) clearly visible against the dark background; no dark-on-dark failures observed; legend box uses elevated dark background #242420 with light text; annotation boxes use same elevated background ensuring readability
+      Data: Stock price line and all event markers use identical colors to the light render — brand green #009E73, lavender, blue, ochre, red — as required (data colors theme-invariant); trend segments with CI bands in muted light-gray, area fill in brand green at alpha=0.12
+      Legibility verdict: PASS — all chrome correctly adapted; data colors identical to light render; no legibility failures in dark mode
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: Event flags use alternating heights, no overlapping text
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Markers visible with good sizing (s=120), line width 2.5 appropriate
+        comment: All sizes explicitly set (title=12, axes=10, ticks=8, legend=8);
+          both themes fully readable; minor deduction for tight flag label spacing
+          in the pre-split period reducing mobile readability slightly
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Alternating above/below flag placement prevents overlap effectively;
+          Jan–Apr window has four flags in close proximity — no actual pixel overlap
+          but visual density is noticeable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Price line at linewidth=2.0 appropriate for 180 trading days; event
+          markers at s=70 clearly visible; area fill alpha=0.12 subtle and correct;
+          trend bands legible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, green, purple, orange are colorblind-distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight excess whitespace on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Date and Stock Price ($) with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Four event types use distinct anyplot palette colors AND distinct
+          marker shapes — redundant encoding is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins; legend lower-right
+          well-positioned; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend position overlaps with the beginning of the price line
+        passed: true
+        comment: 'Y-axis: ''Stock Price ($)'' with units; X-axis: ''Date''; title
+          in correct anyplot format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary line #009E73; event colors from palette positions 2–5; backgrounds
+          #FAF8F1 light / #1A1A17 dark; all chrome theme-adaptive; data colors identical
+          across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: CI trend bands, area fill, rounded
+          annotation boxes, alternating flag layout all show design intent; not quite
+          6/8 due to the dense multi-colored annotation area reducing overall aesthetic
+          cohesion'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; y-axis only grid at alpha=0.15; polished
+          legend with elevated background; annotation boxes with rounded corners;
+          good whitespace — solid refinement but not every detail polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 2:1 split creates dramatic visual focal point; two regression segments
+          reveal pre/post-split market phases; alternating flag heights guide reading;
+          area fill gives price range visual weight — good hierarchy guiding the viewer
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct stock chart with event flags
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X, price on Y, events correctly mapped
-      - id: SC-03
+        comment: Stock price line chart with flag-style event markers — correct type
+          fully implemented
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has flags, markers, connector lines, different event types. Missing
-          hover interactions but acceptable for static library
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: 4 event types, distinct colors+shapes,
+          vertical dashed connector lines, alternating height placement, annotation
+          labels, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=dates, Y=stock price; events correctly aligned to nearest trading
+          dates; all 180 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 event types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: stock-event-flags · seaborn · pyplots.ai
+        comment: Title is exactly 'stock-event-flags · python · seaborn · anyplot.ai';
+          legend shows Stock Price, Trend (95% CI), Earnings, Dividend, Split, News
+          with correct labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple event types (earnings, dividends, split, news), both
-          price rises and falls
+        comment: 'Shows all spec features: 4 event types over 180 trading days; includes
+          a 2:1 stock split with real price adjustment; both upward and downward price
+          movements; earnings-cadence pattern'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Technology stock scenario with quarterly earnings, dividends, product
-          launches - very realistic
+        comment: Realistic tech company scenario — quarterly earnings, dividends ($0.50/$0.55),
+          product launches, partnership news, 2:1 stock split; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Stock price $115-165 and ~180 trading days appropriate
+        comment: Price range ~$60–160 realistic for mid-cap tech; 2:1 split correctly
+          halves post-split prices; dividend amounts plausible; 9-month timeframe
+          appropriate
     code_quality:
       score: 10
       max: 10
@@ -157,11 +207,12 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear flow
+        comment: 'Linear: imports → tokens → data → plot → events → style → save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -169,30 +220,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: matplotlib.dates, plt, Line2D, numpy, pandas,
+          seaborn, os, pathlib, sys'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current seaborn/matplotlib APIs
+        comment: Clean, appropriate complexity; percentage-based flag offset is well-reasoned;
+          no over-engineering; no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'; current
+          seaborn API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot and sns.set_style, but most annotation work done
-          with matplotlib directly
+        comment: sns.lineplot for price, sns.regplot with ci=95 for statistical trend,
+          sns.set_theme for styling, axes-level API throughout — idiomatic; slight
+          deduction for the x_mpl workaround needed to feed dates into regplot
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.regplot with ci=95 confidence interval bands is genuinely distinctive
+          to seaborn's statistical plotting capabilities; two-segment approach (pre/post
+          split) leverages this in a non-trivial way that couldn't easily be replicated
+          in matplotlib without calling statsmodels directly
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -204,7 +268,8 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - time-series
+  - regression
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting
