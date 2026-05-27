@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-27
 """
 
 import os
@@ -35,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
 
-# Data - 3 years of daily temperature sensor readings (1100 data points)
+# Data - 3 years of daily industrial temperature sensor readings (1100 data points)
 np.random.seed(42)
 n_days = 1100
 dates = pd.date_range("2021-01-01", periods=n_days, freq="D")
@@ -67,6 +66,7 @@ title_str = "line-navigator · python · plotnine · anyplot.ai"
 shared_theme = theme_minimal() + theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=10),
@@ -101,13 +101,13 @@ p_navigator = (
     )
     + geom_vline(data=range_highlight, mapping=aes(xintercept="xmin"), color=BRAND, size=1.2, linetype="solid")
     + geom_vline(data=range_highlight, mapping=aes(xintercept="xmax"), color=BRAND, size=1.2, linetype="solid")
-    + geom_line(color=BRAND, size=0.5, alpha=0.7)
+    + geom_line(color=BRAND, size=0.7, alpha=0.7)
     + annotate(
         "text",
         x=range_start + (range_end - range_start) / 2,
         y=nav_y_max - (nav_y_max - nav_y_min) * 0.12,
-        label="Selected",
-        size=2.5,
+        label=f"{range_start.strftime('%b %Y')} – {range_end.strftime('%b %Y')}",
+        size=3.5,
         color=INK_SOFT,
     )
     + scale_x_datetime(date_labels="%Y", date_breaks="1 year")
@@ -116,7 +116,7 @@ p_navigator = (
     + shared_theme
     + theme(
         plot_title=element_text(size=8, color=INK_SOFT),
-        axis_text=element_text(size=7, color=INK_SOFT),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_title=element_text(size=8, color=INK_SOFT),
         panel_grid_major=element_blank(),
     )
