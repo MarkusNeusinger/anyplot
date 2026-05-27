@@ -1,7 +1,7 @@
 # anyplot.ai
 # map-tile-background: Map with Tile Background
-# Library: Makie.jl | Julia
-# Quality: pending | Created: 2026-05-27
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 72/100 | Created: 2026-05-27
 
 using CairoMakie
 using Colors
