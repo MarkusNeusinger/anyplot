@@ -1,0 +1,271 @@
+library: altair
+language: python
+specification_id: map-animated-temporal
+created: '2026-05-27T09:35:04Z'
+updated: '2026-05-27T10:00:12Z'
+generated_by: claude-sonnet
+workflow_run: 26502411073
+issue: 3769
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/altair/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Thoughtful theme-adaptive map styling (LAND_FILL and OCEAN_FILL tokens adapt correctly
+    to both themes)
+  - 'Correct continuous colormap usage: imprint_seq equivalent (green→blue range)
+    for magnitude — dual encoding with size reinforces CVD safety'
+  - 'Excellent Altair idiom: alt.topo_feature, transform_filter, transform_calculate,
+    geographic projection, multi-binding parameters all used correctly'
+  - 'Realistic and scientifically grounded data: Omori Law decay aftershock sequence
+    centered on Tohoku — neutral, plausible, and pedagogically strong'
+  - Creative timer signal injection via JSON spec manipulation to enable true animation
+    in HTML output
+  - 'Perfect spec compliance: play/pause checkbox, day slider, Day N/30 overlay, basemap,
+    cumulative filter all implemented'
+  - KISS code structure with no functions or classes; clean flat script with all imports
+    used
+  weaknesses:
+  - Day 16/30 timestamp overlay is fontsize=13, which is somewhat small at 3200px
+    canvas resolution — spec requires the timestamp to be clearly displayed; consider
+    bumping to fontsize=15-16 for better prominence
+  - 'Design Excellence is moderate: the map lacks visual storytelling emphasis — consider
+    adding a subtle directional annotation or color-coded magnitude thresholds (e.g.,
+    M5+ in a distinct color) to create a focal point'
+  - The geographic zoom level (scale=1400) is tight on the study area but the earthquake
+    cluster itself occupies only ~25% of the visual canvas — the projection could
+    be widened slightly to show more regional context or the scale tuned to make the
+    data cluster more prominent
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, no pure white.
+      Chrome: Title "Earthquake Aftershock Sequence · map-animated-temporal · python · altair · anyplot.ai" rendered in dark INK (#1A1A17), clearly legible. Subtitle "Use slider or Play / Pause to animate cumulative aftershocks" in smaller INK_SOFT. Day 16/30 overlay text in lower-left of map area, readable but slightly small at fontsize=13. Magnitude legend (bottom-right) shows size-graded circles labeled 2-7 with fillColor=ELEVATED_BG frame — all readable.
+      Data: Earthquake circles in green-to-blue imprint_seq gradient (range=["#009E73", "#4467A3"]), size-encoded by magnitude (range [30, 480]), opacity=0.72. Dense cluster offshore Tohoku, with cumulative buildup through Day 16 of 30 well represented. Land in warm tan (#CCC4B0), ocean in cream (#E0D8C8) — clean contrast for circle visibility.
+      Legibility verdict: PASS — all text visible and readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
+      Chrome: Title and subtitle rendered in light INK (#F0EFE8 equivalent) — clearly visible against dark background. Day 16/30 overlay text still visible in light color. Legend frame adapted to ELEVATED_BG (#242420) with light label text. No dark-on-dark failures detected.
+      Data: Earthquake circle colors are identical to the light render (same imprint_seq green→blue gradient, same opacity). Land adapts to dark gray (#2D2D29), ocean to near-black (#1E1E1C) — correct theme flip. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS — theme chrome correctly flips; only data colors (positions 1–8) stay constant as required.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title fontsize correctly scaled for
+          85-char string. Day 16/30 overlay at fontsize=13 is slightly small for 3200px
+          canvas but readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; Day overlay is in clear geographic area, legend
+          is well-separated from data cluster.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Circles well-sized (range 30-480 by magnitude), opacity=0.72 appropriate
+          for cumulative ~200-point density. Smallest magnitude-2 circles may be partially
+          obscured under larger ones in the dense cluster.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dual encoding (size + color) for magnitude is excellent CVD accommodation;
+          imprint_seq (green→blue) is perceptually uniform and CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Ocean fill covers the full padded 3200x1800 canvas. Map area is well-utilized,
+          though the earthquake cluster itself occupies roughly 25% of visual area
+          due to the Mercator zoom level.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axis labels needed for a map. Descriptive title with
+          spec-id, subtitle explains interactivity. Magnitude legend is labeled.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses imprint_seq (green→blue, range=["#009E73",
+          "#4467A3"]) — correct. Backgrounds #FAF8F1 / #1A1A17 correct. Chrome fully
+          theme-adaptive in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive map colors (LAND_FILL/OCEAN_FILL) create a polished
+          warm/cool duality. Dual magnitude encoding is thoughtful. Above the default-4
+          baseline but not publication-ready — could add more focal point emphasis.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: No traditional spines (appropriate for map), strokeWidth=0 on view
+          border is clean, legend styling is subtle. Configure_legend with elevated
+          background and soft colors is nicely refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Cumulative filter approach (show all quakes up to selected day) is
+          a strong narrative choice — viewers see the aftershock sequence accumulate.
+          Omori Law decay makes the temporal story scientifically authentic.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: animated geographic map with point data driven by time
+          parameter.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Play/pause checkbox, day range slider, Day N/30 timestamp overlay,
+          basemap with country borders, cumulative animation, 800ms default speed
+          — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon→longitude, lat→latitude, magnitude→size+color, day→filter parameter
+          — all correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format: ''Earthquake Aftershock Sequence · map-animated-temporal
+          · python · altair · anyplot.ai'' — correct {Descriptive} · {spec-id} · {lang}
+          · {lib} · anyplot.ai pattern. Magnitude legend present and labeled.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: lat/lon point distribution, temporal animation,
+          magnitude color+size encoding, geographic clustering, temporal decay pattern.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Offshore Tohoku aftershock sequence — scientifically grounded, neutral,
+          comprehensible. Omori Law decay for aftershock rates is accurate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 38.3°N 142.4°E is accurate for 2011 Tohoku offshore. Magnitude 2.0-6.8
+          range is realistic for aftershock sequences. 30-day window with ~200 total
+          events matches real aftershock statistics.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Flat: imports → data generation → chart
+          layers → compose → save PNG → pad → save HTML.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 7 imports (json, os, sys, altair, numpy, pandas, PIL) are actually
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, Pythonic, no fake UI. JSON manipulation for timer
+          signal injection is a documented creative workaround, not a fake UI element.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses Altair 6.x API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent Altair idioms: alt.topo_feature, transform_filter, transform_calculate,
+          .project(), alt.layer, alt.TitleParams, binding_range + binding_checkbox.
+          Above the default-3 baseline.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Vega-Lite geographic projection, topojson data integration, reactive
+          transform_filter for animation, timer signal injection via JSON spec manipulation
+          — distinctly Altair/Vega-Lite capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
