@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:38:31Z'
-updated: '2026-05-27T15:27:59Z'
+updated: '2026-05-27T15:40:24Z'
 generated_by: claude-sonnet
 workflow_run: 26520049241
 issue: 3756
@@ -12,52 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Excellent use of Plotly tile map capabilities with theme-adaptive map styles (open-street-map
-    for light, carto-darkmatter for dark)
-  - 'Clean dual encoding: both marker size and color encode visitor count, creating
-    natural visual hierarchy with prominent top attractions'
-  - 'Correct anyplot imprint_seq colorscale (#009E73 → #4467A3) applied to continuous
-    visitor count data'
-  - Custom colorbar styling with theme-adaptive bgcolor, bordercolor, and proper tickformat
-  - Both PNG and interactive HTML outputs generated; hover tooltips with well-formatted
-    template
-  - Correct canvas dimensions (3200×1800) using width=800, height=450, scale=4
-  - Realistic and relatable dataset (European landmarks with plausible visitor counts)
-  - 'Full spec compliance: tile background, auto-fit zoom, attribution visible, interactive
-    map features'
+  - Theme-adaptive map tile providers (OpenStreetMap for light, Carto Dark Matter
+    for dark) is a distinctly sophisticated choice that ensures both renders feel
+    native to their theme
+  - Double encoding of visitor count via marker size AND continuous imprint_seq colorscale
+    creates strong visual hierarchy — the largest/darkest circles immediately draw
+    the eye to top attractions
+  - 'The ''★ Top attraction'' annotation callout with themed border specifically highlights
+    the Colosseum as #1, excellent data storytelling'
+  - Real European landmarks with accurate GPS coordinates and plausible visitor counts
+    demonstrate careful domain knowledge
+  - 'Full spec compliance: tile background, size/color encoding, attribution, interactive
+    hover tooltips, HTML export, and auto-fit zoom level'
   weaknesses:
-  - Two Prague landmarks (Charles Bridge lat=50.0865/lon=14.4114 and Old Town Square
-    lat=50.0870/lon=14.4208) are geographically nearly identical — at zoom 3.5 their
-    markers and text labels stack directly on top of each other causing clear overlap.
-    Replace one Prague landmark with a different city or spread them across different
-    Czech/Slovak cities.
-  - Western Europe cluster (Big Ben, Anne Frank House, Manneken Pis, Eiffel Tower)
-    causes label crowding at zoom 3.5 — consider using textposition='bottom center'
-    alternation or offsetting overlapping labels, or reduce the label font size to
-    11px to reduce crowding.
-  - 'Design Excellence is below the bar for approval: no visual annotation highlighting
-    the top attraction (Eiffel Tower at 7M or Colosseum at 7.4M), no subtitle storytelling
-    cue. Add a brief annotation or callout for the most-visited landmark to create
-    a clear focal point and improve DE-03.'
+  - Label font size (11px at scale=4 = 44 source px) is slightly small — the NW Europe
+    cluster (Big Ben, Manneken Pis, Anne Frank House) shows minor crowding; increasing
+    to 12-13px and/or reducing the zoom area to show more spacing would improve legibility
+  - The _select() helper function slightly violates KISS structure — inline list comprehensions
+    or direct array slicing would keep the code flat
+  - Two-trace approach (top_idx / bottom_idx) creates duplicated marker dict definitions
+    — a single trace with a mixed textposition list would be cleaner and more idiomatic
+    Plotly
+  - 'DE-02: map-type plots still benefit from styling the colorbar more prominently
+    and potentially adding a subtle outline/stroke to markers for better contrast
+    against busy map tile areas'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) paper background framing the OpenStreetMap tile layer, which provides the standard OSM street/terrain rendering over Europe.
-      Chrome: Title "European Landmarks by Visitor Count" in dark ink at 16px is clearly readable. Subtitle "map-tile-background · python · plotly · anyplot.ai" at 12px via HTML span is readable. Colorbar on the right shows "Annual Visitors" label (12px dark ink) with tick labels at 10px (INK_SOFT) formatted with commas — all readable against the FFFDF6 elevated background.
-      Data: 15 bubble markers across Europe sized (15–50px diameter) and colored using imprint_seq (#009E73 → #4467A3); low-visitor landmarks appear green, high-visitor appear blue. Eiffel Tower and Colosseum have the largest/bluest markers. Landmark name labels in dark ink (14px, textposition top center) are legible individually. OSM attribution "© OpenStreetMap contributors" is visible bottom-right.
-      Legibility verdict: PASS — all chrome text is readable. Minor label crowding in the Netherlands/Belgium/France cluster (Big Ben, Anne Frank House, Manneken Pis, Eiffel Tower). The two Prague landmarks (Charles Bridge, Old Town Square) overlap significantly due to near-identical coordinates.
+      Background: Warm off-white (#FAF8F1) paper_bgcolor surrounds the OpenStreetMap tile area; map tiles show street-level Europe detail in muted beige/green/grey.
+      Chrome: Two-line title "European Landmarks by Visitor Count" (16px, dark ink) + subtitle "map-tile-background · python · plotly · anyplot.ai" (12px) both clearly readable at top. Colorbar right-side with "Annual Visitors" label and tick labels in INK/INK_SOFT (dark) — fully readable. Annotation box "★ Top attraction / Colosseum · 7.4M visitors/yr" with green (#009E73) border and ELEVATED_BG (#FFFDF6) fill sits cleanly in lower-center.
+      Data: 15 circular markers sized 15–50px proportional to visitor count, colored via imprint_seq (#009E73 green for low-visitor to #4467A3 blue for high-visitor). Landmark text labels in dark INK at 11px; alternating top/bottom positioning mitigates crowding. Colosseum and Eiffel Tower show largest/darkest markers. Attribution "© OpenStreetMap contributors" visible bottom-right.
+      Legibility verdict: PASS — all text readable; mild label density in NW Europe cluster but no actual occlusion of critical information.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) paper background framing the CartoDB Dark Matter tile layer, which shows a dark stylized map of Europe.
-      Chrome: Title and subtitle text are rendered in #F0EFE8 (light ink) and are clearly readable against the dark paper background. Colorbar title "Annual Visitors" and tick labels are in theme-correct light colors on the #242420 elevated colorbar background — all readable.
-      Data: Marker colors are identical to the light render — imprint_seq from #009E73 (green, low visitors) to #4467A3 (blue, high visitors) — data color identity is preserved across themes. Landmark name labels are in #F0EFE8 (light) against the dark map — readable throughout.
-      No dark-on-dark failures detected: text is light-on-dark throughout.
-      Legibility verdict: PASS — all text readable against dark background. Same Prague label overlap issue present. CARTO attribution visible bottom-right.
+      Background: Warm near-black (#1A1A17) paper_bgcolor surrounding Carto Dark Matter map tiles; dark grey/black tile aesthetic with light geographic labels.
+      Chrome: Title and subtitle in light (#F0EFE8) INK — clearly readable against dark background. Colorbar title "Annual Visitors" and tick labels in light INK_SOFT (#B8B7B0) — fully readable. Annotation box with green border and ELEVATED_BG (#242420) fill — good contrast. Landmark text labels in light INK (#F0EFE8) at 11px — readable against dark map.
+      Data: Identical marker colors to light render — imprint_seq green-to-blue gradient unchanged across themes. Marker sizes identical. Attribution "© CARTO, © OpenStreetMap contributors" visible bottom-right.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly adapts to dark theme; data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -65,85 +61,84 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 16px, labels 14px, colorbar
-          title 12px, colorbar ticks 10px). All text readable in both themes. Deduction
-          for label crowding in western Europe cluster and Prague overlap.
+        comment: 'All font sizes explicitly set (title 16px, subtitle 12px, labels
+          11px, colorbar 10-12px). Readable in both themes. Minor: label text at 11px
+          is slightly small for NW Europe cluster density.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Two Prague landmarks (Charles Bridge at lat=50.0865/lon=14.4114 and
-          Old Town Square at lat=50.0870/lon=14.4208) overlap at zoom 3.5. Some crowding
-          in Netherlands/Belgium/France cluster. Main content mostly readable.
+        comment: Clever two-trace approach alternates textposition top/bottom to mitigate
+          NW Europe cluster crowding. Minor residual crowding near Big Ben/Manneken
+          Pis but labels remain distinguishable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 15 markers well-sized (15–50px diameter) with 0.85 opacity. Color
-          and size dual encoding makes hierarchy clear. Smallest marker (Manneken
-          Pis at 15px) is still visible. Slight deduction as smallest markers could
-          be marginally larger.
+        comment: 'Markers sized 15-50px at 0.85 opacity, well visible against both
+          map styles. Size range appropriately reflects visitor count variation. Minor:
+          some smaller markers blend slightly with map tiles.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq colorscale (green→blue) is CVD-safe. Adequate contrast
-          between markers and both light and dark tile backgrounds.
+        comment: imprint_seq green-to-blue is CVD-safe. Size as redundant encoding
+          adds second channel. No red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Map fills canvas well. Margins (l=20, r=20, t=80, b=20) are tighter
-          than recommended but appropriate for map content. Colorbar well-placed.
-          Minor deduction for tight horizontal margins.
+        comment: Canvas gate passed. Map fills canvas well with appropriate margins
+          (t=80, l/r=20, b=20). Colorbar properly positioned right. No content cut
+          off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with context. Colorbar labeled 'Annual Visitors'
-          with comma-formatted tick values. N/A for axis labels on map.
+        comment: Map has no traditional axes. Colorbar labeled 'Annual Visitors'.
+          Title 'European Landmarks by Visitor Count' is descriptive. Appropriate
+          for map chart type.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used correctly for single-polarity continuous data. Light
-          paper_bgcolor=#FAF8F1, dark paper_bgcolor=#1A1A17. Theme-adaptive map styles
-          and chrome colors. Data colors identical across both renders.
+        comment: 'imprint_seq [[0.0,''#009E73''],[1.0,''#4467A3'']] is the correct
+          sequential cmap. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) are correct.
+          Theme chrome fully adaptive.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: dual size+color encoding, theme-adaptive
-          tile styles, custom colorbar with matching theme colors, clean anyplot colorscale.
-          Not quite FiveThirtyEight level — lacks annotation or emphasis on top attraction.'
+        comment: 'Strong design: theme-adaptive map tile providers, double encoding
+          (size+color), styled annotation callout, refined colorbar. Clearly above
+          library defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: 'Some refinement: custom colorbar (bgcolor, bordercolor, borderwidth,
-          thickness), 0.85 opacity, theme-adaptive backgrounds. No unnecessary clutter.
-          Above default but not fully polished.'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size variation creates natural visual hierarchy — Eiffel Tower and
-          Colosseum immediately stand out as top attractions. Geographic clustering
-          visible. Dual encoding reinforces the message. No focal-point annotation
-          to create a clear insight.
+        comment: 'Good refinement: colorbar styled with border/bgcolor/len, marker
+          opacity 0.85, annotation with themed border. Could improve with thin marker
+          outline strokes for contrast on busy tiles.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: size+color dual encoding creates immediate visual hierarchy,
+          annotation callout highlights top attraction, geographic positioning itself
+          narrates the tourism distribution story.'
     spec_compliance:
       score: 15
       max: 15
@@ -153,33 +148,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tile-based map using go.Scattermap with open-street-map/carto-darkmatter
-          tile providers.
+        comment: 'Correct: scatter map with tile background (OpenStreetMap light,
+          Carto Dark Matter dark). Multiple providers demonstrated.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple tile providers (theme-adaptive), appropriate zoom (3.5 auto-fitted
-          to Europe extent), markers with contrast and opacity, tile attribution visible,
-          interactive zoom/pan (HTML output), color/size encoding. Clustering not
-          needed for 15 sparse points.
+        comment: 'All features present: tile background, markers on tiles, zoom/center
+          set, tile attribution, interactive hover, color+size encoding.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped, visitor count encoded in both size and
-          color, all 15 points visible.
+        comment: Lat/lon correctly mapped. Visitor count correctly encoded in both
+          size and color channels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title uses optional descriptive prefix 'European Landmarks by Visitor
-          Count' on line 1 with 'map-tile-background · python · plotly · anyplot.ai'
-          on line 2 via HTML br. Required info present. showlegend=False correct (colorbar
-          used instead).
+        comment: Title has descriptive prefix 'European Landmarks by Visitor Count'
+          with mandated 'map-tile-background · python · plotly · anyplot.ai' subtitle.
+          Format accepted.
     data_quality:
       score: 15
       max: 15
@@ -189,86 +181,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows geographic distribution across Europe, size encoding, color
-          encoding, text labels, hover tooltips. Full use of lat/lon/value/label data
-          dimensions.
+        comment: Shows full range of visitor magnitudes (500K–7.4M), geographic spread
+          across Europe, tile context at continental zoom, size and color encoding.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real European landmarks with recognizable names and plausible visitor
-          counts. Neutral tourism/culture topic.
+        comment: Real European landmarks with accurate names. Neutral, non-controversial
+          tourism topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitor counts (500K–7.4M) align with real-world figures for these
-          landmarks. Eiffel Tower ~7M and Colosseum ~7.4M match known data. Geographic
-          coordinates are accurate.
+        comment: GPS coordinates are geographically accurate. Visitor counts align
+          with known real-world figures (Eiffel Tower ~7M, Colosseum ~7.4M, Sagrada
+          Familia ~4.5M).
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → figure → layout → save. No functions
-          or classes.'
+        comment: Mostly flat but includes _select() helper function and sys.path manipulation.
+          Core flow is Import→Data→Plot→Save but the helper introduces a non-flat
+          element.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is hardcoded so deterministic.
+        comment: np.random.seed(42) set. Data is effectively deterministic (static
+          arrays).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, plotly.graph_objects — all used. sys path manipulation
-          justified to prevent module shadowing.
+        comment: 'All imports used: os (THEME, sys.path), sys (path fix), numpy (data),
+          plotly.graph_objects (plotting).'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean Pythonic code. sys.path manipulation is an unusual but pragmatically
-          justified pattern for a file named plotly.py. No fake UI elements.
+        comment: 'Acceptable but slightly verbose: two-trace approach duplicates the
+          marker dict definition. A single trace with per-point textposition list
+          would be cleaner.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current go.Scattermap
-          API (not deprecated Scattermapbox).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses go.Scattermap
+          (current API).
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of go.Scattermap with map layout key (current idiomatic
-          Plotly map API). Theme-adaptive map style switching is idiomatic.
+        comment: 'Strong idiomatic usage: go.Scattermap, update_layout map config,
+          colorbar dict, hovertemplate, HTML export. Minor deduction for not using
+          a single trace with textposition array.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Plotly-distinctive tile map layers (open-street-map/carto-darkmatter),
-          interactive HTML export, custom hovertemplate, and colorbar. These cannot
-          be trivially replicated in static libraries.
-  verdict: REJECTED
+        comment: 'Distinctly Plotly: tile-based map with go.Scattermap, theme-adaptive
+          map styles (open-street-map vs carto-darkmatter), interactive hover, HTML
+          export — features not replicable in other libraries without major effort.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -276,5 +272,5 @@ impl_tags:
   dataprep:
   - normalization
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
