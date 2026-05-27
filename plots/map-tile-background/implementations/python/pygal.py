@@ -1,125 +1,147 @@
-""" pyplots.ai
+""" anyplot.ai
 map-tile-background: Map with Tile Background
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 55/100 | Created: 2026-01-20
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-27
 """
 
+import importlib
+import os
 import sys
 
 
-# Fix module name conflict (this file is named pygal.py)
+# Remove cwd from path to avoid importing this file instead of the pygal library
 _cwd = sys.path[0] if sys.path and sys.path[0] else None
 if _cwd:
     sys.path.remove(_cwd)
-
-import numpy as np  # noqa: E402
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
+_pygal = importlib.import_module("pygal")
+_style_mod = importlib.import_module("pygal.style")
 if _cwd:
     sys.path.insert(0, _cwd)
 
-# Data: European city landmarks with visitor counts (thousands per year)
-np.random.seed(42)
+Style = _style_mod.Style
 
-landmarks = [
-    {"label": "Eiffel Tower", "lat": 48.8584, "lon": 2.2945, "value": 7000},
-    {"label": "Colosseum", "lat": 41.8902, "lon": 12.4922, "value": 6500},
-    {"label": "Sagrada Familia", "lat": 41.4036, "lon": 2.1744, "value": 4500},
-    {"label": "Big Ben", "lat": 51.5007, "lon": -0.1246, "value": 3500},
-    {"label": "Brandenburg Gate", "lat": 52.5163, "lon": 13.3777, "value": 3000},
-    {"label": "Acropolis", "lat": 37.9715, "lon": 23.7257, "value": 2900},
-    {"label": "Anne Frank House", "lat": 52.3752, "lon": 4.8840, "value": 1300},
-    {"label": "Prague Castle", "lat": 50.0911, "lon": 14.4008, "value": 2000},
-    {"label": "Schonbrunn Palace", "lat": 48.1845, "lon": 16.3122, "value": 3800},
-    {"label": "Rijksmuseum", "lat": 52.3600, "lon": 4.8852, "value": 2700},
-    {"label": "Uffizi Gallery", "lat": 43.7677, "lon": 11.2553, "value": 2500},
-    {"label": "Tower of London", "lat": 51.5081, "lon": -0.0759, "value": 2900},
-    {"label": "Notre-Dame", "lat": 48.8530, "lon": 2.3499, "value": 5000},
-    {"label": "Louvre Museum", "lat": 48.8606, "lon": 2.3376, "value": 9600},
-    {"label": "Vatican Museums", "lat": 41.9065, "lon": 12.4536, "value": 6800},
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+# Map-inspired plot background simulates geographic tile context
+# Light: warm land beige; Dark: near-black land surface
+LAND_BG = "#eae6df" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Semantic color exception: temperature carries strong cold→blue / hot→red expectation
+# (anyplot palette positions 3, 1, 5 in semantic role order)
+COLOR_COOL = "#4467A3"  # blue  — cool stations (annual mean < 12 °C)
+COLOR_MILD = "#009E73"  # green — mild stations (12–22 °C)
+COLOR_WARM = "#AE3030"  # red   — warm stations (> 22 °C)
+
+# Data: US weather monitoring network — mean annual surface temperatures
+stations = [
+    {"label": "Seattle", "lat": 47.6, "lon": -122.3, "temp_c": 11.0},
+    {"label": "Portland", "lat": 45.5, "lon": -122.7, "temp_c": 12.0},
+    {"label": "San Francisco", "lat": 37.8, "lon": -122.4, "temp_c": 13.5},
+    {"label": "Los Angeles", "lat": 34.1, "lon": -118.2, "temp_c": 19.0},
+    {"label": "Phoenix", "lat": 33.4, "lon": -112.1, "temp_c": 28.5},
+    {"label": "Denver", "lat": 39.7, "lon": -104.9, "temp_c": 10.5},
+    {"label": "Dallas", "lat": 32.8, "lon": -96.8, "temp_c": 19.5},
+    {"label": "Houston", "lat": 29.8, "lon": -95.4, "temp_c": 24.5},
+    {"label": "Minneapolis", "lat": 44.9, "lon": -93.2, "temp_c": 7.5},
+    {"label": "Chicago", "lat": 41.9, "lon": -87.6, "temp_c": 9.5},
+    {"label": "Detroit", "lat": 42.3, "lon": -83.0, "temp_c": 8.5},
+    {"label": "Atlanta", "lat": 33.7, "lon": -84.4, "temp_c": 17.5},
+    {"label": "Miami", "lat": 25.8, "lon": -80.2, "temp_c": 27.0},
+    {"label": "Washington DC", "lat": 38.9, "lon": -77.0, "temp_c": 13.5},
+    {"label": "New York", "lat": 40.7, "lon": -74.0, "temp_c": 12.5},
+    {"label": "Boston", "lat": 42.4, "lon": -71.1, "temp_c": 10.0},
+    {"label": "Nashville", "lat": 36.2, "lon": -86.8, "temp_c": 15.5},
+    {"label": "New Orleans", "lat": 30.0, "lon": -90.1, "temp_c": 23.0},
+    {"label": "Kansas City", "lat": 39.1, "lon": -94.6, "temp_c": 12.5},
+    {"label": "Salt Lake City", "lat": 40.8, "lon": -111.9, "temp_c": 11.5},
+    {"label": "Las Vegas", "lat": 36.2, "lon": -115.2, "temp_c": 20.0},
+    {"label": "Albuquerque", "lat": 35.1, "lon": -106.7, "temp_c": 14.5},
+    {"label": "Memphis", "lat": 35.1, "lon": -90.0, "temp_c": 18.0},
+    {"label": "Charlotte", "lat": 35.2, "lon": -80.8, "temp_c": 16.0},
+    {"label": "Tampa", "lat": 28.0, "lon": -82.5, "temp_c": 25.0},
 ]
 
-# Map bounds for Europe (expanded to include all landmarks with ample padding)
-# Acropolis is at 37.97°N, so we extend southward to 35°N for visibility
-lat_min, lat_max = 35, 55
-lon_min, lon_max = -3, 26
+# Continental US bounds; chart xrange padded to give tick labels breathing room
+lat_min, lat_max = 24, 51
+lon_min, lon_max = -128, -62
+chart_xrange = (-132, -58)
 
-# Custom style for 4800x2700 canvas with OSM-inspired map appearance
-# Note: Pygal cannot render actual tile-based backgrounds; this uses colors
-# inspired by OpenStreetMap (ocean blue #aad3df, land beige #f2efe9) to
-# simulate a map aesthetic. Tile attribution: Colors inspired by OpenStreetMap.
+title = "map-tile-background · python · pygal · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_font_size = max(44, round(66 * ratio))
+
 custom_style = Style(
-    background="#aad3df",  # OSM ocean blue as background
-    plot_background="#f2efe9",  # OSM land beige as plot area
-    foreground="#333333",
-    foreground_strong="#111111",
-    foreground_subtle="#666666",
-    # Distinct colors for better accessibility: orange, teal, purple
-    colors=("#e67e22", "#16a085", "#8e44ad"),
-    title_font_size=72,
-    label_font_size=48,
+    background=PAGE_BG,
+    plot_background=LAND_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(COLOR_COOL, COLOR_MILD, COLOR_WARM),
+    title_font_size=title_font_size,
+    label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=40,
-    value_font_size=32,
-    tooltip_font_size=36,
-    guide_stroke_color="#d4cfc4",  # Subtle beige/tan grid lines
-    guide_stroke_dasharray="0",  # Solid grid lines
-    opacity=0.85,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+    opacity=0.9,
     opacity_hover=1.0,
 )
 
-# Create XY scatter chart
-chart = pygal.XY(
-    width=4800,
-    height=2700,
+chart = _pygal.XY(
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="map-tile-background · pygal · pyplots.ai",
-    x_title="Longitude (degrees East/West)",
-    y_title="Latitude (degrees North)",
+    title=title,
+    x_title="Longitude (°)",
+    y_title="Latitude (°)",
     show_legend=True,
-    legend_at_bottom=True,  # Move legend to bottom to avoid overlap with data
-    legend_box_size=32,
+    legend_at_bottom=True,
+    legend_box_size=36,
     show_x_guides=True,
     show_y_guides=True,
-    dots_size=20,  # Large dots for visibility
-    stroke=False,  # No connecting lines
-    margin=50,
-    margin_top=140,
-    margin_bottom=220,
-    margin_left=220,
+    dots_size=18,
+    stroke=False,
+    margin=60,
+    margin_top=110,
+    margin_bottom=240,
+    margin_left=200,
     margin_right=80,
-    range=(lat_min, lat_max),  # Y-axis range (latitude)
-    xrange=(lon_min, lon_max),  # X-axis range (longitude)
+    range=(lat_min, lat_max),
+    xrange=chart_xrange,
     print_values=False,
-    truncate_legend=-1,  # Don't truncate legend text
+    truncate_legend=-1,
+    truncate_label=-1,
     explicit_size=True,
 )
 
-# Group landmarks by visitor count ranges for legend
-# Low: < 3000K, Medium: 3000-6000K, High: > 6000K
-low_visitors = []  # 1,300K - 2,999K
-medium_visitors = []  # 3,000K - 5,999K
-high_visitors = []  # 6,000K - 9,600K
+# Group stations by annual mean temperature
+cool_pts = []
+mild_pts = []
+warm_pts = []
 
-for lm in landmarks:
-    point = {"value": (lm["lon"], lm["lat"]), "label": f"{lm['label']}: {lm['value']:,}K visitors/year"}
-    if lm["value"] < 3000:
-        low_visitors.append(point)
-    elif lm["value"] < 6000:
-        medium_visitors.append(point)
+for s in stations:
+    pt = {"value": (s["lon"], s["lat"]), "label": f"{s['label']}: {s['temp_c']} °C"}
+    if s["temp_c"] < 12:
+        cool_pts.append(pt)
+    elif s["temp_c"] < 22:
+        mild_pts.append(pt)
     else:
-        high_visitors.append(point)
+        warm_pts.append(pt)
 
-# Add series with meaningful legend labels (different colors per range)
-chart.add("1,300K–2,999K visitors/year", low_visitors, dots_size=16)
-chart.add("3,000K–5,999K visitors/year", medium_visitors, dots_size=22)
-chart.add("6,000K–9,600K visitors/year", high_visitors, dots_size=28)
+chart.add("Cool (< 12 °C)", cool_pts, dots_size=16)
+chart.add("Mild (12–22 °C)", mild_pts, dots_size=20)
+chart.add("Warm (> 22 °C)", warm_pts, dots_size=24)
 
-# Set axis labels with degree notation
-chart.x_labels = [f"{lon}°" for lon in range(lon_min, lon_max + 1, 5)]
+chart.x_labels = [f"{lon}°" for lon in range(lon_min, lon_max + 1, 10)]
 chart.y_labels = [f"{lat}°" for lat in range(lat_min, lat_max + 1, 5)]
 
-# Save output (PNG only)
-chart.render_to_png("plot.png")
+# Save PNG and interactive HTML
+chart.render_to_png(f"plot-{THEME}.png")
+
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

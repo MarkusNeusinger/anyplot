@@ -1,159 +1,187 @@
 library: highcharts
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:58:24Z'
-updated: '2026-01-20T21:00:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878254
+updated: '2026-05-27T11:41:04Z'
+generated_by: claude-sonnet
+workflow_run: 26508331118
 issue: 3785
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-navigator/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of the navigator feature with draggable selection window
-    and resize handles
-  - 'Good use of Highcharts Stock-specific features: range selector buttons (1M, 3M,
-    6M, 1Y, YTD, All), date input fields, scrollbar'
-  - Clean data generation with realistic sensor reading pattern (trend + seasonality
-    + noise)
-  - Proper colorblind-safe color choice (#306998)
-  - Subtitle provides helpful context about the data
-  - Both PNG and interactive HTML outputs are generated
+  - Complete and correct use of Highcharts Stock navigator, range selector, and scrollbar
+    — all distinctively Highstock capabilities
+  - 'Thorough theme-adaptive chrome: every element responds to ANYPLOT_THEME including
+    navigator handles, scrollbar, range selector buttons, legend, tooltips, and grid'
+  - 1100-point synthetic dataset with trend, seasonality, and noise provides an ideal
+    demonstration of navigator utility
+  - Clean code structure with np.random.seed(42) for reproducibility and proper 4-location
+    canvas size coordination
   weaknesses:
-  - Uses manual JSON chart options instead of the highcharts_core Python library classes;
-    this works but bypasses the library object-oriented API
-  - X-axis labels show Jan 2025 repeating multiple times in the visible range which
-    looks odd (could benefit from smarter date formatting)
-  image_description: The plot displays a Highcharts Stock line chart with a mini navigator
-    at the bottom. The main chart shows "Sensor Reading" data over time (approximately
-    one year visible, Dec 2024 - Jan 2025), with values ranging from ~68 to 85 on
-    the Y-axis labeled "Sensor Value (units)". The line is rendered in a blue color
-    (#306998). The title "line-navigator · highcharts · pyplots.ai" appears at the
-    top in bold, with a subtitle "Daily Sensor Readings with Interactive Navigator
-    (2022-2025)". Range selector buttons (1M, 3M, 6M, 1Y, YTD, All) and date input
-    fields are visible at the top left. The bottom navigator pane shows the full 3-year
-    dataset extent (Jan 2022 - Jan 2025) with a selection window highlighted. A scrollbar
-    is present below the navigator. The legend shows "Sensor Reading" at the top.
-    Grid lines are subtle. The X-axis shows dates in "Mon Year" format with some repetition
-    of "Jan 2025" labels. Overall layout is clean with good use of canvas space.
+  - 'Navigator height (120px) is approximately 8-9% of plot area height, below the
+    spec''s 15-20% guideline; increase to height: 180 for better mini-chart proportionality'
+  - LineSeries imported from highcharts_core.options.series.area instead of the canonical
+    highcharts_core.options.series.line module
+  - Main chart area is largely default stock chart styling beyond color theming; no
+    annotation highlighting a trend peak/trough or emphasis layer for visual hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "line-navigator · python · highcharts · anyplot.ai" in dark bold text, subtitle "Daily Sensor Readings · 2022–2025" below. Range selector buttons (1M, 3M, 6M, 1Y, YTD, All) with "1Y" highlighted in brand green. Y-axis label "Sensor Value (units)" and X-axis label "Date" both dark and readable. Tick labels dark grey. Legend box with "Sensor Reading" label. Date range inputs "4 Jan 2024" / "4 Jan 2025" in top right. All chrome elements clearly readable against light background.
+      Data: Single brand green (#009E73) line showing ~1 year of sensor data in main chart (Jan 2024–Jan 2025), ranging ~48–100. Navigator mini chart at bottom shows full 3-year dataset with brand-green selection window. Grid lines are very subtle (15% opacity). First series is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: All text elements (title, subtitle, axis labels, tick labels, legend, range selector labels, date inputs) rendered in light cream/grey tones (#F0EFE8 / #B8B7B0). Title clearly visible as light text on dark background. No dark-on-dark failures detected — no near-black text on near-black background anywhere. Range selector buttons appropriately styled with light borders. Grid lines subtle.
+      Data: Data colors identical to light render — brand green (#009E73) line unchanged. Navigator selection window uses same brand green. Only chrome elements flip theme; data colors stay constant as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, labels, and axis text are readable; range selector buttons
-          are slightly small but acceptable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line is well-sized for the data density; markers disabled appropriately
-          for 1100+ points
+        comment: 'Font sizes explicitly set per style guide (title 66px, axis labels
+          56px, tick labels 44px); all text readable in both themes. Minor: Y-axis
+          tick labels appear slightly dense.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; range selector, legend, and chart area well
+          separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Brand green line clearly visible in both themes; data density handled
+          with appropriately thin lines.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; slight imbalance with navigator taking a
-          relatively small portion
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Sensor Value (units), X-axis has Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Single series in brand green; no accessibility issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); navigator proportions acceptable;
+          nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle; legend placement is good but could be clearer
+        comment: 'Title matches required format; X: Date, Y: Sensor Value (units)
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; background #FAF8F1 light / #1A1A17 dark; navigator
+          series also uses BRAND.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Well above default; range selector custom-themed, navigator handles
+          in brand color, scrollbar styled, tooltip custom, legend bordered. Professional
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid lines (15% opacity), generous margins, consistent theme-adaptive
+          chrome. Appropriate stock-chart styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Pre-selected 1Y range highlights recent trend; full history in navigator
+          provides context; date range inputs give precision; subtitle contextualizes
+          temporal span.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with mini navigator
+        comment: 'Correct: line chart with Highcharts Stock navigator, fully functional
+          mini overview pane.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Navigator with draggable selection, range selector buttons, scrollbar
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: main chart with selected range, mini
+          navigator, draggable selection window, resize handles, smooth transitions,
+          shared styling, proportionally smaller navigator, date range labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible in navigator, selected range in main chart
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: datetime axis, Y: sensor values, 1100 data points.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Sensor Reading label is accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: line-navigator · highcharts · pyplots.ai'
+        comment: Title matches required format; legend Sensor Reading appropriate.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, and noise; demonstrates zoom capability
-          well
+        comment: 'Shows all navigator aspects: range selector with preset buttons,
+          draggable selection window, scrollbar, date range inputs, mini overview
+          chart.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sensor readings over 3 years is a realistic, neutral scenario
+        comment: Daily Sensor Readings over 3 years with trend + seasonality + noise
+          is realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 50-85 are plausible for sensor readings; units are generic
+        comment: 1100 data points over 3 years; values ~50-100 sensor units; plausible
+          and appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,49 +189,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → chart config → HTML generation
-          → screenshot'
+        comment: No unnecessary functions or classes; clean sequential script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) ensures deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports are actually used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses direct JSON construction instead of highcharts_core library
-          classes
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Mixing OOP highcharts_core API with raw dict stock extensions is
+          the correct approach; handled cleanly.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts Stock with navigator, range selector, and scrollbar;
-          however uses manual JSON construction rather than highcharts_core Python
-          API
+        comment: 'Correct Chart(container=container), HighchartsOptions(), LineSeries,
+          chart.add_series(), proper Selenium export. Minor: LineSeries imported from
+          .area module instead of canonical .line module.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent showcase of Highcharts Stock: stockChart(), navigator
+          with handles, range selector with preset buttons, scrollbar, date range
+          input fields.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
   - hover-tooltips
@@ -211,5 +247,4 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
-  styling:
-  - grid-styling
+  styling: []

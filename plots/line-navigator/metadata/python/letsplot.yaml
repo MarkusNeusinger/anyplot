@@ -1,157 +1,182 @@
 library: letsplot
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:58:06Z'
-updated: '2026-01-20T21:00:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878338
+updated: '2026-05-27T12:03:29Z'
+generated_by: claude-sonnet
+workflow_run: 26508425012
 issue: 3785
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-navigator/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of the navigator concept using gggrid to combine main
-    chart and mini overview
-  - Clear visual connection between selection rectangle in navigator and the detailed
-    view
-  - Good use of area fill with transparency for visual depth
-  - Date range annotation effectively communicates the selected period
-  - Proper sizing for 4800x2700 output with scale=3
-  - Both PNG and HTML exports provided
+  - Proper theme-adaptive chrome (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) threads through
+    both charts; both light and dark renders pass readability checks
+  - Navigator proportion (~18% height via gggrid heights=[5.5, 1]) matches spec requirement
+    precisely
+  - geom_vline handle indicators + geom_rect selection window give a convincing visual
+    navigator representation in the static PNG
+  - layer_tooltips() with formatted date and temperature provides genuine interactivity
+    in the HTML output
+  - Distinct elevated background for the navigator panel (ELEVATED_BG) visually separates
+    the two panels without a hard border
+  - 'Date range annotation (''Selected: Jul 04, 2025 - Dec 30, 2025'') adds meaningful
+    temporal context to the main chart'
   weaknesses:
-  - Y-axis label "Value" is generic without units (could be "Temperature (°C)" or
-    similar)
-  - Navigator selection rectangle could have more prominent handles/edges to suggest
-    draggability
-  - The interactive features in the HTML output (drag/resize) are not fully demonstrable
-    in static PNG
-  image_description: 'The plot displays a line chart with mini navigator implementation
-    using lets-plot. The main chart (top ~80% of canvas) shows 6 months of daily sensor
-    data from July 2025 to December 2025, with values ranging from approximately 18
-    to 38. The line is rendered in Python blue (#306998) with a subtle light blue
-    area fill beneath. A bold blue annotation at the top shows "Selected Range: Jul
-    04, 2025 - Dec 30, 2025". The Y-axis is labeled "Value". Below the main chart
-    is a mini navigator (~20% height) showing the full 3-year dataset (2023-2026)
-    with a blue selection rectangle highlighting the currently visible range on the
-    right side. Both charts share consistent blue styling. The title "line-navigator
-    · letsplot · pyplots.ai" appears at the top left.'
+  - True brush-and-drag navigator interactivity is absent -- letsplot HTML export
+    provides tooltip interactivity but not a linked brush widget; static geom_rect
+    + geom_vline representation falls short of the spec's 'draggable selection window'
+    and 'smooth animated transitions'
+  - Navigator tick labels at size=8 are at the lower readable limit; increase to size=9
+    for better robustness at small display widths
+  - Navigator geom_line at size=0.8 on a 90px-tall panel is very thin; size=1.0 would
+    improve overview visibility without adding clutter
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) -- correct, not pure white
+      Chrome: Title "line-navigator · python · letsplot · anyplot.ai" in bold dark (#1A1A17) text -- fully readable. Y-axis label "Temperature (°C)" and X-axis month/year tick labels in INK_SOFT (#4A4A44) -- all readable. Navigator year labels (2023-2026) in INK_SOFT at size=8 -- readable at full resolution but borderline small. Range annotation "Selected: Jul 04, 2025 - Dec 30, 2025" in brand green -- readable and well-placed.
+      Data: Brand green (#009E73) line (size=1.5) with soft area fill (alpha=0.15) in main chart. Navigator uses same green at size=0.8. Selection rectangle has green border (size=2.5, alpha=0.2 fill) and two geom_vline handle markers. First (and only) series is #009E73 -- correct.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) -- correct, not pure black
+      Chrome: Title and axis labels rendered in light near-white (#F0EFE8 / #B8B7B0) -- fully readable against dark surface. No dark-on-dark failures detected; all chrome elements use the correct dark-theme tokens. Navigator elevated panel uses #242420.
+      Data: Brand green (#009E73) data line and area fill are identical to light render -- color identity preserved across themes. Navigator selection rectangle and handles same green -- visible on dark elevated panel.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, labels, and tick marks are all clearly readable at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements anywhere
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Lines well visible, area fill appropriate; navigator line slightly
-          thin but acceptable
+        comment: Main chart text fully readable in both themes; navigator tick labels
+          at size=8 are borderline small but legible at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; range label well-positioned above data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main chart line prominent; navigator line at size=0.8 is intentionally
+          thin for overview but borderline at smallest display sizes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (blue) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions with main chart and navigator; slight imbalance
-          with empty space on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis labeled 'Value' without units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: false
-        comment: Subtle grid with good alpha; minor grid on navigator could be more
-          subtle
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart with mini navigator implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, value on Y-axis, correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Main chart shows detail, navigator shows full data, selection rectangle
-          highlights visible range, date range annotation present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, appropriate axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No legend needed, but the selection rectangle could be more prominent
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: Correctly formatted as 'line-navigator · letsplot · pyplots.ai'
-    data_quality:
-      score: 18
+        comment: 'Single series brand green #009E73; CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); navigator ~18% height as specified;
+          no clipping or overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (°C); title in mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series = #009E73; backgrounds correct (#FAF8F1 light / #1A1A17
+          dark); chrome flips correctly'
+    design_excellence:
+      score: 12
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows trend, seasonality, and noise; 3 years of data demonstrates
-          long time series well
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
+        comment: 'Above default (4): theme-adaptive chrome, geom_area alpha fill for
+          depth, navigator ELEVATED_BG panel, range annotation'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
         passed: true
-        comment: Sensor temperature data is plausible; generic but not named as a
-          specific real scenario
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: 'Above default (2): theme_minimal removes spines; grid opacity tiered
+          (RULE 0.15 main, RULE_FAINT 0.08 navigator); panel_grid_minor blanked'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): navigator communicates full-vs-selected context;
+          date range annotation anchors viewer in time; clear visual hierarchy'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Temperature-like values (18-38) are realistic for sensor readings
+        comment: 'Correct: line chart with mini navigator overview pane'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All visual features present; missing true drag/brush interactivity
+          (letsplot platform limitation, not a code defect)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, temperature on Y, 1095 data points exceeds 1000+ requirement
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in mandated format; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 1095-point time series; navigator + detail view fully demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily temperature sensor readings; plausible seasonal sinusoidal
+          pattern; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range ~18-40°C with seasonal swing; appropriate for warm-climate
+          sensor
     code_quality:
       score: 10
       max: 10
@@ -161,53 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> data -> plot -> save'
+        comment: Flat script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Every import is used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern lets-plot API used
+        comment: DataFrames for selection_rect and handle_df are clean; theme layering
+          is idiomatic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses gggrid for combining plots, layer_tooltips for hover info, and
-          scale_x_datetime; could leverage more interactive features
+        comment: gggrid() for multi-panel, layer_tooltips() for interactive data,
+          scale_x_datetime with format, theme stacking -- all idiomatic letsplot
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips() native tooltip customization, gggrid() with proportional
+          heights, HTML export -- distinctive letsplot capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - annotations
   - subplots
+  - annotations
+  - layer-composition
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - time-series
   dataprep:
   - time-series
   styling:

@@ -1,201 +1,387 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-27
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Remove the script's own directory from sys.path so "bokeh" resolves to the
+# installed package, not this file (which shares the name).
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir]
+
 import numpy as np
-import pandas as pd
-from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, CustomJS, HoverTool, LabelSet, Legend, LegendItem, TapTool
-from bokeh.plotting import figure, output_file
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, LabelSet, Legend, LegendItem
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Portfolio allocation with categories
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Main portfolio data with asset classes
-data = {
-    "asset": [
-        "Apple Inc.",
-        "Microsoft",
-        "Google",
-        "US Treasury 10Y",
-        "Corporate Bonds",
-        "Gold ETF",
-        "Real Estate Fund",
-        "Int'l Equities",
-        "Cash",
-        "Commodities",
-    ],
-    "weight": [18, 15, 12, 15, 10, 5, 8, 10, 4, 3],
-    "category": [
-        "Equities",
-        "Equities",
-        "Equities",
-        "Fixed Income",
-        "Fixed Income",
-        "Alternatives",
-        "Alternatives",
-        "Equities",
-        "Cash",
-        "Alternatives",
-    ],
-    "value": [180000, 150000, 120000, 150000, 100000, 50000, 80000, 100000, 40000, 30000],
-}
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-df = pd.DataFrame(data)
-
-# Calculate angles for pie chart
-df["angle"] = df["weight"] / df["weight"].sum() * 2 * np.pi
-
-# Calculate cumulative angles for positioning (start from top: -pi/2 offset)
-df["end_angle"] = df["angle"].cumsum() - np.pi / 2
-df["start_angle"] = df["end_angle"] - df["angle"]
-
-# Mid-angle for label positioning
-df["mid_angle"] = (df["start_angle"] + df["end_angle"]) / 2
-
-# Color mapping by category
+# Semantic color mapping: green=growth, blue=stable, ochre=commodity, muted=neutral cash
 category_colors = {
-    "Equities": "#306998",  # Python Blue
-    "Fixed Income": "#FFD43B",  # Python Yellow
-    "Alternatives": "#48A9A6",  # Teal
-    "Cash": "#8B8B8B",  # Gray
+    "Equities": ANYPLOT_PALETTE[0],  # #009E73 green
+    "Fixed Income": ANYPLOT_PALETTE[2],  # #4467A3 blue
+    "Alternatives": ANYPLOT_PALETTE[3],  # #BD8233 ochre
+    "Cash": INK_MUTED,  # muted neutral
 }
-df["color"] = df["category"].map(category_colors)
 
-# Calculate positions for labels (outer ring)
-outer_radius = 0.72
-label_radius = 0.88
-df["label_x"] = label_radius * np.cos(df["mid_angle"])
-df["label_y"] = label_radius * np.sin(df["mid_angle"])
+# Portfolio data — 10 holdings across 4 asset classes
+np.random.seed(42)
+holdings = {
+    "Equities": {
+        "asset": ["Apple Inc.", "Microsoft", "Google", "Int'l Equities"],
+        "weight": [18, 15, 12, 10],
+        "value": [180000, 150000, 120000, 100000],
+    },
+    "Fixed Income": {"asset": ["US Treasury 10Y", "Corporate Bonds"], "weight": [15, 10], "value": [150000, 100000]},
+    "Alternatives": {
+        "asset": ["Gold ETF", "Real Estate Fund", "Commodities"],
+        "weight": [5, 8, 3],
+        "value": [50000, 80000, 30000],
+    },
+    "Cash": {"asset": ["Cash"], "weight": [4], "value": [40000]},
+}
 
-# Format weight for display
-df["weight_str"] = df["weight"].apply(lambda x: f"{x}%")
+total_portfolio_value = sum(sum(v["value"]) for v in holdings.values())  # 1,000,000
+categories = list(holdings.keys())
 
-# Create source
-source = ColumnDataSource(df)
+INNER_R = 0.42
+OUTER_R = 0.82
+LABEL_R = 1.04  # labels outside ring for both overview and detail
 
-# Set output file for HTML
-output_file("plot.html", title="Interactive Portfolio Allocation Chart")
+# --- Category overview data ---
+cat_weights = np.array([sum(holdings[c]["weight"]) for c in categories])
+cat_values = np.array([sum(holdings[c]["value"]) for c in categories])
+cat_angles = cat_weights / cat_weights.sum() * 2 * np.pi
+cat_end = np.cumsum(cat_angles) - np.pi / 2
+cat_start = cat_end - cat_angles
+cat_mid = (cat_start + cat_end) / 2
 
-# Create figure - using square aspect for pie chart
-p = figure(
-    width=3600,
-    height=3600,
-    title="pie-portfolio-interactive · bokeh · pyplots.ai",
-    x_range=(-1.25, 1.25),
-    y_range=(-1.25, 1.25),
-    tools="hover,tap,reset,save",
-    toolbar_location="above",
+overview_source = ColumnDataSource(
+    data={
+        "category": categories,
+        "weight": cat_weights.tolist(),
+        "value": cat_values.tolist(),
+        "color": [category_colors[c] for c in categories],
+        "start_angle": cat_start.tolist(),
+        "end_angle": cat_end.tolist(),
+        "label_x": (LABEL_R * np.cos(cat_mid)).tolist(),
+        "label_y": (LABEL_R * np.sin(cat_mid)).tolist(),
+        "label_text": [f"{c}\n{w}%" for c, w in zip(categories, cat_weights.tolist(), strict=True)],
+    }
 )
 
-# Remove grid and axes for clean pie look
+# --- Pre-computed per-category holdings data (passed to JS) ---
+detail_data_js = {}
+for cat in categories:
+    ws = np.array(holdings[cat]["weight"])
+    angs = ws / ws.sum() * 2 * np.pi
+    ends = np.cumsum(angs) - np.pi / 2
+    starts = ends - angs
+    mids = (starts + ends) / 2
+    detail_data_js[cat] = {
+        "asset": holdings[cat]["asset"],
+        "weight": ws.tolist(),
+        "value": holdings[cat]["value"],
+        "category": [cat] * len(ws),
+        "color": [category_colors[cat]] * len(ws),
+        "start_angle": starts.tolist(),
+        "end_angle": ends.tolist(),
+        "label_x": (LABEL_R * np.cos(mids)).tolist(),
+        "label_y": (LABEL_R * np.sin(mids)).tolist(),
+        "total_value": sum(holdings[cat]["value"]),
+        "total_weight": int(ws.sum()),
+    }
+
+# --- Detail source (initially hidden, populated by JS) ---
+detail_source = ColumnDataSource(
+    data={
+        "asset": [""],
+        "weight": [0.0],
+        "value": [0],
+        "category": [""],
+        "color": [category_colors["Equities"]],
+        "start_angle": [0.0],
+        "end_angle": [0.0],
+        "label_x": [0.0],
+        "label_y": [0.0],
+    }
+)
+
+# Center label sources — updated by JS callback on drill-down
+center_header_source = ColumnDataSource(data={"x": [0], "y": [0.12], "text": ["Total Portfolio"]})
+center_value_source = ColumnDataSource(data={"x": [0], "y": [-0.08], "text": [f"${total_portfolio_value:,.0f}"]})
+
+# --- Figure ---
+W, H = 2400, 2400
+title = "pie-portfolio-interactive · python · bokeh · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_pt = max(34, round(50 * ratio))
+
+p = figure(
+    width=W, height=H, title=title, x_range=(-1.38, 1.38), y_range=(-1.38, 1.38), tools="tap", toolbar_location=None
+)
+
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
 p.axis.visible = False
 p.grid.visible = False
-p.outline_line_color = None
 
-# Draw donut wedges
-wedges = p.annular_wedge(
+p.title.text_font_size = f"{title_pt}pt"
+p.title.text_color = INK
+p.title.align = "center"
+
+# --- Overview layer: 4 category wedges ---
+overview_glyph = p.annular_wedge(
     x=0,
     y=0,
-    inner_radius=0.38,
-    outer_radius=outer_radius,
+    inner_radius=INNER_R,
+    outer_radius=OUTER_R,
     start_angle="start_angle",
     end_angle="end_angle",
     color="color",
-    alpha=0.9,
-    source=source,
-    line_color="white",
-    line_width=4,
+    alpha=0.92,
+    source=overview_source,
+    line_color=PAGE_BG,
+    line_width=6,
     hover_fill_alpha=1.0,
-    hover_line_color="#222222",
-    hover_line_width=6,
+    hover_line_color=INK,
+    hover_line_width=8,
+    name="overview_wedge",
 )
 
-# Add labels for assets
-labels = LabelSet(
+overview_labels = LabelSet(
+    x="label_x",
+    y="label_y",
+    text="label_text",
+    source=overview_source,
+    text_font_size="34pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK,
+)
+p.add_layout(overview_labels)
+
+# HoverTool scoped to overview wedge
+overview_hover = HoverTool(
+    renderers=[overview_glyph],
+    tooltips=[("Asset Class", "@category"), ("Total Weight", "@weight{0.0}%"), ("Total Value", "$$@value{0,0}")],
+    mode="mouse",
+)
+p.add_tools(overview_hover)
+
+# --- Detail layer: individual holdings of selected category ---
+detail_glyph = p.annular_wedge(
+    x=0,
+    y=0,
+    inner_radius=INNER_R,
+    outer_radius=OUTER_R,
+    start_angle="start_angle",
+    end_angle="end_angle",
+    color="color",
+    alpha=0.92,
+    source=detail_source,
+    line_color=PAGE_BG,
+    line_width=6,
+    hover_fill_alpha=1.0,
+    hover_line_color=INK,
+    hover_line_width=8,
+    name="detail_wedge",
+    visible=False,
+)
+
+detail_labels = LabelSet(
     x="label_x",
     y="label_y",
     text="asset",
-    source=source,
-    text_font_size="18pt",
+    source=detail_source,
+    text_font_size="34pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#333333",
+    text_color=INK,
+    visible=False,
 )
-p.add_layout(labels)
+p.add_layout(detail_labels)
 
-# Configure hover tool
-hover = p.select(type=HoverTool)
-hover.tooltips = [
-    ("Asset", "@asset"),
-    ("Category", "@category"),
-    ("Weight", "@weight{0.0}%"),
-    ("Value", "$@value{0,0}"),
-]
-hover.mode = "mouse"
+detail_hover = HoverTool(
+    renderers=[detail_glyph],
+    tooltips=[("Asset", "@asset"), ("Category", "@category"), ("Weight", "@weight{0.0}%"), ("Value", "$$@value{0,0}")],
+    mode="mouse",
+)
+p.add_tools(detail_hover)
 
-# Create legend manually with category colors using scatter (not circle)
+# Center label: "Total Portfolio" header + value
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=center_header_source,
+        text_font_size="26pt",
+        text_align="center",
+        text_baseline="middle",
+        text_color=INK_SOFT,
+    )
+)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=center_value_source,
+        text_font_size="34pt",
+        text_align="center",
+        text_baseline="middle",
+        text_color=INK,
+        text_font_style="bold",
+    )
+)
+
+# --- Legend (inside plot, top-right) ---
 legend_items = []
-for category, color in category_colors.items():
-    # Create a dummy glyph for legend using scatter
-    dummy_source = ColumnDataSource(data={"x": [999], "y": [999]})
-    r = p.scatter(x="x", y="y", size=20, color=color, source=dummy_source, marker="square")
-    legend_items.append(LegendItem(label=category, renderers=[r]))
+for cat, color in category_colors.items():
+    dummy = ColumnDataSource(data={"x": [9999], "y": [9999]})
+    r = p.scatter(x="x", y="y", size=20, color=color, source=dummy, marker="square")
+    legend_items.append(LegendItem(label=cat, renderers=[r]))
 
-legend = Legend(items=legend_items, location="center")
-legend.label_text_font_size = "22pt"
-legend.glyph_width = 35
-legend.glyph_height = 35
-legend.spacing = 15
-legend.padding = 25
-legend.background_fill_alpha = 0.85
-legend.border_line_color = "#cccccc"
-legend.border_line_width = 2
-p.add_layout(legend, "right")
+legend = Legend(items=legend_items, location="top_right")
+legend.label_text_font_size = "34pt"
+legend.label_text_color = INK_SOFT
+legend.glyph_width = 44
+legend.glyph_height = 44
+legend.spacing = 18
+legend.padding = 28
+legend.background_fill_color = ELEVATED_BG
+legend.background_fill_alpha = 0.92
+legend.border_line_color = INK_SOFT
+legend.border_line_width = 1
+p.add_layout(legend)
 
-# Style title
-p.title.text_font_size = "36pt"
-p.title.align = "center"
-
-# Add center text showing total portfolio value
-total_value = df["value"].sum()
-center_source = ColumnDataSource(data={"x": [0], "y": [0.02], "text": [f"Total\n${total_value:,.0f}"]})
-center_label = LabelSet(
-    x="x",
-    y="y",
-    text="text",
-    source=center_source,
-    text_font_size="26pt",
-    text_align="center",
-    text_baseline="middle",
-    text_color="#333333",
-    text_font_style="bold",
-)
-p.add_layout(center_label)
-
-# Add JavaScript callback for drill-down interactivity
-callback = CustomJS(
-    args={"source": source},
+# --- JS Callback: click overview category → drill into its holdings ---
+drill_callback = CustomJS(
+    args={
+        "overview_source": overview_source,
+        "detail_source": detail_source,
+        "center_header": center_header_source,
+        "center_value": center_value_source,
+        "overview_glyph": overview_glyph,
+        "overview_labels": overview_labels,
+        "detail_glyph": detail_glyph,
+        "detail_labels": detail_labels,
+        "all_details": detail_data_js,
+        "total_portfolio": total_portfolio_value,
+    },
     code="""
-    const indices = source.selected.indices;
-    if (indices.length > 0) {
-        const idx = indices[0];
-        const asset = source.data['asset'][idx];
-        const weight = source.data['weight'][idx];
-        const category = source.data['category'][idx];
-        const value = source.data['value'][idx];
-        console.log('Selected: ' + asset + ' (' + category + ')');
-        console.log('Weight: ' + weight + '%, Value: $' + value.toLocaleString());
+    const indices = overview_source.selected.indices;
+    if (indices.length === 0) return;
+    const idx = indices[0];
+    const cat = overview_source.data["category"][idx];
+    overview_source.selected.indices = [];
+
+    const det = all_details[cat];
+
+    // Populate detail source with holdings of selected category
+    detail_source.data = {
+        "asset": det.asset,
+        "weight": det.weight,
+        "value": det.value,
+        "category": det.category,
+        "color": det.color,
+        "start_angle": det.start_angle,
+        "end_angle": det.end_angle,
+        "label_x": det.label_x,
+        "label_y": det.label_y,
+    };
+    detail_source.change.emit();
+
+    // Switch to detail view
+    overview_glyph.visible = false;
+    overview_labels.visible = false;
+    detail_glyph.visible = true;
+    detail_labels.visible = true;
+
+    // Update center labels to show category totals
+    center_header.data = {"x": [0], "y": [0.12], "text": [cat]};
+    center_value.data = {"x": [0], "y": [-0.08], "text": ["$" + det.total_value.toLocaleString() + " (" + det.total_weight + "%)"]};
+    center_header.change.emit();
+    center_value.change.emit();
+
+    // Show or create the Back to Overview button
+    let btn = document.getElementById('ap-back-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'ap-back-btn';
+        btn.textContent = '← Back to Overview';
+        btn.style.cssText = [
+            'position:fixed', 'top:24px', 'left:24px',
+            'background:#009E73', 'color:#fff',
+            'border:none', 'border-radius:6px',
+            'padding:10px 22px', 'font-size:17px',
+            'font-weight:600', 'cursor:pointer',
+            'z-index:1000', 'font-family:system-ui,sans-serif',
+            'box-shadow:0 3px 12px rgba(0,0,0,0.22)'
+        ].join(';');
+        document.body.appendChild(btn);
+
+        btn.addEventListener('click', function() {
+            // Restore category overview
+            overview_glyph.visible = true;
+            overview_labels.visible = true;
+            detail_glyph.visible = false;
+            detail_labels.visible = false;
+
+            center_header.data = {"x": [0], "y": [0.12], "text": ["Total Portfolio"]};
+            center_value.data = {"x": [0], "y": [-0.08], "text": ["$" + total_portfolio.toLocaleString()]};
+            center_header.change.emit();
+            center_value.change.emit();
+
+            detail_source.selected.indices = [];
+            detail_source.change.emit();
+
+            btn.style.display = 'none';
+        });
     }
+    btn.style.display = 'block';
 """,
 )
+overview_source.selected.js_on_change("indices", drill_callback)
 
-tap_tool = p.select(type=TapTool)
-source.selected.js_on_change("indices", callback)
-
-# Save outputs
-export_png(p, filename="plot.png")
+# Save interactive HTML
+output_file(f"plot-{THEME}.html", title="Interactive Portfolio Allocation Chart")
 save(p)
+
+# Screenshot with headless Chrome — use driver.save_screenshot() per library guide
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

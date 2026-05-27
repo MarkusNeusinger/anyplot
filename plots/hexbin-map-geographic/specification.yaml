@@ -6,7 +6,7 @@ title: Hexagonal Binning Map
 
 # Specification tracking
 created: 2026-01-11T22:49:59Z
-updated: null
+updated: 2026-05-27T22:30:45Z
 issue: 3767
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - hexbin
-    - map
   data_type:
     - geospatial
     - numeric
