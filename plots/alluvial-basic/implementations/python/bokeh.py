@@ -23,9 +23,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"
-OI_2 = "#D55E00"
-OI_3 = "#0072B2"
-OI_4 = "#CC79A7"
+OI_2 = "#C475FD"
+OI_3 = "#4467A3"
+OI_4 = "#BD8233"
 
 np.random.seed(42)
 

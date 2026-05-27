@@ -33,11 +33,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data - Monthly revenue by product category over 2 years
@@ -92,7 +92,7 @@ for idx, (name, values) in enumerate(series_data):
         data={"x": x_values, "y1": y1, "y2": y2, "month": x_labels, "value": values, "name": [name] * len(x_values)}
     )
 
-    renderer = p.varea(x="x", y1="y1", y2="y2", source=source, fill_color=OKABE_ITO[idx], fill_alpha=0.85)
+    renderer = p.varea(x="x", y1="y1", y2="y2", source=source, fill_color=IMPRINT[idx], fill_alpha=0.85)
     legend_items.append((name, [renderer]))
 
     # Add HoverTool for this series

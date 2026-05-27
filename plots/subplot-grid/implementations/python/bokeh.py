@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Financial dashboard with multiple metrics
 np.random.seed(42)
@@ -64,8 +64,8 @@ p1 = figure(
     tools="",
     toolbar_location=None,
 )
-p1.line("x", "y", source=source_price, line_width=4, color=OKABE_ITO[0], alpha=0.9)
-p1.scatter("x", "y", source=source_price, size=12, color=OKABE_ITO[0], alpha=0.6)
+p1.line("x", "y", source=source_price, line_width=4, color=IMPRINT[0], alpha=0.9)
+p1.scatter("x", "y", source=source_price, size=12, color=IMPRINT[0], alpha=0.6)
 
 # Styling for p1
 p1.background_fill_color = PAGE_BG
@@ -101,7 +101,7 @@ p2 = figure(
     tools="",
     toolbar_location=None,
 )
-p2.vbar(x="x", top="y", source=source_volume, width=0.7, color=OKABE_ITO[1], alpha=0.8)
+p2.vbar(x="x", top="y", source=source_volume, width=0.7, color=IMPRINT[1], alpha=0.8)
 
 # Styling for p2
 p2.background_fill_color = PAGE_BG
@@ -127,7 +127,7 @@ p2.grid.grid_line_alpha = 0.10
 
 # ========== SUBPLOT 3: Risk vs Return Scatter (bottom-left) ==========
 # Color by performance using Okabe-Ito palette
-colors = [OKABE_ITO[0] if r > 8 else (OKABE_ITO[2] if r < 5 else OKABE_ITO[1]) for r in asset_returns]
+colors = [IMPRINT[0] if r > 8 else (IMPRINT[2] if r < 5 else IMPRINT[1]) for r in asset_returns]
 
 source_scatter = ColumnDataSource(data={"x": asset_risk, "y": asset_returns, "color": colors})
 
@@ -184,7 +184,7 @@ p4.quad(
     left="left",
     right="right",
     source=source_hist,
-    fill_color=OKABE_ITO[2],
+    fill_color=IMPRINT[2],
     line_color=PAGE_BG,
     alpha=0.8,
     line_width=2,

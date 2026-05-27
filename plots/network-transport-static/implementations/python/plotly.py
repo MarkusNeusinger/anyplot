@@ -19,10 +19,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for route types
-OKABE_ITO = {
+IMPRINT = {
     "express": "#009E73",  # Position 1 - brand green
-    "regional": "#D55E00",  # Position 2 - vermillion
-    "local": "#0072B2",  # Position 3 - blue
+    "regional": "#C475FD",  # Position 2 - vermillion
+    "local": "#4467A3",  # Position 3 - blue
 }
 
 np.random.seed(42)
@@ -117,7 +117,7 @@ for i, route in enumerate(routes):
     x1_draw = x1_off - shrink * dx / length
     y1_draw = y1_off - shrink * dy / length
 
-    color = OKABE_ITO[route["type"]]
+    color = IMPRINT[route["type"]]
     show_in_legend = route["type"] not in legend_items
     legend_items.add(route["type"])
 

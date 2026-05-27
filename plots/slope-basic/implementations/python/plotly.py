@@ -20,7 +20,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito: increase = brand green, decrease = vermillion, flat = adaptive neutral
 COLOR_UP = "#009E73"
-COLOR_DOWN = "#D55E00"
+COLOR_DOWN = "#AE3030"  # imprint red — decrease
 COLOR_FLAT = INK_MUTED
 
 # Data - Product sales Q1 vs Q4 comparison (10 products showing various patterns)

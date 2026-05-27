@@ -24,8 +24,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 COLOR_POSITIVE = "#009E73"  # bluish green (first series)
-COLOR_NEGATIVE = "#D55E00"  # vermillion
-COLOR_TOTAL = "#0072B2"  # blue
+COLOR_NEGATIVE = "#AE3030"  # imprint red
+COLOR_TOTAL = "#4467A3"  # blue
 
 # Data - Quarterly financial breakdown from revenue to net income
 categories = ["Revenue", "Product Costs", "Operating Expenses", "Marketing", "Other Income", "Taxes", "Net Income"]

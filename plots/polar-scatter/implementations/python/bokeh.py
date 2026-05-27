@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (categorical)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Wind measurements with prevailing directions
 np.random.seed(42)
@@ -155,7 +155,7 @@ for i, cat in enumerate(["Morning", "Afternoon", "Evening"]):
     # Add hover tool for this renderer
     hover = HoverTool(tooltips=[("Direction", "@angle{0.0}°"), ("Speed", "@speed{0.0} m/s"), ("Category", "@category")])
 
-    r = p.scatter("x", "y", source=source, size=24, color=OKABE_ITO[i], alpha=0.75, line_color=PAGE_BG, line_width=2)
+    r = p.scatter("x", "y", source=source, size=24, color=IMPRINT[i], alpha=0.75, line_color=PAGE_BG, line_width=2)
     p.add_tools(hover)
     renderers.append(r)
     legend_items.append(LegendItem(label=cat, renderers=[r]))

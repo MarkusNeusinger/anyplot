@@ -33,10 +33,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito semantic colors for status and change indicators
-STATUS_COLORS = {"good": "#009E73", "warning": "#E69F00", "critical": "#D55E00"}
-SPARKLINE_COLOR = "#0072B2"  # Okabe-Ito position 3
+STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}  # imprint semantic anchors
+SPARKLINE_COLOR = "#4467A3"  # Okabe-Ito position 3
 FAVORABLE_COLOR = "#009E73"  # Okabe-Ito position 1
-UNFAVORABLE_COLOR = "#D55E00"  # Okabe-Ito position 2
+UNFAVORABLE_COLOR = "#AE3030"  # imprint red — unfavorable
 
 # Metrics where a positive change is unfavorable
 UNFAVORABLE_WHEN_UP = {"Error Rate", "Response Time"}

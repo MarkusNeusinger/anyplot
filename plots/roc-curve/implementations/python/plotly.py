@@ -24,7 +24,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND_1 = "#009E73"
-BRAND_2 = "#D55E00"
+BRAND_2 = "#C475FD"
 NEUTRAL = "#888888"
 
 # Generate classification data

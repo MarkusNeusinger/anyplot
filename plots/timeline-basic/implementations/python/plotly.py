@@ -19,11 +19,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data - Economic and stock market milestones (2018-2024)
@@ -56,12 +56,12 @@ df = pd.DataFrame(data)
 
 # Color mapping for categories
 colors = {
-    "Market": OKABE_ITO[0],
-    "Recovery": OKABE_ITO[1],
-    "Crisis": OKABE_ITO[2],
-    "Expansion": OKABE_ITO[3],
-    "Growth": OKABE_ITO[0],
-    "Correction": OKABE_ITO[1],
+    "Market": IMPRINT[0],
+    "Recovery": IMPRINT[1],
+    "Crisis": IMPRINT[2],
+    "Expansion": IMPRINT[3],
+    "Growth": IMPRINT[0],
+    "Correction": IMPRINT[1],
 }
 
 # Alternate positions to prevent label overlap

@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - use Iris dataset with 4 measurements per flower
 np.random.seed(42)
@@ -75,7 +75,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
     cx = col * spacing + spacing / 2
     cy = (n_rows - 1 - row) * spacing + spacing / 2
 
-    color = OKABE_ITO[species]
+    color = IMPRINT[species]
 
     # Feature mapping with increased variation:
     #   - sepal_length (data[0]) -> face width
@@ -209,7 +209,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
 fig.add_trace(go.Scatter(x=[0], y=[0], mode="markers", marker=dict(opacity=0), showlegend=False))
 
 # Add legend entries for species
-for i, (name, color) in enumerate(zip(target_names, OKABE_ITO)):
+for i, (name, color) in enumerate(zip(target_names, IMPRINT)):
     fig.add_trace(
         go.Scatter(
             x=[None],

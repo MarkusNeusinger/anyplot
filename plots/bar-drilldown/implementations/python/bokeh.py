@@ -29,7 +29,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: 3-level geographic sales hierarchy (Region → Country → City)
 hierarchy_data = {
@@ -103,7 +103,7 @@ source = ColumnDataSource(
         "names": init_names,
         "values": init_values,
         "ids": root_children,
-        "colors": [OKABE_ITO[i % len(OKABE_ITO)] for i in range(len(init_names))],
+        "colors": [IMPRINT[i % len(IMPRINT)] for i in range(len(init_names))],
         "has_children": [len(hierarchy_data[c].get("children", [])) > 0 for c in root_children],
         "label_y": [v + init_max * 0.025 for v in init_values],
     }
@@ -206,7 +206,7 @@ drill_callback = CustomJS(
         "state": state_source,
         "p": p,
         "hierarchy": hierarchy_data,
-        "okabe_ito": OKABE_ITO,
+        "okabe_ito": IMPRINT,
         "breadcrumb_div": breadcrumb_div,
         "back_button": back_button,
         "ink": INK,
@@ -268,7 +268,7 @@ drill_up_callback = CustomJS(
         "state": state_source,
         "p": p,
         "hierarchy": hierarchy_data,
-        "okabe_ito": OKABE_ITO,
+        "okabe_ito": IMPRINT,
         "breadcrumb_div": breadcrumb_div,
         "back_button": back_button,
         "ink": INK,
