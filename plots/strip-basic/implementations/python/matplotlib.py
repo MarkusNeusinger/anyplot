@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — employee satisfaction scores by department (1–10 scale)
 np.random.seed(42)
@@ -39,7 +39,7 @@ ax.set_facecolor(PAGE_BG)
 for i, dept in enumerate(departments):
     scores = dept_scores[dept]
     jitter = np.random.uniform(-0.2, 0.2, len(scores))
-    ax.scatter(i + jitter, scores, s=200, alpha=0.6, color=OKABE_ITO[i], edgecolors=PAGE_BG, linewidth=0.5)
+    ax.scatter(i + jitter, scores, s=200, alpha=0.6, color=IMPRINT[i], edgecolors=PAGE_BG, linewidth=0.5)
 
 # Mean reference lines
 for i, dept in enumerate(departments):

@@ -21,8 +21,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
-BRAND = OKABE_ITO[0]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+BRAND = IMPRINT[0]
 
 # Data
 np.random.seed(42)

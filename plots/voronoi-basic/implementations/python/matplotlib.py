@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for Voronoi regions
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Generate seed points for Voronoi diagram
 np.random.seed(42)
@@ -64,7 +64,7 @@ for idx in range(n_points):
     polygon[:, 1] = np.clip(polygon[:, 1], y_min, y_max)
 
     polygons.append(polygon)
-    poly_colors.append(OKABE_ITO[idx % len(OKABE_ITO)])
+    poly_colors.append(IMPRINT[idx % len(IMPRINT)])
 
 # Draw all Voronoi regions at once
 collection = PolyCollection(polygons, facecolors=poly_colors, edgecolors=INK_SOFT, linewidths=2.5, alpha=0.6)

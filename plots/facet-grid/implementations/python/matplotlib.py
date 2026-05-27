@@ -29,11 +29,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # brand green
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data
@@ -68,7 +68,7 @@ gs = gridspec.GridSpec(
 )
 
 # Color map: regions to Okabe-Ito palette
-region_colors = {region: OKABE_ITO[i] for i, region in enumerate(regions)}
+region_colors = {region: IMPRINT[i] for i, region in enumerate(regions)}
 
 # Create scatter plots in each facet with trend lines
 for i, region in enumerate(regions):

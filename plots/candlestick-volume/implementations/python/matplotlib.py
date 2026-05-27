@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 UP_COLOR = "#009E73"  # Brand green (up days)
-DOWN_COLOR = "#D55E00"  # Vermillion (down days)
+DOWN_COLOR = "#C475FD"  # Vermillion (down days)
 
 # Data - Generate realistic 60 trading days of OHLC data with volume
 np.random.seed(42)

@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito: green for rising (X), vermillion for falling (O)
 X_COLOR = "#009E73"
-O_COLOR = "#D55E00"
+O_COLOR = "#C475FD"
 
 # Data: synthetic stock price with upward drift
 np.random.seed(42)

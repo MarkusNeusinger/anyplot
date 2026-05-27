@@ -22,9 +22,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito colors for EMAs
 EMA_SHORT_COLOR = "#009E73"  # Okabe-Ito pos 1 — 12-day EMA
-EMA_LONG_COLOR = "#D55E00"  # Okabe-Ito pos 2 — 26-day EMA
-GOLDEN_COLOR = "#E69F00"  # Okabe-Ito pos 5 — bullish crossover
-DEATH_COLOR = "#CC79A7"  # Okabe-Ito pos 4 — bearish crossover
+EMA_LONG_COLOR = "#C475FD"  # Okabe-Ito pos 2 — 26-day EMA
+GOLDEN_COLOR = "#AE3030"  # Okabe-Ito pos 5 — bullish crossover
+DEATH_COLOR = "#BD8233"  # Okabe-Ito pos 4 — bearish crossover
 
 # Data
 np.random.seed(42)

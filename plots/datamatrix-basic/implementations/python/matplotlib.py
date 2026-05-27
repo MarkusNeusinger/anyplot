@@ -28,8 +28,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Zone colors — Okabe-Ito, theme-constant (data encoding)
 COLOR_FINDER = "#009E73"
-COLOR_TIMING = "#0072B2"
-COLOR_DATA = "#E69F00"
+COLOR_TIMING = "#4467A3"
+COLOR_DATA = "#AE3030"
 
 # Data — 20×20 Data Matrix for electronics component traceability
 np.random.seed(42)

@@ -66,10 +66,10 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Shade overbought zone (70-100)
-ax.fill_between(df["date"], 70, 100, alpha=0.12, color="#D55E00")
+ax.fill_between(df["date"], 70, 100, alpha=0.12, color="#C475FD")
 
 # Shade oversold zone (0-30)
-ax.fill_between(df["date"], 0, 30, alpha=0.12, color="#0072B2")
+ax.fill_between(df["date"], 0, 30, alpha=0.12, color="#4467A3")
 
 # Plot RSI line using brand color
 ax.plot(df["date"], df["rsi"], color=BRAND, linewidth=3, label="RSI (14-period)")

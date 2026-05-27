@@ -19,8 +19,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1, 2, 3 for three series)
 BRAND = "#009E73"  # Position 1 (bluish green)
-ACCENT1 = "#D55E00"  # Position 2 (vermillion)
-ACCENT2 = "#0072B2"  # Position 3 (blue)
+ACCENT1 = "#C475FD"  # Position 2 (vermillion)
+ACCENT2 = "#4467A3"  # Position 3 (blue)
 
 # Data - Wind direction frequencies (8 compass directions)
 np.random.seed(42)

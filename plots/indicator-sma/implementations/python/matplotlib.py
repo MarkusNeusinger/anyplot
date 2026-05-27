@@ -21,9 +21,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — canonical order
 PRICE_COLOR = "#009E73"  # position 1 — price line (first series)
-SMA20_COLOR = "#D55E00"  # position 2
-SMA50_COLOR = "#0072B2"  # position 3
-SMA200_COLOR = "#CC79A7"  # position 4
+SMA20_COLOR = "#C475FD"  # position 2
+SMA50_COLOR = "#4467A3"  # position 3
+SMA200_COLOR = "#BD8233"  # position 4
 
 # Data - realistic stock price data with trend and volatility
 np.random.seed(42)

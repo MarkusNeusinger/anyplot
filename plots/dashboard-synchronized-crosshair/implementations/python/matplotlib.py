@@ -26,8 +26,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # anyplot palette position 1 — always first series
-COLOR_2 = "#9418DB"  # position 2 — RSI line
-COLOR_RED = "#B71D27"  # position 3 — semantic: down / overbought
+COLOR_2 = "#C475FD"  # position 2 — RSI line
+COLOR_RED = "#AE3030"  # position 3 — semantic: down / overbought
 
 # Data — stock-like time series: price, volume, RSI
 np.random.seed(42)

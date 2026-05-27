@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1
-ACCENT = "#D55E00"  # Position 2
+ACCENT = "#C475FD"  # Position 2
 
 # Data - Two distributions with distinct shapes
 np.random.seed(42)

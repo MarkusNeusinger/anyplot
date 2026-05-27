@@ -48,7 +48,7 @@ x_left = np.concatenate([[0], np.cumsum(bar_widths)[:-1]])
 
 # Colors: Okabe-Ito positions 1 and 2
 COLOR_SURVIVED = "#009E73"
-COLOR_DIED = "#D55E00"
+COLOR_DIED = "#C475FD"
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)

@@ -16,7 +16,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Developer survey - programming language proficiency
 # venn3 expects: (Abc, aBc, ABc, abC, AbC, aBC, ABC)
@@ -38,7 +38,7 @@ venn = venn3(
     set_labels=("Python", "JavaScript", "SQL"),
     ax=ax,
     alpha=0.6,
-    set_colors=OKABE_ITO,
+    set_colors=IMPRINT,
 )
 
 # Style circle labels (set names)

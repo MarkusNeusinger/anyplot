@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for waterfall categories
 INCREASE_COLOR = "#009E73"  # Brand green (position 1)
-DECREASE_COLOR = "#D55E00"  # Vermillion (position 2)
-TOTAL_COLOR = "#0072B2"  # Blue (position 3)
+DECREASE_COLOR = "#C475FD"  # Vermillion (position 2)
+TOTAL_COLOR = "#4467A3"  # Blue (position 3)
 
 # Data: Project Budget Allocation (from initial budget to final allocation)
 # Different scenario from the original (avoiding Altair match)

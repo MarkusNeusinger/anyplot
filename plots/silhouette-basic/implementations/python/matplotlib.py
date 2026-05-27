@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for clusters
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - use iris dataset for realistic clustering example
 iris = load_iris()
@@ -54,8 +54,8 @@ for i in range(n_clusters):
         np.arange(y_lower, y_upper),
         0,
         ith_cluster_silhouette_values,
-        facecolor=OKABE_ITO[i % len(OKABE_ITO)],
-        edgecolor=OKABE_ITO[i % len(OKABE_ITO)],
+        facecolor=IMPRINT[i % len(IMPRINT)],
+        edgecolor=IMPRINT[i % len(IMPRINT)],
         alpha=0.8,
     )
 

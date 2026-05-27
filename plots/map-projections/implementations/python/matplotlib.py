@@ -29,7 +29,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Map colors (theme-adaptive; semantic: land/ocean are not data series)
 LAND_COLOR = "#E8E4D9" if THEME == "light" else "#3A3830"
 OCEAN_COLOR = "#A8D5E5" if THEME == "light" else "#1A3348"
-TISSOT_COLOR = "#B71D27"  # anyplot palette position 3 (red)
+TISSOT_COLOR = "#AE3030"  # anyplot palette position 3 (red)
 
 # Projections to compare
 projections = [

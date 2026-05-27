@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 COLOR_CONTROL = "#009E73"  # Position 1 - brand green
-COLOR_TREATMENT = "#D55E00"  # Position 2 - vermillion
+COLOR_TREATMENT = "#C475FD"  # Position 2 - vermillion
 
 # Data - Test score distributions for control vs treatment groups across school levels
 np.random.seed(42)

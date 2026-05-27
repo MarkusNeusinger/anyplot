@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BULLISH = "#009E73"  # Green for upward
-BEARISH = "#D55E00"  # Vermillion (reddish) for downward
+BEARISH = "#C475FD"  # Vermillion (reddish) for downward
 
 # Generate synthetic price data
 np.random.seed(42)

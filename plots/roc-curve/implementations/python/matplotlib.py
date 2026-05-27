@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data
 np.random.seed(42)
@@ -45,14 +45,14 @@ auc3 = auc(fpr3, tpr3)
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.plot(fpr1, tpr1, color=OKABE_ITO[0], linewidth=3.5, label=f"Random Forest (AUC = {auc1:.2f})")
-ax.plot(fpr2, tpr2, color=OKABE_ITO[1], linewidth=3.5, label=f"Logistic Regression (AUC = {auc2:.2f})")
-ax.plot(fpr3, tpr3, color=OKABE_ITO[2], linewidth=3.5, label=f"Decision Tree (AUC = {auc3:.2f})")
+ax.plot(fpr1, tpr1, color=IMPRINT[0], linewidth=3.5, label=f"Random Forest (AUC = {auc1:.2f})")
+ax.plot(fpr2, tpr2, color=IMPRINT[1], linewidth=3.5, label=f"Logistic Regression (AUC = {auc2:.2f})")
+ax.plot(fpr3, tpr3, color=IMPRINT[2], linewidth=3.5, label=f"Decision Tree (AUC = {auc3:.2f})")
 
 ax.plot([0, 1], [0, 1], color=INK_SOFT, linewidth=2.5, linestyle="--", label="Random Classifier (AUC = 0.50)")
 
-ax.fill_between(fpr1, tpr1, alpha=0.12, color=OKABE_ITO[0])
-ax.fill_between(fpr2, tpr2, alpha=0.08, color=OKABE_ITO[1])
+ax.fill_between(fpr1, tpr1, alpha=0.12, color=IMPRINT[0])
+ax.fill_between(fpr2, tpr2, alpha=0.08, color=IMPRINT[1])
 
 # Style
 ax.set_xlabel("False Positive Rate", fontsize=20, color=INK)

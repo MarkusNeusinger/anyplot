@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is ALWAYS position 1)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: Energy mix by country (percentage of total electricity generation)
 categories = ["Germany", "France", "UK", "Spain", "Italy", "Poland"]
@@ -49,7 +49,7 @@ bar_width = 0.6
 bottom = np.zeros(len(categories))
 
 # Create stacked bars
-for i, (component, color) in enumerate(zip(components, OKABE_ITO, strict=True)):
+for i, (component, color) in enumerate(zip(components, IMPRINT, strict=True)):
     bars = ax.bar(
         x, percentages[:, i], bar_width, bottom=bottom, label=component, color=color, edgecolor=PAGE_BG, linewidth=1.5
     )

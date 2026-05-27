@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 COLOR_UP = "#009E73"  # Brand green for up bars
-COLOR_DOWN = "#D55E00"  # Vermillion for down bars
+COLOR_DOWN = "#C475FD"  # Vermillion for down bars
 
 # Data - Generate 45 trading days of synthetic stock OHLC data
 np.random.seed(42)

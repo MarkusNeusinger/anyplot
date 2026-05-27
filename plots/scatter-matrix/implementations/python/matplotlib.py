@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (3 colors for 3 species)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Iris-like flower measurements (4 variables, 3 species)
 np.random.seed(42)
@@ -61,13 +61,13 @@ for i in range(n_vars):
 
         if i == j:
             # Diagonal: histograms with enhanced visual hierarchy
-            for species_idx, (_species, color) in enumerate(zip(species_names, OKABE_ITO, strict=True)):
+            for species_idx, (_species, color) in enumerate(zip(species_names, IMPRINT, strict=True)):
                 mask = species_indices == species_idx
                 species_data = data_arrays[i][mask]
                 ax.hist(species_data, bins=12, alpha=0.85, color=color, edgecolor=INK_SOFT, linewidth=1.0)
         else:
             # Off-diagonal: scatter plots with enhanced marker definition
-            for species_idx, (_species, color) in enumerate(zip(species_names, OKABE_ITO, strict=True)):
+            for species_idx, (_species, color) in enumerate(zip(species_names, IMPRINT, strict=True)):
                 mask = species_indices == species_idx
                 ax.scatter(
                     data_arrays[j][mask],
@@ -121,7 +121,7 @@ legend_elements = [
         markeredgecolor=PAGE_BG,
         markeredgewidth=0.5,
     )
-    for species, color in zip(species_names, OKABE_ITO, strict=True)
+    for species, color in zip(species_names, IMPRINT, strict=True)
 ]
 leg = fig.legend(
     handles=legend_elements, loc="center right", fontsize=16, frameon=True, fancybox=False, edgecolor=INK_SOFT

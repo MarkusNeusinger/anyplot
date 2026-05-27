@@ -20,11 +20,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — use positions 1→N in order
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # 1: bluish green (brand)
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
 ]
 
 # Data: Voter migration across 4 election cycles
@@ -32,7 +32,7 @@ np.random.seed(42)
 
 time_points = ["2012", "2016", "2020", "2024"]
 categories = ["Party A", "Party B", "Party C", "Independent"]
-colors = {cat: OKABE_ITO[i] for i, cat in enumerate(categories)}
+colors = {cat: IMPRINT[i] for i, cat in enumerate(categories)}
 
 # Node values at each time point (thousands of voters)
 node_values = {
