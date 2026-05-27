@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-27
@@ -127,13 +127,13 @@ for idx, event in events_df.iterrows():
             "linewidth": 1.5,
             "alpha": 0.92,
         },
-        zorder=5,
+        zorder=10,
     )
 
 # Legend — price line + all four event types
 legend_handles = [price_line] + [mpatches.Patch(color=c, label=et.capitalize()) for et, c in event_colors.items()]
 legend_labels = ["Close Price"] + [et.capitalize() for et in event_colors]
-leg = ax.legend(handles=legend_handles, labels=legend_labels, loc="upper left", fontsize=8, framealpha=0.9)
+leg = ax.legend(handles=legend_handles, labels=legend_labels, loc="lower right", fontsize=8, framealpha=0.9)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
@@ -144,6 +144,7 @@ ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 ax.set_xlabel("Date", fontsize=10, color=INK)
 ax.set_ylabel("Price (USD)", fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, labelcolor=INK_SOFT, color=INK_SOFT)
+ax.tick_params(which="both", length=0)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
