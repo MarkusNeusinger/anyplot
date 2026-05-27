@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-27
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,20 +13,32 @@ from pathlib import Path
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.pie import PieSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Portfolio allocation with drill-down structure
-# Main categories (asset classes)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# anyplot categorical palette — 8 hues, hybrid-v3 sort order
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+title = "pie-portfolio-interactive · python · highcharts · anyplot.ai"
+
+# Data — portfolio allocation with drill-down structure
 portfolio_data = [
-    {"name": "Equities", "y": 55.0, "drilldown": "equities", "color": "#306998"},
-    {"name": "Fixed Income", "y": 25.0, "drilldown": "fixed-income", "color": "#FFD43B"},
-    {"name": "Alternatives", "y": 12.0, "drilldown": "alternatives", "color": "#9467BD"},
-    {"name": "Cash", "y": 8.0, "drilldown": "cash", "color": "#17BECF"},
+    {"name": "Equities", "y": 55.0, "drilldown": "equities", "color": ANYPLOT_PALETTE[0]},
+    {"name": "Fixed Income", "y": 25.0, "drilldown": "fixed-income", "color": ANYPLOT_PALETTE[1]},
+    {"name": "Alternatives", "y": 12.0, "drilldown": "alternatives", "color": ANYPLOT_PALETTE[2]},
+    {"name": "Cash", "y": 8.0, "drilldown": "cash", "color": ANYPLOT_PALETTE[3]},
 ]
 
-# Drill-down data (sub-holdings within each asset class)
+# Drill-down data — sub-holdings within each asset class
 drilldown_series = [
     {
         "type": "pie",
@@ -61,32 +74,37 @@ drilldown_series = [
     {"type": "pie", "id": "cash", "name": "Cash", "data": [["Money Market Fund", 5.0], ["Savings Account", 3.0]]},
 ]
 
-# Create chart
+# Chart — 2400×2400 square canvas for pie/donut
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
-chart.options.chart = {"type": "pie", "width": 4800, "height": 2700, "backgroundColor": "#ffffff"}
-
-# Title
-chart.options.title = {
-    "text": "pie-portfolio-interactive \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+chart.options.chart = {
+    "type": "pie",
+    "width": 2400,
+    "height": 2400,
+    "backgroundColor": PAGE_BG,
+    "style": {"color": INK},
+    "marginBottom": 160,
 }
 
-chart.options.subtitle = {"text": "Click slices to view individual holdings", "style": {"fontSize": "28px"}}
+chart.options.title = {"text": title, "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK}}
 
-# Tooltip
+chart.options.subtitle = {
+    "text": "Click slices to explore individual holdings",
+    "style": {"fontSize": "44px", "color": INK_SOFT},
+}
+
 chart.options.tooltip = {
-    "headerFormat": '<span style="font-size: 24px">{series.name}</span><br>',
-    "pointFormat": '<span style="color:{point.color}">\u25cf</span> {point.name}: <b>{point.y:.1f}%</b><br/>',
-    "style": {"fontSize": "22px"},
+    "headerFormat": '<span style="font-size: 44px">{series.name}</span><br>',
+    "pointFormat": '<span style="color:{point.color}">&#9679;</span> {point.name}: <b>{point.y:.1f}%</b><br/>',
+    "style": {"fontSize": "40px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
 }
 
-# Accessibility
 chart.options.accessibility = {"announceNewData": {"enabled": True}, "point": {"valueSuffix": "%"}}
 
-# Plot options
 chart.options.plot_options = {
     "pie": {
         "allowPointSelect": True,
@@ -95,53 +113,55 @@ chart.options.plot_options = {
         "dataLabels": {
             "enabled": True,
             "format": "<b>{point.name}</b>: {point.percentage:.1f}%",
-            "style": {"fontSize": "24px", "fontWeight": "normal"},
-            "distance": 30,
+            "style": {"fontSize": "38px", "fontWeight": "normal", "color": INK},
+            "distance": 40,
         },
         "showInLegend": True,
     }
 }
 
-# Legend
+# Legend centered at bottom — fixes previous right-edge visual imbalance
 chart.options.legend = {
     "enabled": True,
-    "layout": "vertical",
-    "align": "right",
-    "verticalAlign": "middle",
-    "itemStyle": {"fontSize": "24px"},
+    "layout": "horizontal",
+    "align": "center",
+    "verticalAlign": "bottom",
+    "itemStyle": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "normal"},
     "itemMarginBottom": 10,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "padding": 16,
 }
 
-# Drilldown configuration
 chart.options.drilldown = {
     "activeAxisLabelStyle": {"textDecoration": "none", "fontStyle": "normal"},
-    "activeDataLabelStyle": {"textDecoration": "none", "fontStyle": "normal"},
-    "breadcrumbs": {"position": {"align": "right"}, "style": {"fontSize": "24px"}},
+    "activeDataLabelStyle": {"textDecoration": "none", "fontStyle": "normal", "color": INK},
+    "breadcrumbs": {"position": {"align": "right"}, "style": {"fontSize": "38px", "color": INK_SOFT}},
     "series": drilldown_series,
 }
 
-# Create main series
 series = PieSeries()
 series.name = "Asset Classes"
 series.data = portfolio_data
 series.color_by_point = True
-
 chart.add_series(series)
 
-# Download Highcharts JS and drilldown module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS modules inline (CDN blocked in headless file:// context)
+_headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.highcharts.com/"}
+
+req = urllib.request.Request("https://code.highcharts.com/highcharts.js", headers=_headers)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-drilldown_url = "https://code.highcharts.com/modules/drilldown.js"
-with urllib.request.urlopen(drilldown_url, timeout=30) as response:
+req = urllib.request.Request("https://code.highcharts.com/modules/drilldown.js", headers=_headers)
+with urllib.request.urlopen(req, timeout=30) as response:
     drilldown_js = response.read().decode("utf-8")
 
-accessibility_url = "https://code.highcharts.com/modules/accessibility.js"
-with urllib.request.urlopen(accessibility_url, timeout=30) as response:
+req = urllib.request.Request("https://code.highcharts.com/modules/accessibility.js", headers=_headers)
+with urllib.request.urlopen(req, timeout=30) as response:
     accessibility_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -151,33 +171,44 @@ html_content = f"""<!DOCTYPE html>
     <script>{drilldown_js}</script>
     <script>{accessibility_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 2400px; height: 2400px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Setup headless Chrome
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=2400,2400")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override makes the viewport authoritative (--window-size alone loses ~139 px to Chrome chrome)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 2400, "height": 2400, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact 2400×2400 so post-render gate passes
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (2400, 2400):
+    _norm = Image.new("RGB", (2400, 2400), PAGE_BG)
+    _norm.paste(_img, ((2400 - _img.size[0]) // 2, (2400 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
