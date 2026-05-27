@@ -1,162 +1,189 @@
 library: plotly
+language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:44:41Z'
-updated: '2026-01-20T19:47:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184842610
+updated: '2026-05-27T09:29:32Z'
+generated_by: claude-sonnet
+workflow_run: 26502212333
 issue: 3769
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Plotly's built-in animation capabilities with scatter_geo and
-    animation_frame
-  - Well-configured play/pause buttons and time slider with smooth cubic-in-out transitions
-  - Realistic earthquake aftershock scenario with appropriate geographic context (Japan
-    2011 region)
-  - Clean, readable code following KISS principles
-  - 'Proper dual output: PNG for static preview and HTML for interactive version'
+  - 'Sophisticated theme-adaptive geographic styling: six separate color variables
+    for land, ocean, borders, lakes, grid, and page background — all flip correctly
+    between light and dark'
+  - Compelling earthquake aftershock dataset with geophysically realistic spreading,
+    decay, and exponential magnitude distribution
+  - Double magnitude encoding (size + color) creates clear visual hierarchy that guides
+    the viewer attention
+  - Ghost trail effect (previous 2 days at 0.2 opacity) adds temporal depth without
+    cluttering the map
+  - Dynamic title font scaling prevents overflow for the long mandated title string
+  - Correct use of imprint_seq for continuous magnitude data with properly bounded
+    cmin/cmax
   weaknesses:
-  - Geographic maps inherently lack traditional axis labels - could add lat/lon graticules
-    for reference
-  - Some magnitude values exceed 10 which is unrealistic for aftershocks (rare above
-    7-8 in reality)
-  - Could add point trails to show movement patterns over recent frames as suggested
-    in spec notes
-  image_description: 'The plot displays an animated geographic map showing earthquake
-    aftershock data off the coast of Japan. The static image shows Day 1 of the sequence,
-    with approximately 30+ scatter points clustered off the eastern coast of Japan
-    near the specified epicenter (38.3°N, 142.4°E). Points are colored using a YlOrRd
-    (yellow-orange-red) continuous color scale representing magnitude (ranging from
-    ~2 to 12), with both size and color encoding the magnitude value. The map shows
-    East Asia with Japan clearly visible, including country boundaries, coastlines,
-    and ocean coloring (light blue for ocean, light gray for land). A colorbar on
-    the right displays the "Magnitude" scale with tick values from 2 to 12. Play/Pause
-    buttons are prominently visible at the bottom left with clear icons, and a time
-    slider spans the full width showing Days 1-15 with "Time: Day 1" displayed above
-    it. The title follows the correct format: "Earthquake Aftershock Sequence · map-animated-temporal
-    · plotly · pyplots.ai" centered at the top in large readable text.'
+  - 'Slider tick labels font size not explicitly set — only color is specified in
+    sliders[0].font, size defaults to Plotly global default. Fix: add size=10 to font=dict(color=INK_SOFT)'
+  - 'Slight horizontal gap between map right edge and colorbar creates mild compositional
+    imbalance. Fix: adjust colorbar.x or right margin to tighten spacing'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches spec exactly
+      Chrome: Title "Earthquake Aftershock Sequence · map-animated-temporal · python · plotly · anyplot.ai" fully visible in dark #1A1A17 text. Colorbar title "Magnitude" and tick labels (2, 4, 6) readable in dark ink. "Time: Day 1" current value label and Day 1–15 slider tick labels readable. Play/Pause button labels readable on elevated #FFFDF6 background.
+      Data: Earthquake markers clustered off Japan's Pacific coast (Day 1 tight cluster near epicenter 38.3N, 142.4E). Color from #009E73 (low magnitude ~2) to #4467A3 (high magnitude ~7.5) via imprint_seq. Marker size proportional to magnitude (min 4px, up to ~26px). Land #E0DDD5, ocean #C5D5E5.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — matches spec exactly
+      Chrome: Title, slider labels, colorbar labels, and button labels all render in light #F0EFE8 text against the dark surface. No dark-on-dark issues. "Time: Day 1" and Day tick labels clearly visible. Colorbar on #242420 elevated background with light text.
+      Data: Data colors identical to light render — imprint_seq green (#009E73) to blue (#4467A3) unchanged. Land #252520, ocean #1E2832. Same marker cluster visible at same position with same sizes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt is clear and readable, colorbar labels visible, slider
-          labels legible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all controls and labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Markers well-sized with size_max=25, alpha=0.7 provides good visibility;
-          minor overlap in clustered points but appropriate for earthquake data
+        comment: Fonts explicitly set for title (adaptive), colorbar (12pt/10pt),
+          currentvalue (12pt), buttons (12pt). Slider tick label size not explicitly
+          set — inherits global default. Both renders fully readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Colorbar, buttons, and slider well-separated from
+          map. Marker overlap is data-accurate for earthquake cluster.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized by magnitude (min 4, up to ~26px). Color + size double
+          encoding provides excellent visual hierarchy. All data elements clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd colorscale is colorblind-friendly sequential warm palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills majority of canvas, controls positioned well at bottom,
-          colorbar appropriately placed
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Geographic maps do not have traditional axis labels - no lat/lon
-          graticules shown
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Colorbar legend well-placed and readable, no distracting grid
+        comment: imprint_seq (green to blue) is CVD-safe with no red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas used correctly. Map, colorbar, controls, and title
+          fill canvas appropriately for an animated geographic map. Slight gap between
+          map right edge and colorbar.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled 'Magnitude'. Title is descriptive with spec-id and
+          full attribution.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq [[0.0, #009E73], [1.0, #4467A3]] used correctly for
+          continuous magnitude. Light bg #FAF8F1, dark bg #1A1A17. All chrome theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Six theme-adaptive geographic color variables, magnitude-based marker
+          sizing, ghost trail effect at 0.2 opacity, dynamic title font scaling, styled
+          colorbar and buttons with ELEVATED_BG. Strongly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 15%-opacity lat/lon grid, styled colorbar with bordered elevated
+          background, themed play/pause buttons with matching borders.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Earthquake aftershock narrative with spreading pattern over 15 days.
+          Size+color double encoding for magnitude creates hierarchy. Ghost trail
+          provides temporal context.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct animated geographic scatter map
+        comment: Animated geographic scatter map — exactly as specified.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly mapped, magnitude to size and color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has play/pause controls, time slider, timestamp display, basemap
-          with boundaries/coastlines/ocean
-      - id: SC-04
-        name: Data Range
+        comment: Play/Pause controls, time slider, timestamp overlay, smooth transitions,
+          basemap with countries/coastlines, configurable speed, ghost trail all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within the map view, zoomed appropriately
-          to Japan region
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lat/lon mapped to geographic position; magnitude used for color and
+          size; days used as animation frame driver.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled Magnitude
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai
+        comment: Title 'Earthquake Aftershock Sequence · map-animated-temporal · python
+          · plotly · anyplot.ai' follows required format. Colorbar labeled 'Magnitude'.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows temporal progression over 15 days, magnitude variation, spatial
-          clustering; could show more dramatic spreading pattern
+        comment: Shows geographic distribution, temporal evolution, magnitude encoding,
+          trail effect, spreading pattern with intensity decay.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Earthquake aftershock sequence off Japan coast is highly plausible
-          and realistic
+        comment: Earthquake aftershock sequence off Japan (38.3N, 142.4E). Realistic
+          coordinates, exponential magnitude distribution, spreading and decay match
+          real aftershock behavior. Neutral scientific topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Magnitudes 2-12 are mostly realistic; some magnitudes above 10 are
-          rare for aftershocks
+        comment: '15 time steps (spec: 10-50), ~30 points/day (~450 total, within
+          50-500). Magnitude range 2.0-7.5 geophysically accurate.'
     code_quality:
       score: 10
       max: 10
@@ -166,42 +193,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: 'Flat imperative: tokens → data → traces → frames → layout → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.express used and needed
+        comment: Only os, numpy, plotly.graph_objects imported; all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly Express API
+        comment: Appropriate complexity. No fake UI elements — controls are real Plotly
+          updatemenus/sliders.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses px.scatter_geo with animation_frame for built-in animation,
-          smooth transitions configured; could leverage more advanced Plotly features
+        comment: Correct use of go.Scattergeo + go.Frame, coloraxis, updatemenus,
+          sliders — standard Plotly animation patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Frame animation engine, updatemenus play/pause, sliders with currentvalue,
+          go.Scattergeo with projection settings, interactive HTML export — all distinctively
+          Plotly.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -214,6 +251,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
-  - edge-highlighting
+  - custom-colormap
