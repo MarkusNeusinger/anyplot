@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-27
@@ -210,7 +210,7 @@ plot = (
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="terrain"),
         data=df_tiles,
         color=INK_MUTED,
-        size=0.1,
+        size=0.05,
         alpha=0.85,
     )
     + scale_fill_manual(values={"water": water_color, "land": land_color}, guide=None)
@@ -221,7 +221,7 @@ plot = (
     + geom_label(
         aes(x="lon", y="lat", label="name"),
         data=label_df,
-        size=3,
+        size=3.5,
         alpha=0.92,
         fill=ELEVATED_BG,
         color=INK,
