@@ -20,9 +20,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-UP_COLOR = "#009E73"  # Brand green (up days)
-DOWN_COLOR = "#C475FD"  # Vermillion (down days)
+# imprint semantic anchors
+UP_COLOR = "#009E73"  # green — up days
+DOWN_COLOR = "#AE3030"  # red — down days
 
 # Data - Generate realistic 60 trading days of OHLC data with volume
 np.random.seed(42)
