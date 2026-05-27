@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-27
@@ -48,6 +48,14 @@ event_type_colors = {
     "split": "#AE3030",  # red — significant corporate action
 }
 
+# Connector line width varies by event significance to create visual hierarchy
+event_stroke_width = {
+    "earnings": 3,  # notable — quarterly results move prices
+    "split": 4,  # major corporate action, thickest connector
+    "news": 2,
+    "dividend": 2,
+}
+
 # Build full color sequence for pygal's cycling: price line + connectors + flag groups
 connector_colors = [event_type_colors[e["type"]] for e in events]
 flag_colors = [event_type_colors[t] for t in ["earnings", "dividend", "news", "split"]]
@@ -73,7 +81,7 @@ chart = pygal.XY(
     height=1800,
     style=custom_style,
     title="Tech Stock 2023 · stock-event-flags · python · pygal · anyplot.ai",
-    x_title="Trading Day Index",
+    x_title="Date",
     y_title="Stock Price ($)",
     show_x_guides=False,
     show_y_guides=True,
@@ -87,11 +95,16 @@ chart = pygal.XY(
     truncate_legend=-1,
     margin=60,
     spacing=30,
+    print_labels=True,
 )
 
 # Main stock price line (first series → #009E73 brand green)
 price_points = [(i, df.iloc[i]["close"]) for i in range(len(df))]
 chart.add("Price", price_points, dots_size=0, stroke_style={"width": 4})
+
+# Date labels at monthly boundaries — replaces numeric trading day index with dates
+# 9 months Jul '23 → Mar '24 over 200 trading days ≈ evenly distributed
+chart.x_labels = ["Jul '23", "Aug '23", "Sep '23", "Oct '23", "Nov '23", "Dec '23", "Jan '24", "Feb '24", "Mar '24"]
 
 # Flag positioning above the price range
 min_price = df["close"].min()
@@ -101,25 +114,28 @@ price_range = max_price - min_price
 event_heights = {"earnings": 0.12, "dividend": 0.20, "news": 0.28, "split": 0.36}
 
 # Connector lines — dashed verticals from price level to flag position
+# Width varies by event type to emphasize earnings and split events
 for event in events:
     idx = df["date"].searchsorted(event["date"])
     if idx < len(df):
         flag_y = max_price + price_range * event_heights[event["type"]]
         price_at_event = df.iloc[idx]["close"]
+        stroke_w = event_stroke_width[event["type"]]
         chart.add(
             None,
             [(idx, price_at_event), (idx, flag_y)],
             stroke=True,
-            stroke_style={"width": 2, "dasharray": "6,4"},
+            stroke_style={"width": stroke_w, "dasharray": "6,4"},
             show_dots=False,
         )
 
 # Flag markers grouped by event type (drives legend)
+# print_labels=True on chart makes event labels visible in the PNG render
 for event_type in ["earnings", "dividend", "news", "split"]:
     type_events = [e for e in events if e["type"] == event_type]
     flag_y = max_price + price_range * event_heights[event_type]
     flag_points = [
-        {"value": (df["date"].searchsorted(e["date"]), flag_y), "label": f"{event_type.upper()}: {e['label']}"}
+        {"value": (df["date"].searchsorted(e["date"]), flag_y), "label": e["label"]}
         for e in type_events
         if df["date"].searchsorted(e["date"]) < len(df)
     ]
