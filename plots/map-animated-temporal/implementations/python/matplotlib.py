@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-27
@@ -25,7 +25,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 OCEAN_BG = "#C8DDF0" if THEME == "light" else "#1E3A4A"
 LAND_COLOR = "#E8E4D8" if THEME == "light" else "#2E2E28"
 
-# anyplot diverging cmap: blue (cold anomaly) → neutral → red (warm anomaly)
+# anyplot diverging cmap: blue (cold) → neutral → red (warm)
+# Intentionally reversed from canonical imprint_div (red→neutral→blue) so cold anomalies
+# appear blue and warm anomalies appear red, matching standard climate science convention.
 midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#4467A3", midpoint, "#AE3030"])
 
@@ -58,6 +60,33 @@ station_coords = [
     (44.43, 26.10),
     (42.70, 23.32),
     (46.95, 7.45),
+]
+station_names = [
+    "Paris",
+    "London",
+    "Berlin",
+    "Rome",
+    "Madrid",
+    "Stockholm",
+    "Helsinki",
+    "Copenhagen",
+    "Amsterdam",
+    "Brussels",
+    "Vienna",
+    "Budapest",
+    "Prague",
+    "Warsaw",
+    "Lisbon",
+    "Milan",
+    "Marseille",
+    "Hamburg",
+    "Munich",
+    "Venice",
+    "Barcelona",
+    "Athens",
+    "Bucharest",
+    "Sofia",
+    "Bern",
 ]
 
 n_months = 12
@@ -195,16 +224,31 @@ for ax, month_idx in zip(axes.flat, snapshot_indices, strict=False):
         bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85, "pad": 1.5},
     )
 
-    ax.tick_params(axis="both", labelsize=5, colors=INK_SOFT)
+    if month_idx == snapshot_indices[-1]:  # Nov: annotate peak anomaly station
+        peak_idx = np.argmax(current)
+        ax.annotate(
+            f"+{current[peak_idx]:.1f}°C\n{station_names[peak_idx]}",
+            xy=(lons[peak_idx], lats[peak_idx]),
+            xytext=(0.95, 0.12),
+            textcoords="axes fraction",
+            fontsize=5.5,
+            color=INK,
+            ha="right",
+            va="bottom",
+            arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.6, "shrinkA": 2, "shrinkB": 3},
+            bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9, "pad": 1.5, "linewidth": 0.3},
+        )
+
+    ax.tick_params(axis="both", labelsize=6, colors=INK_SOFT)
     for spine in ax.spines.values():
         spine.set_color(INK_SOFT)
         spine.set_linewidth(0.4)
 
 # Axis labels on left column and bottom row only
 for row in range(2):
-    axes[row, 0].set_ylabel("Latitude (°)", fontsize=5.5, color=INK)
+    axes[row, 0].set_ylabel("Latitude (°)", fontsize=7, color=INK)
 for col in range(3):
-    axes[1, col].set_xlabel("Longitude (°)", fontsize=5.5, color=INK)
+    axes[1, col].set_xlabel("Longitude (°)", fontsize=7, color=INK)
 
 # Layout and shared colorbar
 fig.subplots_adjust(left=0.07, right=0.87, top=0.94, bottom=0.07, hspace=0.18, wspace=0.14)
