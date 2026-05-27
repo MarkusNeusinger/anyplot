@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-tile-background: Map with Tile Background
-Library: plotnine | Python
-Quality: pending | Created: 2026-01-20
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-27
 """
 
 import os
