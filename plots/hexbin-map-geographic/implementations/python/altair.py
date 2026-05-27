@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-27
@@ -26,18 +26,18 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 LAND_FILL = "#E8E4DC" if THEME == "light" else "#2C2C28"
 LAND_STROKE = "#B0AFA8" if THEME == "light" else "#4A4A44"
 
-# Data: bird species sightings at US metro migration stopover points
+# Data: bird species sightings — deliberately wide density spread to showcase log-scale range
 np.random.seed(42)
-# (lat, lon, n_obs, spread_deg) — tight clusters for clear hotspots
+# (lat, lon, n_obs, spread_deg) — from sparse (150) to heavy (2500)
 clusters = [
-    (47.6, -122.3, 980, 0.45),  # Seattle / Pacific flyway
-    (37.8, -122.4, 850, 0.40),  # San Francisco Bay
-    (29.8, -95.4, 720, 0.40),  # Houston / Gulf Coast
-    (41.9, -87.6, 900, 0.45),  # Chicago / Great Lakes
-    (40.7, -74.0, 960, 0.40),  # New York metro
-    (38.9, -77.0, 820, 0.38),  # Washington DC
-    (25.8, -80.2, 700, 0.38),  # Miami / Atlantic flyway
-    (44.9, -93.2, 650, 0.42),  # Minneapolis / Mississippi corridor
+    (47.6, -122.3, 2000, 0.45),  # Seattle / Pacific flyway (dense hub)
+    (37.8, -122.4, 800, 0.40),  # San Francisco Bay (moderate)
+    (29.8, -95.4, 350, 0.40),  # Houston / Gulf Coast (lighter)
+    (41.9, -87.6, 1500, 0.45),  # Chicago / Great Lakes (dense hub)
+    (40.7, -74.0, 2500, 0.40),  # New York metro (densest hub)
+    (38.9, -77.0, 500, 0.38),  # Washington DC (moderate)
+    (25.8, -80.2, 150, 0.38),  # Miami / Atlantic flyway (sparse)
+    (44.9, -93.2, 250, 0.42),  # Minneapolis / Mississippi corridor (sparse)
 ]
 
 lats_all, lons_all = [], []
@@ -78,9 +78,12 @@ for (c, r), count in hex_counts.items():
         }
     )
 
-# Title
-title_str = "hexbin-map-geographic · python · altair · anyplot.ai"
-title_fs = max(11, round(16 * (67 / len(title_str) if len(title_str) > 67 else 1.0)))
+# Labels for the three strongest migration hubs — guide viewer to the story
+ann_data = [
+    {"lon": -74.0, "lat": 41.2, "label": "NYC Metro"},
+    {"lon": -122.3, "lat": 47.0, "label": "Seattle"},
+    {"lon": -87.6, "lat": 42.5, "label": "Chicago"},
+]
 
 # Base map — vega CDN, no local package required
 WORLD_URL = "https://cdn.jsdelivr.net/npm/vega-datasets@v1.29.0/data/world-110m.json"
@@ -110,16 +113,26 @@ hexbin = (
     .project(**proj_params)
 )
 
+# Text annotations directing the viewer to the densest migration hubs
+annotation = (
+    alt.Chart(alt.InlineData(values=ann_data))
+    .mark_text(color=INK, fontSize=8, fontWeight="bold", align="center", dy=-4)
+    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N")
+    .project(**proj_params)
+)
+
 chart = (
-    alt.layer(basemap, hexbin)
+    alt.layer(basemap, hexbin, annotation)
     .properties(
         width=620,
         height=320,
         background=PAGE_BG,
-        title=title_str,
+        title=alt.TitleParams(
+            text="US Bird Migration Hotspots", subtitle="hexbin-map-geographic · python · altair · anyplot.ai"
+        ),
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
     )
-    .configure_title(color=INK, fontSize=title_fs)
+    .configure_title(color=INK, fontSize=18, fontWeight="bold", subtitleColor=INK_SOFT, subtitleFontSize=10)
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_legend(
         fillColor=ELEVATED_BG,
