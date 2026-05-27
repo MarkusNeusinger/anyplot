@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:16:53Z'
-updated: '2026-05-27T13:24:33Z'
+updated: '2026-05-27T13:39:40Z'
 generated_by: claude-sonnet
 workflow_run: 26513184979
 issue: 3767
@@ -12,46 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Perfect idiomatic seaborn usage: sns.jointplot(kind=''hex'') with marginal_kws/joint_kws
-    is the canonical approach for hexbin + marginal distributions'
-  - Correct imprint_seq colormap applied to hexbin density (green sparse → blue dense)
-  - 'Both themes fully correct: #FAF8F1/#1A1A17 backgrounds, all chrome tokens theme-adaptive'
-  - Clean code with np.random.seed(42), no bbox_inches='tight', explicit font sizes
-    throughout
-  - 'Realistic Pacific Northwest bird observation data with geographically accurate
-    city locations (Seattle: ~47.6°N/-122.3°W, Portland: ~45.5°N/-122.7°W)'
-  - 'Perfect 10/10 on code quality: linear KISS structure, clean imports, reproducible,
-    current API'
+  - Correct use of seaborn's jointplot(kind='hex') with marginal histograms — showcases
+    a seaborn-distinctive feature not easily replicated in other libraries
+  - imprint_seq colormap applied correctly and consistently for density/richness continuous
+    data
+  - Full theme-adaptive chrome — both light and dark renders pass legibility checks
+    with no dark-on-dark or light-on-light failures
+  - Geographic reference layer (coastline, US-Canada border, WA-OR border, state labels)
+    adds meaningful spatial context for a geographic hexbin plot
+  - City label boxes with ELEVATED_BG fill and no edge border are a polished readability
+    solution over hexbins
+  - Perfect spec compliance — all required features present (hexbins, sequential cmap,
+    colorbar, geographic context, transparency, mean aggregation)
+  - Clean reproducible code with seed; no bbox_inches='tight' canvas drift
   weaknesses:
-  - 'Missing geographic base map layer: spec explicitly requires ''Overlay hexagons
-    on a base map showing geographic context (coastlines, country boundaries, or street
-    map)''. City label annotations are a creative substitute but do not fulfill this
-    requirement. Consider using contextily or geopandas + matplotlib basemap tiles,
-    or add simplified coastline/boundary lines using matplotlib patches.'
-  - 'City annotation labels (''Seattle'', ''Portland'') placed directly on hexbin
-    data using INK_MUTED color (#6B6A63 light / #A8A79F dark) — low-contrast on green
-    hexbins. Move labels to coordinate areas outside dense hex zones, or add a bbox
-    with ELEVATED_BG fill for readability.'
-  - Only count aggregation demonstrated; spec mentions support for sum and mean aggregation
-    methods as required features — not implemented.
+  - Canada annotation uses fontsize=7 which is at the lower legibility floor — increase
+    to 8pt to match city labels
+  - Colorbar placed with ax=ax (joint axis) and shrink=0.65, resulting in tight right-side
+    layout where colorbar and marginal-y histogram compete for horizontal space; consider
+    fig.subplots_adjust(right=0.82) or a dedicated cax
+  - 'DQ-01 minor gap: the spec advertises count, sum, and mean aggregation — only
+    mean is live-demonstrated; implementation could default to count and document
+    the switch'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct for light theme, fills entire canvas
-      Chrome: Title "hexbin-map-geographic · python · seaborn · anyplot.ai" fully visible at top-center. Axis labels "Longitude (°W)" and "Latitude (°N)" clearly readable. Tick labels visible and well-sized. Colorbar label "Observation Count" readable. City italic labels "Seattle" and "Portland" in INK_MUTED partially overlap hexbin data — readable but slightly low-contrast.
-      Data: Hexbin cells colored with imprint_seq (#009E73 green → #4467A3 blue). Most cells are brand green (low density); a small blue cluster near Seattle (-122.3°W, 47.6°N) marks highest density. Marginal histograms in #009E73 on top and right axes. Alpha=0.88 on hexbins with thin PAGE_BG edge separation.
-      Legibility verdict: PASS (all primary text readable; city annotations slightly challenging on hexbin data but legible)
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "hexbin-map-geographic · python · seaborn · anyplot.ai" in dark INK (#1A1A17) readable at top. Axis labels "Longitude (°W)" and "Latitude (°N)" at 10pt in INK, clearly visible. Tick labels at 8pt in INK_SOFT, readable. Colorbar label "Mean Species Richness" at 9pt in INK, readable. Geographic text annotations ("Canada", "WA", "OR") in INK_MUTED, readable. City labels "Seattle" and "Portland" at 8pt with ELEVATED_BG boxes, clearly readable over hexbins.
+      Data: imprint_seq colormap (green #009E73 → blue #4467A3) applied to hexbins; marginal histograms in #009E73 brand green. Seattle hotspot shows highest richness (dark blue), Portland cluster moderate, background areas green. 7000 points hexbinned at gridsize=28, alpha=0.88, mincnt=1.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct for dark theme, fills entire canvas
-      Chrome: Title in light #F0EFE8 — fully readable. Axis labels in light INK — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Colorbar "Observation Count" label visible. City labels in INK_MUTED (#A8A79F) — readable on dark gaps between hexbins. Left/bottom spines correctly rendered in light INK_SOFT against dark background.
-      Data: Hexbin colors IDENTICAL to light render — same green/blue gradient of imprint_seq. Hexbins stand out clearly against the near-black background. Marginal histograms same #009E73.
-      Legibility verdict: PASS (all text readable; no dark-on-dark failures; chrome correctly theme-adapted)
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title in light INK (#F0EFE8) clearly readable. Axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0), colorbar label in INK — all clearly visible against the dark background. No dark-on-dark failures observed. Geographic annotations and city labels flip to light tokens correctly. ELEVATED_BG city label boxes use #242420 for contrast.
+      Data: Hexbin colormap identical to light render — same imprint_seq green-to-blue gradient, same #009E73 marginal histogram bars, same hotspot pattern with Seattle in dark blue. Data colors are theme-invariant as required.
+      Legibility verdict: PASS — all text readable, brand green #009E73 clearly visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -59,82 +59,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis labels=10, ticks=8,
-          colorbar=9). Well-proportioned in both themes. Minor deduction: city annotation
-          labels in INK_MUTED sit on hexbin data, slightly low-contrast.'
+        comment: Title 12pt, axis labels 10pt, ticks 8pt, city labels 8pt, colorbar
+          label 9pt — all readable in both themes. Canada label at 7pt is at lower
+          legibility floor.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Seattle and Portland italic annotations overlap with hexbin cells;
-          text-on-data conflict is minor but visible in both renders.
+        comment: No significant overlaps. Colorbar placement slightly tight relative
+          to right marginal histogram but non-overlapping.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 7,000 points binned with gridsize=28 hexagons, alpha=0.88, thin edge
-          separation. Cells well-sized and clearly visible. Marginal histograms appropriately
-          sized.
+        comment: 7000 points hexbinned at gridsize=28, alpha=0.88, mincnt=1. Density
+          representation clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is perceptually uniform and CVD-safe; green→blue gradient
-          works for deuteranopia via luminance variation.
+        comment: imprint_seq (green→blue) is CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas correct for symmetric jointplot. Canvas gate
-          passed. Plot area uses canvas well.
+        comment: Square 2400x2400 canvas correct for jointplot. Slightly cramped right
+          side with colorbar+marginal-y sharing horizontal space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°W) and Latitude (°N) — descriptive with degree units.
+        comment: Longitude (W) / Latitude (N) with units. Colorbar labeled Mean Species
+          Richness. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73→#4467A3) correctly built and applied. #FAF8F1
-          light / #1A1A17 dark backgrounds correct. All chrome tokens theme-adaptive.
-          Both renders pass.'
+        comment: 'imprint_seq used for continuous richness data. Marginals in #009E73.
+          Backgrounds #FAF8F1 / #1A1A17 correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: jointplot elegantly integrates hexbin
-          + marginals, anyplot palette precisely applied, colorbar styled with theme
-          tokens. Not publication-level due to absence of geographic base context.'
+        comment: 'Above default 4: geographic reference layer, city label boxes with
+          ELEVATED_BG, custom imprint_seq colormap, themed colorbar. Simplified geographic
+          lines limit score.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed from joint axis, hexbin cells have subtle
-          edgecolor=PAGE_BG with linewidths=0.15, marginals have alpha=0.75 + edgecolor,
-          colorbar outline styled with INK_SOFT.
+        comment: Top/right spines removed, hexbin edges in PAGE_BG, geographic lines
+          at 55% alpha, marginal bars with PAGE_BG edgecolor. Above default 2.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Urban hotspots near Seattle/Portland visible (bluer hexbins), city
-          labels provide spatial anchors, jointplot marginals add distributional context.
-          Limited storytelling without geographic base layer.
+        comment: 'Clear visual hierarchy: Seattle hotspot (dark blue) vs background
+          (green). Geographic labels guide spatial understanding. Marginals add distributional
+          insight.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,30 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: hexagonal binning on geographic coordinates using seaborn
-          jointplot kind=hex.'
+        comment: Correct hexagonal binning map using seaborn jointplot kind=hex.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Missing key spec requirement: geographic base map overlay. Only
-          count aggregation (no sum/mean). Hexagon size hardcoded. Colorbar and transparency
-          present.'
+        passed: true
+        comment: Hexagonal binning, sequential colormap with colorbar, mean aggregation,
+          geographic context layer, transparency all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Longitude, Y=Latitude, correct geographic orientation, axes show
-          full data extent.
+        comment: Longitude on X, Latitude on Y, Mean Species Richness on color. Geographic
+          bounds explicitly set.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'hexbin-map-geographic · python · seaborn · anyplot.ai'.
-          Colorbar serves as scale reference.
+        comment: Title is exactly hexbin-map-geographic · python · seaborn · anyplot.ai.
+          Colorbar legend present and labeled.
     data_quality:
       score: 14
       max: 15
@@ -175,23 +170,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows geographic clustering with multiple urban hotspots, good density
-          variation, marginal distributions reveal spatial extents. Subtle hotspot
-          color variation with gridsize=28.
+        comment: Demonstrates hexagonal binning, mean aggregation, geographic clustering,
+          marginal distributions, continuous richness variable. Count and sum aggregation
+          noted in comments only.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated bird observation locations in Pacific Northwest — neutral,
-          real-world plausible. City locations geographically accurate.
+        comment: Pacific Northwest bird observations with plausible hotspots at Seattle,
+          Portland, Cascade Range, Olympic Peninsula. Richness 1-5 is standard ecological
+          metric.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinate ranges correct for Pacific Northwest US (lat 43–51°N,
-          lon 116–127°W). 7,000 points appropriate for hexbin density.
+        comment: 7000 points, lat 43-51N, lon -126.5 to -116.5W covers Pacific Northwest
+          correctly. Richness clipped to [1, 5].
     code_quality:
       score: 10
       max: 10
@@ -201,14 +197,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: theme tokens → data generation → plot → styling → save.
-          No functions or classes.'
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -221,37 +216,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Title font size scaling formula is a nice touch.
-          No over-engineering.
+        comment: Appropriate complexity, no fake interactivity, code comments document
+          aggregation alternatives.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches='tight' —
-          correct per seaborn rule.
+        comment: plt.savefig with f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG.
+          No bbox_inches='tight', no bare plot.png.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: sns.jointplot(kind='hex') is the canonical high-level seaborn API
-          for hexbin+marginals. marginal_kws and joint_kws usage demonstrates solid
-          API fluency. Correct figure-level DPI via g.figure.set_dpi(400).
+        comment: sns.jointplot(kind='hex') is the correct idiomatic seaborn API. joint_kws
+          and marginal_kws used correctly. sns.set_theme with rc dict is canonical
+          seaborn practice.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Jointplot approach (hexbin + marginal histograms in one call) is
-          seaborn-distinctive; ratio=8 parameter for joint-to-marginal proportion
-          is seaborn-specific. Could leverage more distinctive features (KDE marginals,
-          bivariate kde overlay).
-  verdict: REJECTED
+        comment: seaborn's jointplot providing marginal distributions alongside the
+          hexbin is a genuinely distinctive seaborn feature. Combination of geographic
+          overlay + jointplot marginals is creative and library-native.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -264,3 +258,4 @@ impl_tags:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
+  - publication-ready
