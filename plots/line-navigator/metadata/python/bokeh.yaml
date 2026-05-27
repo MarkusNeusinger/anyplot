@@ -1,156 +1,182 @@
 library: bokeh
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:57:33Z'
-updated: '2026-01-20T21:00:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878230
+updated: '2026-05-27T11:50:50Z'
+generated_by: claude-sonnet
+workflow_run: 26507960457
 issue: 3785
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-navigator/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Bokeh RangeTool for navigator functionality - idiomatic Bokeh
-    solution
-  - Clean KISS code structure with proper data generation and fixed seed
-  - Good visual consistency between main chart and navigator (same line color, shared
-    y_range)
-  - Appropriate sizing - navigator is ~18% of main chart height as per spec
-  - Yellow selection box provides clear visual feedback of selected range
-  - Generates both PNG and HTML outputs
+  - Excellent use of Bokeh's RangeTool — the defining library feature for this spec,
+    implemented correctly with linked x_range synchronization between main and navigator
+    figures
+  - Amber semantic anchor (#DDCC77) for the selection window is a smart, palette-compliant
+    color choice that avoids spending a categorical palette slot
+  - Navigator height (300/1800 = 16.7%) is perfectly within the spec's 15-20% requirement
+  - Differential alpha (0.9 main / 0.6 navigator) creates intuitive visual hierarchy
+    between detail and overview views
+  - Full theme-adaptive chrome implementation with all required tokens; both light
+    and dark renders pass readability checks
+  - 1095-point dataset with trend + seasonal + noise components is an ideal demo for
+    the navigator concept
   weaknesses:
-  - Title font size (32pt) could be increased to 36-40pt for better visibility on
-    4800px canvas
-  - Grid styling with dashed lines works but solid subtle lines might be cleaner
-  - Bokeh toolbar icons on the right side slightly affect visual balance
-  image_description: The plot displays a line chart with mini navigator featuring
-    sensor reading data over 3 years (Jan 2022 - Jan 2025). The main chart (top) shows
-    a zoomed-in view of approximately 6 months of data (Jan 2024 - Jun 2024) with
-    a blue line (#306998 Python Blue) showing sensor readings ranging from ~40 to
-    ~100 units. The Y-axis is labeled "Sensor Reading (units)" and X-axis shows "Date"
-    with monthly tick marks. Below the main chart is a mini navigator pane showing
-    the complete 3-year dataset at reduced scale. A yellow/gold (#FFD43B Python Yellow)
-    semi-transparent selection box in the navigator highlights the currently visible
-    range in the main chart. The title "line-navigator · bokeh · pyplots.ai" appears
-    in the top-left. The data shows an upward trend with seasonal oscillation and
-    noise, demonstrating the navigator's ability to explore different time periods.
-    Grid lines are subtle with dashed styling. Bokeh toolbar icons appear on the right
-    side of the main chart.
+  - Title font size (65pt) exceeds the 50pt style-guide default for a ~44-character
+    title; consider reducing to 50-55pt to stay closer to the standard
+  - xgrid is not explicitly disabled on either figure; for a line chart, y-only grid
+    is preferred per style guide — add main_plot.xgrid.grid_line_color = None and
+    navigator.xgrid.grid_line_color = None
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "line-navigator · python · bokeh · anyplot.ai" in bold dark text, spans ~55-60% of plot width. Y-axis label "Sensor Reading (units)" and X-axis label "Date" in dark text, clearly readable. Tick labels in INK_SOFT (dark gray) are legible.
+      Data: Brand green (#009E73) line showing sensor readings from Jan 2024 to Jun 2024 in main chart. Navigator below shows full 2022-2025 range with amber (#DDCC77, alpha=0.3) selection window highlighting the visible portion. Subtle horizontal grid lines (alpha=0.15).
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and all axis labels/tick labels render in light cream text (INK = #F0EFE8), clearly visible against the dark surface. Tick labels use INK_SOFT (#B8B7B0) — sufficient contrast, no dark-on-dark failure.
+      Data: Brand green (#009E73) data line is identical to the light render — color preserved across themes as required. Amber selection window in navigator appears slightly olive/muted due to alpha compositing on dark background but remains visually distinct. Grid lines subtle and appropriately muted.
+      Legibility verdict: PASS — all title, axis label, and tick label text is clearly readable against the dark background. No dark-on-dark failure detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels readable, tick labels clear, title font could
-          be slightly larger
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line clearly visible with appropriate thickness; density well-handled
+        comment: All text readable in both themes. Title at 65pt is slightly above
+          the 50pt style-guide default for a ~44-char title; minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line at width=4 with alpha=0.9 clearly visible for 1095-point dense
+          dataset. Navigator uses alpha=0.6 for differentiation.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, navigator ~18% of main chart, slight imbalance
-          with toolbar
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Sensor Reading (units), Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Single series in brand green; high contrast against both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Navigator height 16.7% within spec's
+          15-20%. Clean proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle with dashed styling, no legend needed for single series
+        comment: Title matches required format. Y-axis label includes units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Data line uses #009E73 (brand green). Selection overlay uses #DDCC77
+          (amber semantic anchor). Correct backgrounds for both themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional amber semantic anchor for selection, differential alpha
+          for visual hierarchy, no redundant legend. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: outline_line_color=None removes box border; ygrid at alpha=0.15 is
+          subtle; min_border settings create generous whitespace. xgrid not explicitly
+          disabled (minor).
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Two-pane design with linked ranges directly embodies the navigator
+          concept; amber window creates focal point. Above defaults.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart with navigator
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, values on Y-axis, correctly assigned
-      - id: SC-03
+        comment: Line chart with mini navigator — exactly matches spec.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Navigator with RangeTool, selection window, resizable handles; missing
-          animated transitions (static PNG)
-      - id: SC-04
-        name: Data Range
+        comment: Main detail view, mini overview, draggable selection window via RangeTool,
+          resize handles, shared line styling, navigator at 16.7% height.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data extent visible in navigator, selected range in main chart
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date/value mapping correct; 1095 data points exceeds 1000+ requirement.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: line-navigator · bokeh · pyplots.ai'
+        comment: Title is 'line-navigator · python · bokeh · anyplot.ai' — exact required
+          format. No legend for single-series (correct).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, and noise; demonstrates navigator well;
-          could show more extreme peaks
+        comment: Large dataset, detail view, overview, selection window, realistic
+          trend+seasonal+noise signal. All navigator aspects shown.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Sensor readings scenario is plausible and neutral; values are reasonable
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 50-100 units are sensible for sensor readings
+        comment: Daily sensor readings over 3 years with upward trend, seasonal cycle,
+          and realistic noise — plausible, neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1095 data points over 3 years at daily frequency is ideal for demonstrating
+          the necessity of a navigator widget.
     code_quality:
       score: 10
       max: 10
@@ -160,47 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean script: imports → data → plots → save'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported modules are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current Bokeh API
+        comment: Well-organized, appropriate complexity for the navigator pattern.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses current Bokeh
+          API with Selenium screenshot.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses RangeTool (Bokeh-specific), ColumnDataSource, column layout;
-          could leverage more interactive features like HoverTool
+        comment: ColumnDataSource, RangeTool with linked x_range, HoverTool with datetime
+          formatter, column() layout — all highly idiomatic Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: RangeTool is a signature Bokeh widget unavailable in most other libraries.
+          Linked x_range synchronization is quintessentially Bokeh. Outstanding library
+          mastery.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
+  - hover-tooltips
   - html-export
+  - subplots
   patterns:
   - data-generation
   - columndatasource
@@ -208,4 +247,3 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
