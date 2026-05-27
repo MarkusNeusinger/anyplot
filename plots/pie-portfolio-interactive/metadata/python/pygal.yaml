@@ -1,153 +1,181 @@
 library: pygal
+language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:07:32Z'
-updated: '2026-01-20T23:21:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21190551658
+updated: '2026-05-27T17:49:48Z'
+generated_by: claude-sonnet
+workflow_run: 26527033852
 issue: 3754
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent text legibility with appropriately sized fonts for the large canvas
-  - Clean colorblind-safe color palette (blue, yellow, orange)
-  - Good use of pygal distinctive features including custom Style, donut inner_radius,
-    and value formatting
-  - Realistic portfolio allocation data with proper asset class categorization
-  - Legend well-organized in a single row at bottom
+  - Creative center annotation (55%/Equities/10 holdings) creates a clear focal point
+  - Category totals in legend labels provide portfolio overview at a glance
+  - 'Correct anyplot palette with #009E73 as first series; both themes pass readability
+    checks'
+  - Per-item hover tooltip labels via pygal native JS expose individual holding details
+  - SVG center annotation elegantly injected into pygal output pipeline
   weaknesses:
-  - PNG output cannot demonstrate the interactive drill-down features mentioned in
-    the spec (inherent limitation)
-  - Could show sub-holdings detail within the visualization to better represent the
-    hierarchical data structure
-  image_description: 'The plot displays a donut chart (pie chart with inner radius)
-    showing portfolio allocation across three asset classes. The chart uses a clean
-    white background with three distinctly colored segments: blue for Equities (55%),
-    yellow for Fixed Income (28%), and orange for Alternatives (17%). Percentage values
-    are displayed directly on each slice in dark text. The title "pie-portfolio-interactive
-    · pygal · pyplots.ai" appears at the top center. A legend at the bottom shows
-    all three categories with their percentages in a single horizontal row. The donut
-    chart is well-sized and centered, utilizing good canvas space.'
+  - Small Alternatives sub-slice labels near chart top (5.0%, 5.0%, 7.0%) are crowded
+    — suppress or reposition labels on slices under ~6%
+  - No absolute dollar values alongside percentages; spec requires displaying both;
+    add notional AUM and compute holding dollar values for tooltips
+  - Individual holding names not visible in static PNG — only percentages on slice
+    labels; consider rendering names on larger slices (>=10%)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "pie-portfolio-interactive · python · pygal · anyplot.ai" in dark text at top — fully readable. Legend at bottom with colored swatches and category labels — readable. No axis labels (appropriate for pie chart).
+      Data: Three donut segments — brand green #009E73 (Equities ~55%), lavender #C475FD (Fixed Income ~28%), blue-grey #4467A3 (Alternatives ~17%). Percentage labels on each sub-slice. Center annotation: bold "55%" / "Equities" / "10 holdings".
+      Legibility verdict: PASS — all text readable; minor crowding on the three small Alternatives labels (5.0%, 5.0%, 7.0%) near the top of the donut but all are legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and legend text have flipped to light-colored — fully readable against dark background. No dark-on-dark failures detected. Center annotation text visible in lighter tone.
+      Data: Segment colors are identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue-grey) — data palette unchanged across themes, only chrome flipped.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, slice labels, and legend text are all clearly readable at
-          large font sizes
+        comment: Font sizes explicitly set; all text readable in both themes; small
+          deduction for slightly small value labels on 5% sub-slices
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: No overlapping text elements; percentages positioned well on slices
+        comment: Minor crowding on three small Alternatives sub-slice labels near
+          top of donut; main content readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Donut segments are large and clearly visible with good proportions
+        comment: All segments clearly visible; center annotation bold and prominent;
+          colors well-differentiated
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and orange are colorblind-safe and provide good contrast
+        comment: CVD-safe anyplot palette; three distinct hue families (green/purple/blue)
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good layout with chart centered and legend at bottom, but some excess
-          whitespace
+        comment: Correct 2400x2400 square canvas; donut fills canvas well; generous
+          margins; legend cleanly at bottom
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Not applicable for pie/donut charts - full points
+        comment: Title in exact mandated format; no axis labels needed for pie chart
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, easy to read with color boxes
+        comment: 'First series #009E73; positions 2-3 in canonical order; light #FAF8F1
+          / dark #1A1A17 backgrounds; theme-adaptive text in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default; center annotation shows design thinking; category
+          totals in legend add hierarchy; professional but not publication-ready level
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Generous margins; no grid or spines (appropriate for pie); clean
+          legend; moderate refinement above bare defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center annotation creates focal point for dominant Equities allocation;
+          color coding guides eye; category totals in legend; individual holding names
+          only visible on hover
     spec_compliance:
-      score: 22
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct donut/pie chart as specified
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Weights correctly mapped to slice sizes
-      - id: SC-03
+        comment: Correct donut/pie chart; spec explicitly allows pie or donut
+      - id: SC-02
         name: Required Features
         score: 3
-        max: 5
-        passed: false
-        comment: Shows category-level data but lacks sub-holdings drill-down capability
-          mentioned in spec (limitation of PNG output)
-      - id: SC-04
-        name: Data Range
+        max: 4
+        passed: true
+        comment: 'Hover tooltips via pygal native JS; grouped by asset class; color-coded;
+          legend present. Missing: no absolute dollar values, no true drill-down navigation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, percentages sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Asset weights correctly mapped to slice sizes; categories sum to
+          100%; all 10 holdings accessible via hover
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all categories with percentages
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as spec-id · library · pyplots.ai
+        comment: Exact mandated title format; legend labels include category name
+          and total percentage
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 3 asset classes with different allocations; could show more
-          holdings variation
+        comment: Three distinct asset classes; 10 individual holdings; center annotation
+          highlights dominant allocation; proportional area encoding
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Investment portfolio allocation is a realistic, neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages are realistic for a balanced portfolio (55% equities,
-          28% fixed income, 17% alternatives)
+        comment: Realistic balanced multi-asset portfolio with recognizable asset
+          names; proportions match typical institutional allocation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Weights sum to 100%; 55/28/17 split is a plausible balanced portfolio;
+          individual weights 5-25% are realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,46 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, style, chart, render'
+        comment: 'Linear script: imports -> data -> style -> chart -> render -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but no explicit seed comment
+        comment: Hardcoded data; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: All imports (os, re, sys, cairosvg, pygal, Style) are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: sys.path manipulation justified and commented; SVG annotation injection
+          creative; value_formatter lambda clean
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal Style customization, donut style with inner_radius, print_values,
-          print_labels, legend_at_bottom_columns, value_formatter
+        comment: Uses pygal.Pie with inner_radius, per-item label dicts for hover
+          tooltips, value_formatter, legend_at_bottom_columns — all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Native JS hover via HTML export; per-item label dicts for per-slice
+          tooltip text; SVG center annotation injection — creative library-specific
+          technique
   verdict: APPROVED
 impl_tags:
-  dependencies: []
-  techniques: []
-  patterns: []
+  dependencies:
+  - cairosvg
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - iteration-over-groups
   dataprep: []
   styling: []

@@ -1,18 +1,49 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-27
 """
 
+import os
+
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot import ggbunch  # noqa: F401
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_rect,
+    element_text,
+    geom_label,
+    geom_pie,
+    ggbunch,
+    ggplot,
+    ggsize,
+    labs,
+    layer_labels,
+    layer_tooltips,
+    scale_fill_manual,
+    theme,
+    theme_void,
+)
+from lets_plot.export import ggsave
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
 
-# Data - Portfolio allocation by asset class with individual holdings
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Anyplot palette — semantic mapping for asset classes
+# Equities → green (growth/profit), Fixed Income → blue (safe/conservative)
+# Alternatives → purple, Cash → ochre (store of value)
+CATEGORY_COLORS = {"Equities": "#009E73", "Fixed Income": "#4467A3", "Alternatives": "#C475FD", "Cash": "#BD8233"}
+
+# Anyplot palette positions 1→8 for individual holdings
+HOLDING_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Portfolio data — institutional multi-asset allocation
 portfolio_data = {
     "asset": [
         "Apple Inc.",
@@ -42,169 +73,117 @@ portfolio_data = {
         "Cash",
     ],
 }
-
 df = pd.DataFrame(portfolio_data)
 
-# Aggregate by category for main pie chart
+# Aggregate by category
 category_weights = df.groupby("category", as_index=False)["weight"].sum()
 category_weights = category_weights.sort_values("weight", ascending=False)
-
-# Reorder categories
 category_order = category_weights["category"].tolist()
-category_weights["category"] = pd.Categorical(category_weights["category"], categories=category_order, ordered=True)
 
-# Color palette for asset categories (Python Blue first, colorblind-safe)
-category_colors = {"Fixed Income": "#306998", "Equities": "#FFD43B", "Alternatives": "#DC2626", "Cash": "#059669"}
-
-# Main overview pie chart - shows aggregated asset classes
-center_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": ["Portfolio\n100%"]})
-
-# Build tooltips with drill-down hint showing individual holdings
-# For each category, create a list of holdings to show in tooltip
-holdings_info = {}
-for cat in category_order:
-    cat_holdings = df[df["category"] == cat][["asset", "weight"]].values.tolist()
-    holdings_str = "\n".join([f"  • {h[0]}: {h[1]:.1f}%" for h in cat_holdings])
-    holdings_info[cat] = holdings_str
-
-# Add holdings info to dataframe for tooltips
+# Enrich for tooltips
 category_weights["holdings_count"] = category_weights["category"].apply(lambda c: len(df[df["category"] == c]))
 category_weights["holdings_preview"] = category_weights["category"].apply(
     lambda c: ", ".join(df[df["category"] == c]["asset"].tolist())
 )
+# Suppress slice labels for very small segments (< 5%) to avoid cramped text
+category_weights["pct_label"] = category_weights["weight"].apply(lambda w: f"{w:.1f}%" if w >= 5.0 else "")
 
-# Overview pie chart - main view showing all asset classes
+center_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": ["Portfolio\n100%"]})
+
+# Shared theme — theme_void base + anyplot chrome tokens
+chart_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    plot_title=element_text(size=13, hjust=0.5, face="bold", color=INK),
+    plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
+    legend_title=element_text(size=11, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_position="right",
+    plot_caption=element_text(size=9, hjust=0.5, face="bold", color="#4467A3"),
+    plot_margin=[20, 15, 10, 15],
+)
+
+# Overview pie — all asset classes, interactive tooltips with holdings preview
 plot_overview = (
-    ggplot(category_weights)  # noqa: F405
-    + geom_pie(  # noqa: F405
-        aes(slice="weight", fill="category"),  # noqa: F405
+    ggplot(category_weights)
+    + geom_pie(
+        aes(slice="weight", fill="category"),
         stat="identity",
         size=45,
         hole=0.35,
-        stroke=2.5,
-        color="white",
-        tooltips=layer_tooltips()  # noqa: F405
+        stroke=1.5,
+        color=PAGE_BG,
+        tooltips=layer_tooltips()
         .title("@category")
         .line("Allocation: @weight%")
         .line("Holdings: @holdings_count assets")
         .line("@holdings_preview")
-        .line("")
-        .line("[Click to drill down]")
         .format("weight", ".1f"),
-        labels=layer_labels()  # noqa: F405
-        .line("@weight%")
-        .format("weight", ".1f")
-        .size(20),
+        labels=layer_labels().line("@pct_label").size(7),
     )
-    + geom_label(  # noqa: F405
-        aes(x="x", y="y", label="label"),  # noqa: F405
-        data=center_df,
-        size=20,
-        fill="white",
-        alpha=0.9,
-        label_padding=0.5,
+    + geom_label(
+        aes(x="x", y="y", label="label"), data=center_df, size=9, fill=ELEVATED_BG, color=INK, label_padding=0.5
     )
-    + scale_fill_manual(values=list(category_colors.values()), limits=list(category_colors.keys()))  # noqa: F405
-    + labs(  # noqa: F405
-        title="pie-portfolio-interactive · letsplot · pyplots.ai",
-        subtitle="Hover for details | Click category to drill down",
+    + scale_fill_manual(values=list(CATEGORY_COLORS.values()), limits=list(CATEGORY_COLORS.keys()))
+    + labs(
+        title="pie-portfolio-interactive · python · letsplot · anyplot.ai",
+        subtitle="Hover for details · Drill-down panels in HTML",
+        caption="★  Fixed Income leads at 38% — the largest asset class in this portfolio",
         fill="Asset Class",
     )
-    + ggsize(1600, 900)  # noqa: F405
-    + theme_void()  # noqa: F405
-    + theme(  # noqa: F405
-        plot_title=element_text(size=28, hjust=0.5, face="bold"),  # noqa: F405
-        plot_subtitle=element_text(size=18, hjust=0.5, color="#666666"),  # noqa: F405
-        legend_title=element_text(size=20),  # noqa: F405
-        legend_text=element_text(size=18),  # noqa: F405
-        legend_position=[0.82, 0.5],
-        plot_margin=[40, 20, 20, 20],
-    )
+    + ggsize(600, 600)
+    + theme_void()
+    + chart_theme
 )
 
-# Create drill-down views for each asset class
+# Drill-down plots — one per asset class, showing individual holdings
 drill_down_plots = {}
-holding_colors = ["#306998", "#FFD43B", "#DC2626", "#059669", "#7C3AED", "#0891B2", "#EA580C", "#84CC16"]
-
 for cat in category_order:
-    cat_df = df[df["category"] == cat].copy()
-    cat_df = cat_df.sort_values("weight", ascending=False)
+    cat_df = df[df["category"] == cat].copy().sort_values("weight", ascending=False)
     cat_total = cat_df["weight"].sum()
-
-    # Calculate relative weight within category
     cat_df["relative_weight"] = (cat_df["weight"] / cat_total * 100).round(1)
-
+    n = len(cat_df)
+    cat_colors = HOLDING_COLORS[:n]
     center_cat_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": [f"{cat}\n{cat_total:.0f}%"]})
 
-    # Assign colors
-    n_holdings = len(cat_df)
-    cat_color_list = holding_colors[:n_holdings]
-
-    drill_plot = (
-        ggplot(cat_df)  # noqa: F405
-        + geom_pie(  # noqa: F405
-            aes(slice="weight", fill="asset"),  # noqa: F405
+    drill_down_plots[cat] = (
+        ggplot(cat_df)
+        + geom_pie(
+            aes(slice="weight", fill="asset"),
             stat="identity",
-            size=45,
+            size=18,
             hole=0.35,
-            stroke=2,
-            color="white",
-            tooltips=layer_tooltips()  # noqa: F405
+            stroke=1.5,
+            color=PAGE_BG,
+            tooltips=layer_tooltips()
             .title("@asset")
             .line("Portfolio weight: @weight%")
             .line("Category share: @relative_weight%")
-            .line("")
-            .line("[Click to return to overview]")
             .format("weight", ".1f")
             .format("relative_weight", ".1f"),
-            labels=layer_labels()  # noqa: F405
-            .line("@weight%")
-            .format("weight", ".1f")
-            .size(20),
+            labels=layer_labels().line("@weight%").format("weight", ".1f").size(7),
         )
-        + geom_label(  # noqa: F405
-            aes(x="x", y="y", label="label"),  # noqa: F405
-            data=center_cat_df,
-            size=20,
-            fill="white",
-            alpha=0.9,
-            label_padding=0.5,
+        + geom_label(
+            aes(x="x", y="y", label="label"), data=center_cat_df, size=9, fill=ELEVATED_BG, color=INK, label_padding=0.5
         )
-        + scale_fill_manual(values=cat_color_list)  # noqa: F405
-        + labs(  # noqa: F405
-            title="pie-portfolio-interactive · letsplot · pyplots.ai",
-            subtitle=f"{cat} Holdings | Click to return to overview",
-            fill="Holding",
-        )
-        + ggsize(1600, 900)  # noqa: F405
-        + theme_void()  # noqa: F405
-        + theme(  # noqa: F405
-            plot_title=element_text(size=28, hjust=0.5, face="bold"),  # noqa: F405
-            plot_subtitle=element_text(size=18, hjust=0.5, color="#666666"),  # noqa: F405
-            legend_title=element_text(size=20),  # noqa: F405
-            legend_text=element_text(size=18),  # noqa: F405
-            legend_position=[0.82, 0.5],
-            plot_margin=[40, 20, 20, 20],
-        )
+        + scale_fill_manual(values=cat_colors, limits=cat_df["asset"].tolist())
+        + labs(title=f"{cat} Holdings", subtitle=f"Total: {cat_total:.0f}% of portfolio", fill="Holding")
+        + ggsize(600, 600)
+        + theme_void()
+        + chart_theme
     )
-    drill_down_plots[cat] = drill_plot
 
-# Save main plot as PNG (static overview)
-export_ggsave(plot_overview, filename="plot.png", path=".", scale=3)
+# PNG — static overview, square canvas: 600×600 × scale=4 → 2400×2400
+ggsave(plot_overview, filename=f"plot-{THEME}.png", path=".", scale=4)
 
-# For HTML export, create a ggbunch showing overview plus drill-down panels
-# This demonstrates the drill-down capability in a static multi-panel layout
-# ggbunch uses relative coordinates: (x, y, width, height)
-plots_list = [plot_overview]
-regions_list = [(0, 0, 1.0, 0.5)]  # Overview takes top half
+# HTML — overview + all four drill-down panels in a ggbunch layout
+# Overview left (40%), drill-downs in 2×2 grid on right (30%+30%)
+plots = [plot_overview] + list(drill_down_plots.values())
+regions = [(0.0, 0.0, 0.4, 1.0)]
+for i in range(len(drill_down_plots)):
+    col = i % 2
+    row = i // 2
+    regions.append((0.4 + col * 0.3, row * 0.5, 0.3, 0.5))
 
-# Add mini drill-down plots as a panel to show drill-down capability
-num_drills = len(drill_down_plots)
-for i, (_cat, dplot) in enumerate(drill_down_plots.items()):
-    plots_list.append(dplot)
-    x_pos = (i % 2) * 0.5
-    y_pos = 0.52 + (i // 2) * 0.25
-    regions_list.append((x_pos, y_pos, 0.5, 0.24))
-
-bunch = ggbunch(plots_list, regions_list) + ggsize(1600, 1800)  # noqa: F405
-export_ggsave(bunch, filename="plot.html", path=".")
+bunch = ggbunch(plots, regions) + ggsize(1200, 700)
+ggsave(bunch, filename=f"plot-{THEME}.html", path=".")

@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: hexbin-map-geographic
+created: '2026-05-27T13:38:14Z'
+updated: '2026-05-27T14:00:32Z'
+generated_by: claude-sonnet
+workflow_run: 26514203873
+issue: 3767
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Correct hexbin! native recipe with proper ANYPLOT_SEQ sequential colormap (green→blue)
+  - Well-implemented dual-theme (light/dark) with correct anyplot palette tokens applied
+    throughout
+  - 'Clean KISS structure with idiomatic Makie patterns: hexbin!, poly!, Colorbar,
+    colgap!, limits!'
+  - Correct title format with descriptive prefix (SF Bike-Share) plus mandatory spec-id
+    format
+  - Geographic polygon base map (SF Bay + Pacific) drawn with poly! — creative use
+    of Makie primitives
+  - RGBAf alpha control for water fill and coast line is precise and theme-adaptive
+  weaknesses:
+  - Hexbins lack transparency (no alpha= parameter) — spec requires hexagon transparency
+    so base map features show through under the data area; currently base map is only
+    visible where there are no hexbins
+  - Water fill polygons have very low opacity (~0.32 light, 0.45 dark) making the
+    geographic base map barely perceptible; the SF Bay and Pacific coastlines are
+    hard to distinguish even in the empty map margins
+  - 'DE-03: The density gradient story is clear (high-density downtown core) but no
+    neighborhood labels or annotations to anchor viewer geographically — without a
+    readable base map the viewer cannot identify which city district they are looking
+    at'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "SF Bike-Share · hexbin-map-geographic · julia · makie · anyplot.ai" is bold, dark ink (#1A1A17), clearly readable. Axis labels "Longitude" and "Latitude" are dark and proportionate (14pt). Tick labels (-122.40 to -122.50, 37.70 to 37.80) are mid-gray INK_SOFT, readable. Left and bottom spines visible, top/right removed. Subtle grid lines visible. Colorbar on right with "Ride Count" label in INK and tick labels in INK_SOFT — all readable.
+      Data: Hexagonal bins covering SF geographic area (~-122.51 to -122.36 lon, 37.70 to 37.84 lat). Colormap transitions from brand green #009E73 (low density, ~50–100 rides) to blue #4467A3 (high density, ~350–430 rides) — correct ANYPLOT_SEQ. Dense core visible slightly right-of-center (Union Square / Downtown area). Water polygon fills (SF Bay east, Pacific west) are very subtly rendered in light blue — barely visible, particularly where hexbins overlap the area.
+      Legibility verdict: PASS — all text is readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title and axis labels rendered in near-white (#F0EFE8 INK), clearly readable against dark background. Tick labels in #B8B7B0 (INK_SOFT) — readable, no dark-on-dark failure. Colorbar "Ride Count" label white, tick values readable. Spines and grid lines appear correctly light-on-dark.
+      Data: Hexbin colors are identical to light render — same green (#009E73) to blue (#4467A3) gradient, confirming data palette is theme-independent. Water polygons slightly more visible on dark background (light blue against near-black) but still subtle.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark text failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, tick labels well-proportioned
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Hexbins clearly visible; water polygon base map barely perceptible
+          in light render (very low opacity)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential colormap is CVD-safe; density gradient distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; some empty margin space in lower-left (geographically
+          correct but leaves whitespace)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude and Latitude descriptive; Ride Count on colorbar is clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ANYPLOT_SEQ (green #009E73 → blue #4467A3) used correctly for continuous
+          density; backgrounds correct (#FAF8F1 / #1A1A17); chrome tokens theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: custom sequential colormap, spine removal,
+          subtle hex strokes, theme-adaptive colors — but base map nearly invisible
+          weakens geographic polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: top/right spines removed, 0.12 opacity grid, subtle
+          0.5px hex stroke, clean colorbar styling'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Density gradient creates clear visual hierarchy to high-density downtown
+          core; but lack of readable base map leaves viewer unable to identify neighborhoods
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hexbin map using native hexbin! recipe
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Hexbins, sequential colormap, colorbar, base map overlay, configurable
+          cellsize all present; hexbin transparency missing (spec: ''allow base map
+          features to show through'')'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on X, Latitude on Y, density count encoded as color — all
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''SF Bike-Share · hexbin-map-geographic · julia · makie ·
+          anyplot.ai'' — correct optional-prefix format'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Multi-cluster density distribution demonstrates hexbin aggregation
+          well; variation from ~50 to ~430 rides per cell shows full density range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: SF bike-share ride starts is realistic, neutral, and geographically
+          anchored
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SF coordinate range correct; cluster centers (Union Square, Mission,
+          SoMa, Marina, Haight) are geographically plausible; ride count scale plausible
+          for urban bike-share
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → tokens → data → polygons → figure →
+          hexbin → colorbar → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized; manual polygon vertices are appropriate given no
+          geo library available; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; correct CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: hexbin!, poly!, Colorbar, Figure grid layout, colgap!, limits! —
+          all idiomatic Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: hexbin! native recipe, poly! with Point2f vector for geographic polygons,
+          RGBAf for alpha-precise color construction — distinctively Makie
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
