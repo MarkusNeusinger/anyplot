@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: stock-event-flags
 created: '2026-05-27T23:01:48Z'
-updated: '2026-05-27T23:09:09Z'
+updated: '2026-05-27T23:24:07Z'
 generated_by: claude-sonnet
 workflow_run: 26543539900
 issue: 3749
@@ -12,38 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 93
 review:
-  strengths: []
+  strengths:
+  - 'Price line correctly uses brand green #009E73 as the first categorical series'
+  - Semantic color assignment for event types (blue=Earnings, ochre=Dividend, lavender=News,
+    cyan=Launch) is thoughtful and meaningful
+  - 'Q2 Miss is highlighted with multiple techniques: red emphasis ring, curved arrow
+    annotation, and italic callout text — clear focal point'
+  - Earnings-season shading bands (geom_rect with alpha=0.06) add valuable context
+    showing quarterly reporting cadence
+  - Dual encoding (shape + color) for event types provides excellent CVD accessibility
+  - Dashed connector lines from price level to flag markers correctly implement the
+    spec requirement
+  - Staggered flag heights in two alternating rows prevent label overlap
+  - All font sizes explicitly set using theme tokens with proper theme-adaptive chrome
+  - 'Perfect spec compliance: all required features present including event types,
+    connector lines, flag labels, and background bands'
+  - Clean KISS structure with reproducible set.seed(42) and idiomatic ggplot2 grammar-of-graphics
+    layering
   weaknesses:
-  - 'DE-01 (5/8): Design sophistication is above defaults but not at publication-ready
-    level — no additional design flourishes (e.g., no background shading for earnings
-    seasons, no subtle data-label positioning refinement, no micro-typography improvements)'
-  - 'DE-03 (4/6): No special emphasis on the most narratively impactful event — the
-    Q2 Miss at Jul ''23 corresponds to a visible price decline but is not visually
-    distinguished from other Earnings events. Adding a different alpha, size, or annotation
-    for this event would improve storytelling'
-  - 'VQ-01 (7/8): Flag annotation text at geom_text(size=2.2) is ~6.25pt at 400dpi
-    — readable at 3200×1800 but borderline at mobile widths (~400px scaling produces
-    ~4px text height). Consider increasing to size=2.5–2.8 for better mobile readability'
-  - 'LM-02 (3/5): Library''s distinctive features are used but not deeply — ggplot2''s
-    annotation/label positioning, ggrepel for label collision avoidance, or sec_axis
-    for a secondary reference axis would push distinctiveness further'
+  - The "Decline follows miss" callout annotation (size=2.2, ~6.3pt) is noticeably
+    small — consider increasing to size=2.7 to match the flag labels for better readability
+    at mobile scale
+  - Slight crowding of "Q2 Miss" and "Div $0.28" labels in the top-right area — the
+    two flags are adjacent and their text nearly touches; minor stagger in flag_y
+    or a slight horizontal nudge would separate them more clearly
+  - 'DE-01: Strong design but axis lines (element_line) could be softened further;
+    the axis-line endpoints create a framing that competes slightly with the data
+    — experiment with element_blank() for axis.line to push toward full publication-ready
+    look'
+  - 'LM-02: The curved arrow annotate("curve") is a distinctive ggplot2 feature but
+    the implementation could lean further into ggplot2 distinctives such as using
+    coord_cartesian(clip="off") for flag labels positioned near the plot edge, or
+    stat_smooth() as a subtle trend overlay'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the anyplot light surface — not pure white
-      Chrome: Bold title "stock-event-flags · r · ggplot2 · anyplot.ai" in near-black (#1A1A17), clearly readable. Axis labels "Date" (X) and "Close Price (USD)" (Y) in size-10 INK text, well-proportioned. Tick labels in INK_SOFT (#4A4A44) at size 8, dollar-formatted on Y-axis ($140–$180 range), month labels (Feb–Oct '23) on X-axis. Horizontal legend at bottom with elevated background box and subtle border. All chrome text is dark on light background — PASS.
-      Data: Brand-green (#009E73) stock price line is prominent and clear. Seven event markers above the price data: blue triangles for Earnings (Q4 Beat, Q1 Beat, Q2 Miss), ochre squares for Dividend (Div $0.25, Div $0.28), lavender circle for News (Upgrade), cyan diamond for Launch (New Model). Dashed colored connector lines link each event to its price level with 75% alpha. Short bold labels above each marker in matching event colors.
-      Legibility verdict: PASS — all text clearly readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "stock-event-flags · r · ggplot2 · anyplot.ai" in dark bold ink at top-left, clearly readable. Axis label "Close Price (USD)" on Y-axis and "Date" on X-axis both in dark ink, legible. Tick labels in INK_SOFT (#4A4A44) on all axes, readable. Month/year labels ("Feb '23", "Apr '23"…) distinct. Horizontal-only grid lines subtle. Legend at bottom with elevated off-white background.
+      Data: Green (#009E73) price line dominant. Event markers: blue filled triangles (Earnings), ochre filled squares (Dividend), lavender/purple filled circles (News), cyan filled diamonds (Launch). Dashed connector lines from price level to flags match their event color. Three subtle blue-green shaded earnings bands. Red (#AE3030) emphasis ring on Q2 Miss. Curved red arrow with "Decline follows miss" italic annotation. Flag labels ("Q4 Beat", "Div $0.25", "Q1 Beat", "Upgrade", "Q2 Miss", "New Model", "Div $0.28") in bold, matching event color, above each marker.
+      Legibility verdict: PASS — all primary text readable; "Decline follows miss" annotation (size 2.2) is small but visible. Slight crowding between "Q2 Miss" and "Div $0.28" labels near top-right but not overlapping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly theme-adapted, not pure black
-      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Axis labels in light INK, tick labels in INK_SOFT (#B8B7B0) — all light-colored on dark. Y-axis gridlines subtle and visible (light semi-transparent). Legend at bottom with elevated dark background (#242420) and visible border. No dark-on-dark failures detected.
-      Data: Price line remains exactly #009E73 (identical to light render) ✓. All event marker colors identical to light render: blue triangles, ochre squares, lavender circle, cyan diamond ✓. Flag labels use the same event colors which remain visible against the dark background.
-      Legibility verdict: PASS — all text clearly readable in dark theme, data colors unchanged from light render
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title in light near-white (#F0EFE8) ink, clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — light gray, legible on dark surface. No dark-on-dark text failures. Legend box has elevated dark background (#242420) with subtle border.
+      Data: Green (#009E73) price line identical to light render. All event marker colors (blue, ochre, lavender, cyan) identical — only chrome has flipped. Red emphasis ring and annotation visible. Earnings shading bands appear as subtle dark-blue regions.
+      Legibility verdict: PASS — all text readable on dark surface. No dark-on-dark failures. Data colors confirmed identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,87 +68,91 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
-          legend 8/10, geom_text=2.2). Proportions well-balanced. Flag annotation
-          text at 2.2mm is borderline small for mobile scaling (~4px at 400px viewport
-          width).
+        comment: 'All font sizes explicitly set via theme tokens; title, axis labels,
+          ticks, and flag labels all readable in both themes. Minor deduction: ''Decline
+          follows miss'' annotation at size=2.2 (~6.3pt) is the smallest element and
+          slightly under-scaled relative to flag labels (size=2.7).'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Staggered two-row flag heights effectively prevent overlap across
-          all 7 events. No label collisions in either render.
+        comment: Staggered flag heights effectively prevent most overlap. Minor crowding
+          between 'Q2 Miss' and 'Div $0.28' labels in the top-right — they are adjacent
+          and their bold text nearly touches.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line (linewidth=1.0) prominent. Flag markers (size=3.5) clearly
-          visible. Dashed connectors (linewidth=0.45, alpha=0.75) visible without
-          dominating.
+        comment: Price line linewidth=1.0 is clearly dominant. Event markers size=3.5
+          are visible and well-proportioned. Q2 Miss emphasis ring size=6.5 stands
+          out effectively. Dashed connectors at alpha=0.75 are visible without overpowering.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Shape redundancy (triangle/square/circle/diamond) + color encoding
-          provides CVD safety. Anyplot palette is CVD-optimized.
+        comment: Dual encoding (shape + color) for event types provides excellent
+          CVD accessibility — Earnings=triangle, Dividend=square, News=circle, Launch=diamond.
+          No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas well-utilized. Price line fills mid-section, flags in upper
-          region, legend at bottom. No content cut off. Generous margins (15, 30,
-          10, 15).
+        comment: Plot fills ~75% of canvas in landscape. Margins balanced (15,30,10,15).
+          Bottom legend does not crowd data area. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Close Price (USD)'' with dollar format on ticks. X-axis:
-          ''Date''. Title: ''stock-event-flags · r · ggplot2 · anyplot.ai''.'
+        comment: 'Y-axis: ''Close Price (USD)'' — descriptive with units. X-axis:
+          ''Date'' — descriptive. Title follows required format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Price line = #009E73 (brand green, first series). Event colors from
-          anyplot palette with semantic assignment (blue=Earnings, ochre=Dividend,
-          lavender=News, cyan=Launch). Light bg=#FAF8F1, dark bg=#1A1A17. Chrome correctly
-          theme-adaptive in both renders.'
+        comment: 'Price line uses #009E73 (brand green) as first series. Event colors
+          are semantic-exception assignments from the anyplot palette: blue (#4467A3)
+          for Earnings, ochre (#BD8233) for Dividend, lavender (#C475FD) for News,
+          cyan (#2ABCCD) for Launch. Q2 Miss uses #AE3030 (semantic red for loss).
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults (4): semantic color mapping, shape
-          redundancy, dollar formatting, connector lines with alpha. Not yet at ''strong
-          design'' (6): lacks additional polish touches like background shading for
-          periods, refined data-label placement.'
+        comment: 'Strong design clearly above defaults: semantic color assignment,
+          Q2 Miss multi-technique emphasis (ring + arrow + annotation), earnings-season
+          bands, dual shape+color encoding. Not quite FiveThirtyEight-level publication
+          polish — axis lines still present and minor crowding at top-right prevents
+          full 8.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good refinement: y-axis-only grid (subtle 12% alpha), panel border
-          removed, L-frame axis lines, minor grids removed, legend elevated background
-          with border, generous margins. Not perfect — could further refine typography
-          hierarchy.'
+        comment: 'Well-refined: horizontal-only grid (major.y visible, major.x/minor
+          blank), no panel border, elevated legend background, generous margins. Axis
+          lines (INK_SOFT) are still rendered which adds a slight frame; removing
+          them would push to 6.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: connector lines create narrative links, color+shape
-          coding guides eye, staggered flags create clear zones. Q2 Miss corresponds
-          to visible price decline but gets no special visual emphasis to highlight
-          this insight.'
+        comment: 'Clear story: stock performance punctuated by corporate events with
+          Q2 Miss as the narrative focal point. The earnings shading, red emphasis
+          ring, and ''Decline follows miss'' callout guide the viewer to the key insight.
+          Strong visual hierarchy: green line dominant, event markers secondary, Q2
+          Miss tertiary emphasis.'
     spec_compliance:
       score: 15
       max: 15
@@ -141,30 +162,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: stock price line chart with flag-style event markers above
-          the price data.'
+        comment: 'Correct: stock price line chart with flag-style event markers, connector
+          lines, and event labels — all required elements of the spec.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: flag markers, distinct event type colors+shapes,
-          dashed vertical connectors, short text labels, alternating heights, 4 event
-          types (Earnings/Dividend/News/Launch), legend.'
+        comment: 'All features: distinct event types with different icons/colors,
+          vertical dashed connector lines from price to flag, short event labels on
+          flags, staggered heights to avoid obscuring price data, background regions
+          for earnings windows. Interactive features correctly omitted for static
+          library.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Date (trading dates), Y=Close Price (USD). All 190 data points
-          and 7 events visible.
+        comment: Date on X-axis, Close Price (USD) on Y-axis. Events correctly positioned
+          at their dates. All 190 trading days and 7 events shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''stock-event-flags · r · ggplot2 · anyplot.ai'' ✓. Legend
-          shows all 4 event types with correct labels.'
+        comment: 'Title: ''stock-event-flags · r · ggplot2 · anyplot.ai'' — correct
+          format. Legend correctly labels 4 event types (Dividend, Earnings, Launch,
+          News) with matching colors and shapes.'
     data_quality:
       score: 15
       max: 15
@@ -174,25 +198,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: 3 Earnings events (beats AND miss), 2 Dividends,
-          1 News (upgrade), 1 Launch. Price shows realistic variability with uptrend
-          then decline.'
+        comment: Shows 4 distinct event types. Includes both earnings beats (Q4, Q1)
+          and a miss (Q2) — demonstrating different market reactions. Dividend payments,
+          product launch, and analyst upgrade round out the event diversity.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fictional tech company stock in 2023. Realistic event labels (Q4
-          Beat, Q1 Beat, Q2 Miss, Div $0.25, Div $0.28, Upgrade, New Model). Neutral
-          business scenario.
+        comment: Fictional tech company, 2023 trading year, quarterly earnings cadence,
+          dividends of $0.25-$0.28/share, product launch, analyst upgrade — all realistic
+          and neutral business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Price range $141–$180 starting at $150: realistic tech stock. Daily
-          volatility sd=0.015 (~24% annualized): realistic for tech. Dividends $0.25–$0.28:
-          plausible quarterly amounts. 190 trading days ≈ 9 months of data.'
+        comment: Stock price ~$140-$180 with 1.5% daily volatility is realistic for
+          a mid-cap tech company. 190 trading days correctly corresponds to ~9 months.
+          Geometric random walk starting at $150 produces plausible price dynamics.
     code_quality:
       score: 10
       max: 10
@@ -202,8 +226,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data generation
-          → plot layers → save. No functions or classes.'
+        comment: 'Linear: imports → seed → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,45 +239,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2 (plot), dplyr (left_join, mutate, row_number, pipe), scales
-          (dollar_format), ragg (agg_png) — all used.
+        comment: ggplot2, dplyr, scales, ragg — all imported and all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic R. Modern pipe (|>), clear variable names, elegant
-          flag height staggering logic. No fake functionality.
+        comment: Clean idiomatic R/ggplot2. Appropriate complexity for the visualization.
+          No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Uses linewidth= (not deprecated size=).
-          ragg::agg_png device.
+        comment: Saves as plot-%s.png (plot-light.png / plot-dark.png). Uses ragg::agg_png
+          device. Modern linewidth= API (not deprecated size=).
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics layering: geom_rect + geom_line + geom_segment
+          + geom_point + geom_text + annotate. scale_color_manual + scale_shape_manual
+          for dual encoding. scale_x_date with date_breaks/date_labels. scale_y_continuous
+          with dollar_format() and expansion(). theme_minimal() + layered theme()
+          overrides.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Strong ggplot2 idioms: grammar of graphics with 4 geom layers, scale_x_date,
-          scale_y_continuous with dollar formatter, synchronized scale_color_manual
-          + scale_shape_manual sharing same ''name'' for unified legend, show.legend=FALSE
-          on connector segments.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Uses ggplot2-specific features: date scale formatting (date_breaks/date_labels),
-          synchronized multi-scale legend (color+shape with name=''Event''), show.legend=FALSE
-          on individual geom layers. Missing: ggrepel for collision-safe labels or
-          secondary axis would push distinctiveness further.'
-  verdict: REJECTED
+        comment: annotate('curve') with curvature and arrow for the Q2 Miss callout
+          is distinctly ggplot2. Dual aes mapping (color + shape) from a single scale
+          definition using scale_color_manual + scale_shape_manual sharing the same
+          legend name. expansion(mult=...) for fine-grained axis padding. geom_rect
+          for shading bands. Could go further with coord_cartesian(clip='off') for
+          safer flag label positioning near edges.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -265,3 +291,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - grid-styling
