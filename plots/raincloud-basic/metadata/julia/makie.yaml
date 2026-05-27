@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: raincloud-basic
 created: '2026-05-27T05:48:11Z'
-updated: '2026-05-27T05:53:32Z'
+updated: '2026-05-27T06:14:51Z'
 generated_by: claude-opus
 workflow_run: 26492749623
 issue: 1876
@@ -12,110 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Faithful raincloud composition built from Makie primitives (band! + lines! + poly!
-    + scatter!) — cloud rises above baseline, box sits on baseline, rain falls below;
-    the visual metaphor is unambiguous in both renders.
-  - Anyplot palette applied in canonical order (Baseline=#009E73 brand green, Variant
-    A=lavender, Variant B=blue, Variant C=ochre) and rendered identically across light
-    and dark themes.
-  - 'Theme-adaptive chrome is correctly wired: PAGE_BG, INK, INK_SOFT, and ELEVATED_BG
-    (used for the box fill) all flip on the ANYPLOT_THEME env var; no dark-on-dark
-    or light-on-light text in either render.'
-  - Hand-rolled Gaussian KDE with Silverman/IQR bandwidth produces clean, smooth densities
-    — the bimodal cache hit/miss pattern in Variant A is clearly visible.
-  - Realistic, neutral A/B-test page-load context (ms scale 200–1100) with four meaningfully
-    distinct distribution shapes (right-skewed, bimodal, tight, heavy-tailed) — exercises
-    the raincloud's full descriptive power.
-  - Canvas lands exactly on the canonical landscape size (3200×1800) via resolution=(1600,900)
-    + px_per_unit=2; no canvas-gate violation.
+  - Spec-faithful raincloud composition built from Makie primitives — cloud above
+    baseline (band! + lines! envelope), box centered on baseline (poly! + Rect2f),
+    and rain jittered below (scatter!) — visual metaphor unambiguous in both themes.
+  - Anyplot palette in canonical order with brand green `#009E73` assigned to Baseline;
+    PALETTE_BY_CAT keeps colors stable per category after the sort, so data colors
+    are pixel-identical between light and dark renders.
+  - 'Theme-adaptive chrome wired all the way through: PAGE_BG, INK, INK_SOFT, ELEVATED_BG
+    (box fill) flip on ANYPLOT_THEME — no contrast failures in either render, brand
+    green stays readable on both surfaces.'
+  - Hand-rolled Silverman/IQR-bandwidth Gaussian KDE on a 256-point grid produces
+    clean cloud shapes; Variant A's bimodal `cache hit vs cache miss` distribution
+    is clearly visible — the exact case a plain boxplot would hide.
+  - Realistic, neutral A/B-test page-load context with four meaningfully distinct
+    distribution shapes (right-skewed control, bimodal, tight unimodal, heavy-right-tail)
+    — DQ-01/02/03 all exercised.
+  - Canvas lands exactly on 3200×1800 (Figure(1600,900) × px_per_unit=2); canvas-dimension
+    gate not present, no AR-09 clipping in either render.
+  - 'Prior-review feedback applied cleanly: rain_gap bumped 0.08 → 0.14 (rain band
+    now clearly separated from box bottom), x/y tick sizes equalized at 12pt, left
+    spine hidden, categories sorted by median.'
   weaknesses:
-  - 'Rain band sits almost flush against the box bottom: box extends to baseline−0.07
-    and rain starts at baseline−0.08, leaving only a 0.01 y-unit gap. Visually the
-    topmost rain points touch the box outline (most visible on Variant A and Baseline).
-    Increase rain_gap to ~0.12 or shrink box_height to ~0.10 so the box and rain are
-    clearly separated bands.'
-  - Category ordering follows the declaration order (Baseline at bottom → Variant
-    C at top) rather than a meaningful sort. Reordering by median (fastest variant
-    at top or bottom) would create a clearer visual hierarchy and stronger storytelling
-    — currently the viewer has to scan and compare without a guided reading order.
-  - X-axis tick labels are set to 12pt while y-axis tick labels are 13pt — a minor
-    imbalance with no semantic reason. Make them equal (both 12 or both 13) for tick-label
-    balance.
-  - Y-axis baseline spine is visible (leftspinecolor = INK_SOFT) but carries no information
-    since the category labels are positioned to the left of it; removing the left
-    spine (leftspinevisible = false) would further declutter the chrome and match
-    the minimal-grid aesthetic of the x-axis-only grid.
+  - 'DE-03: Category sort happens but there is no annotation, emphasis, or focal marker
+    (no highlighted winner, no shared median reference line, no callout) — the comparison
+    is left for the viewer to do. A subtle vertical reference line at the Baseline
+    median, or a one-line subtitle naming the fastest variant, would convert four
+    parallel rainclouds into a single A/B-test story.'
+  - 'DE-01: Aesthetic is competent but generic — solid color blocks plus white/elevated
+    boxes, no typographic hierarchy beyond default title vs axis label, no whitespace
+    flourish. Consider a thinner cloud outline (linewidth ~1.0 instead of 1.6), a
+    slightly muted box stroke, or a refined typographic accent.'
+  - 'LM-02: Built-in `Makie.rainclouds!` (or `violin!(...; side = :right)` + `boxplot!`
+    + `scatter!`) would be more idiomatic and shorter, and would surface the library''s
+    distinctive recipe ecosystem. The manual construction works and gives full layout
+    control, but doesn''t lean on Makie''s high-level recipes — points left on the
+    table for LM-02.'
+  - Markersize 6 px (post px_per_unit=2 → 12 px on canvas) is on the small side for
+    the rain band in landscape — alpha=0.6 keeps them readable but a slight bump (8
+    px) plus a thin contrasting stroke (1 px ELEVATED_BG) would lift VQ-03 without
+    inviting overplotting.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface across the full 3200×1800 canvas. No pure-white.
-      Chrome: Title "raincloud-basic · julia · makie · anyplot.ai" centered at the top in dark INK, ~50% canvas width — readable with breathing room. X-axis label "Page Load Time (ms)" centered below the axis, dark INK. X tick labels (200, 400, 600, 800, 1000) and y tick labels (Baseline, Variant A, Variant B, Variant C) all rendered in INK_SOFT against the warm cream background — fully readable, no light-on-light failures. Vertical x-grid is subtle (~12% alpha INK), y-grid hidden, top/right spines removed, left + bottom spines in INK_SOFT.
-      Data: Four rainclouds stacked vertically. From bottom to top: Baseline (anyplot brand green #009E73, right-skewed cloud peaking ~750 ms), Variant A (lavender #C475FD, clearly bimodal cloud), Variant B (blue #4467A3, tight cloud peaking ~470 ms), Variant C (ochre #BD8233, broad cloud peaking ~600 ms with a long right tail). Each group shows the cloud above the baseline, a small box+whisker on the baseline with elevated-bg fill and dark median line, and jittered rain points (alpha 0.6) below the baseline. First series uses the brand green as required.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 across the full 3200×1800 canvas — confirmed not pure white, not dark.
+      Chrome: title "raincloud-basic · julia · makie · anyplot.ai" centered at top in dark INK at ~50% canvas width; x-axis label "Page Load Time (ms)" with units below the axis; x-tick labels 200/400/600/800/1000 in INK_SOFT; y-tick categorical labels (Baseline, Variant A, Variant B, Variant C, reading bottom-to-top) in INK; subtle vertical x-grid only; bottom spine in INK_SOFT, top/right/left spines hidden. All chrome text is clearly readable against the cream background.
+      Data: four stacked rainclouds with cloud above baseline, box centered on baseline, rain band below — Baseline = anyplot brand green #009E73, Variant A = lavender #C475FD (clearly bimodal cloud), Variant B = blue #4467A3 (tight unimodal), Variant C = ochre #BD8233 (broad with heavy right tail). Box fill is elevated near-white #FFFDF6 with dark median tick visible; rain points alpha-blended at ~0.6.
+      Legibility verdict: PASS — every label, tick, and title is clearly visible; no light-on-light failures; first categorical series is the mandated #009E73.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface across the full 3200×1800 canvas. No pure-black.
-      Chrome: Title rendered in light INK (#F0EFE8) — clearly visible against the dark background. X-axis label "Page Load Time (ms)" in light INK. X and y tick labels in INK_SOFT (#B8B7B0) — readable, no dark-on-dark failures. Vertical x-grid uses semi-transparent INK so the grid is now light-on-dark (~12% alpha) and remains subtle. Box-plot interiors flip to the elevated dark fill #242420 with the median line in light INK — both clearly readable.
-      Data: Same four rainclouds in the same anyplot palette colors as the light render — Baseline green, Variant A lavender, Variant B blue, Variant C ochre. Cloud shapes, box positions, whisker extents, and rain-point positions are pixel-identical to the light render; only the background, text, spines, and box fill have flipped. Brand green #009E73 reads cleanly on the warm dark surface.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17 across the full canvas — confirmed not pure black, not light.
+      Chrome: title and x-axis label flip to light INK #F0EFE8; y-tick category labels light, x-tick labels in INK_SOFT #B8B7B0; grid stays semi-transparent (RGBAf of INK with alpha 0.12); bottom spine in INK_SOFT. No dark-on-dark failures — every chrome element is clearly visible against the warm near-black surface.
+      Data: pixel-identical to the light render — same green/lavender/blue/ochre in the same y positions, same densities, same rain jitter. Box fill flips to elevated near-black #242420 with a light median tick that reads cleanly on the dark box body; brand green #009E73 reads cleanly on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text, data colors identical to light render, only chrome flipped as required.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title 20pt, axis label 14pt, ticks 12-13pt. All elements readable
-          in both renders. Minor: x/y tick sizes slightly mismatched (12 vs 13).'
+        comment: All font sizes explicit; title 20pt, axis label 14pt, x and y ticks
+          both 12pt (mismatch from attempt 1 fixed); readable in both themes at full
+          size and when scaled to ~400 px.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Rain points sit only 0.01 y-units below the box bottom — visually
-          flush against the box outline, especially on Variant A and Baseline. Not
-          a hard collision, but tighter than ideal.
+        comment: rain_gap bumped from 0.08 to 0.14 — rain band is now clearly separated
+          from box bottom; clouds, boxes, and rain don't collide; categorical labels
+          don't overlap each other.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Rain markers at size=6 with alpha=0.6 read well for ~110 points/category.
-          Cloud edge lines (linewidth=1.6) clearly trace the KDE shape.
+        comment: Markers visible with markersize=6 + alpha=0.6 for ~110 pts/cat; slight
+          bump to 8 + thin stroke would lift further but current is adequate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe by design; four well-separated hues.
+        comment: Anyplot palette (green/lavender/blue/ochre) is CVD-safe; box outline
+          and median tick provide contrast independent of hue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200×1800 landscape canvas. Nothing clipped, balanced internal
-          margins, title ~50% width.
+        comment: Figure(1600,900) × px_per_unit=2 → exact 3200×1800; no canvas-gate
+          file present; nothing clipped at any edge in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Page Load Time (ms)' includes units. Y-axis is intentionally
-          label-free (categorical names already on ticks).
+        comment: X-axis labeled 'Page Load Time (ms)' with units; Y-axis empty by
+          design (categorical ticks are self-evident); title matches mandate.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, then lavender/blue/ochre in canonical order.
-          Backgrounds are #FAF8F1 and #1A1A17. Data colors identical across themes.'
+        comment: 'First series = #009E73 brand green; remaining categories use anyplot
+          palette (#C475FD, #4467A3, #BD8233); page backgrounds #FAF8F1 light / #1A1A17
+          dark; data colors identical across themes — only chrome flips.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -123,24 +132,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom raincloud built from primitives shows intent; elevated-bg
-          box fill is a nice touch. Lacks a true stand-out aesthetic flourish.
+        comment: Solid composition with custom palette, intentional layout, refined
+          box-stroke and median lines — competent and clean, but no stand-out flourish
+          or typographic hierarchy beyond defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right/left spines hidden (left spine removal from attempt 1 review
+          applied); only bottom spine and subtle vertical x-grid remain; whitespace
+          generous; no y-grid clutter.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, x-grid only, subtle grid alpha — good.
-          Could remove the left spine since y-tick labels already anchor the categorical
-          axis.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: All four shapes are visible but the category order (declaration order)
-          provides no narrative — sorting by median would guide the eye to the fastest-vs-slowest
-          comparison.
+        comment: Categories now sorted by median (sortperm applied per attempt-1 feedback)
+          creating a reading order; cloud/box/rain layering creates visual hierarchy;
+          missing a focal point/annotation/reference line to call out the winner of
+          the A/B test.
     spec_compliance:
       score: 15
       max: 15
@@ -150,30 +161,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Genuine raincloud: half-violin cloud + boxplot + jittered rain composed
-          per category.'
+        comment: Horizontal raincloud with categories on y-axis, values on x-axis
+          — matches spec's required orientation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, cloud above baseline, box on baseline, rain
-          below baseline — visual metaphor exactly per spec. Half-violin (not full),
-          median + IQR + whiskers all present.
+        comment: Half-violin cloud above baseline ✓, box on baseline ✓, rain below
+          baseline ✓, jitter ~0.05-0.18 ✓, alpha 0.6 for rain ✓, median + quartile
+          markers ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, continuous values (ms) on x-axis. Axis range
-          covers all data with sensible 60ms padding.
+        comment: X = page load time values, Y = category positions 1..4; axes show
+          all 4 categories with full distribution range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'raincloud-basic · julia · makie · anyplot.ai'.
-          No legend needed (category labels on y-axis carry the color encoding).
+        comment: Title exactly 'raincloud-basic · julia · makie · anyplot.ai'; no
+          legend needed (categories self-identified by y-axis ticks and color).
     data_quality:
       score: 15
       max: 15
@@ -183,23 +194,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three raincloud elements per category and intentionally
-          diverse distribution shapes (right-skewed, bimodal, tight, heavy-tailed)
-          — Variant A's bimodality is exactly the kind of pattern a raincloud reveals
-          that a boxplot would hide.
+        comment: 'Exercises every raincloud strength: distribution shape (bimodal
+          Variant A), summary stats (boxplot), individual observations (rain) — bimodality
+          is the case a plain box plot would hide.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Page-load A/B test is a neutral, plausible, technology-domain story;
-          no controversial framing.
+        comment: A/B test of page-load times across baseline + 3 variants — realistic
+          web-performance domain, fully neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200–1100 ms range is realistic for web page load times.
+        comment: Range ~200-1000 ms with 110 obs/cat — plausible for page-load benchmarks;
+          well within spec's 20-300 obs/cat and 2-6 categories.
     code_quality:
       score: 10
       max: 10
@@ -209,33 +220,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Single loop per category.
+        comment: No functions, no classes — single linear script with one for-loop
+          over categories.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) at top.
+        comment: Random.seed!(42) at top of file.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used.
+        comment: CairoMakie, Colors, Random, Statistics — all four used (Statistics
+          for quantile/median/std/extrema).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Compact 142 lines, no fake UI, no display() calls. Inline KDE keeps
-          everything in one file.
+        comment: Inline Silverman/IQR KDE is concise and self-contained; no fake UI,
+          no simulated interactivity; AR-08 clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — canonical Makie
-          save pattern.
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — themed PNG output,
+          current Makie API.
     library_mastery:
       score: 8
       max: 10
@@ -245,30 +258,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis configuration, band!/lines!/poly!/scatter! primitives,
-          RGBAf for grid alpha. Could have leaned on Makie's built-in violin! and
-          boxplot! recipes — though the manual approach gives the layout control needed
-          for a half-violin raincloud.
+        comment: Uses Makie idioms (Figure, Axis with explicit theme tokens, band!,
+          lines!, poly! + Rect2f, scatter!) — would be more idiomatic to use built-in
+          `rainclouds!`/`violin!`/`boxplot!`, but manual gives layout control over
+          the cloud-above/box-on/rain-below metaphor.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Compositional plotting (band! for filled half-violin, poly! with
-          Rect2f for box, lines! for whiskers/median, scatter! for rain) showcases
-          Makie's flexible layered primitives — a true raincloud is non-trivial in
-          most libraries and this one builds it cleanly.
+        comment: Clean compositional use of band! for the half-violin envelope, poly!
+          with Rect2f for the box, lines! for whiskers/median, scatter! for rain —
+          leverages Makie's primitive layering well. Loses 1 point for not surfacing
+          the high-level `rainclouds!` recipe.
+    score_caps_applied: []
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - manual-ticks
-  - patches
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - kde
   styling:
