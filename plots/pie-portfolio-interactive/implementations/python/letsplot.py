@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-27
@@ -85,6 +85,8 @@ category_weights["holdings_count"] = category_weights["category"].apply(lambda c
 category_weights["holdings_preview"] = category_weights["category"].apply(
     lambda c: ", ".join(df[df["category"] == c]["asset"].tolist())
 )
+# Suppress slice labels for very small segments (< 5%) to avoid cramped text
+category_weights["pct_label"] = category_weights["weight"].apply(lambda w: f"{w:.1f}%" if w >= 5.0 else "")
 
 center_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": ["Portfolio\n100%"]})
 
@@ -97,7 +99,8 @@ chart_theme = theme(
     legend_text=element_text(size=10, color=INK_SOFT),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_position="right",
-    plot_margin=[25, 15, 15, 15],
+    plot_caption=element_text(size=9, hjust=0.5, face="bold", color="#4467A3"),
+    plot_margin=[20, 15, 10, 15],
 )
 
 # Overview pie — all asset classes, interactive tooltips with holdings preview
@@ -106,7 +109,7 @@ plot_overview = (
     + geom_pie(
         aes(slice="weight", fill="category"),
         stat="identity",
-        size=38,
+        size=45,
         hole=0.35,
         stroke=1.5,
         color=PAGE_BG,
@@ -116,7 +119,7 @@ plot_overview = (
         .line("Holdings: @holdings_count assets")
         .line("@holdings_preview")
         .format("weight", ".1f"),
-        labels=layer_labels().line("@weight%").format("weight", ".1f").size(7),
+        labels=layer_labels().line("@pct_label").size(7),
     )
     + geom_label(
         aes(x="x", y="y", label="label"), data=center_df, size=9, fill=ELEVATED_BG, color=INK, label_padding=0.5
@@ -125,6 +128,7 @@ plot_overview = (
     + labs(
         title="pie-portfolio-interactive · python · letsplot · anyplot.ai",
         subtitle="Hover for details · Drill-down panels in HTML",
+        caption="★  Fixed Income leads at 38% — the largest asset class in this portfolio",
         fill="Asset Class",
     )
     + ggsize(600, 600)
