@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-27
@@ -23,10 +23,9 @@ Style = _style_mod.Style
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 
-# Map-inspired backgrounds simulate geographic tile context
-# Light: OSM-style ocean blue + warm land beige
-# Dark: deep water navy + near-black land surface
-OCEAN_BG = "#b8d4e8" if THEME == "light" else "#1c2e40"
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+# Map-inspired plot background simulates geographic tile context
+# Light: warm land beige; Dark: near-black land surface
 LAND_BG = "#eae6df" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
@@ -66,9 +65,10 @@ stations = [
     {"label": "Tampa", "lat": 28.0, "lon": -82.5, "temp_c": 25.0},
 ]
 
-# Continental US bounds with padding
+# Continental US bounds; chart xrange padded to give tick labels breathing room
 lat_min, lat_max = 24, 51
 lon_min, lon_max = -128, -62
+chart_xrange = (-132, -58)
 
 title = "map-tile-background · python · pygal · anyplot.ai"
 n = len(title)
@@ -76,7 +76,7 @@ ratio = 67 / n if n > 67 else 1.0
 title_font_size = max(44, round(66 * ratio))
 
 custom_style = Style(
-    background=OCEAN_BG,
+    background=PAGE_BG,
     plot_background=LAND_BG,
     foreground=INK,
     foreground_strong=INK,
@@ -112,7 +112,7 @@ chart = _pygal.XY(
     margin_left=200,
     margin_right=80,
     range=(lat_min, lat_max),
-    xrange=(lon_min, lon_max),
+    xrange=chart_xrange,
     print_values=False,
     truncate_legend=-1,
     truncate_label=-1,
