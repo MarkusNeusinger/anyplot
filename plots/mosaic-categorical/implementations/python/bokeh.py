@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-SURVIVAL_COLORS = {"Survived": "#009E73", "Did Not Survive": "#D55E00"}
+SURVIVAL_COLORS = {"Survived": "#009E73", "Did Not Survive": "#C475FD"}
 
 # Data - Titanic survival data (class vs survival)
 data = {
@@ -176,7 +176,7 @@ p.add_layout(x_axis_label)
 legend_y = 0.92
 legend_items = [
     {"color": "#009E73", "text": "Survived", "x": 0.38},
-    {"color": "#D55E00", "text": "Did Not Survive", "x": 0.58},
+    {"color": "#C475FD", "text": "Did Not Survive", "x": 0.58},
 ]
 for item in legend_items:
     p.quad(

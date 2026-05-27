@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly energy consumption by source with uncertainty
 np.random.seed(42)
@@ -94,8 +94,8 @@ solar_band = Band(
     upper="y_upper",
     source=source_solar,
     fill_alpha=0.2,
-    fill_color=OKABE_ITO[0],
-    line_color=OKABE_ITO[0],
+    fill_color=IMPRINT[0],
+    line_color=IMPRINT[0],
     line_alpha=0.3,
 )
 p.add_layout(solar_band)
@@ -106,8 +106,8 @@ wind_band = Band(
     upper="y_upper",
     source=source_wind,
     fill_alpha=0.2,
-    fill_color=OKABE_ITO[1],
-    line_color=OKABE_ITO[1],
+    fill_color=IMPRINT[1],
+    line_color=IMPRINT[1],
     line_alpha=0.3,
 )
 p.add_layout(wind_band)
@@ -118,21 +118,21 @@ hydro_band = Band(
     upper="y_upper",
     source=source_hydro,
     fill_alpha=0.2,
-    fill_color=OKABE_ITO[2],
-    line_color=OKABE_ITO[2],
+    fill_color=IMPRINT[2],
+    line_color=IMPRINT[2],
     line_alpha=0.3,
 )
 p.add_layout(hydro_band)
 
 # Plot stacked areas using varea
-r_solar = p.varea(x="x", y1="base", y2="y", source=source_solar, fill_color=OKABE_ITO[0], fill_alpha=0.7)
-r_wind = p.varea(x="x", y1="base", y2="y", source=source_wind, fill_color=OKABE_ITO[1], fill_alpha=0.7)
-r_hydro = p.varea(x="x", y1="base", y2="y", source=source_hydro, fill_color=OKABE_ITO[2], fill_alpha=0.7)
+r_solar = p.varea(x="x", y1="base", y2="y", source=source_solar, fill_color=IMPRINT[0], fill_alpha=0.7)
+r_wind = p.varea(x="x", y1="base", y2="y", source=source_wind, fill_color=IMPRINT[1], fill_alpha=0.7)
+r_hydro = p.varea(x="x", y1="base", y2="y", source=source_hydro, fill_color=IMPRINT[2], fill_alpha=0.7)
 
 # Add center lines for each series for better visibility
-p.line(x="x", y="y", source=source_solar, line_color=OKABE_ITO[0], line_width=3, line_alpha=0.8)
-p.line(x="x", y="y", source=source_wind, line_color=OKABE_ITO[1], line_width=3, line_alpha=0.8)
-p.line(x="x", y="y", source=source_hydro, line_color=OKABE_ITO[2], line_width=3, line_alpha=0.8)
+p.line(x="x", y="y", source=source_solar, line_color=IMPRINT[0], line_width=3, line_alpha=0.8)
+p.line(x="x", y="y", source=source_wind, line_color=IMPRINT[1], line_width=3, line_alpha=0.8)
+p.line(x="x", y="y", source=source_hydro, line_color=IMPRINT[2], line_width=3, line_alpha=0.8)
 
 # Create legend outside plot area (bottom right)
 legend = Legend(

@@ -24,11 +24,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data - Monthly performance metrics over a year
@@ -64,7 +64,7 @@ y_columns = ["cpu", "memory", "disk", "network"]
 # Create legend items
 legend_items = []
 
-for col, style, color, name in zip(y_columns, line_styles, OKABE_ITO, series_names, strict=True):
+for col, style, color, name in zip(y_columns, line_styles, IMPRINT, series_names, strict=True):
     # Add line with appropriate style
     line = p.line(x="month", y=col, source=source, line_width=6, color=color, line_dash=style)
 

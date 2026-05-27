@@ -22,7 +22,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - File system hierarchy with nested folders and file sizes
 nodes = [
@@ -73,7 +73,7 @@ max_level = max(n["level"] for n in nodes)
 # Assign colors by level using Okabe-Ito palette
 level_colors = []
 for i in range(max_level + 1):
-    level_colors.append(OKABE_ITO[i % len(OKABE_ITO)])
+    level_colors.append(IMPRINT[i % len(IMPRINT)])
 
 
 # Calculate icicle layout (horizontal, top-down)

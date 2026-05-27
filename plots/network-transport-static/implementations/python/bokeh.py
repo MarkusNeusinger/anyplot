@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -138,13 +138,13 @@ for route in routes:
 
     route_id = route["route_id"]
     if route_id.startswith("RE"):
-        color = OKABE_ITO[0]
+        color = IMPRINT[0]
     elif route_id.startswith("S"):
-        color = OKABE_ITO[1]
+        color = IMPRINT[1]
     elif route_id.startswith("EX"):
-        color = OKABE_ITO[2]
+        color = IMPRINT[2]
     else:
-        color = OKABE_ITO[3]
+        color = IMPRINT[3]
 
     # Draw arrow - scaled for large canvas
     p.add_layout(
@@ -218,9 +218,9 @@ p.add_layout(labels)
 legend_x = 3750
 legend_y = 2400
 legend_items = [
-    ("Regional Express (RE)", OKABE_ITO[0]),
-    ("S-Bahn Local (S)", OKABE_ITO[1]),
-    ("Express (EX)", OKABE_ITO[2]),
+    ("Regional Express (RE)", IMPRINT[0]),
+    ("S-Bahn Local (S)", IMPRINT[1]),
+    ("Express (EX)", IMPRINT[2]),
 ]
 
 for i, (label, color) in enumerate(legend_items):

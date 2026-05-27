@@ -34,8 +34,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — scatter points
-ACCENT = "#D55E00"  # Okabe-Ito pos 2 — LOWESS / Q-Q reference line
-BLUE = "#0072B2"  # Okabe-Ito pos 3 — Cook's distance contours
+ACCENT = "#C475FD"  # Okabe-Ito pos 2 — LOWESS / Q-Q reference line
+BLUE = "#4467A3"  # Okabe-Ito pos 3 — Cook's distance contours
 
 # Data: Drug-response study — standardised predictors for controlled leverage
 np.random.seed(42)
