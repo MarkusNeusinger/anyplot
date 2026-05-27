@@ -40,7 +40,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors for split groups
 COLOR_PLACEBO = "#009E73"  # First series - brand green
-COLOR_TREATMENT = "#D55E00"  # Second series - vermillion
+COLOR_TREATMENT = "#C475FD"  # Second series - vermillion
 
 # Data - Clinical trial recovery scores (placebo vs active treatment)
 np.random.seed(42)

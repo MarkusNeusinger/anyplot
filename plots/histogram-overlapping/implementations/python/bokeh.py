@@ -31,8 +31,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (canonical order)
 BRAND = "#009E73"  # Position 1 - first series
-COLOR_2 = "#D55E00"  # Position 2
-COLOR_3 = "#0072B2"  # Position 3
+COLOR_2 = "#C475FD"  # Position 2
+COLOR_3 = "#4467A3"  # Position 3
 
 # Data - Employee response times (ms) by department
 np.random.seed(42)

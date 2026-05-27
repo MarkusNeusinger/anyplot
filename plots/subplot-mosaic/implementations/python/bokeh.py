@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 np.random.seed(42)
 
@@ -94,8 +94,8 @@ def style_figure(fig):
 p_a = figure(
     width=3200, height=1100, title="Quarterly Revenue Overview", x_axis_label="Day", y_axis_label="Revenue ($)"
 )
-p_a.line("day", "revenue", source=source_a, line_width=4, color=OKABE_ITO[0], legend_label="Daily Revenue")
-p_a.scatter("day", "revenue", source=source_a, size=15, color=OKABE_ITO[0], alpha=0.7)
+p_a.line("day", "revenue", source=source_a, line_width=4, color=IMPRINT[0], legend_label="Daily Revenue")
+p_a.scatter("day", "revenue", source=source_a, size=15, color=IMPRINT[0], alpha=0.7)
 p_a.legend.label_text_font_size = "16pt"
 p_a.legend.background_fill_color = ELEVATED_BG
 p_a.legend.border_line_color = INK_SOFT
@@ -107,10 +107,10 @@ p_b = figure(
     width=1600, height=1100, title="Product Profitability", x_axis_label="Units Sold", y_axis_label="Profit Margin (%)"
 )
 p_b.scatter(
-    "products", "profit_margin", source=source_b1, size=18, color=OKABE_ITO[0], alpha=0.7, legend_label="Premium Line"
+    "products", "profit_margin", source=source_b1, size=18, color=IMPRINT[0], alpha=0.7, legend_label="Premium Line"
 )
 p_b.scatter(
-    "products", "profit_margin", source=source_b2, size=18, color=OKABE_ITO[1], alpha=0.7, legend_label="Standard Line"
+    "products", "profit_margin", source=source_b2, size=18, color=IMPRINT[1], alpha=0.7, legend_label="Standard Line"
 )
 p_b.legend.label_text_font_size = "14pt"
 p_b.legend.background_fill_color = ELEVATED_BG
@@ -137,7 +137,7 @@ p_c.vbar(
     top="sales",
     source=source_c,
     width=0.7,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
     alpha=0.85,
     line_color=PAGE_BG,
     line_width=2,
@@ -172,7 +172,7 @@ p_f.vbar(
     top="satisfaction",
     source=source_f,
     width=0.6,
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     alpha=0.9,
     line_color=PAGE_BG,
     line_width=2,
@@ -193,10 +193,10 @@ style_figure(p_f)
 p_d = figure(
     width=4800, height=700, title="subplot-mosaic · bokeh · anyplot.ai", x_axis_label="Month", y_axis_label="Orders"
 )
-p_d.line("month", "orders", source=source_d1, line_width=5, color=OKABE_ITO[0], legend_label="2023")
-p_d.scatter("month", "orders", source=source_d1, size=18, color=OKABE_ITO[0])
-p_d.line("month", "orders", source=source_d2, line_width=5, color=OKABE_ITO[1], legend_label="2024")
-p_d.scatter("month", "orders", source=source_d2, size=18, color=OKABE_ITO[1])
+p_d.line("month", "orders", source=source_d1, line_width=5, color=IMPRINT[0], legend_label="2023")
+p_d.scatter("month", "orders", source=source_d1, size=18, color=IMPRINT[0])
+p_d.line("month", "orders", source=source_d2, line_width=5, color=IMPRINT[1], legend_label="2024")
+p_d.scatter("month", "orders", source=source_d2, size=18, color=IMPRINT[1])
 p_d.legend.label_text_font_size = "18pt"
 p_d.legend.background_fill_color = ELEVATED_BG
 p_d.legend.border_line_color = INK_SOFT

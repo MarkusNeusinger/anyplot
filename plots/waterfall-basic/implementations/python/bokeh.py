@@ -23,8 +23,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 POSITIVE = "#009E73"  # brand green for positive changes
-NEGATIVE = "#D55E00"  # vermillion for negative changes
-TOTAL = "#0072B2"  # blue for totals
+NEGATIVE = "#AE3030"  # imprint red — negative changes
+TOTAL = "#4467A3"  # blue for totals
 
 # Data - quarterly financial breakdown
 categories = ["Starting Revenue", "Product Sales", "Services", "Refunds", "Operating Costs", "Marketing", "Net Income"]

@@ -117,14 +117,14 @@ p.scatter(
     legend_label="Start",
 )
 
-# End marker — Okabe-Ito #D55E00 (large square)
+# End marker — Okabe-Ito #C475FD (large square)
 end_src = ColumnDataSource(data={"x": [x_coords[-1]], "y": [y_coords[-1]]})
 p.scatter(
     x="x",
     y="y",
     source=end_src,
     size=32,
-    fill_color="#D55E00",
+    fill_color="#C475FD",
     line_color=PAGE_BG,
     line_width=3,
     marker="square",

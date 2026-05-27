@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first 4 positions for the 4 communities
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: A small social network with 20 people in 4 communities
 np.random.seed(42)
@@ -160,7 +160,7 @@ for src, tgt in edges:
 # Nodes by group
 legend_items = []
 renderers_for_hover = []
-for group_id, (color, name) in enumerate(zip(OKABE_ITO, group_names, strict=True)):
+for group_id, (color, name) in enumerate(zip(IMPRINT, group_names, strict=True)):
     group_nodes = [node for node in nodes if node["group"] == group_id]
     node_x = [pos[node["id"]][0] for node in group_nodes]
     node_y = [pos[node["id"]][1] for node in group_nodes]
