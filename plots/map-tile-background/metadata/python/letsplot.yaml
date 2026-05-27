@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:39:27Z'
-updated: '2026-05-27T15:39:24Z'
+updated: '2026-05-27T15:53:38Z'
 generated_by: claude-sonnet
 workflow_run: 26520749453
 issue: 3756
@@ -12,49 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: geom_livemap with real tile providers for interactive
-    HTML + creative static tile simulation using geom_rect/geom_polygon'
-  - 'Excellent theme adaptation: tile colors, land polygon colors, and chrome all
-    independently adapt between light (#FAF8F1) and dark (#1A1A17) surfaces'
-  - 'Distinctive letsplot features used idiomatically: tilesets.CARTO_POSITRON/LETS_PLOT_DARK,
-    layer_tooltips() with formatted lines, geom_livemap location/zoom params'
-  - 'Perfect data quality: real European cities with plausible visitor counts, 20-point
-    dataset with meaningful geographic and magnitude variation'
-  - Clean theme_void() approach removes all axis noise, appropriate for a geographic
-    map visualization
-  - White stroke (color=PAGE_BG) on bubbles provides contrast against both tile backgrounds
+  - geom_livemap with tilesets (CARTO Positron / LETS_PLOT_DARK) is the canonical
+    letsplot approach and uniquely powerful for this spec
+  - 'Dual HTML + PNG output: interactive tiles for HTML, elegant polygon simulation
+    for PNG'
+  - Theme-adaptive tile and land polygon colors that genuinely shift between light
+    and dark renders
+  - Realistic, geographically accurate European tourism data with plausible visitor
+    counts
+  - 'Perfect spec compliance: all required features (tile providers, zoom, attribution,
+    interactive pan/zoom) present'
   weaknesses:
-  - Land polygon approximations are very crude (35–19 polygon-vertex outlines) — the
-    resulting shapes look geometric rather than geographic; repair should use geopandas
-    with Natural Earth data (ne_110m_admin_0_countries) or at minimum a higher-vertex
-    approximation to get recognizable country outlines
-  - layer_tooltips() is attached to geom_point in the static PNG version — tooltips
-    have no effect in static raster exports and constitute dead code; remove from
-    the static plot or note it is intentional for when users adapt the code to interactive
-  - Caption font size=8 renders at 32pt-equivalent in the output image but drops to
-    ~4pt when scaled to mobile 400px width — tertiary text but still consider increasing
-    to 10pt
-  - 'Design could be more polished: the static tile grid (geom_rect 5-degree cells)
-    creates visible coarse squares that look unfinished compared to a real tile background;
-    reducing tile_size to 2-3 degrees would create a finer, more convincing grid'
+  - Central European city cluster (Amsterdam, Brussels, Zurich, Munich area) shows
+    minor visual crowding due to closely-spaced small bubbles; consider reducing scale_size
+    minimum from [6,22] to [5,20]
+  - Title fontsize=16 sits slightly small at 3200px canvas; bumping to 18 would improve
+    desktop legibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) fills the outer canvas. The map area has a light gray tile grid created by geom_rect cells (~5-degree squares) in #E8E8E6 with subtle #D0D0CE borders.
-      Chrome: Title "map-tile-background · python · letsplot · anyplot.ai" in dark INK (#1A1A17), approx 50% canvas width at size=16. Caption in muted dark text at bottom-right. Legend "Visitors (thousands)" with three reference bubbles (10K, 20K, 30K) placed to the right, clearly readable.
-      Data: European land polygons in beige/tan (#D5D1C8 fill, #B5B1A4 border) — crude but recognizable mainland, Scandinavia, Britain, Ireland, Italy, Balkans outlines. 20 green (#009E73) bubble markers sized by visitor count, white (#FAF8F1) stroke at stroke=2 for contrast. Paris bubble is largest (~38K), London second.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct surface color
+      Chrome: Title "map-tile-background · python · letsplot · anyplot.ai" in dark (#1A1A17) text at top — readable. Legend title "Visitors (thousands)" and values (10,000 / 20,000 / 30,000) in dark text — readable. Attribution caption at bottom in muted (#6B6A63) text — readable.
+      Data: Simulated tile grid (light-gray rectangles with hairline borders). European landmass polygons (medium gray #D5D1C8 fill, #B5B1A4 border). 20 city bubble markers in brand green #009E73 with warm off-white (#FAF8F1) stroke. Sizes range from small (Oslo/Helsinki ~3-3.5M) to large (Paris 38M, London 32M).
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) fills the outer canvas. Map area uses dark olive-gray tile cells (#2A2A27 fill, #3A3A37 border), creating a convincing dark map aesthetic.
-      Chrome: Title in light cream (#F0EFE8/INK_DARK), clearly readable. Caption in lighter muted text at bottom. Legend text in #B8B7B0 (INK_SOFT_DARK) on #242420 elevated background with subtle border — fully readable.
-      Data: Land polygons in dark olive (#38382F fill, #4A4A40 border) clearly distinguishable from the tile background. Green data bubbles (#009E73) are IDENTICAL to light render — only chrome flips. White stroke on bubbles replaced by dark (#1A1A17) background-colored stroke, maintaining visual clarity.
-      Legibility verdict: PASS — all text readable against the dark surface; no dark-on-dark issues; brand green #009E73 clearly visible.
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light (#F0EFE8) text at top — clearly readable. Legend title and values in light/secondary text — readable. Caption in muted light text — readable. No dark-on-dark failures observed.
+      Data: Tile grid shifts to darker fills (#2A2A27) with dark borders (#3A3A37). Land polygons shift to warm dark-gray (#38382F) with #4A4A40 borders. Bubble markers remain in the same #009E73 — identical data colors to light render. Only chrome has flipped.
+      Legibility verdict: PASS — all text is light-on-dark as expected, brand green visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,50 +53,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, legend=10, caption=8); readable
-          at desktop; caption at 8pt will be very small at mobile scale
+        comment: All font sizes explicitly set (title=16, legend/caption=10). Readable
+          in both themes. Slight deduction for title being marginally small at 3200px
+          canvas.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps; data bubble geographic clustering is expected and
-          handled with white stroke
+        comment: Central-European cluster (Amsterdam, Brussels, Vienna, Munich, Zurich)
+          shows some visual crowding. White stroke borders prevent confusion but close
+          spacing reduces score.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: scale_size(range=[6,22]) well adapted to 20-point sparse dataset;
-          white stroke enhances contrast
+        comment: 20 sparse datapoints with size range [6,22] well-adapted. All markers
+          clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series BRAND green with white stroke provides clear contrast
-          in both themes; CVD-safe single hue
+        comment: Single series, size-encoded. White/PAGE_BG stroke on green markers
+          ensures separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450)*scale=4=3200x1800 correct; map area well-utilized;
-          legend adjacent to plot
+        comment: Map fills canvas well; legend right-aligned close to data; balanced
+          margins; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels appropriate for geographic map (theme_void); title
-          correct format; legend 'Visitors (thousands)' descriptive
+        comment: No axis labels needed for map (theme_void appropriate). Title correct,
+          attribution caption included.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BRAND=#009E73 as sole data color; background #FAF8F1/#1A1A17 theme-correct;
-          chrome tokens all theme-adaptive'
+        comment: 'First series #009E73; background #FAF8F1 light / #1A1A17 dark; all
+          chrome tokens theme-adaptive; data colors identical across renders.'
     design_excellence:
       score: 13
       max: 20
@@ -115,23 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear design intent above defaults: theme-adaptive tile colors,
-          land polygon color system, white bubble stroke; crude polygon shapes hold
-          back from ''strong design'' tier'
+        comment: 'Exceeds well-configured default: custom tile-grid simulation, hand-crafted
+          European polygons, dual HTML+PNG, theme-adaptive tile/land colors.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void removes all axis noise; custom legend border/fill; tile
-          grid provides subtle structure without overwhelming
+        comment: theme_void removes all spines; hairline tile borders; subtle land
+          polygon borders; elevated legend background styling.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size variation creates clear hierarchy — Paris and London immediately
-          identifiable as dominant; geographic context enhances interpretation
+        comment: Paris and London dominate visually through bubble size. Geographic
+          positioning gives instant context. Clear tourism hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: tile-backed map with data points; both interactive (geom_livemap+real
-          tiles) and static (simulated tile background) provided'
+        comment: 'Correct: map with tile-style background, proportional markers over
+          geographic base.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tile providers (CARTO_POSITRON/LETS_PLOT_DARK), location/zoom bounds,
-          marker contrast with stroke, attribution caption, tooltips all present
+        comment: Multiple tile providers, zoom/location bounds, white-stroke contrast,
+          OSM attribution, interactive pan/zoom in HTML.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped to y/x; visitors to bubble size; city names
-          in tooltips
+        comment: lat/lon correctly mapped; size mapped to visitors; all 20 cities
+          visible within bounding box.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title exactly 'map-tile-background · python · letsplot · anyplot.ai';
-          legend 'Visitors (thousands)' with size reference bubbles
+          legend 'Visitors (thousands)' with reference bubbles.
     data_quality:
       score: 15
       max: 15
@@ -173,23 +165,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all map features: tile background, geographic points, size
-          encoding, range from 3K to 38K visitors, 20 cities across Europe'
+        comment: Shows geographic distribution, size variation, all spec-required
+          fields (lat, lon, value, label).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real European city tourism data, comprehensible and neutral scenario
+        comment: European cities with annual tourist visitor counts — neutral, real-world,
+          no sensitive content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitor counts (3M-38M per year) and coordinates are factually plausible
-          for named European cities
+        comment: Geographically accurate coordinates; visitor counts match real-world
+          tourism figures (Paris ~38M, London ~32M, Berlin ~14M).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,61 +190,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; clear Imports→Theme→Data→Plot(interactive)→Save→Plot(static)→Save
-          flow
+        comment: 'Linear: imports → constants → data → interactive plot → HTML save
+          → polygon data → static plot → PNG save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no random generation needed
+        comment: All data hardcoded and deterministic; no random generation required.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 17 imports from lets_plot are used; os and pandas used
+        comment: All 15 lets_plot symbols, os, and pd are actually used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: layer_tooltips() in static plot is dead code (no effect in PNG export);
-          polygon data verbose but appropriate for task
+        passed: true
+        comment: Clean, appropriate complexity. Polygon verbosity is inherent to geographic
+          shapes. No over-engineering, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current letsplot
-          API used
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct scale=4.
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: geom_livemap with tilesets, layer_tooltips, scale_size, ggsize+ggsave(scale=4)
-          all idiomatic; static fallback to geom_rect+geom_polygon is appropriate
-          for PNG limitation
+        comment: Expertly uses geom_livemap, tilesets, layer_tooltips, scale_size
+          layered correctly in letsplot grammar.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: geom_livemap+tilesets.CARTO_POSITRON/LETS_PLOT_DARK is a distinctive
-          letsplot-only capability; layer_tooltips().title().line() formatted tooltips
-          also distinctive
-  verdict: REJECTED
+        comment: geom_livemap with tilesets is unique to letsplot; layer_tooltips().title().line()
+          for tooltip config is letsplot-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - hover-tooltips
   - html-export
+  - hover-tooltips
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
