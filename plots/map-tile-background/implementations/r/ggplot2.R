@@ -4,7 +4,6 @@
 #' Quality: 82/100 | Created: 2026-05-27
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -39,6 +38,11 @@ continents <- rbind(
     group = "europe"
   ),
   data.frame(
+    lon   = c( 14,  16,  18,  20,  18,  16,  14,  12,  14),
+    lat   = c( 56,  58,  63,  70,  71,  68,  63,  58,  56),
+    group = "scandinavia"
+  ),
+  data.frame(
     lon   = c( -5,  15,  30,  42,  43,  40,  35,  28,  18,  10,  -5, -17, -17,  -5),
     lat   = c( 35,  37,  30,  22,   5,  -3, -15, -30, -35, -35, -25,  -5,  14,  35),
     group = "africa"
@@ -71,6 +75,12 @@ cities <- data.frame(
                   3.7,  4.4)
 )
 
+# Label the top 6 cities (>= 14M visitors); hand-tuned nudges to avoid overlap
+label_cities <- cities[cities$visitors_m >= 14, ]
+label_cities$nudge_x <- c(-9,  -6,   5,   9,   8,   9)
+label_cities$nudge_y <- c( 5,   6,   6,  -6,   6,  -6)
+label_cities$hjust   <- c( 1,   1,   0,   0,   0,   0)
+
 title_str  <- "Global City Tourism · map-tile-background · r · ggplot2 · anyplot.ai"
 title_size <- max(8, round(12 * 67 / nchar(title_str)))
 
@@ -90,6 +100,13 @@ p <- ggplot() +
     stroke = 0.5,
     alpha  = 0.9
   ) +
+  geom_text(
+    data     = label_cities,
+    aes(x = lon + nudge_x, y = lat + nudge_y, label = city, hjust = hjust),
+    color    = INK,
+    size     = 2.6,
+    fontface = "bold"
+  ) +
   scale_fill_gradient(
     low  = "#009E73",
     high = "#4467A3",
@@ -105,9 +122,10 @@ p <- ggplot() +
     expand = FALSE
   ) +
   labs(
-    title = title_str,
-    x     = "Longitude",
-    y     = "Latitude"
+    title    = title_str,
+    subtitle = "Top 6 destinations labelled · New York leads at 66.6M visitors/yr",
+    x        = "Longitude",
+    y        = "Latitude"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -119,6 +137,7 @@ p <- ggplot() +
     axis.title        = element_text(color = INK_SOFT,   size = 10),
     axis.text         = element_text(color = INK_SOFT,   size = 8),
     plot.title        = element_text(color = INK,        size = title_size, face = "bold"),
+    plot.subtitle     = element_text(color = INK_SOFT,   size = 8),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT,   size = 8),
     legend.title      = element_text(color = INK,        size = 9),
