@@ -1,20 +1,36 @@
-""" pyplots.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: bokeh | Python 3.13
+Quality: pending | Updated: 2026-05-27
 """
+
+import os
+import sys
+
+
+# bokeh.py shadows the installed bokeh package — remove script dir from sys.path
+_here = os.path.abspath(os.path.dirname(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
+
+import time
+from pathlib import Path
 
 import numpy as np
 import xyzservices.providers as xyz
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.io import output_file, save
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data: European capital cities with visitor counts (millions per year)
-np.random.seed(42)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# City coordinates (lon, lat)
+# Data: European capital cities with annual visitor counts (millions)
 cities = {
     "Paris": (2.3522, 48.8566),
     "London": (-0.1276, 51.5074),
@@ -33,27 +49,16 @@ cities = {
     "Warsaw": (21.0122, 52.2297),
 }
 
-# Extract data
 names = list(cities.keys())
 lons = np.array([cities[c][0] for c in names])
 lats = np.array([cities[c][1] for c in names])
-
-# Visitor counts (millions per year) - realistic estimates
 visitors = np.array([19.1, 21.0, 10.1, 12.0, 8.0, 6.1, 8.0, 7.7, 7.5, 4.5, 4.0, 5.5, 3.5, 4.0, 3.0])
 
+# Web Mercator projection (required for tile maps)
+k = 6378137
+x_merc = lons * (k * np.pi / 180.0)
+y_merc = np.log(np.tan((90 + lats) * np.pi / 360.0)) * k
 
-# Convert lon/lat to Web Mercator projection (required for tile maps)
-def lonlat_to_mercator(lon, lat):
-    """Convert longitude/latitude to Web Mercator coordinates."""
-    k = 6378137  # Earth radius in meters
-    x = lon * (k * np.pi / 180.0)
-    y = np.log(np.tan((90 + lat) * np.pi / 360.0)) * k
-    return x, y
-
-
-x_merc, y_merc = lonlat_to_mercator(lons, lats)
-
-# Create data source
 source = ColumnDataSource(
     data={
         "x": x_merc,
@@ -62,52 +67,111 @@ source = ColumnDataSource(
         "lat": lats,
         "name": names,
         "visitors": visitors,
-        "size": visitors * 2.0 + 25,  # Scale size by visitors
+        "size": visitors * 2.0 + 20,
     }
 )
 
-# Create figure with Web Mercator projection
+# imprint_seq colormap: #009E73 (brand green) → #4467A3 (blue)
+ANYPLOT_SEQ256 = [
+    "#{:02X}{:02X}{:02X}".format(
+        int(round(0 + 68 * t / 255)), int(round(158 - 55 * t / 255)), int(round(115 + 48 * t / 255))
+    )
+    for t in range(256)
+]
+color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=visitors.min(), high=visitors.max())
+
+tile_provider = xyz.CartoDB.Positron if THEME == "light" else xyz.CartoDB.DarkMatter
+
+title = "map-tile-background · python · bokeh · anyplot.ai"
+n = len(title)
+title_pt = max(34, round(50 * 67 / n)) if n > 67 else 50
+
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     x_axis_type="mercator",
     y_axis_type="mercator",
-    title="map-tile-background · bokeh · pyplots.ai",
+    title=title,
     tools="pan,wheel_zoom,box_zoom,reset",
     active_scroll="wheel_zoom",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=250,
 )
 
-# Add tile background (CartoDB Positron for clean look)
-p.add_tile(xyz.CartoDB.Positron)
+p.add_tile(tile_provider)
 
-# Plot city markers with color based on visitor count
-p.scatter("x", "y", source=source, size="size", fill_color="#306998", fill_alpha=0.7, line_color="white", line_width=3)
+p.scatter(
+    "x",
+    "y",
+    source=source,
+    size="size",
+    fill_color={"field": "visitors", "transform": color_mapper},
+    fill_alpha=0.85,
+    line_color="white",
+    line_width=2,
+)
 
-# Add hover tool
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    title="Visitors (M/year)",
+    title_text_font_size="28pt",
+    title_text_color=INK,
+    major_label_text_font_size="24pt",
+    major_label_text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    width=80,
+)
+p.add_layout(color_bar, "right")
+
 hover = HoverTool(
     tooltips=[("City", "@name"), ("Visitors", "@visitors{0.0}M/year"), ("Location", "@lat{0.00}°N, @lon{0.00}°E")]
 )
 p.add_tools(hover)
 
-# Styling for large canvas
-p.title.text_font_size = "32pt"
+p.title.text_font_size = f"{title_pt}pt"
 p.title.align = "center"
+p.title.text_color = INK
 
-# Axis labels
-p.xaxis.axis_label = "Longitude"
-p.yaxis.axis_label = "Latitude"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "16pt"
-p.yaxis.major_label_text_font_size = "16pt"
+p.xaxis.axis_label = "Longitude (°)"
+p.yaxis.axis_label = "Latitude (°)"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
 
-# Save as PNG
-export_png(p, filename="plot.png")
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Also save as HTML for interactivity
-output_file("plot.html")
+output_file(f"plot-{THEME}.html")
 save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
