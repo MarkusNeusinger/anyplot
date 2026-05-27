@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:45:13Z'
-updated: '2026-05-27T09:41:19Z'
+updated: '2026-05-27T10:15:35Z'
 generated_by: claude-sonnet
 workflow_run: 26502800915
 issue: 3769
@@ -12,47 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-anima
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - Correct use of the spec's small-multiples fallback with a well-structured 4-panel
-    cumulative temporal view
-  - Dual encoding (color + size) for earthquake magnitude with correct imprint_seq
-    gradient (#009E73→#4467A3)
-  - 'Complete theme-adaptive chrome: all INK/INK_SOFT/INK_MUTED/PAGE_BG tokens correctly
-    wired in both light and dark renders'
-  - Realistic and neutral scientific dataset (aftershock sequence) with geographically
-    accurate California region coordinates
-  - 'Perfect code quality: flat structure, seed, clean imports, correct canvas (3200×1800
-    via ggsize(800,450)×scale=4), both PNG and HTML outputs'
+  - Custom California polygon basemap provides clean geographic context without external
+    dependencies
+  - 'Correct imprint_seq gradient (green #009E73 → blue #4467A3) for continuous magnitude
+    data'
+  - 'Dual output: PNG as small-multiples facet grid + HTML with geom_livemap tile
+    basemap (CARTO_POSITRON/MIDNIGHT_COMMANDER) — distinctively letsplot'
+  - Cumulative data approach across 4 panels naturally shows the spreading aftershock
+    sequence
+  - Merged color+size legend with shared breaks (mag_breaks=[2,3,4,5,6]) avoids redundant
+    legend entries
+  - 'Full theme-adaptive chrome: all text, backgrounds, and borders adapt correctly
+    to both light (#FAF8F1) and dark (#1A1A17) themes'
+  - Dynamic title fontsize scaling for the long mandated title string
+  - 'Realistic seismic dataset: Central California epicenter, exponential spread,
+    plausible magnitude decay'
   weaknesses:
-  - 'Design lacks focal-point element: no epicenter marker or annotation at (-119.5,
-    36.0) to anchor the radial spread narrative — add geom_point cross/star marker
-    + geom_text label ''Epicenter'' to elevate DE-03'
-  - Two separate legends (color bar + size guide) for the same Magnitude variable
-    create visual clutter — merge via guides() with matching breaks into a single
-    combined legend
-  - 'Panel borders not explicitly themed: appear bright white in dark render against
-    near-black background — add panel_border=element_rect(color=INK_SOFT, size=0.3)
-    to theme() call'
-  - Does not use letsplot's distinctive geom_livemap() tile-based basemap — replacing
-    the hand-coded California polygon with geom_livemap using carto tiles would demonstrate
-    the library's most unique geographic feature and significantly boost LM-02
+  - '''Epicenter'' text label overlaps data points in dense Week 4 and Week 6 panels
+    — increase nudge_y from 0.22 to ~0.35 degrees lat, or add a semi-transparent background
+    to the label'
+  - Small multiples show only 4 snapshots (Week 1/2/4/6) — the HTML geom_livemap version
+    still uses facet_wrap rather than any interactive time control; a tooltip showing
+    timestamp/magnitude on hover would improve the HTML experience
+  - 'DE-01: Design is above defaults but not publication-ready — the polygon basemap
+    could be styled with a more subtle fill, and panel spacing could be more generous'
+  - 'DE-03: The story of spreading aftershocks is clear from the cumulative data,
+    but no annotation highlights the maximum spread or key transition between panels'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "Seismic Activity Spread · map-animated-temporal · python · letsplot · anyplot.ai" in bold dark ink — readable. Axis labels "Longitude" and "Latitude" in INK_SOFT color — readable. Tick labels (-122 to -117, 34 to 38) in INK_MUTED at size=8 — small but readable. Strip headers "Week 1/2/4/6" bold in INK. Caption in muted tone. Legend with gradient color bar and size guide on right side.
-      Data: Points colored with imprint_seq gradient from #009E73 (M2) to #4467A3 (M6), sized by magnitude range [2,9], alpha=0.75. California polygon in #E0DDD5 fill with #B0ADA5 border.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "Seismic Activity Spread · map-animated-temporal · python · letsplot · anyplot.ai" in dark bold text, well-centered at ~80% width (expected for long mandated title). Strip labels "Week 1/2/4/6" in bold dark text. Axis labels "Longitude" / "Latitude" in dark/muted colors. Caption "Cumulative aftershock sequence..." in small muted text at bottom. Legend "Magnitude (M)" on right with combined color+size entries.
+      Data: 2×2 facet grid showing Central California region with polygon basemap (grey fill, subtle border). Points sized 2–9 and colored via imprint_seq gradient (green #009E73 for low magnitude → blue #4467A3 for high). Epicenter marked with × symbol and "Epicenter" label. Alpha=0.75 handles overlapping in dense panels. Week 4/6 show clear cluster expansion from epicenter.
+      Legibility verdict: PASS — all text readable against light background. Minor concern: "Epicenter" label overlaps scattered data points in dense panels but remains legible.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in cream/off-white (#F0EFE8 = INK for dark theme) — readable. Axis labels in INK_SOFT (#B8B7B0) — readable. Tick labels in INK_MUTED (#A8A79F) — readable. Strip headers in cream tone. Legend text in theme-correct light tones. Panel borders appear as bright white lines against dark background (not explicitly themed — minor visual issue, not a readability failure).
-      Data: Colors identical to light render — green-to-blue gradient unchanged, confirming only chrome flips. California polygon in #2A2A26 fill with #4A4A44 border. Legend backgrounds use elevated dark (#242420).
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light (#F0EFE8) text clearly visible. Strip labels in light text on slightly elevated dark panel headers. Axis labels, tick labels, and caption in appropriate light-on-dark colors. Legend box uses elevated dark (#242420) background with light text. Map polygon basemap uses darker fill and border adapting to dark theme.
+      Data: Colors are identical to light render — same teal-to-blue imprint_seq gradient, confirming only chrome flips between themes. The X epicenter marker is white/light against dark background. Points visible with alpha=0.75.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements use light tokens against near-black background. No "dark text on dark background" issues detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -60,52 +63,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title fontsize calculated for long
-          title; all text readable in both themes; tick labels at size=8 are small
-          but readable
+        comment: All font sizes explicitly set including dynamic title scaling; readable
+          in both themes; minor crowding of Epicenter label in dense Week 4/6 panels
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Epicenter label overlaps data points in Week 4 and Week 6 accumulated
+          panels; label still legible but nudge_y=0.22 is insufficient for dense clusters
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor point overlap in Week 4/6 central clusters, mitigated by alpha=0.75;
-          no text overlaps
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: scale_size(range=[2,9]) gives density-appropriate sizing; alpha=0.75
-          appropriate for cumulative point counts
+        comment: Good density adaptation with alpha=0.75 and size range 2-9; some
+          overplotting in cumulative panels expected and handled
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe; size redundancy adds robustness
+        comment: imprint_seq gradient (green-blue) is CVD-safe; magnitude encoded
+          redundantly via color+size
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2x2 facet uses canvas well; canvas 3200x1800 correct; legends slightly
-          float between rows on right panel
+        comment: 2x2 facet grid fills canvas well; legend properly placed right; ggsize(800,450)
+          scale=4 = 3200x1800 correct
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are descriptive; title format correct with
-          descriptive prefix
+        comment: Longitude / Latitude labels; caption explains epicenter symbol; facet
+          labels show temporal steps
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_color_gradient(low=#009E73, high=#4467A3) is imprint_seq;
-          backgrounds #FAF8F1/#1A1A17 correct; chrome fully theme-adaptive'
+        comment: 'imprint_seq gradient (low=#009E73 high=#4467A3) correct for continuous
+          magnitude; backgrounds #FAF8F1/#1A1A17 correct; all chrome theme-adaptive'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,80 +116,81 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above plain default: theme_void for clean map, hand-coded basemap,
-          dual encoding; but still a well-configured standard template lacking strong
-          typographic hierarchy'
+        comment: 'Above defaults: custom polygon basemap, dual HTML/PNG output, proper
+          gradient, merged legend. Not yet publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_void removes axis chrome; elevated legend background is good;
-          panel borders not themed (bright white in dark render); above default
+        comment: theme_void() appropriate for maps; custom panel borders 0.3pt; legend
+          with elevated background; caption in muted color
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Cumulative build-up shows aftershock spreading narrative; caption
-          adds context; no focal-point emphasis like epicenter marker
+        comment: Cumulative data progression shows spreading pattern clearly; redundant
+          magnitude encoding aids comprehension; consistent epicenter marker as focal
+          point
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Small multiples fallback is spec-specified for non-animation libraries;
-          correctly implemented
+        comment: Correct geographic point-over-time visualization; small multiples
+          is sanctioned fallback per spec note for libraries without animation
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Basemap, timestamp via facet labels, cumulative spread all present;
-          point trails (optional) not included
+        comment: Basemap present, timestamp display via facet labels, cumulative trails
+          via data design; play/pause and time slider not implemented (fallback approach)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly assigned; magnitude dual-encoded; all 4 time snapshots
-          visible
+        comment: lat/lon correctly mapped to x/y; magnitude to color+size; week to
+          facets
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · {lang} · {lib} ·
-          anyplot.ai format; legend labels correct
+        comment: Title 'Seismic Activity Spread · map-animated-temporal · python ·
+          letsplot · anyplot.ai' correct; legend 'Magnitude (M)' with breaks matches
+          data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Spatial spread, temporal accumulation, magnitude variation all shown;
-          week 1-6 radiating pattern clearly visible
+        comment: 'Shows all aspects: geographic spread, temporal progression, magnitude
+          variation, epicenter reference point, cumulative accumulation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Earthquake aftershock sequence in Central California — real, neutral
-          scientific scenario with plausible coordinates
+        comment: Realistic Central California earthquake scenario; plausible coordinates
+          (-119.5, 36.0); realistic aftershock decay pattern
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 events, M2-M6 range, Omori-law-like decay pattern (20-45-50-40-30-15
-          per week); geographic extent appropriate
+        comment: Magnitude 2-6 realistic for aftershocks; coordinate range within
+          California; event counts per week plausible
     code_quality:
       score: 10
       max: 10
@@ -196,7 +200,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → tokens → data → basemap → plot → save'
+        comment: 'Clean linear structure: imports → tokens → data → plot_png → plot_html
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,21 +213,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used
+        comment: All 22 lets_plot imports are used across both PNG and HTML plots
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; title fontsize calculation is appropriate
+        comment: Clean dual-output pattern; justified theme differences between PNG
+          (theme_void) and HTML (geom_livemap)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
-    library_features:
-      score: 6
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current letsplot
+          API
+    library_mastery:
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -230,16 +237,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ggplot grammar correct; facet_wrap for small multiples; proper theme
-          customization; ggsize/ggsave(scale=4) canonical letsplot pattern
+        comment: Idiomatic ggplot grammar; guides() for merged legend; facet_wrap;
+          theme_void for map; proper scale alignment
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export is letsplot-specific; but geom_polygon basemap and facet_wrap
-          are ggplot2-portable; geom_livemap() tile basemap would be truly distinctive
-  verdict: REJECTED
+        passed: true
+        comment: geom_livemap with tilesets.CARTO_POSITRON/MIDNIGHT_COMMANDER is uniquely
+          letsplot — no other Python ggplot-style library has built-in tile-based
+          interactive maps
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,9 +256,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
   - custom-colormap
+  - minimal-chrome
