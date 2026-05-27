@@ -28,7 +28,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: gene expression profiles, 5 well-separated clusters
 np.random.seed(42)
@@ -83,7 +83,7 @@ for i, (left, right, dist, _) in enumerate(Z):
 def branch_color(node_id):
     clusters = subtree_clusters[node_id]
     if len(clusters) == 1:
-        return OKABE_ITO[list(clusters)[0]]
+        return IMPRINT[list(clusters)[0]]
     return INK_SOFT
 
 
@@ -146,7 +146,7 @@ for leaf_idx in range(n_leaves):
             "y": np.sin(a),
             "label": gene_names[leaf_idx],
             "cluster": f"Cluster {c + 1}",
-            "clr": OKABE_ITO[c],
+            "clr": IMPRINT[c],
         }
     )
 df_leaves = pd.DataFrame(leaf_rows)
@@ -157,11 +157,11 @@ legend_data = pd.DataFrame(
         "x": np.linspace(-0.72, 0.72, n_clusters),
         "y": [-1.22] * n_clusters,
         "label": [f"Cluster {k + 1}" for k in range(n_clusters)],
-        "clr": OKABE_ITO[:n_clusters],
+        "clr": IMPRINT[:n_clusters],
     }
 )
 
-all_colors = sorted(set(df_lines["clr"].unique()) | set(OKABE_ITO[:n_clusters]))
+all_colors = sorted(set(df_lines["clr"].unique()) | set(IMPRINT[:n_clusters]))
 cscale = alt.Scale(domain=all_colors, range=all_colors)
 XY_DOM = [-1.40, 1.40]
 

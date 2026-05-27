@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - using Iris dataset for multivariate analysis
 iris = load_iris()
@@ -73,7 +73,7 @@ scatter = (
         y=alt.Y("PC2:Q", title=f"PC2 ({var_explained[1]:.1f}%)", scale=alt.Scale(domain=[-3, 3])),
         color=alt.Color(
             "Species:N",
-            scale=alt.Scale(range=OKABE_ITO),
+            scale=alt.Scale(range=IMPRINT),
             legend=alt.Legend(title="Species", titleFontSize=18, labelFontSize=16, symbolSize=200, orient="right"),
         ),
         tooltip=["Species:N", alt.Tooltip("PC1:Q", format=".2f"), alt.Tooltip("PC2:Q", format=".2f")],

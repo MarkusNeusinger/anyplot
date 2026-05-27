@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 OKABE_ITO_1 = "#009E73"  # Brand green for main data
-OKABE_ITO_2 = "#D55E00"  # Vermillion for outliers
+OKABE_ITO_2 = "#C475FD"  # Vermillion for outliers
 
 # Data: Simulate a linear regression scenario with some non-linearity
 np.random.seed(42)

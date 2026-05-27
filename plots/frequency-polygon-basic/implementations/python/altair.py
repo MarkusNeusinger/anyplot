@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (colorblind-safe)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Response times (ms) by experimental condition
 np.random.seed(42)
@@ -65,7 +65,7 @@ chart = (
         y=alt.Y("Frequency:Q", title="Frequency"),
         color=alt.Color(
             "Condition:N",
-            scale=alt.Scale(domain=["Control", "Treatment A", "Treatment B"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Control", "Treatment A", "Treatment B"], range=IMPRINT),
             legend=alt.Legend(title="Condition", titleFontSize=20, labelFontSize=18),
         ),
         strokeDash=alt.StrokeDash(

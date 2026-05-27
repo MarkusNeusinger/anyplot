@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito: position 1 = Increase, position 2 = Decrease
 COLOR_INCREASE = "#009E73"
-COLOR_DECREASE = "#D55E00"
+COLOR_DECREASE = "#AE3030"  # imprint red — decrease
 
 # Data
 data = pd.DataFrame(

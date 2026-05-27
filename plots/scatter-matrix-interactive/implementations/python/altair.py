@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Synthetic Iris-like multivariate data
 np.random.seed(42)
@@ -119,7 +119,7 @@ for row_idx, y_var in enumerate(variables):
                     ),
                     color=alt.Color(
                         "Species:N",
-                        scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO),
+                        scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=IMPRINT),
                         legend=None,
                     ),
                 )
@@ -162,7 +162,7 @@ for row_idx, y_var in enumerate(variables):
                     ),
                     color=alt.Color(
                         "Species:N",
-                        scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO),
+                        scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=IMPRINT),
                         legend=None,
                     ),
                     tooltip=["Species:N"] + [alt.Tooltip(v, format=".2f") for v in variables],
@@ -179,7 +179,7 @@ legend_chart = (
     .encode(
         y=alt.Y("Species:N", title="", axis=alt.Axis(labelFontSize=18, orient="right")),
         color=alt.Color(
-            "Species:N", scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO), legend=None
+            "Species:N", scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=IMPRINT), legend=None
         ),
     )
     .properties(width=50, height=150, title=alt.Title("Species", fontSize=22))
@@ -249,7 +249,7 @@ interactive_chart = (
             brush,
             alt.Color(
                 "Species:N",
-                scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO),
+                scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=IMPRINT),
                 legend=alt.Legend(titleFontSize=18, labelFontSize=16, orient="right", title="Species"),
             ),
             alt.value(INK_SOFT),

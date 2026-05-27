@@ -21,7 +21,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BULLISH = "#009E73"  # Okabe-Ito position 1 (bluish green)
-BEARISH = "#D55E00"  # Okabe-Ito position 2 (vermillion)
+BEARISH = "#AE3030"  # imprint red — bearish
 
 # Data: Generate 60 days of realistic stock OHLC data with volume
 np.random.seed(42)

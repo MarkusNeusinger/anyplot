@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - generate two-moon classification dataset
 np.random.seed(42)
@@ -63,7 +63,7 @@ background = (
         y=alt.Y("X2:Q", bin=alt.Bin(maxbins=150), title="Feature X2"),
         color=alt.Color(
             "Class:N",
-            scale=alt.Scale(domain=["Class A", "Class B"], range=[OKABE_ITO[0], OKABE_ITO[1]]),
+            scale=alt.Scale(domain=["Class A", "Class B"], range=[IMPRINT[0], IMPRINT[1]]),
             legend=alt.Legend(title="Decision Region", titleFontSize=18, labelFontSize=16, orient="right"),
         ),
     )
@@ -77,7 +77,7 @@ correct_points = (
         x=alt.X("X1:Q"),
         y=alt.Y("X2:Q"),
         fill=alt.Color(
-            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=[OKABE_ITO[0], OKABE_ITO[1]]), legend=None
+            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=[IMPRINT[0], IMPRINT[1]]), legend=None
         ),
         stroke=alt.value(INK_SOFT),
         tooltip=["X1:Q", "X2:Q", "Class:N", "Classification:N"],
@@ -92,9 +92,9 @@ incorrect_points = (
         x=alt.X("X1:Q"),
         y=alt.Y("X2:Q"),
         fill=alt.Color(
-            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=[OKABE_ITO[0], OKABE_ITO[1]]), legend=None
+            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=[IMPRINT[0], IMPRINT[1]]), legend=None
         ),
-        stroke=alt.value(OKABE_ITO[1]),
+        stroke=alt.value(IMPRINT[1]),
         tooltip=["X1:Q", "X2:Q", "Class:N", "Classification:N"],
     )
 )

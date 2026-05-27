@@ -55,7 +55,7 @@ hline_data = pd.DataFrame({"y": [pval_threshold]})
 # Color mapping using Okabe-Ito palette
 color_scale = alt.Scale(
     domain=["Up-regulated", "Down-regulated", "Not Significant"],
-    range=["#009E73", "#D55E00", INK_SOFT],  # Green, orange, adaptive gray
+    range=["#009E73", "#C475FD", INK_SOFT],  # Green, orange, adaptive gray
 )
 
 # Main scatter plot

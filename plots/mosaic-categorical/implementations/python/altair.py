@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito positions 1 and 2
 COLOR_SURVIVED = "#009E73"
-COLOR_NOT_SURVIVED = "#D55E00"
+COLOR_NOT_SURVIVED = "#C475FD"
 
 # Data: Titanic survival by passenger class (contingency table)
 data = pd.DataFrame(

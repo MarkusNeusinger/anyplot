@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 hierarchy_data = [
     {"id": "root", "name": "All Departments", "value": 3200000, "parent": None},
@@ -47,20 +47,20 @@ df = pd.DataFrame(hierarchy_data)
 
 color_map = {
     "All Departments": INK,
-    "Engineering": OKABE_ITO[0],
-    "Marketing": OKABE_ITO[1],
-    "Operations": OKABE_ITO[2],
-    "HR": OKABE_ITO[3],
-    "Frontend": "#56B4E9",
-    "Backend": OKABE_ITO[0],
-    "DevOps": "#0072B2",
+    "Engineering": IMPRINT[0],
+    "Marketing": IMPRINT[1],
+    "Operations": IMPRINT[2],
+    "HR": IMPRINT[3],
+    "Frontend": "#2ABCCD",
+    "Backend": IMPRINT[0],
+    "DevOps": "#4467A3",
     "Digital": "#FFC863",
-    "Content": OKABE_ITO[1],
-    "Events": "#D55E00",
+    "Content": IMPRINT[1],
+    "Events": "#C475FD",
     "Facilities": "#72C472",
-    "IT Support": OKABE_ITO[2],
+    "IT Support": IMPRINT[2],
     "Recruiting": "#BC8FBC",
-    "Training": "#CC79A7",
+    "Training": "#BD8233",
 }
 
 df["color"] = df["name"].map(color_map)
@@ -108,7 +108,7 @@ main_center_df = pd.DataFrame([{"line1": "All Departments", "line2": "$3.20B"}])
 main_center = alt.layer(
     alt.Chart(main_center_df).mark_text(fontSize=22, fontWeight="bold", dy=-20, color=INK).encode(text="line1:N"),
     alt.Chart(main_center_df)
-    .mark_text(fontSize=32, fontWeight="bold", dy=15, color=OKABE_ITO[0])
+    .mark_text(fontSize=32, fontWeight="bold", dy=15, color=IMPRINT[0])
     .encode(text="line2:N"),
 )
 
