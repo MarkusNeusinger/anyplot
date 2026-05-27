@@ -1,10 +1,18 @@
-""" pyplots.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 86/100 | Created: 2026-01-20
+Library: pygal | Python 3.13
+Quality: pending | Updated: 2026-05-27
 """
 
 import io
+import os
+import sys
+
+
+# Remove current directory from sys.path to prevent self-import conflict
+# (this file is named pygal.py, same as the library package)
+_cwd = os.path.abspath(".")
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _cwd]
 
 import numpy as np
 import pandas as pd
@@ -13,50 +21,53 @@ from PIL import Image
 from pygal.style import Style
 
 
-# Data - Daily sensor readings over 3 years (1095 points)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Data — daily sensor readings over 3 years (1095 points)
 np.random.seed(42)
 dates = pd.date_range("2022-01-01", periods=1095, freq="D")
-
-# Generate realistic sensor data with trend, seasonality, and noise
 trend = np.linspace(50, 80, 1095)
-seasonal = 15 * np.sin(2 * np.pi * np.arange(1095) / 365)  # Yearly cycle
+seasonal = 15 * np.sin(2 * np.pi * np.arange(1095) / 365)
 noise = np.random.normal(0, 5, 1095)
 values = trend + seasonal + noise
 
-# Define selected range for the navigator view (middle portion)
-selection_start = 400
-selection_end = 600
+# Navigator selection: Feb 2023 – Aug 2023
+selection_start, selection_end = 400, 600
+start_label = dates[selection_start].strftime("%b %Y")
+end_label = dates[selection_end - 1].strftime("%b %Y")
+detail_label = f"{start_label} – {end_label}"
 
-# Create descriptive date range label for selected range
-start_date = dates[selection_start].strftime("%b %Y")
-end_date = dates[selection_end - 1].strftime("%b %Y")
-# Use shorter label to avoid legend truncation
-detail_label = f"{start_date} - {end_date}"
+TITLE = "line-navigator · python · pygal · anyplot.ai"
 
-# Custom style for pyplots
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=("#306998", "#FFD43B"),
-    title_font_size=56,
-    label_font_size=32,
-    major_label_font_size=28,
-    legend_font_size=32,
-    value_font_size=24,
+# Main chart: 3200 × 1530 px (85 % of 1800)
+main_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=ANYPLOT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     stroke_width=3,
-    opacity=".8",
-    opacity_hover=".9",
 )
 
-# Main Chart - Shows selected range in detail
 main_chart = pygal.Line(
-    width=4800,
-    height=2160,
-    style=custom_style,
-    title="line-navigator \u00b7 pygal \u00b7 pyplots.ai",
+    width=3200,
+    height=1530,
+    style=main_style,
+    title=TITLE,
     x_title="Date",
     y_title="Sensor Reading (mV)",
     show_x_guides=False,
@@ -69,42 +80,41 @@ main_chart = pygal.Line(
     truncate_label=-1,
     show_dots=False,
     fill=False,
-    stroke_style={"width": 4},
+    stroke_style={"width": 3},
     interpolate="cubic",
     margin=80,
 )
 
-# Add selected range data to main chart
 selected_values = list(values[selection_start:selection_end])
-selected_dates = [dates[i].strftime("%Y-%m-%d") for i in range(selection_start, selection_end)]
-
-# Sample labels for x-axis (show every 25th date to reduce overlap)
-main_x_labels = [selected_dates[i] if i % 25 == 0 else "" for i in range(len(selected_dates))]
+n_sel = selection_end - selection_start  # 200
+selected_dates = [dates[i].strftime("%b %d") for i in range(selection_start, selection_end)]
+step = max(1, n_sel // 6)  # ~33 → ~6 evenly-spaced labels
+main_x_labels = [selected_dates[i] if i % step == 0 else "" for i in range(n_sel)]
 main_chart.x_labels = main_x_labels
 main_chart.add(detail_label, selected_values)
 
-# Navigator Chart - Shows full data extent with selection indicator
+# Navigator: 3200 × 270 px (15 % of 1800; ~17.6 % of main height)
 nav_style = Style(
-    background="#f0f0f0",
-    plot_background="#f0f0f0",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=("#8AAEC7", "#E67E22"),  # Lighter blue for full data, orange for selection
-    title_font_size=44,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=36,
-    value_font_size=28,
+    background=ELEVATED_BG,
+    plot_background=ELEVATED_BG,
+    foreground=INK_SOFT,
+    foreground_strong=INK_SOFT,
+    foreground_subtle=INK_MUTED,
+    colors=ANYPLOT_PALETTE,
+    title_font_size=40,
+    label_font_size=32,
+    major_label_font_size=28,
+    legend_font_size=30,
+    value_font_size=22,
     stroke_width=2,
-    opacity=".7",
+    opacity=".6",
 )
 
 nav_chart = pygal.Line(
-    width=4800,
-    height=540,
+    width=3200,
+    height=270,
     style=nav_style,
-    title="Navigator - Full Data Range (2022-2024)",
+    title=None,
     x_title="",
     y_title="",
     show_x_guides=False,
@@ -112,49 +122,48 @@ nav_chart = pygal.Line(
     show_y_labels=False,
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=20,
+    legend_box_size=16,
     truncate_legend=-1,
     x_label_rotation=0,
     show_dots=False,
     fill=True,
-    stroke_style={"width": 2},
-    margin=50,
+    stroke_style={"width": 1.5},
+    margin=30,
 )
 
-# Add full data to navigator
-nav_x_labels = [dates[i].strftime("%Y-%m") if i % 182 == 0 else "" for i in range(len(dates))]
+nav_x_labels = [dates[i].strftime("%Y") if i % 365 == 0 else "" for i in range(len(dates))]
 nav_chart.x_labels = nav_x_labels
-nav_chart.add("Full Dataset (2022-2024)", list(values))
+nav_chart.add("Full Dataset (2022–2024)", list(values))
 
-# Create selection indicator as a separate series (highlighted area)
-selection_indicator = [None] * len(values)
+selection_series = [None] * len(values)
 for i in range(selection_start, selection_end):
-    selection_indicator[i] = values[i]
-nav_chart.add(f"Selected: {start_date} - {end_date}", selection_indicator)
+    selection_series[i] = values[i]
+nav_chart.add(f"Selected: {detail_label}", selection_series)
 
-# Render charts to PNG bytes in memory (no temp files)
-main_png_bytes = main_chart.render_to_png()
-nav_png_bytes = nav_chart.render_to_png()
+# Combine into single 3200 × 1800 PNG using PIL
+main_png = main_chart.render_to_png()
+nav_png = nav_chart.render_to_png()
+main_img = Image.open(io.BytesIO(main_png))
+nav_img = Image.open(io.BytesIO(nav_png))
 
-# Combine both charts into single image using PIL
-main_img = Image.open(io.BytesIO(main_png_bytes))
-nav_img = Image.open(io.BytesIO(nav_png_bytes))
+# Resize to exact targets in case cairosvg introduces a pixel offset
+TARGET_W, TARGET_MAIN_H, TARGET_NAV_H = 3200, 1530, 270
+if main_img.size != (TARGET_W, TARGET_MAIN_H):
+    main_img = main_img.resize((TARGET_W, TARGET_MAIN_H), Image.LANCZOS)
+if nav_img.size != (TARGET_W, TARGET_NAV_H):
+    nav_img = nav_img.resize((TARGET_W, TARGET_NAV_H), Image.LANCZOS)
 
-# Create combined image without gap between charts
-combined_height = main_img.height + nav_img.height
-combined = Image.new("RGB", (main_img.width, combined_height), "white")
+combined = Image.new("RGB", (TARGET_W, TARGET_MAIN_H + TARGET_NAV_H), PAGE_BG)
 combined.paste(main_img, (0, 0))
-combined.paste(nav_img, (0, main_img.height))
+combined.paste(nav_img, (0, TARGET_MAIN_H))
+combined.save(f"plot-{THEME}.png")
 
-# Save final combined plot
-combined.save("plot.png")
-
-# Also save HTML version
-main_chart_html = pygal.Line(
+# HTML output — interactive pygal charts in browser viewport dimensions
+main_html_chart = pygal.Line(
     width=1200,
     height=540,
-    style=custom_style,
-    title="line-navigator \u00b7 pygal \u00b7 pyplots.ai",
+    style=main_style,
+    title=TITLE,
     x_title="Date",
     y_title="Sensor Reading (mV)",
     show_x_guides=False,
@@ -165,49 +174,43 @@ main_chart_html = pygal.Line(
     truncate_label=-1,
     show_dots=False,
     fill=False,
+    stroke_style={"width": 3},
     interpolate="cubic",
 )
-main_chart_html.x_labels = main_x_labels
-main_chart_html.add(detail_label, selected_values)
+main_html_chart.x_labels = main_x_labels
+main_html_chart.add(detail_label, selected_values)
 
-nav_chart_html = pygal.Line(
+nav_html_chart = pygal.Line(
     width=1200,
     height=150,
     style=nav_style,
-    title="Navigator - Full Data Range",
+    title=None,
     show_legend=True,
     legend_at_bottom=True,
     show_dots=False,
     fill=True,
 )
-nav_chart_html.x_labels = nav_x_labels
-nav_chart_html.add("Full Dataset (2022-2024)", list(values))
-nav_chart_html.add(f"Selected: {start_date} - {end_date}", selection_indicator)
+nav_html_chart.x_labels = nav_x_labels
+nav_html_chart.add("Full Dataset (2022–2024)", list(values))
+nav_html_chart.add(f"Selected: {detail_label}", selection_series)
 
-# Create HTML with both charts
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>line-navigator - pygal - pyplots.ai</title>
+    <title>line-navigator · python · pygal · anyplot.ai</title>
     <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; background: #fff; }}
+        body {{ font-family: Arial, sans-serif; margin: 20px; background: {PAGE_BG}; color: {INK}; }}
         .chart-container {{ max-width: 1200px; margin: 0 auto; }}
-        .main-chart {{ margin-bottom: 0; }}
-        .nav-chart {{ background: #f0f0f0; }}
     </style>
 </head>
 <body>
     <div class="chart-container">
-        <div class="main-chart">
-            {main_chart_html.render(is_unicode=True)}
-        </div>
-        <div class="nav-chart">
-            {nav_chart_html.render(is_unicode=True)}
-        </div>
+        {main_html_chart.render(is_unicode=True)}
+        {nav_html_chart.render(is_unicode=True)}
     </div>
 </body>
 </html>
 """
 
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(html_content)
