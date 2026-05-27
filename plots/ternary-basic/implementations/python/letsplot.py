@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Soil composition samples (Sand, Silt, Clay)
 np.random.seed(42)
@@ -164,7 +164,7 @@ plot = (
     # Tick labels
     + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=11, color=INK_SOFT)
     # Color scale using Okabe-Ito palette
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     # Labels and title
     + labs(title="ternary-basic · letsplot · anyplot.ai", color="Soil Type")
     # Theme

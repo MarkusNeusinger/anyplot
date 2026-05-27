@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Market share evolution over 8 years
 np.random.seed(42)
@@ -77,7 +77,7 @@ df["Company"] = pd.Categorical(
 plot = (
     ggplot(df, aes(x="Year", y="Share", fill="Company"))
     + geom_area(position="fill", alpha=0.85)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + scale_x_continuous(breaks=list(range(2016, 2024)))
     + scale_y_continuous(format=".0%")
     + labs(x="Year", y="Market Share (%)", title="area-stacked-percent · letsplot · anyplot.ai")

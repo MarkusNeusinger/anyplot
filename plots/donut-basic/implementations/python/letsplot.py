@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 categories = ["Marketing", "Operations", "R&D", "Sales", "HR"]
 values = [28, 22, 25, 18, 7]
@@ -52,7 +52,7 @@ plot = (
         label_padding=0.6,
         label_r=0.2,
     )
-    + scale_fill_manual(values=OKABE_ITO)  # noqa: F405
+    + scale_fill_manual(values=IMPRINT)  # noqa: F405
     + labs(title="donut-basic · letsplot · anyplot.ai", fill="Department")  # noqa: F405
     + ggsize(1200, 1200)  # noqa: F405
     + theme_void()  # noqa: F405

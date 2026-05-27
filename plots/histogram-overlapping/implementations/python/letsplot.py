@@ -37,7 +37,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-COLORS = ["#009E73", "#D55E00"]
+COLORS = ["#009E73", "#C475FD"]
 
 # Data - comparing response times between two experimental conditions
 np.random.seed(42)

@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 STUDENT_COLOR = "#009E73"
-COURSE_COLOR = "#D55E00"
+COURSE_COLOR = "#C475FD"
 
 # Data — student-course enrollment network
 students = ["Alice", "Bob", "Carol", "David", "Emma", "Frank", "Grace", "Henry", "Iris", "James", "Kate", "Leo"]

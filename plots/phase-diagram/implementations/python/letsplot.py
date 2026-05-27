@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Damped harmonic oscillator with distinct parameters
 # dx/dt = v, dv/dt = -omega^2 * x - gamma * v
@@ -96,7 +96,7 @@ plot = (
         stroke=3,
         inherit_aes=False,
     )
-    + scale_color_manual(values=OKABE_ITO)  # noqa: F405
+    + scale_color_manual(values=IMPRINT)  # noqa: F405
     + labs(  # noqa: F405
         x="Position (x)", y="Velocity (dx/dt)", title="phase-diagram · letsplot · anyplot.ai", color="Initial Condition"
     )

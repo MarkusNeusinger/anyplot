@@ -68,7 +68,7 @@ for node in hierarchy_data.values():
 total_value = sum(n["value"] for n in hierarchy_data.values() if n["level"] == 1)
 
 # Okabe-Ito positions 1-4 for departments; lighter variants for children
-DEPT_COLORS = {"Engineering": "#009E73", "Sales": "#D55E00", "Marketing": "#0072B2", "Operations": "#CC79A7"}
+DEPT_COLORS = {"Engineering": "#009E73", "Sales": "#C475FD", "Marketing": "#4467A3", "Operations": "#BD8233"}
 CHILD_COLORS = {
     "Backend": "#4DC4A0",
     "Frontend": "#80D5B8",
