@@ -55,10 +55,10 @@ hierarchy = [
 
 # Department color families using Okabe-Ito bases with tints for child levels
 dept_colors = {
-    "Engineering": {"base": "#009E73", "mid": "#55C4A4", "light": "#AAE0D5"},
-    "Marketing": {"base": "#AE3030", "mid": "#F0BC4D", "light": "#F7D899"},
-    "Sales": {"base": "#4467A3", "mid": "#4DA6D5", "light": "#99CDE8"},
-    "Operations": {"base": "#BD8233", "mid": "#DDA5C5", "light": "#EED2E3"},
+    "Engineering": {"base": "#009E73", "mid": "#55C4A4", "light": "#AAE0D5"},  # imprint green family
+    "Marketing": {"base": "#AE3030", "mid": "#C56666", "light": "#DEAAAA"},  # imprint red family
+    "Sales": {"base": "#4467A3", "mid": "#7A93BD", "light": "#B0BFD8"},  # imprint blue family
+    "Operations": {"base": "#BD8233", "mid": "#D1A668", "light": "#E5C9A3"},  # imprint ochre family
 }
 
 # Clearer abbreviations than 3-char truncation

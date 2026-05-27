@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 HIST_POSITIVE = "#009E73"  # Position 1 - brand green
 HIST_NEGATIVE = "#AE3030"  # imprint red — bars below zero
 MACD_LINE_COLOR = "#4467A3"  # Position 3 - blue
-SIGNAL_LINE_COLOR = "#AE3030"  # Position 5 - orange
+SIGNAL_LINE_COLOR = "#BD8233"  # imprint ochre — distinct from histogram bars
 
 # Data - Generate synthetic stock price data and calculate MACD
 np.random.seed(42)

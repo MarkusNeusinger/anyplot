@@ -89,8 +89,9 @@ plotting = [
     "scipy>=1.14.0",
     "scikit-learn>=1.6.0",
     "statsmodels>=0.14.0",
-    # matplotlib add-ons required by individual specs (cartopy: map-projections,
-    # wordcloud: wordcloud-basic, matplotlib-venn: venn-basic, squarify: treemap-basic seaborn)
+    # matplotlib add-ons required by individual specs:
+    #   cartopy → map-projections, wordcloud → wordcloud-basic,
+    #   matplotlib-venn → venn-basic, squarify → treemap-basic (seaborn variant)
     "cartopy>=0.24.0",
     "wordcloud>=1.9.0",
     "matplotlib-venn>=1.1.0",

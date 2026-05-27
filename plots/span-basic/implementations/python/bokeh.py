@@ -45,9 +45,9 @@ vertical_span = BoxAnnotation(
 )
 p.add_layout(vertical_span)
 
-# Add horizontal span - highlight target revenue range (120-140)
+# Add horizontal span - highlight target revenue range (120-140) using imprint amber
 horizontal_span = BoxAnnotation(
-    bottom=120, top=140, fill_alpha=0.2, fill_color="#AE3030", line_color="#AE3030", line_width=2, line_alpha=0.5
+    bottom=120, top=140, fill_alpha=0.2, fill_color="#DDCC77", line_color="#DDCC77", line_width=2, line_alpha=0.5
 )
 p.add_layout(horizontal_span)
 
