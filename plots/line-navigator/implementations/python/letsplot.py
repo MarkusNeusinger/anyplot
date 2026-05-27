@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-navigator: Line Chart with Mini Navigator
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-05-27
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-27
 """
 
 import os
