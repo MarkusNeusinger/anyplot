@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:15:14Z'
-updated: '2026-05-27T23:02:29Z'
+updated: '2026-05-27T23:18:01Z'
 generated_by: claude-sonnet
 workflow_run: 26543218212
 issue: 3749
@@ -12,126 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: all required elements (flags, connectors, dashed verticals,
-    event labels, 4 event types) implemented correctly'
-  - 'Correct anyplot palette with brand green #009E73 as the first series (Earnings),
-    proper canonical order for remaining types'
-  - 'Both themes work correctly: warm off-white / near-black backgrounds, fully theme-adaptive
-    chrome, identical data colors across themes'
-  - Redundant shape + color encoding for event types (CVD-safe, good accessibility)
-  - Alternating flag heights (above/below price, staggered offsets) prevents overlapping
-    flags
-  - Clean, idiomatic plotnine grammar with excellent layer composition (5 geom types)
-  - Reproducible synthetic financial data with realistic parameters and np.random.seed(42)
+  - Clean layered grammar-of-graphics composition — price line, LOWESS trend, dashed
+    reference lines, connector segments, flag markers, and text labels all stack elegantly
+    without visual conflicts
+  - 'Correct anyplot palette in canonical order with full semantic color assignment:
+    Earnings=#009E73, Dividend=#C475FD, News=#4467A3, Split=#BD8233'
+  - Redundant encoding with distinct marker shapes (square/diamond/triangle/circle)
+    per event type plus size hierarchy (Earnings markers larger) is a strong accessibility
+    win
+  - 'Theme-adaptive chrome is complete and correct: INK/INK_SOFT tokens applied to
+    all title, axis, legend, and grid elements — both renders look correct'
+  - 'Realistic, neutral financial dataset: 180-day period, quarterly earnings beats/misses,
+    dividends, split with proper price halving, news events — textbook financial chart
+    context'
+  - guides(size='none') correctly suppresses the size legend while retaining color+shape
+    — idiomatic plotnine
+  - LOWESS trend line (geom_smooth method='lowess') adds analytical value, helping
+    viewers see the overall downtrend despite short-term volatility
   weaknesses:
-  - Event labels (geom_text size=3mm) are borderline small for mobile/thumbnail viewing
-    — increase to size=3.5 or 4 for better mobile legibility
-  - All 4 event types receive equal visual weight with no hierarchy — consider giving
-    Earnings markers a larger size (size=4) vs secondary events (size=3) since earnings
-    are typically the dominant price catalyst
-  - No visual focal point or emphasis — all events displayed uniformly; even a subtle
-    size distinction between event types would create storytelling hierarchy
-  - Post-split price does not halve after the 2:1 Split in May 2024 — apply split
-    adjustment (price / 2 from split_date forward) for factual correctness
-  - 'LM-02: Layer composition is used well but plotnine grammar could be pushed further
-    — a stat_smooth trend line or annotate() for richer label control would demonstrate
-    deeper library mastery'
+  - Event label text (geom_text size=3.5–4 mm) is on the smaller side — short labels
+    like 'Div $0.50', 'Q1 Miss', 'Partnership' are legible at full resolution but
+    borderline when scaled to mobile width (~400 px); increasing to size=4.5–5 would
+    help
+  - 'Flag crowding in the Feb–May 2024 region: the Earnings (Q4 Beat), Dividend (Div
+    $0.50), and News (New Product) flags all land within two months of each other,
+    and the alternating above/below offsets create some visual density; additional
+    horizontal nudging or label angle adjustment would reduce perceived clutter'
+  - Some event label text overlaps with the colored connector segments directly below/above
+    the flag markers — particularly the 'Div $0.50' and '2:1 Split' labels which sit
+    very close to their connector lines
+  - 'Design Excellence: no top/right spine removal beyond theme_minimal defaults —
+    an explicit axis_ticks_major / panel_border=element_blank() pass would give a
+    cleaner L-frame look'
+  - 'LM-02: no use of plotnine-distinctive techniques like facet_wrap for a split-period
+    comparison or stat_smooth with explicit span control — the implementation is correct
+    but conventional'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "stock-event-flags · python · plotnine · anyplot.ai" bold dark text, clearly readable. Axis labels "Date" (x) and "Stock Price ($)" (y) in dark INK color, both readable. Tick labels in INK_SOFT (#4A4A44), rotated 45° on x-axis, all readable. Legend "Event Type" with 4 entries, legible. Grid lines subtle (alpha=0.15).
-      Data: Stock price line in dark gray INK_SOFT. Event flags: Earnings (green #009E73 squares), Dividend (lavender #C475FD diamonds), News (blue #4467A3 triangles), Split (ochre #BD8233 circle). Connector segments and dashed verticals visible.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "stock-event-flags · python · plotnine · anyplot.ai" in bold dark ink — fully readable. X-axis label "Date" and Y-axis label "Stock Price ($)" in dark ink at 10pt — readable. Tick labels in INK_SOFT gray at 8pt — readable on the warm background. Month ticks rotated 45° without collision.
+      Data: Stock price line in INK_SOFT gray traces ~$150 pre-split, drops sharply at the 2:1 split (May 2024) to ~$65, then stabilizes. LOWESS trend in #009E73 brand green with subtle fill shows the overall downward trajectory. Eight event flags annotated: Earnings (green squares, #009E73), Dividends (lavender diamonds, #C475FD), News (blue triangles, #4467A3), Split (ochre circle, #BD8233) — all distinct. Colored connector segments link each flag marker to the corresponding price level. Vertical dashed gray lines mark event dates. Legend titled "Event Type" at right with 4 entries.
+      Legibility verdict: PASS — all text and labels readable, though event label text at size=3.5–4mm is small in the dense Feb–May region.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title and axis labels in light INK (#F0EFE8), clearly readable. Tick labels in INK_SOFT (#B8B7B0, light gray), all readable. Legend text light-colored and legible. Grid lines subtle. No dark-on-dark failures detected.
-      Data: Price line in light gray (INK_SOFT #B8B7B0). Event flag colors are IDENTICAL to light render: Earnings #009E73, Dividend #C475FD, News #4467A3, Split #BD8233 — only chrome flips.
-      Legibility verdict: PASS — all text clearly readable against dark background.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 ink — clearly readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark token) — readable, sufficient contrast. Legend background elevated to #242420 with INK_SOFT border. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — Earnings green, Dividend lavender, News blue, Split ochre — chrome-only flip confirmed. Stock price line rendered in lighter gray appropriate for dark bg. LOWESS trend in #009E73 remains clearly visible.
+      Legibility verdict: PASS — theme adaptation is correct throughout both renders.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
-          geom_text 3mm). Well-proportioned in both themes. Event labels at size=3
-          borderline small for mobile.
+        comment: Title/axis/tick labels readable in both themes; event label text
+          (geom_text 3.5-4mm) is legible at full res but borderline at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor visual crowding near Aug-Sep 2024 where two close events have
-          crossing connector lines, but no text-on-text overlap.
+        comment: Alternating flag placement works well overall but Feb-May region
+          is moderately crowded; some label text touches connector segments
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Price line, markers (distinct shapes), connectors, and dashed verticals
-          all visible. Event labels at size=3 borderline for thumbnail.
+        comment: Markers well-sized for sparse data (8 events); distinct shapes and
+          colors; filled markers with stroke are clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape+color encoding; anyplot palette is CVD-safe.
+        comment: Anyplot palette with redundant shape encoding; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct; balanced margins; legend well-positioned
-          to the right.
+        comment: 3200x1800 canvas confirmed (gate passed); landscape fits the time-series
+          well; some vertical compression given multiple flag levels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stock Price ($) has units; Date is descriptive; title in correct
-          format.
+        comment: Title matches required format; Y-axis 'Stock Price ($)' has units;
+          X-axis 'Date' is appropriate
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Earnings=#009E73 (first, brand green), Dividend=#C475FD, News=#4467A3,
-          Split=#BD8233. Background #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
+        comment: 'Earnings=first series=#009E73, canonical palette order, correct
+          backgrounds #FAF8F1/#1A1A17, identical data colors in both themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured with anyplot palette and distinct shapes. Professional
-          but not publication-ready; all event types have equal visual weight with
-          no hierarchy.
+        passed: true
+        comment: Custom palette, shape+size hierarchy, LOWESS trend, layered composition,
+          font weight hierarchy — clearly above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal base, major grid alpha=0.15, no minor grid, styled
-          legend background, rotated x-tick labels. Good refinement above defaults.
+        comment: theme_minimal base, subtle grid (alpha=0.15), dashed reference lines
+          at low alpha; could be refined further with explicit spine removal
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Connector-line + flag system creates visual linkage between events
-          and price. Color+shape redundant encoding guides viewer. No emphasis on
-          most market-moving event type.
+        comment: Clear visual hierarchy (price+trend+events), earnings events emphasized,
+          connector lines tie events to price levels, LOWESS reveals trend narrative
     spec_compliance:
       score: 15
       max: 15
@@ -141,31 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stock line chart with flag-style event markers; correct chart type
-          fully implemented.
+        comment: Stock price line chart with flag-style event markers — correct chart
+          type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Flags above/below price with alternating heights, connector lines,
-          dashed vertical date lines, event labels, 4 event type categories all present.
+        comment: Distinct icons/colors per event type, vertical dashed reference lines,
+          connector segments, event labels on flags — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, Stock Price ($) on y-axis, events correctly mapped
-          to nearest trading day.
+        comment: Date on X, price on Y, all 8 events visible, split price adjustment
+          implemented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'stock-event-flags · python · plotnine · anyplot.ai';
-          legend shows all 4 event types with correct symbols.
+        comment: Title 'stock-event-flags · python · plotnine · anyplot.ai' correct;
+          legend 'Event Type' with 4 entries
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -173,22 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 event types, multiple occurrences (3 earnings, 2 dividends,
-          2 news, 1 split), flags both above and below price.
+        comment: All 4 event types represented; price line + trend + annotations;
+          alternating flag placement; size hierarchy
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible tech stock in 2024; quarterly earnings with beat/miss labels;
-          dividend amounts; 2:1 split; product/partnership news.
+        comment: Realistic tech stock ~$150, quarterly earnings beats/misses, dividends
+          at $0.50/$0.55, 2:1 split with price adjustment, news events — neutral and
+          plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Starting price ~$150 with realistic daily volatility (~1.8%). Minor:
-          after 2:1 Split in May 2024, price does not halve as it would in reality.'
+        comment: 180 trading days, 8 events, realistic price range $60-155 with split
     code_quality:
       score: 10
       max: 10
@@ -198,53 +206,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save; no functions or classes.
+        comment: Flat linear structure, no classes or functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; flag_offsets loop is the simplest approach; no
-          over-engineering.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dimensions; no deprecated
-          APIs.
+        comment: Saves as plot-{THEME}.png at correct dimensions
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Exemplary plotnine grammar: ggplot() + layered geoms + scale_* +
-          labs() + theme(). Correct use of scale_x_datetime with date_labels/date_breaks.'
+        comment: Proper aes() mappings, scale_*_manual for multi-encoding, guides()
+          to hide size legend, theme() for complete customization
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Layered grammar composition (5 geom types) is the plotnine signature
-          used well. scale_shape_manual with string shape codes is plotnine-specific.
-          Could push further with stat_smooth or annotate().
-  verdict: REJECTED
+        comment: Effective use of geom_segment+geom_vline+geom_smooth combination;
+          no use of more distinctive plotnine features like faceting or stat layers
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -252,6 +257,7 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
