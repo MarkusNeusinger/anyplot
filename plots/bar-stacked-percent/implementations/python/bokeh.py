@@ -33,7 +33,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Market share of smartphone brands over quarters
 categories = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025"]
@@ -85,7 +85,7 @@ for i, comp in enumerate(components):
         bottom="bottom",
         source=source,
         width=0.7,
-        color=OKABE_ITO[i],
+        color=IMPRINT[i],
         legend_label=comp,
         line_color=PAGE_BG,
         line_width=2,

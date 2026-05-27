@@ -42,8 +42,8 @@ TILE_URL = (
     else "https://a.basemaps.cartocdn.com/dark_all/{Z}/{X}/{Y}.png"
 )
 
-# anyplot palette — canonical order
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+# anyplot palette — canonical imprint slot order (green, lavender, blue, ochre)
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — coffee shop chain locations across NYC neighborhoods
 np.random.seed(42)
@@ -63,7 +63,7 @@ neighborhoods = [
 
 categories = ["Coffee", "Express", "Roastery", "Reserve"]
 category_weights = [0.5, 0.3, 0.15, 0.05]
-category_colors = dict(zip(categories, ANYPLOT_PALETTE, strict=False))
+category_colors = dict(zip(categories, IMPRINT, strict=False))
 
 all_lats, all_lons, all_categories = [], [], []
 
@@ -131,7 +131,7 @@ p.add_tile(WMTSTileSource(url=TILE_URL, attribution="© OpenStreetMap contributo
 # Faint individual store markers
 individual_source = ColumnDataSource(data={"x": mercator_x, "y": mercator_y, "category": store_categories})
 p.scatter(
-    x="x", y="y", source=individual_source, size=8, fill_color=ANYPLOT_PALETTE[0], fill_alpha=0.20, line_color=None
+    x="x", y="y", source=individual_source, size=8, fill_color=IMPRINT[0], fill_alpha=0.20, line_color=None
 )
 
 # Per-category cluster renderers for legend (all 4 categories always present)

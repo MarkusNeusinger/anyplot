@@ -36,9 +36,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # anyplot palette — assigned across the three metric series
 C_PRICE = "#009E73"  # green  (position 1)
-C_VOLUME = "#9418DB"  # purple (position 2)
-C_RSI = "#16B8F3"  # sky blue (position 4)
-C_OVERBOUGHT = "#B71D27"  # red — semantic: danger / sell zone
+C_VOLUME = "#C475FD"  # purple (position 2)
+C_RSI = "#4467A3"  # sky blue (position 4)
+C_OVERBOUGHT = "#AE3030"  # red — semantic: danger / sell zone
 
 # Data — stock data over 200 trading days
 np.random.seed(42)

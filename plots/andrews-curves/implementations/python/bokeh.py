@@ -25,7 +25,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 iris = load_iris()
@@ -98,7 +98,7 @@ for species_idx in range(3):
             data={"x": t_values, "y": curve_values, "species": [species_names[species_idx]] * len(t_values)}
         )
 
-        line = p.line(x="x", y="y", source=source, line_color=OKABE_ITO[species_idx], line_alpha=0.4, line_width=3)
+        line = p.line(x="x", y="y", source=source, line_color=IMPRINT[species_idx], line_alpha=0.4, line_width=3)
 
         if first_line is None:
             first_line = line

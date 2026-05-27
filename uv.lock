@@ -271,6 +271,7 @@ all = [
     { name = "scipy" },
     { name = "seaborn" },
     { name = "selenium" },
+    { name = "squarify" },
     { name = "statsmodels", version = "0.14.4", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'emscripten'" },
     { name = "statsmodels", version = "0.14.6", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten'" },
     { name = "vl-convert-python" },
@@ -384,6 +385,7 @@ plotting = [
     { name = "scipy" },
     { name = "seaborn" },
     { name = "selenium" },
+    { name = "squarify" },
     { name = "statsmodels", version = "0.14.4", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'emscripten'" },
     { name = "statsmodels", version = "0.14.6", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten'" },
     { name = "vl-convert-python" },
@@ -499,6 +501,7 @@ requires-dist = [
     { name = "selenium", marker = "extra == 'lib-highcharts'", specifier = ">=4.44.0" },
     { name = "selenium", marker = "extra == 'plotting'", specifier = ">=4.44.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.50" },
+    { name = "squarify", marker = "extra == 'plotting'", specifier = ">=0.4.0" },
     { name = "statsmodels", specifier = ">=0.14.0" },
     { name = "statsmodels", marker = "extra == 'lib-altair'", specifier = ">=0.14.0" },
     { name = "statsmodels", marker = "extra == 'lib-bokeh'", specifier = ">=0.14.0" },
@@ -3593,6 +3596,15 @@ wheels = [
 [package.optional-dependencies]
 asyncio = [
     { name = "greenlet" },
+]
+
+[[package]]
+name = "squarify"
+version = "0.4.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/01/1753243870dff9fa786c9712fdc8dffb56f356c46c77d7468cb12f6d8398/squarify-0.4.4.tar.gz", hash = "sha256:b8a110c8dc5f1cd1402ca12d79764a081e90bfc445346cfa166df929753ecb46", size = 5514, upload-time = "2024-07-19T18:57:41.418Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/3c/eedbe9fb07cc20fd9a8423da14b03bc270d0570b3ba9174a4497156a2152/squarify-0.4.4-py3-none-any.whl", hash = "sha256:d7597724e29d48aa14fd2f551060d6b09e1f0a67e4cd3ea329fe03b4c9a56f11", size = 4082, upload-time = "2024-07-19T18:57:40.338Z" },
 ]
 
 [[package]]

@@ -35,7 +35,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is ALWAYS #009E73 (brand)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris dataset
 iris = load_iris()
@@ -103,7 +103,7 @@ p.ygrid.grid_line_alpha = 0.10
 for i, name in enumerate(target_names):
     mask = y == i
     source = ColumnDataSource(data={"x": scores[mask, 0], "y": scores[mask, 1]})
-    p.scatter(x="x", y="y", source=source, size=20, alpha=0.7, color=OKABE_ITO[i], legend_label=name)
+    p.scatter(x="x", y="y", source=source, size=20, alpha=0.7, color=IMPRINT[i], legend_label=name)
 
 # Style legend
 if p.legend:

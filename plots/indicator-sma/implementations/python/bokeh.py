@@ -26,9 +26,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4)
 COLOR_CLOSE = "#009E73"  # brand green — close price (first series)
-COLOR_SMA20 = "#D55E00"  # vermillion
-COLOR_SMA50 = "#0072B2"  # blue
-COLOR_SMA200 = "#CC79A7"  # reddish purple
+COLOR_SMA20 = "#C475FD"  # vermillion
+COLOR_SMA50 = "#4467A3"  # blue
+COLOR_SMA200 = "#BD8233"  # reddish purple
 
 # Data — engineered to produce visible golden cross / death cross signals
 np.random.seed(42)

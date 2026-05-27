@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito colors for clusters
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - simulating silhouette analysis of customer segmentation (3 clusters)
 # Realistic scenario: clustering customers by purchase behavior
@@ -79,7 +79,7 @@ for i in range(n_clusters):
         bar_data["y"].append(y_lower + j + 0.5)  # Y position
         bar_data["width"].append(abs(val))  # Width = silhouette value
         bar_data["height"].append(0.85)  # Slightly less than 1 for gap
-        bar_data["color"].append(OKABE_ITO[i])
+        bar_data["color"].append(IMPRINT[i])
 
     y_lower = y_upper + 15  # Gap between clusters
 
@@ -148,7 +148,7 @@ for center_y, cluster_avg, size, cluster_idx in cluster_info:
         y=center_y,
         text=f"Cluster {cluster_idx}",
         text_font_size="18pt",
-        text_color=OKABE_ITO[cluster_idx],
+        text_color=IMPRINT[cluster_idx],
         text_font_style="bold",
         text_align="left",
         text_baseline="middle",
@@ -161,7 +161,7 @@ for center_y, cluster_avg, size, cluster_idx in cluster_info:
         y=center_y,
         text=f"n={size}, avg={cluster_avg:.2f}",
         text_font_size="16pt",
-        text_color=OKABE_ITO[cluster_idx],
+        text_color=IMPRINT[cluster_idx],
         text_font_style="normal",
         text_align="left",
         text_baseline="middle",
