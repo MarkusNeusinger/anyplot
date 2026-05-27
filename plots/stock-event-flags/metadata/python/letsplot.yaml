@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:17:24Z'
-updated: '2026-05-27T23:06:23Z'
+updated: '2026-05-27T23:19:08Z'
 generated_by: claude-sonnet
 workflow_run: 26543460468
 issue: 3749
@@ -12,45 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Semantic color + shape redundancy (4 event types, 4 distinct shapes, 4 anyplot
-    palette colors) — excellent CVD-safe encoding with redundant signal
-  - Three-tier staggered flag heights reduce overlap while keeping all 9 events visible
-    on the chart
-  - layer_tooltips() with per-layer custom content leverages letsplot interactivity
-    correctly for both the price line and event markers
-  - 'Perfect spec compliance: all required features (flags, connector lines, multi-type
-    distinction, hover tooltips) implemented'
-  - Clean reproducible code with correct KISS structure and theme-adaptive chrome
-    in both light and dark renders
+  - Semantic color assignment for event types using anyplot palette with financial
+    semantics (Dividend→green, Earnings→blue, News→ochre, Split→red)
+  - Redundant encoding with distinct shapes AND colors for each event type — improves
+    CVD accessibility
+  - Three-tier staggered flag heights effectively reduce crowding across the 9 events
+  - Q2 shaded band directly connects the earnings miss event to the price decline
+    period — good storytelling
+  - Interactive tooltips via layer_tooltips for both price line and event markers
+  - Correct canvas size (800×450 with scale=4 = 3200×1800) and dual output (PNG +
+    HTML)
+  - Fully theme-adaptive chrome with correct warm backgrounds and adaptive text/grid
+    colors
   weaknesses:
-  - Q4 Beat and Div $0.25 flags (late-January and mid-February) compute nearly identical
-    flag_y values because both events land at similar prices on tiers 0 and 1 — increase
-    tier spacing multipliers (e.g. [0.18, 0.36, 0.54]) or enforce minimum vertical
-    separation between adjacent-date flags
-  - 2:1 Split flag marker and label are right at the y-axis maximum with minimal top
-    margin — add scale_y_continuous(expand=c(0.08, 0)) or equivalent to provide breathing
-    room above the highest flag
-  - Price line uses INK_SOFT gray and blends too much into the background — increase
-    line size to 1.2–1.5 and consider a low-opacity geom_area fill below the line
-    for visual depth (DE-01)
-  - Add a subtle geom_rect shaded band around the Q2 Miss period to visually connect
-    the earnings event to the subsequent price drop — this turns the chart from a
-    data display into a story (DE-03)
+  - Event label text (geom_text size=4mm) is quite small — the flag labels like Q4
+    Beat, Div $0.25, Analyst Upgrade etc. are hard to read at mobile scale (400px
+    width). Increase to size=5 or 6mm.
+  - The 2:1 Split flag marker in the top-right corner is visually crowded — the label
+    overlaps the plot boundary near the legend. Consider placing it lower or using
+    a smaller offset for the text label.
+  - Minor crowding between Q4 Beat and Div $0.25 labels in January-February area —
+    the leftmost two events share similar x-positions and the stagger does not fully
+    resolve the crowding.
+  - 'Design excellence could be elevated: the price line uses INK_SOFT (neutral gray)
+    which is correct but the chart lacks any additional emphasis on the key Q2 Miss
+    narrative beyond the background band — consider a bolder visual treatment for
+    the miss event.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
-      Chrome: Title "stock-event-flags · python · letsplot · anyplot.ai" in dark ink, clearly readable. X-axis label "Date" and Y-axis label "Stock Price ($)" in dark ink, both visible. Tick labels (Jan 2024, Mar 2024, Jun 2024, Sep 2024) in INK_SOFT gray, readable. Legend "Event Type" with four entries, readable against elevated #FFFDF6 legend background.
-      Data: Stock price line in muted dark gray (INK_SOFT) from Jan–Sep 2024, peaking ~$163 in Feb and troughing ~$121 in Jun. Nine event flags with dashed gray connector lines: Earnings (blue diamond #4467A3), Dividend (teal circle #009E73), News (ochre triangle #BD8233), Split (red square #AE3030). Flag labels in dark ink above each marker. "2:1 Split" label and red square positioned at the top-right, very close to the top of the chart area.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct anyplot surface.
+      Chrome: Title "stock-event-flags · python · letsplot · anyplot.ai" in dark ink at top-left, fully readable. Axis title "Stock Price ($)" on Y-axis and "Date" on X-axis both clearly visible in dark ink. Tick labels in dark gray (INK_SOFT) along both axes readable. Grid lines very subtle light gray, not competing with data.
+      Data: Price line in neutral dark gray with subtle area fill under it. Event flag markers: Dividend events as teal/green circles (#009E73 BRAND), Earnings as blue diamonds (#4467A3), News as ochre triangles (#BD8233), Split as red square (#AE3030). Dashed gray connector lines from each flag to the price level at that date. Q2 shaded band (pink-red tint, very low alpha) covers Jun-Aug 2024 period. Small text labels ("Q4 Beat", "Div $0.25", "Product Launch", etc.) appear above each flag marker. Legend on right side shows "Event Type" with all four categories.
+      Legibility verdict: PASS — all text readable, though flag label text (size=4mm) is on the smaller side. Minor crowding near Jan-Feb area and top-right "2:1 Split" marker near legend boundary.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
-      Chrome: Title, axis labels, tick labels, and legend text all render in light off-white/gray tones (INK #F0EFE8 / INK_SOFT #B8B7B0), clearly readable against the dark background. No dark-on-dark failures observed. Grid lines subtle on dark surface. Legend background elevated to #242420.
-      Data: All event marker colors are identical to the light render — #009E73, #4467A3, #BD8233, #AE3030 are preserved. Price line renders as lighter gray on dark background (INK_SOFT #B8B7B0 in dark theme), contrasting well. Flag labels rendered in light INK color, readable.
-      Legibility verdict: PASS — all text readable against dark background, theme-adaptive chrome correct throughout.
+      Background: Warm near-black consistent with #1A1A17 — not pure black, correct anyplot dark surface.
+      Chrome: Title and axis labels now in light text (#F0EFE8 / #B8B7B0) against dark background — fully readable, no dark-on-dark failures. Grid lines subtly visible as lighter-than-background lines. Legend box uses elevated dark (#242420) with light legend text.
+      Data: Price line now renders in light gray (#B8B7B0) on dark background — clearly visible. Event marker colors are IDENTICAL to light render: green circles (Dividend), blue diamonds (Earnings), ochre triangles (News), red square (Split) — only chrome flipped, data colors unchanged. Q2 shaded band shows as a darker red-tinted region against the near-black background, still distinguishable. Brand green #009E73 clearly visible on dark surface (Dividend markers).
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures identified.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -58,57 +60,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set in theme; both renders clear. Minor:
-          flag labels slightly small in early Jan-Feb cluster; 2:1 Split label has
-          tight headroom at canvas top.'
+        comment: All font sizes explicitly set (axis_title=12, axis_text=10, legend=10,
+          geom_text size=4mm). Result is readable in both themes but flag label text
+          is on the small side for mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Q4 Beat and Div $0.25 flags produce nearly identical flag_y values
-          in the staggered tiers, creating crowding in the early period. All labels
-          readable but the first two flags are uncomfortably close.
+        comment: Minor crowding between Q4 Beat and Div $0.25 in Jan-Feb, and 2:1
+          Split label near legend boundary. No hard overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weight, marker sizes (size=6 for flags, size=2.5 for price anchors),
-          and dashed connector lines all well-adapted. Every element is distinct and
-          visible.
+        comment: Event markers (size=6), connector lines, price line and area fill
+          all clearly visible and well-adapted to density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic color assignment with redundant shape encoding ensures CVD
-          safety across all four event types.
+        comment: 'Redundant encoding: distinct shapes AND colors for each event type
+          — excellent CVD accessibility.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas. Good fill. The 2:1 Split marker sits right
-          at the y-axis maximum with minimal top margin, creating a cramped top-right
-          corner.
+        comment: Good layout overall. Minor crowding near top-right with 2:1 Split
+          marker close to legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Stock Price ($) with units. Correct mandatory title format.
+        comment: Stock Price ($) with units, Date on x-axis. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: Dividend gets #009E73 (income=green),
-          Split gets #AE3030 (major event=red). All colors from anyplot palette. Backgrounds
-          #FAF8F1/#1A1A17. Theme-adaptive chrome correct in both renders.'
+        comment: 'Valid semantic exception for finance: Dividend→BRAND green, Earnings→blue,
+          News→ochre, Split→red — all anyplot palette members. Backgrounds correct
+          (#FAF8F1 / #1A1A17). Data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -118,24 +117,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color+shape encoding, warm anyplot theme,
-          staggered flag heights. Not yet publication-ready — price line is too muted
-          and flag density in the first half reduces clarity.'
+        comment: 'Above configured defaults: semantic color assignment, redundant
+          encoding, area fill, Q2 band. Not yet FiveThirtyEight-level but clearly
+          thoughtful.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() base, subtle grid (size=0.2), minor grid suppressed,
-          elevated legend background, axis line set. Adequate whitespace.
+        comment: theme_minimal base, very subtle major grid (size=0.2), elevated legend
+          background, no minor grid. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: INK_SOFT gray price line recedes behind colored events — good hierarchy.
-          Q4 Beat/Q2 Miss labels hint at narrative. No visual emphasis connects price
-          movements to specific events.
+        comment: Q2 shaded band connects earnings miss to price movement — good focal
+          point. Color hierarchy between event types creates clear visual categorization.
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stock line chart with flag-style event markers, connector lines,
-          and multi-type event annotation.
+        comment: 'Correct: line chart with event flags, connector lines, and highlighted
+          period.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Staggered heights, distinct color+shape per type, vertical dashed
-          connectors, interactive tooltips via layer_tooltips().
+        comment: Flag markers, distinct shapes/colors per type, dashed connectors
+          to price level, event labels, hover tooltips, background region for extended
+          event all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x-axis, closing price on y-axis, events matched to nearest
-          trading day.
+        comment: Date on X, price on Y, events matched to nearest trading day.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title stock-event-flags · python · letsplot · anyplot.ai correct.
-          Legend Event Type with correct labels.
+        comment: 'Title: ''stock-event-flags · python · letsplot · anyplot.ai'' —
+          correct format. Legend: ''Event Type'' with all four categories labeled
+          correctly.'
     data_quality:
       score: 15
       max: 15
@@ -177,22 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four event types; positive (Q4 Beat) and negative (Q2 Miss) earnings;
-          quarterly dividends; corporate split; 9 events over 180 days.
+        comment: 4 event types shown, 9 events over 180 days, mix of positive (Q4
+          Beat, Analyst Upgrade) and negative (Q2 Miss) events, stock split included.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech company 2024; realistic quarterly earnings, dividends ($0.25/$0.28),
-          analyst upgrade, product launch, stock split.
+        comment: Tech company stock in 2024, quarterly earnings, dividends $0.25-0.28,
+          product launch, analyst upgrade, 2:1 split — all realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $120-$165 range; $0.25-$0.28 quarterly dividends; 2:1 split — all
-          plausible for a mid-cap tech stock.
+        comment: Price range $120-175 realistic for a tech stock. Dividend amounts
+          and 2:1 split are standard corporate actions. Random walk with seed=42.
     code_quality:
       score: 10
       max: 10
@@ -202,8 +201,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens → data → events → matching → heights → plot layers
-          → save.'
+        comment: Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,49 +213,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; semantic dicts for color/shape maps are clear;
-          no over-engineering.
+        comment: Clean Pythonic code, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics layering; correct scale overrides; theme_minimal()
-          + theme() override pattern.
+        comment: Multiple geom layers with ggplot grammar, scale_color_manual + scale_shape_manual,
+          layer_tooltips, theme composition. Strong idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with multi-line custom content and HTML export
-          — both distinctive to letsplot. Could go further with geom_band, position_nudge,
-          or as_discrete().
-  verdict: REJECTED
+        comment: layer_tooltips with custom .title() and .line() formatting for both
+          price line and event flags — a distinctive letsplot feature. HTML export
+          for interactive exploration.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
-  - publication-ready
+  - alpha-blending
