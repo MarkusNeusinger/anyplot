@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-27
@@ -147,20 +147,29 @@ df["y_pix"] = (df["tile_y"] - ty_min) * tile_disp_h
 
 df = df[(df["x_pix"] >= 0) & (df["x_pix"] <= chart_width) & (df["y_pix"] >= 0) & (df["y_pix"] <= chart_height)]
 
+# Tile provider: CartoDB Positron (light, muted) or CartoDB Dark Matter (dark)
+# Demonstrates multiple tile provider support per spec; muted basemap lets anyplot colors pop
+if THEME == "dark":
+    tile_base_url = "https://basemaps.cartocdn.com/dark_all"
+    tile_provider = "CartoDB Dark Matter"
+else:
+    tile_base_url = "https://basemaps.cartocdn.com/light_all"
+    tile_provider = "CartoDB Positron"
+
 # Build tile grid for mark_image
 tiles = []
 for tx in range(tx_min, tx_max + 1):
     for ty in range(ty_min, ty_max + 1):
         tiles.append(
             {
-                "url": f"https://tile.openstreetmap.org/{zoom}/{tx}/{ty}.png",
+                "url": f"{tile_base_url}/{zoom}/{tx}/{ty}.png",
                 "x": (tx - tx_min + 0.5) * tile_disp_w,
                 "y": (ty - ty_min + 0.5) * tile_disp_h,
             }
         )
 tiles_df = pd.DataFrame(tiles)
 
-# Layer 1: OpenStreetMap tile background
+# Layer 1: CartoDB tile background (Positron in light, Dark Matter in dark)
 tile_layer = (
     alt.Chart(tiles_df)
     .mark_image(width=tile_disp_w, height=tile_disp_h)
@@ -213,22 +222,22 @@ labels_layer = (
     alt.Chart(labels_df)
     .mark_text(align="left", dx=14, dy=-10, fontSize=13, fontWeight="bold", color=INK)
     .encode(
-        x=alt.X("x_pix:Q", scale=alt.Scale(domain=[0, chart_width], nice=False)),
-        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False)),
+        x=alt.X("x_pix:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
+        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
         text="name:N",
     )
 )
 
-# Layer 4: OSM attribution (required by license)
+# Layer 4: tile provider attribution (required by CartoDB and OSM license)
 attribution_df = pd.DataFrame(
-    {"text": ["© OpenStreetMap contributors"], "x": [chart_width - 5], "y": [chart_height - 5]}
+    {"text": [f"© {tile_provider} | © OpenStreetMap contributors"], "x": [chart_width - 5], "y": [chart_height - 5]}
 )
 attribution_layer = (
     alt.Chart(attribution_df)
     .mark_text(align="right", baseline="bottom", fontSize=10, color=INK_MUTED)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, chart_width], nice=False)),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False)),
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
         text="text:N",
     )
 )
