@@ -76,7 +76,7 @@ fig.add_trace(
         line={"color": OKABE_VERMILLION, "width": 4},
         marker={"size": 10, "color": OKABE_VERMILLION},
         fill="tozeroy",
-        fillcolor="rgba(213, 94, 0, 0.2)",
+        fillcolor="rgba(196, 117, 253, 0.2)",
     )
 )
 
@@ -89,7 +89,7 @@ fig.add_trace(
         line={"color": OKABE_BLUE, "width": 4, "dash": "dash"},
         marker={"size": 10, "color": OKABE_BLUE},
         fill="tozeroy",
-        fillcolor="rgba(0, 114, 178, 0.2)",
+        fillcolor="rgba(68, 103, 163, 0.2)",
     )
 )
 

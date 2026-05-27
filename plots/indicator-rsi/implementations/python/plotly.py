@@ -59,7 +59,7 @@ fig.add_trace(
         fill="tonexty",
         mode="lines",
         line={"width": 0},
-        fillcolor="rgba(213, 94, 0, 0.15)",
+        fillcolor="rgba(196, 117, 253, 0.15)",
         name="Overbought Zone (70-100)",
     )
 )

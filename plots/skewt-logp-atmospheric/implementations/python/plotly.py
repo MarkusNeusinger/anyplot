@@ -23,8 +23,8 @@ C_DEWPT = "#C475FD"  # Okabe-Ito pos 2 — dewpoint profile
 
 # Reference line colors: subtle, theme-adaptive
 C_ISO = "rgba(80,80,80,0.22)" if THEME == "light" else "rgba(180,180,180,0.28)"
-C_DRY = "rgba(213,94,0,0.22)" if THEME == "light" else "rgba(213,94,0,0.38)"
-C_MOIST = "rgba(0,114,178,0.22)" if THEME == "light" else "rgba(0,114,178,0.38)"
+C_DRY = "rgba(196, 117, 253,0.22)" if THEME == "light" else "rgba(196, 117, 253,0.38)"
+C_MOIST = "rgba(68, 103, 163,0.22)" if THEME == "light" else "rgba(68, 103, 163,0.38)"
 C_MIX = "rgba(0,158,115,0.22)" if THEME == "light" else "rgba(0,158,115,0.38)"
 
 # Skew-T transform: °C shift per log10 decade of pressure from 1000 hPa

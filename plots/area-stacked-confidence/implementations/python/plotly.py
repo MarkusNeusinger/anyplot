@@ -93,7 +93,7 @@ fig.add_trace(
         x=quarters + quarters[::-1],
         y=list(wind_upper_stack) + list(wind_lower_stack[::-1]),
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.25)",
+        fillcolor="rgba(196, 117, 253, 0.25)",
         line=dict(color="rgba(255,255,255,0)"),
         showlegend=False,
         name="Wind Band",
@@ -110,7 +110,7 @@ fig.add_trace(
         line=dict(color=WIND_COLOR, width=3),
         name="Wind",
         fill="tonexty",
-        fillcolor="rgba(213, 94, 0, 0.6)",
+        fillcolor="rgba(196, 117, 253, 0.6)",
     )
 )
 
@@ -120,7 +120,7 @@ fig.add_trace(
         x=quarters + quarters[::-1],
         y=list(solar_upper_stack) + list(solar_lower_stack[::-1]),
         fill="toself",
-        fillcolor="rgba(0, 114, 178, 0.25)",
+        fillcolor="rgba(68, 103, 163, 0.25)",
         line=dict(color="rgba(255,255,255,0)"),
         showlegend=False,
         name="Solar Band",
@@ -137,7 +137,7 @@ fig.add_trace(
         line=dict(color=SOLAR_COLOR, width=3),
         name="Solar",
         fill="tonexty",
-        fillcolor="rgba(0, 114, 178, 0.6)",
+        fillcolor="rgba(68, 103, 163, 0.6)",
     )
 )
 
