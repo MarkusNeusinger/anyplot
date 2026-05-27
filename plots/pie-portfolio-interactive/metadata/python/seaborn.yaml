@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:08:42Z'
-updated: '2026-05-27T17:24:29Z'
+updated: '2026-05-27T17:35:33Z'
 generated_by: claude-sonnet
 workflow_run: 26526502545
 issue: 3754
@@ -12,126 +12,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Semantic color assignments (equity=green, bonds=blue, alternatives=ochre) align
-    with real-world color expectations
-  - Dual-ring donut design solves drill-down requirement in a static format — inner
-    ring = category overview, outer ring = holdings detail
-  - Seaborn palette blending (blend_palette, light_palette, dark_palette) creates
-    gradient shading within categories — a seaborn-distinctive technique
-  - Fully theme-adaptive chrome with no dark-on-dark or light-on-light failures in
-    either render
-  - Realistic neutral portfolio data with correct proportionality ($1M portfolio,
-    weights summing to 100%)
+  - Dual-ring donut effectively communicates both asset-class aggregates and individual
+    holdings simultaneously without requiring interactivity
+  - Semantic color assignment (green=equities/growth, blue=fixed income/stability,
+    ochre=alternatives) is clearly justified and uses anyplot palette members correctly
+  - sns.blend_palette() / sns.light_palette() / sns.dark_palette() gradient approach
+    for within-category differentiation is a distinctive seaborn usage
+  - Theme adaptation is correct and comprehensive across all chrome elements in both
+    renders — no dark-on-dark or light-on-light failures
+  - Realistic 9-holding portfolio data with percentage + dollar values provides excellent
+    real-world context
+  - Category-colored borders on annotation callout boxes create a sophisticated visual
+    link between annotation and wedge
   weaknesses:
-  - Annotation and legend text at 6pt is marginally small; raise annotation fontsize
-    to 7-8pt and legend fontsize to 7-8pt to improve mobile readability
-  - Gradient shading within categories creates minimal visual differentiation on small
-    wedges (Gold 4%, Municipal Bonds 5%, REITs 6%) — consider wider blend range or
-    stronger contrast between min/max shades
-  - Inner-ring color generation code (lines 79-88) uses an over-complex index lookup;
-    simplify with enumerate or a position counter variable
-  - Small amount of wasted space below the bottom legend — reduce subplots_adjust(bottom)
-    or tighten ylim to improve canvas utilization
+  - 'Legend text truncated in rightmost column: ''Fixed Income: 35% ($350K, 3 hol''
+    — ''dings)'' is cut off. With ncol=3 and long label strings the column width is
+    insufficient. Fix: use ncol=1 with loc=''lower right'' outside the donut, or shorten
+    the label format, or switch to ncol=1 stacked layout at bbox_to_anchor=(1.02,
+    0.5).'
+  - 'Four annotation callout boxes are tightly stacked in the upper-right quadrant
+    with minimal spacing. Distribute by quadrant: top-left for largest Equities holding,
+    top-right for International Equity, right for Fixed Income entries.'
+  - Annotation and legend text at fontsize=7 is functional but at the lower edge of
+    readability at 2400x2400. Bump to fontsize=8 for both.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "pie-portfolio-interactive · python · seaborn · anyplot.ai" in dark ink at top — fully readable. Wedge percentage labels (28.0%, 15.0%, 7.0%, 12.0%, 18.0%, 6.0%) in dark INK on colored wedges — readable. Inner ring labels (50%, 35%, 15%) in white on colored wedges — readable. Annotation callout boxes with dark text on #FFFDF6 elevated bg — readable at full res (6pt is small). Bottom legend in INK_SOFT dark gray — readable.
-      Data: Outer ring shows 9 holdings in gradient shades per category. Equities = brand green (#009E73) shades. Fixed Income = blue (#4467A3) shades. Alternatives = ochre (#BD8233) shades. First/dominant series is brand green (Equities 50%). Inner ring shows solid category base colors (green, blue, ochre).
-      Legibility verdict: PASS — all text readable in light theme; annotation/legend text at 6pt is small but visible at full 2400px resolution.
+      Chrome: Title "pie-portfolio-interactive · python · seaborn · anyplot.ai" readable in dark #1A1A17 ink. No axis labels (appropriate for pie). Annotation callout text in INK (#1A1A17) on ELEVATED_BG (#FFFDF6) boxes. Legend text in INK_SOFT (#4A4A44) on elevated background.
+      Data: Outer ring uses gradient palette variants of #009E73 (Equities, 3 shades), #4467A3 (Fixed Income, 3 shades), #BD8233 (Alternatives, 3 shades). Inner ring uses solid base colors. First series (Equities) anchored to #009E73. Legend truncation: "Fixed Income: 35% ($350K, 3 hol" — "dings)" cut off in ncol=3 layout.
+      Legibility verdict: PASS (minor: legend text truncated in rightmost column, not canvas clipping)
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title in light cream (#F0EFE8) against dark background — fully readable. Wedge percentage labels flip to light INK color — readable. Annotation boxes use dark elevated bg (#242420) with light text — readable. Legend text in light INK_SOFT (#B8B7B0) on dark elevated bg — readable. No dark-on-dark failures observed.
-      Data: All data colors (green equities gradient, blue fixed income gradient, ochre alternatives gradient) are identical to the light render — only chrome flipped.
-      Legibility verdict: PASS — all text readable in dark theme; chrome correctly theme-adaptive throughout.
+      Chrome: Title switches to light #F0EFE8 ink. Annotation callout boxes use ELEVATED_BG (#242420) with light INK text. Legend text uses INK_SOFT (#B8B7B0). Inner ring labels remain white (#FFFFFF hardcoded) — appropriate on solid saturated base colors. No dark-on-dark failures detected.
+      Data: All data colors identical to light render (#009E73 green, #4467A3 blue, #BD8233 ochre base hues). Only chrome flips between themes.
+      Legibility verdict: PASS (same legend truncation as light render, not a readability failure)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; main chart text (8-10pt) well-proportioned;
-          annotation/legend text at 6pt is small but legible at full resolution; marginal
-          at mobile widths
+        comment: All sizes explicitly set (title=12pt, annotations=7pt, legend=7pt,
+          inner=9pt, outer=8pt, center=10pt). Annotation and legend text at 7pt is
+          functional but small for 2400x2400.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean; slight crowding between inner-ring 35% label and
-          Corporate Bonds annotation line in right quadrant
+        comment: Four annotation callout boxes stacked tightly in upper-right quadrant.
+          No actual overlap but very compressed vertical spacing. Legend text truncation
+          also contributes.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wedges clearly visible; gradient shading within categories is subtle
-          on smaller slices (Gold 4%, Municipal Bonds 5%, REITs 6%)
+        comment: All wedges, labels, callout boxes, and center text clearly visible
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette with semantic assignments; white inner-ring labels
-          on colored backgrounds; CVD-safe
+        comment: Semantic palette is CVD-safe. White text on solid category colors
+          has adequate contrast. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square canvas used correctly; donut fills space well; some wasted
-          vertical space below bottom legend
+        comment: 2400x2400 square correct for donut chart. Chart fills canvas well.
+          Legend text truncation ('3 hol' instead of '3 holdings') is a real layout
+          defect.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; center label provides portfolio total; no axis
-          labels needed for pie/donut
+        comment: No axis labels needed for pie chart. Title is correct format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Equities #009E73 (brand green, first/dominant), Fixed Income #4467A3
-          (blue), Alternatives #BD8233 (ochre); correct semantic mapping; backgrounds
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: 'Equities=#009E73, Fixed Income=#4467A3, Alternatives=#BD8233 — all
+          anyplot palette members with clear semantic justification. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome tokens correct in both themes.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: semantic color assignments matching real-world expectations;
-          seaborn palette blending creates gradient shading within categories; dual-ring
-          structure is purposeful'
+        comment: Dual-ring donut with per-category gradient palettes using sns.light_palette/dark_palette/blend_palette
+          is above defaults. Category-colored annotation borders are refined. Falls
+          short of 'strong design' (6) — gradient adds complexity without strongly
+          improving readability.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Wedge separators use PAGE_BG for clean breaks; no spines/grid appropriate
-          for pie; legend styled; good refinement
+        comment: Clean pie styling with PAGE_BG edge colors between wedges, no gridlines,
+          fancybox legend frame. Noticeably above minimal defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Dual-ring creates visual hierarchy: inner ring = category overview
-          (50/35/15), outer ring = holdings detail; four largest annotated; center
-          value is focal point'
+        comment: Two-ring structure communicates both granularity levels simultaneously.
+          Top-4 callouts highlight dominant holdings. Center focal point delivers
+          portfolio total. Good visual hierarchy.
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -139,29 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Dual-ring donut chart correctly implements spec pie/donut requirement
+        comment: Dual-ring donut chart is the correct visualization per spec.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Static features fully implemented; interactive features (hover, drill-down,
-          return-to-overview) not achievable in seaborn; dual-ring is best static
-          equivalent
+        passed: false
+        comment: Static features well implemented (percentage + absolute values, color-coding,
+          legend, dual-ring hierarchy). Primary spec requirements (interactive hover
+          tooltips, click-to-drill-down, return navigation) are entirely absent —
+          fundamentally not achievable in seaborn.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Weights sum correctly to 100%; inner ring totals match grouped outer
-          ring values
+        comment: Weights correctly mapped to arc sizes, sum to 100%, categories correctly
+          grouped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend correctly summarizes asset
-          classes with weights, values, holding counts
+        comment: 'Title: ''pie-portfolio-interactive · python · seaborn · anyplot.ai''.
+          Legend shows asset class, percentage, dollar value, and holding count.'
     data_quality:
       score: 15
       max: 15
@@ -171,25 +177,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multi-level hierarchy, 3 asset classes, 9 individual
-          holdings, both percentage and dollar value representation'
+        comment: Shows 9 holdings across 3 categories, both percentage weights and
+          dollar values, category aggregates, and per-category holding counts.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic diversified investment portfolio with plausible allocation
-          mix (50% equities, 35% fixed income, 15% alternatives); neutral business
-          domain
+        comment: Real-world investment portfolio with realistic asset names. Neutral
+          business domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights sum exactly to 100%; dollar values proportional to weights
-          ($1M portfolio); sensible diversified allocation
+        comment: Weights (5-28%) realistic. $1M total portfolio with per-holding values
+          ($40K-$280K) plausible. Weights sum exactly to 100%.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,33 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows Imports -> Data -> Plot -> Save; no functions or classes
+        comment: 'Linear flow: imports → theme → data → palette → plot → annotations
+          → legend → title → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (hardcoded data, no random generation)
+        comment: Data is fully deterministic (hardcoded DataFrame, no randomness).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib, numpy, pandas, seaborn) are used
+        comment: 'All five imports used: os, matplotlib.pyplot, numpy, pandas, seaborn.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Generally clean; gradient color generation at lines 79-88 uses convoluted
-          index-within-category lookup that could be simplified with enumerate
+        comment: Clean, Pythonic. Gradient palette generation loop is appropriately
+          complex. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches='tight'; current seaborn
-          API
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', seaborn 0.13+
+          API.
     library_mastery:
       score: 6
       max: 10
@@ -233,18 +239,19 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_theme() with rc-dict and seaborn palette functions;
-          main donut uses ax.pie() (matplotlib) since seaborn has no native pie chart
-          — correct within constraint
+        comment: sns.set_theme() with rc= overrides is idiomatic for full theme control.
+          Palette utilities (sns.light_palette, sns.dark_palette, sns.blend_palette)
+          used idiomatically. Core donut uses ax.pie() (matplotlib) since seaborn
+          has no native pie function.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.light_palette(), sns.dark_palette(), and sns.blend_palette()
-          to create per-category gradient shading — a seaborn-distinctive technique
-          not easily replicated in bare matplotlib
-  verdict: REJECTED
+        comment: Per-category gradient generation using sns.light_palette() + sns.dark_palette()
+          + sns.blend_palette() is a distinctive seaborn capability for smooth within-group
+          tonal variation.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
