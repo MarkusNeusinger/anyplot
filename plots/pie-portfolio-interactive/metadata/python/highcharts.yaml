@@ -1,151 +1,186 @@
 library: highcharts
+language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:07:49Z'
-updated: '2026-01-20T23:10:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21190551751
+updated: '2026-05-27T17:33:28Z'
+generated_by: claude-sonnet
+workflow_run: 26527140797
 issue: 3754
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Highcharts drill-down functionality with complete sub-holdings
-    data
-  - Colorblind-safe palette following library guidelines
-  - Proper title format and helpful subtitle guiding user interaction
-  - Clean donut chart with good proportions (50% inner size)
-  - Accessibility module included for screen reader support
-  - Well-structured drill-down data for all four asset classes
-  - Interactive HTML also generated for full interactivity
+  - Perfect anyplot palette compliance with correct theme-adaptive chrome in both
+    renders
+  - Highcharts drilldown feature is genuinely distinctive and fully implemented (nested
+    series, breadcrumbs, accessibility module)
+  - All font sizes explicitly set and well-proportioned
+  - Realistic neutral financial data with named real-world holdings
+  - 'Complete spec coverage: hover tooltips, drill-down navigation, legend, color
+    coding'
+  - Clean deterministic well-structured code with proper canvas normalization
   weaknesses:
-  - Legend is positioned at the far right edge, creating some visual imbalance
-  image_description: The plot displays an interactive donut chart showing portfolio
-    allocation across four asset classes. The chart uses a colorblind-safe palette
-    with blue (#306998) for Equities (55.0%), yellow (#FFD43B) for Fixed Income (25.0%),
-    purple (#9467BD) for Alternatives (12.0%), and cyan (#17BECF) for Cash (8.0%).
-    The donut has a 50% inner radius creating a clean ring visualization. Data labels
-    are positioned outside each slice showing category name and percentage. A vertical
-    legend on the right side lists all four categories with colored markers. The title
-    "pie-portfolio-interactive · highcharts · pyplots.ai" appears at the top with
-    a subtitle "Click slices to view individual holdings" below it. The chart fills
-    a good portion of the canvas with balanced white space.
+  - 'DE-01 (4/8): Aesthetic sophistication is at configured-default level. To improve:
+    add center annotation in donut hole, reduce innerSize to ~40%, explore font-weight
+    hierarchy for data labels emphasising the dominant Equities slice.'
+  - 'DE-02 (4/6): Visual refinement is good but not exceptional. Legend could be more
+    minimal (borderless inline); data label font could be made bolder for the dominant
+    slice.'
+  - 'LM-01 (4/5): Options configured primarily via raw dicts rather than highcharts_core
+    typed option objects — use typed option classes where available for richer validation.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "pie-portfolio-interactive · python · highcharts · anyplot.ai" in dark ink (#1A1A17), bold, ~75% canvas width. Subtitle "Click slices to explore individual holdings" in secondary ink (#4A4A44). Data labels ("Cash: 8.0%", "Alternatives: 12.0%", "Fixed Income: 25.0%", "Equities: 55.0%") in dark ink with connector lines. Legend at bottom with bordered elevated box (#FFFDF6), labels in secondary ink.
+      Data: Equities (55%) in #009E73 brand green, Fixed Income (25%) in #C475FD lavender, Alternatives (12%) in #4467A3 blue, Cash (8%) in #BD8233 ochre — canonical anyplot palette order.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Data labels use INK token (light color for dark theme), all visible. Legend box uses elevated dark background (#242420) with border, label text in light secondary ink (#B8B7B0).
+      Data: Colors identical to light render — Equities #009E73 green, Fixed Income #C475FD lavender, Alternatives #4467A3 blue, Cash #BD8233 ochre. Only chrome flips, data colors unchanged.
+      Legibility verdict: PASS — all text elements clearly readable against near-black background. No dark-on-dark failures detected. Brand green #009E73 remains vivid and identifiable.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and labels are readable, though data labels could be slightly
-          larger for optimal viewing
+        comment: All font sizes explicitly set (title 66px, subtitle 44px, data labels
+          38px, legend 44px). Readable in both themes, no overflow.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: Data labels with connector lines cleanly positioned outside the ring
+          with no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Donut segments are well-sized and clearly visible
+        comment: All four donut segments large and clearly distinguishable in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple, cyan - no red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good chart sizing, legend slightly far from chart on the right edge
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 0
-        passed: true
-        comment: Not applicable for pie/donut charts
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-positioned and readable
+        comment: anyplot palette with four perceptually distinct hues. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills 2400x2400 canvas well. Balanced whitespace, legend anchored
+          at bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted. No axis labels needed for pie/donut chart.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 green, canonical palette order for positions
+          2-4. Correct theme backgrounds and chrome.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default. Uses anyplot palette and donut form
+          with subtitle. Not at FiveThirtyEight-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean presentation with themed legend box and good whitespace. Limited
+          additional refinement beyond chart type defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Dominant green Equities segment creates immediate visual hierarchy.
+          Subtitle guides interaction. Good but not exceptional storytelling.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct donut chart for portfolio visualization
+        comment: Donut chart (innerSize 50%) as primary visualization with drill-down
+          structure.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Weights correctly mapped to slice sizes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Drill-down configured, hover tooltips, legend, color-coding by asset
-          class
-      - id: SC-04
-        name: Data Range
+        comment: Hover tooltips, click-to-drill-down, breadcrumb navigation, color
+          coding, legend, percentages — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, percentages sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Weight correctly mapped to segment size. All four asset classes visible.
+          Weights sum to 100%.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 asset classes
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: pie-portfolio-interactive · highcharts · pyplots.ai'
+        comment: Title 'pie-portfolio-interactive · python · highcharts · anyplot.ai'
+          correct. Legend labels match data.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows main categories and drill-down data, though drill-down not
-          visible in static image
+        comment: Four asset classes with drill-down data covering 7 equities, 4 fixed
+          income, 3 alternatives, 2 cash instruments. Wide weight range (3-55%).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic portfolio allocation scenario with sensible asset classes
+        comment: Real portfolio scenario with named companies (Apple, Microsoft, Amazon)
+          and instruments (US Treasury 10Y, REITs). Neutral financial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Weights are realistic (55% equities, 25% bonds is typical allocation)
+        comment: Allocations (55/25/12/8) realistic for equity-heavy portfolio. Individual
+          holding percentages plausible. Sums to exactly 100%.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -153,50 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart config → export'
+        comment: 'Linear: imports -> theme tokens -> data -> chart config -> series
+          -> JS download -> render -> screenshot -> save.'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed, but data is deterministic (hardcoded) so reproducibility
-          is ensured
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded and deterministic. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib.Path,
+          highcharts_core classes, PIL.Image, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API
+        comment: Clean code, no fake interactive elements. Download and CDP viewport
+          pattern is correct for this library.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current highcharts_core
+          API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts drill-down, accessibility module, breadcrumb
-          navigation, interactive tooltips
+        comment: Correct Chart(container='container') pattern, PieSeries OOP construction.
+          Mixed dict/OOP for options acceptable but not fully idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Highcharts drilldown with nested series is distinctive to this library.
+          Breadcrumb navigation, accessibility module, interactive tooltips all leverage
+          Highcharts-specific capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
+  - drilldown
   patterns: []
   dataprep: []
   styling: []
