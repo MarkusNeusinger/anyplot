@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: line-navigator
 created: '2026-01-20T21:00:14Z'
-updated: '2026-05-27T11:35:32Z'
+updated: '2026-05-27T11:51:00Z'
 generated_by: claude-sonnet
 workflow_run: 26508145992
 issue: 3785
@@ -12,126 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - Fully theme-adaptive chrome with correct PAGE_BG, INK, and INK_SOFT tokens on
-    both light and dark renders
-  - Idiomatic plotnine patchwork composition (p_detail / p_navigator) with proper
-    proportional sizing (navigator ~18% of main chart height as specified)
-  - 'Correct brand green #009E73 for all data elements, identical between light and
-    dark renders'
-  - Well-structured shared_theme with per-plot overrides keeps code DRY while allowing
-    navigator-specific adjustments
-  - 'Appropriate data-density adaptation: line size=1.0 for 4-month detail view, size=0.5
-    + alpha=0.7 for full 1100-point overview'
+  - Clean dual-panel composition using plotnine's patchwork '/' operator — idiomatic
+    and concise
+  - 'Theme-adaptive chrome is fully correct in both renders: correct backgrounds (#FAF8F1
+    light / #1A1A17 dark), all text uses INK/INK_SOFT tokens, no dark-on-dark failures'
+  - Brand green (#009E73) used correctly as the sole data series color, consistent
+    across both themes
+  - Navigator selection highlight (geom_rect + geom_vline + date range annotation)
+    clearly communicates the selected range concept
+  - 'Excellent data quality: 3-year industrial temperature sensor dataset with seasonal
+    cycles, upward trend, and anomaly spikes — all aspects visible in the overview'
+  - 'Perfect code quality: KISS structure, seed set, clean imports, saves plot-{THEME}.png
+    correctly'
+  - Subtle grid in main chart (alpha=0.15), no grid in navigator — good visual hierarchy
+    between panels
   weaknesses:
-  - The `Selected` annotation text in the navigator (size=2.5 mm ≈ 7pt) is quite small
-    and barely readable at scaled-down sizes — increase to size=3.5–4 or add the actual
-    date range as a text string
-  - Temperature values peak above 60°C which is physically unusual for ambient temperature
-    sensor readings — consider framing as industrial sensor data or adjusting the
-    range to 10–35°C for more realistic context
-  - Navigator overall text (axis_text at 7pt, plot_title at 8pt) is slightly undersized
-    for the small panel height — consider 8–9pt for navigator axis_text
-  - Top/right spine removal is delegated to theme_minimal() which is fine, but explicitly
-    setting panel_border=element_blank() would be cleaner and more explicit
+  - Navigator panel appears visually larger (~35-40% of image height) than the spec's
+    required 15-20% of main chart height — manual axis positioning via fig.axes may
+    not be fully respected by plotnine's patchwork engine; consider using matplotlib
+    subplots with height_ratios=[5,1] as the underlying figure layout instead
+  - The 'Overview' title (size=8, INK_SOFT) and date range annotation 'Jun 2022 –
+    Oct 2022' (size=3.5) are quite small in the navigator panel — the annotation especially
+    may be hard to read at mobile widths (~400px); increase annotation size to 4.5-5
+    and 'Overview' title to 10pt
+  - 'Minor: navigator y-axis has no title label — a short label like ''°C'' would
+    clarify the unit in the overview pane'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
-      Chrome: Title "line-navigator · python · plotnine · anyplot.ai" at top in dark ink — fully readable. Y-axis label "Temperature (°C)" in dark ink — readable. X-axis biweekly date tick labels rotated 45° (29 May through 16 Oct) — readable. Navigator panel has "Overview" subtitle and "Date" x-axis label — both readable. "Selected" annotation in navigator selection window is present but small.
-      Data: Main chart shows brand green #009E73 line for the Jun–Oct 2022 selected range. Navigator shows full 1100-point time series in same brand green with alpha=0.7, with a lighter green geom_rect highlight and two solid green vlines marking the selection bounds.
-      Legibility verdict: PASS — all primary text elements are clearly visible against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-navigator · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Temperature (°C)" in dark ink, readable. X-axis tick labels rotated 45° in INK_SOFT, readable. Navigator "Overview" title in INK_SOFT (small but visible). Date range annotation "Jun 2022 – Oct 2022" in INK_SOFT, small but visible.
+      Data: Single brand green (#009E73) line in detail view showing temperature data May–Oct 2022. Navigator shows full 2021–2024 range at reduced alpha (0.7). Selection highlight is a semi-transparent brand green rectangle with vertical boundary lines. Data line clearly visible against warm off-white background.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
-      Chrome: Title in light F0EFE8-range text — fully readable against dark background. Y-axis label, tick labels, and x-axis date labels all render in light INK_SOFT-range text — no dark-on-dark failures observed. Navigator "Overview" and "Date" labels similarly in light text.
-      Data: Data line color (brand green #009E73) is identical to the light render — only chrome tokens (backgrounds, text) flipped to dark variants. Selection highlight retains same green shade, clearly distinguishable against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark text failures; all elements readable against the warm near-black background.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light text (F0EFE8 equivalent), clearly readable against dark background. Axis labels in light text, readable. Tick labels in INK_SOFT light equivalent (#B8B7B0), readable. "Overview" title readable. No dark-on-dark failures detected.
+      Data: Data line color is identical brand green (#009E73) — same as light render. Selection highlight renders as a slightly more opaque green overlay on the dark background (expected with alpha=0.2 on near-black). Grid lines subtle but present in main chart, absent in navigator.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark issues detected
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Main chart text well-sized (title 12pt, axis labels 10pt, ticks
-          8pt). Minor deduction: navigator annotation ''Selected'' at size=2.5mm (~7pt)
-          is quite small; navigator axis_text at 7pt is borderline at scale.'
+        comment: Font sizes explicitly set (12pt title, 10pt axis, 8pt ticks). All
+          text readable in both themes. Navigator annotation (size=3.5) and 'Overview'
+          title (size=8) are small but not illegible. Deducted 2 for these being undersized
+          for mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlapping elements in either render. Rotated x-axis labels in
+          main chart are well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Dense data (1100 pts) handled well: size=0.5 + alpha=0.7 for navigator,
-          size=1.0 for 4-month detail. Minor deduction: navigator line could be slightly
-          more prominent.'
+        comment: Line in detail view (size=1.0) is well-visible. Navigator line (size=0.7,
+          alpha=0.7) is slightly thin for 1100 points but still readable. Deducted
+          1.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series brand green #009E73, CVD-safe, no red-green signal
-          dependency.'
+        comment: Single-series brand green (#009E73) is CVD-safe. Good contrast against
+          both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 'Canvas exactly 3200x1800. Proportions correct: navigator ~18% of
-          main chart height as specified. Gap between panels clean.'
+        comment: Navigator panel appears visually larger (~35-40% of image height)
+          than the spec's required 15-20% of main chart height. Functional but proportions
+          are off from spec. Canvas is exactly 3200x1800.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows exact format. 'Temperature (°C)' y-axis label is descriptive
-          with units. Navigator has 'Overview' subtitle and 'Date' label.
+        comment: 'Main chart: Y-axis ''Temperature (°C)'' with units, X-axis empty
+          (dates are self-explanatory). Navigator: X-axis ''Date'', Y-axis empty (no
+          unit shown).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 used correctly as first (only) series. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Data colors identical between both renders.'
+        comment: 'First (only) series is brand green #009E73. Backgrounds are #FAF8F1
+          (light) and #1A1A17 (dark). Chrome uses correct INK/INK_SOFT tokens in both
+          renders.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above default: theme-adaptive chrome throughout, clean dual-panel
-          layout, shared theme with per-plot overrides adds polish. Not exceptional
-          (no bold typographic hierarchy, no annotations with callout context).'
+        comment: Clean, professional design with brand-correct palette. Well-configured
+          theme_minimal with custom chrome. Not exceptional but above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed in navigator (good), subtle grid in main chart, rotated
-          tick labels handled. theme_minimal() removes top/right spines implicitly.
+        comment: Navigator has no grid (clean), main chart has very subtle grid (alpha=0.15).
+          theme_minimal removes unnecessary spines. Good separation between panels.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Navigator concept clearly communicates context+detail: highlighted
-          selection window with vlines shows the relationship between overview and
-          detail view effectively.'
+        comment: The navigator selection highlight clearly shows which portion of
+          the full time series is displayed in the detail view. Seasonal patterns
+          and anomalies in the full dataset are visible. Good visual narrative.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,32 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with mini navigator correctly implemented as static two-panel
-          layout using plotnine's patchwork composition.
+        comment: 'Correct: line chart with mini navigator overview pane below.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Main detail view, full-extent navigator, selection window highlight,
-          proportional height (18%), consistent styling. Date range labels optional
-          per spec ('Consider') — 'Selected' text present.
+        comment: Main chart with detail view ✓, mini chart with full extent ✓, selection
+          window highlight ✓, date range text ✓, shared styling ✓. Navigator proportion
+          off from spec's 15-20% requirement. Deducted 1.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: date (datetime with pd.date_range), Y: temperature value. 1100
-          data points, 4-month detail selection.'
+        comment: Date on X-axis, temperature values on Y-axis. Correct in both panels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'line-navigator · python · plotnine · anyplot.ai'.
+        comment: Title is exactly 'line-navigator · python · plotnine · anyplot.ai'.
           No legend needed for single series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -172,23 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows seasonal pattern, upward trend, random noise, and anomaly spikes
-          — full feature coverage for the navigator concept.
+        comment: 'Dataset shows all key aspects: 3 years of data (long time series
+          requiring navigation), seasonal cycles, upward trend, anomaly spikes at
+          realistic intervals.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Daily sensor readings framing is realistic and neutral. Minor: temperature
-          values (30–70°C) are unusual for ambient temperature; more plausible as
-          industrial sensor.'
+        comment: Industrial temperature sensor readings — realistic, neutral, non-controversial
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 3-year daily dataset (1100 points) is appropriate scale for demonstrating
-          the navigator pattern.
+        comment: Temperature range ~25-75°C with baseline 50°C is plausible for industrial
+          equipment. Seasonal variation of 20°C and 8°C upward trend are realistic.
     code_quality:
       score: 10
       max: 10
@@ -198,7 +204,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure, no functions or classes, logically organized.
+        comment: Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,20 +216,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used.
+        comment: All imports used. No unnecessary imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Patchwork composition with manual axes positioning is well-commented
-          and necessary. No fake UI elements.
+        comment: Clean, Pythonic code. Patchwork composition with '/' operator is
+          elegant. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400 without bbox_inches='tight'.
+        comment: Saves as plot-{THEME}.png. Current plotnine API used.
     library_mastery:
       score: 7
       max: 10
@@ -233,22 +239,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic ggplot grammar: geoms, scales, labs, theme layering. Uses
-          shared_theme pattern for DRY theme inheritance.'
+        comment: 'Idiomatic plotnine: ggplot() + geom_*() layers, theme_minimal()
+          + theme() composition, scale_x_datetime with date_labels/date_breaks. Patchwork
+          with ''/'' operator is idiomatic.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine's / patchwork operator for panel stacking, scale_x_datetime
-          with date_labels/date_breaks, lambda tick formatters.
+        comment: Uses plotnine's patchwork '/' composition operator (inherited from
+          ggplot2/patchwork) — a distinctive feature for multi-panel layouts. geom_rect
+          for selection highlight is library-appropriate.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
   - annotations
-  - layer-composition
+  - subplots
   patterns:
   - data-generation
   dataprep:
