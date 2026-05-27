@@ -49,7 +49,7 @@ lower_tail = mean_return - 2 * std_return
 upper_tail = mean_return + 2 * std_return
 
 bar_colors = [
-    "#D55E00" if (edges[i] < lower_tail or edges[i + 1] > upper_tail) else "#009E73" for i in range(len(hist))
+    "#C475FD" if (edges[i] < lower_tail or edges[i + 1] > upper_tail) else "#009E73" for i in range(len(hist))
 ]
 
 hist_source = ColumnDataSource(
@@ -81,8 +81,8 @@ p = figure(
     min_border_right=50,
 )
 
-p.add_layout(BoxAnnotation(right=lower_tail, fill_alpha=0.10, fill_color="#D55E00"))
-p.add_layout(BoxAnnotation(left=upper_tail, fill_alpha=0.10, fill_color="#D55E00"))
+p.add_layout(BoxAnnotation(right=lower_tail, fill_alpha=0.10, fill_color="#C475FD"))
+p.add_layout(BoxAnnotation(left=upper_tail, fill_alpha=0.10, fill_color="#C475FD"))
 
 bars = p.quad(
     top="top",
@@ -99,7 +99,7 @@ bars = p.quad(
 hover = HoverTool(renderers=[bars], tooltips=[("Range", "@bin_left% – @bin_right%"), ("Density", "@density")])
 p.add_tools(hover)
 
-p.line(x="x", y="y", source=norm_source, line_color="#0072B2", line_width=5, legend_label="Normal Distribution")
+p.line(x="x", y="y", source=norm_source, line_color="#4467A3", line_width=5, legend_label="Normal Distribution")
 
 stats_text = f"Mean: {mean_return:.3f}%\nStd Dev: {std_return:.3f}%\nSkewness: {skewness:.3f}\nKurtosis: {kurtosis:.3f}"
 stats_label = Label(

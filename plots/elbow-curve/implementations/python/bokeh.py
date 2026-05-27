@@ -41,7 +41,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Generate realistic K-means inertia values
 np.random.seed(42)
@@ -101,8 +101,8 @@ p.scatter(
     x=[optimal_k],
     y=[optimal_inertia],
     size=28,
-    fill_color=OKABE_ITO[1],  # Vermillion
-    line_color=OKABE_ITO[1],
+    fill_color=IMPRINT[1],  # Vermillion
+    line_color=IMPRINT[1],
     line_width=3,
     fill_alpha=0.8,
     legend_label=f"Elbow Point (k={optimal_k})",

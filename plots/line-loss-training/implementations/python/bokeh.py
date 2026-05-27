@@ -33,7 +33,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 TRAIN_COLOR = "#009E73"  # bluish green - first series (brand)
-VAL_COLOR = "#D55E00"  # vermillion - second series
+VAL_COLOR = "#C475FD"  # vermillion - second series
 
 # Generate realistic neural network training data
 np.random.seed(42)

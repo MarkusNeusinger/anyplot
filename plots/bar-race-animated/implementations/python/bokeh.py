@@ -25,14 +25,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: Streaming platform subscriber counts (millions) over 8 years
 np.random.seed(42)
 
 platforms = ["StreamMax", "ViewHub", "FlixNet", "WatchNow", "CineCloud", "MediaFlow"]
 years = list(range(2016, 2024))
-platform_colors = dict(zip(platforms, OKABE_ITO, strict=True))
+platform_colors = dict(zip(platforms, IMPRINT, strict=True))
 
 # Generate realistic growth patterns
 data_rows = []
@@ -167,7 +167,7 @@ legend_fig.yaxis.visible = False
 legend_fig.xgrid.grid_line_color = None
 legend_fig.ygrid.grid_line_color = None
 
-for i, (platform, color) in enumerate(zip(platforms, OKABE_ITO, strict=True)):
+for i, (platform, color) in enumerate(zip(platforms, IMPRINT, strict=True)):
     legend_fig.rect(x=[i + 0.12], y=[0.5], width=0.17, height=0.5, color=color, alpha=0.9)
     legend_fig.text(
         x=[i + 0.25], y=[0.5], text=[platform], text_font_size="20pt", text_color=INK_SOFT, text_baseline="middle"

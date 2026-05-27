@@ -33,8 +33,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # anyplot palette with semantic override: loss/drawdown → red
-DRAWDOWN_COLOR = "#B71D27"  # anyplot red (pos 3) — semantic: financial loss
-MAX_DD_COLOR = "#16B8F3"  # anyplot sky blue (pos 4) — contrasting accent
+DRAWDOWN_COLOR = "#AE3030"  # anyplot red (pos 3) — semantic: financial loss
+MAX_DD_COLOR = "#4467A3"  # anyplot sky blue (pos 4) — contrasting accent
 RECOVERY_COLOR = "#009E73"  # anyplot green (pos 1) — recovery / new highs
 
 # Data — simulate 3 years of daily portfolio returns

@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — gene expression clustering scenario (40 genes, 4 clusters)
 np.random.seed(42)
@@ -112,9 +112,9 @@ for row in Z:
     cl = get_leaf_cluster(left)
     cr = get_leaf_cluster(right)
     cp = get_leaf_cluster(parent_id)
-    color_left = OKABE_ITO[cl] if cl >= 0 else INK_SOFT
-    color_right = OKABE_ITO[cr] if cr >= 0 else INK_SOFT
-    color_arc = OKABE_ITO[cp] if cp >= 0 else INK_SOFT
+    color_left = IMPRINT[cl] if cl >= 0 else INK_SOFT
+    color_right = IMPRINT[cr] if cr >= 0 else INK_SOFT
+    color_arc = IMPRINT[cp] if cp >= 0 else INK_SOFT
 
     px_l, py_l = polar_to_xy(r_parent, a_left)
     cx_l, cy_l = polar_to_xy(node_radius[left], a_left)
@@ -153,7 +153,7 @@ for i, leaf_idx in enumerate(ordered_leaves):
     dx, dy = polar_to_xy(1.03, a)
     dot_xs.append(dx)
     dot_ys.append(dy)
-    dot_colors.append(OKABE_ITO[int(true_clusters[leaf_idx])])
+    dot_colors.append(IMPRINT[int(true_clusters[leaf_idx])])
 
 # Plot
 W, H = 2700, 2700
@@ -195,7 +195,7 @@ p.add_layout(labels_set)
 
 legend_items = []
 for c_idx in range(n_clusters):
-    r = p.scatter([], [], size=18, color=OKABE_ITO[c_idx], line_color=None)
+    r = p.scatter([], [], size=18, color=IMPRINT[c_idx], line_color=None)
     legend_items.append(LegendItem(label=f"Cluster {c_idx + 1}", renderers=[r]))
 
 legend = Legend(

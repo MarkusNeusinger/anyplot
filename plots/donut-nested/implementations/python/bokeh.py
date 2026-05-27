@@ -37,9 +37,9 @@ data = {
 # Using consistent hue with varying lightness per department
 color_palettes = {
     "Engineering": ["#009E73", "#1ab98d", "#35d5a7", "#4ff1c1"],  # Greens (position 1)
-    "Marketing": ["#D55E00", "#e07714", "#eb8f28", "#f6a83c"],  # Oranges (position 2)
-    "Sales": ["#0072B2", "#1f8ac9", "#3ea2e0", "#5dbaf7"],  # Blues (position 3)
-    "Operations": ["#CC79A7", "#d98cbc", "#e69fd1", "#f3b2e6"],  # Purples (position 4)
+    "Marketing": ["#C475FD", "#e07714", "#eb8f28", "#f6a83c"],  # Oranges (position 2)
+    "Sales": ["#4467A3", "#1f8ac9", "#3ea2e0", "#5dbaf7"],  # Blues (position 3)
+    "Operations": ["#BD8233", "#d98cbc", "#e69fd1", "#f3b2e6"],  # Purples (position 4)
 }
 
 # Calculate totals and angles

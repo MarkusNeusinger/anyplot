@@ -25,8 +25,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 OKABE_ITO_1 = "#009E73"  # Bluish green (brand)
-OKABE_ITO_2 = "#D55E00"  # Vermillion
-OKABE_ITO_4 = "#CC79A7"  # Reddish purple
+OKABE_ITO_2 = "#C475FD"  # Vermillion
+OKABE_ITO_4 = "#BD8233"  # Reddish purple
 
 # Data - Monthly product sales with forecast
 np.random.seed(42)
