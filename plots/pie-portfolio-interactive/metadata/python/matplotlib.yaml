@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:07:57Z'
-updated: '2026-05-27T17:27:03Z'
+updated: '2026-05-27T17:37:56Z'
 generated_by: claude-sonnet
 workflow_run: 26526393501
 issue: 3754
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Dual-ring donut correctly implements two-level portfolio hierarchy (asset classes
-    + holdings) without faking interactivity
-  - Theme adaptation is complete and correct — all chrome tokens (INK, INK_SOFT, PAGE_BG,
-    ELEVATED_BG) applied to every text element in both renders
-  - Anyplot palette applied in canonical order with brand green correctly anchoring
-    the largest (Equities) slice
-  - Outer ring alpha (0.72) elegantly distinguishes hierarchy levels visually
-  - Hierarchical legend design (category headers + indented holdings) effectively
-    communicates structure
-  - Fully deterministic data with realistic balanced-fund allocation summing exactly
-    to 100%
+  - Dual-ring concentric donut correctly implements the hierarchical portfolio concept
+    as a static visualization without any fake interactivity
+  - Anyplot palette applied in canonical order with correct first-series brand green;
+    full theme adaptation with correct dark/light chrome tokens
+  - Hierarchical legend with both percentage and dollar value context adds real investment
+    utility
+  - Deterministic hardcoded data that sums to exactly 100%; realistic balanced fund
+    composition with plausible asset class breakdown
   weaknesses:
-  - Legend item font size is 6pt — below recommended 8pt for a 2400x2400 canvas; increase
-    fontsize=8 (items) and title_fontsize=8 (legend title) to improve mobile readability
-  - 'Significant vertical whitespace: donut fills only ~55-60% of canvas height; tighten
-    fig.subplots_adjust top/bottom or increase ring radii to reduce dead space'
-  - Absolute portfolio values absent from legend entries; spec requires 'both percentage
-    and absolute values' — add notional dollar amounts to legend labels
-  - plt.savefig used instead of idiomatic fig.savefig — inconsistent with object-oriented
-    matplotlib pattern
+  - Outer ring pct labels at 7pt may be marginal at mobile scale; consider bumping
+    outer ring autopct fontsize to 8pt for consistency
+  - No visual emphasis on the dominant segment (48% Equities) — could use a subtle
+    pull-out or slightly increased radius on the largest inner wedge to create a focal
+    point without faking interactivity
+  - The ax.pie() approach is idiomatic but there is an opportunity to use matplotlib
+    wedge properties more creatively (e.g. wedge explode for the largest segment)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface.
-      Chrome: Title "pie-portfolio-interactive · python · matplotlib · anyplot.ai" in dark medium-weight text — clearly readable. Center "Portfolio Allocation" text in dark ink — readable. Legend title "Asset Allocation" and item labels in dark/muted tones — readable. No axis labels (pie chart). All chrome is dark on light — no light-on-light failures.
-      Data: Inner ring shows 4 asset classes: Equities 48% (#009E73 brand green), Fixed Income 30% (#C475FD lavender), Alternatives 17% (#4467A3 blue), Cash 5% (#BD8233 ochre). Outer ring shows 8 individual holdings using same hue family at 0.72 alpha. White separator lines between wedges. Percentage labels in cream/white text within wedges (labels suppressed for slices < 8%).
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title 'pie-portfolio-interactive · python · matplotlib · anyplot.ai' fully visible in dark ink at top. Legend title 'Asset Allocation' and all legend entries readable. Center label 'Portfolio\nAllocation' in dark ink on center of donut.
+      Data: Dual-ring donut. Inner ring: Equities (#009E73, 48%), Fixed Income (#C475FD, 30%), Alternatives (#4467A3, 17%), Cash (#BD8233, 5%). Outer ring: same palette colors at alpha=0.72 showing individual holdings. Wedge percentage labels in PCT_COLOR (near-white). First series correctly #009E73.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title text is light cream (#F0EFE8) — clearly readable against dark background. Center "Portfolio Allocation" text uses INK token (#F0EFE8 in dark mode) — readable. Legend text uses INK_SOFT (#B8B7B0) on elevated dark background (#242420) — readable. No dark-on-dark failures observed anywhere.
-      Data: Data colors are identical to the light render — Equities #009E73, Fixed Income #C475FD, Alternatives #4467A3, Cash #BD8233. Outer ring alpha (0.72) preserved. Percentage labels in cream/white — readable against the colored wedges.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8, clearly readable. Legend entries in #B8B7B0 (INK_SOFT). Center label in light INK token. Legend frame uses elevated dark background #242420. No dark-on-dark failures.
+      Data: Data colors identical to light render — #009E73, #C475FD, #4467A3, #BD8233 unchanged across themes. Only chrome flips.
+      Legibility verdict: PASS — all text readable against warm near-black background, brand green #009E73 clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,49 +53,52 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title/center/wedge labels readable.
-          Legend items at 6pt below recommended 8pt minimum.
+        comment: All font sizes explicitly set (title_fontsize computed, inner 8pt,
+          outer 7pt, center 10pt, legend 8pt). Readable at canvas resolution; outer
+          7pt labels marginal at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlaps; outer ring suppresses labels < 8% to prevent crowding.
+        comment: No overlapping text. Legend items properly spaced. Wedge labels do
+          not collide.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both rings clearly visible with white separators; alpha blending
-          differentiates hierarchy.
+        comment: Both donut rings clearly visible. Alpha=0.72 on outer ring preserves
+          visibility while creating visual hierarchy.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; wedge colors distinguishable under simulated
-          color deficiency.
+        comment: CVD-safe anyplot palette. Four distinct hue families. Wedge edges
+          provide shape separation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Balanced left/right (donut/legend) but notable vertical whitespace
-          above/below donut (~40-45% empty height).
+        comment: Pie in left half (right=0.52), legend in right half. Square canvas
+          well-utilized. Balanced composition.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (pie). Title descriptive and correct format;
-          center label anchors chart.
+        comment: No traditional axes (pie chart). Correct mandated title format. Center
+          label and legend title provide clear context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; subsequent in canonical order; correct backgrounds
-          both themes; all chrome tokens adapted.'
+        comment: 'First series Equities = #009E73. Canonical order (#C475FD, #4467A3,
+          #BD8233). Background #FAF8F1/#1A1A17. Chrome flips correctly. Data colors
+          identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -109,25 +108,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: dual-ring with intentional alpha differentiation
-          and anyplot palette. Not yet publication-ready polish.'
+        comment: Thoughtful hierarchical design with alpha differentiation. Above
+          configured default. No emphasis on dominant segment; lacks a focal point.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Clear refinements: styled legend frame, white wedge separators,
-          alpha blending, custom layout. Vertical whitespace and small legend limit
-          score.'
+        comment: No grid (appropriate). Wedge edges with PAGE_BG color. Legend frame
+          with elevated background. Alpha layering. Some refinement visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dual-ring tells clear two-level hierarchy story. Brand green on largest
-          slice creates focal point. Hierarchical legend reinforces narrative.
+        comment: Inner/outer ring hierarchy communicates two-level structure. Dollar
+          values provide actionable context. Dominant 48% Equities segment visually
+          clear.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,53 +134,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Dual-ring donut chart — correct type for portfolio allocation spec.
+        comment: Correct donut/pie chart. Dual-ring is appropriate static adaptation
+          of hierarchical drill-down.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Interactive features correctly omitted (not faked). Missing absolute
-          values alongside percentages per spec requirement.
+        passed: true
+        comment: 'All static-feasible features: donut chart, weights+dollar values,
+          category grouping, color-coding, legend. Interactive features correctly
+          omitted (not faked).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Inner ring = asset class totals; outer ring = individual holdings.
-          All data correctly mapped and visible.
+        comment: Inner ring = category totals, outer ring = individual holdings. Proportions
+          correctly reflect weights.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly. Hierarchical legend with category
-          headers and indented holdings is correct.
+        comment: 'Title: ''pie-portfolio-interactive · python · matplotlib · anyplot.ai''.
+          Legend titled ''Asset Allocation'' with correct hierarchical entries.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 asset classes, 8 holdings, varying weights 5-48%. Missing absolute
-          value display per spec.
+        comment: Both hierarchy levels shown. Multiple asset classes. Sub-holdings
+          across each class. Full diversified portfolio spectrum.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Balanced fund allocation is realistic and neutral. Holdings are authentic
-          financial instrument categories.
+        comment: Realistic diversified balanced fund. Standard asset classes and holdings.
+          Neutral business domain, no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights sum to 100%. Distribution is realistic balanced-to-growth
-          profile.
+        comment: Weights sum exactly to 100%. $1M portfolio with plausible sub-allocations.
+          Equities-heavy balanced fund is realistic.
     code_quality:
       score: 10
       max: 10
@@ -191,14 +192,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → inner ring → outer ring →
-          center → legend → title → save.'
+        comment: 'Linear: theme tokens → data → inner ring → outer ring → center label
+          → legend → title → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random numbers used.
+        comment: Deterministic hardcoded data. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -210,15 +211,17 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; no fake interactive elements or over-engineering.
+        comment: Clean Pythonic code. No fake interactive elements. Legend loop is
+          appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current matplotlib API throughout.
+        comment: fig.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) without
+          bbox_inches='tight'. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,24 +229,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idioms: fig.text() for cross-axes title, Patch for custom legend,
-          fig.subplots_adjust, plt.setp(). plt.savefig instead of fig.savefig is a
-          minor idiom slip.'
+        comment: Uses ax.pie() correctly (not pyplot.pie()), fig.text() for figure-level
+          title, Patch for custom legend handles.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Dual-ring via two ax.pie() calls with radius/width params is matplotlib-specific.
-          Custom Patch hierarchical legend also library-specific. Common patterns
-          — not highly distinctive.
-  verdict: REJECTED
+        passed: true
+        comment: Dual-ring via two ax.pie() calls with different radii and widths.
+          Custom Patch-based hierarchical legend with alpha variation.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
-  - patches
   patterns:
   - iteration-over-groups
   - explicit-figure
