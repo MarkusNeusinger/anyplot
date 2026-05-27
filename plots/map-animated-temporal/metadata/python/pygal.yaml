@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:47:28Z'
-updated: '2026-05-27T09:49:46Z'
+updated: '2026-05-27T10:01:41Z'
 generated_by: claude-sonnet
 workflow_run: 26502606731
 issue: 3769
@@ -12,54 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-anima
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - Correct use of pygal_maps_world World choropleth chart with binned series — idiomatic
-    to this library ecosystem
-  - 'imprint_seq colormap (#009E73 → #4467A3) correctly interpolated and applied to
-    intensity bins'
-  - 'Both theme variants correctly handled: PAGE_BG, INK, INK_SOFT, INK_MUTED all
-    derived from ANYPLOT_THEME token'
-  - 'Title format correct: ''Seismic Activity · map-animated-temporal · python · pygal
-    · anyplot.ai'''
-  - Single shared legend at bottom (instead of 6 redundant per-panel legends) — clear
-    design choice
-  - Interactive HTML delivers tab navigation and time slider as required by spec
-  - 'Realistic, neutral scenario: seismic activity spreading across Pacific Ring of
-    Fire over 72 hours'
-  - Countries selected are all geographically accurate members of the Ring of Fire
-  - Deterministic hardcoded data (fully reproducible with no random seed needed)
+  - 'Correctly uses imprint_seq colormap (#009E73 → #4467A3) for seismic intensity
+    binning, matching anyplot continuous palette rules'
+  - 'Full spec compliance: small multiples PNG (6 temporal panels in 2×3 grid) plus
+    interactive HTML with play/pause, time slider, and tab navigation'
+  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with theme-adaptive
+    chrome; data colors are identical across themes
+  - Compelling seismic narrative (Pacific Ring of Fire 72-hour spread) with descriptive
+    subtitle and sequential intensity bins
+  - Deterministic data, clean imports, no functions or classes — clean KISS structure
+    throughout
   weaknesses:
-  - HTML animation is tab/slider navigation only — no auto-play (setInterval) button.
-    Spec explicitly asks for prominently visible play/pause controls. Add an auto-play
-    toggle that cycles frames every ~1.2 s.
-  - HTML frame transitions are instantaneous show/hide — no CSS transition or cross-fade.
-    Spec calls for smooth transitions between frames. Add a CSS opacity or fade transition
-    on .frame elements.
-  - Binning loop is duplicated verbatim for PNG render and HTML render (lines 113-118
-    and 200-206). Extract to a shared pre-computed dict to DRY the code.
-  - 'DE-01 / DE-02: Design could benefit from stronger visual hierarchy — e.g., a
-    subtle grid overlay in the empty ocean area, or a brief explanatory subtitle,
-    to elevate beyond a configured default.'
-  - 'SC-02: HTML lacks auto-play functionality. The .tab-btn set is a workaround for
-    the missing animation — the implementation should add a Play button with JavaScript
-    setInterval.'
+  - Design Excellence is above default but the individual pygal map panels retain
+    stock pygal world-map styling — custom cartographic refinements (e.g., subtle
+    panel separation, background differentiation between land/ocean) would raise DE-01/DE-02
+  - Library Mastery is adequate but PIL handles most of the composition work (grid
+    layout, title, legend) rather than leveraging pygal directly — LM-01/LM-02 ceiling
+    constrained by this
+  - 'Panel titles (T1: Initial, etc.) rendered inside pygal panels at 66px in a 1066px-wide
+    cell; readable at desktop scale but may become small when the PNG is displayed
+    below ~800px wide'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct; not pure white.
-      Chrome: Title "Seismic Activity · map-animated-temporal · python · pygal · anyplot.ai" is bold, dark (#1A1A17), centered at top and clearly readable. Panel timestamp labels (T1: Initial, T2: +6h, etc.) appear in dark ink in the upper-left of each cell. Legend at bottom uses INK_SOFT (#4A4A44) text with colored swatches — all 6 bins legible.
-      Data: Six world map panels in 2×3 grid. Countries along the Pacific Ring of Fire are highlighted with a sequential teal-to-blue gradient (imprint_seq: #009E73 → #4467A3). T1 shows only Japan highlighted in deep green; subsequent frames show progressive spread southward and eastward. Non-highlighted countries appear as faint gray outlines against the off-white background. Ocean areas match the warm off-white background.
-      Legibility verdict: PASS. All title, panel labels, and legend text are readable against the light background. No light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "Seismic Activity · map-animated-temporal · python · pygal · anyplot.ai" in dark ink, fully readable. Subtitle "Pacific Ring of Fire — 72-hour seismic spread from epicenter in Japan" in secondary-ink tone below. Panel time labels (T1: Initial through T6: +72h) are dark text within each map cell — readable at full resolution. Legend at bottom has 6 color swatches with descriptive labels (Minimal (<20) through Extreme (80+)) in dark text, well-spaced.
+      Data: Six world map panels in 2×3 grid. Countries colored with imprint_seq green (#009E73) to blue (#4467A3) sequential gradient. Japan, Philippines, Indonesia, Australia, NZ, Chile, Peru, Mexico — highlighted appropriately per time step. Unaffected countries in gray outlines on light background.
+      Legibility verdict: PASS — all text elements readable; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct; not pure black.
-      Chrome: Title text renders in light cream (#F0EFE8), clearly visible against the dark background. Panel timestamp labels are light-colored and readable. Legend text uses INK_SOFT dark-mode token (#B8B7B0), readable against the dark background. No dark-on-dark failures observed.
-      Data: The same sequential imprint_seq palette is applied — #009E73 (brand green) through #4467A3 (blue) — identical data colors to the light render. Only chrome elements (background, text, map outlines) differ. Country highlights are clearly visible against the dark background. The green-to-blue gradient reads well on the near-black surface.
-      Legibility verdict: PASS. All text is readable in the dark theme. Data colors are identical between both renders (only chrome flips).
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title and subtitle rendered in light off-white text, clearly visible against dark background. Panel labels (T1-T6) appear in light tone within cells. Legend labels in light text at bottom — readable. No dark-on-dark failures observed; all chrome elements use theme-adaptive light tokens.
+      Data: Data colors are identical to light render — same imprint_seq green-to-blue gradient, confirming only chrome flips between themes. Country outlines visible in subtle lighter tone against dark background. Highlighted countries pop clearly.
+      Legibility verdict: PASS — all text readable; theme adaptation is correct throughout.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,85 +57,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (font_title=64pt, font_legend=38pt,
-          title_font_size=66 in map_style). Title and panel labels readable in both
-          themes. Minor: panel timestamp labels appear slightly small within each
-          1066×780 cell.'
+        comment: 'All font sizes explicitly set (PIL: 64/42/38pt; pygal Style: 66/44/36).
+          Readable at full resolution in both themes. Minor deduction: pygal panel
+          titles at 66px in 1066px-wide cells become small below ~800px display width.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Six panels are well-separated. Legend items
-          at bottom are horizontally spaced without collision.
+        comment: No text overlaps anywhere — panel labels, legend items, title, subtitle
+          all well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Country highlights are clearly visible. Sequential gradient distinguishes
-          intensity levels. Lowest bin (Minimal <20) in lightest teal can be marginally
-          hard to distinguish from unlighted countries in light render.
+        comment: Highlighted countries are clearly visible in both themes. Sequential
+          colormap provides good luminance separation across 6 bins.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe. Sequential gradient provides
-          luminance contrast.
+        comment: imprint_seq green-to-blue gradient is CVD-safe; sequential luminance
+          change aids discrimination for CVD viewers.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas used correctly. 2×3 grid fills canvas well. Inherent
-          pygal world-map whitespace inside each cell is unavoidable but acceptable.
-          Title bar (110px) and legend strip (130px) are proportionate.
+        comment: 3200×1800 canvas well-utilized. Title + subtitle header, 2×3 grid
+          of maps, shared legend at bottom — balanced proportions. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Map has no traditional axes. Title is descriptive. Intensity legend
-          labels include value ranges (Minimal <20, Low 20-35, etc.).
+        comment: Map visualization with no traditional axes. Title is descriptive;
+          time-step labels serve as temporal axis labels. Legend bins are clearly
+          described with value ranges.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly interpolated from #009E73 to #4467A3. First
-          bin = brand green. Background #FAF8F1 / #1A1A17 correct in both renders.
-          Theme-adaptive INK tokens applied correctly.'
+        comment: 'Sequential colormap interpolates #009E73 → #4467A3 (imprint_seq).
+          First bin = brand green. Backgrounds: #FAF8F1 (light) / #1A1A17 (dark).
+          Data colors identical across themes. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default. The anyplot palette integration
-          is correct. Layout is clean. But overall visual style does not rise above
-          a polished default.
+        passed: true
+        comment: 'Above configured-default level: custom imprint_seq colormap, narrative
+          subtitle, clean PIL composition, shared legend at bottom. Map panels retain
+          stock pygal styling without cartographic refinements.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Some refinement: shared single legend instead of 6 redundant per-panel
-          legends; custom PIL compositing for layout control. But pygal''s internal
-          map styling provides limited knobs for refinement.'
+        passed: true
+        comment: Good overall composition cleanliness; generous whitespace in header/footer
+          areas. Individual map panels are fairly stock pygal world map rendering
+          without additional refinement (e.g., no panel separation, no ocean/land
+          differentiation beyond defaults).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: The Ring of Fire seismic spreading narrative is visible through the
-          frame sequence. Color intensity changes guide the eye across time steps.
-          But no text hierarchy or annotation emphasizes the key insight.
+        passed: true
+        comment: 'Clear narrative: subtitle names the story, time labels (T1-T6) guide
+          progression, sequential color intensity encodes seismic severity. Viewer
+          can follow the Pacific Ring spread. Above default but lacks annotation-level
+          emphasis.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,61 +143,65 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: World choropleth map with temporal small multiples (spec-permitted
-          fallback for libraries without animation). Interactive HTML also provided.'
+        comment: 'Animated map over time. For static PNG: small multiples (6 temporal
+          panels). For HTML: full animation with play/pause, time slider, and tab
+          navigation. Matches spec guidance for libraries without native animation.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Basemap ✓, timestamp labels ✓, time slider (HTML) ✓. Missing: auto-play
-          button (spec asks for play/pause controls), smooth transitions (HTML just
-          hides/shows frames with no fade/transition effect).'
+        comment: Play/pause controls ✓, time slider ✓, current timestamp display ✓,
+          smooth CSS opacity transitions ✓, basemap with geographic context ✓, configurable
+          animation speed (1.2s) ✓, small multiples for static PNG ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Countries correctly mapped to geographic locations. Intensity values
-          mapped to sequential color bins. Temporal progression correctly ordered.
+        comment: Country codes map correctly to pygal_maps_world World chart. Intensity
+          values correctly binned and color-mapped. Temporal progression visible across
+          6 panels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Seismic Activity · map-animated-temporal · python · pygal
-          · anyplot.ai'' — correct format with descriptive prefix. Legend bins are
-          labeled with value ranges.'
+          · anyplot.ai'' — correct {Descriptive Title} · {spec-id} · {language} ·
+          {library} · anyplot.ai format. Legend: 6 bins with descriptive labels and
+          value ranges.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows temporal spread, multiple intensity levels (6 bins), geographic
-          distribution across Ring of Fire, and decreasing origin intensity as activity
-          disperses. Good coverage.
+        comment: All 6 intensity bins represented across time steps. Clear temporal
+          evolution from concentrated origin to distributed spread. Geographic diversity
+          from T1 to T6 demonstrates full feature of animated temporal map.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Seismic activity spreading across Pacific Ring of Fire is realistic,
-          scientific, and neutral. All selected countries are geographically accurate
-          Ring of Fire members.
+        comment: Seismic aftershock tracking across the Pacific Ring of Fire is a
+          well-established scientific use case. Country selection (Japan → Philippines
+          → Indonesia → NZ → Australia → South America) follows plausible seismic
+          geography.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 0-100 intensity scale is plausible. The rate of geographic spread
-          across the entire Ring of Fire in 72h is idealized for storytelling but
-          acceptable for a visualization example.
+        comment: 0-100 intensity scale with 6h/12h/24h/48h/72h time steps is plausible
+          for aftershock sequence monitoring. Decreasing intensity at epicenter (Japan
+          95→35) while spreading outward is geophysically consistent.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -215,35 +209,39 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → style → render panels → compose
-          → HTML → save. No functions or classes.'
+        comment: 'No functions or classes. Flat structure: imports → data → PNG render
+          → HTML render. Module import hack at top is a known necessity for anyplot
+          (filename pygal.py would shadow the package).'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data. No random generation needed.
+        comment: Fully deterministic — all data is hardcoded dictionaries; no random
+          elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: importlib.util (shadowing fix), json, os,
-          sys, BytesIO, PIL, pygal Style, pygal_maps_world World.'
+        comment: 'All imports are used: importlib.util (module shadow fix), json (HTML
+          JS data), os/sys (theme env + path), io.BytesIO (PIL image loading), PIL
+          (image composition), pygal Style + World map.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Binning loop is duplicated verbatim for the PNG and HTML render passes
-          (lines 113-118 and 200-206). Should be pre-computed once and reused.
+        passed: true
+        comment: binned_by_time pre-computed once and reused for both PNG and HTML
+          render passes — avoids duplication. No fake functionality. Appropriate complexity
+          for the dual-output (PNG + HTML) requirement.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current pygal
-          API (render_to_png, render).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using ANYPLOT_THEME
+          env var. Correct output for pygal (interactive library).
     library_mastery:
       score: 6
       max: 10
@@ -253,28 +251,29 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal_maps_world.maps.World correctly with binned country-code
-          series and Style object. PIL compositing is non-idiomatic but necessary
-          for the grid layout and shared legend.
+        comment: Uses World from pygal_maps_world with proper Style theming and render_to_png()/render()
+          API. Correct usage but PIL handles most of the composition; the pygal API
+          surface used is fairly narrow.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Country-code based choropleth binning (e.g. jp: 95 mapped to intensity
-          bins) is genuinely distinctive to the pygal/pygal_maps_world ecosystem.
-          SVG-based interactive HTML output with embedded JavaScript is also a pygal
-          strength.'
-  verdict: REJECTED
+        comment: 'pygal_maps_world.maps.World is a pygal-specific geographic map type
+          — the country-code-keyed data API is distinctive to pygal. The animated
+          HTML output leverages pygal''s SVG rendering pipeline. Partial credit: PIL
+          replaces what pygal could do with its own layout compositing.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - subplots
   - html-export
   - custom-legend
+  - faceting
   patterns:
   - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - custom-colormap
