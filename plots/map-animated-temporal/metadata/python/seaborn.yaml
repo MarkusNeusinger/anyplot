@@ -1,157 +1,213 @@
 library: seaborn
+language: python
 specification_id: map-animated-temporal
 created: '2026-01-20T19:45:04Z'
-updated: '2026-01-20T20:12:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184843990
+updated: '2026-05-27T09:36:39Z'
+generated_by: claude-sonnet
+workflow_run: 26502113970
 issue: 3769
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent earthquake aftershock narrative showing temporal diffusion from epicenter
-  - Good use of small multiples approach for temporal visualization in a static library
-  - Viridis colormap with dual encoding (color + size) for magnitude is effective
-  - Geographic context with simplified coastline adds realism
-  - Clean KISS code structure with proper random seed
+  - 'Excellent dual encoding: magnitude mapped to both hue (imprint_seq colormap)
+    and marker size simultaneously, maximizing data density without clutter'
+  - KDE density contours (sns.kdeplot) are a seaborn-distinctive feature used effectively
+    to show cumulative aftershock clustering across panels
+  - Ghost trail pattern (faded prior-period scatter points) elegantly communicates
+    temporal history without adding noise
+  - 'Full anyplot theme compliance: correct background tokens (#FAF8F1/#1A1A17), imprint_seq
+    colormap, INK/INK_SOFT tokens throughout, no bbox_inches=''tight'''
+  - 'Semantic use of #AE3030 for the epicenter marker is contextually appropriate
+    — danger/alert role matches the anyplot semantic anchor rules'
+  - Ocean tint adds meaningful geographic context without requiring an external mapping
+    library
+  - np.random.seed(42) ensures reproducibility; KISS flat-script structure with no
+    functions/classes
   weaknesses:
-  - Legend partially cut off at bottom right edge of figure
-  - Could benefit from a size legend showing magnitude scale
-  - Consider using seaborn FacetGrid for more native small-multiples implementation
-  image_description: The plot displays a 2x3 small multiples grid showing earthquake
-    aftershock data over 6 days (Day 1 through Day 6). Each panel shows a scatter
-    plot with longitude on the x-axis (°W) and latitude on the y-axis (°N), covering
-    the California coastal region. Points are colored using a viridis colormap representing
-    earthquake magnitude (2.0-5.5 scale), with point size also encoding magnitude.
-    A simplified brown California coastline provides geographic context. A red star
-    marks the epicenter at approximately (35°N, -120°W). The temporal progression
-    clearly shows aftershocks spreading outward from the epicenter over time, with
-    more points appearing in later days. A shared colorbar on the right shows the
-    Magnitude scale. A legend in the lower right identifies the Epicenter marker and
-    Coastline. The title correctly uses the format "map-animated-temporal · seaborn
-    · pyplots.ai".
+  - Tick labels and n= count annotations are set at fontsize=6.5pt — readable at full
+    3200×1800 resolution but borderline at mobile scale (~400px); nudge to 7-7.5pt
+    to improve mobile legibility
+  - Ghost trail scatter uses ax.scatter(s=3) directly; at 3pt² the trail points are
+    nearly invisible in the rendered image — increase to s=5-6 to make the temporal
+    history more legible
+  - Small multiples are created with matplotlib plt.subplots() rather than seaborn's
+    FacetGrid — slightly misses the seaborn-idiomatic approach for faceted layouts
+  - The synthetic coastline is defined by only 10 hand-typed lat/lon points, producing
+    a visibly coarse approximation; a slightly denser set of waypoints (~20-30) would
+    improve geographic fidelity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, matches required token.
+      Chrome: Title "map-animated-temporal · python · seaborn · anyplot.ai" in dark INK at fontsize=12, clearly readable at the top. Panel subtitles "Day 1"–"Day 6" bold at 9pt, clearly visible. X-axis label "Lon (°E)" on bottom row, Y-axis label "Lat (°N)" on left column, both at 8pt and readable. Tick labels at 6.5pt show longitude (140-146) and latitude (36-41) values — readable at full resolution, borderline at mobile scale. Italic n= annotations in bottom-right of each panel at 6.5pt are readable. Colorbar label "Magnitude" rotated vertically at 7.5pt is readable. Legend at bottom center ("★ Epicenter", "— Coastline") at 7pt fully visible.
+      Data: Scatter points use imprint_seq colormap (#009E73 to #4467A3), sizes scaled 10-110pt² by magnitude. Ghost trail (faded prior-period points at alpha=0.15, s=3) accumulates from Day 2 onward. KDE density contours in INK_SOFT at alpha=0.30 appear from Day 2 onward. Epicenter marked with red star (#AE3030). Ocean tint (#D4E8F0 at alpha=0.35) fills east of coastline. Coastline drawn in INK_SOFT at 0.8pt linewidth.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, matches required token.
+      Chrome: Title and all labels rendered in light INK (#F0EFE8), clearly visible against the dark background. Tick labels in INK_SOFT (#B8B7B0) are readable against the dark background — no dark-on-dark failures observed. Colorbar tick labels light-colored and readable. Legend frame uses ELEVATED_BG (#242420) — just slightly lighter than the plot background, clean separation. Panel subtitles "Day 1"–"Day 6" in INK are clearly visible.
+      Data: Scatter point colors (imprint_seq colormap) are identical to the light render — teal-to-blue gradient consistent across both themes, confirming only chrome flips. Ocean tint shifts to #192830 (darker blue-gray), maintaining geographic context. Ghost trail points in INK_SOFT (#B8B7B0 at alpha=0.15) are very faint but intentionally subtle. KDE contours in INK_SOFT visible against dark background.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; data colors unchanged between themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, subplot titles at 20pt, axis labels at 16pt, all readable
-          at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, subplots well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Markers sized appropriately for data density, alpha=0.7 provides
-          good visibility though some overlap in dense areas
+        comment: Title at 12pt and panel titles at 9pt are well-sized. Tick labels
+          and n= annotations at 6.5pt are readable at full resolution but borderline
+          at mobile scale; small deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlaps. Dense later panels (Day
+          5/6) handled via alpha layering (ghost trail 0.15, main scatter 0.80). KDE
+          contours zorder-managed appropriately.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main scatter markers (10-110pt²) are well-visible. Ghost trail at
+          s=3, alpha=0.15 is nearly invisible by design but could be slightly larger
+          (s=5) to make temporal history more apparent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe
+        comment: imprint_seq (green→blue) is perceptually uniform and CVD-safe. Epicenter
+          red (#AE3030) used semantically. Size+color dual encoding adds redundancy.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas for small multiples, but legend partially cut
-          off at edge
+        comment: Canvas exactly 3200x1800. subplots_adjust carefully set (left=0.08,
+          right=0.91, top=0.88, bottom=0.14, wspace=0.38, hspace=0.50) with colorbar
+          at 0.93. No overflow. Canvas gate passed.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Longitude (°W) and Latitude (°N)'
+        comment: 'Title correct format. X: ''Lon (°E)'', Y: ''Lat (°N)'' — both descriptive
+          with units.'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha=0.3), legend well placed
+        comment: 'imprint_seq colormap (correct for single-polarity magnitude data).
+          Backgrounds #FAF8F1/#1A1A17. INK/INK_SOFT tokens throughout. Epicenter uses
+          semantic red #AE3030. Full compliance.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Well above default (4). Dual encoding (hue+size), ghost trail, KDE
+          density contours, ocean tint, semantic epicenter marker — all intentional
+          and add meaning. Professional polish throughout.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed on all panels. Subtle grid (alpha=0.12).
+          Ocean tint geographic context is a refined touch. Panel spacing could be
+          slightly more generous (panels feel slightly dense at wspace=0.38).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong temporal narrative: Day 1→6 progression shows aftershock
+          spreading. Ghost trails build historical context. KDE contours show clustering
+          evolution. n= annotations track data volume. Clear focal point (epicenter
+          star). Good but not exceptional — a brief annotation explaining the spreading
+          pattern would elevate to 5-6.'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct: small multiples for temporal animation per spec note for
-          libraries without animation'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly assigned to y/x axes
-      - id: SC-03
+        comment: Small multiples geographic map is the correct static fallback for
+          seaborn per library rules. Correctly shows temporal snapshots with spatial
+          distribution.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has geographic context and timestamp display, no play/pause or slider
-          (acceptable for static library)
-      - id: SC-04
-        name: Data Range
+        comment: Geographic context (coastline+ocean tint), temporal progression (6
+          panels), point data with value encoding, timestamp in panel titles, point
+          trails (ghost scatter). Animation controls not applicable for static library
+          — correctly omitted per seaborn rules.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: lat→y, lon→x correctly mapped. Timestamp→period labels. Magnitude→both
+          hue and size (dual encoding exceeds requirement).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Epicenter and coastline identified, but no size legend for magnitude
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: map-animated-temporal · seaborn · pyplots.ai'
+        comment: 'Title: ''map-animated-temporal · python · seaborn · anyplot.ai''
+          — exact correct format. Epicenter and Coastline legend items. Colorbar labeled
+          ''Magnitude''.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows temporal spread, magnitude variation, geographic diffusion;
-          good but could show more dramatic magnitude decay
+        comment: 'Shows all aspects: spatial distribution, temporal evolution, magnitude
+          encoding, geographic context, cumulative density (KDE), historical trail,
+          point counts.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Excellent: earthquake aftershock sequence in California is a real,
-          neutral, comprehensible scenario'
+        comment: Tohoku aftershock sequence is realistic, plausible, and contextually
+          neutral. Epicenter at (38.1°N, 142.8°E) is geographically accurate for the
+          2011 Tōhoku earthquake zone.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Magnitude 2.0-5.5 realistic for aftershocks; lat/lon coordinates
-          appropriate for California
+        comment: Magnitude range 2.5-5.8 is realistic for aftershock sequences. ±3.5°
+          spatial extent appropriate for regional aftershock spread. 6 periods with
+          growing point counts (12→32) models realistic decay pattern.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,56 +215,73 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure, no functions/classes
+        comment: Flat sequential script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: All 7 imports (os, matplotlib.pyplot, numpy, pandas, seaborn, LinearSegmentedColormap,
+          Line2D) are actively used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loop structure, well-named variables, no fake UI elements.
+          Appropriate complexity for the visualization task.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn API with legend=False to avoid palette warning
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly - deducted for consistency with overall
-          scoring
-    library_features:
-      score: 4
-      max: 5
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          format, no bbox_inches='tight'.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with hue/size mapping, sns.set_context and set_style
-          for theming; could leverage FacetGrid for more native approach
+        comment: 'sns.scatterplot with hue+size+palette+hue_norm, sns.kdeplot with
+          data/x/y/fill/levels, sns.set_theme with rc dict — all idiomatic seaborn
+          axes-level patterns. Minor: small multiples done via plt.subplots() rather
+          than seaborn''s FacetGrid.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.kdeplot for cumulative density contours is a genuinely seaborn-distinctive
+          feature — demonstrates statistical estimation capability unique to seaborn
+          vs matplotlib. Dual hue+size encoding in sns.scatterplot also idiomatic.
+          Could further leverage seaborn's FacetGrid or PairGrid for small multiples
+          to be more library-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
   - colorbar
+  - annotations
+  - subplots
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - kde
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
   - grid-styling
-  - custom-colormap
