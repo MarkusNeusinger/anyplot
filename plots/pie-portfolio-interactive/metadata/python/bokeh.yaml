@@ -1,154 +1,211 @@
 library: bokeh
+language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:08:09Z'
-updated: '2026-01-20T23:10:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21190551667
+updated: '2026-05-27T17:54:12Z'
+generated_by: claude-sonnet
+workflow_run: 26526715471
 issue: 3754
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent visual design with professional color palette matching Python branding
-  - Good use of Bokeh interactive features (hover tooltips, tap callbacks)
-  - Clean donut chart presentation with center value display
-  - Proper square aspect ratio for pie/donut chart
-  - Well-positioned labels around the chart circumference
-  - Dual output format (PNG + HTML) appropriate for Bokeh
+  - 'Full spec compliance — all required features implemented: hover tooltips, click-to-drill-down
+    into category holdings, return-to-overview navigation, center labels showing portfolio
+    value'
+  - 'Proper Bokeh idioms: ColumnDataSource, HoverTool scoped to specific renderers,
+    CustomJS callbacks for client-side interactivity, annular_wedge for donut chart'
+  - Excellent data quality with realistic portfolio (Apple, Microsoft, Google, US
+    Treasury, Corporate Bonds, Gold ETF, Real Estate Fund) totalling $1,000,000
+  - Correct anyplot palette with semantic color mapping (green=equities/growth, blue=fixed
+    income/stable, ochre=alternatives/commodity, muted neutral=cash)
+  - Theme-adaptive chrome tokens applied correctly — all text, legend, center labels
+    use INK/INK_SOFT tokens; both renders are theme-correct and fully legible
+  - Bokeh-distinctive CustomJS drill-down with renderer visibility toggling — a feature
+    unique to client-side interactive libraries
   weaknesses:
-  - Drill-down functionality only logs to console instead of actual UI navigation
-    (spec mentions return-to-overview navigation)
-  - Label font size (18pt) could be slightly larger for optimal readability at 3600x3600
-  image_description: 'The plot displays a donut chart showing portfolio allocation
-    across 10 holdings. The chart uses a 3600×3600 pixel square format. Four asset
-    class categories are color-coded: Equities (blue #306998) showing Apple Inc.,
-    Microsoft, Google, and Int''l Equities; Fixed Income (yellow #FFD43B) showing
-    US Treasury 10Y and Corporate Bonds; Alternatives (teal #48A9A6) showing Gold
-    ETF, Real Estate Fund, and Commodities; and Cash (gray #8B8B8B). The center of
-    the donut displays "Total $1,000,000". Asset names are positioned as labels around
-    the outer ring of the donut. A legend appears on the right side showing all four
-    category colors. The title "pie-portfolio-interactive · bokeh · pyplots.ai" appears
-    at the top center. The toolbar is visible in the top-right corner showing Bokeh''s
-    interactive tools.'
+  - 'Canvas dimensions drifted from required target. Actual: 2400x2261. Closest valid
+    target: 2400x2400 (±16 px tolerance). Signed delta: +0 x -139 — height is 139
+    px short. Most likely cause: bokeh toolbar adding ~30-50 px above the figure.
+    Set `toolbar_location=None`. Re-render at exactly 2400x2400; the post-render gate
+    enforces this.'
+  - toolbar_location=None is already set, so the 139 px shortfall likely comes from
+    Selenium save_screenshot() capturing only the visible page content height rather
+    than the full viewport — fix by ensuring the Bokeh figure fills the full window
+    or by using driver.execute_script-based full-page screenshot, or by explicitly
+    setting driver.set_window_size before get() and after get()
+  - LabelSet label_text for overview uses newline character in f-string (\n) which
+    may render as literal text in some Bokeh/Chrome versions — consider using two
+    separate LabelSet layers (one for category name, one for percentage) for robustness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — PASS
+      Chrome: Title "pie-portfolio-interactive · python · bokeh · anyplot.ai" in dark ink, clearly readable. No axis labels (hidden, correct for donut). Category labels (e.g. "Equities\n55%", "Fixed Income\n25%") appear as two-line text outside the ring in dark ink — all legible. Center labels "Total Portfolio" (INK_SOFT) and "$1,000,000" (INK, bold) are readable. Legend (top-right) shows all four categories in dark text on #FFFDF6 elevated background.
+      Data: Donut ring with four segments — #009E73 green (Equities, largest at 55%), #4467A3 blue (Fixed Income 25%), #BD8233 ochre (Alternatives 16%), muted gray (Cash 4%). Segment borders use PAGE_BG line, creating clean visual separation. All segments clearly distinguishable.
+      Legibility verdict: PASS — no light-on-light issues, all text is clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — PASS
+      Chrome: Title and labels use light INK (#F0EFE8) — readable against dark background. Center labels use INK_SOFT (#B8B7B0) for header and INK for value — both readable. Legend uses INK_SOFT text on #242420 elevated background — legible.
+      Data: Data colors are identical to the light render — #009E73 green, #4467A3 blue, #BD8233 ochre, muted gray for Cash. Segment borders use dark PAGE_BG for separation. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text is readable against the warm near-black background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 36pt, labels at 18pt, legend at 22pt. All text readable,
-          but some smaller labels could be larger.
+        comment: 'All font sizes explicitly set (title ~50pt, labels 34pt, legend
+          34pt, center header 26pt). Readable in both themes. Minor deduction: center
+          header at 26pt is slightly below guideline for 2400x2400.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements. Labels well positioned around the chart.
+        comment: Labels are well-spaced around the ring. Minor risk of crowding between
+          'Cash 4%' and 'Alternatives 16%' labels given how small the Cash wedge is,
+          but no actual overlap visible.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Donut wedges are clearly visible with appropriate sizing, good inner/outer
-          radius ratio.
+        comment: 'Donut segments clearly visible. Cash (4%) is a thin wedge but its
+          label makes it identifiable. alpha=0.92 adds slight depth. Minor deduction:
+          Cash segment is very thin.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/teal/gray palette is colorblind-safe, good contrast between
-          categories.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format appropriate for pie/donut chart, good canvas utilization
-          (~60%), legend well positioned.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for pie charts (no axes).
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well placed on right, subtle border, good spacing.
+        comment: Four palette colors are perceptually distinct. Semantic mapping (green=growth,
+          blue=stable, ochre=commodity, muted=neutral) aids CVD safety with category
+          context.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 0
+        max: 4
+        passed: false
+        comment: 'CANVAS GATE FAILURE: Actual 2400x2261, target 2400x2400 (delta -139px
+          height). Forced to 0/4 per canvas gate rule.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed (donut chart with hidden axes). Title is correct.
+          Segment labels provide category context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Equities) uses #009E73. Multi-series uses palette
+          positions 1,3,4 with semantic exception (skip lavender for finance domain).
+          Cash uses INK_MUTED (muted anchor) — appropriate for neutral/rest. Backgrounds
+          #FAF8F1/#1A1A17 correct. Both themes fully correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: semantic color mapping (green=growth, blue=stable,
+          ochre=commodity), clean donut with hover states, legend with elevated background.
+          Not publication-level but clearly above generic defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden (appropriate for donut). Clean segment separation
+          via PAGE_BG border. alpha=0.92 on wedges. Legend styled with elevated BG
+          and border. Above minimal defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Interactive drill-down is genuine storytelling — allows exploration
+          from category to individual holdings. Center labels update to show category
+          totals on drill-down. Multi-level hierarchy creates a clear narrative flow.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct donut chart for portfolio allocation.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Weights correctly mapped to wedge angles, colors mapped by category.
-      - id: SC-03
+        comment: Donut chart implemented with annular_wedge — correct per spec ('pie
+          or donut chart as primary visualization').
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has hover tooltips, legend, color-coding. Tap callback logs to console
-          but lacks full drill-down UI.
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: hover tooltips (HoverTool on both layers),
+          click-to-drill-down into sub-holdings (CustomJS), display of weights and
+          values, color-coding by asset class, legend, return-to-overview navigation
+          (Back button).'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All holdings visible, weights sum to 100%.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Weights correctly map to wedge angles. Values shown in tooltips and
+          center labels. Asset/category hierarchy correctly implemented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 asset class categories.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: pie-portfolio-interactive · bokeh · pyplots.ai'
+        comment: 'Title: ''pie-portfolio-interactive · python · bokeh · anyplot.ai''
+          — correct format. Legend labels match asset class categories.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 10 holdings across 4 categories with varying weights.
+        comment: 'Shows all chart aspects: category-level overview, individual holdings
+          detail via drill-down, hover tooltips, navigation. 10 holdings across 4
+          asset classes.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real portfolio scenario with realistic company names and asset types.
+        comment: 'Realistic portfolio: Apple, Microsoft, Google, US Treasury 10Y,
+          Corporate Bonds, Gold ETF, Real Estate Fund, Commodities, Cash. $1,000,000
+          total — plausible wealth management scenario. Neutral business context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: $1M portfolio with realistic allocation percentages.
+        comment: Weights sum to 100% (55+25+16+4). Values sum to $1,000,000. Allocation
+          ratios (55% equities, 25% bonds, 16% alts, 4% cash) realistic for a balanced
+          growth portfolio.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,56 +213,73 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save.'
+        comment: 'Flat script: imports → tokens → data → figure → overlays → callbacks
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) set. Data is largely hardcoded so deterministic
+          regardless.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports used: os/sys (path+env), time (sleep), Path (file path),
+          numpy (angle math), bokeh.io/models/plotting, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Minor comment/code mismatch, but no actual deprecated API.
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for a multi-layer interactive chart.
+          JavaScript callback is complex but necessary for the drill-down feature.
+          The sys.path manipulation has a clear explanatory comment.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses current Bokeh
+          3.9.0 API with Selenium screenshot pattern per library guide.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, HoverTool, TapTool with CustomJS, LabelSet,
-          HTML export. Good but drill-down only logs to console.
-  verdict: APPROVED
+        comment: ColumnDataSource used throughout. HoverTool scoped to specific renderers.
+          CustomJS with source data mutation. LabelSet for external labels. annular_wedge
+          for donut. Selenium screenshot per library guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: CustomJS drill-down with renderer visibility toggling — client-side
+          state management unique to Bokeh's JavaScript bridge. Two separate glyph
+          layers (overview/detail) with dynamic show/hide. HoverTool renderer scoping.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - custom-legend
   - html-export
+  - custom-legend
   - annotations
   patterns:
   - data-generation
   - columndatasource
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
   - edge-highlighting
