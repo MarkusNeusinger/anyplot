@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Set seaborn theme
 sns.set_theme(
@@ -87,8 +87,8 @@ for i in range(n_clusters):
         y_positions,
         cluster_silhouette_vals,
         height=1.0,
-        color=OKABE_ITO[i],
-        edgecolor=OKABE_ITO[i],
+        color=IMPRINT[i],
+        edgecolor=IMPRINT[i],
         alpha=0.85,
         label=f"Cluster {i}",
     )
@@ -109,7 +109,7 @@ for cluster_id, cluster_avg, y_center in cluster_info:
         f"C{cluster_id}\n{cluster_avg:.2f}",
         fontsize=14,
         fontweight="medium",
-        color=OKABE_ITO[cluster_id],
+        color=IMPRINT[cluster_id],
         va="center",
         ha="right",
     )

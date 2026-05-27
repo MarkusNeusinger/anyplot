@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
 OI_BRAND = "#009E73"
-OI_2 = "#D55E00"
-OI_3 = "#0072B2"
+OI_2 = "#C475FD"
+OI_3 = "#4467A3"
 OI_NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 # Configure seaborn theme

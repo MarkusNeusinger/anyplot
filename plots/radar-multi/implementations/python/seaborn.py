@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Set seaborn theme with theme-adaptive colors
 sns.set_theme(
@@ -72,10 +72,10 @@ for idx, (product_name, values) in enumerate(products.items()):
     values_closed = values + values[:1]  # Close the polygon
 
     # Fill with transparency
-    ax.fill(angles, values_closed, alpha=0.25, color=OKABE_ITO[idx], label=product_name)
+    ax.fill(angles, values_closed, alpha=0.25, color=IMPRINT[idx], label=product_name)
 
     # Outline with larger markers
-    ax.plot(angles, values_closed, "o-", linewidth=3, markersize=10, color=OKABE_ITO[idx])
+    ax.plot(angles, values_closed, "o-", linewidth=3, markersize=10, color=IMPRINT[idx])
 
 # Set category labels on each axis
 ax.set_xticks(angles[:-1])

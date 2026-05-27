@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Load Iris dataset - classic multivariate data for scatter matrices
 iris = sns.load_dataset("iris")
@@ -46,7 +46,7 @@ df = iris.rename(
 )
 
 # Create color mapping using Okabe-Ito palette
-palette = {"setosa": OKABE_ITO[0], "versicolor": OKABE_ITO[1], "virginica": OKABE_ITO[2]}
+palette = {"setosa": IMPRINT[0], "versicolor": IMPRINT[1], "virginica": IMPRINT[2]}
 
 # Apply theme-adaptive styling
 sns.set_theme(

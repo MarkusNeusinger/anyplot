@@ -38,15 +38,15 @@ sns.set_theme(
 sns.set_context("notebook", font_scale=1.0)
 
 # Anyplot palette — canonical order: green, purple, red, sky-blue, lime, …
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
-sns.set_palette(ANYPLOT_PALETTE)
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233"]
+sns.set_palette(IMPRINT)
 
 COLOR_PRICE = "#009E73"  # position 1
-COLOR_VOLUME = "#9418DB"  # position 2
-COLOR_RSI = "#B71D27"  # position 3
-COLOR_OVERBOUGHT = "#B71D27"
+COLOR_VOLUME = "#C475FD"  # position 2
+COLOR_RSI = "#AE3030"  # position 3
+COLOR_OVERBOUGHT = "#AE3030"
 COLOR_OVERSOLD = "#99B314"
-COLOR_CROSSHAIR = "#16B8F3"
+COLOR_CROSSHAIR = "#4467A3"
 
 # Data — stock-like metrics over 200 trading days
 np.random.seed(42)

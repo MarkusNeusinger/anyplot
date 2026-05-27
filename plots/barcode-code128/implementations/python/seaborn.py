@@ -273,9 +273,9 @@ st = len(STOP)  # 13
 zone_defs = [
     (0, q, INK_SOFT, 0.20, ""),
     (q, q + s, "#009E73", 0.85, "Start\n128B"),
-    (q + s, q + s + d, "#0072B2", 0.80, f"Data region · {len(content)} chars"),
-    (q + s + d, q + s + d + ck, "#D55E00", 0.85, "Check\nmod 103"),
-    (q + s + d + ck, q + s + d + ck + st, "#CC79A7", 0.85, "Stop"),
+    (q + s, q + s + d, "#4467A3", 0.80, f"Data region · {len(content)} chars"),
+    (q + s + d, q + s + d + ck, "#C475FD", 0.85, "Check\nmod 103"),
+    (q + s + d + ck, q + s + d + ck + st, "#BD8233", 0.85, "Stop"),
     (n_cols - q, n_cols, INK_SOFT, 0.20, ""),
 ]
 

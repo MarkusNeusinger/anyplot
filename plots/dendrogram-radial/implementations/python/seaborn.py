@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
 
@@ -85,7 +85,7 @@ def get_node_color(node_id):
     leaves_in = get_subtree_leaves(node_id)
     clusters_in = {flat[leaf] for leaf in leaves_in}
     if len(clusters_in) == 1:
-        return OKABE_ITO[clusters_in.pop()]
+        return IMPRINT[clusters_in.pop()]
     return INK_SOFT
 
 
@@ -136,7 +136,7 @@ R_LABEL = R_LEAF + 0.055
 for disp_pos, leaf_idx in enumerate(leaf_order):
     angle = x_to_angle(10 * disp_pos + 5)
     cluster_id = flat[leaf_idx]
-    color = OKABE_ITO[cluster_id]
+    color = IMPRINT[cluster_id]
 
     # Colored dot at leaf
     ax.scatter([angle], [R_DOT], color=color, s=55, zorder=5, linewidths=0)
@@ -182,7 +182,7 @@ for c in range(N_CLUSTERS):
         va="center",
         fontsize=13,
         fontweight="bold",
-        color=OKABE_ITO[c],
+        color=IMPRINT[c],
         rotation=rot,
         rotation_mode="anchor",
     )

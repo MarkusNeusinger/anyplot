@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 sns.set_theme(
     style="ticks",
@@ -62,7 +62,7 @@ sns.scatterplot(
     y="tsne_2",
     hue="cluster",
     hue_order=cluster_names,
-    palette=OKABE_ITO[:n_clusters],
+    palette=IMPRINT[:n_clusters],
     alpha=0.65,
     s=120,
     edgecolors=PAGE_BG,
@@ -81,13 +81,13 @@ for i, name in enumerate(cluster_names):
         name,
         fontsize=14,
         fontweight="semibold",
-        color=OKABE_ITO[i],
+        color=IMPRINT[i],
         ha="center",
         va="center",
         bbox={
             "boxstyle": "round,pad=0.3",
             "facecolor": ELEVATED_BG,
-            "edgecolor": OKABE_ITO[i],
+            "edgecolor": IMPRINT[i],
             "alpha": 0.85,
             "linewidth": 1.5,
         },

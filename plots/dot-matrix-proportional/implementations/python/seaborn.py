@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 sns.set_theme(
     style="ticks",
@@ -61,7 +61,7 @@ df = pd.DataFrame({"x": xs, "y": ys, "category": dot_labels})
 fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-palette = dict(zip(categories, OKABE_ITO, strict=True))
+palette = dict(zip(categories, IMPRINT, strict=True))
 
 sns.scatterplot(
     data=df,
@@ -87,7 +87,7 @@ legend_handles = [
         [0],
         marker="o",
         color="none",
-        markerfacecolor=OKABE_ITO[i],
+        markerfacecolor=IMPRINT[i],
         markeredgecolor=PAGE_BG,
         markeredgewidth=0.5,
         markersize=16,

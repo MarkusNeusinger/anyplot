@@ -25,7 +25,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233"]
 
 sns.set_theme(
     style="ticks",
@@ -47,7 +47,7 @@ sns.set_theme(
 # Data
 iris = sns.load_dataset("iris")
 species_order = iris["species"].unique()
-species_colors = {sp: ANYPLOT_PALETTE[i] for i, sp in enumerate(species_order)}
+species_colors = {sp: IMPRINT[i] for i, sp in enumerate(species_order)}
 
 # Plot
 fig, axes = plt.subplots(1, 3, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)

@@ -20,13 +20,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
 ]
 
 # Data: Sports league team distribution across regional conferences
@@ -95,7 +95,7 @@ sns.scatterplot(
     y="y",
     hue="group",
     hue_order=conferences,
-    palette=OKABE_ITO[: len(conferences)],
+    palette=IMPRINT[: len(conferences)],
     s=350,
     edgecolor=PAGE_BG,
     linewidth=1.5,
@@ -111,7 +111,7 @@ ax.text(0.85, 0.02, f"Majority: {majority} seats", fontsize=14, color=INK_SOFT, 
 
 # Create legend with seat counts
 legend_elements = [
-    plt.scatter([], [], c=[OKABE_ITO[i % len(OKABE_ITO)]], s=200, label=f"{conf}: {count}")
+    plt.scatter([], [], c=[IMPRINT[i % len(IMPRINT)]], s=200, label=f"{conf}: {count}")
     for i, (conf, count) in enumerate(zip(conferences, teams, strict=True))
 ]
 ax.legend(

@@ -18,12 +18,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (canonical order)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # brand green
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
 ]
 
 # Data - Software project milestones
@@ -48,11 +48,11 @@ df["y_offset"] = [1 if i % 2 == 0 else -1 for i in range(len(df))]
 # Map categories to Okabe-Ito colors
 category_order = ["Planning", "Design", "Development", "Testing", "Deployment"]
 palette = {
-    "Planning": OKABE_ITO[0],  # green
-    "Design": OKABE_ITO[1],  # vermillion
-    "Development": OKABE_ITO[2],  # blue
-    "Testing": OKABE_ITO[3],  # reddish purple
-    "Deployment": OKABE_ITO[4],  # orange
+    "Planning": IMPRINT[0],  # green
+    "Design": IMPRINT[1],  # vermillion
+    "Development": IMPRINT[2],  # blue
+    "Testing": IMPRINT[3],  # reddish purple
+    "Deployment": IMPRINT[4],  # orange
 }
 
 # Set seaborn theme with theme-adaptive tokens

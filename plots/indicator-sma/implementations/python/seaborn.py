@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — close price first (brand green), then SMAs in canonical order
-PALETTE = {"Close Price": "#009E73", "SMA 20": "#D55E00", "SMA 50": "#0072B2", "SMA 200": "#CC79A7"}
+PALETTE = {"Close Price": "#009E73", "SMA 20": "#C475FD", "SMA 50": "#4467A3", "SMA 200": "#BD8233"}
 
 sns.set_theme(
     style="ticks",

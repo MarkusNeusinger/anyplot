@@ -20,8 +20,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
-COLORS = {"stocks": OKABE_ITO[0], "bonds": OKABE_ITO[1], "commodities": OKABE_ITO[2], "real_estate": OKABE_ITO[3]}
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+COLORS = {"stocks": IMPRINT[0], "bonds": IMPRINT[1], "commodities": IMPRINT[2], "real_estate": IMPRINT[3]}
 
 # Data - Portfolio allocation over 6 years with confidence bands
 np.random.seed(42)

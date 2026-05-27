@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series - machinery signal
-ACCENT = "#D55E00"  # Peak markers
+ACCENT = "#C475FD"  # Peak markers
 
 # Data - Create a synthetic signal with multiple frequency components
 np.random.seed(42)

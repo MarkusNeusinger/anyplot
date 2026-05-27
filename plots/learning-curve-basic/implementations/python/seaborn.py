@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
 TRAIN_COLOR = "#009E73"
-VAL_COLOR = "#D55E00"
+VAL_COLOR = "#C475FD"
 
 # Data - Simulating a learning curve with typical patterns
 np.random.seed(42)

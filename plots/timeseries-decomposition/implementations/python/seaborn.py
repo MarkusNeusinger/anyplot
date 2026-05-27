@@ -22,9 +22,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"
-COLOR_TREND = "#D55E00"
-COLOR_SEASONAL = "#0072B2"
-COLOR_RESIDUAL = "#CC79A7"
+COLOR_TREND = "#C475FD"
+COLOR_SEASONAL = "#4467A3"
+COLOR_RESIDUAL = "#BD8233"
 
 # Set seaborn theme with theme-adaptive colors
 sns.set_theme(

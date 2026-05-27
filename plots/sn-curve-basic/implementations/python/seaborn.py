@@ -20,9 +20,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — data & fit
-C2 = "#D55E00"  # Okabe-Ito pos 2 — Ultimate Strength
-C3 = "#0072B2"  # Okabe-Ito pos 3 — Yield Strength
-C4 = "#CC79A7"  # Okabe-Ito pos 4 — Endurance Limit
+C2 = "#C475FD"  # Okabe-Ito pos 2 — Ultimate Strength
+C3 = "#4467A3"  # Okabe-Ito pos 3 — Yield Strength
+C4 = "#BD8233"  # Okabe-Ito pos 4 — Endurance Limit
 
 sns.set_theme(
     style="ticks",

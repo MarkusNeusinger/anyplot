@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 sns.set_theme(
     style="ticks",
@@ -56,21 +56,21 @@ bins = np.linspace(daily_returns.min() - 0.1, daily_returns.max() + 0.1, 32)
 
 # Single histplot on the full dataset so all bars share the same density normalization;
 # recolor tail-region bars afterward (two-call approach normalizes each subset independently)
-sns.histplot(daily_returns, bins=bins, stat="density", color=OKABE_ITO[0], alpha=0.7, ax=ax)
+sns.histplot(daily_returns, bins=bins, stat="density", color=IMPRINT[0], alpha=0.7, ax=ax)
 for patch in ax.patches:
     bin_center = patch.get_x() + patch.get_width() / 2
     if bin_center < lower_tail or bin_center > upper_tail:
-        patch.set_facecolor(OKABE_ITO[1])
+        patch.set_facecolor(IMPRINT[1])
         patch.set_alpha(0.85)
 
 # Empirical KDE via seaborn (seaborn-native feature for distribution comparison)
-sns.kdeplot(daily_returns, ax=ax, color=OKABE_ITO[0], linewidth=1.5, linestyle=":", alpha=0.8)
+sns.kdeplot(daily_returns, ax=ax, color=IMPRINT[0], linewidth=1.5, linestyle=":", alpha=0.8)
 kde_line = ax.lines[-1]
 
 # Normal distribution curve fitted to the data
 x_range = np.linspace(daily_returns.min() - 0.5, daily_returns.max() + 0.5, 300)
 normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
-ax.plot(x_range, normal_pdf, color=OKABE_ITO[2], linewidth=2.0)
+ax.plot(x_range, normal_pdf, color=IMPRINT[2], linewidth=2.0)
 normal_line = ax.lines[-1]
 
 # Vertical dashed lines at ±2σ boundaries
@@ -106,8 +106,8 @@ ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
 # Legend: histogram bars first (primary data), then analytical curves; no frame
-center_patch = Patch(facecolor=OKABE_ITO[0], alpha=0.7, label="Returns (±2σ)")
-tail_patch = Patch(facecolor=OKABE_ITO[1], alpha=0.7, label="Tail regions (>2σ)")
+center_patch = Patch(facecolor=IMPRINT[0], alpha=0.7, label="Returns (±2σ)")
+tail_patch = Patch(facecolor=IMPRINT[1], alpha=0.7, label="Tail regions (>2σ)")
 kde_line.set_label("Empirical KDE")
 normal_line.set_label("Normal fit")
 ax.legend(handles=[center_patch, tail_patch, kde_line, normal_line], fontsize=8, loc="lower left", frameon=False)

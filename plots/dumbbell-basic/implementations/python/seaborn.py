@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = INK  # alpha applied via grid.alpha
 
 BEFORE_COLOR = "#009E73"  # Okabe-Ito 1 — first series, brand
-AFTER_COLOR = "#D55E00"  # Okabe-Ito 2
+AFTER_COLOR = "#C475FD"  # Okabe-Ito 2
 
 # Data — Employee satisfaction scores before and after policy changes
 df = pd.DataFrame(

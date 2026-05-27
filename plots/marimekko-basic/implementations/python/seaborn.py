@@ -38,7 +38,7 @@ sns.set_theme(
 )
 
 # Okabe-Ito palette — canonical order, first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 np.random.seed(42)
 
@@ -85,7 +85,7 @@ for region_idx, region in enumerate(regions):
 
         # Draw rectangle (seaborn has no native Marimekko; matplotlib patches required)
         rect = mpatches.Rectangle(
-            (x_start, y_bottom), bar_width, height, facecolor=OKABE_ITO[prod_idx], edgecolor="white", linewidth=2
+            (x_start, y_bottom), bar_width, height, facecolor=IMPRINT[prod_idx], edgecolor="white", linewidth=2
         )
         ax.add_patch(rect)
 
@@ -139,7 +139,7 @@ fig.text(
 )
 
 legend_handles = [
-    mpatches.Patch(facecolor=OKABE_ITO[i], edgecolor="white", label=products[i]) for i in range(len(products))
+    mpatches.Patch(facecolor=IMPRINT[i], edgecolor="white", label=products[i]) for i in range(len(products))
 ]
 ax.legend(
     handles=legend_handles,

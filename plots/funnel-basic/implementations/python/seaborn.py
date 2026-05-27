@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Sales funnel data
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
@@ -52,7 +52,7 @@ sns.barplot(
     y=stages,
     hue=stages,
     order=stages,
-    palette=OKABE_ITO[: len(stages)],
+    palette=IMPRINT[: len(stages)],
     ax=ax,
     legend=False,
     width=0.50,
@@ -78,7 +78,7 @@ for i in range(len(bars) - 1):
                 (p_bot.get_x() + p_bot.get_width(), bot_y),
                 (p_bot.get_x(), bot_y),
             ],
-            facecolor=OKABE_ITO[i],
+            facecolor=IMPRINT[i],
             edgecolor="none",
             zorder=1,
         )
@@ -97,7 +97,7 @@ ax.add_patch(
             (tail_bot_w / 2, last_top_y + tail_height),
             (-tail_bot_w / 2, last_top_y + tail_height),
         ],
-        facecolor=OKABE_ITO[-1],
+        facecolor=IMPRINT[-1],
         edgecolor="none",
         zorder=1,
     )

@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Configure seaborn theme with theme-adaptive colors
 sns.set_theme(
@@ -62,7 +62,7 @@ ax.plot(
     angles_closed,
     prevailing_closed,
     linewidth=3.5,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
     label="Prevailing Winds",
     marker="o",
     markersize=12,
@@ -72,7 +72,7 @@ ax.plot(
     angles_closed,
     secondary_closed,
     linewidth=3.5,
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     label="Secondary Pattern",
     marker="s",
     markersize=10,

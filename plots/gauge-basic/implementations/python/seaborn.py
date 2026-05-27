@@ -19,8 +19,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito zone palette (semantic gauge mapping: vermillion / orange / brand green)
-ZONE_LOW, ZONE_MED, ZONE_HIGH = sns.color_palette(["#D55E00", "#E69F00", "#009E73"])
+# imprint semantic anchors (red / amber / green traffic-light)
+ZONE_LOW, ZONE_MED, ZONE_HIGH = sns.color_palette(["#AE3030", "#DDCC77", "#009E73"])
 
 # Data — sales performance gauge
 value = 72

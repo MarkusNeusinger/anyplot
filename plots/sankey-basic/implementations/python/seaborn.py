@@ -18,7 +18,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
 
@@ -38,8 +38,8 @@ flows = [
 ]
 df = pd.DataFrame(flows, columns=["source", "target", "value"])
 
-source_colors = dict(zip(source_names, OKABE_ITO[:3], strict=True))
-target_colors = dict(zip(target_names, OKABE_ITO[3:6], strict=True))
+source_colors = dict(zip(source_names, IMPRINT[:3], strict=True))
+target_colors = dict(zip(target_names, IMPRINT[3:6], strict=True))
 
 sources = df.groupby("source")["value"].sum().loc[source_names]
 targets = df.groupby("target")["value"].sum().loc[target_names]

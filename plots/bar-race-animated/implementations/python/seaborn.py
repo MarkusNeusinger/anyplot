@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 sns.set_theme(
     style="ticks",
@@ -53,7 +53,7 @@ market_cap_data = {
     "Zeta Cloud": [120, 180, 260, 310, 410, 580],  # steady late-stage grower
 }
 
-color_map = {company: OKABE_ITO[i] for i, company in enumerate(companies)}
+color_map = {company: IMPRINT[i] for i, company in enumerate(companies)}
 
 rows = [
     {"company": company, "year": year, "market_cap": value}

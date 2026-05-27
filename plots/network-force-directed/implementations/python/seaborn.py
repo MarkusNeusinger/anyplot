@@ -40,7 +40,7 @@ sns.set_theme(
 np.random.seed(42)
 
 # Okabe-Ito categorical palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Sample social network: organization with 3 departments
 num_nodes = 37
@@ -135,7 +135,7 @@ sns.scatterplot(
     x=x_coords,
     y=y_coords,
     hue=communities,
-    palette=OKABE_ITO,
+    palette=IMPRINT,
     size=node_sizes,
     sizes=(150, 800),
     alpha=0.9,
@@ -173,7 +173,7 @@ legend_elements = []
 for idx, name in enumerate(community_names):
     count = community_sizes[idx]
     legend_elements.append(
-        plt.scatter([], [], c=OKABE_ITO[idx], s=300, label=f"{name} ({count})", edgecolor=PAGE_BG, linewidth=2)
+        plt.scatter([], [], c=IMPRINT[idx], s=300, label=f"{name} ({count})", edgecolor=PAGE_BG, linewidth=2)
     )
 legend_elements.append(
     plt.scatter([], [], s=300, facecolors="none", edgecolors=INK, linewidth=1.8, label="Bridge node")
