@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-27
+Quality: 93/100 | Updated: 2026-05-27
 """
 
 import os
