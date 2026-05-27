@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Created: 2026-05-27
+Quality: 85/100 | Created: 2026-05-27
 """
 
 import json
