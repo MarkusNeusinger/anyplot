@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-27
 """
 
 import json
+import math
 import os
 import tempfile
 import time
@@ -25,6 +26,15 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Tile provider — switch here to try alternatives:
+#   {"type": "OpenStreetMap"}                — standard street map (default)
+#   {"type": "Stamen", "theme": "Terrain"}   — terrain shading with labels
+#   {"type": "Stamen", "theme": "Toner"}     — high-contrast black & white
+#   {"type": "USGS", "theme": "USTopo"}      — USGS topographic map
+#   {"type": "USGS", "theme": "USImagery"}   — satellite imagery
+TILE_PROVIDER = {"type": "OpenStreetMap"}
+TILE_CREDIT = "Tiles © OpenStreetMap contributors"
+
 # Data: major European cities — annual international visitor counts (millions, ~2023)
 cities = [
     {"name": "Paris", "lat": 48.8566, "lon": 2.3522, "visitors": 38.5},
@@ -44,6 +54,14 @@ cities = [
     {"name": "Warsaw", "lat": 52.2297, "lon": 21.0122, "visitors": 3.8},
 ]
 
+# Derive map center and zoom from data bounds so the view adapts if data changes
+lats = [c["lat"] for c in cities]
+lons = [c["lon"] for c in cities]
+map_center = [(min(lons) + max(lons)) / 2, (min(lats) + max(lats)) / 2]  # [lon, lat]
+lon_span = (max(lons) - min(lons)) * 1.25  # 25% padding each side
+map_zoom = round(math.log2(360 / lon_span * (3200 / 256)) - 1, 1)
+map_zoom = max(3.0, min(8.0, map_zoom))
+
 max_visitors = max(c["visitors"] for c in cities)
 mappoint_data = [
     {
@@ -58,9 +76,6 @@ mappoint_data = [
 
 title = "European Tourism · map-tile-background · python · highcharts · anyplot.ai"
 title_fontsize = round(66 * min(1.0, 67 / len(title)))
-
-# Both themes use OpenStreetMap tiles; dark mode applies an invert filter post-render
-tile_credit = "Tiles © OpenStreetMap contributors"
 
 chart_config = {
     "chart": {
@@ -81,24 +96,24 @@ chart_config = {
         "style": {"fontSize": "34px", "color": INK_SOFT},
         "margin": 18,
     },
-    "credits": {"text": tile_credit, "style": {"color": INK_SOFT, "fontSize": "22px"}},
+    "credits": {"text": TILE_CREDIT, "style": {"color": INK_SOFT, "fontSize": "22px"}},
     "legend": {"enabled": False},
-    "mapNavigation": {"enabled": False},
-    "mapView": {"center": [12, 50], "zoom": 6},
+    "mapNavigation": {"enabled": True, "enableButtons": True},
+    "mapView": {"center": map_center, "zoom": map_zoom},
     "series": [
-        {"type": "tiledwebmap", "provider": {"type": "OpenStreetMap"}, "showInLegend": False},
+        {"type": "tiledwebmap", "provider": TILE_PROVIDER, "showInLegend": False},
         {
             "type": "mappoint",
             "name": "Cities",
             "color": ANYPLOT_PALETTE[0],
             "data": mappoint_data,
-            "cursor": "default",
+            "cursor": "pointer",
             "marker": {"symbol": "circle", "lineColor": PAGE_BG, "lineWidth": 2, "fillOpacity": 0.85},
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.name}",
-                "style": {"color": INK, "fontSize": "26px", "fontWeight": "400", "textOutline": f"3px {PAGE_BG}"},
-                "y": -14,
+                "style": {"color": INK, "fontSize": "34px", "fontWeight": "400", "textOutline": f"3px {PAGE_BG}"},
+                "y": -18,
                 "padding": 0,
             },
             "tooltip": {"headerFormat": "", "pointFormat": "<b>{point.name}</b><br>Visitors: {point.visitors}M/yr"},
