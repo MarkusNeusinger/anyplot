@@ -75,15 +75,15 @@ colors = [
     "#C475FD",  # Sales — Okabe-Ito #2
     "#4467A3",  # Marketing — Okabe-Ito #3
     "#BD8233",  # Operations — Okabe-Ito #4
-    "#00B589",  # Backend — lighter green
+    "#2DAE89",  # Backend — lighter green
     "#009E73",  # Frontend — base green
     "#007A58",  # DevOps — darker green
-    "#F07030",  # Enterprise — lighter vermillion
-    "#C475FD",  # SMB — base vermillion
-    "#2090CC",  # Digital — lighter blue
+    "#D195FE",  # Enterprise — lighter lavender
+    "#C475FD",  # SMB — base lavender
+    "#6883B6",  # Digital — lighter blue
     "#4467A3",  # Brand — base blue
-    "#DD99C0",  # HR — lighter pink
-    "#BD8233",  # Finance — base pink
+    "#CC9852",  # HR — lighter ochre
+    "#BD8233",  # Finance — base ochre
 ]
 
 fig = go.Figure(

@@ -17,7 +17,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for source nodes (positions 1-4)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-SOURCE_RGBA = ["rgba(0,158,115,0.4)", "rgba(213,94,0,0.4)", "rgba(0,114,178,0.4)", "rgba(204,121,167,0.4)"]
+SOURCE_RGBA = ["rgba(0,158,115,0.4)", "rgba(196,117,253,0.4)", "rgba(68,103,163,0.4)", "rgba(189,130,51,0.4)"]
 
 # Data - Energy flow from sources to sectors (TWh)
 sources = ["Coal", "Natural Gas", "Nuclear", "Renewables"]

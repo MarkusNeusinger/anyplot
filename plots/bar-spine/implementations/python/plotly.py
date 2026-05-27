@@ -41,8 +41,8 @@ for w in widths:
 # Conditional proportions within each bar (heights sum to 1)
 outcome_props = {k: [cnt / m for cnt, m in zip(v, channel_sizes)] for k, v in outcome_counts.items()}
 
-# Okabe-Ito palette: Active=green(1), On Trial=orange(5), Cancelled=vermillion(2)
-COLORS = {"Active": "#009E73", "On Trial": "#AE3030", "Cancelled": "#C475FD"}
+# imprint semantic anchors: Active=green, On Trial=amber (warning), Cancelled=red (bad)
+COLORS = {"Active": "#009E73", "On Trial": "#DDCC77", "Cancelled": "#AE3030"}
 
 # Plot
 fig = go.Figure()

@@ -50,7 +50,7 @@ fig.add_trace(
         r=junior_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.25)",
+        fillcolor="rgba(196, 117, 253, 0.25)",
         line={"color": IMPRINT[1], "width": 3},
         marker={"size": 12, "color": IMPRINT[1]},
         name="Junior Developer",

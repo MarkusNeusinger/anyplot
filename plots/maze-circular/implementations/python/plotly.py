@@ -198,7 +198,7 @@ fig.add_trace(
         x=[0.0],
         y=[0.0],
         mode="markers",
-        marker={"symbol": "star", "size": 20, "color": "#954477", "line": {"color": ACCENT, "width": 2}},
+        marker={"symbol": "star", "size": 20, "color": "#DDCC77", "line": {"color": ACCENT, "width": 2}},
         showlegend=False,
         hoverinfo="skip",
     )
