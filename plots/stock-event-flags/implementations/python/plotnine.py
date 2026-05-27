@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
-Library: plotnine | Python 3.13
-Quality: 91/100 | Created: 2026-01-21
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-27
 """
 
 import os
