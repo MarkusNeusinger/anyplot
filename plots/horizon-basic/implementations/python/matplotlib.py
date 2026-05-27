@@ -45,8 +45,8 @@ n_bands = 3
 band_height = 1.0
 
 # Color bases with theme-adaptive styling
-pos_base = mcolors.to_rgb("#009E73")  # Okabe-Ito brand green for positive
-neg_base = mcolors.to_rgb("#C475FD")  # Okabe-Ito vermillion for negative
+pos_base = mcolors.to_rgb("#009E73")  # imprint green — positive
+neg_base = mcolors.to_rgb("#AE3030")  # imprint red — negative
 
 # Create figure
 fig, axes = plt.subplots(n_series, 1, figsize=(16, 9), sharex=True, facecolor=PAGE_BG)

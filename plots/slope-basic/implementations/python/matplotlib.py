@@ -18,8 +18,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-COLOR_INC = "#009E73"  # Okabe-Ito pos 1 — increase (brand green)
-COLOR_DEC = "#C475FD"  # Okabe-Ito pos 2 — decrease (vermillion)
+COLOR_INC = "#009E73"  # imprint green — increase
+COLOR_DEC = "#AE3030"  # imprint red — decrease
 
 # Data
 products = ["Product A", "Product B", "Product C", "Product D", "Product E", "Product F", "Product G", "Product H"]

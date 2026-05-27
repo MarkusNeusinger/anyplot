@@ -65,8 +65,8 @@ df = pd.DataFrame({"date": rsi_dates, "rsi": rsi})
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Shade overbought zone (70-100)
-ax.fill_between(df["date"], 70, 100, alpha=0.12, color="#C475FD")
+# Shade overbought zone (70-100) — imprint red, semantic danger
+ax.fill_between(df["date"], 70, 100, alpha=0.12, color="#AE3030")
 
 # Shade oversold zone (0-30)
 ax.fill_between(df["date"], 0, 30, alpha=0.12, color="#4467A3")

@@ -115,11 +115,12 @@ def _substitute(text: str) -> tuple[str, int]:
 def _rename_palette_constant(text: str) -> str:
     """Rename common old palette variable names to IMPRINT (Python, R, Julia).
 
-    Only renames identifiers that look like a standalone palette constant
-    (whole-word match, all-caps name). Conservative — does not touch
-    inline comments or string literals.
+    Whole-word ASCII boundary match. The regex is intentionally not
+    AST-aware, so occurrences of OKABE_ITO / ANYPLOT_PALETTE inside
+    comments or string literals are renamed too. That's fine for our
+    one-shot use case (the surrounding comments are about to become
+    stale anyway), but worth knowing for future reuse.
     """
-    # Whole-word, ASCII identifier boundary on both sides.
     for old in ("OKABE_ITO", "ANYPLOT_PALETTE"):
         text = re.sub(rf"\b{old}\b", "IMPRINT", text)
     return text

@@ -18,9 +18,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BULLISH = "#009E73"  # Green for upward
-BEARISH = "#C475FD"  # Vermillion (reddish) for downward
+# imprint semantic anchors
+BULLISH = "#009E73"  # green — upward
+BEARISH = "#AE3030"  # red — downward
 
 # Generate synthetic price data
 np.random.seed(42)
