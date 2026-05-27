@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: pie-portfolio-interactive
 created: '2026-01-20T23:07:32Z'
-updated: '2026-05-27T17:30:06Z'
+updated: '2026-05-27T17:49:48Z'
 generated_by: claude-sonnet
 workflow_run: 26527033852
 issue: 3754
@@ -15,43 +15,34 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 quality_score: 85
 review:
   strengths:
-  - Full anyplot theme-adaptive tokens applied correctly across both light and dark
-    renders — foreground, foreground_strong, foreground_subtle all set.
-  - Generates both HTML (interactive) and PNG, correctly leveraging pygal's primary
-    strength.
-  - Per-slice label dicts with holding name + formatted weight enable rich interactive
-    tooltips in the HTML version.
-  - Realistic and well-balanced portfolio data with correct 100% allocation; clearly
-    neutral financial context.
-  - Font sizes all explicitly set with correct proportional formula for title length.
+  - Creative center annotation (55%/Equities/10 holdings) creates a clear focal point
+  - Category totals in legend labels provide portfolio overview at a glance
+  - 'Correct anyplot palette with #009E73 as first series; both themes pass readability
+    checks'
+  - Per-item hover tooltip labels via pygal native JS expose individual holding details
+  - SVG center annotation elegantly injected into pygal output pipeline
   weaknesses:
-  - inner_radius=0.35 produces a shallow donut hole — widen to 0.55–0.65 for a more
-    modern donut and to open space for a center annotation (e.g. '100% · 10 Holdings'
-    or the dominant category name).
-  - Legend labels show only category names ('Equities') — adding the category total
-    percentage ('Equities · 55.0%') in the legend would improve data storytelling
-    without cluttering the chart.
-  - No visual emphasis on the dominant category — the Equities slice at 55% is not
-    highlighted; consider a slight slice explosion or a text callout to draw attention
-    to the dominant allocation.
-  - Small Alternatives slices (three 5.0%/7.0% slices) cluster tightly at the top
-    — consider reducing value_font_size on small slices or using a wider inner_radius
-    to improve slice label separation.
+  - Small Alternatives sub-slice labels near chart top (5.0%, 5.0%, 7.0%) are crowded
+    — suppress or reposition labels on slices under ~6%
+  - No absolute dollar values alongside percentages; spec requires displaying both;
+    add notional AUM and compute holding dollar values for tooltips
+  - Individual holding names not visible in static PNG — only percentages on slice
+    labels; consider rendering names on larger slices (>=10%)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Title "pie-portfolio-interactive · python · pygal · anyplot.ai" in dark ink (~80% canvas width), fully readable. Legend at bottom with 3 columns ("Equities", "Fixed Income", "Alternatives") in dark text, clearly visible.
-      Data: Three asset-class segments — Equities (#009E73 brand green, ~55%), Fixed Income (#C475FD lavender, ~28%), Alternatives (#4467A3 steel blue, ~17%). Individual sub-holding slices labeled with percentages (25.0%, 10.0%, 12.0%, 8.0%, 15.0%, 8.0%, 5.0%, 7.0%, 5.0%, 5.0%). All value labels in dark ink on light background.
-      Legibility verdict: PASS — all text clearly readable, minor crowding on the three small Alternatives slices at the top
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "pie-portfolio-interactive · python · pygal · anyplot.ai" in dark text at top — fully readable. Legend at bottom with colored swatches and category labels — readable. No axis labels (appropriate for pie chart).
+      Data: Three donut segments — brand green #009E73 (Equities ~55%), lavender #C475FD (Fixed Income ~28%), blue-grey #4467A3 (Alternatives ~17%). Percentage labels on each sub-slice. Center annotation: bold "55%" / "Equities" / "10 holdings".
+      Legibility verdict: PASS — all text readable; minor crowding on the three small Alternatives labels (5.0%, 5.0%, 7.0%) near the top of the donut but all are legible.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title in light cream/off-white text, clearly readable. Legend text in light color, visible. Slice value labels in light text on the dark background — no dark-on-dark failures detected.
-      Data: Colors are identical to the light render — Equities (#009E73), Fixed Income (#C475FD), Alternatives (#4467A3) — confirming only chrome flips between themes.
-      Legibility verdict: PASS — all text readable in dark mode; foreground token (#F0EFE8) correctly applied to all text elements
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and legend text have flipped to light-colored — fully readable against dark background. No dark-on-dark failures detected. Center annotation text visible in lighter tone.
+      Data: Segment colors are identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue-grey) — data palette unchanged across themes, only chrome flipped.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,73 +50,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; minor crowding
-          on small 5.0% Alternatives slices
+        comment: Font sizes explicitly set; all text readable in both themes; small
+          deduction for slightly small value labels on 5% sub-slices
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three small Alternatives slices cluster tightly at top causing minor
-          label crowding but all values legible
+        comment: Minor crowding on three small Alternatives sub-slice labels near
+          top of donut; main content readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All pie segments and value labels clearly visible in both themes
+        comment: All segments clearly visible; center annotation bold and prominent;
+          colors well-differentiated
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette; three hue families (green/purple/blue) are CVD-safe
-          and perceptually distinct
+        comment: CVD-safe anyplot palette; three distinct hue families (green/purple/blue)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas well-utilized; chart fills ~80%; generous
-          margins; legend correctly placed
+        comment: Correct 2400x2400 square canvas; donut fills canvas well; generous
+          margins; legend cleanly at bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; pie chart has no axis labels (N/A)
+        comment: Title in exact mandated format; no axis labels needed for pie chart
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Equities=#009E73, Fixed Income=#C475FD, Alternatives=#4467A3; backgrounds
-          correct; text tokens adapt correctly
+        comment: 'First series #009E73; positions 2-3 in canonical order; light #FAF8F1
+          / dark #1A1A17 backgrounds; theme-adaptive text in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured anyplot default; inner_radius=0.35 minimal donut
-          hole; no center annotation; clean but not elevated
+        passed: true
+        comment: Above default; center annotation shows design thinking; category
+          totals in legend add hierarchy; professional but not publication-ready level
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: No grid (appropriate); explicit margins; legend columns organized;
-          no center annotation; legend lacks category totals
+        passed: true
+        comment: Generous margins; no grid or spines (appropriate for pie); clean
+          legend; moderate refinement above bare defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grouped coloring communicates asset class composition; no visual
-          emphasis on dominant Equities (55%) category
+        passed: true
+        comment: Center annotation creates focal point for dominant Equities allocation;
+          color coding guides eye; category totals in legend; individual holding names
+          only visible on hover
     spec_compliance:
       score: 14
       max: 15
@@ -135,26 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Donut/pie chart with grouped asset-class slices
+        comment: Correct donut/pie chart; spec explicitly allows pie or donut
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Interactive HTML tooltips, color-coded by asset class, legend, percentage
-          display present; no true drill-down (pygal limitation)
+        comment: 'Hover tooltips via pygal native JS; grouped by asset class; color-coded;
+          legend present. Missing: no absolute dollar values, no true drill-down navigation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 10 holdings mapped correctly; weights sum to 100%
+        comment: Asset weights correctly mapped to slice sizes; categories sum to
+          100%; all 10 holdings accessible via hover
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend shows Equities/Fixed Income/Alternatives
+        comment: Exact mandated title format; legend labels include category name
+          and total percentage
     data_quality:
       score: 15
       max: 15
@@ -164,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three asset classes with sub-holdings; meaningful weight variation
-          across slices
+        comment: Three distinct asset classes; 10 individual holdings; center annotation
+          highlights dominant allocation; proportional area encoding
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world multi-asset portfolio with recognizable holdings; neutral
-          financial scenario
+        comment: Realistic balanced multi-asset portfolio with recognizable asset
+          names; proportions match typical institutional allocation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Equities 55%, Fixed Income 28%, Alternatives 17%; realistic balanced
-          portfolio; individual holdings correctly sized
+        comment: Weights sum to 100%; 55/28/17 split is a plausible balanced portfolio;
+          individual weights 5-25% are realistic
     code_quality:
       score: 10
       max: 10
@@ -189,26 +183,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → data → style → chart → save; no functions or classes
+        comment: 'Linear script: imports -> data -> style -> chart -> render -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Hardcoded data; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, pygal, Style — all used
+        comment: All imports (os, re, sys, cairosvg, pygal, Style) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean dict comprehension, idiomatic lambda for value_formatter, no
-          fake UI
+        comment: sys.path manipulation justified and commented; SVG annotation injection
+          creative; value_formatter lambda clean
       - id: CQ-05
         name: Output & API
         score: 1
@@ -216,7 +210,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -224,21 +218,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Style object use, grouped series via chart.add(), value_formatter,
-          legend_at_bottom with columns, inner_radius
+        comment: Uses pygal.Pie with inner_radius, per-item label dicts for hover
+          tooltips, value_formatter, legend_at_bottom_columns — all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Interactive HTML with hover tooltips (pygal's signature feature);
-          per-slice label dicts for rich tooltips; value_formatter
-  verdict: REJECTED
+        comment: Native JS hover via HTML export; per-item label dicts for per-slice
+          tooltip text; SVG center annotation injection — creative library-specific
+          technique
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - iteration-over-groups
   dataprep: []
