@@ -1,10 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-27
 """
 
 import importlib.util
+import json
 import os
 import sys
 from io import BytesIO
@@ -98,11 +98,11 @@ map_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=seq_colors,
-    title_font_size=44,
-    label_font_size=32,
-    major_label_font_size=28,
-    legend_font_size=28,
-    value_font_size=24,
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=36,
+    legend_font_size=36,
+    value_font_size=28,
 )
 
 # Render 6 world map panels as PNG bytes
@@ -131,8 +131,8 @@ draw = ImageDraw.Draw(combined)
 
 # Load fonts (fall back to PIL default if DejaVu not available)
 try:
-    font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
-    font_legend = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 34)
+    font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 64)
+    font_legend = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
 except OSError:
     font_title = ImageFont.load_default()
     font_legend = ImageFont.load_default()
@@ -179,7 +179,7 @@ for (lbl, _, _), color in zip(activity_bins, seq_colors, strict=True):
 
 combined.save(f"plot-{THEME}.png")
 
-# Interactive HTML: final state (T6) choropleth with tooltips and toggleable legend
+# Interactive HTML: all 6 time steps with tab navigation
 html_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -187,30 +187,94 @@ html_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=seq_colors,
-    title_font_size=55,
+    title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
 )
-html_map = World(
-    style=html_style,
-    width=3200,
-    height=1800,
-    title="Seismic Activity (T6: +72h) · map-animated-temporal · python · pygal · anyplot.ai",
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=6,
-)
-final_binned = {label: {} for label, _, _ in activity_bins}
-for country, value in activity_by_time[5].items():
-    for label, low, high in activity_bins:
-        if low <= value < high:
-            final_binned[label][country] = value
-            break
-for label, _, _ in activity_bins:
-    if final_binned[label]:
-        html_map.add(label, final_binned[label])
 
-with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(html_map.render())
+# Render all 6 time steps as embeddable SVG strings
+svg_frames = []
+for time_idx in range(6):
+    data = activity_by_time[time_idx]
+    binned = {label: {} for label, _, _ in activity_bins}
+    for country, value in data.items():
+        for label, low, high in activity_bins:
+            if low <= value < high:
+                binned[label][country] = value
+                break
+    html_map = World(
+        style=html_style,
+        width=1600,
+        height=900,
+        title=f"Seismic Activity · {time_periods[time_idx]} · pygal · anyplot.ai",
+        show_legend=True,
+        legend_at_bottom=True,
+        legend_at_bottom_columns=6,
+    )
+    for label, _, _ in activity_bins:
+        if binned[label]:
+            html_map.add(label, binned[label])
+    svg_frames.append(html_map.render().decode("utf-8"))
+
+# Build tabbed HTML with JavaScript slider navigation
+tab_buttons = ""
+svg_divs = ""
+for i, (period, svg) in enumerate(zip(time_periods, svg_frames, strict=True)):
+    active_btn = " active" if i == 0 else ""
+    active_div = "" if i == 0 else ' style="display:none"'
+    tab_buttons += f'<button class="tab-btn{active_btn}" onclick="showFrame({i})">{period}</button>\n'
+    svg_divs += f'<div class="frame" id="frame-{i}"{active_div}>{svg}</div>\n'
+
+html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Seismic Activity · map-animated-temporal · pygal · anyplot.ai</title>
+<style>
+  body {{ margin: 0; background: {PAGE_BG}; font-family: DejaVu Sans, sans-serif; color: {INK}; }}
+  h1 {{ text-align: center; font-size: 1.6em; padding: 0.6em 1em 0.3em; margin: 0; }}
+  .tabs {{ display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0.4em 1em; }}
+  .tab-btn {{
+    background: {PAGE_BG}; color: {INK}; border: 2px solid {INK_SOFT};
+    border-radius: 6px; padding: 6px 18px; cursor: pointer; font-size: 1em;
+    transition: background 0.15s;
+  }}
+  .tab-btn:hover {{ background: {INK_SOFT}; color: {PAGE_BG}; }}
+  .tab-btn.active {{ background: #009E73; color: #FAF8F1; border-color: #009E73; }}
+  .frame svg {{ display: block; margin: 0 auto; max-width: 100%; }}
+  #progress {{ display: flex; justify-content: center; align-items: center; gap: 12px; padding: 0.3em 1em; }}
+  #slider {{ width: 300px; accent-color: #009E73; }}
+</style>
+</head>
+<body>
+<h1>Seismic Activity · map-animated-temporal · python · pygal · anyplot.ai</h1>
+<div class="tabs">
+{tab_buttons}
+</div>
+<div id="progress">
+  <span style="font-size:0.9em;color:{INK_SOFT}">Step:</span>
+  <input id="slider" type="range" min="0" max="5" value="0" oninput="showFrame(this.value)">
+  <span id="step-label" style="min-width:80px;font-size:0.9em;color:{INK_SOFT}">{time_periods[0]}</span>
+</div>
+{svg_divs}
+<script>
+var labels = {json.dumps(time_periods)};
+function showFrame(idx) {{
+  idx = parseInt(idx);
+  document.querySelectorAll('.frame').forEach(function(d, i) {{
+    d.style.display = i === idx ? '' : 'none';
+  }});
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {{
+    b.classList.toggle('active', i === idx);
+  }});
+  document.getElementById('slider').value = idx;
+  document.getElementById('step-label').textContent = labels[idx];
+}}
+</script>
+</body>
+</html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
