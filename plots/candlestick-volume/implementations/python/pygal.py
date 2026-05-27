@@ -24,10 +24,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 UP_COLOR = "#009E73"
-DOWN_COLOR = "#D55E00"
-VOLUME_COLOR = "#56B4E9"
+DOWN_COLOR = "#AE3030"  # imprint red — down days
+VOLUME_COLOR = "#2ABCCD"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 np.random.seed(42)
 n_periods = 60
@@ -50,7 +50,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

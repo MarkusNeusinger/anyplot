@@ -17,7 +17,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data — employee satisfaction scores by department (1–10 scale)
 np.random.seed(42)
@@ -38,7 +38,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=72,
     label_font_size=48,
     major_label_font_size=42,
@@ -82,7 +82,7 @@ for i, cat in enumerate(categories, start=1):
     ]
     chart.add(cat, points)
 
-# Mean reference markers — one dot per category at the mean position (5th Okabe color: #E69F00)
+# Mean reference markers — one dot per category at the mean position (5th Okabe color: #AE3030)
 # Positioned at exact integer x (no jitter) so they stand apart from the scattered data cloud
 mean_points = [
     {"value": (float(i), float(np.mean(scores[cat]))), "label": f"Mean {cat}: {np.mean(scores[cat]):.2f}"}

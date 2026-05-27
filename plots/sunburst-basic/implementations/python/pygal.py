@@ -15,7 +15,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 custom_style = Style(
     background=PAGE_BG,
@@ -23,7 +23,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=72,
     label_font_size=40,
     major_label_font_size=36,
@@ -45,9 +45,9 @@ departments = [
             ("Data Science", "#7DD3AB", 100),
         ],
     ),
-    ("Business", "#D55E00", [("Sales", "#D55E00", 150), ("Finance", "#E07D33", 100), ("Legal", "#EB9C66", 60)]),
-    ("Operations", "#0072B2", [("IT Support", "#0072B2", 90), ("Human Resources", "#3396C8", 80)]),
-    ("Marketing", "#CC79A7", [("Brand Design", "#CC79A7", 60), ("Digital Marketing", "#D99ABD", 40)]),
+    ("Business", "#C475FD", [("Sales", "#C475FD", 150), ("Finance", "#D195FE", 100), ("Legal", "#DEB5FE", 60)]),  # imprint lavender family
+    ("Operations", "#4467A3", [("IT Support", "#4467A3", 90), ("Human Resources", "#7A93BD", 80)]),  # imprint blue family
+    ("Marketing", "#BD8233", [("Brand Design", "#BD8233", 60), ("Digital Marketing", "#D1A668", 40)]),  # imprint ochre family
 ]
 
 # pygal.Pie with multiple series creates concentric rings — a sunburst chart

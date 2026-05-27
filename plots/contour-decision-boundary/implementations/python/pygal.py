@@ -29,7 +29,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series
-COLORS = ("#009E73", "#D55E00")  # Two classes
+COLORS = ("#009E73", "#C475FD")  # Two classes
 
 # Data: Generate synthetic classification data (moon shapes)
 np.random.seed(42)

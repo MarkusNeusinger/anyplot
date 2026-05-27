@@ -28,8 +28,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical palette: brand green, vermillion, blue
 COLOR_A = "#009E73"
-COLOR_B = "#D55E00"
-COLOR_C = "#0072B2"
+COLOR_B = "#C475FD"
+COLOR_C = "#4467A3"
 
 # Symmetric three-circle Venn: equilateral triangle of centers (apex up)
 RADIUS = 1.0

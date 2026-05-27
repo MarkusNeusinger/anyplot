@@ -28,7 +28,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 PIL_BG = (250, 248, 241) if THEME == "light" else (26, 26, 23)
 
 # Okabe-Ito palette — position 1 (#009E73) is always first series
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data: file-system storage allocation (GB) — 4 top-level folders, 3 sub-folders each
 hierarchy = [
@@ -66,13 +66,13 @@ sub_colors = {
     "videos": "#009E73",
     "photos": "#4DBB9D",
     "music": "#99D7C7",
-    "work": "#D55E00",
+    "work": "#C475FD",
     "personal": "#E28B4D",
     "archived": "#EEB899",
-    "productivity": "#0072B2",
+    "productivity": "#4467A3",
     "games": "#4D9EC9",
     "devtools": "#99C9E0",
-    "os": "#CC79A7",
+    "os": "#BD8233",
     "cache": "#DAA0C0",
     "logs": "#E8C7D8",
 }
@@ -86,7 +86,7 @@ html_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=18,
     major_label_font_size=16,
@@ -102,7 +102,7 @@ png_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=64,
     label_font_size=36,
     major_label_font_size=32,
@@ -164,15 +164,15 @@ html_content = f"""<!DOCTYPE html>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{ font-family: Arial, sans-serif; background: {PAGE_BG}; color: {INK}; padding: 24px; }}
     .container {{ max-width: 1600px; margin: 0 auto; }}
-    h1 {{ text-align: center; color: {OKABE_ITO[0]}; font-size: 26px; margin-bottom: 8px; }}
+    h1 {{ text-align: center; color: {IMPRINT[0]}; font-size: 26px; margin-bottom: 8px; }}
     .subtitle {{ text-align: center; color: {INK_MUTED}; font-size: 15px; margin-bottom: 22px; }}
     .toggle {{ text-align: center; margin-bottom: 18px; }}
     .btn {{
       padding: 10px 30px; font-size: 15px; margin: 0 6px; cursor: pointer;
-      border: 2px solid {OKABE_ITO[0]}; background: {PAGE_BG}; color: {OKABE_ITO[0]};
+      border: 2px solid {IMPRINT[0]}; background: {PAGE_BG}; color: {IMPRINT[0]};
       border-radius: 6px; font-weight: bold; transition: background 0.2s, color 0.2s;
     }}
-    .btn.active {{ background: {OKABE_ITO[0]}; color: {PAGE_BG}; }}
+    .btn.active {{ background: {IMPRINT[0]}; color: {PAGE_BG}; }}
     .chart {{ display: none; width: 100%; }}
     .chart.active {{ display: block; }}
     .chart svg {{ max-width: 100%; height: auto; }}
@@ -288,7 +288,7 @@ except OSError:
 
 title_str = "Disk Storage · hierarchy-toggle-view · python · pygal · anyplot.ai"
 tw = draw.textbbox((0, 0), title_str, font=font_title)
-draw.text(((4800 - (tw[2] - tw[0])) // 2, 40), title_str, fill=OKABE_ITO[0], font=font_title)
+draw.text(((4800 - (tw[2] - tw[0])) // 2, 40), title_str, fill=IMPRINT[0], font=font_title)
 
 sub_str = "240 GB total — Treemap excels at size comparison; Sunburst reveals hierarchy depth"
 sw = draw.textbbox((0, 0), sub_str, font=font_sub)
