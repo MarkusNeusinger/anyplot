@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-animated-temporal: Animated Map over Time
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-27
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-27
 """
 
 import os
