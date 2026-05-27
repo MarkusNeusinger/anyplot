@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-27
@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -79,7 +79,7 @@ p = figure(
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # L-shaped frame: only left/bottom axis lines visible
 
 p.title.text_color = INK
 p.title.text_font_size = "50pt"
@@ -106,7 +106,11 @@ price_line = p.line(x="date", y="close", source=source, line_width=4, line_color
 
 # Event flags — vertical connector lines + markers + labels
 legend_renderers = {}
+all_event_renderers = []
 price_range = close_prices.max() - close_prices.min()
+
+# Major events (earnings, split) get slightly larger offsets for visual hierarchy
+major_events = {"earnings", "split"}
 
 for i, event in events_df.iterrows():
     event_date = event["date"]
@@ -119,7 +123,9 @@ for i, event in events_df.iterrows():
     event_price = df.loc[idx, "close"]
 
     offset_dir = 1 if i % 2 == 0 else -1
-    flag_y = event_price + offset_dir * price_range * 0.15
+    # Major events flagged higher to create visual hierarchy
+    offset_factor = 0.20 if event_type in major_events else 0.13
+    flag_y = event_price + offset_dir * price_range * offset_factor
 
     p.segment(
         x0=[event_date],
@@ -132,8 +138,16 @@ for i, event in events_df.iterrows():
         alpha=0.7,
     )
 
-    flag_source = ColumnDataSource(data={"x": [event_date], "y": [flag_y]})
-    marker_size = 26 if marker == "diamond" else 20
+    flag_source = ColumnDataSource(
+        data={
+            "x": [event_date],
+            "y": [flag_y],
+            "event_type": [event_type.capitalize()],
+            "event_label": [event_label],
+            "price": [f"${event_price:.2f}"],
+        }
+    )
+    marker_size = 28 if event_type in major_events else 22
     renderer = p.scatter(
         x="x",
         y="y",
@@ -145,6 +159,8 @@ for i, event in events_df.iterrows():
         line_width=2,
         marker=marker,
     )
+
+    all_event_renderers.append(renderer)
 
     if event_type not in legend_renderers:
         legend_renderers[event_type] = renderer
@@ -160,6 +176,12 @@ for i, event in events_df.iterrows():
         text_font_style="bold",
     )
     p.add_layout(label)
+
+# HoverTool on event markers — reveals full event details in the HTML artifact
+hover = HoverTool(
+    renderers=all_event_renderers, tooltips=[("Type", "@event_type"), ("Event", "@event_label"), ("Price", "@price")]
+)
+p.add_tools(hover)
 
 # Legend
 legend_items = [LegendItem(label="Close Price", renderers=[price_line])]
