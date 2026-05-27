@@ -252,3 +252,4 @@ secrets/
 
 # Generated OG image samples (issue #5652) — review-only output of scripts/generate_og_samples.py
 /out/
+.migration-progress.json
