@@ -218,15 +218,34 @@ def render(spec: str, language: str, library: str) -> tuple[Path, Path]:
     # Fallback: a handful of impls save to the impl directory (script_dir) instead
     # of cwd — e.g. lines like `plt.savefig(os.path.join(script_dir, f"plot-{theme}.png"))`.
     # Move stray PNGs (and matching HTML sidecars for interactive libs) into the
-    # preview dir if found before checking existence.
+    # preview dir if found before checking existence. Skip git-tracked files —
+    # those are pre-existing committed artifacts shared across libraries in the
+    # same spec (e.g. plots/<spec>/implementations/python/plot-light.html from an
+    # old daily-regen pass), not output from the current render.
     impl_dir = impl.parent
     for theme in ("light", "dark"):
         for ext in ("png", "html"):
             target = preview / f"plot-{theme}.{ext}"
-            if not target.is_file():
-                stray = impl_dir / f"plot-{theme}.{ext}"
-                if stray.is_file():
-                    stray.rename(target)
+            if target.is_file():
+                continue
+            stray = impl_dir / f"plot-{theme}.{ext}"
+            if not stray.is_file():
+                continue
+            # Skip if git-tracked (pre-existing artifact, not our output).
+            try:
+                check = subprocess.run(
+                    ["git", "ls-files", "--error-unmatch", str(stray)],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    check=False,
+                )
+                if check.returncode == 0:
+                    continue  # tracked → leave it alone
+            except FileNotFoundError:
+                # git not on PATH (very unlikely in this repo) — fall through and
+                # move the file as before; better than aborting the whole run.
+                pass
+            stray.rename(target)
 
     if not light_png.is_file() or not dark_png.is_file():
         raise RuntimeError(f"render incomplete in {preview} — missing light or dark PNG")

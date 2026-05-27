@@ -21,7 +21,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 SELECTOR_ACTIVE = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data - Generate synthetic stock price data for 4 companies
 np.random.seed(42)
@@ -58,7 +58,7 @@ for i, symbol in enumerate(stocks.keys()):
             y=df_rebased[symbol],
             mode="lines",
             name=symbol,
-            line={"width": 2.5, "color": ANYPLOT_PALETTE[i]},
+            line={"width": 2.5, "color": IMPRINT[i]},
             hovertemplate=f"{symbol}<br>Date: %{{x|%Y-%m-%d}}<br>Value: %{{y:.1f}}<extra></extra>",
         )
     )
@@ -87,7 +87,7 @@ for i, symbol in enumerate(stocks.keys()):
         showarrow=False,
         xanchor="left",
         yanchor="middle",
-        font={"size": 9, "color": ANYPLOT_PALETTE[i]},
+        font={"size": 9, "color": IMPRINT[i]},
     )
 
 # Layout

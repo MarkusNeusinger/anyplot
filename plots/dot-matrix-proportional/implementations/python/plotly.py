@@ -20,7 +20,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Data: city commute survey, 100 respondents
 categories = ["Public Transit", "Car", "Cycling", "Work from Home"]
 counts = [42, 31, 15, 12]
-colors = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 total = sum(counts)  # 100
 grid_cols = 10
 grid_rows = total // grid_cols  # 10

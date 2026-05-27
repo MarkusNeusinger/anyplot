@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.25)" if THEME == "light" else "rgba(240,239,232,0.25)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: Major economy GDP rankings (approximate, in trillion USD, 1995–2023)
 np.random.seed(42)
@@ -27,7 +27,7 @@ countries = ["USA", "China", "Japan", "Germany", "UK", "France", "Brazil"]
 years = list(range(1995, 2024))
 
 base_gdp = {"USA": 7.70, "China": 0.73, "Japan": 5.45, "Germany": 2.60, "UK": 1.28, "France": 1.60, "Brazil": 0.77}
-color_map = dict(zip(countries, OKABE_ITO))
+color_map = dict(zip(countries, IMPRINT))
 
 data_rows = []
 for country in countries:

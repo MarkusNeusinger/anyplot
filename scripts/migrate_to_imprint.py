@@ -65,6 +65,19 @@ COMBINED: dict[str, str] = {**OKABE_TO_IMPRINT, **VARIANT_D_TO_IMPRINT}
 # Hex codes we expect to find — lowercased, with leading '#'.
 OLD_HEXES: set[str] = {k for k in COMBINED if COMBINED[k].lower() != k}
 
+# Same mapping expressed as RGB triples, for rgba(r,g,b,a) literals. The hex
+# regex above doesn't reach inline rgba() colors, but those are common in
+# plotly/bokeh/altair for semi-transparent fills. Whitespace inside the rgba
+# tuple is tolerated via a regex pattern rather than literal substring match.
+def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
+    h = hex_str.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+RGB_MAP: dict[tuple[int, int, int], tuple[int, int, int]] = {
+    _hex_to_rgb(old): _hex_to_rgb(new) for old, new in COMBINED.items() if old.lower() != new.lower()
+}
+
 # Library names by language (subdir = language).
 LIBRARIES_BY_LANGUAGE: dict[str, list[str]] = {
     "python": ["matplotlib", "seaborn", "plotnine", "plotly", "bokeh", "altair", "pygal", "highcharts", "letsplot"],
@@ -109,6 +122,34 @@ def _substitute(text: str) -> tuple[str, int]:
         return new if new != original else original
 
     new_text = HEX_RE.sub(repl, text)
+    new_text, rgba_count = _substitute_rgba(new_text)
+    return new_text, count + rgba_count
+
+
+# rgba(r, g, b, a) — r/g/b ints, a flexible. Tolerates any whitespace between
+# the components and preserves the alpha + closing paren verbatim.
+RGBA_RE = re.compile(r"rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,([^)]+)\)")
+
+
+def _substitute_rgba(text: str) -> tuple[str, int]:
+    count = 0
+
+    def repl(match: re.Match[str]) -> str:
+        nonlocal count
+        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
+        alpha = match.group(4)
+        new_rgb = RGB_MAP.get((r, g, b))
+        if new_rgb is None:
+            return match.group(0)
+        count += 1
+        nr, ng, nb = new_rgb
+        # Match the source's spacing style — if the original had a space after
+        # the third comma, preserve it (most "well-formatted" callers do);
+        # otherwise stay compact. Avoids ending up with mixed "a, b, c,d" output.
+        alpha_str = alpha if alpha.startswith(" ") else " " + alpha.lstrip()
+        return f"rgba({nr}, {ng}, {nb},{alpha_str})"
+
+    new_text = RGBA_RE.sub(repl, text)
     return new_text, count
 
 
@@ -163,8 +204,12 @@ def _process_file(
     original = impl_path.read_text()
     lower = original.lower()
 
-    has_old = any(h in lower for h in OLD_HEXES)
-    if not has_old:
+    has_old_hex = any(h in lower for h in OLD_HEXES)
+    has_old_rgba = bool(RGBA_RE.search(original)) and any(
+        f"rgba({r},{g},{b}" in lower.replace(" ", "") or f"rgba({r}, {g}, {b}" in original
+        for r, g, b in RGB_MAP
+    )
+    if not (has_old_hex or has_old_rgba):
         stats.skipped_already_imprint += 1
         return
 

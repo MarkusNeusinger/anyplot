@@ -19,8 +19,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # SHAP semantic colors (Okabe-Ito positions used for semantic encoding)
-POS_COLOR = "#D55E00"  # vermillion — positive SHAP (pushes prediction up)
-NEG_COLOR = "#0072B2"  # blue — negative SHAP (pushes prediction down)
+POS_COLOR = "#AE3030"  # imprint red — positive SHAP (pushes prediction up)
+NEG_COLOR = "#4467A3"  # blue — negative SHAP (pushes prediction down)
 REF_COLOR = "#009E73"  # brand green — reference bars (base & final)
 
 # Data — credit risk model SHAP waterfall for a single high-risk loan applicant

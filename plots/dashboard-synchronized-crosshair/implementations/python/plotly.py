@@ -22,8 +22,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # anyplot palette
 PRICE_COLOR = "#009E73"  # position 1 - green
-VOLUME_COLOR = "#9418DB"  # position 2 - purple
-RSI_COLOR = "#16B8F3"  # position 4 - sky blue
+VOLUME_COLOR = "#C475FD"  # position 2 - purple
+RSI_COLOR = "#4467A3"  # position 4 - sky blue
 
 # Data - Stock data: price, volume, and 14-period RSI over 200 trading days
 np.random.seed(42)
@@ -104,7 +104,7 @@ fig.add_trace(
 )
 
 # RSI reference lines — distinct dash patterns for colorblind accessibility
-fig.add_hline(y=70, line_dash="dash", line_color="#B71D27", line_width=1.5, row=3, col=1)
+fig.add_hline(y=70, line_dash="dash", line_color="#AE3030", line_width=1.5, row=3, col=1)
 fig.add_hline(y=30, line_dash="dot", line_color="#009E73", line_width=1.5, row=3, col=1)
 
 # Style

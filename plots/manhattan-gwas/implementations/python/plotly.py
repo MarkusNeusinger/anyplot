@@ -30,19 +30,19 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
 ]
 
 # Threshold line colors (theme-adaptive)
 THRESHOLD_COLOR = INK_MUTED
-HIGHLIGHT_COLOR = OKABE_ITO[1]  # vermillion for significant SNPs
+HIGHLIGHT_COLOR = IMPRINT[1]  # vermillion for significant SNPs
 
 # Data - Simulated GWAS results
 np.random.seed(42)
@@ -119,7 +119,7 @@ df = pd.DataFrame(data)
 
 # Alternating chromosome colors (Okabe-Ito positions 1 and 2)
 def get_chr_color(chrom_num):
-    return OKABE_ITO[0] if int(chrom_num) % 2 == 1 else OKABE_ITO[1]
+    return IMPRINT[0] if int(chrom_num) % 2 == 1 else IMPRINT[1]
 
 
 # Create figure

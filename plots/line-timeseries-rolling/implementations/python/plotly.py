@@ -21,7 +21,7 @@ GRID = "rgba(26,26,23,0.25)" if THEME == "light" else "rgba(240,239,232,0.25)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Raw data (first series)
-ACCENT = "#D55E00"  # Rolling average
+ACCENT = "#C475FD"  # Rolling average
 
 # Data - Daily temperature readings with noise
 np.random.seed(42)

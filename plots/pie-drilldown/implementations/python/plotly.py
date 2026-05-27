@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 ACCENT = "#009E73"
 
 # Okabe-Ito palette (first series must be #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Hierarchical data for sales regions
 hierarchy = {
@@ -58,30 +58,30 @@ top_percent = 100 * top_value / total_value
 
 # Color mapping using Okabe-Ito (first series is always #009E73 for brand)
 colors = {
-    "North America": OKABE_ITO[0],  # #009E73 - brand green
-    "Europe": OKABE_ITO[1],  # #D55E00 - vermillion
-    "Asia Pacific": OKABE_ITO[2],  # #0072B2 - blue
-    "Latin America": OKABE_ITO[3],  # #CC79A7 - reddish purple
+    "North America": IMPRINT[0],  # #009E73 - brand green
+    "Europe": IMPRINT[1],  # #C475FD - vermillion
+    "Asia Pacific": IMPRINT[2],  # #4467A3 - blue
+    "Latin America": IMPRINT[3],  # #BD8233 - reddish purple
 }
 
 # Lighter shades for subcategories (derived from main colors with opacity in hover)
 sub_colors = {
     # North America shades
-    "USA": OKABE_ITO[0],
-    "Canada": OKABE_ITO[0],
-    "Mexico": OKABE_ITO[0],
+    "USA": IMPRINT[0],
+    "Canada": IMPRINT[0],
+    "Mexico": IMPRINT[0],
     # Europe shades
-    "UK": OKABE_ITO[1],
-    "Germany": OKABE_ITO[1],
-    "France": OKABE_ITO[1],
+    "UK": IMPRINT[1],
+    "Germany": IMPRINT[1],
+    "France": IMPRINT[1],
     # Asia Pacific shades
-    "Japan": OKABE_ITO[2],
-    "Australia": OKABE_ITO[2],
-    "India": OKABE_ITO[2],
+    "Japan": IMPRINT[2],
+    "Australia": IMPRINT[2],
+    "India": IMPRINT[2],
     # Latin America shades
-    "Brazil": OKABE_ITO[3],
-    "Argentina": OKABE_ITO[3],
-    "Chile": OKABE_ITO[3],
+    "Brazil": IMPRINT[3],
+    "Argentina": IMPRINT[3],
+    "Chile": IMPRINT[3],
 }
 
 # Get data for top level
