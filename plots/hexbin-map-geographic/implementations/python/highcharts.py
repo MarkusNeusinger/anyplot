@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: highcharts unknown | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-27
+Quality: 86/100 | Created: 2026-05-27
 """
 
 import json
