@@ -1,207 +1,264 @@
 library: pygal
+language: python
 specification_id: line-navigator
 created: '2026-01-20T20:59:13Z'
-updated: '2026-01-20T21:19:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21186878226
+updated: '2026-05-27T11:41:07Z'
+generated_by: claude-sonnet
+workflow_run: 26508239295
 issue: 3785
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-navigator/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-navigator/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-navigator/python/pygal/plot-dark.html
 quality_score: 86
 review:
   strengths:
-  - Creative solution using two separate pygal charts combined with PIL to achieve
-    navigator functionality
-  - Excellent use of pygal Style for consistent, professional appearance
-  - Good colorblind-safe color scheme (blue/orange)
-  - Appropriate data scale with 1095 points demonstrating large dataset handling
-  - Proper title format on main chart
-  - HTML output also generated for interactive viewing
+  - Correct two-pane line+navigator layout with main detail chart (85%) and mini overview
+    (15%) exactly matching the spec ratio
+  - 'Brand green #009E73 used as first series in both main and navigator charts; lavender
+    #C475FD correctly used for the selection highlight as palette position 2'
+  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with proper theme-adaptive
+    chrome — no dark-on-dark or light-on-light failures
+  - All font sizes explicitly set in both chart styles (title=66, label=56, major_label=44,
+    legend=44 for main; scaled-down equivalents for navigator)
+  - PIL composition cleanly stacks the two pygal-rendered PNGs into an exact 3200×1800
+    canvas; resize guard prevents pixel-offset artifacts from cairosvg
+  - Dual HTML+PNG output correctly generated; cubic interpolation on the main line
+    provides visual smoothness for the 200-point detail view
+  - 'Elevated background on navigator pane (#FFFDF6 light / #242420 dark) creates
+    subtle visual separation between the two chart regions'
+  - 'Data is realistic: 3-year daily sensor readings with trend + seasonality + noise
+    — a genuinely useful navigator scenario with 1095 points'
   weaknesses:
-  - X-axis date labels in main chart are slightly crowded despite label sampling
-  - Navigator title uses different format than main chart (not matching spec-id format)
-  - The workaround with PIL adds complexity that deviates from KISS principle
-  - 'Pygal limitation: cannot implement truly interactive draggable selection handles
-    (static PNG only)'
-  image_description: The plot displays a line chart with a mini navigator design.
-    The main chart at the top shows a blue line representing sensor readings (in mV)
-    over a selected date range from Feb 2023 to Aug 2023. The line shows significant
-    variability with values ranging roughly from 45 to 92 mV. The x-axis displays
-    dates in YYYY-MM-DD format rotated 45 degrees, and the y-axis shows "Sensor Reading
-    (mV)". The title correctly shows "line-navigator · pygal · pyplots.ai". Below
-    the main chart is a smaller navigator panel with a gray background, titled "Navigator
-    - Full Data Range (2022-2024)". This navigator shows the full dataset as a light
-    blue filled area and highlights the selected range (Feb 2023 - Aug 2023) in orange.
-    The legend at the bottom clearly identifies both series. The two-chart composition
-    effectively demonstrates the navigator concept.
+  - Design sophistication (DE-01) is above defaults but still reads as a well-configured
+    library output rather than a publication-ready chart — consider adding a thin
+    horizontal rule or subtle annotation marking the selection bounds (start/end date
+    lines) in the navigator to make the selection window more visually explicit and
+    polished
+  - 'Navigator legend (''Full Dataset (2022–2024)'' and ''Selected: Feb 2023 – Aug
+    2023'') appears compressed at the 270px navigator height — the legend_at_bottom
+    placement competes with the already-tight vertical space; consider moving the
+    navigator legend to a one-line label rendered inside the navigator (e.g., a text
+    annotation) or removing it if the selection range label in the main chart''s legend
+    is sufficient'
+  - The navigator fill series for the selected range uses opacity='.6' globally but
+    the selection-highlighted fill could benefit from stronger contrast (more opaque
+    fill or a slightly different opacity level) to make the selected window more visually
+    distinct from the full dataset fill
+  - No date-range annotation / callout on the main chart beyond the legend — adding
+    a subtle subtitle or annotation showing the exact range being viewed would improve
+    data storytelling (DE-03) without adding clutter
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "line-navigator · python · pygal · anyplot.ai" in dark ink, clearly readable at ~65–70% of chart width. X-axis label "Date" and Y-axis label "Sensor Reading (mV)" visible at appropriate size. Tick labels (Feb 05 through Aug 22 on X; 50–90 on Y) readable in dark ink. Subtle Y-axis grid lines present. Legend at bottom of main chart shows "■ Feb 2023 – Aug 2023" in dark text.
+      Data: Single brand-green (#009E73) line showing 200 data points (Feb–Aug 2023) with cubic interpolation. No dots (appropriate for this density). Navigator pane below uses elevated background (#FFFDF6) with a filled area chart — full dataset in green (#009E73 with opacity 0.6) and selected range in lavender (#C475FD).
+      Navigator: 270px tall (~17.6% of main chart height, within spec's 15–20% target). Legend shows "Full Dataset (2022–2024)" and "Selected: Feb 2023 – Aug 2023" — text is small due to compressed height but set explicitly.
+      Legibility verdict: PASS — all elements readable; first series correctly #009E73.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title in light off-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in light-colored text (#B8B7B0 range), all readable. Subtle grid lines visible. Legend text light-colored.
+      Data: Brand-green line identical to light render — data colors are unchanged between themes as required. Lavender selection fill in navigator matches light render. No dark-on-dark failures detected; no near-black text on near-black background.
+      Legibility verdict: PASS — all text readable; chrome correctly adapts to dark theme; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels clearly readable; tick labels legible though
-          x-axis dates slightly dense
+        comment: All font sizes explicitly set; main chart text proportioned well;
+          navigator legend text is small due to 270px height constraint but explicitly
+          sized
       - id: VQ-02
         name: No Overlap
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Minor visual density on x-axis labels but no significant overlap
+        comment: No overlapping text in either render; main chart x-labels spaced
+          correctly
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line clearly visible with good stroke width; navigator fills distinguish
-          well
+        comment: Line without dots appropriate for 200-point detail and 1095-point
+          navigator; navigator fill compressed but functional
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/orange colorblind-safe scheme with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 80/20 proportion; some margin space could be tighter
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units, X-axis labeled Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: '#009E73 and #C475FD are CVD-safe; good contrast in both themes'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas; 85%/15% split within spec range; good margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend well placed; subtle y-axis guides present
+        comment: Title correct format; 'Sensor Reading (mV)' includes units; 'Date'
+          appropriate
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second series #C475FD (palette position 2);
+          backgrounds #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: elevated navigator bg, dual-pane layout, opacity
+          refinement — not yet publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No dots, Y-only grid, no navigator guides, cubic interpolation, elevated
+          bg separation — good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Navigator selection highlight creates clear focal point; dual-pane
+          inherently tells a zoom story
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart with mini navigator implementation
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, numeric values on Y-axis correctly mapped
-      - id: SC-03
+        comment: Correct line chart with navigator pane implementation
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Main chart shows selected range, navigator shows full extent with
-          selection highlight; interactive dragging not possible in static PNG
-      - id: SC-04
-        name: Data Range
+        comment: Main detail view, mini overview, visual selection window, date labels
+          present; no interactive draggable handles (static medium limitation)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis auto-scales appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, sensor readings on Y; selected range and full dataset
+          correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels accurately describe the data series
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Main chart has correct title format; navigator has separate descriptive
-          title
+        comment: Title 'line-navigator · python · pygal · anyplot.ai' exactly correct;
+          legends clearly label all series
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows trend, noise, and large dataset; could show more distinct seasonal
-          patterns
+        comment: Full dataset + selected range highlighted; trend and seasonal variation
+          visible in navigator; 1095-point series demonstrates navigation need
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sensor readings in millivolts is realistic neutral scientific scenario
+        comment: Daily sensor readings over 3 years with trend, seasonality, and noise
+          — real, neutral, scientifically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 50-90 mV plausible for sensor data; 3-year daily readings
-          appropriate
+        comment: 50–90 mV range appropriate for sensor data; 1095 daily points makes
+          navigation essential
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly flat structure but combines two charts using PIL adding complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Linear flow: imports → sys.path fix → data → charts → PIL compose
+          → HTML; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, pygal, PIL, io)
+        comment: 'All imports used: io, os, sys, numpy, pandas, pygal, PIL.Image,
+          pygal.style.Style'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; sys.path manipulation necessary (file named
+          pygal.py); PIL composition is straightforward
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses PIL workaround rather than direct pygal output
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Style object usage with all theme tokens; render_to_png()
+          and render() both used; proper constructor configuration
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal Style, fill mode, cubic interpolation; two-chart composition
-          requires PIL workaround
-  verdict: APPROVED
+        comment: Cubic interpolation (pygal-native), fill=True for area, dual PNG+HTML
+          output using render_to_png() + render() — distinctively pygal
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - html-export
+  - subplots
   patterns:
   - data-generation
   dataprep:
