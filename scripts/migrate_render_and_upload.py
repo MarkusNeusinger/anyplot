@@ -10,8 +10,10 @@
 """Stage B of the imprint migration: re-render light+dark images locally and
 overwrite the GCS production bucket.
 
-For every (spec, language, library) listed in ``.migration-list.json`` (or
-discovered from a freshly-applied Stage A), this script:
+Targets are discovered from either git's working tree (``git diff --name-only HEAD``,
+the default — useful right after running Stage A) or from a specific commit
+(``--from-commit <sha>``, used after a squash-merge to re-render the files that
+just landed on ``main``). For every (spec, language, library) target, this script:
 
 1. Renders ``plot-light.png`` and ``plot-dark.png`` in ``.regen-preview/{library}/``
    by running the impl with ``ANYPLOT_THEME`` set to each theme.
@@ -155,6 +157,11 @@ def preflight(python_libs: set[str], needs_r: bool, needs_julia: bool, needs_sel
     if not gcloud_ok:
         notes.append("gcloud not authenticated → gcloud auth login")
 
+    gsutil_ok = _check_command(["gsutil", "version"])
+    if not gsutil_ok:
+        gcloud_ok = False
+        notes.append("gsutil not on PATH → install via 'gcloud components install gsutil'")
+
     return PreFlight(
         python_ok=python_ok,
         r_ok=r_ok,
@@ -288,17 +295,9 @@ def _key(spec: str, language: str, library: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _discover_targets_from_git(library_filter: str) -> list[tuple[str, str, str]]:
-    """Find (spec, language, library) from git's working tree — files modified vs HEAD."""
-    out = subprocess.run(
-        ["git", "diff", "--name-only", "HEAD"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+def _parse_changed_files(stdout: str, library_filter: str) -> list[tuple[str, str, str]]:
     targets: list[tuple[str, str, str]] = []
-    for line in out.stdout.splitlines():
+    for line in stdout.splitlines():
         # Expected: plots/{spec}/implementations/{language}/{library}.{ext}
         parts = line.split("/")
         if len(parts) != 5 or parts[0] != "plots" or parts[2] != "implementations":
@@ -312,6 +311,30 @@ def _discover_targets_from_git(library_filter: str) -> list[tuple[str, str, str]
             continue
         targets.append((spec, language, library))
     return targets
+
+
+def _discover_targets_from_git(library_filter: str) -> list[tuple[str, str, str]]:
+    """Find (spec, language, library) from git's working tree — files modified vs HEAD."""
+    out = subprocess.run(
+        ["git", "diff", "--name-only", "HEAD"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return _parse_changed_files(out.stdout, library_filter)
+
+
+def _discover_targets_from_commit(commit: str, library_filter: str) -> list[tuple[str, str, str]]:
+    """Find (spec, language, library) from a specific commit's file list (squash-merge friendly)."""
+    out = subprocess.run(
+        ["git", "show", "--name-only", "--pretty=format:", commit],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return _parse_changed_files(out.stdout, library_filter)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -383,12 +406,20 @@ def process_one(spec: str, language: str, library: str, *, dry_run: bool, consol
     is_flag=True,
     help="Skip items already marked 'done' in .migration-progress.json.",
 )
-def main(library: str, spec: str | None, check_only: bool, dry_run: bool, skip_on_error: bool, resume: bool) -> None:
+@click.option(
+    "--from-commit",
+    default=None,
+    help="Discover targets from a specific commit (e.g. a squash-merge SHA) instead of the working tree.",
+)
+def main(library: str, spec: str | None, check_only: bool, dry_run: bool, skip_on_error: bool, resume: bool, from_commit: str | None) -> None:
     """Re-render and upload light/dark images for migrated impls."""
     console = Console()
 
     # Discover targets first so we know which langs to pre-flight.
-    targets = _discover_targets_from_git(library)
+    if from_commit:
+        targets = _discover_targets_from_commit(from_commit, library)
+    else:
+        targets = _discover_targets_from_git(library)
     if spec:
         targets = [t for t in targets if t[0] == spec]
 

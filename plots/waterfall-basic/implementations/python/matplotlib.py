@@ -18,10 +18,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for waterfall categories
-INCREASE_COLOR = "#009E73"  # Brand green (position 1)
-DECREASE_COLOR = "#C475FD"  # Vermillion (position 2)
-TOTAL_COLOR = "#4467A3"  # Blue (position 3)
+# imprint semantic anchors for waterfall categories
+INCREASE_COLOR = "#009E73"  # green — increase
+DECREASE_COLOR = "#AE3030"  # red — decrease
+TOTAL_COLOR = "#4467A3"  # blue — total/baseline
 
 # Data: Project Budget Allocation (from initial budget to final allocation)
 # Different scenario from the original (avoiding Altair match)

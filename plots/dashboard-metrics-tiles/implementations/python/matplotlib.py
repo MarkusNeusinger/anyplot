@@ -17,8 +17,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Status colors — semantic alarm indicators using Okabe-Ito positions 1, 5, 2
-STATUS_COLORS = {"good": "#009E73", "warning": "#AE3030", "critical": "#C475FD"}
+# Status colors — imprint semantic anchors (green / amber / red)
+STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}
 STATUS_LABELS = {"good": "GOOD", "warning": "WARNING", "critical": "CRITICAL"}
 
 # Data

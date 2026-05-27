@@ -20,11 +20,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito colors for EMAs
-EMA_SHORT_COLOR = "#009E73"  # Okabe-Ito pos 1 — 12-day EMA
-EMA_LONG_COLOR = "#C475FD"  # Okabe-Ito pos 2 — 26-day EMA
-GOLDEN_COLOR = "#AE3030"  # Okabe-Ito pos 5 — bullish crossover
-DEATH_COLOR = "#BD8233"  # Okabe-Ito pos 4 — bearish crossover
+# imprint palette — categorical EMAs + semantic crossover markers
+EMA_SHORT_COLOR = "#4467A3"  # imprint blue — 12-day EMA
+EMA_LONG_COLOR = "#BD8233"  # imprint ochre — 26-day EMA
+GOLDEN_COLOR = "#009E73"  # green — bullish crossover (semantic)
+DEATH_COLOR = "#AE3030"  # red — bearish crossover (semantic)
 
 # Data
 np.random.seed(42)

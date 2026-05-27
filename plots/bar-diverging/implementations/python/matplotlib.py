@@ -42,9 +42,8 @@ sorted_indices = np.argsort(values)
 categories_sorted = [categories[i] for i in sorted_indices]
 values_sorted = values[sorted_indices]
 
-# Create colors using Okabe-Ito palette
-# #009E73 (position 1) for positive, #C475FD (position 2) for negative
-colors = ["#009E73" if v >= 0 else "#C475FD" for v in values_sorted]
+# imprint semantic anchors: green for positive, red for negative
+colors = ["#009E73" if v >= 0 else "#AE3030" for v in values_sorted]
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
@@ -87,7 +86,7 @@ ax.spines["bottom"].set_color(INK_SOFT)
 # Add legend
 legend_elements = [
     Patch(facecolor="#009E73", edgecolor=INK_SOFT, label="Positive (Satisfied)"),
-    Patch(facecolor="#C475FD", edgecolor=INK_SOFT, label="Negative (Dissatisfied)"),
+    Patch(facecolor="#AE3030", edgecolor=INK_SOFT, label="Negative (Dissatisfied)"),
 ]
 leg = ax.legend(handles=legend_elements, loc="lower right", fontsize=16)
 if leg:

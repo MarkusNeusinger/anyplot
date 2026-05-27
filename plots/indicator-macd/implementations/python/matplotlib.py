@@ -22,11 +22,11 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-MACD_COLOR = "#4467A3"  # Blue (position 3)
-SIGNAL_COLOR = "#AE3030"  # Orange (position 5)
-POSITIVE_COLOR = "#009E73"  # Green (position 1)
-NEGATIVE_COLOR = "#C475FD"  # Red-orange (position 2)
+# imprint palette
+MACD_COLOR = "#4467A3"  # blue — MACD line
+SIGNAL_COLOR = "#BD8233"  # ochre — signal line (categorical contrast with MACD blue)
+POSITIVE_COLOR = "#009E73"  # green — histogram bars above zero
+NEGATIVE_COLOR = "#AE3030"  # red — histogram bars below zero
 
 # Generate synthetic stock price data and calculate MACD
 np.random.seed(42)

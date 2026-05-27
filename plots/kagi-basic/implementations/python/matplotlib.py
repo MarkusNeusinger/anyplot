@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data colors (Okabe-Ito palette, theme-independent)
-COLOR_YANG = "#009E73"  # Okabe-Ito position 1 (green for bullish)
-COLOR_YIN = "#C475FD"  # Okabe-Ito position 2 (red for bearish)
+COLOR_YANG = "#009E73"  # imprint green — bullish
+COLOR_YIN = "#AE3030"  # imprint red — bearish
 
 # Generate synthetic stock price data
 np.random.seed(42)
