@@ -1,199 +1,188 @@
-""" pyplots.ai
+""" anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 68/100 | Created: 2026-01-20
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-27
 """
 
+import os
+import sys
+
+
+# Remove the script's own directory from sys.path to prevent self-import collision
+# (this file is named bokeh.py, which would otherwise shadow the installed bokeh package)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != "" and os.path.abspath(p) != _script_dir]
+
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, CustomJSTickFormatter, HoverTool, LinearColorMapper
+from bokeh.io import output_file, save
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper
 from bokeh.plotting import figure
 from bokeh.transform import transform
 from bokeh.util.hex import hexbin
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated GPS coordinates (NYC taxi pickups)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data — simulated NYC taxi pickup GPS coordinates
 np.random.seed(42)
+n_points = 8000
 
-# Generate clustered point data to simulate urban hotspots
-n_points = 5000
-
-# Create multiple cluster centers (simulating different neighborhoods in NYC)
-centers = [
-    (-73.98, 40.75),  # Midtown Manhattan
-    (-73.96, 40.78),  # Upper East Side
-    (-74.00, 40.72),  # West Village
-    (-73.99, 40.73),  # Greenwich Village
-    (-73.97, 40.76),  # Central Park South
+cluster_centers = [
+    (-73.984, 40.754),  # Times Square / Midtown
+    (-73.965, 40.782),  # Upper West Side
+    (-74.005, 40.724),  # SoHo / TriBeCa
+    (-73.991, 40.735),  # Greenwich Village
+    (-73.951, 40.773),  # Carnegie Hill / Museum Mile
 ]
 
-# Generate points around cluster centers with varying densities
-lon_data = []
-lat_data = []
-for center_lon, center_lat in centers:
-    n_cluster = n_points // len(centers) + np.random.randint(-200, 200)
-    lon_data.extend(np.random.normal(center_lon, 0.015, n_cluster))
-    lat_data.extend(np.random.normal(center_lat, 0.012, n_cluster))
+lon_list = []
+lat_list = []
+for cx, cy in cluster_centers:
+    n = n_points // len(cluster_centers) + np.random.randint(-300, 300)
+    lon_list.extend(np.random.normal(cx, 0.018, n))
+    lat_list.extend(np.random.normal(cy, 0.014, n))
 
-lon = np.array(lon_data)
-lat = np.array(lat_data)
+lon = np.array(lon_list)
+lat = np.array(lat_list)
 
-# Convert lat/lon to Web Mercator projection
-k = 6378137  # Earth radius in meters
-merc_lon = lon * (k * np.pi / 180.0)
-merc_lat = np.log(np.tan((90 + lat) * np.pi / 360.0)) * k
+# Web Mercator projection (EPSG:3857)
+K = 6378137.0
+merc_x = lon * (K * np.pi / 180.0)
+merc_y = np.log(np.tan((90.0 + lat) * np.pi / 360.0)) * K
 
-# Compute hexbin aggregation in Web Mercator coordinates
-hex_size = 800  # Size in meters (Web Mercator units)
-bins = hexbin(merc_lon, merc_lat, hex_size)
+# Hexagonal binning (size in Web Mercator meters)
+hex_size = 650
+bins = hexbin(merc_x, merc_y, hex_size)
+source = ColumnDataSource(data={"q": np.array(bins.q), "r": np.array(bins.r), "counts": np.array(bins.counts)})
 
-# Extract hexagon coordinates and counts
-hex_q = bins.q
-hex_r = bins.r
-hex_counts = bins.counts
+# imprint_seq colormap: #009E73 (green) → #4467A3 (blue), 256 stops
+c0 = np.array([0x00, 0x9E, 0x73])
+c1 = np.array([0x44, 0x67, 0xA3])
+t_vals = np.linspace(0, 1, 256)
+rgb_ramp = np.round(c0 + np.outer(t_vals, c1 - c0)).astype(int)
+imprint_seq = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in rgb_ramp]
 
-# Create ColumnDataSource for hex tiles
-hex_source = ColumnDataSource(data={"q": hex_q, "r": hex_r, "counts": hex_counts})
+mapper = LinearColorMapper(palette=imprint_seq, low=float(bins.counts.min()), high=float(bins.counts.max()))
 
-# Create color mapper with viridis-like colors
-colors = ["#440154", "#482878", "#3e4989", "#31688e", "#26828e", "#1f9e89", "#35b779", "#6ece58", "#b5de2b", "#fde725"]
-mapper = LinearColorMapper(palette=colors, low=min(hex_counts), high=max(hex_counts))
+# Map viewport with padding
+pad = 4000
+x_range = (float(merc_x.min()) - pad, float(merc_x.max()) + pad)
+y_range = (float(merc_y.min()) - pad, float(merc_y.max()) + pad)
 
-# Calculate bounds for the map (with padding)
-x_min, x_max = merc_lon.min() - 2000, merc_lon.max() + 2000
-y_min, y_max = merc_lat.min() - 2000, merc_lat.max() + 2000
+# Title — 51 chars, under 67 baseline, no scaling needed
+title = "hexbin-map-geographic · python · bokeh · anyplot.ai"
 
-# Simplified Manhattan coastline coordinates (approximate)
-manhattan_coast_lon = np.array(
-    [-74.047, -74.041, -74.019, -74.009, -73.971, -73.968, -73.943, -73.934, -73.921, -73.911, -73.929, -73.942]
-)
-manhattan_coast_lat = np.array(
-    [40.689, 40.701, 40.705, 40.714, 40.728, 40.751, 40.776, 40.794, 40.806, 40.874, 40.879, 40.873]
-)
-manhattan_coast_x = manhattan_coast_lon * (k * np.pi / 180.0)
-manhattan_coast_y = np.log(np.tan((90 + manhattan_coast_lat) * np.pi / 360.0)) * k
+# Tile layer for geographic context
+tile_provider = "CartoDB Dark Matter" if THEME == "dark" else "CartoDB Positron"
 
-# Hudson River west boundary (approximate)
-hudson_lon = np.array([-74.065, -74.055, -74.045, -74.035, -74.025, -74.020, -74.015, -74.010, -74.005])
-hudson_lat = np.array([40.68, 40.72, 40.74, 40.76, 40.78, 40.80, 40.82, 40.84, 40.88])
-hudson_x = hudson_lon * (k * np.pi / 180.0)
-hudson_y = np.log(np.tan((90 + hudson_lat) * np.pi / 360.0)) * k
-
-# East River boundary (approximate)
-east_lon = np.array([-73.90, -73.91, -73.92, -73.93, -73.94, -73.95, -73.96, -73.97, -73.98])
-east_lat = np.array([40.88, 40.84, 40.80, 40.77, 40.74, 40.72, 40.70, 40.69, 40.68])
-east_x = east_lon * (k * np.pi / 180.0)
-east_y = np.log(np.tan((90 + east_lat) * np.pi / 360.0)) * k
-
-# Create figure with standard axes (not mercator axis type to avoid tick format issues)
+# Figure — 3200×1800 landscape, toolbar disabled for exact PNG dimensions
 p = figure(
-    width=4800,
-    height=2700,
-    title="hexbin-map-geographic · bokeh · pyplots.ai",
-    x_axis_label="Longitude",
-    y_axis_label="Latitude",
-    x_range=(x_min, x_max),
-    y_range=(y_min, y_max),
-    tools="pan,wheel_zoom,box_zoom,reset",
-    background_fill_color="#d4e6f1",  # Light blue for water
-)
-
-# Draw land mass background (simplified Manhattan/NYC area)
-land_x = [-8250000, -8250000, -8215000, -8215000]
-land_y = [4960000, 5010000, 5010000, 4960000]
-p.patch(land_x, land_y, fill_color="#e8e4d8", fill_alpha=0.8, line_color=None)
-
-# Draw coastline boundaries for geographic context
-p.line(manhattan_coast_x, manhattan_coast_y, line_width=4, line_color="#5d6d7e", alpha=0.7)
-p.line(hudson_x, hudson_y, line_width=4, line_color="#5d6d7e", alpha=0.7, line_dash="dashed")
-p.line(east_x, east_y, line_width=4, line_color="#5d6d7e", alpha=0.7, line_dash="dashed")
-
-# Plot hex tiles using ColumnDataSource
-p.hex_tile(
-    q="q",
-    r="r",
-    size=hex_size,
-    fill_color=transform("counts", mapper),
-    line_color="#333333",
-    line_width=0.5,
-    alpha=0.8,
-    source=hex_source,
-)
-
-# Add hover tool for interactivity
-hover = HoverTool(tooltips=[("Pickup Count", "@counts"), ("Cell (q, r)", "(@q, @r)")], mode="mouse")
-p.add_tools(hover)
-
-# Add color bar legend with larger text for 4800x2700 canvas
-color_bar = ColorBar(
-    color_mapper=mapper,
-    location=(0, 0),
-    title="Pickup Count",
-    title_text_font_size="28pt",
-    title_text_font_style="bold",
-    major_label_text_font_size="22pt",
-    width=50,
-    padding=20,
-    margin=30,
-)
-p.add_layout(color_bar, "right")
-
-# Style the plot with larger text sizes for 4800x2700 canvas
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
-
-# Grid styling - subtle grid for geographic reference
-p.xgrid.grid_line_color = "#999999"
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_color = "#999999"
-p.ygrid.grid_line_alpha = 0.3
-
-# Format axis ticks to show degrees instead of Web Mercator meters
-lon_formatter = CustomJSTickFormatter(code="return (tick / (6378137 * Math.PI / 180)).toFixed(2) + '°'")
-lat_formatter = CustomJSTickFormatter(
-    code="return (Math.atan(Math.exp(tick / 6378137)) * 360 / Math.PI - 90).toFixed(2) + '°'"
-)
-p.xaxis.formatter = lon_formatter
-p.yaxis.formatter = lat_formatter
-
-# Save PNG output
-export_png(p, filename="plot.png")
-
-# Save interactive HTML (with tile layer for full interactivity)
-output_file("plot.html")
-p_html = figure(
-    width=4800,
-    height=2700,
-    title="hexbin-map-geographic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_axis_label="Longitude",
     y_axis_label="Latitude",
     x_axis_type="mercator",
     y_axis_type="mercator",
-    x_range=(x_min, x_max),
-    y_range=(y_min, y_max),
-    tools="pan,wheel_zoom,box_zoom,reset",
+    x_range=x_range,
+    y_range=y_range,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=200,
+    min_border_top=110,
+    min_border_right=80,
 )
-p_html.add_tile("CartoDB Positron")
-p_html.hex_tile(
-    q="q",
-    r="r",
-    size=hex_size,
-    fill_color=transform("counts", mapper),
-    line_color="#333333",
-    line_width=0.5,
-    alpha=0.8,
-    source=hex_source,
+
+# Geographic base layer
+p.add_tile(tile_provider)
+
+# Hex tiles
+p.hex_tile(
+    q="q", r="r", size=hex_size, fill_color=transform("counts", mapper), line_color=None, alpha=0.78, source=source
 )
-p_html.add_tools(hover)
-p_html.add_layout(color_bar, "right")
-p_html.title.text_font_size = "36pt"
-p_html.title.text_font_style = "bold"
-p_html.xaxis.axis_label_text_font_size = "28pt"
-p_html.yaxis.axis_label_text_font_size = "28pt"
-p_html.xaxis.major_label_text_font_size = "22pt"
-p_html.yaxis.major_label_text_font_size = "22pt"
-save(p_html)
+
+# Hover tooltip
+hover = HoverTool(tooltips=[("Taxi Pickups", "@counts"), ("Hex Cell", "(@q, @r)")], mode="mouse")
+p.add_tools(hover)
+
+# Color bar
+color_bar = ColorBar(
+    color_mapper=mapper,
+    location=(0, 0),
+    title="Pickup Count",
+    title_text_font_size="34pt",
+    title_text_font_style="bold",
+    title_text_color=INK,
+    major_label_text_font_size="28pt",
+    major_label_text_color=INK_SOFT,
+    width=60,
+    padding=30,
+    margin=40,
+)
+p.add_layout(color_bar, "right")
+
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.title.text_font_style = "bold"
+
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.12
+p.ygrid.grid_line_alpha = 0.12
+
+# Save interactive HTML
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome — Selenium Manager resolves the driver automatically
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+    "--force-device-scale-factor=1",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+# Override viewport to exact pixel dimensions (bypasses browser-chrome height overhead)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
