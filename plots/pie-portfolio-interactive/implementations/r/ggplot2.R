@@ -75,7 +75,7 @@ p <- ggplot() +
     data      = holdings,
     aes(x = 3.2, y = weight, fill = category),
     width     = 1.0,
-    color     = PAGE_BG,
+    color     = "white",
     linewidth = 0.5
   ) +
   # Inner ring: asset class summary
@@ -83,7 +83,7 @@ p <- ggplot() +
     data      = categories,
     aes(x = 2.0, y = weight, fill = category),
     width     = 0.9,
-    color     = PAGE_BG,
+    color     = "white",
     linewidth = 1.0
   ) +
   # Inner ring labels (skip Cash at 5% — too small)
@@ -91,21 +91,33 @@ p <- ggplot() +
     data       = filter(categories, weight >= 8),
     aes(x = 2.0, y = midpoint,
         label  = paste0(gsub(" ", "\n", as.character(category)), "\n", weight, "%")),
-    color      = PAGE_BG,
-    size       = 2.3,
+    color      = "white",
+    size       = 3.5,
     fontface   = "bold",
     lineheight = 0.82
   ) +
-  # Outer ring percentage labels for larger holdings (>= 10%)
+  # Second-largest holding (Intl Developed, 18%): show name + percentage
+  # US Large Cap (20%) starts at 12 o'clock and its midpoint lands near the
+  # right canvas edge, so it gets a percentage-only label like the rest.
   geom_text(
-    data     = filter(holdings, weight >= 10),
+    data       = filter(holdings, weight >= 15 & weight < 20),
+    aes(x = 3.2, y = midpoint,
+        label  = paste0(holding, "\n", weight, "%")),
+    color      = "white",
+    size       = 3.0,
+    fontface   = "bold",
+    lineheight = 0.85
+  ) +
+  # All other large outer ring segments (>= 10%): show percentage only
+  geom_text(
+    data     = filter(holdings, weight >= 10 & (weight < 15 | weight >= 20)),
     aes(x = 3.2, y = midpoint,
         label = paste0(weight, "%")),
-    color    = PAGE_BG,
-    size     = 2.6,
+    color    = "white",
+    size     = 3.5,
     fontface = "bold"
   ) +
-  coord_polar(theta = "y", start = 0) +
+  coord_polar(theta = "y", start = 0, clip = "off") +
   xlim(c(0.7, 4.2)) +
   scale_fill_manual(
     values = cat_colors,
@@ -138,7 +150,7 @@ p <- ggplot() +
     legend.key.size   = unit(0.45, "cm"),
     legend.position   = "bottom",
     legend.direction  = "horizontal",
-    plot.margin       = margin(10, 20, 20, 20)
+    plot.margin       = margin(10, 40, 20, 40)
   )
 
 # Save — square canvas: 2400 x 2400 px (6 in x 400 dpi)
