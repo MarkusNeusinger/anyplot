@@ -1,7 +1,7 @@
 # anyplot.ai
 # pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-05-27
+# Quality: 83/100 | Created: 2026-05-27
 
 using CairoMakie
 using Colors

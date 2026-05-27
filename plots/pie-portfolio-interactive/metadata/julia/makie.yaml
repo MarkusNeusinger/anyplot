@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: pie-portfolio-interactive
 created: '2026-05-27T17:37:57Z'
-updated: '2026-05-27T17:42:44Z'
+updated: '2026-05-27T17:52:30Z'
 generated_by: claude-sonnet
 workflow_run: 26527463804
 issue: 3754
@@ -12,97 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portfolio-interactive/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - 'Correct anyplot palette order — Equities mapped to brand green #009E73, palette
-    positions 1-4 in canonical order'
-  - Theme-adaptive chrome properly threaded through all elements — title, center labels,
-    legend text, and slice separators all flip correctly between light and dark
-  - Manual arc construction using poly! and trigonometry is idiomatic CairoMakie for
-    custom donut geometry — no AR-08 fake interactivity
-  - Center hole labels ('Portfolio' + '$100M AUM') give the chart context and fill
-    the donut hole purposefully
-  - Clean horizontal legend below the chart with no frame, correct labelcolor token,
-    and concise category+percent labels
+  - Correct anyplot palette in canonical order with brand green (#009E73) as first
+    series (Equities)
+  - Theme-adaptive chrome fully threaded through titlecolor, labelcolor, backgroundcolor
+    — no dark-on-dark failures in either render
+  - Center summary labels ('Portfolio' / '$100M AUM') add real informational value
+    within the donut hole
+  - PAGE_BG stroke between slices creates clean visual separation without harsh borders
+  - Dollar + percentage values shown per slice, matching spec requirement for 'both
+    percentage and absolute values'
+  - Correct square 2400x2400 canvas for a symmetric donut chart
+  - Clean flat script structure with no unnecessary abstractions or fake interactivity
   weaknesses:
-  - Missing per-category absolute dollar values — spec says 'display both percentage
-    and absolute values where applicable'; the implementation shows percentages and
-    the total AUM but not per-slice values like '$40M', '$30M', '$20M', '$10M'
-  - Donut fills roughly 55-60% of the canvas area, leaving large empty corners — tighten
-    xlims/ylims from ±1.58 to ±1.42 to better use the square canvas
-  - No visual emphasis distinguishing the dominant 40% Equities slice — all slices
-    have equal visual weight; a slight radial offset or bold percentage label on the
-    largest slice would improve data storytelling
+  - Donut appears moderately sized with noticeable horizontal whitespace on both sides
+    of the canvas — consider slightly increasing r_outer or adjusting xlims!/ylims!
+    bounds to fill the square canvas more effectively
+  - Design storytelling is limited to a minor font-size bump on the dominant slice;
+    a more prominent visual callout or annotation on the largest allocation (Equities
+    40%) would strengthen the narrative
+  - Library Mastery is adequate but not distinctive — no Makie-specific features (Observables,
+    Themes, @recipe) leveraged beyond polygon primitives
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white
-      Chrome: Title "pie-portfolio-interactive · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly legible. No axis decorations (donut chart, decorations hidden). Percentage labels (40%, 30%, 20%, 10%) placed radially outside the ring in INK color, readable. Legend at bottom in INK / INK_SOFT tokens, readable.
-      Data: Donut chart with 4 segments — Equities in #009E73 (brand green, largest at 40%), Fixed Income in #C475FD (lavender, 30%), Alternatives in #4467A3 (blue, 20%), Cash in #BD8233 (ochre, 10%). Slice separators in PAGE_BG give clean boundaries. Center hole contains "Portfolio" (INK) and "$100M AUM" (INK_SOFT).
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "pie-portfolio-interactive · julia · makie · anyplot.ai" in dark ink — clearly readable. No axis labels (appropriate for donut). Legend text in dark ink — readable. Outer radial labels in dark ink — readable.
+      Data: Four donut slices — brand green (#009E73) Equities 40%, lavender (#C475FD) Fixed Income 30%, blue (#4467A3) Alternatives 20%, ochre (#BD8233) Cash 10%. First series is #009E73 ✓. Center labels "Portfolio" and "$100M AUM" in dark ink.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
-      Chrome: Title in light (#F0EFE8) clearly visible. Percentage labels in INK token (light on dark) all readable. Center "Portfolio" label light and legible; "$100M AUM" in INK_SOFT readable as secondary. Legend labels in INK token, readable.
-      Data: Donut segment colors are identical to light render — #009E73, #C475FD, #4467A3, #BD8233 — only chrome flips. The center hole renders as elevated dark (#242420 is the elevated bg, though implementation uses PAGE_BG — appears as a dark circle against the near-black background, which still reads correctly). No dark-on-dark failures observed.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all labels in light ink (F0EFE8/B8B7B0 range) — clearly readable against dark background. No dark-on-dark failures observed. Legend text light-colored and legible.
+      Data: All four data colors (green, lavender, blue, ochre) visually identical to light render — only chrome flipped. Slice colors remain saturated and distinguishable on dark surface.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes; titlesize=20, percentage labels=16,
-          legend=14 — all legible at full resolution and mobile scale
+        comment: All text readable in both themes; font sizes explicitly set. Outer
+          labels for small Cash slice are slightly close to title area but legible.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps; percentage labels placed outside the ring at r=1.22
-          with no collisions; legend clear below chart
+        comment: No text-on-text or text-on-data overlaps. Cash label near top sits
+          close but not overlapping title.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 4 donut segments clearly visible with distinct anyplot colors;
-          slice separators (strokecolor=PAGE_BG) add clarity
+        comment: All four donut slices clearly visible with well-saturated distinct
+          colors. PAGE_BG stroke creates clean separation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; 4-color donut with sufficient perceptual
-          distance between all pairs
+        comment: Anyplot palette used — colorblind-safe by design. No red-green as
+          sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for donut chart. Donut fills ~55-60%
-          of canvas height leaving large corner whitespace — could tighten xlims from
-          ±1.58 to ±1.42
+        comment: Correct square 2400x2400 canvas. Donut moderately sized with noticeable
+          horizontal whitespace on both sides.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'pie-portfolio-interactive · julia · makie · anyplot.ai' correct;
-          no axis labels needed for donut
+        comment: Title in correct format. No axis labels needed for donut chart —
+          appropriate omission.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 brand green for Equities; canonical palette
-          order 1-4; PAGE_BG #FAF8F1 light / #1A1A17 dark correct'
+        comment: 'First series = #009E73 ✓. Canonical palette order ✓. Backgrounds
+          #FAF8F1/#1A1A17 correct ✓. Data colors identical between renders ✓.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,25 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean design; center labels add purpose; correct anyplot palette
-          with proper slice separation. No visual hierarchy or emphasis between slices
-          of different weight — all segments look equally prominent.
+        comment: 'Above baseline: correct palette, center summary labels, dominant
+          slice slightly emphasized. Professional without deep visual complexity.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: hidedecorations!/hidespines! applied; no grid (correct for pie);
-          no legend frame; strokecolor=PAGE_BG creates clean slice separation — above
-          default refinement.
+        comment: hidedecorations! + hidespines! applied, frameless legend, PAGE_BG
+          stroke between slices. Minimal chrome well-executed.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Center hole context ('Portfolio' + '$100M AUM') guides viewer. Percentage
-          labels direct reading. No emphasis or focal point differentiating the dominant
-          40% Equities allocation.
+        comment: Percentage and dollar values per slice, center shows total AUM, dominant
+          slice label slightly larger. No annotation or callout guiding to key insight.
     spec_compliance:
       score: 14
       max: 15
@@ -138,30 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Donut chart — correct implementation of the pie/donut type specified
+        comment: Donut/pie chart is correct for portfolio allocation.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Color coding, legend, percentage labels all present. Missing per-category
-          absolute values — spec says 'both percentage and absolute values where applicable'.
-          Interactive features (hover, drill-down) correctly omitted per CairoMakie
-          limits.
+        comment: Donut ✓, asset-class color coding ✓, legend ✓, percentage + dollar
+          values ✓. Interactive features correctly omitted (CairoMakie is static-only
+          per library rules).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 4 asset classes, weights sum to 100%, proportions visually correct
-          in the donut
+        comment: Four asset classes with correct weights summing to 100%, dollar values
+          derived from $100M total.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec-id · julia · makie · anyplot.ai format; legend
-          shows all 4 categories with percentages
+        comment: Title matches required format ✓. Legend includes category name, percentage,
+          and dollar value ✓.
     data_quality:
       score: 14
       max: 15
@@ -171,22 +167,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all 4 asset classes with correct proportions; center AUM context.
-          No sub-holdings breakdown possible without interactivity.
+        comment: All asset classes with percentage and dollar values, center summary,
+          horizontal legend. No drill-down (impossible with CairoMakie).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: $100M diversified portfolio with Equities 40% / Fixed Income 30%
-          / Alternatives 20% / Cash 10% — realistic and neutral institutional allocation
+        comment: $100M portfolio with Equities/Fixed Income/Alternatives/Cash at 40/30/20/10%
+          is realistic, neutral, real-world allocation.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights sum to exactly 100%; proportions realistic for a multi-asset
-          portfolio
+        comment: Weights sum to 100%, dollar values proportional, $100M AUM is plausible
+          institutional portfolio size.
     code_quality:
       score: 10
       max: 10
@@ -196,34 +192,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat top-level script, no functions or classes, clean sequential
+          flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) — deterministic
+        comment: Random.seed!(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random — all used and necessary.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over categories; manual arc math is appropriate for Makie
-          donut geometry; no fake UI
+        comment: No fake interactivity. Clean arc geometry construction. Loop over
+          categories is idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save('plot-$(THEME).png', fig; px_per_unit = 2) — correct
+        comment: Saves as plot-$(THEME).png with px_per_unit=2 ✓.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -231,28 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct poly! for custom polygon shapes; Legend() with PolyElement
-          entries; proper theme token usage throughout
+        comment: Uses poly!, text!, PolyElement, hidedecorations!, hidespines!, DataAspect()
+          — all idiomatic Makie patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Manual arc construction using trigonometric angle computation into
-          Point2f arrays demonstrates Makie's composable geometry primitives beyond
-          simple chart types
+        passed: false
+        comment: Hand-constructed arc geometry via poly! is correct but doesn't showcase
+          Makie-distinctive features (Observables, Theme system, @recipe) beyond generic
+          polygon rendering.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - colors
   techniques:
-  - patches
   - annotations
   - custom-legend
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - minimal-chrome
   - edge-highlighting
