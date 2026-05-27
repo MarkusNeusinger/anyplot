@@ -1,11 +1,25 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-27
 """
+
+# When run directly (python seaborn.py), this directory is prepended to
+# sys.path, which causes local files like matplotlib.py to shadow the
+# installed matplotlib package.  Remove it so the venv package is found.
+import pathlib as _pathlib
+import sys as _sys
+
+
+try:
+    _here = str(_pathlib.Path(__file__).resolve().parent)
+    _sys.path = [p for p in _sys.path if p not in ("", _here)]
+except NameError:
+    pass  # exec() context — sys.path is already clean
+del _sys, _pathlib
 
 import os
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,6 +33,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = ANYPLOT_PALETTE[0]
@@ -52,6 +67,9 @@ split_idx = dates.searchsorted(split_date)
 price[split_idx:] = price[split_idx:] * 0.5
 
 df = pd.DataFrame({"date": dates, "close": price})
+# Numeric x using matplotlib date floats — matches the internal scale of the date axis,
+# so sns.regplot overlays correctly without a secondary axis
+df["x_mpl"] = mdates.date2num(df["date"].values)
 
 # Event type styling — anyplot palette positions 2–5
 event_colors = {
@@ -94,9 +112,27 @@ events = pd.DataFrame(
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Stock price line (seaborn lineplot)
 sns.lineplot(data=df, x="date", y="close", ax=ax, color=BRAND, linewidth=2.0, label="Stock Price")
 y_base = df["close"].min() * 0.9
-ax.fill_between(df["date"], y_base, df["close"], alpha=0.07, color=BRAND)
+ax.fill_between(df["date"], y_base, df["close"], alpha=0.12, color=BRAND)
+
+# Seaborn-distinctive: per-segment linear regression trend with 95% CI.
+# Two separate regplots (pre- and post-split) avoid a spurious downward slope
+# from the discontinuity; the CI bands give statistical context for each period.
+for mask in [df["date"] < split_date, df["date"] >= split_date]:
+    df_seg = df[mask]
+    if len(df_seg) > 2:
+        sns.regplot(
+            data=df_seg,
+            x="x_mpl",
+            y="close",
+            ax=ax,
+            scatter=False,
+            color=INK_MUTED,
+            ci=95,
+            line_kws={"linewidth": 1.0, "linestyle": ":", "alpha": 0.9},
+        )
 
 # Flags — percentage-based offset keeps proportions consistent across the split
 for idx, (_, event) in enumerate(events.iterrows()):
@@ -126,7 +162,7 @@ for idx, (_, event) in enumerate(events.iterrows()):
     ax.annotate(
         event_label,
         xy=(actual_date, flag_y),
-        fontsize=7,
+        fontsize=8,
         fontweight="bold",
         color=color,
         ha="center",
@@ -141,7 +177,10 @@ for idx, (_, event) in enumerate(events.iterrows()):
     )
 
 # Legend — lower right avoids the early-session price area and first-event flags
-legend_elements = [Line2D([0], [0], color=BRAND, linewidth=2.0, label="Stock Price")]
+legend_elements = [
+    Line2D([0], [0], color=BRAND, linewidth=2.0, label="Stock Price"),
+    Line2D([0], [0], color=INK_MUTED, linewidth=1.0, linestyle=":", alpha=0.9, label="Trend (95% CI)"),
+]
 for etype, color in event_colors.items():
     legend_elements.append(
         plt.scatter(
