@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-portfolio-interactive: Interactive Portfolio Allocation Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-27
@@ -44,6 +44,8 @@ ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Portfolio data — anyplot palette with semantic assignments
 np.random.seed(42)
 
+TOTAL_PORTFOLIO = 1_200_000
+
 MAIN_COLORS = {
     "Equities": ANYPLOT_PALETTE[0],  # #009E73 green  — growth / equities
     "Fixed Income": ANYPLOT_PALETTE[2],  # #4467A3 blue   — stability / bonds
@@ -73,7 +75,8 @@ N_PTS = 50
 
 # Build main donut polygons (asset classes) — inline, no function
 rows_main = []
-label_rows_main = []
+label_rows_main_pct = []
+label_rows_main_usd = []
 angle = np.pi / 2
 
 for asset_class, weight in MAIN_WEIGHTS.items():
@@ -87,18 +90,26 @@ for asset_class, weight in MAIN_WEIGHTS.items():
     for order, (x, y) in enumerate(all_pts):
         rows_main.append({"x": x, "y": y, "segment": asset_class, "order": order, "fill": color})
     mid_a = (angle + end_angle) / 2
-    mid_r = (INNER_R + OUTER_R) / 2
-    label_rows_main.append(
-        {"x": CX_MAIN + mid_r * float(np.cos(mid_a)), "y": CY + mid_r * float(np.sin(mid_a)), "label": f"{weight}%"}
+    pct_r = (INNER_R + OUTER_R) / 2 + 7
+    usd_r = (INNER_R + OUTER_R) / 2 - 7
+    dollar_val = weight / 100 * TOTAL_PORTFOLIO
+    dollar_str = f"${dollar_val / 1000:.0f}K"
+    label_rows_main_pct.append(
+        {"x": CX_MAIN + pct_r * float(np.cos(mid_a)), "y": CY + pct_r * float(np.sin(mid_a)), "label": f"{weight}%"}
+    )
+    label_rows_main_usd.append(
+        {"x": CX_MAIN + usd_r * float(np.cos(mid_a)), "y": CY + usd_r * float(np.sin(mid_a)), "label": dollar_str}
     )
     angle = end_angle
 
 main_df = pd.DataFrame(rows_main)
-main_label_df = pd.DataFrame(label_rows_main)
+main_label_pct_df = pd.DataFrame(label_rows_main_pct)
+main_label_usd_df = pd.DataFrame(label_rows_main_usd)
 
 # Build detail donut polygons (Equities breakdown) — inline, no function
 rows_detail = []
-label_rows_detail = []
+label_rows_detail_pct = []
+label_rows_detail_usd = []
 angle = np.pi / 2
 equities_total = MAIN_WEIGHTS["Equities"]
 
@@ -115,32 +126,40 @@ for holding in HOLDINGS:
     for order, (x, y) in enumerate(all_pts):
         rows_detail.append({"x": x, "y": y, "segment": name, "order": order, "fill": color})
     mid_a = (angle + end_angle) / 2
-    mid_r = (INNER_R_D + OUTER_R_D) / 2
-    label_rows_detail.append(
-        {"x": CX_DETAIL + mid_r * float(np.cos(mid_a)), "y": CY + mid_r * float(np.sin(mid_a)), "label": f"{weight}%"}
+    pct_r = (INNER_R_D + OUTER_R_D) / 2 + 5
+    usd_r = (INNER_R_D + OUTER_R_D) / 2 - 5
+    dollar_val = weight / 100 * TOTAL_PORTFOLIO
+    dollar_str = f"${dollar_val / 1000:.0f}K"
+    label_rows_detail_pct.append(
+        {"x": CX_DETAIL + pct_r * float(np.cos(mid_a)), "y": CY + pct_r * float(np.sin(mid_a)), "label": f"{weight}%"}
+    )
+    label_rows_detail_usd.append(
+        {"x": CX_DETAIL + usd_r * float(np.cos(mid_a)), "y": CY + usd_r * float(np.sin(mid_a)), "label": dollar_str}
     )
     angle = end_angle
 
 detail_df = pd.DataFrame(rows_detail)
-detail_label_df = pd.DataFrame(label_rows_detail)
+detail_label_pct_df = pd.DataFrame(label_rows_detail_pct)
+detail_label_usd_df = pd.DataFrame(label_rows_detail_usd)
 
 # Connecting arrow — drill-down indicator from main to detail donut
 arrow_df = pd.DataFrame([{"x": CX_MAIN + OUTER_R + 7, "y": 16, "xend": CX_DETAIL - OUTER_R_D - 7, "yend": 16}])
 
-# Section titles — identical y for vertical symmetry
+# Section titles — tightened y to reduce corner whitespace
+TITLE_Y = 100
 titles_df = pd.DataFrame(
     [
-        {"x": CX_MAIN, "y": 108, "label": "Portfolio Allocation"},
-        {"x": CX_DETAIL, "y": 108, "label": "Equities Breakdown"},
+        {"x": CX_MAIN, "y": TITLE_Y, "label": "Portfolio Allocation"},
+        {"x": CX_DETAIL, "y": TITLE_Y, "label": "Equities Breakdown"},
     ]
 )
 
-# Center hole labels — both donuts at CY=0
+# Center hole labels — detail donut shows dollar value of equities allocation
 center_df = pd.DataFrame(
     [
         {"x": CX_MAIN, "y": 7, "label": "Total"},
         {"x": CX_MAIN, "y": -10, "label": "$1.2M"},
-        {"x": CX_DETAIL, "y": 5, "label": "45%"},
+        {"x": CX_DETAIL, "y": 5, "label": "$540K"},
         {"x": CX_DETAIL, "y": -10, "label": "Equities"},
     ]
 )
@@ -148,7 +167,7 @@ center_df = pd.DataFrame(
 # Legend at bottom — color boxes + text labels
 leg_items = list(MAIN_WEIGHTS.keys())
 LEG_X_START = -152
-LEG_Y = -112
+LEG_Y = -106
 LEG_SPACING = 80
 BOX_SIZE = 10
 
@@ -181,8 +200,12 @@ plot = (
     ggplot()
     + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=main_df, color=PAGE_BG, size=0.8, alpha=0.97)
     + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=detail_df, color=PAGE_BG, size=0.8, alpha=0.97)
-    + geom_text(aes(x="x", y="y", label="label"), data=main_label_df, size=3.5, fontweight="bold", color="#FFFFFF")
-    + geom_text(aes(x="x", y="y", label="label"), data=detail_label_df, size=3.2, fontweight="bold", color="#FFFFFF")
+    + geom_text(aes(x="x", y="y", label="label"), data=main_label_pct_df, size=3.5, fontweight="bold", color="#FFFFFF")
+    + geom_text(aes(x="x", y="y", label="label"), data=main_label_usd_df, size=3.0, color="#FFFFFF")
+    + geom_text(
+        aes(x="x", y="y", label="label"), data=detail_label_pct_df, size=3.2, fontweight="bold", color="#FFFFFF"
+    )
+    + geom_text(aes(x="x", y="y", label="label"), data=detail_label_usd_df, size=2.8, color="#FFFFFF")
     + geom_segment(
         aes(x="x", xend="xend", y="y", yend="yend"),
         data=arrow_df,
@@ -191,14 +214,14 @@ plot = (
         linetype="dashed",
         arrow=arrow(length=0.10, type="closed"),
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=titles_df, size=4.8, fontweight="bold", color=INK)
-    + geom_text(aes(x="x", y="y", label="label"), data=center_df, size=3.2, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=titles_df, size=5.2, fontweight="bold", color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=center_df, size=3.8, color=INK_SOFT)
     + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=legend_box_df, color=INK_SOFT, size=0.3)
     + geom_text(aes(x="x", y="y", label="label"), data=legend_text_df, size=2.8, ha="left", color=INK_SOFT)
     + scale_fill_identity()
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-195, 185))
-    + scale_y_continuous(limits=(-130, 130))
+    + scale_y_continuous(limits=(-118, 113))
     + labs(title=title_str)
     + theme(
         figure_size=(8, 4.5),
