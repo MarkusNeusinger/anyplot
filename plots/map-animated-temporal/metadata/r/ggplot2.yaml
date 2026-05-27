@@ -1,0 +1,260 @@
+library: ggplot2
+language: r
+specification_id: map-animated-temporal
+created: '2026-05-27T09:37:21Z'
+updated: '2026-05-27T09:52:56Z'
+generated_by: claude-sonnet
+workflow_run: 26502897271
+issue: 3769
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-animated-temporal/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct anyplot sequential colormap (#009E73→#4467A3) applied to continuous magnitude
+    data — no forbidden cmaps used
+  - 'Both light (#FAF8F1) and dark (#1A1A17) themes fully correct: all chrome tokens
+    (INK, INK_SOFT, ELEVATED_BG, PAGE_BG) wired through to every element'
+  - 'Excellent data domain: Tohoku earthquake Omori-law aftershock decay is scientifically
+    accurate, neutral, and tells a clear temporal story'
+  - Dual encoding of magnitude via both color and size provides rich information density
+    with minimal clutter
+  - Facet strip labels include event counts (n=45, n=28…) that numerically reinforce
+    the visible frequency decay — elegant data storytelling
+  - Epicenter cross-marker provides a geographic anchor across all 9 panels
+  - All font sizes explicitly set; both theme renders fully readable with no dark-on-dark
+    or light-on-light failures
+  - 'Perfect code quality: KISS structure, set.seed(42), clean imports, correct ggsave
+    dimensions (8×4.5 in, dpi=400 → 3200×1800 px)'
+  weaknesses:
+  - 'No geographic basemap: spec explicitly requires ''Include a basemap with geographic
+    context (country boundaries, coastlines, or terrain)''. ggplot2 without sf/ggmap
+    cannot render basemaps (out of scope per library guide), so the context relies
+    solely on lat/lon tick labels — an accepted library limitation but still a notable
+    spec gap'
+  - 'DE-01 moderate: design is above defaults (dual encoding, epicenter marker, informative
+    strip labels) but still founded on theme_minimal — the palette and theming are
+    correct but the overall aesthetic does not yet reach FiveThirtyEight / publication-quality
+    polish (score: 5/8)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface. Panel backgrounds match page background.
+      Chrome: Title "map-animated-temporal · r · ggplot2 · anyplot.ai" centered, dark ink, ~70% width — fits well. Subtitle in INK_SOFT, smaller, readable. Facet strip labels ("Day 1 (n=45)"…"Day 9 (n=9)") bold, dark, on ELEVATED_BG strip. Axis labels "Longitude" / "Latitude" in dark INK. Tick labels in INK_SOFT with degree notation (140°E, 142°E, 144°E; 36°N, 38°N, 40°N), rotated 45° on x-axis. Colorbar legend titled "Mag" on right with values 3–7, text in INK_SOFT/INK. All text clearly readable against light background.
+      Data: 3×3 facet grid of scatter points colored green (#009E73, low magnitude) to blue (#4467A3, high magnitude) via imprint_seq sequential colormap. Point size also encodes magnitude (dual encoding). Alpha=0.75. Epicenter marked with '+' cross in dark INK. Visible temporal decay in event count and growing spatial spread across panels.
+      Legibility verdict: PASS — all text readable, no overflow, no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface. Panel backgrounds match page background.
+      Chrome: Title, subtitle, facet strips, axis labels, and tick labels all render in light (#F0EFE8 / #B8B7B0) against the near-black background. No dark-on-dark failures observed. Colorbar legend text light-colored and readable. Grid lines subtle against dark background.
+      Data: Data colors are identical to light render — green-to-blue gradient unchanged (only chrome flips). Epicenter cross visible in light INK. The decay pattern and spatial spread remain clearly visible.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (base_size=7, axis.title=9, axis.text=8,
+          plot.title=12, etc.). Both theme renders fully readable. Rotated x-axis
+          tick labels prevent overlap. No overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text in either render. Facets well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points sized 0.8–4.5 proportional to magnitude with alpha=0.75. Appropriate
+          for 9–45 points per panel.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue gradient is CVD-safe. Good contrast on both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3×3 facet grid fills landscape canvas well. Margins balanced. Legend
+          positioned right. Canvas 3200×1800 confirmed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes labeled 'Longitude' and 'Latitude' with degree tick notation
+          (140°E, 36°N). Descriptive with implicit units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous colormap uses imprint_seq (#009E73→#4467A3). Backgrounds
+          #FAF8F1/#1A1A17. All chrome tokens theme-correct in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: dual encoding (size+color), epicenter marker, informative
+          strip labels with event counts, correct palette. Still theme_minimal based
+          — not yet FiveThirtyEight polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Very subtle grid (linewidth=0.15), panel borders appropriate for
+          map-style facets, good whitespace. Not fully stripped down but well-refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle states Omori law story. Event counts in strip labels numerically
+          show decay. Spatial spread visually grows across panels. Clear focal narrative.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot2 cannot animate; correctly implements small multiples (facet_wrap)
+          as the static alternative per library guide.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Time dimension via facets ✓, timestamp in strip labels ✓, magnitude
+          encoding ✓, size variation ✓. Basemap missing — spec requires 'geographic
+          context (country boundaries, coastlines)' but sf/ggmap are out-of-scope
+          for ggplot2 in this catalog.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude→x, Latitude→y, Magnitude→color+size, Day→facet. All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'map-animated-temporal · r · ggplot2 · anyplot.ai' matches
+          required format. Legend 'Mag' for colorbar is accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows temporal decay (event counts), spatial spread growth, magnitude
+          variation, and 9 distinct time steps.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tohoku earthquake aftershock sequence — real historical event context,
+          scientifically grounded, neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude 2.5–7.5, coordinates ~38°N/142°E (correct for Tohoku),
+          Omori-law decay parameters physically realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean: theme tokens → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Idiomatic R: do.call(rbind, lapply(...)) for data generation. No
+          over-engineering.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with sprintf('plot-%s.png', THEME), ragg::agg_png, 8×4.5 in
+          @ dpi=400 → 3200×1800 px.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper grammar of graphics: aes mappings, scale_color_gradient,
+          scale_size_continuous with guide=''none'', factor level reordering, theme
+          layering on theme_minimal.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: facet_wrap with ordered factor levels and informative strip labels
+          is a distinctive ggplot2 strength. guide='none' on size while keeping colorbar
+          shows ggplot2 legend control. Could push further with coord_fixed() for
+          true geographic proportions.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
