@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-27
@@ -17,12 +17,15 @@ from plotnine import (
     geom_line,
     geom_point,
     geom_segment,
+    geom_smooth,
     geom_text,
     geom_vline,
     ggplot,
+    guides,
     labs,
     scale_color_manual,
     scale_shape_manual,
+    scale_size_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
@@ -45,6 +48,9 @@ color_map = {
     "News": ANYPLOT_PALETTE[2],  # #4467A3 blue
     "Split": ANYPLOT_PALETTE[3],  # #BD8233 ochre
 }
+shape_map = {"Earnings": "s", "Dividend": "D", "News": "^", "Split": "o"}
+# Earnings get larger markers — primary price catalyst deserves visual emphasis
+size_map = {"Earnings": 5, "Dividend": 3, "News": 3, "Split": 3}
 
 # Data
 np.random.seed(42)
@@ -54,6 +60,10 @@ returns = np.random.normal(0.0005, 0.018, n_days)
 price = 150 * np.cumprod(1 + returns)
 
 df_price = pd.DataFrame({"date": dates, "close": price})
+
+# 2:1 split adjustment: halve prices from the day after the split effective date
+split_date = pd.Timestamp("2024-05-20")
+df_price.loc[df_price["date"] > split_date, "close"] /= 2
 
 events = pd.DataFrame(
     {
@@ -104,10 +114,23 @@ for i, (_, row) in enumerate(events.iterrows()):
 
 events["flag_y"] = flag_offsets
 
+# Separate earnings labels (larger) from secondary event labels for size hierarchy
+events_earnings = events[events["event_type"] == "Earnings"]
+events_other = events[events["event_type"] != "Earnings"]
+
 # Plot
 plot = (
     ggplot()
     + geom_line(data=df_price, mapping=aes(x="date", y="close"), color=INK_SOFT, size=1.0, alpha=0.9)
+    + geom_smooth(
+        data=df_price,
+        mapping=aes(x="date", y="close"),
+        method="lowess",
+        color=ANYPLOT_PALETTE[0],
+        fill=ANYPLOT_PALETTE[0],
+        size=0.7,
+        alpha=0.1,
+    )
     + geom_vline(
         data=events, mapping=aes(xintercept="matched_date"), linetype="dashed", color=INK_SOFT, alpha=0.35, size=0.4
     )
@@ -118,22 +141,32 @@ plot = (
     )
     + geom_point(
         data=events,
-        mapping=aes(x="matched_date", y="flag_y", color="event_type", shape="event_type"),
-        size=3,
+        mapping=aes(x="matched_date", y="flag_y", color="event_type", shape="event_type", size="event_type"),
         fill=ELEVATED_BG,
         stroke=1.5,
     )
     + geom_text(
-        data=events,
+        data=events_other,
         mapping=aes(x="matched_date", y="flag_y", label="event_label", color="event_type"),
-        size=3,
+        size=3.5,
+        ha="center",
+        va="bottom",
+        nudge_y=price_range * 0.03,
+        fontweight="bold",
+    )
+    + geom_text(
+        data=events_earnings,
+        mapping=aes(x="matched_date", y="flag_y", label="event_label", color="event_type"),
+        size=4,
         ha="center",
         va="bottom",
         nudge_y=price_range * 0.03,
         fontweight="bold",
     )
     + scale_color_manual(values=color_map, name="Event Type")
-    + scale_shape_manual(values={"Earnings": "s", "Dividend": "D", "News": "^", "Split": "o"}, name="Event Type")
+    + scale_shape_manual(values=shape_map, name="Event Type")
+    + scale_size_manual(values=size_map)
+    + guides(size="none")
     + scale_x_datetime(date_labels="%b %Y", date_breaks="1 month")
     + labs(title="stock-event-flags · python · plotnine · anyplot.ai", x="Date", y="Stock Price ($)")
     + theme_minimal()
