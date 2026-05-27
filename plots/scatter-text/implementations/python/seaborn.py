@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Stock symbols positioned by market metrics (market cap vs growth similarity)
 np.random.seed(42)
@@ -149,12 +149,12 @@ df = pd.DataFrame({"x": x, "y": y, "ticker": stocks, "sector": sectors})
 
 # Map sectors to Okabe-Ito colors
 sector_color_map = {
-    "Technology": OKABE_ITO[0],
-    "Cryptocurrency": OKABE_ITO[1],
-    "Finance": OKABE_ITO[2],
-    "Energy": OKABE_ITO[3],
-    "Healthcare": OKABE_ITO[4],
-    "Retail": OKABE_ITO[5],
+    "Technology": IMPRINT[0],
+    "Cryptocurrency": IMPRINT[1],
+    "Finance": IMPRINT[2],
+    "Energy": IMPRINT[3],
+    "Healthcare": IMPRINT[4],
+    "Retail": IMPRINT[5],
 }
 
 # Set seaborn theme with theme-adaptive colors

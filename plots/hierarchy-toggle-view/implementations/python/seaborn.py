@@ -40,7 +40,7 @@ sns.set_theme(
 )
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: software project budget allocation (3 levels, 17 nodes)
 data = [
@@ -73,7 +73,7 @@ for _, row in df.iterrows():
 
 # Color map: Okabe-Ito for level-1 nodes, same color inherited by children
 level1_ids = ["dev", "infra", "ops", "research"]
-color_map = {nid: OKABE_ITO[i] for i, nid in enumerate(level1_ids)}
+color_map = {nid: IMPRINT[i] for i, nid in enumerate(level1_ids)}
 for nid in level1_ids:
     for cid in children.get(nid, []):
         color_map[cid] = color_map[nid]

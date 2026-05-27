@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (canonical order)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Apply seaborn theme with theme-adaptive colors
 sns.set_theme(
@@ -96,9 +96,9 @@ axis_angles = {"core": np.pi / 2, "utility": np.pi / 2 + 2 * np.pi / 3, "interfa
 
 # Use Okabe-Ito palette for axis colors
 axis_colors = {
-    "core": OKABE_ITO[0],  # #009E73 (brand green)
-    "utility": OKABE_ITO[1],  # #D55E00 (vermillion)
-    "interface": OKABE_ITO[2],  # #0072B2 (blue)
+    "core": IMPRINT[0],  # #009E73 (brand green)
+    "utility": IMPRINT[1],  # #C475FD (vermillion)
+    "interface": IMPRINT[2],  # #4467A3 (blue)
 }
 
 # Calculate node positions on radial axes (normalized by degree within each type)

@@ -125,9 +125,9 @@ df = pd.DataFrame(line_data)
 # Create figure
 fig, ax = plt.subplots(figsize=(16, 9))
 
-# Color mapping: use Okabe-Ito palette (green for bullish, red for bearish)
-color_yang = "#009E73"  # Okabe-Ito position 1 (green)
-color_yin = "#D55E00"  # Okabe-Ito position 2 (vermillion/red)
+# imprint semantic anchors (green for bullish, red for bearish)
+color_yang = "#009E73"  # imprint green — bullish
+color_yin = "#AE3030"  # imprint red — bearish
 
 # Plot Yang (bullish) and Yin (bearish) segments with different line widths
 for segment_type, color, linewidth in [("Yang", color_yang, 4.5), ("Yin", color_yin, 1.5)]:

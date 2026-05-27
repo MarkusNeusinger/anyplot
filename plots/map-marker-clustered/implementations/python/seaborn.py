@@ -24,9 +24,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot palette — canonical order, 4 categories
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 category_names = ["Coffee Shop", "Restaurant", "Bookstore", "Gym"]
-category_palette = dict(zip(category_names, ANYPLOT_PALETTE, strict=True))
+category_palette = dict(zip(category_names, IMPRINT, strict=True))
 
 # Data — business locations across NYC region
 np.random.seed(42)

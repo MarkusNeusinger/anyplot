@@ -21,8 +21,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito pos 1 — entry
-GOAL_COLOR = "#E69F00"  # Okabe-Ito pos 5 — goal star
-PATH_COLOR = "#56B4E9"  # Okabe-Ito pos 6 — solution path
+GOAL_COLOR = "#AE3030"  # Okabe-Ito pos 5 — goal star
+PATH_COLOR = "#2ABCCD"  # Okabe-Ito pos 6 — solution path
 
 sns.set_theme(
     style="white",

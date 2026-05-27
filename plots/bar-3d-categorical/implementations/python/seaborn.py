@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 sns.set_theme(
     style="ticks",
@@ -59,7 +59,7 @@ ax = fig.add_subplot(111, projection="3d")
 bar_w = 0.55
 bar_d = 0.55
 
-for i, (_product, color) in enumerate(zip(products, OKABE_ITO, strict=False)):
+for i, (_product, color) in enumerate(zip(products, IMPRINT, strict=False)):
     for j in range(n_reg):
         h = sales[i, j]
         ax.bar3d(i - bar_w / 2, j - bar_d / 2, 0, bar_w, bar_d, h, color=color, alpha=0.85, shade=True)
@@ -89,7 +89,7 @@ for pane in (ax.xaxis.pane, ax.yaxis.pane, ax.zaxis.pane):
     pane.set_alpha(0.25)
 
 # Legend
-patches = [mpatches.Patch(color=OKABE_ITO[i], label=p) for i, p in enumerate(products)]
+patches = [mpatches.Patch(color=IMPRINT[i], label=p) for i, p in enumerate(products)]
 legend = ax.legend(
     handles=patches,
     loc="upper left",

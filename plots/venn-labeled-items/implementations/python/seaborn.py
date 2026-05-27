@@ -21,8 +21,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 OKABE_GREEN = "#009E73"
-OKABE_ORANGE = "#D55E00"
-OKABE_BLUE = "#0072B2"
+OKABE_ORANGE = "#C475FD"
+OKABE_BLUE = "#4467A3"
 
 sns.set_theme(
     style="white",

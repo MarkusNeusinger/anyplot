@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
 HISTOGRAM_COLOR = "#009E73"  # Brand green
-KDE_COLOR = "#D55E00"  # Vermillion
+KDE_COLOR = "#C475FD"  # Vermillion
 
 # Configure seaborn theme with theme-adaptive colors
 sns.set_theme(

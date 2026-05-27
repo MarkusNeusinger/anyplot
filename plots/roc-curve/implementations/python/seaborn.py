@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette - first series ALWAYS #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Set random seed for reproducibility
 np.random.seed(42)
@@ -96,7 +96,7 @@ auc3 = np.trapezoid(tpr3[idx3], fpr3[idx3])
 # Configure seaborn with theme-adaptive colors and settings
 sns.set_theme(
     style="whitegrid",
-    palette=OKABE_ITO,
+    palette=IMPRINT,
     rc={
         "figure.facecolor": PAGE_BG,
         "axes.facecolor": PAGE_BG,
@@ -122,10 +122,10 @@ ax.set_axisbelow(True)
 
 # Plot ROC curves using seaborn lineplot with theme-aware palette
 sns.lineplot(
-    x=fpr1, y=tpr1, ax=ax, linewidth=3.5, color=OKABE_ITO[0], label=f"Support Vector Machine (AUC = {auc1:.3f})"
+    x=fpr1, y=tpr1, ax=ax, linewidth=3.5, color=IMPRINT[0], label=f"Support Vector Machine (AUC = {auc1:.3f})"
 )
-sns.lineplot(x=fpr2, y=tpr2, ax=ax, linewidth=3.5, color=OKABE_ITO[1], label=f"Random Forest (AUC = {auc2:.3f})")
-sns.lineplot(x=fpr3, y=tpr3, ax=ax, linewidth=3.5, color=OKABE_ITO[2], label=f"Logistic Regression (AUC = {auc3:.3f})")
+sns.lineplot(x=fpr2, y=tpr2, ax=ax, linewidth=3.5, color=IMPRINT[1], label=f"Random Forest (AUC = {auc2:.3f})")
+sns.lineplot(x=fpr3, y=tpr3, ax=ax, linewidth=3.5, color=IMPRINT[2], label=f"Logistic Regression (AUC = {auc3:.3f})")
 
 # Diagonal reference line (random classifier) - use neutral theme-aware color
 ax.plot([0, 1], [0, 1], linestyle="--", linewidth=2.5, color=INK_SOFT, label="Random Classifier (AUC = 0.500)")

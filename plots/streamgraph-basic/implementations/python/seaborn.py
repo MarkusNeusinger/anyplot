@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 sns.set_theme(
     style="ticks",
@@ -82,7 +82,7 @@ for i in range(len(genres)):
         spl_lower(x_smooth),
         spl_upper(x_smooth),
         label=genres[i],
-        color=OKABE_ITO[i],
+        color=IMPRINT[i],
         alpha=0.85,
         edgecolor=PAGE_BG,
         linewidth=0.5,
@@ -100,7 +100,7 @@ for gname, linestyle in [("Hip-Hop", (0, (6, 3))), ("Rock", (0, (6, 3)))]:
         x="x",
         y="y",
         ax=ax,
-        color=OKABE_ITO[gi],
+        color=IMPRINT[gi],
         linewidth=2.5,
         linestyle=linestyle,
         alpha=0.85,
@@ -120,7 +120,7 @@ ax.annotate(
     xytext=(hh_x - 4, hh_center + 28),
     fontsize=15,
     fontweight="bold",
-    color=OKABE_ITO[hip_hop_idx],
+    color=IMPRINT[hip_hop_idx],
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
 )
 
@@ -133,7 +133,7 @@ ax.annotate(
     xytext=(rk_x - 5, rk_center - 32),
     fontsize=15,
     fontweight="bold",
-    color=OKABE_ITO[rock_idx],
+    color=IMPRINT[rock_idx],
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
 )
 

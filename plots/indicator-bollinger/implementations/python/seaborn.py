@@ -27,8 +27,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Close price (primary)
-SECONDARY = "#D55E00"  # SMA (middle band)
-TERTIARY = "#0072B2"  # Bollinger Bands
+SECONDARY = "#C475FD"  # SMA (middle band)
+TERTIARY = "#4467A3"  # Bollinger Bands
 
 # Apply theme
 sns.set_theme(

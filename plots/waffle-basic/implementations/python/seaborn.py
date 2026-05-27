@@ -26,7 +26,7 @@ categories = ["Housing", "Food", "Transportation", "Utilities", "Entertainment"]
 values = [35, 25, 20, 12, 8]  # Percentages, sum to 100
 
 # Okabe-Ito palette - first series always #009E73 (brand)
-okabe_ito = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+okabe_ito = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 colors = okabe_ito[: len(categories)]
 
 # Grid dimensions (10x10 = 100 squares for percentage representation)

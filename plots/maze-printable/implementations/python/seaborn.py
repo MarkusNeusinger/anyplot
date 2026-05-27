@@ -17,7 +17,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Set theme
 sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
@@ -70,7 +70,7 @@ sns.heatmap(maze, ax=ax, cmap=cmap, cbar=False, square=True, xticklabels=False, 
 
 # Mark start position (top-left passage)
 start_y, start_x = 1, 1
-circle_start = plt.Circle((start_x + 0.5, start_y + 0.5), 0.55, color=OKABE_ITO[0], zorder=10)
+circle_start = plt.Circle((start_x + 0.5, start_y + 0.5), 0.55, color=IMPRINT[0], zorder=10)
 ax.add_patch(circle_start)
 ax.text(
     start_x + 0.5,
@@ -86,7 +86,7 @@ ax.text(
 
 # Mark goal position (bottom-right passage)
 goal_y, goal_x = 2 * HEIGHT - 1, 2 * WIDTH - 1
-circle_goal = plt.Circle((goal_x + 0.5, goal_y + 0.5), 0.55, color=OKABE_ITO[1], zorder=10)
+circle_goal = plt.Circle((goal_x + 0.5, goal_y + 0.5), 0.55, color=IMPRINT[1], zorder=10)
 ax.add_patch(circle_goal)
 ax.text(
     goal_x + 0.5, goal_y + 0.5, "G", fontsize=22, fontweight="bold", color="white", ha="center", va="center", zorder=11

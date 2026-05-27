@@ -22,11 +22,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette for volcano plot
 # Non-significant: adaptive neutral
-# Down-regulated: #0072B2 (Okabe-Ito blue)
-# Up-regulated: #E69F00 (Okabe-Ito orange)
+# Down-regulated: #4467A3 (Okabe-Ito blue)
+# Up-regulated: #AE3030 (Okabe-Ito orange)
 NOT_SIG_COLOR = INK_MUTED
-DOWN_COLOR = "#0072B2"
-UP_COLOR = "#E69F00"
+DOWN_COLOR = "#4467A3"
+UP_COLOR = "#AE3030"
 
 # Data generation
 np.random.seed(42)

@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Damped harmonic oscillator phase trajectories
 np.random.seed(42)
@@ -84,7 +84,7 @@ sns.lineplot(
     x="Position (x)",
     y="Velocity (dx/dt)",
     hue="Initial Condition",
-    palette=OKABE_ITO,
+    palette=IMPRINT,
     linewidth=3,
     alpha=0.8,
     legend=True,
@@ -94,7 +94,7 @@ sns.lineplot(
 
 # Add starting points as larger markers
 for i, (x, dx_dt, _label) in enumerate(trajectories):
-    ax.scatter(x[0], dx_dt[0], s=300, color=OKABE_ITO[i], zorder=5, edgecolor=PAGE_BG, linewidth=2)
+    ax.scatter(x[0], dx_dt[0], s=300, color=IMPRINT[i], zorder=5, edgecolor=PAGE_BG, linewidth=2)
 
 # Add fixed point (equilibrium at origin)
 ax.scatter(0, 0, s=400, color=INK, marker="x", linewidth=3.5, zorder=6, label="Equilibrium")
@@ -110,7 +110,7 @@ for i, (x, dx_dt, _label) in enumerate(trajectories):
                 "",
                 xy=(x[idx] + dx * 0.5, dx_dt[idx] + dy * 0.5),
                 xytext=(x[idx], dx_dt[idx]),
-                arrowprops={"arrowstyle": "->", "color": OKABE_ITO[i], "lw": 2},
+                arrowprops={"arrowstyle": "->", "color": IMPRINT[i], "lw": 2},
             )
 
 # Styling

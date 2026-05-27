@@ -21,9 +21,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Semantic palette: loss/drawdown → red, recovery/new high → green, emphasis → purple
-DRAWDOWN_COLOR = "#B71D27"  # anyplot position 3 — loss (semantic)
+DRAWDOWN_COLOR = "#AE3030"  # anyplot position 3 — loss (semantic)
 RECOVERY_COLOR = "#009E73"  # anyplot position 1 — gain/new high (semantic)
-MAX_DD_COLOR = "#9418DB"  # anyplot position 2 — max drawdown emphasis
+MAX_DD_COLOR = "#C475FD"  # anyplot position 2 — max drawdown emphasis
 
 sns.set_theme(
     style="ticks",

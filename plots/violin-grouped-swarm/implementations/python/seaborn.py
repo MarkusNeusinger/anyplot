@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data: Cognitive test performance across different test types and experience levels
 np.random.seed(42)
@@ -72,7 +72,7 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
 # Violin plot with transparency
 sns.violinplot(
-    data=df, x="Test Type", y="Score", hue="Experience", palette=OKABE_ITO, alpha=0.5, inner=None, ax=ax, linewidth=2
+    data=df, x="Test Type", y="Score", hue="Experience", palette=IMPRINT, alpha=0.5, inner=None, ax=ax, linewidth=2
 )
 
 # Swarm overlay with matching colors and dodging
@@ -81,7 +81,7 @@ sns.swarmplot(
     x="Test Type",
     y="Score",
     hue="Experience",
-    palette=OKABE_ITO,
+    palette=IMPRINT,
     dodge=True,
     size=3.5,
     alpha=0.7,

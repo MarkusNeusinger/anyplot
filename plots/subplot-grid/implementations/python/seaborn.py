@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Apply theme to seaborn
 sns.set_theme(
@@ -78,7 +78,7 @@ fig, axes = plt.subplots(2, 2, figsize=(16, 9), facecolor=PAGE_BG)
 
 # Subplot 1: Temperature Time Series (top-left)
 ax1 = axes[0, 0]
-sns.lineplot(data=df, x="Hour", y="Temperature", ax=ax1, color=OKABE_ITO[0], linewidth=3)
+sns.lineplot(data=df, x="Hour", y="Temperature", ax=ax1, color=IMPRINT[0], linewidth=3)
 ax1.set_title("Temperature Over Time", fontsize=24, fontweight="medium", color=INK)
 ax1.set_xlabel("Hours Since Start", fontsize=20, color=INK)
 ax1.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
@@ -89,7 +89,7 @@ ax1.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
 # Subplot 2: Humidity Distribution (top-right)
 ax2 = axes[0, 1]
-sns.histplot(data=df, x="Humidity", bins=15, ax=ax2, color=OKABE_ITO[1], alpha=0.7, edgecolor=PAGE_BG)
+sns.histplot(data=df, x="Humidity", bins=15, ax=ax2, color=IMPRINT[1], alpha=0.7, edgecolor=PAGE_BG)
 ax2.set_title("Humidity Distribution", fontsize=24, fontweight="medium", color=INK)
 ax2.set_xlabel("Humidity (%)", fontsize=20, color=INK)
 ax2.set_ylabel("Frequency", fontsize=20, color=INK)
@@ -127,12 +127,12 @@ ax4_twin = ax4.twinx()
 
 # Plot AQI as bars
 bars = ax4.bar(
-    df["Hour"], df["AQI"], alpha=0.6, color=OKABE_ITO[2], label="AQI", width=0.8, edgecolor=PAGE_BG, linewidth=0.5
+    df["Hour"], df["AQI"], alpha=0.6, color=IMPRINT[2], label="AQI", width=0.8, edgecolor=PAGE_BG, linewidth=0.5
 )
 
 # Plot Pressure as line on twin axis
 line = ax4_twin.plot(
-    df["Hour"], df["Pressure"], color=OKABE_ITO[3], linewidth=3, marker="o", markersize=6, label="Pressure"
+    df["Hour"], df["Pressure"], color=IMPRINT[3], linewidth=3, marker="o", markersize=6, label="Pressure"
 )
 
 ax4.set_title("Air Quality & Pressure", fontsize=24, fontweight="medium", color=INK)
