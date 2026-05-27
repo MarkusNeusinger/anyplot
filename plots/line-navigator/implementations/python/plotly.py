@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-navigator: Line Chart with Mini Navigator
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-27
@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 BRAND = "#009E73"
-FILL_COLOR = "rgba(0,158,115,0.07)" if THEME == "light" else "rgba(0,158,115,0.11)"
+FILL_COLOR = "rgba(0,158,115,0.12)" if THEME == "light" else "rgba(0,158,115,0.15)"
 
 # Data - Daily temperature sensor data over 3 years (~1100 data points)
 np.random.seed(42)
@@ -68,7 +68,8 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Date", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "gridcolor": GRID,
+        "showgrid": False,
+        "showline": False,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
         "showspikes": True,
@@ -77,7 +78,13 @@ fig.update_layout(
         "spikethickness": 1,
         "spikecolor": INK_SOFT,
         "spikedash": "dot",
-        "rangeslider": {"visible": True, "thickness": 0.15, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1},
+        "rangeslider": {
+            "visible": True,
+            "thickness": 0.15,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
+        },
         "rangeselector": {
             "buttons": [
                 {"count": 1, "label": "1M", "step": "month", "stepmode": "backward"},
@@ -100,8 +107,8 @@ fig.update_layout(
         "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
-        "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "showline": False,
+        "zeroline": False,
         "showspikes": True,
         "spikemode": "across",
         "spikesnap": "cursor",
@@ -111,6 +118,17 @@ fig.update_layout(
     },
     hovermode="x unified",
     margin={"l": 80, "r": 40, "t": 100, "b": 60},
+)
+
+fig.add_hline(
+    y=0,
+    line_dash="dot",
+    line_color=INK_SOFT,
+    line_width=1,
+    annotation_text="Freezing Point",
+    annotation_font_size=9,
+    annotation_font_color=INK_SOFT,
+    annotation_position="bottom right",
 )
 
 # Save
