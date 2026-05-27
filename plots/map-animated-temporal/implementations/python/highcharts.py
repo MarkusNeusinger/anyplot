@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-animated-temporal: Animated Map over Time
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-27
@@ -121,7 +121,7 @@ var chart = Highcharts.mapChart('container', {{
             [1, '#4467A3']
         ],
         labels: {{
-            style: {{ fontSize: '36px', color: '{INK_SOFT}' }}
+            style: {{ fontSize: '44px', color: '{INK_SOFT}' }}
         }},
         title: {{
             text: 'PM2.5 (µg/m³)',
