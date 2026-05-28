@@ -16,10 +16,11 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Anyplot palette positions 1→3 for event types
+# Anyplot palette positions 1→3 for event types; position 5 for negative reactions
 const COLOR_EARNINGS = colorant"#009E73"  # 1 — brand green (quarterly earnings)
 const COLOR_DIVIDEND = colorant"#C475FD"  # 2 — lavender   (dividend payments)
 const COLOR_NEWS     = colorant"#4467A3"  # 3 — blue        (analyst / news events)
+const COLOR_LOSS     = colorant"#AE3030"  # 5 — matte red   (negative price reaction)
 
 # Data: simulate one year of tech stock prices via geometric Brownian motion
 n_days = 252
@@ -59,8 +60,17 @@ flag_hi = y_max + 0.27 * p_range
 y_top   = y_max + 0.48 * p_range
 y_bot   = y_min - 0.05 * p_range
 
+# Post-earnings price reactions: 3-day post vs 2-day pre window
+earn_days = [day for (day, etype, _) in events if etype == "earnings"]
+reactions = Dict{Int,Float64}()
+for day in earn_days
+    pre  = prices[max(day - 2, 1)]
+    post = prices[min(day + 3, n_days)]
+    reactions[day] = (post - pre) / pre
+end
+
 # Title with length-adaptive fontsize
-title_str = "TechCorp 2024 · stock-event-flags · julia · makie · anyplot.ai"
+title_str      = "TechCorp 2024 · stock-event-flags · julia · makie · anyplot.ai"
 title_fontsize = length(title_str) > 67 ? round(Int, 20 * 67.0 / length(title_str)) : 20
 
 # Figure
@@ -98,17 +108,22 @@ ax = Axis(fig[1, 1];
     xticks            = (month_centers, month_labels),
 )
 
-# Earnings blackout windows (±5 trading days around each quarterly announcement)
+# Earnings blackout windows (±5 trading days — clearly visible to guide reader to earnings dates)
 for (day, etype, _) in events
     if etype == "earnings"
         poly!(ax, Rect2f(day - 5.0, y_bot, 10.0, y_top - y_bot);
-              color       = RGBAf(COLOR_EARNINGS.r, COLOR_EARNINGS.g, COLOR_EARNINGS.b, 0.07),
+              color       = RGBAf(COLOR_EARNINGS.r, COLOR_EARNINGS.g, COLOR_EARNINGS.b, 0.12),
               strokewidth = 0)
     end
 end
 
-# Stock price line (neutral baseline, receded behind event flags)
-lines!(ax, 1:n_days, prices; color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.8), linewidth = 1.5)
+# Area fill under price line — creates visual mass for the data layer, recedes behind event flags
+band!(ax, 1:n_days, fill(y_bot, n_days), prices;
+      color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.10))
+
+# Stock price line (thinner so event flags dominate the visual hierarchy)
+lines!(ax, 1:n_days, prices;
+       color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.9), linewidth = 1.2)
 
 # Event flags: dashed connector + price dot + flag marker + label
 for (i, (day, etype, label)) in enumerate(events)
@@ -123,8 +138,20 @@ for (i, (day, etype, label)) in enumerate(events)
     text!(ax, label;
           position = (Float64(day), flag_y + 0.04 * p_range),
           align    = (:center, :bottom),
-          fontsize = 11,
+          fontsize = 12,
           color    = INK)
+
+    # Earnings reaction annotation: green/red % shows how the market responded
+    if etype == "earnings"
+        pct     = reactions[day]
+        pct_str = (pct >= 0 ? "+" : "") * string(round(pct * 100; digits = 1)) * "%"
+        ann_y   = max(price - 0.08 * p_range, y_bot + 0.02 * p_range)
+        text!(ax, pct_str;
+              position = (Float64(day), ann_y),
+              align    = (:center, :top),
+              fontsize = 9,
+              color    = pct >= 0 ? COLOR_EARNINGS : COLOR_LOSS)
+    end
 end
 
 ylims!(ax, y_bot, y_top)
