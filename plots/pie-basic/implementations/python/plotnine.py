@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-28
@@ -13,6 +13,7 @@ import sys
 _dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _dir]
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from plotnine import (
@@ -94,7 +95,7 @@ title = "pie-basic · python · plotnine · anyplot.ai"
 plot = (
     ggplot()
     + geom_polygon(data=df_wedges, mapping=aes(x="x", y="y", fill="category", group="category"))
-    + geom_text(data=df_labels, mapping=aes(x="x", y="y", label="label"), size=3.5, color="white")
+    + geom_text(data=df_labels, mapping=aes(x="x", y="y", label="label"), size=4.0, color="white")
     + scale_fill_manual(values=ANYPLOT_PALETTE)
     + coord_equal()
     + labs(title=title, fill="Department")
@@ -111,5 +112,8 @@ plot = (
     )
 )
 
-# Save
-plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
+# Draw and save — use subplots_adjust to give the right-side legend breathing room
+fig = plot.draw()
+fig.subplots_adjust(right=0.85)
+fig.savefig(f"plot-{THEME}.png", dpi=400)
+plt.close(fig)
