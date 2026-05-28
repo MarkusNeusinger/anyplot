@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-28
@@ -435,8 +435,8 @@ for origin, dest, volume in routes:
     line_xs.append(arc_lons.tolist())
     line_ys.append(arc_lats.tolist())
     normalized = (volume - min_vol) / (max_vol - min_vol) if max_vol > min_vol else 0.5
-    line_widths.append(4 + normalized * 10)
-    line_alphas.append(0.4 + normalized * 0.3)
+    line_widths.append(5 + normalized * 9)
+    line_alphas.append(0.5 + normalized * 0.2)
     route_labels.append(f"{origin} → {dest}")
     passenger_volumes.append(f"{volume}M pax/year")
 
@@ -444,6 +444,16 @@ for origin, dest, volume in routes:
 airport_names = list(airports.keys())
 airport_lons = [airports[a][1] for a in airport_names]
 airport_lats = [airports[a][0] for a in airport_names]
+
+# Per-airport label offsets — push European cluster apart to prevent overlap
+LABEL_OFFSETS = {
+    "LHR": (-65, 8),  # west of dot; avoids CDG/AMS cluster to the right
+    "AMS": (14, 22),  # above default; AMS is the northernmost hub
+    "CDG": (14, -22),  # below default; CDG is the southernmost hub
+    "FRA": (20, 8),  # slightly further right than default
+}
+airport_x_offsets = [LABEL_OFFSETS.get(a, (14, 8))[0] for a in airport_names]
+airport_y_offsets = [LABEL_OFFSETS.get(a, (14, 8))[1] for a in airport_names]
 
 # Data sources
 line_source = ColumnDataSource(
@@ -456,7 +466,15 @@ line_source = ColumnDataSource(
         "passengers": passenger_volumes,
     }
 )
-airport_source = ColumnDataSource(data={"x": airport_lons, "y": airport_lats, "name": airport_names})
+airport_source = ColumnDataSource(
+    data={
+        "x": airport_lons,
+        "y": airport_lats,
+        "name": airport_names,
+        "x_off": airport_x_offsets,
+        "y_off": airport_y_offsets,
+    }
+)
 continent_source = ColumnDataSource(data={"xs": CONT_LON, "ys": CONT_LAT})
 
 # Title font size (scales linearly if title exceeds 67-char baseline)
@@ -515,8 +533,8 @@ p.text(
     y="y",
     text="name",
     source=airport_source,
-    x_offset=14,
-    y_offset=8,
+    x_offset="x_off",
+    y_offset="y_off",
     text_font_size="22pt",
     text_color=INK,
     text_font_style="bold",
