@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -51,7 +51,7 @@ chart.options.chart = {
     "width": 2400,
     "height": 2400,
     "backgroundColor": PAGE_BG,
-    "spacingTop": 20,
+    "spacingTop": 10,
     "spacingBottom": 25,
     "spacingLeft": 60,
     "spacingRight": 60,
@@ -89,7 +89,7 @@ chart.options.plot_options = {
             "enabled": True,
             "format": "<b>{point.name}</b><br>{point.percentage:.1f}%",
             "style": {"fontSize": "38px", "textOutline": "none", "fontWeight": "normal", "color": INK},
-            "distance": 55,
+            "distance": 65,
             "connectorWidth": 2,
             "connectorColor": INK_SOFT,
             "softConnector": True,
@@ -97,9 +97,9 @@ chart.options.plot_options = {
         },
         "showInLegend": True,
         "slicedOffset": 40,
-        "size": "72%",
-        "center": ["50%", "52%"],
-        "startAngle": -45,
+        "size": "78%",
+        "center": ["50%", "54%"],
+        "startAngle": -135,
         "innerSize": "0%",
         "states": {"hover": {"halo": {"size": 15, "opacity": 0.25}}, "inactive": {"opacity": 0.5}},
     }
