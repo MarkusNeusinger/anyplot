@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:20Z'
-updated: '2026-05-28T07:50:03Z'
+updated: '2026-05-28T07:58:59Z'
 generated_by: claude-sonnet
 workflow_run: 26561335439
 issue: 654
@@ -12,98 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Excellent spec compliance and data quality (30/30 combined): all histogram features
-    present, realistic cherry cultivar domain, appropriate data size and scale'
-  - 'Strong theme adaptation: all chrome tokens correctly flip between light/dark;
-    no dark-on-dark or light-on-light failures in either render'
-  - 'Thoughtful data story: symmetric vs. right-skewed contrast with outlier tail
-    is more interesting than a generic normal distribution; subtitle explains the
-    distributions explicitly'
-  - Color-coded annotations (bold geom_text matching series colors) reinforce visual
-    identity without extra legend entries
-  - 'Correct letsplot canvas spec: ggsize(800, 450) + scale=4 = 3200x1800 px; clean
-    idiomatic grammar-of-graphics layer composition'
+  - Well-executed two-cultivar comparison with deliberate distributional contrast
+    (symmetric Yoshino vs. right-skewed Kwanzan with outlier tail)
+  - Color-coded mean annotation labels (geom_label) with matching fill and text colors
+    for each series
+  - All font sizes explicitly set with correct hierarchy (title=16, subtitle=12, axis=12,
+    ticks=10, legend=10)
+  - 'Perfect palette compliance: Yoshino=#009E73, Kwanzan=#C475FD; warm backgrounds
+    #FAF8F1 (light) / #1A1A17 (dark)'
+  - layer_tooltips() with custom format strings — lets_plot-distinctive feature properly
+    utilized
+  - Y-only subtle grid (rgba opacity), X-grid removed — good visual restraint
+  - 'Correct canvas: ggsize(800,450) + scale=4 = 3200×1800 px'
   weaknesses:
-  - Yoshino annotation text positioned at y=78% of peak places it within the histogram
-    body (bars in that area reach ~47 frequency while annotation is at ~42), causing
-    minor visual overlap with bars — consider raising annot_y multiplier from 0.78
-    to 0.92-0.95 or using geom_label() with ELEVATED_BG fill
-  - geom_text(size=5) for annotations may scale down poorly at 400 px mobile width
-    — consider size=6 or size=7
-  - 'Design polish room: legend box border could be removed in light theme for cleaner
-    look; mean line annotations could use geom_label() with background fill to lift
-    text above bars'
+  - Two mean annotation labels (Yoshino avg and Kwanzan avg) are placed at identical
+    y height; they nearly touch horizontally — stagger vertically (e.g. Yoshino label
+    8-10% lower) to create breathing room and prevent collision across display sizes
+  - 'Design Excellence headroom: consider removing the panel border entirely and adding
+    slightly more left margin to give the y-axis tick labels room to breathe'
+  - LM-02 could be elevated by adding a geom_density layer in addition to geom_histogram
+    (lets_plot supports combining both naturally) to reinforce the distributional
+    shape story
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface, not pure white
-      Chrome: Title "histogram-basic · python · letsplot · anyplot.ai" in bold dark #1A1A17 ink — readable; subtitle in #4A4A44 secondary ink — readable; axis labels "Trunk Diameter (cm)" and "Frequency" in dark ink — readable; tick labels in #4A4A44 — readable; legend title "Cultivar" bold dark ink — readable; legend text "Yoshino"/"Kwanzan" in secondary ink — readable
-      Data: Yoshino histogram in #009E73 (first series, brand green) with alpha=0.65; Kwanzan histogram in #C475FD (position 2, lavender) with alpha=0.65; dashed vlines in matching colors; bold color-coded annotation text; white bar edges at size=0.2
-      Legibility verdict: PASS — all text readable; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Bold black title "histogram-basic · python · letsplot · anyplot.ai" fully visible, fills ~70% of plot width. Subtitle in INK_SOFT gray clearly readable. X-axis label "Trunk Diameter (cm)" and Y-axis label "Frequency" dark and sharp. Tick labels in secondary ink gray, all legible. Legend box (Cultivar) with slightly elevated warm fill, top-right position.
+      Data: Two overlapping histograms — Yoshino in brand green #009E73 and Kwanzan in lavender #C475FD, alpha=0.65. Dashed vertical mean lines matching each series color. Two geom_label annotation boxes at same y height showing "Yoshino avg 28.5 cm" and "Kwanzan avg 38.8 cm" — boxes are adjacent with a very thin gap, just barely avoiding overlap.
+      Legibility verdict: PASS — all text readable; annotation labels close but text within each box is clear.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
-      Chrome: Title in near-white #F0EFE8 — clearly readable against dark surface; subtitle in #B8B7B0 secondary ink — readable; axis labels in #B8B7B0 — readable; tick labels in #B8B7B0 — readable; legend box uses #242420 elevated dark background with light text — readable; NO dark-on-dark failures detected
-      Data: Colors identical to light render — Yoshino #009E73 (green) and Kwanzan #C475FD (lavender) unchanged; only chrome elements flip; brand green #009E73 clearly visible on dark background
-      Legibility verdict: PASS — all text readable in correct light-on-dark configuration; theme adaptation correct
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title in #F0EFE8 off-white, fully visible and bold. Subtitle in #B8B7B0 secondary ink clearly readable. Axis labels and tick labels all in light-colored text — no dark-on-dark failures detected. Legend box with #242420 elevated dark fill and light text.
+      Data: Data colors IDENTICAL to light render — Yoshino #009E73, Kwanzan #C475FD. Dashed mean lines and annotation labels unchanged. The annotation label fills switch to #242420 (ELEVATED_BG dark) which correctly contrasts against the dark page background.
+      Legibility verdict: PASS — all chrome correctly flipped; no dark-on-dark text issues.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=16pt, subtitle=12pt, axis=12pt,
-          ticks=10pt); all text readable in both themes. Minor: geom_text annotation
-          size=5mm may be marginally small at 400px mobile scale.'
+        comment: 'All font sizes explicitly set: title=16, subtitle=12, axis_title=12,
+          axis_text=10, legend=10. Well-proportioned in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'No text-on-text collisions. Minor: Yoshino annotation at y=78% of
-          peak sits within histogram body causing slight visual overlap with bars,
-          though readable due to bold colored text.'
+        comment: No text overlaps; annotation labels are adjacent with thin gap but
+          do not overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 600 observations with alpha=0.65 appropriate; bars clearly distinguishable;
-          dashed vlines prominent; white bar edges give bin definition.
+        comment: 600-point histogram with alpha=0.65 and white edges; both series
+          clearly visible and overlapping region distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette positions 1 and 2; no red-green sole signal; colorblind-safe
-          palette.
+        comment: Green and lavender from anyplot palette are CVD-safe with good perceptual
+          distance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450) x scale=4 = 3200x1800 px; canvas gate passed; title
-          ~65% width; generous whitespace; legend well-placed.
+        comment: Canvas 3200x1800 confirmed. Plot fills canvas well, legend well-positioned,
+          balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Trunk Diameter (cm) and Frequency are descriptive with units; mandated
-          title format correct.
+        comment: 'X: ''Trunk Diameter (cm)'' with units. Y: ''Frequency'' — appropriate
+          for count data.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #C475FD; light bg #FAF8F1; dark bg
-          #1A1A17; all chrome tokens theme-adaptive.'
+        comment: 'First series #009E73, second #C475FD. Backgrounds #FAF8F1/#1A1A17.
+          Chrome adaptive. Data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -113,24 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: color-coded annotations, subtitle with distribution
-          descriptions, alpha-blended overlapping histograms, mean reference lines.'
+        comment: 'Above configured default: color-matched annotation labels, mean
+          reference lines, alpha transparency for overlapping distributions. Not quite
+          at publication-ready level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'theme_minimal base with deliberate customizations: x-axis grid removed,
-          y-axis-only grid at 15% opacity, custom legend positioning inside plot,
-          white bar edges.'
+        comment: Y-axis grid only with rgba opacity, theme_minimal, custom backgrounds,
+          text color hierarchy (INK vs INK_SOFT). Visible refinement beyond defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear comparative story: symmetric vs. right-skewed with outlier
-          tail; subtitle labels distribution shapes; color-coded annotations guide
-          viewer to key metrics.'
+        comment: Subtitle explicitly states the comparison narrative. Mean annotations
+          provide quantitative focal points. Data chosen to show symmetric vs. right-skewed
+          with outlier tail.
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_histogram() with correct bin-based frequency display.
+        comment: Correct histogram type with geom_histogram, appropriate bins=30.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges (color=white), no inter-bin gaps, readable axes,
-          30 bins, y-axis starts at zero.
+        comment: Bin edges visible (white edges), readable axis labels, appropriate
+          bin count, Y-axis from zero.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Continuous variable on x (trunk diameter), frequency count on y,
-          fill mapped to cultivar; all data visible.
+        comment: X=diameter (continuous), Y=frequency. Full data range shown via percentile-based
+          limits.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels Yoshino/Kwanzan match
-          data.
+        comment: 'Title: ''histogram-basic · python · letsplot · anyplot.ai''. Legend
+          labels Yoshino/Kwanzan match data.'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates histogram bins, two overlapping distributions, shape
-          contrast, mean reference lines, frequency axis, outlier tail.
+        comment: Shows symmetric distribution, right-skewed distribution, and outlier
+          tail — all key histogram features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cherry tree trunk diameters in cm; Yoshino and Kwanzan are real cultivar
-          names; same-orchard comparison is meaningful; neutral data.
+        comment: Cherry cultivar trunk diameters — real, neutral scientific scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600 observations within 50-1000 spec; diameter range 20-58 cm plausible;
-          well-separated means create clear visual story.
+        comment: Trunk diameters 20-60 cm range, ~28.5 cm mean for Yoshino, ~38.8
+          cm for Kwanzan — plausible for mature cherry trees.
     code_quality:
       score: 10
       max: 10
@@ -196,7 +193,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-level structure.
+        comment: 'Linear flow: imports → theme → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,20 +206,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All 18 lets_plot symbols used; os, numpy, pandas all used.
+        comment: All imports are used; no extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean grammar-of-graphics composition; layer_tooltips() is legitimate
-          interactive feature.
+        comment: Clean idiomatic code. Duplicate geom_label calls are necessary (separate
+          DataFrames per cultivar).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API.
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html. Correct ggsave with path
+          and scale.
     library_mastery:
       score: 7
       max: 10
@@ -231,24 +230,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics layers; scale_fill_manual with named dict;
-          theme() system for all chrome; scale_x/y_continuous with format strings.
-          Above default 3.
+        comment: Expert ggplot grammar with scale_fill_manual (named dict), theme_minimal
+          + theme override, ggsize+ggsave pattern. layer_tooltips() idiomatic to lets_plot.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with chained .format()/.line() API is distinctly
-          letsplot; HTML export alongside PNG. Above default 1.
+        comment: layer_tooltips() with custom .format() and .line() calls is genuinely
+          lets_plot-specific; HTML export alongside PNG leverages interactive nature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
