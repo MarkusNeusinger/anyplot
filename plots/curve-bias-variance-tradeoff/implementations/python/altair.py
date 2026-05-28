@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-05-28
@@ -68,7 +68,7 @@ label_df = pd.DataFrame(
         {"complexity": 1.2, "error": 1.72, "label": "Bias²", "curve": "Bias²"},
         {"complexity": 8.5, "error": 2.06, "label": "Variance", "curve": "Variance"},
         {"complexity": 5.0, "error": 1.62, "label": "Total Error", "curve": "Total Error"},
-        {"complexity": 2.5, "error": 0.04, "label": "Irreducible Error", "curve": "Irreducible Error"},
+        {"complexity": 4.0, "error": 0.16, "label": "Irreducible Error", "curve": "Irreducible Error"},
     ]
 )
 
@@ -164,7 +164,7 @@ opt_label_layer = (
 
 # Layer 7: Formula
 formula_layer = (
-    alt.Chart(formula_df).mark_text(fontSize=9, color=INK_SOFT).encode(x="complexity:Q", y="error:Q", text="text:N")
+    alt.Chart(formula_df).mark_text(fontSize=11, color=INK_SOFT).encode(x="complexity:Q", y="error:Q", text="text:N")
 )
 
 chart = (
@@ -179,7 +179,7 @@ chart = (
         formula_layer,
     )
     .properties(width=620, height=320, background=PAGE_BG, title=alt.TitleParams(text=title, fontSize=16, color=INK))
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -190,6 +190,7 @@ chart = (
         titleColor=INK,
         titleFontSize=12,
     )
+    .configure_axisX(grid=False)
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
