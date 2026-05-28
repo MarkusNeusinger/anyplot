@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: bokeh 3.8.2 | Python 3.14.0
+Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-28
 """
 
