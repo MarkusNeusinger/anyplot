@@ -1,63 +1,55 @@
 library: bokeh
+language: python
 specification_id: area-basic
 created: '2025-12-23T00:48:55Z'
-updated: '2026-02-12T22:25:46Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447970023
-issue: 0
-python_version: 3.14.2
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-basic/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-28T05:50:47Z'
+generated_by: claude-sonnet
+workflow_run: 26556741560
+issue: 711
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent data storytelling with the 'Campaign launch +84%' annotation that provides
-    context and guides the viewer's eye to the key insight
-  - All text sizes explicitly set and well-scaled for 4800x2700 canvas — title 42pt,
-    labels 32pt, ticks 26pt
-  - 'Strong idiomatic Bokeh usage: ColumnDataSource, varea, HoverTool with datetime
-    formatters, Label model, HTML export'
-  - 'Clean visual refinement: subtle grid (alpha 0.2), removed outline, styled axis
-    lines, hidden toolbar'
-  - Realistic data with weekly cyclical pattern, upward trend, and viral spike creating
-    a compelling narrative
-  - Dual output (PNG + HTML) leverages Bokeh's interactive strengths
+  - Perfect theme adaptation — all chrome tokens (background, text, grid, axis lines,
+    ticks) correctly set for both light (#FAF8F1) and dark (#1A1A17) renders with
+    no dark-on-dark or light-on-light failures
+  - 'Idiomatic varea + line combination at fill_alpha=0.35 is the correct bokeh pattern
+    for an area chart, and the brand green #009E73 is used correctly as the first
+    series'
+  - Meaningful event annotation ('HN front page +172%') that immediately tells the
+    data story; uses INK token for theme-adaptive text color
+  - 'Strong bokeh feature usage: ColumnDataSource, varea, HoverTool with datetime
+    formatters, invisible scatter hit-targets, and HTML export artifact'
+  - Y-axis-only grid is the right design choice for area charts — keeps the plot clean
+    while still aiding value estimation; alpha=0.15 is correctly subtle
+  - Deterministic data with np.random.seed(42), realistic tech-blog scenario with
+    plausible viral traffic event, KISS code structure
   weaknesses:
-  - Y-axis label 'Daily Visitors' lacks explicit units (could be 'Daily Visitors (count)')
-  - '''Date'' x-axis label is somewhat generic'
-  - Slight vertical whitespace above annotation due to y_range padding
-  - Could leverage more distinctive Bokeh features like Band glyph for confidence
-    intervals or CustomJS for richer interactivity
-  image_description: The plot displays a basic area chart titled "Daily Website Traffic
-    · area-basic · bokeh · pyplots.ai". The x-axis shows dates from Jan 01, 2024 to
-    Feb 01, spanning one month with datetime formatting. The y-axis shows "Daily Visitors"
-    ranging from 0 to approximately 10,500. The area is filled with a semi-transparent
-    Python Blue (#306998) at approximately 0.4 alpha, with a solid blue line (width
-    5) tracing the top edge. The data shows a clear upward trend combined with weekly
-    cyclical patterns (peaks and troughs roughly every 7 days). A dramatic spike appears
-    around Jan 18, reaching approximately 9,200 visitors, annotated with bold text
-    reading "Campaign launch +84%". Grid lines are subtle (alpha 0.2). The plot frame
-    outline is removed for a clean look. The toolbar is hidden. Text sizes are generous
-    — title at 42pt, axis labels at 32pt, tick labels at 26pt — all clearly legible
-    at the 4800x2700 canvas size.
+  - outline_line_color = INK_SOFT adds a visible border box around the plot area in
+    both renders; set p.outline_line_color = None for cleaner, more refined appearance
+  - DE-01 could reach 6+ by removing the outline border box and ensuring the axis
+    label font style is non-italic (bokeh defaults axis labels to italic) — add p.xaxis.axis_label_text_font_style
+    = 'normal' and p.yaxis.axis_label_text_font_style = 'normal' for a sharper look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "Daily Website Traffic · area-basic · python · bokeh · anyplot.ai" in bold dark text, fully readable; Y-axis label "Daily Visitors (count)" and X-axis label "Date (March 2024)" in dark INK color (italic, bokeh default); tick labels in dark INK_SOFT color; all readable; subtle y-axis-only horizontal grid lines; thin INK_SOFT border box around plot area
+      Data: Area fill in #009E73 (brand green) at alpha=0.35 creating a mint-teal tone; bright #009E73 line at the top of the area; "HN front page +172%" annotation in dark INK color positioned above the Mar 22 peak (11,400 visitors); maintenance dip visible around Mar 08 (~2100 visitors)
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title in light #F0EFE8 text, fully readable against dark background; Y- and X-axis labels in light #F0EFE8 (INK dark token); tick labels in #B8B7B0 (INK_SOFT dark token), clearly readable against near-black; no dark-on-dark failures; subtle grid lines visible; thin lighter border box around plot area
+      Data: Area fill in #009E73 at alpha=0.35 blends with dark background creating a deep teal tone; bright #009E73 line is clearly visible at area top; annotation "HN front page +172%" in light #F0EFE8 — readable; data colors are identical to light render (only chrome flips)
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,67 +57,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, tick
-          labels 26pt. Perfectly readable.'
+        comment: All font sizes explicitly set (50pt title adaptive, 42pt axis labels,
+          34pt ticks); well-proportioned in both themes at full and mobile widths
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere. Title, annotation, axis labels
-          all well separated.
+        comment: No text or data element overlaps in either render; annotation positioned
+          with clear space above peak
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 5 and area alpha 0.4 well adapted for 31 data points.
+        comment: Area fill at alpha=0.35 clearly visible; line at line_width=4 clearly
+          delineates the data boundary; 31 data points at appropriate density
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in #009E73 — high luminance contrast on both light
+          and dark backgrounds; CVD-safe (green with strong brightness differential)'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single series using Python Blue (#306998). No color discrimination
-          needed.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: false
-        comment: Good canvas utilization but slight wasted vertical space at top due
-          to y_range padding for annotation.
+        comment: 3200x1800 canvas (gate passed); min_border settings ensure proper
+          whitespace; plot fills ~75% of canvas area; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but 'Daily Visitors' lacks explicit units and
-          'Date' is generic.
+        passed: true
+        comment: '''Daily Visitors (count)'' and ''Date (March 2024)'' are descriptive
+          with context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (and only) series = #009E73; light background = #FAF8F1; dark
+          background = #1A1A17; all theme chrome tokens correctly set in both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Python Blue, clean frame, removed toolbar, good hierarchy. Above
-          defaults but not FiveThirtyEight-level.
+        passed: true
+        comment: 'Above defaults: intentional anyplot palette, event annotation, y-only
+          grid design choice; but visible outline border and italic axis labels prevent
+          reaching ''strong design'' tier'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.2), outline removed, styled axis lines, generous
-          margins.
+        comment: Y-axis-only grid (x-grid disabled), subtle alpha=0.15, generous min_border
+          whitespace; deduction for visible outline_line_color border box (INK_SOFT)
+          around plot area
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Excellent 'Campaign launch +84%' annotation highlights key event
-          with percentage context.
+        comment: Event annotation 'HN front page +172%' clearly narrates the viral
+          surge; creates visual hierarchy at the peak; maintenance dip also visible
     spec_compliance:
       score: 15
       max: 15
@@ -135,49 +137,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart using varea for fill + line for edge.
+        comment: Correct basic area chart using varea + line combination
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill, gridlines, clear axis labels, HoverTool for
-          interactivity.
+        comment: Semi-transparent fill (alpha=0.35), gridlines, clear axis labels
+          with units — all spec requirements met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=datetime, Y=numeric visitors. Correctly assigned.
+        comment: X=dates (datetime), Y=visitors (count); axes show all 31 data points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single series.
+        comment: Title 'Daily Website Traffic · area-basic · python · bokeh · anyplot.ai'
+          matches required format; single series, no legend needed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Shows upward trend, weekly cycles, viral spike, noise. Could show
-          a trough/dip event for full marks.
+        passed: true
+        comment: Shows trend, variability, traffic dip (maintenance), and viral surge
+          — demonstrates all aspects of area chart as a volume/magnitude visualization
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitors over a month. Matches spec example exactly.
+        comment: Realistic tech blog scenario with plausible HN front-page viral event;
+          March 2024 timeframe adds specificity; neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5,000-9,200 daily visitors is realistic for a mid-size website.
+        comment: 4000-11400 visitors is realistic for a mid-size tech blog; maintenance
+          dip to ~2100 and viral surge to 11400 are plausible
     code_quality:
       score: 10
       max: 10
@@ -187,32 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, figure, plot, styling, save.'
+        comment: 'Linear flow: imports → data → figure → add layers → annotations
+          → chrome → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: io/os/sys/time (std lib), numpy/pandas (data),
+          bokeh components (all used), PIL/selenium (screenshot pipeline)'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Invisible scatter for hover is legitimate
-          Bokeh pattern.
+        comment: Clean, Pythonic; length-aware title font scaling is a practical touch;
+          invisible scatter for hit targets is idiomatic bokeh, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current bokeh API
     library_mastery:
       score: 9
       max: 10
@@ -222,13 +229,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, varea, HoverTool with datetime formatters, Label
-          model.
+        comment: 'Expert use: ColumnDataSource, varea glyph, figure() with proper
+          configuration, HoverTool, Label, toolbar_location=None — all idiomatic bokeh
+          patterns'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: HoverTool with vline mode, HTML export, Label model. Distinctly Bokeh
-          but could push further.
+        passed: true
+        comment: 'Distinctive: varea glyph (bokeh-specific), HoverTool with datetime
+          formatter (interactive), HTML catalog artifact via output_file/save; one
+          point off for not using bokeh callbacks or more advanced interactive features'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
