@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -171,7 +171,7 @@ crit_in_chart = (
 # Consolidated annotation layer for key critical speeds (single layer, not per-row)
 annot_chart = (
     alt.Chart(df_annot)
-    .mark_text(fontSize=9, fontWeight="bold", align="left", dx=8, dy=-12)
+    .mark_text(fontSize=11, fontWeight="bold", align="left", dx=8, dy=-20)
     .encode(
         x=alt.X("RPM:Q", scale=x_scale),
         y=alt.Y("Hz:Q", scale=y_scale),
@@ -208,7 +208,7 @@ chart = (
             subtitleColor=INK_MUTED,
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
