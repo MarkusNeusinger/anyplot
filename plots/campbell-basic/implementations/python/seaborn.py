@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -140,17 +140,28 @@ for order in engine_orders:
         bbox={"boxstyle": "round,pad=0.12", "fc": ELEVATED_BG, "ec": INK_SOFT, "alpha": 0.85, "linewidth": 0.5},
     )
 
-# Critical speed markers via seaborn scatterplot
-cs_palette = {"In Range": ANYPLOT_PALETTE[4], "Outside": INK_MUTED}
-cs_sizes = {"In Range": 120, "Outside": 45}
+# Critical speed markers via seaborn scatterplot (split by status for independent alpha)
+cs_in_df = cs_df[cs_df["Status"] == "In Range"]
+cs_out_df = cs_df[cs_df["Status"] == "Outside"]
 sns.scatterplot(
-    data=cs_df,
+    data=cs_in_df,
     x="RPM",
     y="Frequency (Hz)",
-    hue="Status",
-    size="Status",
-    palette=cs_palette,
-    sizes=cs_sizes,
+    color=ANYPLOT_PALETTE[4],
+    s=120,
+    ax=ax,
+    zorder=5,
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
+    legend=False,
+)
+sns.scatterplot(
+    data=cs_out_df,
+    x="RPM",
+    y="Frequency (Hz)",
+    color=INK_MUTED,
+    s=30,
+    alpha=0.7,
     ax=ax,
     zorder=5,
     edgecolor=PAGE_BG,
