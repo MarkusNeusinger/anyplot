@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-basic
 created: '2025-12-23T00:23:14Z'
-updated: '2026-05-28T09:29:17Z'
+updated: '2026-05-28T09:39:20Z'
 generated_by: claude-sonnet
 workflow_run: 26565856718
 issue: 612
@@ -15,47 +15,41 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Full theme-adaptive chrome with all tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED)
-    correctly threaded through every element — both light and dark renders pass readability
-    checks with zero dark-on-dark failures.
-  - 'Idiomatic matplotlib usage throughout: ax.bar_label() for value labels, ticker.StrMethodFormatter
-    for dollar tick formatting, ax.set_axisbelow(True) for clean grid-under-bars,
-    and fig.subplots_adjust() instead of bbox_inches=''tight'' to preserve exact 3200×1800
-    canvas.'
-  - Storytelling annotations for top (Electronics) and lowest (Books) performers with
-    brand-green and INK_MUTED respectively, creating clear focal points and guiding
-    the viewer through the data.
-  - 'Complete spec compliance: correct vertical bar chart, all 7 categories within
-    the 3–15 recommended range, value labels above each bar, single-color bars in
-    brand green, L-shaped spine frame, and correct mandated title format.'
+  - Focal emphasis via alpha variation (Electronics at full opacity, others at 0.55)
+    creates clear visual hierarchy that guides the reader immediately to the top performer
+  - Two well-placed annotations identify both the top and lowest performers, adding
+    real data storytelling without clutter
+  - Top, right, and bottom spines all removed with only the left spine kept — maximally
+    clean frame treatment
+  - Subtle y-axis-only grid (alpha=0.15) with ax.set_axisbelow(True) keeps grid behind
+    bars — idiomatic and correct
+  - Dollar formatting via ticker.StrMethodFormatter and ax.bar_label() for automated
+    value placement are distinctive matplotlib features used well
+  - 'Full theme-adaptive chrome: all tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED, ELEVATED_BG)
+    correctly applied to every element in both renders'
+  - No bbox_inches='tight' — correct canvas handling per library rules, canvas gate
+    passes
   weaknesses:
-  - 'DE-01 (5/8): The design is clean and correct but stops short of publication quality.
-    The annotations use the right colors (brand green / INK_MUTED) but lack visual
-    weight — adding a semi-transparent ELEVATED_BG box behind annotation text (bbox=dict(facecolor=ELEVATED_BG,
-    edgecolor=''none'', alpha=0.75, pad=3)) would give the labels proper legibility
-    on any bar background and lift the sophistication level.'
-  - 'DE-01 / DE-03: No visual emphasis distinguishes Electronics as the standout bar.
-    Consider rendering all bars at reduced opacity (alpha=0.55) and the top bar at
-    full opacity (alpha=1.0), or giving the top bar a BRAND fill and all others a
-    slightly desaturated tint — this would create a clear focal point that immediately
-    communicates the insight without relying solely on the annotation arrow.'
-  - 'DE-02 (4/6): The left and bottom spines are retained and colored INK_SOFT, which
-    is fine for an L-frame, but the bottom spine has no matching tick-mark gap treatment
-    on the x-axis. Removing the x-tick spine entirely (ax.spines[''bottom''].set_visible(False))
-    for a fully open x-axis would look more refined alongside the already-removed
-    tick marks (length=0).'
+  - Value labels and annotation text both at fontsize=8; at 400 px mobile width these
+    scale to ~1 pt effective — borderline on smallest screens; consider raising value
+    labels to 9pt
+  - 'DE-01 moderate: alpha emphasis is clever but design could push further — e.g.,
+    stronger color contrast between the highlighted bar and muted bars, or a subtle
+    background band behind the Electronics bar'
+  - 'LM-02 could go further: matplotlib supports grouped/stacked bar variants and
+    FancyArrowPatch customization that could show deeper library mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "bar-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17) at fontsize 12, centered at top — fully readable, occupies ~55% of canvas width. Y-axis label "Sales (USD)" and x-axis label "Product Department" in dark ink at fontsize 10 — balanced, proportional, readable. Tick labels in INK_SOFT at fontsize 8 — readable. Dollar-formatted y-axis ticks ($0–$60,000). X-axis tick marks removed (length=0). L-shaped spine frame (top and right removed, left and bottom in INK_SOFT).
-      Data: 7 vertical bars in brand green #009E73. Dollar value labels above each bar in INK_SOFT (fontsize 8). Annotation "Top: Electronics" in #009E73 bold with arrow pointing to Electronics bar. Annotation "Lowest: Books" in INK_MUTED italic with arrow pointing to Books bar. Subtle y-axis grid (alpha=0.15, set below bars).
-      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "bar-basic · python · matplotlib · anyplot.ai" in dark ink at fontsize=12, clearly readable. X-axis label "Product Department" and Y-axis label "Sales (USD)" both at fontsize=10, well-readable. Tick labels at fontsize=8 in INK_SOFT (#4A4A44), clearly legible. Value labels ($48,500 etc.) above each bar in INK_SOFT at fontsize=8, readable. Y-axis dollar tick labels formatted correctly. Only left spine visible (top, right, bottom removed). Subtle y-axis grid in INK at alpha=0.15.
+      Data: All 7 bars in brand green (#009E73). Electronics (index 0, highest value $48,500) rendered at full alpha=1.0; remaining 6 bars at alpha=0.55, creating focal emphasis. "Top: Electronics" annotation in bold brand green with arrowhead pointing to Electronics bar. "Lowest: Books" annotation in italic INK_MUTED with arrowhead pointing to Books bar. Semi-transparent ELEVATED_BG boxes on both annotations. First (and only) series is #009E73.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Axis labels in light ink, readable. Tick labels in INK_SOFT (#B8B7B0 in dark mode), visible against dark background. Spines in dark-mode INK_SOFT. Grid lines subtle and visible.
-      Data: Bar colors are identical to light render — all 7 bars in #009E73. Value labels visible. Annotations for Electronics (brand green) and Books (INK_MUTED in dark mode) both visible and readable.
-      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored on dark background. Brand green #009E73 clearly visible on #1A1A17 surface.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Axis labels in INK (#F0EFE8), clearly visible. Tick labels in INK_SOFT (#B8B7B0), clearly legible against dark bg. Value labels above bars in INK_SOFT (#B8B7B0). Grid lines subtle but visible in light INK at alpha=0.15. Left spine in INK_SOFT. Annotation boxes use ELEVATED_BG (#242420) — dark elevated surface, blends well.
+      Data: Bar colors are identical to light render — all brand green (#009E73) with same alpha treatment. "Top: Electronics" and "Lowest: Books" annotations present with same colors (BRAND green and INK_MUTED respectively). No dark-on-dark failures detected: no near-black text on near-black background anywhere.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,54 +60,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, labels=10, ticks=8, annotations=8).
-          Readable in both themes. Proportions balanced. Minor deduction: value labels
-          and annotation text at fontsize=8 are at the small end for the high-res
-          canvas.'
+        comment: 'Title (12pt), axis labels (10pt), tick labels (8pt) all explicitly
+          set and readable in both themes. Minor deduction: value labels and annotation
+          text at 8pt are borderline at 400px mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Value labels, annotations, and tick labels
-          are all clearly separated.
+        comment: 'No text overlaps observed. Annotations are well-positioned; ''Lowest:
+          Books'' at (4.4, 25100) and Toys value label at (5, ~22200) are visually
+          distinct.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: '7 bars in brand green clearly visible. Good bar width (0.65) with
-          adequate spacing. Brand green contrasts well on both #FAF8F1 and #1A1A17
-          backgrounds.'
+        comment: All 7 bars clearly visible. Alpha=0.55 for non-focal bars retains
+          visibility while creating emphasis hierarchy.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green. Annotation contrast is good (green
-          on cream/dark, muted grey on both surfaces). CVD-safe.
+        comment: Single-hue chart with brand green. No red-green sole-signal issues.
+          Annotations use brand green and muted color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills canvas well. fig.subplots_adjust(left=0.10,
-          right=0.97, top=0.92, bottom=0.12) gives good margins. No clipping. Y-axis
-          headroom (×1.30) accommodates value labels and annotations.
+        comment: Canvas gate passed. figsize=(8,4.5) dpi=400 → 3200x1800. Margins
+          set via subplots_adjust. No bbox_inches='tight'. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Product Department'', Y: ''Sales (USD)'' with dollar tick formatting.
-          Both descriptive with context.'
+        comment: 'Title: ''bar-basic · python · matplotlib · anyplot.ai''. X: ''Product
+          Department'', Y: ''Sales (USD)'' with currency unit — fully descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73. Light bg #FAF8F1, dark bg #1A1A17. All
-          theme tokens correctly applied. Data colors identical in both renders.'
+        comment: 'Single series uses #009E73 (brand green). Light bg #FAF8F1, dark
+          bg #1A1A17. All chrome tokens correctly flip between themes.'
     design_excellence:
       score: 13
       max: 20
@@ -122,29 +114,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Above well-configured defaults due to storytelling annotations (top/bottom
-          performers), but lacks visual emphasis on the standout bar. No differentiation
-          of the max bar (e.g., opacity variation). Annotation boxes lack background
-          fills (ELEVATED_BG) that would give them professional polish.
+        passed: true
+        comment: Alpha emphasis on top bar is a deliberate design choice that elevates
+          above generic defaults. Annotations add professional polish. Above-default
+          score merited.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: top/right spines removed, x-tick marks removed,
-          grid subtle (alpha=0.15), set_axisbelow(True), bar edges use PAGE_BG. Not
-          quite perfect: bottom spine kept while tick marks are removed creates minor
-          visual inconsistency.'
+        passed: true
+        comment: Excellent spine removal (top+right+bottom all gone, only left kept).
+          y-axis-only grid at alpha=0.15 with set_axisbelow(True). x-tick marks removed
+          (length=0). Semi-transparent annotation boxes.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Annotations for top (Electronics) and lowest (Books) performers create
-          focal points. Value labels support precise reading. However, no visual weight
-          distinguishes the top bar from others — all bars render at the same opacity/color,
-          so the annotation is the only differentiator.
+        passed: true
+        comment: Clear focal point (Electronics at full alpha). Two annotations identify
+          top and lowest performers. Alpha gradient creates effective visual hierarchy
+          guiding viewer's eye.
     spec_compliance:
       score: 15
       max: 15
@@ -154,27 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart implementation.
+        comment: Correct vertical bar chart with rectangular bars whose heights represent
+          values.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Value labels above bars, consistent bar widths, single color for
-          all bars, adequate spacing.
+        comment: Consistent bar widths (width=0.65). Value labels above bars. Single
+          color for all bars. Adequate bar spacing.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, sales values on y-axis, all 7 categories shown.
+        comment: Categories on x-axis, values on y-axis. All 7 categories shown. Y-axis
+          starts at 0.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bar-basic · python · matplotlib · anyplot.ai' matches required
-          format exactly. No legend for single-series plot (correct).
+        comment: 'Title exactly: ''bar-basic · python · matplotlib · anyplot.ai''.
+          No legend (single series) — correct per style guide.'
     data_quality:
       score: 15
       max: 15
@@ -184,23 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 categories (within 3–15 spec range), varied values showing realistic
-          distribution, covers both high and low performers.
+        comment: 'All core bar chart features present: bars, value labels, axis labels,
+          grid, annotations highlighting key data points.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Q1 retail sales by product department. Neutral business scenario.
-          Plausible category names and values.
+        comment: Q1 retail sales by product department — realistic, neutral business
+          context. Values ($15K-$48K) are plausible for department-level sales.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis starts at 0 (required for bar charts). Sales range $15,400–$48,500
-          plausible for retail department Q1 sales. Dollar formatting matches USD
-          context.
+        comment: Y-axis from $0 to ~$63K (130% of max). 7 categories — within the
+          3-15 recommended range. Values have realistic spread.
     code_quality:
       score: 10
       max: 10
@@ -210,34 +200,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → tokens → data → plot → save. No functions
-          or classes.'
+        comment: Linear script, no functions or classes. Clear, readable flow from
+          data → plot → save.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data (no randomness). Deterministic output.
+        comment: 'Fully deterministic: hardcoded category and value lists, no random
+          generation needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, matplotlib.ticker — all three are used.
+        comment: os (ANYPLOT_THEME env), matplotlib.pyplot, matplotlib.ticker — all
+          three imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic. No over-engineering or fake UI. Appropriate complexity
-          for a bar chart.
+        comment: Appropriate complexity for a bar chart with emphasis. No fake UI
+          or unnecessary abstractions.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
-          filename pattern, no bbox_inches='tight', current API.
+        comment: Saves plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
+          API used throughout.
     library_mastery:
       score: 7
       max: 10
@@ -247,19 +239,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistently uses ax.* methods (not plt.*). ax.bar_label() is the
-          idiomatic modern way to add bar labels. ticker.StrMethodFormatter for tick
-          formatting. ax.set_axisbelow(True). fig.subplots_adjust() for layout. Above
-          the default 3.
+        comment: 'Axes methods used correctly (ax.bar, ax.bar_label, ax.annotate,
+          ax.yaxis.grid). fig.subplots_adjust for layout. ax.set_axisbelow for grid
+          ordering. Minor gap: could use FancyBboxPatch or other advanced primitives.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ax.bar_label() (matplotlib 3.4+ convenience), ticker.StrMethodFormatter,
-          ax.annotate() with arrowprops dict, ax.set_axisbelow(True) — several distinctly
-          matplotlib features. Above the default 1.
-  verdict: REJECTED
+        comment: ax.bar_label() for automatic label placement, ticker.StrMethodFormatter
+          for currency formatting, ax.set_axisbelow(True) — three distinctive matplotlib-specific
+          features used correctly.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -268,5 +259,6 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
   - grid-styling
