@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-basic: Basic Histogram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -16,7 +16,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_histogram,
-    geom_text,
+    geom_label,
     geom_vline,
     ggplot,
     ggsize,
@@ -40,6 +40,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+LEGEND_BORDER = PAGE_BG if THEME == "light" else INK_SOFT
 
 # anyplot palette positions 1 and 2
 BRAND = "#009E73"
@@ -65,10 +66,10 @@ all_diameters = np.concatenate([cultivar_a, cultivar_b])
 x_min = float(np.floor(np.percentile(all_diameters, 0.5)) - 1)
 x_max = float(np.ceil(np.percentile(all_diameters, 99.5)) + 1)
 
-# Annotation y at 78% of peak bar height — clear of axis top
+# Annotation y at 93% of peak bar height — above histogram body, clear of bars
 counts_a, _ = np.histogram(cultivar_a, bins=30, range=(x_min, x_max))
 counts_b, _ = np.histogram(cultivar_b, bins=30, range=(x_min, x_max))
-annot_y = round(max(counts_a.max(), counts_b.max()) * 0.78)
+annot_y = round(max(counts_a.max(), counts_b.max()) * 0.93)
 
 annotations_a = pd.DataFrame({"x": [mean_a + 2.5], "y": [annot_y], "label": [f"Yoshino avg {mean_a:.1f} cm"]})
 annotations_b = pd.DataFrame({"x": [mean_b + 2.0], "y": [annot_y], "label": [f"Kwanzan avg {mean_b:.1f} cm"]})
@@ -93,19 +94,23 @@ plot = (
     + scale_fill_manual(values={"Yoshino": BRAND, "Kwanzan": COLOR_B}, name="Cultivar")
     + geom_vline(xintercept=mean_a, color=BRAND, size=1.2, linetype="dashed")
     + geom_vline(xintercept=mean_b, color=COLOR_B, size=1.2, linetype="dashed")
-    + geom_text(
+    + geom_label(
         data=annotations_a,
         mapping=aes(x="x", y="y", label="label"),
-        size=5,
+        size=7,
         color=BRAND,
+        fill=ELEVATED_BG,
+        label_padding=0.3,
         fontface="bold",
         inherit_aes=False,
     )
-    + geom_text(
+    + geom_label(
         data=annotations_b,
         mapping=aes(x="x", y="y", label="label"),
-        size=5,
+        size=7,
         color=COLOR_B,
+        fill=ELEVATED_BG,
+        label_padding=0.3,
         fontface="bold",
         inherit_aes=False,
     )
@@ -120,7 +125,7 @@ plot = (
         plot_subtitle=element_text(size=12, color=INK_SOFT),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=LEGEND_BORDER),
         legend_title=element_text(size=10, face="bold", color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_position=[0.88, 0.82],
