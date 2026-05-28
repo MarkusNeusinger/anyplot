@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-28
@@ -17,9 +17,11 @@ from lets_plot import (
     geom_point,
     geom_polygon,
     geom_text,
+    geom_text_repel,
     ggplot,
     ggsave,
     ggsize,
+    guide_legend,
     labs,
     scale_color_gradient,
     scale_size,
@@ -87,6 +89,13 @@ df_routes = pd.DataFrame(route_data)
 
 airport_data = [{"name": name, "lon": lon, "lat": lat} for _, (lon, lat, name) in airports.items()]
 df_airports = pd.DataFrame(airport_data)
+
+# Annotation: highlight busiest route JFK-LHR (4.2M passengers)
+jfk_lon, jfk_lat, _ = airports["JFK"]
+lhr_lon, lhr_lat, _ = airports["LHR"]
+df_callout = pd.DataFrame(
+    [{"x": (jfk_lon + lhr_lon) / 2, "y": (jfk_lat + lhr_lat) / 2 + 13, "label": "Busiest route\nJFK–LHR · 4.2M pax"}]
+)
 
 # Simplified world coastline polygons
 world_coords = [
@@ -199,9 +208,21 @@ plot = (
     + geom_point(
         data=df_airports, mapping=aes(x="lon", y="lat"), size=6, color=PAGE_BG, fill="#009E73", shape=21, stroke=2
     )
-    + geom_text(data=df_airports, mapping=aes(x="lon", y="lat", label="name"), size=3, color=INK, nudge_y=5, hjust=0.5)
-    + scale_size(range=[0.5, 6], name="Passengers\n(millions)")
-    + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers\n(millions)")
+    + geom_text_repel(
+        data=df_airports,
+        mapping=aes(x="lon", y="lat", label="name"),
+        size=3,
+        color=INK,
+        seed=42,
+        point_padding=5,
+        box_padding=3,
+        max_overlaps=20,
+    )
+    + geom_text(
+        data=df_callout, mapping=aes(x="x", y="y", label="label"), size=3.5, color=INK, hjust=0.5, fontface="bold"
+    )
+    + scale_size(range=[0.5, 6], name="Passengers (millions)", guide=guide_legend())
+    + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers (millions)", guide=guide_legend())
     + labs(title=title)
     + theme_void()
     + theme(
