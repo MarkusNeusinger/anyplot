@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-28
@@ -30,7 +30,6 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Data — Monthly website traffic (thousands) across content categories
 np.random.seed(42)
 
-categories = ["Tech", "Science", "Health", "Finance", "Sports", "Travel", "Food", "Culture"]
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 base_traffic = {
@@ -43,6 +42,8 @@ base_traffic = {
     "Food": [88, 82, 85, 90, 95, 92, 98, 100, 88, 92, 105, 115],
     "Culture": [72, 68, 78, 82, 85, 88, 75, 70, 80, 90, 95, 92],
 }
+
+categories = sorted(base_traffic.keys(), key=lambda c: sum(base_traffic[c]) / len(base_traffic[c]))
 
 matrix = []
 for cat in categories:
@@ -108,7 +109,7 @@ custom_style = _Style(
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=26,
+    value_font_size=36,
     font_family="sans-serif",
 )
 
@@ -119,14 +120,14 @@ chart = _pygal.HorizontalStackedBar(
     title=title,
     show_legend=False,
     print_values=True,
-    value_font_size=26,
+    value_font_size=36,
     show_y_guides=False,
     show_x_guides=False,
     show_x_labels=False,
     margin_top=200,
     margin_bottom=100,
     margin_left=300,
-    margin_right=380,
+    margin_right=450,
     range=(0, 12),
     spacing=0,
     rounded_bars=1,
@@ -227,7 +228,7 @@ extra.append(
 )
 
 # Colorbar
-cb_x = grid_right + 26
+cb_x = grid_right + 50
 cb_w = 36
 cb_top = grid_top + 18
 cb_bot = grid_bottom - 18
@@ -253,12 +254,18 @@ extra.append(
 )
 
 # Peak annotations — amber highlight for seasonal storytelling
-for row_i, col_j, label in [(3, 11, "Year-end peak"), (5, 7, "Summer peak")]:
+for cat_name, col_j, label in [("Finance", 11, "Year-end peak"), ("Travel", 7, "Summer peak")]:
+    row_i = categories.index(cat_name)
     svg_row = len(categories) - 1 - row_i
-    ax = grid_left + col_j * cell_w + cell_w / 2
     ay = grid_top + svg_row * cell_h + cell_h * 0.82
+    if col_j == len(months) - 1:
+        ax = grid_right - 10
+        anchor = "end"
+    else:
+        ax = grid_left + col_j * cell_w + cell_w / 2
+        anchor = "middle"
     extra.append(
-        f'<text x="{ax:.0f}" y="{ay:.0f}" text-anchor="middle" fill="#DDCC77" '
+        f'<text x="{ax:.0f}" y="{ay:.0f}" text-anchor="{anchor}" fill="#DDCC77" '
         f'style="font-size:26px;font-weight:bold;font-family:sans-serif;font-style:italic">▼ {label}</text>'
     )
 
