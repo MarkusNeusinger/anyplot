@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-basic: Basic Bar Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, LabelSet, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet, NumeralTickFormatter
 from bokeh.plotting import figure
 from PIL import Image
 from selenium import webdriver
@@ -32,14 +32,29 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
 
-# Data - Quarterly revenue by department
-categories = ["Engineering", "Marketing", "Sales", "Support", "Design", "Operations"]
-values = [38200, 21500, 45800, 14300, 27600, 19100]
+# Data - Quarterly revenue by department, sorted descending for ranking clarity
+_raw = {
+    "Engineering": 38200,
+    "Marketing": 21500,
+    "Sales": 45800,
+    "Support": 14300,
+    "Design": 27600,
+    "Operations": 19100,
+}
+categories = [k for k, _ in sorted(_raw.items(), key=lambda x: -x[1])]
+values = [_raw[k] for k in categories]
 value_labels = [f"${v / 1000:.1f}K" for v in values]
+# Emphasize the top-ranked bar; others at reduced alpha to create a focal point
+bar_alphas = [1.0 if i == 0 else 0.55 for i in range(len(categories))]
 
-source = ColumnDataSource(data={"categories": categories, "values": values, "value_labels": value_labels})
+source = ColumnDataSource(
+    data={"categories": categories, "values": values, "value_labels": value_labels, "alpha": bar_alphas}
+)
 
 title = "bar-basic · python · bokeh · anyplot.ai"
+
+# HoverTool for bokeh-native interactivity (works even with toolbar_location=None)
+hover = HoverTool(tooltips=[("Department", "@categories"), ("Revenue", "@values{$0,0}")])
 
 # Create figure — toolbar_location=None prevents extra height being added above canvas
 p = figure(
@@ -50,14 +65,17 @@ p = figure(
     x_axis_label="Department",
     y_axis_label="Quarterly Revenue ($)",
     toolbar_location=None,
+    tools=[hover],
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
     min_border_right=60,
 )
 
-# Bars — brand green fill, page-background edge for subtle separation
-p.vbar(x="categories", top="values", source=source, width=0.7, color=BRAND, alpha=0.9, line_color=PAGE_BG, line_width=2)
+# Bars — top bar fully saturated (focal point), others muted; page-bg edge for separation
+p.vbar(
+    x="categories", top="values", source=source, width=0.7, color=BRAND, alpha="alpha", line_color=PAGE_BG, line_width=2
+)
 
 # Value labels positioned above bars
 labels_glyph = LabelSet(
