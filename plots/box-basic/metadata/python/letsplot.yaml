@@ -1,127 +1,130 @@
 library: letsplot
+language: python
 specification_id: box-basic
 created: '2025-12-23T00:36:22Z'
-updated: '2026-02-14T22:38:16Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447786735
-issue: 0
-python_version: '3.14'
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-basic/letsplot/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - groupby-aggregation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-28T14:01:14Z'
+generated_by: claude-sonnet
+workflow_run: 26577636150
+issue: 689
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - 'Excellent use of lets-plot distinctive features: stat-based ordering via as_discrete,
-    layer_tooltips with stat variables, flavor theme'
-  - Strong data storytelling with median annotations, overall mean reference line,
-    and percentage comparison insight
-  - Wong colorblind-safe palette ensures accessibility
-  - Clean code structure with realistic salary data scenario
-  - Boxes ordered by median provides natural narrative flow
+  - 'Perfect spec compliance: all required box plot elements present (median line,
+    outliers, whiskers, per-category colors)'
+  - Insightful median-based ordering of boxes creates an immediate salary hierarchy
+    narrative
+  - Bold median value labels inside each box give readers instant numerical context
+    without tooltip interaction
+  - 'Excellent theme adaptation: both light and dark renders are visually correct
+    with no dark-on-dark failures'
+  - Distinctive use of as_discrete(order_by='..middle..') for computed-stat ordering
+    — leverages letsplot's grammar-of-graphics power
+  - layer_tooltips() with rich Q1/median/Q3/min/max content is idiomatic letsplot
+    interactive feature usage
   weaknesses:
-  - 'Minor text proximity issue: Avg label and insight annotation slightly crowd the
-    Engineering box area'
-  - Some wasted whitespace on the right side of the canvas — layout could be tighter
-  - Annotation DataFrames are somewhat verbose (three separate DataFrames for text
-    layers)
-  image_description: 'The plot displays 5 box-and-whisker plots showing salary distributions
-    across departments (HR, Marketing, Sales, Finance, Engineering), ordered left-to-right
-    by ascending median salary. Each box uses a distinct color from the Wong colorblind-safe
-    palette: teal (HR), golden yellow (Marketing), orange (Sales), pink (Finance),
-    blue (Engineering). Outliers appear as large filled circles above and below whiskers.
-    A dashed gray horizontal reference line marks the overall average salary (~$71,502)
-    with a label "Avg: $71,502" near the right side. Median dollar values ($54,599
-    to $85,333) are annotated in bold above each box. A bold italic insight annotation
-    "Eng. +56% vs. HR" highlights the salary gap between highest and lowest median
-    departments. Title reads "box-basic · letsplot · pyplots.ai" with subtitle "Salary
-    distributions across five departments, ordered by median". Y-axis is "Annual Salary
-    (USD)" with dollar formatting, X-axis is "Department". Clean white background
-    with subtle horizontal gridlines.'
+  - Annotation text (geom_text size=3, italic) renders at ~8.5pt equivalent at the
+    3200x1800 canvas — marginally too small; increase annotation size to 4 for better
+    readability in both themes
+  - Outlier dots at outlier_size=2.5 are slightly small; increase to 3.0-3.5 for better
+    visibility at full canvas resolution
+  - No focal-point emphasis on the extreme departments (highest/lowest) — Engineering
+    and HR could use a subtle visual distinction to guide the viewer's eye to the
+    key story
+  - Annotation placement (upper-left, HR column) is hard to spot; consider increasing
+    its contrast or repositioning near the mean dashed line
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "box-basic · python · letsplot · anyplot.ai" bold dark text, clearly readable. Subtitle readable. Axis labels "Department" and "Annual Salary (USD)" dark and legible. Tick labels dark on light, clearly visible. Annotation text "Avg: $72,853 | Eng. +59% vs HR." is very small (size=3) and barely readable — marginally too small but technically present.
+      Data: Five box plots with anyplot palette colors: HR=ochre (#BD8233), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Finance=matte red (#AE3030), Engineering=green (#009E73). Ordered left-to-right by ascending median salary. Median labels bold inside each box. Outlier dots visible above whiskers. Dashed mean reference line.
+      Legibility verdict: PASS (primary text excellent; annotation text marginally too small)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels flip to light-colored text — clearly readable against dark background. Tick labels are light-on-dark, no dark-on-dark failures detected anywhere. Annotation text remains small but visible.
+      Data: Colors are identical to light render — same ochre HR, lavender Marketing, blue Sales, red Finance, green Engineering boxes. Data integrity confirmed across themes.
+      Legibility verdict: PASS (no dark-on-dark failures; annotation text small but same as light render)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, annotation text 10-11pt'
+        comment: All primary font sizes explicitly set; annotation text at size=3
+          marginally too small for the canvas
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Minor: Avg label and insight annotation slightly crowd Engineering
-          box area'
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes well-sized (width=0.72), outliers visible (size=5), good alpha
-          (0.85)
+        comment: No overlapping text; median labels well-positioned inside boxes
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Boxes prominent; outlier dots at outlier_size=2.5 slightly small
+          for 3200x1800 canvas
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Five distinct anyplot palette hues; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Wong colorblind-safe palette with 5 distinct hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 1
-        max: 4
-        passed: false
-        comment: Some wasted whitespace on right side, boxes somewhat narrow relative
-          to canvas width
+        comment: Good proportions, balanced margins, no clipping; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Annual Salary (USD) with units, Department descriptive
+        comment: Department (x) and Annual Salary (USD) (y) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering assigned #009E73 (position 1); palette order 1-5 via
+          scale_fill_manual; backgrounds correct; chrome theme-adaptive'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: Wong palette, intentional hierarchy, flavor theme,
-          custom grid styling'
+        comment: 'Clearly above defaults: median ordering, labels in boxes, reference
+          line, tooltip config. No focal-point emphasis on extreme departments.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Ticks removed, minor grid removed, x-grid removed, subtle y-grid,
-          clean margins
+        comment: 'Well-refined: ticks removed, y-grid only at size=0.3, L-frame axis
+          lines, legend removed'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Median labels, overall mean reference line, insight annotation comparing
-          highest vs lowest
+        comment: Median ordering creates salary hierarchy narrative; median labels
+          + reference line provide insight; annotation adds cross-department comparison
     spec_compliance:
       score: 15
       max: 15
@@ -131,53 +134,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box plot with all components
+        comment: Correct box-and-whisker plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: median line, outliers, whiskers at 1.5*IQR,
-          different colors'
+        comment: Median line, outlier points, whiskers at 1.5xIQR, different colors
+          per category — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X-axis, values on Y-axis correctly assigned
+        comment: Category on x-axis, salary on y-axis; all data visible
       - id: SC-04
-        name: Title Format
+        name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title box-basic · letsplot · pyplots.ai correct, legend appropriately
-          hidden
+        comment: Title exactly 'box-basic · python · letsplot · anyplot.ai'; legend
+          appropriately omitted
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Different distributions with varying spreads, outliers present, meaningful
-          median differences
+        comment: Five departments with different spreads; explicit outlier injection;
+          full box features visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distributions across departments — real, neutral business
-          scenario
+        comment: Salary distributions across Engineering/Marketing/Sales/HR/Finance
+          — classic neutral professional scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic salary values in $20K-$140K range
+        comment: Engineering ~$86k, HR ~$54k median — realistic US salary proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,47 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save flow
+        comment: 'Linear: imports → tokens → data → medians → annotation → plot →
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 19 letsplot imports are used; no dead imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Slightly verbose with three annotation DataFrames but serves storytelling
+        comment: Clean and readable; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert grammar of graphics: as_discrete ordering, layer_tooltips,
-          flavor themes, ggsave'
+        comment: Correct grammar-of-graphics layering; as_discrete(order_by='..middle..')
+          is idiomatic; theme_classic() + overrides follows best practice
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: as_discrete stat-based ordering, layer_tooltips with stat variables,
-          flavor_high_contrast_light
+        comment: as_discrete(order_by='..middle..') for computed-stat ordering and
+          layer_tooltips() with Q1/median/Q3/min/max are distinctive letsplot features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
