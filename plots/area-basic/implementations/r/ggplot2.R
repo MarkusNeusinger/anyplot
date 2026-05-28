@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' area-basic: Basic Area Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 90/100 | Created: 2026-05-28
 
 library(ggplot2)
 library(scales)
