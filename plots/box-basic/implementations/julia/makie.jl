@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -36,7 +37,14 @@ for i in 1:5
     append!(salaries, max.(raw, 30.0))
 end
 
-box_colors = [ANYPLOT_PALETTE[g] for g in groups]
+all_median = median(salaries)
+
+# Engineering (group 1) at full opacity; others dimmed to highlight highest-paid dept
+box_colors = [
+    RGBAf(red(ANYPLOT_PALETTE[g]), green(ANYPLOT_PALETTE[g]), blue(ANYPLOT_PALETTE[g]),
+          g == 1 ? 1.0 : 0.5)
+    for g in groups
+]
 
 # Figure
 fig = Figure(
@@ -84,6 +92,18 @@ boxplot!(ax, groups, salaries;
 )
 
 ax.xticks = (1:5, dept_names)
+
+# Tighten y-axis to remove dead canvas space at bottom
+ylims!(ax, 28, nothing)
+
+# Dashed reference line at cross-department median
+hlines!(ax, [all_median]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
+text!(ax, 0.58, all_median;
+    text  = "all-dept median: $(round(Int, all_median))K",
+    color = INK_SOFT,
+    fontsize = 10,
+    align = (:left, :bottom),
+)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
