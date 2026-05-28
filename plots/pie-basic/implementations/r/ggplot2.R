@@ -32,8 +32,7 @@ budget <- budget |>
     label      = if_else(pct >= 5, sprintf("%.0f%%", pct), "")
   )
 
-# ggplot2 position_stack places last factor level at y=0 (start of pie).
-# Compute midpoints matching that reversed stacking order.
+# Pre-compute cumulative y positions (coord_polar stacks last-level-first).
 budget <- budget |>
   mutate(
     ymax = rev(cumsum(rev(amount))),
@@ -41,24 +40,35 @@ budget <- budget |>
     ymid = (ymin + ymax) / 2
   )
 
+# Explode largest slice (R&D 32%) outward by shifting its x range.
+# Using geom_rect with explicit xmin/xmax avoids position_stack limitations.
+EXPLODE_OFFSET <- 0.12
+budget <- budget |>
+  mutate(
+    xmin = if_else(department == "R&D", 0.5 + EXPLODE_OFFSET, 0.5),
+    xmax = if_else(department == "R&D", 1.5 + EXPLODE_OFFSET, 1.5),
+    xmid = (xmin + xmax) / 2
+  )
+
 palette_named <- setNames(
   ANYPLOT_PALETTE[seq_len(nrow(budget))],
   levels(budget$department)
 )
 
-p <- ggplot(budget, aes(x = 1, y = amount, fill = department)) +
-  geom_col(
+p <- ggplot(budget) +
+  geom_rect(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = department),
     color     = PAGE_BG,
-    linewidth = 0.8,
-    width     = 1
+    linewidth = 0.8
   ) +
   geom_text(
-    aes(y = ymid, label = label),
-    x        = 1,
+    aes(x = xmid, y = ymid, label = label),
     color    = "#FAF8F1",
     size     = 3.8,
     fontface = "bold"
   ) +
+  scale_x_continuous(limits = c(0.5, 1.65), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
   coord_polar(theta = "y", start = 0) +
   scale_fill_manual(values = palette_named) +
   labs(
@@ -67,20 +77,21 @@ p <- ggplot(budget, aes(x = 1, y = amount, fill = department)) +
   ) +
   theme_void() +
   theme(
-    plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    plot.title        = element_text(
+    plot.background     = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    plot.title          = element_text(
       color  = INK,
       size   = 12,
       hjust  = 0.5,
       face   = "bold",
       margin = margin(b = 10, t = 10)
     ),
-    legend.text       = element_text(color = INK_SOFT, size = 8),
-    legend.title      = element_text(color = INK, size = 10),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.5),
-    legend.key.size   = unit(0.5, "cm"),
-    legend.margin     = margin(6, 6, 6, 6),
-    plot.margin       = margin(30, 40, 30, 40)
+    plot.title.position = "plot",
+    legend.text         = element_text(color = INK_SOFT, size = 8),
+    legend.title        = element_text(color = INK, size = 10),
+    legend.background   = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.5),
+    legend.key.size     = unit(0.5, "cm"),
+    legend.margin       = margin(6, 6, 6, 6),
+    plot.margin         = margin(30, 40, 30, 40)
   )
 
 ggsave(
