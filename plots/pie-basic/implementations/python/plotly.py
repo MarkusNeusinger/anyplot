@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
-Library: plotly | Python 3.14
-Quality: 91/100 | Updated: 2026-05-28
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-28
 """
 
 import os
