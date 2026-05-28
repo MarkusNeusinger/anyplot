@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: plotnine | Python 3.13
-Quality: pending | Updated: 2026-05-28
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-28
 """
 
 import os
