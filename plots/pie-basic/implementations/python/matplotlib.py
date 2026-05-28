@@ -1,59 +1,72 @@
-""" pyplots.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
-Library: matplotlib 3.10.8 | Python 3.14.0
-Quality: 91/100 | Created: 2025-12-23
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
+
+import os
 
 import matplotlib.pyplot as plt
 
 
-# Data - Global cloud infrastructure market share (2024)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# anyplot categorical palette — positions 1→5
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data — global cloud infrastructure market share (2024)
 companies = ["AWS", "Azure", "Google Cloud", "Alibaba Cloud", "Others"]
 market_share = [31, 25, 11, 4, 29]
 
-# Colors - Python Blue first, then harmonious colorblind-safe colors
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF6B6B", "#95A5A6"]
+# Explode the largest slice (AWS) for emphasis
+explode = [0.06, 0, 0, 0, 0]
 
-# Explode the largest slice slightly for emphasis
-explode = [0.05, 0, 0, 0, 0]
-
-# Create plot (3600x3600 px - square format ideal for pie charts)
-fig, ax = plt.subplots(figsize=(12, 12))
+# Plot — square canvas, appropriate for pie charts
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 wedges, texts, autotexts = ax.pie(
     market_share,
     labels=companies,
     autopct="%1.1f%%",
     explode=explode,
-    colors=colors,
+    colors=ANYPLOT_PALETTE,
     startangle=90,
-    shadow=True,
-    textprops={"fontsize": 22},
-    wedgeprops={"linewidth": 2.5, "edgecolor": "white"},
-    pctdistance=0.55,
+    textprops={"fontsize": 10, "color": INK},
+    wedgeprops={"linewidth": 2, "edgecolor": PAGE_BG},
+    pctdistance=0.7,
 )
 
-# Style percentage labels
+# Percentage labels: bold white for contrast against colored slices
 for autotext in autotexts:
-    autotext.set_fontsize(20)
+    autotext.set_fontsize(9)
     autotext.set_fontweight("bold")
     autotext.set_color("white")
 
 # Title
-ax.set_title("pie-basic · matplotlib · pyplots.ai", fontsize=28, fontweight="medium", pad=30)
+title = "pie-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=20)
 
-# Legend with contextual title
-ax.legend(
+# Legend — category identification
+leg = ax.legend(
     wedges,
-    [f"{c} ({s}%)" for c, s in zip(companies, market_share, strict=True)],
+    companies,
     title="Cloud Providers",
     loc="lower center",
-    bbox_to_anchor=(0.5, -0.05),
-    fontsize=18,
-    title_fontsize=20,
+    bbox_to_anchor=(0.5, -0.08),
+    fontsize=8,
+    title_fontsize=9,
     ncol=3,
-    framealpha=0.9,
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
