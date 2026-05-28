@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: area-basic
 created: '2025-12-23T00:47:41Z'
-updated: '2026-05-28T05:47:04Z'
+updated: '2026-05-28T05:56:19Z'
 generated_by: claude-sonnet
 workflow_run: 26556810473
 issue: 711
@@ -12,47 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Correct area chart using mark_area() with idiomatic Altair gradient fill via alt.Gradient
-    and alt.GradientStop
-  - 'Perfect spec compliance: semi-transparent fill, gradient from baseline to line,
-    gridlines, descriptive axis labels with units'
-  - 'Excellent realistic data: daily website traffic with weekly pattern, upward trend,
-    and a visible anomaly spike on Jan 15'
-  - All theme-adaptive chrome tokens applied correctly — both light (#FAF8F1) and
-    dark (#1A1A17) backgrounds use correct INK/INK_SOFT tokens
-  - 'Clean idiomatic code: proper :T and :Q field type encodings, explicit font sizes
-    matching style-guide defaults, no unnecessary complexity'
-  - Dual HTML + PNG output correctly leverages Altair as an interactive library
-  - 'Brand color #009E73 used for both line and gradient fill — data color is identical
-    across both themes'
+  - Gradient fill (5%→60% opacity upward) is a sophisticated, spec-aligned design
+    choice that emphasizes data magnitude
+  - Peak annotation (dashed rule + text label) adds professional storytelling and
+    creates a clear focal point
+  - Theme-adaptive chrome is correctly implemented throughout — both renders pass
+    readability checks
+  - 'Idiomatic Altair: alt.layer(), alt.Gradient, configure_* pattern all used correctly'
+  - 'Realistic, richly-featured data: upward trend + weekly pattern + spike event'
+  - Canvas padding correctly implemented with no cropping
   weaknesses:
-  - Grid lines appear on both X and Y axes — for a time-series area chart, Y-axis
-    gridlines only would be more refined (remove X-axis grid with configure_axisX(grid=False))
-  - 'Area fill in dark render is quite low contrast: the gradient stops rgba(0,158,115,0.05)
-    to rgba(0,158,115,0.45) produce a dark teal that blends into the #1A1A17 background
-    in the lower portion; increase the upper stop opacity to ~0.6 and consider a lighter
-    minimum stop for dark theme'
-  - No visual emphasis on the data spike (Jan 15, ~9300 visitors) or the overall upward
-    trend — an annotation or reference line at the peak would improve data storytelling
-    (DE-03)
-  - X-axis grid lines are unnecessary visual noise for a time series; remove them
-    so only horizontal Y-axis gridlines remain (standard best practice for line/area
-    charts)
+  - Peak annotation text (fontSize=9) is slightly small for mobile readability at
+    400 px width — consider fontSize=10 or 11
+  - DE-02 could improve with more explicit whitespace control and ensuring L-shaped
+    spine appearance is explicit in Altair config
+  - LM-02 could reach 5/5 by incorporating an Altair-specific transform (e.g., transform_window
+    for rolling average overlay) or selection-based interactive feature
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "area-basic · python · altair · anyplot.ai" is bold dark text, clearly readable (~60% canvas width). Y-axis title "Daily Visitors (count)" and X-axis title "Date" both readable. Tick labels (Jan 01, Jan 03, ... Jan 29 at -30° rotation; 0, 1,000, ... 10,000 on Y) all clearly legible against the light background.
-      Data: Area fill uses an alt.Gradient from rgba(0,158,115,0.05) at baseline to rgba(0,158,115,0.45) near the line — creating a gradient that fades from very light near y=0 to more visible teal near the data values. Line stroke is solid #009E73. Both horizontal and vertical grid lines visible at 15% opacity.
-      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "area-basic · python · altair · anyplot.ai" in dark ink, clearly readable. Axis title "Daily Visitors (count)" (y) and "Date" (x) in dark ink readable. Tick labels in INK_SOFT (#4A4A44), all legible. Peak annotation "Peak: 9,297" in dark ink, small (fontSize=9) but visible.
+      Data: Single area series in brand green #009E73 with gradient fill (5% opacity at baseline → 60% near data line). Solid brand-green line border at strokeWidth=2.5. Dashed vertical rule at Jan 15 peak in brand green. 30 daily data points fully visible.
+      Legibility verdict: PASS — all text readable, no dark-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title and axis labels render in light INK (#F0EFE8) — clearly visible against dark background. Tick labels use INK_SOFT (#B8B7B0) — readable. No dark-on-dark text issues.
-      Data: Line stroke #009E73 is vivid and clearly visible. Area fill gradient with max 45% opacity over the dark background produces a dark teal region — the lower portion (near y=0) has very low contrast with the background (5% opacity is nearly invisible on dark), but the upper/bulk of the fill area is distinguishable. Data colors are identical to light render.
-      Legibility verdict: PASS — all text readable, but area fill is noticeably lower contrast in dark mode (upper portion of fill visible, lower portion fades into background)
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title in light ink (#F0EFE8), readable. Axis labels and tick labels in INK_SOFT (#B8B7B0), all legible. Peak annotation text in dark-theme INK — readable. No dark-on-dark failure observed.
+      Data: Brand green #009E73 identical to light render (only chrome flipped). Gradient fill maintains same green hue with matching opacity stops. Dashed rule in brand green at same position.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,75 +50,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis=12, tick=10); proportions
-          balanced; readable in both themes
+        comment: All font sizes explicitly set (labelFontSize=10, titleFontSize=12,
+          title fontSize=16). Peak annotation at fontSize=9 is small but readable
+          at full res; slightly tight at 400px mobile width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; rotated X tick labels clean
+        comment: No overlap. X-axis dates rotated -30 degrees cleanly; peak label
+          positioned clear of data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Line clearly visible; area fill slightly low-contrast in dark render
-          (45% max opacity produces dark teal that blends with #1A1A17)'
+        comment: Area and line perfectly visible in both themes; gradient fill differentiates
+          magnitude well.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series #009E73 — good contrast, CVD-safe'
+        comment: Single series in brand green; CVD-safe, good contrast against both
+          surfaces.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, no clipping, canvas gate passed
+        comment: Canvas gate passed; chart centered with balanced margins; no overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Daily Visitors (count)'' and ''Date'' — descriptive with units'
+        comment: 'Y-axis: ''Daily Visitors (count)'' with units; X-axis: ''Date''
+          descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme chrome
-          correct in both renders'
+        comment: 'Single series uses #009E73; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); all chrome tokens correctly theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Gradient fill is a genuinely thoughtful design element above library
-          defaults; coherent color scheme; but not publication-ready
+        comment: Upward gradient fill (5%→60% opacity) is sophisticated; peak dashed
+          rule + label adds professional annotation polish. Clearly above library
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid on both X and Y axes for a time series is not ideal; view stroke
-          removed (good); label rotation adds refinement; but Y-axis-only grid would
-          be better
+        passed: true
+        comment: Y-only grid at gridOpacity=0.15; x-axis grid disabled; view strokeWidth=0
+          removes plot border; L-shaped axis appearance.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Default; data spike (Jan 15) and upward trend are naturally visible
-          but no design emphasis draws the viewer's eye
+        passed: true
+        comment: Peak annotation creates clear focal point; upward trend with weekly
+          pattern tells coherent story; gradient fill reinforces volume reading.
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart with mark_area()
+        comment: Correct area chart using mark_area.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill, gridlines, axis labels with units, gradient
-          fill all present
+        comment: Semi-transparent gradient fill; gridlines present; clear axis labels
+          with units; gradient fill from baseline as suggested by spec.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, visitors on Y; all 30 data points visible
+        comment: Date on x (temporal), visitor count on y (quantitative); all 30 points
+          visible; y-axis anchored at 0.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'area-basic · python · altair · anyplot.ai' correct; no legend
-          needed for single series
+        comment: Title is exactly 'area-basic · python · altair · anyplot.ai'; no
+          legend for single series (correctly omitted).
     data_quality:
       score: 15
       max: 15
@@ -168,20 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Upward trend, weekly cyclical pattern, and traffic spike — covers
-          all area chart features
+        comment: Shows upward trend, weekly weekday/weekend pattern, a traffic spike
+          event, and natural noise.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitors January 2024 — real, neutral, business scenario
+        comment: Daily website visitors over January 2024; neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 3,500–9,300 daily visitors — plausible for a mid-sized website
+        comment: 3500-9500 visitors/day realistic for mid-sized website; weekly drops
+          on weekends factually coherent.
     code_quality:
       score: 10
       max: 10
@@ -191,33 +188,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Chart → Save; sys.path fix is necessary boilerplate
+        comment: 'Linear: imports → theme tokens → data → chart layers → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: altair, numpy, pandas, PIL all used; os, sys for path guard and theme
+          env var.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no over-engineering
+        comment: sys.path guard comment explains non-obvious self-import risk; alt.Gradient
+          and layer composition clean and idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API
+        comment: Saves plot-{THEME}.png (with PAD-only block) and plot-{THEME}.html;
+          current API throughout.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -225,28 +226,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert idiomatic Altair: proper :T/:Q encodings, alt.X/alt.Y/alt.Tooltip,
-          configure_* chaining'
+        comment: Expertly uses alt.layer() for multi-mark composition; alt.Gradient
+          with GradientStop; configure_axis/axisX/title/legend for theme-wide styling
+          — canonical Altair patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses alt.Gradient and alt.GradientStop (Vega-Lite gradient spec,
-          not available in static libs); dual PNG+HTML output; interactive tooltips
-          in HTML
-  verdict: REJECTED
+        comment: alt.Gradient (Vega-Lite gradient spec) is Altair/Vega-specific; layer
+          composition with typed encodings is idiomatic. Could push further with transform_window
+          or selection features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
+  - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
-  - gradient-fill
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - gradient-fill
-  - alpha-blending
