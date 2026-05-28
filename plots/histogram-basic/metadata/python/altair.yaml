@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:03Z'
-updated: '2026-05-28T07:41:25Z'
+updated: '2026-05-28T07:50:32Z'
 generated_by: claude-sonnet
 workflow_run: 26560982555
 issue: 654
@@ -15,55 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram
 quality_score: 88
 review:
   strengths:
-  - Brand green bars (#009E73) with subtle opacity and thin stroke create clean bin
-    edge definition
-  - Bimodal annotation strategy — dashed amber vertical lines at both group medians
-    with descriptive labels — effectively guides the viewer through the distribution
-    story
-  - Subtitle adds context without cluttering the title; italic mean annotation adds
-    a third reference layer
-  - 'Theme-adaptive chrome is fully implemented: background, ink, grid, and axis tokens
-    all flip correctly between light and dark'
-  - Canvas handling follows the canonical altair pad-only pattern; no clipping detected
-    in either render
-  - 'Perfect spec compliance: histogram with bins starting at zero, axis labels with
-    units, appropriate bin count (maxbins=30)'
-  - 'Clean Altair idioms: layer composition with +, alt.Bin(), alt.datum() for fixed
-    y-position, alt.Title() with subtitle — all idiomatic'
-  - Both HTML and PNG outputs produced correctly
+  - Bimodal data design creates an analytically interesting, realistic distribution
+    with two clearly separated subgroups
+  - Both light and dark renders are fully theme-adaptive with no legibility failures
+    in either theme
+  - Layer composition (bars + peak rules + group labels + mean rule + mean label)
+    demonstrates Altair's composable grammar effectively
+  - 'Correct use of amber #DDCC77 as semantic caution anchor for reference lines,
+    and INK_MUTED for the mean annotation'
+  - 'Perfect spec compliance: correct format title, contiguous bins, stroked bar edges,
+    y-axis from zero'
   weaknesses:
-  - 'VQ-02: ''Taller subgroup (μ ≈ 186 cm, n=150)'' annotation label at y_offset=32
-    sits inside bars that reach 35–45 frequency in the 168–176 cm range — the long
-    right-aligned text extends leftward from x=186 directly over these tall bars,
-    causing visible text-bar overlap. Reposition this label above the bar tops in
-    its vicinity (e.g. y_offset≥48) or move it to the upper-right margin outside the
-    bar area.'
-  - 'VQ-02: ''Mean: 174.8 cm'' italic label at y=42 (alt.datum(42)) is placed at the
-    height of the tallest bars (x=172–178 region, bars reaching ~40–41), causing the
-    label to sit right at bar-top level. Raise to y≥48 or position to the right of
-    the last bar past the distribution tail.'
-  - 'VQ-01 (minor): Mean annotation text at fontSize=9 renders at 36 source-px in
-    the 3200px canvas — borderline unreadable when scaled to mobile width (~400px).
-    Raise to at least fontSize=10 (same as peak labels) for consistent legibility.'
-  - 'DE-01/DE-02: Design sophistication is good but not publication-ready — consider
-    removing the Y-axis domain line entirely (configure_axis domainWidth=0) and using
-    a lighter-weight subtitle font to create stronger typographic hierarchy between
-    title and subtitle layers.'
+  - 'Peak lines are drawn at median positions (np.median()) but annotation text uses
+    mu (mean symbol). Either use np.mean() for the lines or change label from ''mu
+    approx'' to ''median approx''. The separate ''Mean: 174.8 cm'' label is correctly
+    labeled.'
+  - Primary group label at y=50 and Mean label at y=52 in data units are only 2 data
+    units apart vertically, creating tight crowding at the top. Separate them by shifting
+    the mean label to y=alt.datum(57) or using negative dx for left-alignment.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "histogram-basic · python · altair · anyplot.ai" in bold dark ink, top-left anchored — fully readable. Subtitle "Distribution of human heights — bimodal pattern with primary and taller subgroups" in lighter gray (INK_SOFT) beneath title — readable. Y-axis label "Frequency" vertical, X-axis label "Height (cm)" bold — both readable. Tick labels at 10px, clearly legible.
-      Data: Bars in #009E73 (brand green), opacity 0.85, thin #4A4A44 stroke at 0.5px — clean bin edges throughout. Bars span ~146–199 cm with peak at ~170–174 (frequency ~45), showing a secondary shoulder around 182–186 (frequency ~27–29). Dashed amber (#DDCC77) vertical rule lines at x≈170 and x≈186; dotted gray mean line at x≈174.8. Three text annotations: "Primary group (μ ≈ 170 cm, n=350)" at top of chart (y=50), "Taller subgroup (μ ≈ 186 cm, n=150)" at mid-height (y=32), and "Mean: 174.8 cm" italic at y=42. The Taller subgroup and Mean labels overlap with histogram bars (bars in 168–176 range reach height 38–45, above the y=32 annotation level).
-      Legibility verdict: PASS for main chrome; MINOR ISSUE — Taller subgroup and Mean annotation labels overlap with bar bodies.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "histogram-basic · python · altair · anyplot.ai" in bold dark text, clearly readable. Subtitle in INK_SOFT. Axis labels "Height (cm)" and "Frequency" in dark ink. Tick labels in INK_SOFT, all legible.
+      Data: Brand green #009E73 bars for histogram. Two amber #DDCC77 dashed vertical lines mark subgroup peaks (~170 cm, ~186 cm). Gray dotted mean line at ~174.8 cm. Annotation text labels in INK_SOFT.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title, subtitle, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0 range) — fully readable against dark background. No dark-on-dark failures detected. Grid lines are subtle dashed horizontal lines, visible but not dominant.
-      Data: Bars remain identical #009E73 brand green — same as light render, data colors unchanged as required. Amber dashed lines and gray dotted mean line also identical. Annotation text rendered in light INK_SOFT (#B8B7B0) — readable against green bars and dark background. Same text-bar overlap pattern as light render.
-      Legibility verdict: PASS for chrome; same minor annotation overlap issue as light render.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle in light cream/off-white text (#F0EFE8), clearly readable against dark background. Axis labels and tick labels use light INK_SOFT (#B8B7B0) — no dark-on-dark failure. All chrome elements properly adapted to dark theme.
+      Data: Identical brand green #009E73 bars. Same amber #DDCC77 peak lines and gray mean line — colors unchanged from light render as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -71,52 +55,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; proportions good. Minor: 9px mean
-          annotation renders at 36 source-px, borderline for mobile ~400px width.'
+        comment: All text explicitly sized and readable in both themes. Slight crowding
+          of mean and primary-group annotations near y=50-52 data units.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Taller subgroup label (y_offset=32) and Mean label (y=42) placed
-          inside bar bodies — bars in 168–176 range reach height 38–45. Text is readable
-          due to color contrast but overlap is clearly visible.
+        passed: true
+        comment: Mean label (y=52) and primary-group label (y=50) are tightly packed
+          at chart top — readable but crowded.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green bars clearly visible in both themes; 500 data points with opacity=0.85
-          and stroke for bin edge definition — well-adapted to density.
+        comment: All histogram bars, annotation lines, and text clearly visible in
+          both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast throughout. No red-green sole-signal encoding. Amber
-          lines and gray mean line are distinguishable.
+        comment: Brand green CVD-safe; amber semantic anchor correct; mean in INK_MUTED.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Plot fills ~60% of canvas. Good margins.
-          No AR-09 clipping. Title, axes, labels all within bounds.
+        comment: Canvas gate passed (3200x1800). No clipping. All annotations within
+          bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Height (cm)' with units; Y-axis 'Frequency'; title follows
-          exact spec format.
+        comment: Height (cm) and Frequency with units. Title follows spec format with
+          descriptive subtitle.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series: brand green #009E73 used correctly. Amber #DDCC77
-          for reference lines (semantic anchor). Background #FAF8F1 light / #1A1A17
-          dark. Chrome tokens flip correctly.'
+        comment: 'Single series #009E73. Amber for reference lines. Backgrounds #FAF8F1
+          light / #1A1A17 dark.'
     design_excellence:
       score: 13
       max: 20
@@ -126,26 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a well-configured default: subtitle, dual amber dashed reference
-          lines, dotted mean line, subtle bar stroke, corner radius on bars, opacity.
-          Not quite publication-ready (no dominant hierarchy between annotation layers).'
+        comment: Above default. Bimodal data choice, layered annotation system, subtitle
+          narrative, corner-radius bars show clear design intent.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed Y-grid (gridDash=[4,4], gridOpacity=0.12), view strokeWidth=0
-          removes chart border, explicit axis color tokens. Vega-Lite default hides
-          top/right spines.
+        comment: Above default. No border (strokeWidth=0), Y-axis-only dashed grid
+          at opacity=0.12, thin bar strokes and corner radius add polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Annotations guide the viewer through the bimodal story: labeled
-          peaks, group sample sizes, overall mean. Subtitle frames the narrative.
-          Visual hierarchy is present, though the bimodal pattern in the data itself
-          is subtle.'
+        comment: 'Bimodal pattern surfaced with peak annotations and mean line. Minor
+          accuracy issue: lines at median but labeled with mu (mean symbol).'
     spec_compliance:
       score: 15
       max: 15
@@ -155,27 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram using mark_bar with alt.Bin(maxbins=30).
+        comment: Correct histogram using mark_bar with binned X encoding.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges (thin stroke), readable axis labels with units, appropriate
-          bin count, Y-axis starts at zero.
+        comment: Contiguous bins, stroked bar edges, maxbins=30, Y-axis starts at
+          zero.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Height (continuous) on X; count() on Y; all 500 data points shown.
+        comment: X=heights, Y=count. Full 146-200 cm range displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title exactly 'histogram-basic · python · altair · anyplot.ai'. No
-          legend (single series — appropriate).
+          legend needed for single series.
     data_quality:
       score: 15
       max: 15
@@ -185,25 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution with two overlapping subpopulations; demonstrates
-          distribution shape, central tendency, skew, and clustering — full feature
-          coverage for a histogram.
+        comment: Shows bin distribution, shape, spread, bimodal structure, annotated
+          summary statistics.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Human heights — realistic, neutral, real-world scenario. Primary
-          group 170±7cm and taller subgroup 186±4.5cm are plausible anthropometric
-          values.
+        comment: Human height data with realistic means (170, 186 cm), realistic SDs
+          (7, 4.5 cm), plausible mixed-population. Neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Height range 146–199 cm factually plausible. Mean ~170 for primary
-          group is realistic adult height. Taller subgroup at ~186cm could represent
-          an athletic cohort.
+        comment: 500 observations, height range 146-200 cm, frequency counts up to
+          ~45 consistent with sample.
     code_quality:
       score: 10
       max: 10
@@ -213,58 +187,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Linear: imports → constants → data → chart
-          layers → save. Multi-layer Altair composition is appropriately flat.'
+        comment: Flat sequential code, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports (os, altair, numpy, pandas, PIL.Image) are actually
-          used.
+        comment: All five imports (os, altair, numpy, pandas, PIL) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a 6-layer Altair composition. Separate
-          DataFrames for each annotation group is clean. No fake interactivity (tooltips
-          are real Altair tooltips).
+        comment: Appropriate complexity for layered annotations. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. scale_factor=4.0. PIL
-          padding to 3200x1800. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct pad-to-3200x1800
+          pattern with PIL.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Idiomatic: mark_bar with alt.Bin(), layer composition with +, alt.Title()
-          with subtitle, configure_axisY() separate from configure_axis(), alt.datum()
-          for fixed y-position, alt.Tooltip() with bin.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Layer composition API (+), alt.datum() for fixed-coordinate annotation
-          anchoring, and separate HTML+PNG outputs are distinctively Altair. Could
-          go further with alt.selection or alt.condition for more advanced Altair-only
-          features.
-  verdict: REJECTED
+        comment: Idiomatic mark_bar with alt.Bin, count() aggregation, configure_*
+          theming, alt.datum() for absolute positioning.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition across multiple data frames, interactive HTML tooltips,
+          alt.datum() for fixed reference annotations.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
