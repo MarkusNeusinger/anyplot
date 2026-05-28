@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -71,8 +71,8 @@ g = sns.clustermap(
     row_cluster=True,
     col_cluster=False,
     dendrogram_ratio=0.08,
-    cbar_pos=(0.02, 0.15, 0.03, 0.6),
-    cbar_kws={"label": "Performance Score", "ticks": [0, 25, 50, 75, 100]},
+    cbar_pos=(0.05, 0.15, 0.04, 0.6),
+    cbar_kws={"ticks": [0, 25, 50, 75, 100]},
     vmin=0,
     vmax=100,
 )
@@ -95,10 +95,10 @@ if g.ax_col_dendrogram is not None:
     for spine in g.ax_col_dendrogram.spines.values():
         spine.set_visible(False)
 
-# Colorbar styling
-g.cax.set_ylabel("Performance Score", fontsize=10, labelpad=10, color=INK)
+# Colorbar styling — small labelpad keeps label on-canvas given cbar_pos x=0.05
+g.cax.set_ylabel("Performance Score", fontsize=9, labelpad=2, color=INK)
 g.cax.yaxis.set_label_position("left")
-g.cax.tick_params(labelsize=8, colors=INK_SOFT)
+g.cax.tick_params(labelsize=7, colors=INK_SOFT)
 for spine in g.cax.spines.values():
     spine.set_color(INK_SOFT)
 
