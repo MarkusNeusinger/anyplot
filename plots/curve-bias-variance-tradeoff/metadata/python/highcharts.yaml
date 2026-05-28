@@ -1,208 +1,250 @@
 library: highcharts
+language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:59:07Z'
-updated: '2026-01-26T20:02:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21371825976
+updated: '2026-05-28T04:01:19Z'
+generated_by: claude-sonnet
+workflow_run: 26552665903
 issue: 4134
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of all four theoretical curves with mathematically correct
-    relationships
-  - Shaded underfitting/overfitting zones with clear labels add educational value
-  - Formula displayed in subtitle as specified
-  - Optimal complexity point clearly marked with both vertical line and scatter marker
-  - Good use of Highcharts-specific features (plotBands, plotLines)
-  - Clean, well-organized code structure
+  - 'Full spec compliance: all 5 required features (4 curves, optimal marker, direct
+    labels, formula, zone shading) implemented correctly'
+  - 'Highcharts-native feature usage: plotBands, plotLines, and per-point dataLabels
+    are all distinctively Highcharts'
+  - 'Strong data storytelling: underfitting/overfitting zone shading with color-matched
+    labels, thicker Total Error line, and formula subtitle create clear visual narrative'
+  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, GRID)
+    correctly applied in both light and dark renders'
+  - Deterministic data with mathematically correct bias-variance tradeoff shapes
   weaknesses:
-  - Zone labels at the bottom are relatively small and could be more prominent
-  - Legend could potentially be integrated into the plot via direct curve labels instead
-    of external legend
-  image_description: 'The plot displays the bias-variance tradeoff visualization with
-    four smooth curves on a white background. The chart has a clear title "curve-bias-variance-tradeoff
-    · highcharts · pyplots.ai" at the top, with the formula subtitle "Total Error
-    = Bias² + Variance + Irreducible Error" below it. The X-axis shows "Model Complexity"
-    (0-10), and the Y-axis shows "Prediction Error" (0-3.5). Four curves are displayed:
-    (1) Bias² in blue - decreasing curve starting high at ~1.9 and decreasing to ~0.3;
-    (2) Variance in yellow - increasing curve starting near 0 and rising to ~3.2;
-    (3) Irreducible Error in purple dotted line - constant horizontal line at 0.3;
-    (4) Total Error in red - U-shaped curve with minimum around complexity 2.5. A
-    green diamond marker indicates the optimal point where total error is minimized.
-    The plot features shaded regions: light blue for "Underfitting (High Bias)" zone
-    on the left and light yellow for "Overfitting (High Variance)" zone on the right.
-    A dashed green vertical line marks the optimal complexity point with a label.
-    The legend is positioned on the right side showing all five series.'
+  - Bias² and Irreducible Error curve end-labels converge at x=10 (curves only ~0.033
+    units apart); at scaled/mobile sizes the labels appear to touch — shift the Bias²
+    label to x≈7 where separation is ~0.5 units
+  - _label_style helper function is a minor KISS violation; could be inlined as a
+    dict literal
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct anyplot light surface
+      Chrome: Title "curve-bias-variance-tradeoff · python · highcharts · anyplot.ai" bold at ~70% canvas width in dark ink; subtitle "Total Error = Bias² + Variance + Irreducible Error" in secondary ink; Y-axis "Prediction Error" and X-axis "Model Complexity" both in dark ink; tick labels in INK_SOFT; all readable. Zone labels "Underfitting Zone" (green) and "Overfitting Zone" (purple) below x-axis. Curve labels at right edge: Variance (purple), Total Error (orange), Bias² (green), Irreducible Error (blue) - last two are very close at the right edge but readable. "Optimal" dashed vertical line label visible.
+      Data: Bias²=#009E73 (brand green, first series, decreasing), Variance=#C475FD (lavender, increasing), Irreducible Error=#4467A3 (blue, dotted horizontal), Total Error=#BD8233 (ochre, U-shaped, thicker line), Optimal Point diamond in ochre. Zone shading with rgba fills.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct anyplot dark surface
+      Chrome: Title, subtitle, axis labels, tick labels all render in light ink (#F0EFE8/#B8B7B0). Zone labels light. Curve labels light. Legend uses #242420 elevated background. Grid rgba(240,239,232,0.15). No dark-on-dark failures detected.
+      Data: Colors identical to light render - Bias² green, Variance lavender, Irreducible Error blue (dotted), Total Error ochre. Diamond marker visible. Zone shading visible with rgba fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable; title, axis labels, and legend appropriately sized.
-          Slight deduction for zone labels being small.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or elements.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Lines well-visible with appropriate thickness. Optimal point marker
-          clear.
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, curve labels 40px, zone labels 48px). Well-proportioned. Minor crowding
+          of Bias² and Irreducible Error labels at x=10 end of curves.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant overlap. Bias² and Irreducible Error curve end-labels
+          have ~7px gap at full resolution but appear to touch at scaled sizes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All curves clearly visible. Total Error thicker (8px) for emphasis.
+          Diamond optimal point visible. Zone shading subtle but clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Colorblind-safe palette: blue, yellow, purple, red, green.'
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space. Minor asymmetry from right legend.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Model Complexity, Prediction Error.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: CVD-safe anyplot palette. Redundant encoding via linestyle (dotted
+          irreducible) and line weight (thicker total error).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good layout. Chart fills ~70-75% of canvas. Legend well-positioned
+          on right. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle and appropriate. Legend functional.
+        comment: Model Complexity and Prediction Error are descriptive. Formula subtitle
+          adds useful context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Positions 1-4 in canonical order. Backgrounds
+          #FAF8F1/#1A1A17. All chrome theme-adaptive in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above well-configured defaults. Zone shading, direct curve labels,
+          formula subtitle, diamond optimal marker, variable line weights show intentional
+          design. Not yet publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle rgba grid, legend with elevated background and border, zone
+          shading with low-opacity fills, dotted irreducible line. Clear refinement
+          above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone shading guides viewer to tradeoff. Optimal point marked. Total
+          Error thicker for emphasis. Formula decomposition in subtitle. Clear visual
+          hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct spline/line chart for theoretical curves.
+        comment: Four SplineSeries curves correctly represent bias-variance decomposition.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 'X-axis: model complexity, Y-axis: prediction error.'
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required: 4 curves, optimal marker, shaded zones, formula.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All 5 spec features: 4 curves with distinct colors/linestyles, optimal
+          marker (plotLine+diamond), direct curve labels (dataLabels), formula (subtitle),
+          zone shading (plotBands).'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=model complexity, Y=prediction error. Bias² decreasing, Variance
+          increasing, Irreducible constant, Total Error U-shaped. All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All series correctly labeled.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: {spec-id} · {library} · pyplots.ai'
+        comment: Title is 'curve-bias-variance-tradeoff · python · highcharts · anyplot.ai'.
+          Legend labels match series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all aspects: decreasing bias, increasing variance, constant
-          irreducible error, U-shaped total.'
+        comment: 'All components shown: 4 curves, U-shaped total error, optimal point,
+          zone regions, formula decomposition.'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Theoretical ML concept well demonstrated. Generic educational context.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Sensible values for theoretical demonstration.
+        comment: Canonical ML education scenario. Theoretical curves with correct
+          shapes. Not controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: bias_squared=2.0/(1+0.5x) and variance=0.1x^1.5 produce mathematically
+          correct tradeoff shapes. Irreducible=0.3 is a reasonable noise floor.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data, chart, series, export.'
+        comment: _label_style helper function is a minor KISS deviation but practical
+          (used 4 times).
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic mathematical functions, no random data.
+        comment: Fully deterministic (np.linspace, no randomness).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API.
+        comment: Clean, well-organized. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses plotBands, plotLines, spline type, tooltips. Could leverage
-          more advanced features.
+        comment: Expert use of SplineSeries, ScatterSeries, chart.add_series(), to_js_literal(),
+          CDP viewport override, PIL size pinning.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Three distinctively Highcharts features: plotBands (zone shading),
+          plotLines (optimal marker), per-point dataLabels (direct curve labeling).'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
