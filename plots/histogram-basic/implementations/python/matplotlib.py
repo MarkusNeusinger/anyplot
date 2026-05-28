@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-28
+Quality: 93/100 | Updated: 2026-05-28
 """
 
 import os

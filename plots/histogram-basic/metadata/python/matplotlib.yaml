@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:22:29Z'
-updated: '2026-05-28T07:31:08Z'
+updated: '2026-05-28T07:44:00Z'
 generated_by: claude-sonnet
 workflow_run: 26560636161
 issue: 654
@@ -12,121 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Intensity-graded bar coloring via patch alpha manipulation is a creative and distinctive
-    matplotlib technique that adds visual depth without chart junk
-  - 'Complete spec compliance: correct chart type, 25 bins, zero-baseline, visible
-    edges, descriptive labels with units'
-  - 'Excellent theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
-    correctly applied to every element; dark render passes full readability check
-    with no dark-on-dark issues'
-  - 'Semantic annotation design: mean/median labeled with color-matched annotation
-    boxes and arrows; high-performer cluster callout adds real insight'
-  - Clean code with reproducible seed (np.random.seed(42)), no fake interactivity,
-    correct canvas size (3200x1800 via figsize=(8,4.5) dpi=400)
+  - Per-patch intensity gradient via to_rgba and patch manipulation is a distinctive
+    matplotlib technique that adds visual sophistication while reinforcing height
+    encoding
+  - 'Both renders pass full theme-readability: INK, INK_SOFT, ELEVATED_BG, PAGE_BG
+    chrome tokens correctly applied throughout'
+  - Dual annotation system with semantic matte-red mean line and italic high-performer
+    cluster callout creates genuine data storytelling
+  - 'Perfect spec compliance: correct bin edges via patch.set_edgecolor, Y-axis at
+    zero, descriptive axis labels with units, 25 bins appropriate for 500 points'
+  - Clean reproducible code with np.random.seed(42), KISS structure, no over-engineering,
+    correct plot-{THEME}.png output without bbox_inches=tight
   weaknesses:
-  - Mean (73.7) and median (74.1) reference lines are only 0.4 points apart and visually
-    merge into a single stripe in both renders — lines overlap nearly completely,
-    making them indistinguishable as separate indicators
-  - Bar edges use edgecolor=PAGE_BG which creates visible white gaps in light theme
-    but invisible (dark-on-dark) gaps in dark theme — replace with edgecolor=INK_SOFT
-    at alpha=0.35 for theme-adaptive separation visible in both renders
-  - Intensity-gradient alpha floor of 0.5 * 0.85 = 0.43 makes low-count tail bins
-    significantly transparent in dark theme, potentially making outlier observations
-    at the distribution edges look artificially faint — raise floor from 0.5 to 0.65
+  - 'Annotation text ''Mean ≈ Median'' implies symmetry but the combined distribution
+    (base normal + right-tail cluster) has mean slightly above median — change to
+    ''Mean: {value}'' to avoid inaccurate symmetry claim'
+  - 'DE-02 refinement stops short of perfect: tick marks are retained; removing them
+    (ax.tick_params(length=0)) would push toward minimal-chrome style'
+  - 'LM-02: patch manipulation is distinctive but does not exploit a truly unique
+    matplotlib primitive — a ContourSet, PathCollection property, or ArtistAnimation
+    would score higher'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "histogram-basic · python · matplotlib · anyplot.ai" in dark ink at 12pt, clearly readable. X-axis label "Exam Score (points)" and Y-axis label "Frequency (count)" at 10pt in INK (#1A1A17). Tick labels at 8pt in INK_SOFT (#4A4A44) — all legible. Top and right spines removed; left/bottom spines in INK_SOFT. Subtle y-axis grid at alpha=0.15.
-      Data: Histogram bars in brand green #009E73 with alpha intensity gradient (taller bars more opaque at ~0.85 alpha, shorter bars more transparent at ~0.43 alpha). Dashed red mean line (#AE3030) and dotted blue median line (#4467A3) at nearly the same position (73.7 vs 74.1). Three annotation boxes with rounded corners: red-bordered "Mean: 73.7", blue-bordered "Median: 74.1", muted italic cluster annotation. Bar edges are PAGE_BG (#FAF8F1) creating visible white separation between bins.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "histogram-basic · python · matplotlib · anyplot.ai" at ~50% width, dark ink on light background; X-axis label "Exam Score (points)" and Y-axis label "Frequency (count)" at 10pt dark ink, balanced; tick labels at 8pt in INK_SOFT (#4A4A44) — readable; annotation callout boxes with ELEVATED_BG (#FFFDF6) fill and rounded corners — readable
+      Data: 25 histogram bars in brand green (#009E73) with per-bar intensity gradient (taller bars more opaque, tail bars more translucent); matte-red (#AE3030) dashed mean line at x≈74; subtle y-axis grid lines at alpha=0.15 behind bars
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light colors (INK_SOFT = #B8B7B0 for ticks, INK = #F0EFE8 for labels/title) — clearly readable. No dark-on-dark issues anywhere. Annotation boxes use elevated dark background (#242420) with correctly adapted border and text colors. Grid lines visible as subtle light lines.
-      Data: Histogram bar colors identical to light render (brand green #009E73) — chrome-only flip confirmed. Mean (#AE3030) and median (#4467A3) lines retain same semantic colors. Bar edges (edgecolor=PAGE_BG=#1A1A17) are nearly invisible against the dark background, causing slight bin merging — but intensity gradient still provides adequate differentiation.
-      Legibility verdict: PASS — all text readable against dark background; brand green #009E73 clearly visible
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0); tick labels light-colored and readable; annotation box fills use ELEVATED_BG (#242420) — slightly lighter than page background; no dark-on-dark failures detected
+      Data: Bar colors identical to light render — brand green intensity gradient unchanged, confirming data colors are theme-constant; matte-red mean line remains visible on dark background; arrow colors theme-adaptive
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text theme-adaptive and legible in both renders; annotation italic
-          at 8pt slightly small at mobile scale but fine at full resolution
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
+          8pt, annotations 8pt); proportional and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Mean (73.7) and median (74.1) reference lines visually merge due
-          to 0.4-point separation; annotation boxes well-positioned and non-overlapping
+        comment: Mean annotation upper-left of center, cluster annotation in right-tail
+          region; no text-on-data or text-on-text overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Intensity-graded bars work well in light theme; dark theme bar edges
-          (edgecolor=PAGE_BG) nearly invisible causing slight bin merging
+        comment: Bars clearly visible with intensity gradient; lowest-count tail bars
+          retain >=55% alpha; mean line and arrows well-visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Colorblind-safe palette; no red-green as sole signal
+        comment: Brand green on off-white/near-black; CVD-safe palette; matte red
+          for semantic mean reference; no red-green sole-signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good margins via subplots_adjust; no elements
-          clipped; balanced axis labels
+        comment: Confirmed 3200x1800 px; subplots_adjust provides balanced margins;
+          no content cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Exam Score (points) and Frequency (count) are descriptive with units;
-          correct title format
+        comment: Exam Score (points) and Frequency (count) — both descriptive with
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for first series; matte red for mean reference
-          (semantic anchor); blue #4467A3 for median; backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome uses
+          INK/INK_SOFT/ELEVATED_BG tokens in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intensity-graded bar coloring via patch alpha manipulation is distinctive;
-          coordinated annotation styling with semantic color matching
+        comment: 'Clearly above defaults: per-patch intensity gradient, dual annotation
+          system with semantic colors, clean L-shaped frame; not quite publication-grade'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle grid (alpha=0.15); consistently
-          styled annotation boxes — above default but not exceptional
+        comment: Top/right spines removed; y-axis grid at alpha=0.15 with set_axisbelow;
+          annotation boxes with rounded padding; spine colors match INK_SOFT
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Mean and median annotated; high-performer cluster called out with
-          percentage; clear narrative about bimodal exam distribution
+        comment: Mean/median annotation creates focal point; high-performer cluster
+          annotation identifies and quantifies right-tail feature; intensity gradient
+          adds interest
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram; no gaps between bars
+        comment: ax.hist() histogram — correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible bin edges; readable frequency and value axes; 25 bins; y-axis
-          starts at zero
+        comment: Bin edges via patch.set_edgecolor at alpha=0.35; readable axes with
+          units; 25 bins for 500 points; Y-axis starts at zero
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = exam scores, Y = frequency count; full range shown; bimodal distribution
-          visible
+        comment: 'X: exam score continuous variable; Y: frequency count; all data
+          within 0-100 shown'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; no legend for single-series
-          (correct)
+        comment: histogram-basic · python · matplotlib · anyplot.ai — exact format;
+          no legend for single series (correct)
     data_quality:
       score: 15
       max: 15
@@ -167,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution shape, central tendency, spread, outliers, and
-          bimodal structure
+        comment: 500 points (450 base normal + 50 high-cluster); reveals distribution
+          shape, skew, bimodality at right tail, varying bin heights
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam scores are neutral, real-world domain; bimodal distribution
-          is plausible; 500 observations appropriate
+        comment: Exam score distribution — canonical, neutral, educational-domain
+          scenario with real-world interpretability
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30-100 range for exam scores sensible; frequency counts in 0-45 range
-          correct
+        comment: Scores clipped to [0,100]; mean ~74 with SD ~12 realistic for exam;
+          high-performer cluster at 88 SD 4 plausible
     code_quality:
       score: 10
       max: 10
@@ -192,60 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; sequential top-level code
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (os, matplotlib.pyplot, numpy, matplotlib.colors.to_rgba)
-          are used
+        comment: os, matplotlib.pyplot, numpy, matplotlib.colors.to_rgba — all used,
+          none unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; patch manipulation loop necessary for intensity
-          gradient effect
+        comment: Per-patch loop clean; strict=True in zip() is good Python 3.10+ practice;
+          no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; correct matplotlib
-          API
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          naming, no bbox_inches=tight
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods throughout; subplots_adjust for layout; set_axisbelow;
+          correct figsize=(8,4.5), dpi=400
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses axes methods (ax.hist, ax.axvline, ax.annotate); fig/ax subplots
-          pattern; theme tokens via standard params
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: to_rgba() + patch iteration for intensity gradient is distinctly
-          matplotlib low-level; annotate() with arrowprops; axvline() for reference
-          lines
+        comment: Per-patch alpha/color manipulation via (n,bins,patches) return from
+          ax.hist and to_rgba for intensity-scaled bar colors — matplotlib-distinctive;
+          could go further with a truly unique primitive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - patches
   patterns:
   - data-generation
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
