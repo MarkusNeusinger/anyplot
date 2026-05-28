@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -112,9 +112,18 @@ labels = LabelSet(
     source=source,
     text_align="center",
     text_baseline="middle",
-    text_font_size="22pt",
+    text_font_size="26pt",
 )
 p.add_layout(labels)
+
+# Storytelling callout: highlight the most extreme anomaly cell with a bold border + label
+extreme_idx = np.unravel_index(np.argmax(np.abs(values)), values.shape)
+extreme_city = cities[extreme_idx[0]]
+extreme_month = months[extreme_idx[1]]
+extreme_val = values[extreme_idx[0], extreme_idx[1]]
+p.rect(
+    x=[extreme_month], y=[extreme_city], width=1, height=1, fill_color=None, fill_alpha=0, line_color=INK, line_width=8
+)
 
 # Color bar (construct from renderer — idiomatic Bokeh)
 color_bar = r.construct_color_bar(
