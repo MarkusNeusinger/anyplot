@@ -123,6 +123,19 @@ export function MastheadRule() {
   // Pick one random comment style per browser session (stable across client-side nav).
   const [randomIdx] = useState(() => Math.floor(Math.random() * COMMENT_POOL.length));
 
+  // Short single-segment breadcrumbs (e.g. `/palette`, `/about`, `/mcp`) leave
+  // plenty of room on xs — hiding `~/anyplot.ai` there strands the breadcrumb
+  // as a tiny label and makes the masthead look empty. Keep the root marker
+  // visible whenever the xs-effective breadcrumb is under 15 chars.
+  const xsBreadcrumbLength = isLanding
+    ? 0
+    : segments.reduce((sum, s) => {
+        const xsLabel = s.short && s.short !== s.label ? s.short : s.label;
+        return sum + xsLabel.length;
+      }, 0);
+  const keepRootMarkerOnXs = !isLanding && xsBreadcrumbLength < 15;
+  const rootMarkerDisplay = keepRootMarkerOnXs ? 'inline' : { xs: 'none', sm: 'inline' };
+
   // Determine whether the center comment shows, what it says, and in which syntax.
   // - Landing: random delim + brand claim
   // - Spec routes (/:specId[/:language[/:library]]): random or language-matched delim,
@@ -182,12 +195,14 @@ export function MastheadRule() {
       }}>
         {/* Root marker — hidden on xs (where the NavBar logo `any.plot()` below
             already anchors the brand) so the breadcrumb has room for the
-            spec-id + lang + lib without truncating. */}
+            spec-id + lang + lib without truncating. Short single-segment
+            breadcrumbs override this and keep the marker on xs (see
+            keepRootMarkerOnXs above). */}
         <Box
           component={RouterLink}
           to="/"
           onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: '/' })}
-          sx={{ ...linkSx, display: { xs: 'none', sm: 'inline' } }}
+          sx={{ ...linkSx, display: rootMarkerDisplay }}
         >
           ~/anyplot.ai
         </Box>
@@ -238,9 +253,10 @@ export function MastheadRule() {
             );
             return (
               <Box key={`${seg.label}-${i}`} component="span">
-                {/* First separator hides on xs because the logo is hidden too;
+                {/* First separator follows the root marker's xs visibility —
+                    showing it without the marker would dangle a stray ` · `;
                     later separators always show. */}
-                <Box component="span" sx={i === 0 ? { display: { xs: 'none', sm: 'inline' } } : undefined}>
+                <Box component="span" sx={i === 0 ? { display: rootMarkerDisplay } : undefined}>
                   {' · '}
                 </Box>
                 {seg.to ? (
