@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-basic: Basic Histogram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-28
@@ -19,7 +19,6 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
 MEAN_COLOR = "#AE3030"  # matte red — semantic anchor for reference/alert
-MED_COLOR = "#4467A3"  # anyplot palette position 3 — blue
 
 # Data - exam scores with slight left skew and high-performer cluster
 np.random.seed(42)
@@ -35,46 +34,32 @@ title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-n, bins, patches = ax.hist(scores, bins=25, color=BRAND, edgecolor=PAGE_BG, linewidth=1.2)
+n, bins, patches = ax.hist(scores, bins=25, color=BRAND, linewidth=0.8)
 
 # Intensity-graded bar coloring via patch manipulation (matplotlib-distinctive)
 max_count = max(n)
 base_rgba = to_rgba(BRAND)
 for count, patch in zip(n, patches, strict=True):
-    intensity = 0.5 + 0.5 * (count / max_count)
+    intensity = 0.65 + 0.35 * (count / max_count)
     patch.set_facecolor((*base_rgba[:3], intensity * 0.85))
+    patch.set_edgecolor(to_rgba(INK_SOFT, alpha=0.35))
 
 # Key statistics
 mean_score = np.mean(scores)
-median_score = np.median(scores)
 y_max = max(n)
 pct_above_80 = 100 * np.sum(scores >= 80) / len(scores)
 
-# Mean line with annotation
+# Combined mean/median line — values nearly equal, indicating symmetric distribution
 ax.axvline(mean_score, color=MEAN_COLOR, linewidth=2.5, linestyle="--", zorder=5)
 ax.annotate(
-    f"Mean: {mean_score:.1f}",
-    xy=(mean_score, y_max * 0.92),
-    xytext=(mean_score - 18, y_max * 0.97),
+    f"Mean ≈ Median: {mean_score:.0f}",
+    xy=(mean_score, y_max * 0.90),
+    xytext=(mean_score - 20, y_max * 0.97),
     fontsize=8,
     fontweight="bold",
     color=MEAN_COLOR,
     arrowprops={"arrowstyle": "->", "color": MEAN_COLOR, "lw": 1.8},
     bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": MEAN_COLOR, "alpha": 0.9},
-    zorder=6,
-)
-
-# Median line with annotation
-ax.axvline(median_score, color=MED_COLOR, linewidth=2.5, linestyle=":", zorder=5)
-ax.annotate(
-    f"Median: {median_score:.1f}",
-    xy=(median_score, y_max * 0.78),
-    xytext=(median_score + 9, y_max * 0.86),
-    fontsize=8,
-    fontweight="bold",
-    color=MED_COLOR,
-    arrowprops={"arrowstyle": "->", "color": MED_COLOR, "lw": 1.8},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": MED_COLOR, "alpha": 0.9},
     zorder=6,
 )
 
