@@ -252,8 +252,8 @@ async def seo_palette():
     """Bot-optimized palette page with correct og:tags."""
     return HTMLResponse(
         BOT_HTML_TEMPLATE.format(
-            title="Palette | anyplot.ai",
-            description="Color palette reference for anyplot.ai branding.",
+            title="imprint palette | anyplot.ai",
+            description="Imprint — a colorblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/palette",
         )
