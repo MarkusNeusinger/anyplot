@@ -1,0 +1,260 @@
+library: makie
+language: julia
+specification_id: campbell-basic
+created: '2026-05-28T15:40:42Z'
+updated: '2026-05-28T15:47:08Z'
+generated_by: claude-sonnet
+workflow_run: 26584485810
+issue: 4241
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfectly compliant Campbell diagram with all required spec elements: 4 natural
+    frequency curves, 3 engine order lines, 6 critical speed intersection markers,
+    and inline EO labels.'
+  - 'Excellent semantic color use: mode curves use anyplot palette in canonical order
+    (#009E73 first), engine order lines correctly muted with INK_MUTED as reference
+    lines, critical speeds in semantic red (#AE3030/danger anchor).'
+  - Both themes render correctly with full theme-adaptive chrome — warm off-white
+    (#FAF8F1) / near-black (#1A1A17) backgrounds, no dark-on-dark failures, all text
+    readable in both renders.
+  - KISS Julia code with correct CairoMakie idioms, reproducible Random.seed!(42),
+    clean imports, and correct output naming.
+  - Precise gyroscopic-effect data (some modes increase, one decreases with speed)
+    and analytically-correct critical speed intersections — realistic turbine rotor
+    scenario.
+  weaknesses:
+  - DE-01 at well-configured default level (4/8) — visual sophistication does not
+    rise above a carefully-tuned library default; title font weight and overall typographic
+    hierarchy could be more intentional.
+  - 'DE-02: tick marks still visible on both axes — removing them (`xticksvisible
+    = false, yticksvisible = false`) would polish the chart and reduce visual clutter
+    without losing information.'
+  - 'LM-02 moderate (3/5): uses Makie layout system (Relative, colsize!) correctly
+    but does not showcase more distinctive Makie capabilities like `titlefont = :bold`,
+    padding fine-tuning, or styled legend markers.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct anyplot light surface, not pure white
+      Chrome: title "campbell-basic · julia · makie · anyplot.ai" dark text, clearly readable; "Rotational Speed (RPM)" x-label and "Frequency (Hz)" y-label in dark ink; tick labels in dark soft ink — all readable
+      Data: 1st Bending line in brand green #009E73; 2nd Bending in lavender #C475FD; 1st Torsional in blue #4467A3; Axial in ochre #BD8233; engine order lines as dashed gray (INK_MUTED); critical speed diamonds in semantic red #AE3030; side legend with all 6 entries clearly labeled; inline "1×", "2×", "3×" labels positioned near EO lines
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct anyplot dark surface, not pure black
+      Chrome: title in light #F0EFE8 text, clearly readable against dark background; axis labels and tick labels in light-colored ink — no dark-on-dark failures observed; grid lines subtle and visible
+      Data: all 4 mode curves, 3 engine order lines, and 6 critical speed markers are identical in color to the light render — only the chrome flipped; green #009E73 1st Bending remains clearly distinguishable; red critical speed diamonds clearly visible
+      Legibility verdict: PASS — no dark-on-dark issues; all text readable against the near-black surface
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
+          xticklabelsize=12, yticklabelsize=12); readable and proportioned in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; inline EO labels positioned to avoid
+          mode curves
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=2.5, critical speed diamonds at markersize=14
+          — well-visible against both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette; critical speeds use distinct diamond shape
+          in addition to red color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: colsize!(fig.layout, 1, Relative(0.82)) gives good plot-to-legend
+          ratio; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'x: Rotational Speed (RPM); y: Frequency (Hz) — descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 brand green; palette positions 2-4 in canonical
+          order; CRITICAL_COLOR=#AE3030 used as semantic danger anchor; backgrounds
+          #FAF8F1 / #1A1A17; full theme-adaptive chrome in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default — correct palette and semantic color use,
+          but typography and hierarchy do not rise to publication-ready level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Top/right spines removed; y-only grid at 0.12 opacity; theme-adaptive
+          legend background — good refinement, tick marks still visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Clear visual hierarchy: muted EO lines as reference layer, prominent
+          colored mode curves, red diamond critical speeds as focal points — above
+          default storytelling level'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Campbell diagram with natural frequency curves, engine order
+          excitation lines, and critical speed intersection markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 mode shapes (1st Bending, 2nd Bending, 1st Torsional, Axial); 3
+          engine order lines (1x, 2x, 3x); 6 critical speed markers; inline EO labels;
+          legend distinguishing curves from EO lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=RPM 0-6000, Y=Hz 0-360; all data correctly mapped and visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''campbell-basic · julia · makie · anyplot.ai'' correct;
+          legend labels match mode names'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All Campbell diagram features: modes with gyroscopic variation (some
+          increase, one decreases with speed), EO lines from origin, intersection
+          markers'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine rotor, 0-6000 RPM operating range — real-world rotordynamic
+          scenario with engineering-accurate mode nomenclature
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: RPM and Hz ranges realistic for turbomachinery; EO slopes correct
+          (n×RPM/60); critical speed positions analytically correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → theme tokens → data → plot → save; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors (colorant syntax), Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia; @. broadcast operator; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2); uses current size=
+          API (not deprecated resolution=)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic CairoMakie: lines!, scatter!, text!, Legend, colsize!,
+          RGBAf for transparent grid colors — correct high-level API usage throughout'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Makie layout system (colsize! + Relative) and RGBAf — some Makie-specific
+          features, but does not showcase more distinctive capabilities like custom
+          recipes or advanced layouting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
