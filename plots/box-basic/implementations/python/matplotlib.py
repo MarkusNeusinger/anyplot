@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-28
@@ -99,11 +99,11 @@ ax.annotate(
     bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": ANYPLOT_PALETTE[best_idx], "alpha": 0.9},
 )
 
-# Annotation — widest IQR (Finance, placed to the right to avoid crowding)
+# Annotation — widest IQR (Finance, placed higher to clear Healthcare box region)
 ax.annotate(
     f"Widest spread\nIQR=${iqrs[widest_idx]:.0f}K",
     xy=(widest_idx + 1, medians[widest_idx]),
-    xytext=(widest_idx + 1.7, medians[widest_idx] + 38),
+    xytext=(widest_idx + 1.7, medians[widest_idx] + 65),
     fontsize=8,
     fontweight="bold",
     color=ANYPLOT_PALETTE[widest_idx],
@@ -122,21 +122,20 @@ ax.annotate(
     },
 )
 
-# Annotation — tightest IQR (Retail, placed to the left of the box)
+# Annotation — tightest IQR (Retail, placed directly above Retail's box)
+# Placed at x=tightest_idx+1 (same column as Retail) so it cannot overlap Healthcare (x=3).
+# Use INK text color in dark theme: #AE3030 on dark elevated bg has marginal contrast.
+_tight_text_color = INK if THEME == "dark" else ANYPLOT_PALETTE[tightest_idx]
 ax.annotate(
     f"Tightest spread\nIQR=${iqrs[tightest_idx]:.0f}K",
-    xy=(tightest_idx + 1, medians[tightest_idx]),
-    xytext=(tightest_idx - 0.8, medians[tightest_idx] + 38),
+    xy=(tightest_idx + 1, q3s[tightest_idx] + 1),
+    xytext=(tightest_idx + 1, q3s[tightest_idx] + 42),
     fontsize=8,
     fontweight="bold",
-    color=ANYPLOT_PALETTE[tightest_idx],
-    ha="right",
-    arrowprops={
-        "arrowstyle": "->",
-        "connectionstyle": "arc3,rad=0.3",
-        "color": ANYPLOT_PALETTE[tightest_idx],
-        "lw": 1.5,
-    },
+    color=_tight_text_color,
+    ha="center",
+    va="bottom",
+    arrowprops={"arrowstyle": "->", "color": ANYPLOT_PALETTE[tightest_idx], "lw": 1.5},
     bbox={
         "boxstyle": "round,pad=0.3",
         "facecolor": ELEVATED_BG,
