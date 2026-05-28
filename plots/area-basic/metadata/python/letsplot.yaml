@@ -1,125 +1,142 @@
 library: letsplot
+language: python
 specification_id: area-basic
 created: '2025-12-23T00:49:34Z'
-updated: '2026-02-12T22:44:50Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447993117
-issue: 0
-python_version: 3.14.2
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-basic/letsplot/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
-  - gradient-fill
-  - grid-styling
+updated: '2026-05-28T05:56:32Z'
+generated_by: claude-sonnet
+workflow_run: 26557090371
+issue: 711
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling with subtitle narrative, peak/dip annotations, and
-    loess trend line providing analytical context
-  - Smart gradient simulation using dual geom_area layers with different alpha values
-  - Strong library mastery with lets_plot-specific features like layer_tooltips()
-    and label_format
-  - Clean, well-structured code following KISS principles with appropriate complexity
-  - Good visual design with intentional typographic hierarchy and minimal chrome
+  - 'Perfect spec compliance: area chart with semi-transparent fill, gridlines, clear
+    axis labels, and continuous time axis'
+  - 'Excellent data storytelling: subtitle with quantitative insight, peak/dip annotations
+    with semantic color coding (green=peak, red=dip), and loess trend line guiding
+    the eye to the upward trend'
+  - 'Theme-adaptive chrome correctly implemented: INK/INK_SOFT tokens propagate to
+    all text and chrome elements; both light and dark renders are fully readable'
+  - 'Idiomatic lets_plot usage: layer_tooltips() for HTML interactivity, layer composition
+    with multiple geoms, proper ggsize(800,450) + scale=4 for canonical 3200x1800
+    canvas'
+  - Two-layer area fill (alpha=0.15 + alpha=0.35) creates visual depth, making the
+    area more visually interesting than a single flat fill
+  - Realistic, neutral website traffic data with plausible weekly cycles and growth
+    trend; np.random.seed(42) ensures reproducibility
+  - Clean KISS code structure with no functions or classes; all imports used
   weaknesses:
-  - Y-axis has slightly excessive headroom above the data (y_max set to peak_val *
-    1.12 pushes empty space above the filled area)
-  - Axis labels could include units (e.g. Daily Visitors count)
-  image_description: 'The plot displays a basic area chart showing daily website visitors
-    over January 2024. The filled area uses a blue color (#306998) with layered semi-transparency
-    (alpha 0.15 and 0.35) to simulate a gradient effect. A solid blue line (width
-    2.2) traces the data on top of the area fill. A dashed dark blue loess trend line
-    shows the overall upward trajectory. Two annotated data points are highlighted:
-    a red-outlined circle at the dip (~Jan 6, 4,299 visitors) with a red "▼ 4,299
-    dip" label, and a blue-outlined circle at the peak (~Jan 29, 7,694 visitors) with
-    a dark blue "▲ 7,694 peak" label. The title reads "area-basic · letsplot · pyplots.ai"
-    with a subtitle "+15% average growth over January — weekly cycles with steady
-    upward trend". The x-axis shows dates from Jan 01 to Jan 31, the y-axis shows
-    "Daily Visitors" ranging from ~3,500 to ~8,500. Subtle horizontal gridlines are
-    present; vertical gridlines are removed. The overall layout is clean with a minimal
-    theme and balanced margins.'
+  - 'DE-02 (Visual Refinement): axis spines at left/bottom are visible; removing the
+    bottom spine (keeping only the y-axis line) would achieve a cleaner minimal look
+    more in line with the anyplot aesthetic'
+  - 'DE-01 (Aesthetic Sophistication): the geom_smooth dashed trend line color uses
+    INK_SOFT (theme-adaptive gray) — slightly blends with grid lines; a distinct INK_MUTED
+    or slightly different linetype would make it more visually distinct from the chart''s
+    structural elements'
+  - 'VQ-01 (Text Legibility): geom_text annotation labels (size=4 mm) are on the smaller
+    end — slightly larger size (5–6 mm) would make peak/dip callouts more prominent
+    without cluttering the chart'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "area-basic · python · letsplot · anyplot.ai" in dark INK (#1A1A17), spanning ~55% of width — well-proportioned. Subtitle "+15% average growth over January — weekly cycles with steady upward trend" in INK_SOFT, readable. Y-axis label "Daily Visitors" rotated, dark, clearly readable. X-axis label "Date" dark. Tick labels on both axes in INK_SOFT at appropriate size. Horizontal grid lines very subtle.
+      Data: Area fill in brand green #009E73 at two alpha layers (0.15 + 0.35) creating visual depth. Line overlay in #009E73. Dashed loess trend line in gray-brown INK_SOFT color. Peak marker (Jan 29, 7,694) as hollow circle in #009E73 with annotation "▲ 7,694 peak" in green. Dip marker (Jan 04, 4,299) as hollow circle in matte-red #AE3030 with annotation "▼ 4,299 dip" in red — semantic exception correctly applied.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title in light #F0EFE8 text, fully readable. Subtitle in #B8B7B0, readable. Axis labels in light INK color, clear. Tick labels in INK_SOFT light gray (#B8B7B0), readable against dark background. Dashed trend line adapts to white/light gray — visible. Grid lines subtle light tone.
+      Data: Area fill remains same brand green #009E73 — identical to light render. Line in #009E73. Peak marker in #009E73, dip marker in #AE3030 — both retain their colors identically. Annotations are legible.
+      Legibility verdict: PASS — all text is light-colored on dark background with no dark-on-dark failures. Chrome correctly inverts while data colors remain identical across both renders.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16. All
-          text perfectly readable.'
+        comment: All font sizes explicitly set; proportions well-balanced; annotations
+          (size=4mm) are readable but slightly small — could be 5-6mm for more prominence
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations well-positioned with appropriate
-          nudge offsets.
+        comment: No overlapping text or elements; peak/dip annotations positioned
+          clearly without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area fill, line width (2.2), and annotation markers well-adapted
-          to 30 data points.
+        comment: 30 data points shown with well-sized area, line, and markers; dual-layer
+          fill creates clear visual weight
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green and matte red are CVD-safe anyplot palette colors; text
+          annotations and distinct positions provide redundant encoding beyond hue
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue primary with red for dip annotation only. Colorblind-safe contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization. Slight excess vertical whitespace above
-          data.
+        comment: Canvas gate passed (3200x1800); generous margins (plot_margin=[40,60,20,20]);
+          chart fills canvas well with balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but lack explicit units.
+        comment: '''Daily Visitors'' and ''Date'' are descriptive and appropriate;
+          visitors is the count unit'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses #009E73 (brand green); dip marker uses #AE3030
+          (palette position 5, correct semantic red for ''bad/dip''); backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark) correct; all chrome theme-adaptive'
     design_excellence:
-      score: 17
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom Python Blue palette, intentional typographic hierarchy, dashed
-          trend line. Approaching publication quality.
+        comment: 'Strong design clearly above defaults: brand identity, semantic color
+          coding, dual-layer fill depth, narrative subtitle, loess trend line. Not
+          FiveThirtyEight level but genuinely polished.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minimal theme, removed vertical gridlines, subtle horizontal gridlines,
-          generous margins.
+        comment: 'Good refinement: horizontal-only grid at size=0.15 (very subtle),
+          custom margins, theme_minimal base with clean axis lines. Spines at left/bottom
+          could be further minimized.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtitle narrates growth and patterns. Peak/dip annotations and loess
-          trend line guide the viewer.
+        comment: 'Good storytelling: subtitle explicitly states the insight, peak/dip
+          annotations create focal points, trend line guides the eye to the growth
+          narrative. Visual hierarchy is clear.'
     spec_compliance:
       score: 15
       max: 15
@@ -129,47 +146,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic area chart with filled area below line.
+        comment: Correct area chart with filled region below line on continuous time
+          axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill, gridlines, clear labels, gradient fill simulation.
+        comment: Semi-transparent fill (0.35 alpha layer), gridlines (horizontal,
+          subtle), clear axis labels, area fill all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=datetime, Y=numeric. Correctly assigned.
+        comment: X=date (continuous time), Y=visitors; all 30 data points visible
       - id: SC-04
-        name: Title Format
+        name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Correct format: area-basic · letsplot · pyplots.ai. No legend needed.'
+        comment: Title 'area-basic · python · letsplot · anyplot.ai' correct format;
+          no legend (single series — appropriate omission)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows upward trend, weekly cycles, peak, dip, and noise variation.
+        comment: Shows trend, weekly cycles, upward growth, peak and trough — all
+          key area chart features demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitors - realistic neutral scenario from spec example.
+        comment: Daily website visitors over January — real, neutral, comprehensible
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 3,500-7,700 daily visitors are perfectly realistic.
+        comment: 2,000–8,000 visitors/day is plausible for a medium-sized website;
+          +15% monthly growth and weekly cycles are realistic
     code_quality:
       score: 10
       max: 10
@@ -179,33 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure. No functions or classes.
+        comment: Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: os, numpy, pandas, lets_plot, ggsave — all used; noqa comments appropriate
+          for lets_plot wildcard import convention
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Dual-area gradient is smart, not over-engineering.
+        comment: Clean, appropriate complexity; layer_tooltips() is real lets_plot
+          interactivity (functional in HTML export), not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct export_ggsave API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API used throughout
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -213,12 +238,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert ggplot grammar usage with proper lets_plot patterns.
+        comment: Expert grammar-of-graphics layer composition; proper ggsize+scale
+          pattern; layer_tooltips() with custom format strings is idiomatic lets_plot
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips(), label_format, and HTML export - distinctive
-          lets_plot features.
+        comment: Uses layer_tooltips() with .line() and .format() — distinctive to
+          lets_plot and functional in HTML export; label_format with Unicode symbols
+          in geom_text; dual HTML+PNG export
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
