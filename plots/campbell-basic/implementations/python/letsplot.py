@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-28
@@ -103,7 +103,7 @@ annot_df = pd.DataFrame(
     [
         {
             "Speed": danger_row["Speed"],
-            "Frequency": danger_row["Frequency"] + 8,
+            "Frequency": danger_row["Frequency"] + 10,
             "Label": f"{danger_row['Intersection']}\n({int(danger_row['Speed'])} RPM)",
         }
     ]
@@ -147,17 +147,13 @@ plot = (
         .format("Frequency", ".1f"),
     )
     + geom_text(
-        data=eo_label_df,
-        mapping=aes(x="Speed", y="Frequency", label="Label"),
-        color=INK_MUTED,
-        size=14,
-        fontface="bold",
+        data=eo_label_df, mapping=aes(x="Speed", y="Frequency", label="Label"), color=INK_MUTED, size=4, fontface="bold"
     )
     + geom_text(
         data=annot_df,
         mapping=aes(x="Speed", y="Frequency", label="Label"),
         color=CRIT_COLOR,
-        size=11,
+        size=4,
         fontface="italic",
         hjust=0.5,
     )
