@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-basic: Basic Histogram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -69,7 +69,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    stroke_width=2.5,
+    stroke_width=0,
 )
 
 # Chart
