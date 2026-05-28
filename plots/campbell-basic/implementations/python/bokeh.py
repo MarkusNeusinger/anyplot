@@ -1,19 +1,43 @@
-""" pyplots.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 95/100 | Created: 2026-02-15
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Prevent this file from shadowing the installed bokeh package
+_this_dir = str(Path(__file__).parent.resolve())
+sys.path = [p for p in sys.path if os.path.normpath(p) != os.path.normpath(_this_dir)]
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d, Span
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"
 
 # Data
+np.random.seed(42)
 speeds = np.linspace(0, 6000, 100)
 
-# Natural frequency modes (Hz) with pronounced rotordynamic behavior
+# Natural frequency modes (Hz) with realistic rotordynamic behavior
 mode_1_bending = 25 + 0.008 * speeds + 3.5 * np.sin(speeds / 2800 * np.pi)
 mode_2_bending = 62 - 0.006 * speeds + 2.0 * np.sin(speeds / 2200 * np.pi)
 mode_1_torsional = 85 + 0.005 * speeds
@@ -27,6 +51,7 @@ modes = {
     "Axial": mode_axial,
     "3rd Bending": mode_3_bending,
 }
+mode_colors = ANYPLOT_PALETTE[:5]
 
 # Engine order lines: frequency = order * speed / 60
 engine_orders = [1, 2, 3]
@@ -56,44 +81,49 @@ for order in engine_orders:
                 critical_speed_labels.append(f"{order}x × {mode_name}")
                 critical_in_operating.append(3000 <= rpm_val <= 5000)
 
-# Compute y-range
+# Y-range
 all_freqs = np.concatenate(list(modes.values()))
 y_max_data = max(np.max(all_freqs), max(critical_speeds_freq) if critical_speeds_freq else 0)
 y_max = min(int(np.ceil(y_max_data / 10) * 10) + 15, 200)
 
+# Title with font-size scaling
+title = "campbell-basic · python · bokeh · anyplot.ai"
+title_len = len(title)
+title_fontsize = f"{round(50 * min(67 / title_len, 1.0))}pt"
+
 # Plot
 p = figure(
-    width=4800,
-    height=2700,
-    title="campbell-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_axis_label="Rotational Speed (RPM)",
     y_axis_label="Frequency (Hz)",
     x_range=Range1d(-100, 6300),
     y_range=Range1d(0, y_max),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
 # Operating range shading (3000–5000 RPM)
 operating_zone = BoxAnnotation(
     left=3000,
     right=5000,
-    fill_color="#306998",
-    fill_alpha=0.06,
-    line_color="#306998",
+    fill_color=INK_SOFT,
+    fill_alpha=0.07,
+    line_color=INK_SOFT,
     line_alpha=0.3,
     line_dash="dotted",
     line_width=2,
 )
 p.add_layout(operating_zone)
 
-# Operating range boundary lines for crisp delineation
+# Operating range boundary lines
 for rpm_boundary in [3000, 5000]:
     boundary_line = Span(
-        location=rpm_boundary,
-        dimension="height",
-        line_color="#306998",
-        line_alpha=0.35,
-        line_width=2,
-        line_dash="dashed",
+        location=rpm_boundary, dimension="height", line_color=INK_SOFT, line_alpha=0.4, line_width=2, line_dash="dashed"
     )
     p.add_layout(boundary_line)
 
@@ -103,14 +133,14 @@ op_label = Label(
     y=y_max * 0.04,
     text="Operating Range (3000–5000 RPM)",
     text_font_size="18pt",
-    text_color="#306998",
-    text_alpha=0.8,
+    text_color=INK_SOFT,
+    text_alpha=0.9,
     text_align="center",
     text_font_style="bold italic",
 )
 p.add_layout(op_label)
 
-# Danger zone highlighting around critical speeds within operating range
+# Danger zones around critical speeds within operating range
 for rpm_val, freq_val, in_op in zip(critical_speeds_rpm, critical_speeds_freq, critical_in_operating, strict=True):
     if in_op:
         danger = BoxAnnotation(
@@ -118,41 +148,34 @@ for rpm_val, freq_val, in_op in zip(critical_speeds_rpm, critical_speeds_freq, c
             right=rpm_val + 120,
             bottom=freq_val - 4,
             top=freq_val + 4,
-            fill_color="#C44E52",
-            fill_alpha=0.10,
-            line_color="#C44E52",
-            line_alpha=0.25,
+            fill_color=ANYPLOT_AMBER,
+            fill_alpha=0.18,
+            line_color=ANYPLOT_AMBER,
+            line_alpha=0.4,
             line_width=1,
         )
         p.add_layout(danger)
 
-# Natural frequency mode colors — distinct, colorblind-safe palette
-# Python Blue, amber, rose, violet, teal — all perceptually distinct
-mode_colors = ["#306998", "#E8A838", "#C44E52", "#7A68A6", "#48A9A6"]
-
-# Plot natural frequency curves
+# Natural frequency curves (anyplot palette positions 1–5)
 legend_items = []
 for i, (mode_name, mode_freq) in enumerate(modes.items()):
     source = ColumnDataSource(data={"speed": speeds, "freq": mode_freq})
     line = p.line(x="speed", y="freq", source=source, line_width=4, line_color=mode_colors[i], line_alpha=0.9)
     legend_items.append(LegendItem(label=mode_name, renderers=[line]))
 
-# Engine order lines (lighter, thinner to reduce visual clutter)
-eo_color = "#666666"
-
+# Engine order lines (theme-adaptive muted)
 for order in engine_orders:
     eo_freq = eo_frequencies[order]
     mask = eo_freq <= y_max
     clipped_speeds = speeds[mask]
     clipped_freq = eo_freq[mask]
-
     source = ColumnDataSource(data={"speed": clipped_speeds, "freq": clipped_freq})
     line = p.line(
-        x="speed", y="freq", source=source, line_width=2, line_color=eo_color, line_dash=[12, 8], line_alpha=0.6
+        x="speed", y="freq", source=source, line_width=2, line_color=INK_MUTED, line_dash=[12, 8], line_alpha=0.75
     )
     legend_items.append(LegendItem(label=f"{order}x EO", renderers=[line]))
 
-# Engine order labels — positioned at right edge, offset to avoid crowding
+# Engine order labels at right edge
 for order in engine_orders:
     freq_at_max = order * 6000 / 60
     if freq_at_max > y_max - 5:
@@ -161,19 +184,18 @@ for order in engine_orders:
     else:
         label_rpm = 5850
         label_freq = freq_at_max
-
     label = Label(
         x=label_rpm,
         y=label_freq,
         text=f" {order}x",
         text_font_size="20pt",
-        text_color="#555555",
+        text_color=INK_MUTED,
         text_font_style="bold",
         text_baseline="middle",
     )
     p.add_layout(label)
 
-# Critical speed markers — dark orange, clearly distinct from crimson mode lines
+# Critical speed markers (amber = warning semantic anchor)
 if critical_speeds_rpm:
     crit_source = ColumnDataSource(
         data={
@@ -190,15 +212,14 @@ if critical_speeds_rpm:
         y="freq",
         source=crit_source,
         marker="diamond",
-        size=28,
-        fill_color="#E65100",
-        line_color="#FFFFFF",
-        line_width=2.5,
-        fill_alpha=0.9,
+        size=26,
+        fill_color=ANYPLOT_AMBER,
+        line_color=INK,
+        line_width=2,
+        fill_alpha=0.95,
     )
     legend_items.append(LegendItem(label="Critical Speed", renderers=[crit_scatter]))
 
-    # HoverTool with enriched tooltips (Bokeh distinctive feature)
     hover = HoverTool(
         renderers=[crit_scatter],
         tooltips=[
@@ -211,7 +232,7 @@ if critical_speeds_rpm:
     )
     p.add_tools(hover)
 
-    # Annotate the most critical intersection in the operating range
+    # Annotate the lowest critical intersection inside the operating range
     op_crits = [
         (r, f, lbl)
         for r, f, lbl, op in zip(
@@ -227,63 +248,84 @@ if critical_speeds_rpm:
             y=worst_freq + 8,
             text=f"⚠ {worst_label} @ {worst_rpm:.0f} RPM",
             text_font_size="15pt",
-            text_color="#E65100",
+            text_color=ANYPLOT_AMBER,
             text_font_style="bold",
-            text_alpha=0.85,
+            text_alpha=0.95,
         )
         p.add_layout(annotation)
 
-# Legend — positioned top-left, compact to minimize data overlap
+# Legend — increased glyph size and spacing to address previous weakness
 legend = Legend(
     items=legend_items,
     location="top_left",
-    label_text_font_size="16pt",
-    glyph_width=50,
-    glyph_height=26,
-    spacing=10,
-    padding=16,
-    background_fill_color="#FFFFFF",
-    background_fill_alpha=0.88,
-    border_line_color="#CCCCCC",
-    border_line_alpha=0.25,
+    label_text_font_size="34pt",
+    label_text_color=INK_SOFT,
+    glyph_width=60,
+    glyph_height=32,
+    spacing=14,
+    padding=20,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.92,
+    border_line_color=INK_SOFT,
+    border_line_alpha=0.5,
     border_line_width=1,
 )
 p.add_layout(legend)
 
-# Title styling
-p.title.text_font_size = "28pt"
+# Title
+p.title.text_font_size = title_fontsize
 p.title.align = "center"
-p.title.text_color = "#222222"
+p.title.text_color = INK
+p.title.text_font_style = "bold"
 
 # Axis styling
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.axis_label_text_color = "#333333"
-p.yaxis.axis_label_text_color = "#333333"
-p.xaxis.major_label_text_color = "#555555"
-p.yaxis.major_label_text_color = "#555555"
-p.xaxis.axis_line_color = "#BBBBBB"
-p.yaxis.axis_line_color = "#BBBBBB"
-p.xaxis.major_tick_line_color = "#BBBBBB"
-p.yaxis.major_tick_line_color = "#BBBBBB"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-# Grid styling (subtle, refined)
-p.xgrid.grid_line_color = "#E0E0E0"
-p.xgrid.grid_line_alpha = 0.4
-p.ygrid.grid_line_color = "#E0E0E0"
-p.ygrid.grid_line_alpha = 0.4
+# Grid
+p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 
-# Background and frame
-p.background_fill_color = "#FAFAFA"
-p.border_fill_color = "#FFFFFF"
-p.outline_line_color = None
+# Background and border
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Save
-export_png(p, filename="plot.png")
-
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Save PNG via headless Chrome (Selenium)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
