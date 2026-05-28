@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:35:23Z'
-updated: '2026-05-28T13:30:25Z'
+updated: '2026-05-28T13:44:08Z'
 generated_by: claude-sonnet
 workflow_run: 26577000800
 issue: 689
@@ -15,39 +15,33 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required box plot features (median line, outlier
-    points, whiskers at 1.5xIQR, per-category colors) present and correctly implemented'
-  - 'Excellent data quality: realistic salary domain with meaningful inter-department
-    variation, true outliers (Engineering low, Sales high), and a clear narrative'
-  - Correct theme-adaptive chrome in both renders — no dark-on-dark failures, anyplot
-    palette identical across light and dark themes
-  - Targeted annotations tell a genuine data story (highest/lowest/gap) with color-matched
-    borders reinforcing category identity
-  - Clean idiomatic code with seed reproducibility and correct canvas dimensions (800x450
-    scale=4)
+  - 'Full theme-adaptive chrome: all non-data elements correctly flip between light/dark
+    surfaces; annotation callout boxes use ELEVATED_BG'
+  - 'Excellent spec compliance: all required box plot features present (median, quartile
+    box, 1.5xIQR whiskers, outlier points, per-category colors)'
+  - 'Strong data storytelling: highest/lowest annotations with arrows, market rate
+    band, and gap metric create a coherent salary-benchmarking narrative'
+  - 'Correct canvas: 3200x1800 px via width=800, height=450, scale=4 + autosize=False'
+  - np.random.seed(42) ensures reproducibility
   weaknesses:
-  - Lowest median annotation box positioned at ~$90k in the Sales column area, crowded
-    by the Sales upper whisker line passing through the same region — reposition ax/ay
-    offsets to a cleaner whitespace zone
-  - x-axis title Department and horizontal legend appear in close vertical proximity
-    creating visual redundancy — remove xaxis.title since tick labels already name
-    the departments, or suppress legend header duplication
-  - Design lacks strong typographic hierarchy — title could be bolder or a subtitle
-    added to push toward publication-ready level
-  - Hovertemplate is plotly-specific but invisible in PNG — add a PNG-visible plotly-native
-    element (e.g. add_hrect shading a target salary band) to push LM-02 score
+  - Lowest median annotation (ax=80, ay=-60) overlaps the visual space of the Finance
+    box — shift horizontal offset leftward (e.g., ax=-80) to point away from Finance
+  - Market rate band annotation label (font_size=9) is very small and sits flush against
+    the Finance box; increase to 10pt and adjust annotation_position
+  - No explicit mirror=False on axes — add mirror=False to both xaxis and yaxis dicts
+    to guarantee no mirrored right/top spines
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "box-basic · python · plotly · anyplot.ai" in dark #1A1A17 text, centered — readable. X-axis label "Department" in dark ink, Y-axis label "Annual Salary ($)" in dark ink — both readable. Tick labels in #4A4A44 (INK_SOFT) — readable. Annotation text and callout boxes visible.
-      Data: Engineering box in #009E73 (brand green, first series — correct). Marketing in #C475FD (lavender), Sales in #4467A3 (blue), HR in #BD8233 (ochre), Finance in #AE3030 (matte red). Canonical palette order 1-5 followed correctly. Two outlier points visible: Engineering low ~$57k, Sales high ~$147k. Three annotations: "Highest median $93,096" (green), "Lowest median $64,846" (ochre), "Median salary gap: $28,249" (top-right).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "box-basic · python · plotly · anyplot.ai" in bold dark ink, subtitle in INK_SOFT — all readable. Y-axis label "Annual Salary ($)" in INK. Tick labels in INK_SOFT ($20k–$140k, dollar-formatted). Annotation callout boxes in ELEVATED_BG (#FFFDF6).
+      Data: 5 box plots — Engineering #009E73, Marketing #C475FD, Sales #4467A3, HR #BD8233, Finance #AE3030. First series correctly #009E73. Horizontal market rate band ($75k–$90k) in subtle green. Outlier points visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, not pure black
-      Chrome: Title in light #F0EFE8 text — readable against dark background. Axis labels and tick labels in light tones (#B8B7B0 INK_SOFT) — readable. No dark-on-dark failures detected. Annotation boxes use dark elevated background #242420 with category-colored text — readable. Grid lines subtle and visible.
-      Data: All data colors identical to light render — Engineering green #009E73, Marketing lavender #C475FD, Sales blue #4467A3, HR ochre #BD8233, Finance red #AE3030. Brand green #009E73 clearly legible on dark surface. Outliers and annotations visible with same colors as light render.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no chrome-theme failures
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. Tick labels in INK_SOFT for dark (#B8B7B0). Annotation callout boxes in ELEVATED_BG dark (#242420). No dark-on-dark failures observed.
+      Data: Identical data colors to light render — Engineering #009E73, Marketing #C475FD, Sales #4467A3, HR #BD8233, Finance #AE3030. Brand green clearly visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,82 +52,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=11).
-          Well-proportioned. Minor: Department x-axis title and legend in close vertical
-          proximity causing subtle visual confusion.'
+        comment: All text legible in both themes; minor deduction for borderline small
+          annotation (11pt) and legend (10pt) at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Lowest median annotation box positioned in Sales column area (~$90k);
-          Sales upper whisker line passes through that region creating minor visual
-          crowding. Not a hard collision but tighter than ideal.
+        comment: 'Minor: Lowest median annotation (ax=80) overlaps Finance box visual
+          space; Market rate band label (9pt) sits flush against Finance'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box fills, whiskers, and outlier points (Engineering low ~$57k, Sales
-          high ~$147k) all clearly visible and well-sized.
+        comment: All box plot elements clearly visible; outliers shown correctly;
+          opacity 0.85 on boxes appropriate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; 5 distinct hues cover all series without
-          hue-only reliance.
+        comment: anyplot palette used; CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot uses canvas space well; bottom margin accommodates
-          legend; annotations don't clip; nothing cut off.
+        comment: Correct 3200x1800 canvas via width=800 height=450 scale=4. No clipping.
+          Good proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Annual Salary ($) with unit and Department are descriptive; dollar-formatted
-          tick labels add context.
+        comment: Y-axis label Annual Salary ($) with units. Title format matches spec
+          exactly. Subtitle adds context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering correctly renders in #009E73 first. Remaining departments
-          follow canonical order positions 2-5. Backgrounds #FAF8F1 light and #1A1A17
-          dark. Data colors identical across themes; chrome flips correctly.'
+        comment: 'First series #009E73. All 5 categories use canonical palette positions
+          1-5. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic library default: color-matched annotation borders,
-          themed chrome, three targeted callouts. Standard typography hierarchy; not
-          quite strong design level. Stacked legend below x-axis title creates visual
-          redundancy.'
+        comment: 'Above generic: custom palette, market rate band, dual annotation
+          arrows with category colors, elevated-bg callout boxes, descriptive subtitle'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis-only grid (correct for box plots), subtle opacity, left+bottom
-          axis lines only, clean layout. Legend box has visible border that could
-          be softened.
+        comment: Y-only grid correct; axis lines with proper weight; horizontal legend
+          placement; no explicit mirror=False for top/right spine guarantee
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three targeted annotations clearly guide viewer to salary extremes
-          and gap statistic. Color-matched annotation borders reinforce category identity.
-          Good narrative.
+        comment: 'Clear narrative: Engineering highest, HR lowest, gap quantified.
+          Market rate band provides business context. Three annotations create coherent
+          story.'
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker implementation via go.Box.
+        comment: Correct box-and-whisker using go.Box
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line (plotly default), outlier points (boxpoints=outliers),
-          whiskers at 1.5xIQR (plotly default), distinct colors per category — all
-          present.
+        comment: Median line, outlier points (boxpoints=outliers), 1.5xIQR whiskers,
+          per-category colors — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y=salary values, X=department categories; all five departments displayed
-          with full data ranges.
+        comment: 5 categories (within 2-8), 60-120 points each (within 20-500), Y-axis
+          covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'box-basic · python · plotly · anyplot.ai'. Legend
-          labels match data categories.
+        comment: Title box-basic · python · plotly · anyplot.ai matches spec. Legend
+          labels match categories.
     data_quality:
       score: 15
       max: 15
@@ -175,24 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying IQR widths (Engineering tight, Sales wide), different medians,
-          true outliers in Engineering (low) and Sales (high). Full box plot feature
-          set demonstrated.
+        comment: 'All box plot features shown: median, IQR box, whiskers, outliers.
+          Five departments for comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distribution by department is a canonical, neutral, real-world
-          scenario. Department names and salary ranges immediately comprehensible.
+        comment: Salary data across corporate departments is realistic and neutral.
+          Values ($65k-$95k median) plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Median salaries (Engineering $93k, Marketing $75k, Sales $70k, HR
-          $65k, Finance $85k) and spreads are realistic for a US mid-sized company.
-          Clipping at $25k minimum is a reasonable domain constraint.
+        comment: Y-axis $20k-$155k appropriate. Different means and SDs per department
+          realistic.
     code_quality:
       score: 10
       max: 10
@@ -202,33 +186,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions or classes.
+        comment: No functions or classes; direct linear code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, and plotly.graph_objects imported; all used.
+        comment: Only os, numpy, plotly.graph_objects; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration over categories, no over-engineering, no fake UI
-          elements.
+        comment: Clean category iteration; appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API; correct
-          dimensions (width=800, height=450, scale=4).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
     library_mastery:
       score: 7
       max: 10
@@ -238,19 +220,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of go.Box with update_layout for theming. For multi-series
-          with custom colors, go.Box in a loop is the right choice. Slight deduction
-          for not leveraging px.box with color_discrete_map which could have been
-          more concise.
+        comment: 'Correct go.Box, add_hrect, add_annotation, update_layout usage.
+          Minor: per-trace marker dicts could use update_traces more idiomatically.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hovertemplate (interactive-only, invisible in PNG), annotation
-          arrows (arrowhead, arrowsize, arrowwidth), whiskerwidth, and HTML export.
-          Solid but stops short of PNG-visible distinctive plotly capabilities.
-  verdict: REJECTED
+        comment: add_hrect with annotation_text, hovertemplate, write_html — all distinctively
+          Plotly. Could further leverage updatemenus or customdata.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -263,4 +242,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
