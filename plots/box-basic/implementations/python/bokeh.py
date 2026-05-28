@@ -1,17 +1,41 @@
-""" pyplots.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
-Library: bokeh 3.8.2 | Python 3.14
-Quality: 92/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-28
 """
 
+import io
+import os
+import sys
+import time
+from pathlib import Path
+
+from PIL import Image
+
+
+# Remove this script's own directory from sys.path so the installed
+# bokeh package is found instead of this file (also named bokeh.py).
+_own_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path = [p for p in sys.path if os.path.realpath(p or ".") != _own_dir]
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, LabelSet, Whisker
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Test scores across 4 classes with varying distributions
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — test scores across 4 classes with varying distributions
 np.random.seed(42)
 categories = ["Class A", "Class B", "Class C", "Class D"]
 
@@ -23,8 +47,6 @@ scores = {
 }
 
 # Box plot statistics
-colors = ["#306998", "#4B8BBE", "#E5A03A", "#7A9E3D"]
-
 box_data = {"cat": [], "q1": [], "q2": [], "q3": [], "upper": [], "lower": [], "iqr": []}
 outlier_x = []
 outlier_y = []
@@ -55,20 +77,26 @@ for cat in categories:
 
 source = ColumnDataSource(data=box_data)
 
-# Figure (4800 x 2700 px)
+# Figure
+title = "box-basic · python · bokeh · anyplot.ai"
+W, H = 3200, 1800
 p = figure(
     x_range=categories,
-    width=4800,
-    height=2700,
-    title="box-basic \u00b7 bokeh \u00b7 pyplots.ai",
+    width=W,
+    height=H,
+    title=title,
     x_axis_label="Class",
     y_axis_label="Test Score (points)",
     toolbar_location=None,
     tools="",
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Boxes (q1 to q3) with factor_cmap - wider boxes for better canvas utilization
-cmap = factor_cmap("cat", palette=colors, factors=categories)
+# Boxes (q1–q3)
+cmap = factor_cmap("cat", palette=ANYPLOT_PALETTE[:4], factors=categories)
 box_width = 0.7
 
 p.vbar(
@@ -78,7 +106,7 @@ p.vbar(
     source=source,
     width=box_width,
     fill_color=cmap,
-    line_color="#333333",
+    line_color=INK_SOFT,
     line_width=2,
     fill_alpha=0.85,
 )
@@ -89,18 +117,18 @@ p.vbar(
     source=source,
     width=box_width,
     fill_color=cmap,
-    line_color="#333333",
+    line_color=INK_SOFT,
     line_width=2,
     fill_alpha=0.85,
 )
 
-# Median lines - thin rect for crisp appearance on categorical axis
+# Median line
 median_source = ColumnDataSource(data={"x": box_data["cat"], "y": box_data["q2"]})
-p.rect(x="x", y="y", width=box_width, height=0.08, source=median_source, fill_color="#1a1a1a", line_color="#1a1a1a")
+p.rect(x="x", y="y", width=box_width, height=0.3, source=median_source, fill_color=INK, line_color=INK)
 
 # Whiskers
 whisker = Whisker(
-    base="cat", upper="upper", lower="lower", source=source, level="annotation", line_width=3, line_color="#333333"
+    base="cat", upper="upper", lower="lower", source=source, level="annotation", line_width=3, line_color=INK_SOFT
 )
 whisker.upper_head.size = 40
 whisker.lower_head.size = 40
@@ -116,14 +144,14 @@ if outlier_x:
         y="y",
         source=outlier_source,
         size=18,
-        fill_color="white",
-        line_color="#333333",
+        fill_color=PAGE_BG,
+        line_color=INK_SOFT,
         line_width=2.5,
         marker="circle",
         alpha=0.9,
     )
 
-# Data storytelling - annotations highlighting key insights
+# Annotations — highlight tightest and widest spread
 class_b_iqr = box_data["iqr"][1]
 class_c_iqr = box_data["iqr"][2]
 
@@ -131,53 +159,74 @@ annotation_source = ColumnDataSource(
     data={
         "x": ["Class B", "Class C"],
         "y": [box_data["upper"][1] + 6, box_data["upper"][2] + 6],
-        "text": [f"Tightest spread (IQR = {class_b_iqr})", f"Widest spread (IQR = {class_c_iqr})"],
-        "color": ["#3a6f94", "#c0820a"],
+        "text": [f"Tightest spread (IQR = {class_b_iqr})", f"Widest spread (IQR = {class_c_iqr})"],
     }
 )
 labels = LabelSet(
     x="x",
     y="y",
     text="text",
-    text_color="color",
+    text_color=INK_SOFT,
     source=annotation_source,
-    text_font_size="20pt",
-    text_font_style="bold",
+    text_font_size="30pt",
+    text_font_style="italic",
     text_align="center",
 )
 p.add_layout(labels)
 
-# Styling for 4800x2700 px
-p.title.text_font_size = "36pt"
+# Styling
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "normal"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = None
+p.yaxis.major_tick_line_color = None
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
-# Reduce x_range padding so boxes fill more of the canvas
 p.x_range.range_padding = 0.12
 
 # Grid
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.2
-p.ygrid.grid_line_dash = [6, 4]
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_width = 1
 
-# Spines - remove top and right
-p.outline_line_color = None
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.minor_tick_line_color = None
-p.yaxis.minor_tick_line_color = None
-p.xaxis.major_tick_line_color = None
-p.yaxis.major_tick_line_color = None
-
 # Background
-p.background_fill_color = None
-p.border_fill_color = None
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
 
-# Save
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome — window is H+200 tall so bokeh canvas fills
+# exactly W×H; PIL crops to the target rect before saving.
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H + 200}",
+    "--hide-scrollbars",
+    "--force-device-scale-factor=1",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H + 200)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+raw = driver.get_screenshot_as_png()
+driver.quit()
+Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")

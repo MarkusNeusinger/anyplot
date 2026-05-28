@@ -1,0 +1,247 @@
+library: ggplot2
+language: r
+specification_id: box-basic
+created: '2026-05-28T13:34:02Z'
+updated: '2026-05-28T13:51:24Z'
+generated_by: claude-sonnet
+workflow_run: 26577749912
+issue: 689
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Exemplary multi-layer composition: jitter + boxplot + stat_summary diamond mean
+    markers layered with clear visual hierarchy'
+  - 'Correct anyplot palette positions 1-5 in canonical order, first series Engineering
+    = #009E73'
+  - Theme tokens fully wired through all chrome elements — no dark-on-dark or light-on-light
+    failures in either render
+  - Informative subtitle narrates the insight explicitly
+  - Y-axis uses dollar formatting with k-suffix (label_dollar) — clean and readable
+  - Suppressed legend correctly — color is explained by x-axis category labels
+  - set.seed(42) ensures reproducibility; KISS flat structure; clean imports
+  weaknesses:
+  - Jitter points (size=0.9, alpha=0.25) are slightly small — for 80 points per category
+    a size of 1.2–1.5 would give better individual-point legibility without overwhelming
+    the boxes
+  - Diamond mean markers (size=2.8) could be bumped to 3.2–3.5 for slightly better
+    prominence at desktop and mobile scales
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "box-basic · r · ggplot2 · anyplot.ai" rendered in dark #1A1A17 ink at size 12, clearly visible. Subtitle in muted gray, readable. Y-axis label "Annual Salary (USD)" and X-axis label "Department" in dark ink at size 10, well-proportioned. Tick labels ($40k–$160k, department names) in INK_SOFT at size 8, all readable. Y-axis horizontal grid lines are subtle (linewidth 0.2). No top/right borders.
+      Data: Five department box plots — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), Design (#BD8233 ochre), Research (#AE3030 red). Anyplot palette positions 1–5 in canonical order. Jitter points scattered behind each box (matching fill colors, alpha=0.25). Diamond mean markers (white fill, INK_SOFT outline) clearly visible within each box. Research visually highest and widest.
+      Legibility verdict: PASS — all text readable, no overflow, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title and subtitle rendered in light #F0EFE8 ink, clearly visible against dark background. Axis labels and tick labels in INK_SOFT #B8B7B0, all readable. Y-axis grid lines visible as subtle light lines. No dark-on-dark issues — all text elements correctly flip to light tokens.
+      Data: Identical palette colors to light render — Engineering green, Marketing lavender, Sales blue, Design ochre, Research red. Jitter points and diamond markers visible. Data colors are identical between light and dark themes; only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures, all text elements readable, theme adaptation fully correct.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, subtitle=8).
+          Readable at full and mobile scale in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap. Category labels well-spaced on x-axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Boxes and mean diamonds clearly visible. Jitter points at size=0.9
+          alpha=0.25 are slightly small for the canvas — functional but not optimal
+          for 80pts/category.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Anyplot palette CVD-safe. Diamond mean markers use white fill + dark
+          outline for contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Boxes span the full width comfortably. Generous
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: Annual Salary (USD) with dollar+k formatting. X-axis: Department.
+          Both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Engineering = #009E73. Positions 2-5 canonical order.
+          Background #FAF8F1/#1A1A17. All chrome theme-adaptive. Data colors identical
+          across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Multi-layer (jitter+box+mean diamond) is thoughtful. Anyplot palette,
+          clean typography with subtitle, suppressed legend. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-only grid at linewidth=0.2, no border, axis lines retained, minor
+          grid removed, legend suppressed. Well-refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Subtitle explicitly narrates the insight. Diamond mean markers reveal
+          mean/median divergence. Visual hierarchy: boxes foreground, jitter background.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box-and-whisker plot with median line, IQR box, whiskers,
+          individual point display.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median line, outliers as individual points (jitter), 1.5*IQR whiskers,
+          different colors per category — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=department, Y=salary. All 5 categories with 80 points each. Axes
+          show full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''box-basic · r · ggplot2 · anyplot.ai'' — correct format.
+          No legend needed (category color explained by x-axis labels).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows departments with varying centers (72k–105k), varying spreads,
+          and visible outliers in jitter. Full feature coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Salary distribution by department is a classic real-world use case.
+          Realistic company departments with plausible pay ranges.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: US tech company salary ranges are accurate. Research highest (~105k),
+          Marketing lowest (~72k) — factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat Imports→Data→Plot→Save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales (label_dollar), ragg (PNG device) — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Comments explain the why. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-%s.png with THEME var. Uses linewidth= (not deprecated
+          size=). ragg device explicit.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot2 grammar: aes() mapping, geom layers, scale_*_manual,
+          labs, theme_minimal + theme chain.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_summary() diamond mean overlay is ggplot2-idiomatic. Layered
+          jitter+boxplot is a canonical ggplot2 pattern. expansion() function used.
+          Some but not maximal use of distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
