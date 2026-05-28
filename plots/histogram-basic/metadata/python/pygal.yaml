@@ -1,15 +1,251 @@
 library: pygal
+language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:37Z'
-updated: '2026-02-13T22:54:38Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447580374
-issue: 0
-python_version: 3.14.0
+updated: '2026-05-28T07:57:30Z'
+generated_by: claude-sonnet
+workflow_run: 26561157618
+issue: 654
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/pygal/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Full spec compliance: correct pygal.Histogram type, 20 bins, Y-axis starting
+    at zero, no gaps between bars'
+  - 'Excellent data storytelling: stats annotation box, mean reference line, and peak
+    callout create strong visual hierarchy'
+  - 'Theme-adaptive throughout: all PIL overlay colors use INK/INK_SOFT tokens so
+    both light and dark renders are fully readable'
+  - Realistic and neutral dataset (exam scores, beta-distributed, n=500) with accurate
+    left-skew characterization
+  - 'Perfect code quality: flat KISS structure, np.random.seed(42), clean imports,
+    correct dual output (PNG + HTML)'
+  - Data colors identical between light and dark renders — only chrome flips
+  weaknesses:
+  - stroke_width=0 removes bar outlines; spec calls for thin visible edges between
+    bins — set stroke_width=2.5 per library guide
+  - Mean label 'Mean (77.6) →' placed at plot_y_bot+8 falls in the x-axis tick label
+    row, causing visual crowding near the '75'/'80' tick labels
+  - Peak callout at plot_y_top+20 is very close to the top of the tallest bar, leaving
+    minimal breathing room at the chart top
+  - 'DE-02: pygal default chart frame/border still visible; no spine suppression possible
+    in pygal but more whitespace via increased margins would improve refinement'
+  - 'LM-02: Statistical annotations are rendered via PIL overlay rather than leveraging
+    pygal''s native SVG annotation/label system — reduces library mastery score'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "histogram-basic · python · pygal · anyplot.ai" dark text, fully readable; Y-axis label "Number of Students" and X-axis label "Exam Score (points)" clearly visible; tick labels on both axes (0–40 on Y, ~55–95 on X) dark and readable; horizontal-only grid lines subtle
+      Data: 20-bin histogram in brand green (#009E73) filling the full score range; left-skewed distribution shape clearly visible; mean reference line in dashed red (#AE3030) with "Mean (77.6) →" label; peak callout "▼ Peak: 78–80 pts" in brand green; stats box upper-left with white semi-transparent background showing Distribution Summary (mean, median, IQR, peak bin, skew description)
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light cream/off-white (#F0EFE8 / #A8A79F) — clearly readable against dark background; no dark-on-dark failure observed; grid lines subtle and visible
+      Data: Histogram bars are identical brand green (#009E73) — data colors match light render exactly; mean dashed red line and peak callout identically colored; stats box has dark-adaptive background (dark elevated fill ~rgba(36,36,32,220)) with light text — readable
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues; brand green #009E73 reads well on both surfaces
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44); fully readable in both themes at full size; minor crowding from
+          mean label near x-axis tick row
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Generally clean; mean label 'Mean (77.6) →' positioned at plot_y_bot+8,
+          falling in x-axis tick area and potentially crowding '75'/'80' tick labels;
+          peak callout tight above tallest bar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All histogram bars, reference lines, and annotations clearly visible
+          in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green; red used only as annotation color, not
+          as categorical data signal alongside green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct 3200×1800 canvas; good proportions overall; peak callout
+          at plot_y_top+20 leaves tight headroom above tallest bar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Clear descriptive labels with units: ''Exam Score (points)'' and
+          ''Number of Students'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default: custom anyplot tokens throughout, professional stats
+          box with rounded corners and semi-transparent theme-adaptive fill, mean
+          reference line and peak callout show intentional design hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Horizontal-only grid is refined (show_x_guides=False); stroke_width=0
+          removes bar outlines which should be 2.5; pygal default chart frame visible;
+          annotation overlay well-styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong: stats box provides complete distribution summary, mean line
+          creates focal point, peak callout highlights mode, skew description adds
+          interpretive value, green/red semantic color distinction meaningful'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pygal.Histogram type; bars with no gaps; Y-axis from zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: bin edges visible, readable labels,
+          appropriate bin count (20 for n=500), Y-axis starts at zero'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: exam scores (35-95 range); Y-axis: count (0-45); all data
+          visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'histogram-basic · python · pygal · anyplot.ai' matches required
+          format; legend 'Score Distribution (n=500)' informative
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows distribution shape, central tendency (mean line), spread (IQR
+          in stats box), peak mode, skew type — comprehensive coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam scores for 500 students; left-skewed beta(5,2) distribution
+          realistic for academic data; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score range 35-95 realistic; count axis 0-45 appropriate for n=500
+          with 20 bins
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat linear script; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: sys, io, os, numpy, pygal, PIL (Image/ImageDraw/ImageFont),
+          Style'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured; PIL overlay is a reasonable workaround for pygal's
+          annotation limitations; sys.path manipulation necessary for naming conflict
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for interactive
+          pygal library
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.Histogram, Style object, render_to_png() and render()
+          correctly; tooltip_fancy_mode=True is idiomatic; PIL overlay bypasses native
+          pygal annotation system
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: pygal.Histogram chart type, HTML interactive output, tooltip_fancy_mode=True;
+          statistical annotations go through PIL rather than pygal's SVG-native labeling
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -20,225 +256,4 @@ impl_tags:
   - data-generation
   dataprep:
   - binning
-  styling:
-  - grid-styling
-  - alpha-blending
-review:
-  strengths:
-  - Excellent data storytelling with Distribution Summary box showing mean, median,
-    IQR, peak bin, and skew interpretation
-  - Professional visual design with custom Style, dashed grid, semi-transparent annotation
-    box, and refined typography hierarchy
-  - Proper use of pygal native Histogram chart type with (count, low, high) tuple
-    format
-  - Dual output (PNG + interactive HTML) leverages pygal strength as an SVG/web-oriented
-    library
-  - 'Well-chosen data: beta distribution creates a realistic left-skewed exam score
-    distribution'
-  - Clean code structure with thorough statistical annotations that guide the viewer
-    understanding
-  weaknesses:
-  - The mean annotation label near the x-axis is slightly small and faint compared
-    to other annotations, reducing its visibility
-  - The data_to_px() helper function is a minor KISS violation, though justified by
-    PIL annotation requirements
-  - PIL-based annotations add code complexity that would not be needed if pygal had
-    better native annotation support
-  image_description: 'The plot displays a histogram of exam score distributions using
-    blue bars (#306998, Python Blue) on a light gray (#fafafa) plot background with
-    a white canvas. The title "histogram-basic · pygal · pyplots.ai" is centered at
-    the top in dark gray text. The X-axis is labeled "Exam Score (points)" with tick
-    marks at 60, 70, 80, 90, and the Y-axis is labeled "Number of Students" with ticks
-    at 0, 10, 20, 30, 40. The distribution is clearly left-skewed, with most scores
-    concentrated in the 75-90 range and a long left tail extending to around 50. A
-    translucent white "Distribution Summary" box in the upper-left shows Mean: 77.6,
-    Median: 78.8, IQR: 72-85, Peak bin: 78-80 (49 students), and skew direction. A
-    red dashed vertical line marks the mean at 77.6, with a small red "Mean (77.6)"
-    label near the x-axis. A blue "Peak: 78-80 pts" callout appears above the tallest
-    bar. The legend at the bottom reads "Score Distribution (n=500)". Bars are contiguous
-    with no gaps, Y-axis starts at zero, and the overall layout is well-balanced with
-    the chart filling most of the canvas.'
-  criteria_checklist:
-    visual_quality:
-      score: 29
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 7
-        max: 8
-        passed: true
-        comment: All font sizes explicitly set in Style (title=56, label=40, major_label=36,
-          legend=32). Chart text clearly readable. PIL-drawn mean annotation label
-          near x-axis is slightly small/faint.
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping elements. Statistics box in upper-left where bars
-          are short. Peak annotation above chart area.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Bars clearly visible and well-sized. 20 bins for 500 data points
-          is a good balance. Opacity 0.85 gives bars good visual weight.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Single blue color (#306998) with red mean line. Colorblind-safe combination.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 4
-        passed: true
-        comment: Chart fills most of canvas with well-tuned margins. Good proportions
-          and balanced whitespace.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Exam Score (points) and Number of Students - descriptive labels with
-          units.
-    design_excellence:
-      score: 17
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 7
-        max: 8
-        passed: true
-        comment: Custom style with intentional color choices, refined typography hierarchy,
-          subtle dashed grid lines, light plot background. Professional polish with
-          rounded-rectangle stats box.
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Subtle dashed grid lines, x-guides hidden, generous whitespace, rounded
-          annotation box with semi-transparent fill. Could further refine grid.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Distribution Summary box with mean, median, IQR, peak bin, and skew
-          interpretation. Mean dashed line and peak callout guide the viewer.
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Correct chart type: pygal.Histogram() with (count, low, high) tuple
-          data format.'
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Clear bin edges, readable axis labels, appropriate bin count (20
-          for n=500), Y-axis starts at zero.
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X-axis shows exam scores, Y-axis shows frequency counts. Correct
-          assignment.
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title follows required format. Legend label Score Distribution (n=500)
-          is descriptive.
-    data_quality:
-      score: 14
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 5
-        max: 6
-        passed: true
-        comment: Shows left-skewed distribution with clear shape, central tendency,
-          spread, and tapering tails. Good feature coverage for a basic histogram.
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Exam scores in an educational context. Neutral, comprehensible, and
-          realistic scenario.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Scores in 35-95 range using beta(5,2) distribution. n=500 is sensible.
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Follows Imports-Data-Plot-Save structure. Defines data_to_px() helper
-          function, minor KISS deviation justified by PIL annotation needs.
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set at the start.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: 'All imports used: io, numpy, pygal, PIL, Style.'
-      - id: CQ-04
-        name: Code Elegance
-        score: 1
-        max: 2
-        passed: true
-        comment: Clean and readable. PIL overlay adds necessary complexity. Slightly
-          verbose with annotation code.
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html. No deprecated functions.
-    library_mastery:
-      score: 7
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses pygal.Histogram() with proper tuple format. Full Style customization.
-          render_to_png() and render_to_file(). PIL overlay bypasses some pygal capabilities.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Native Histogram chart type with specific data format. Dual PNG and
-          HTML output. Tooltip configuration and fancy mode.
-  verdict: APPROVED
+  styling: []
