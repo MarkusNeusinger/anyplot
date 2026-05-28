@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-basic: Basic Bar Chart
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-28
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-28
 """
 
 import os
