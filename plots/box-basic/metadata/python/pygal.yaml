@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:36:15Z'
-updated: '2026-05-28T13:38:16Z'
+updated: '2026-05-28T14:11:13Z'
 generated_by: claude-sonnet
 workflow_run: 26577416479
 issue: 689
@@ -12,119 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - Full spec compliance — Tukey box mode, median lines, whiskers, outliers all correct
-  - Storytelling subtitle annotation with highest/lowest median stats and gap
-  - Proper anyplot palette in canonical order, theme-adaptive backgrounds and chrome
-  - SVG post-processing to fix pygal hardcoded outlier radius (r=3→r=15) and box fill
-    opacity (0.2→0.7)
-  - Realistic salary data with manually injected outliers showing different distribution
-    spreads
-  - Interactive HTML output alongside PNG — leverages pygal as SVG-first library
+  - Sophisticated SVG post-processing to enhance box fill opacity (0.7), ink-colored
+    borders per series, enlarged outlier circles (r=20), and thickened whiskers (stroke-width:5)
+    — well above pygal defaults
+  - Storytelling subtitle annotation below the title highlights highest/lowest median
+    department and the salary gap, creating genuine narrative value
+  - Comma-formatted y-axis tick labels via SVG regex (80,000 vs 80000) adds professional
+    polish
+  - 'Perfect anyplot palette compliance: Engineering=#009E73 first, canonical order
+    through HR, correct #FAF8F1/#1A1A17 backgrounds, theme-adaptive chrome in both
+    renders'
+  - 'Complete spec compliance: Tukey whiskers, visible outlier dots, median line,
+    per-category colors for all 5 departments'
+  - Clean code with explanatory comments on each SVG workaround (explains the pygal
+    hardcoded .subtle-fill opacity, the r=3 outlier issue, etc.)
   weaknesses:
-  - Y-axis tick labels show raw numbers without comma formatting (80000 vs 80,000)
-    — reduces salary data readability
-  - 'DE-01: Boxes lack prominent borders/strokes and median lines are not visually
-    distinct enough for publication-ready polish'
-  - 'DE-02: Bottom and left axis frame lines are visually heavy — no spine-removal;
-    SVG post-processing could thin or remove the chart border for refinement'
-  - 'CQ-04: SVG regex manipulation to fix hardcoded class names is functional but
-    fragile — if pygal changes CSS class .subtle-fill or the r attribute position
-    in circle tags, the regex will silently fail without error'
+  - 'DE-01 moderate: design is above defaults but not yet publication-ready — Engineering
+    box (highest median) could be further visually emphasized (e.g. slightly higher
+    fill opacity or a subtle glow border) to create a stronger focal point and push
+    to 8/8'
+  - 'DE-02 moderate: dashed grid lines in the dark render read slightly busy against
+    the near-black background — consider reducing grid opacity or switching to thin
+    solid lines at 10% opacity for more refined look'
+  - 'LM-02: SVG post-processing is creative but pygal has additional distinctive features
+    that could be showcased, such as custom x_labels for category display or sparkline-based
+    annotations native to pygal''s SVG output'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme chrome.
-      Chrome: Title "box-basic · python · pygal · anyplot.ai" centered at top, dark text, clearly readable. Italic muted subtitle "Highest median: Engineering ($83,265) · Lowest median: HR ($57,393) · Gap: $25,872" visible below title. Y-axis label "Salary ($)" rotated, dark text, readable. X-axis label "Department" dark text, readable. Tick labels 20000–140000 in dark muted tone, readable. Legend at bottom with 5 color swatches and labels Engineering, Marketing, Sales, Operations, HR — all readable.
-      Data: Engineering box (teal #009E73), Marketing (purple #C475FD), Sales (blue #4467A3), Operations (tan #BD8233), HR (red #AE3030) — anyplot palette positions 1–5 in canonical order. Boxes with visible IQR fill (opacity ~0.7), median line visible inside each box, Tukey whiskers extending to 1.5×IQR limits, outlier dots visible as circles (r=15). Horizontal dashed grid lines (y-guides only), no x-guides.
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background. No "light on light" failures.
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Title "box-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Italic subtitle annotation in muted ink: "Highest median: Engineering ($83,265) · Lowest median: HR ($57,393) · Gap: $25,872". Y-axis label "Salary ($)" and X-axis label "Department" both readable in dark ink. Comma-formatted tick labels (20,000–140,000) clearly visible. Bottom legend with 5 color swatches and labels all readable.
+      Data: 5 box plots — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), Operations (#BD8233 ochre), HR (#AE3030 red) — in anyplot canonical order. Boxes have 0.7 fill opacity with ink-colored borders. Outlier circles enlarged and clearly visible (Engineering has 3 above + 2 below, Sales has 1 above + 1 below). Tukey whiskers with horizontal caps visible for all categories. Dashed y-axis grid lines subtle. Bottom axis line visible. No x-axis grid (cleaner look).
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme chrome.
-      Chrome: Title in light cream color, clearly readable. Subtitle italic text in muted light tone, readable. Y-axis label "Salary ($)" in light color, readable. X-axis label "Department" in light color, readable. Tick labels in light muted tone, readable. Legend labels in light text against dark background — readable.
-      Data: Box colors identical to light render — Engineering teal #009E73, Marketing purple, Sales blue, Operations tan, HR red. Whiskers, median lines, outlier dots all visible. Dashed y-grid lines in subtle lighter-than-background tone.
-      Legibility verdict: PASS — all text elements clearly readable against warm near-black background. No dark-on-dark failures detected. Brand green #009E73 remains clearly visible on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and subtitle in light/near-white ink, clearly readable. Axis labels, tick labels, and legend text all in light colors. No dark-on-dark failures observed.
+      Data: Colors identical to light render — Engineering green, Marketing lavender, Sales blue, Operations ochre, HR red. Box borders appear with #B8B7B0 ink in dark mode, making the box boundaries clearly visible against the dark background. Outlier circles and whiskers visible.
+      Legibility verdict: PASS — all text readable against dark background, data-color identity confirmed
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). Readable in both themes. Minor: no comma formatting on large
-          tick numbers.'
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44, value=36). Proportional and readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps detected.
+        comment: No text or element overlap observed in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Box fills visible at opacity 0.7 (SVG patched). Outlier dots r=15
-          visible but on the smaller side for a 3200x1800 canvas.
+        comment: Boxes with 0.7 fill opacity + ink borders clearly visible. Outlier
+          circles enlarged (r=20). Whiskers thickened (stroke-width:5).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. No red-green sole signal.
+        comment: 5-color anyplot palette is CVD-safe by design with max-min delta-E
+          optimization.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800, plot fills well, margins balanced, legend at bottom.
+        comment: 3200x1800 landscape. Balanced margins (80px). Legend at bottom well-placed.
+          Chart area fills canvas proportionally.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Salary ($) — descriptive with units. X-axis: Department
-          — descriptive.'
+        comment: 'Y-axis: ''Salary ($)'' with units. X-axis: ''Department'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Engineering). Canonical palette order. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Chrome theme-correct in both renders.'
+        comment: 'Engineering first = #009E73. Canonical palette order through all
+          5 departments. Light background #FAF8F1, dark #1A1A17. Theme-adaptive chrome
+          correct in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: custom palette, subtitle annotation,
-          enlarged outlier dots. Boxes lack prominent borders; median lines not visually
-          distinct enough for publication-ready polish.'
+        comment: 'Strong design clearly above defaults: SVG post-processing for enhanced
+          box fills, enlarged outliers, ink borders, comma-formatted ticks, storytelling
+          annotation. Not yet FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only dashed grid is a good refinement. Box opacity improved via
-          SVG. No spine removal possible in standard pygal API; heavy axis frame lines
-          remain.
+        comment: 'Some refinement: chart border removed, y-axis only grid, generous
+          margins. Dashed grid lines in dark render slightly busy.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Explicit subtitle annotation identifies highest/lowest median and
-          gap. Categories ordered from highest to lowest salary create implicit visual
-          hierarchy.
+        comment: Subtitle annotation highlights highest/lowest median and salary gap
+          — genuine storytelling above mere data display.
     spec_compliance:
       score: 15
       max: 15
@@ -134,56 +140,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.Box with box_mode='tukey' — correct Tukey box-and-whisker plot.
+        comment: Correct box plot with Tukey mode (1.5*IQR whiskers).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, IQR box, 1.5*IQR whiskers, outlier points, different
-          colors per category — all present.
+        comment: 'All spec features present: median line, outliers as dots, whiskers
+          at 1.5*IQR, different colors per category.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis via legend, salary values on y-axis, full range
-          20k–145k shown.
+        comment: X=Department categories, Y=Salary values. All 5 departments correctly
+          displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'box-basic · python · pygal · anyplot.ai' correct. Legend labels
-          match all 5 department categories.
+        comment: 'Title: ''box-basic · python · pygal · anyplot.ai'' correct. Legend
+          at bottom with correct department labels.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows outliers, different spreads (HR narrow σ=8k, Sales wide σ=18k),
-          different medians. Good coverage; distributions are all normal which limits
-          variety.
+        comment: 'Shows all boxplot features: different distributions, different IQR
+          spreads, outliers in multiple categories (Engineering 3+2, Sales 1+1), varying
+          medians.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distributions across company departments — realistic, neutral
-          business scenario.
+        comment: Salary distributions across 5 business departments — comprehensible,
+          real-world, neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary range $25k–$135k is realistic for US corporate departments.
-          Engineering highest, HR lowest — factually plausible.
+        comment: 'Salary ranges realistic: Engineering ~$40K–$135K, HR ~$40K–$80K.
+          Relationships between departments plausible.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -191,52 +197,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → SVG patch → Save. No functions or classes.
+        comment: 'Linear structure: imports → sys.path fix → data → style → chart
+          → SVG post-processing → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before all data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: os, sys, re, cairosvg, numpy, pygal, pygal.style.Style — all used.
+          No unused imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Functional but the SVG regex manipulation (.subtle-fill class, r='3'
-          attribute) is fragile — a pygal version change silently breaks it. Necessary
-          workaround for pygal's hardcoded values.
+        comment: SVG post-processing is pragmatic workaround for pygal limitations,
+          well-commented explaining the why for each step.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
+        comment: Saves plot-{THEME}.png (PNG) and plot-{THEME}.html (interactive SVG)
+          as required for pygal.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: box_mode='tukey', full Style object theming, truncate_legend=-1,
-          legend_at_bottom_columns. Above default idiomatic usage.
+        comment: Idiomatic pygal.Box with Style object, box_mode='tukey', truncate_legend=-1,
+          legend_at_bottom — uses library's recommended patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG source manipulation (pygal is SVG-first), HTML output with full
-          interactivity. These features are unique to pygal's architecture.
-  verdict: REJECTED
+        comment: box_mode='tukey' is pygal-specific. SVG post-processing leverages
+          pygal's SVG-native output. HTML export uses pygal's interactive SVG features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
@@ -245,6 +253,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
