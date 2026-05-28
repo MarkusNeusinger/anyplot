@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-28
@@ -13,8 +13,8 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import AreaSeries
 from highcharts_core.options.series.scatter import ScatterSeries
+from highcharts_core.options.series.spline import SplineSeries
 from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -53,9 +53,10 @@ chart.options.chart = {
     "width": 3200,
     "height": 1800,
     "backgroundColor": PAGE_BG,
+    "plotBorderWidth": 0,
     "marginBottom": 180,
     "marginLeft": 220,
-    "marginRight": 360,
+    "marginRight": 500,
     "marginTop": 200,
 }
 
@@ -70,6 +71,7 @@ chart.options.x_axis = {
     "title": {"text": "Model Complexity", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "lineColor": INK_SOFT,
+    "lineWidth": 1,
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
     "gridLineWidth": 1,
@@ -124,11 +126,12 @@ chart.options.y_axis = {
     "title": {"text": "Prediction Error", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "lineColor": INK_SOFT,
+    "lineWidth": 1,
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
     "gridLineWidth": 1,
     "min": 0,
-    "max": 3.5,
+    "max": 4.0,
 }
 
 chart.options.legend = {
@@ -159,34 +162,100 @@ chart.options.tooltip = {
     "style": {"color": INK, "fontSize": "36px"},
 }
 
+
+# Curve label style helper
+def _label_style(color):
+    return {"fontSize": "40px", "color": color, "fontWeight": "bold", "textOutline": "none"}
+
+
 # Series — anyplot palette positions 1-4 in order
-bias_series = AreaSeries()
+# Bias² — last point carries the direct curve annotation
+bias_data = [[float(x), float(y)] for x, y in zip(complexity, bias_squared, strict=True)]
+bias_data[-1] = {
+    "x": float(complexity[-1]),
+    "y": float(bias_squared[-1]),
+    "dataLabels": {
+        "enabled": True,
+        "format": "Bias²",
+        "align": "left",
+        "x": 12,
+        "y": -5,
+        "crop": False,
+        "overflow": "none",
+        "style": _label_style(ANYPLOT_PALETTE[0]),
+    },
+}
+bias_series = SplineSeries()
 bias_series.name = "Bias²"
-bias_series.data = [[float(x), float(y)] for x, y in zip(complexity, bias_squared, strict=True)]
+bias_series.data = bias_data
 bias_series.color = ANYPLOT_PALETTE[0]
-bias_series.fill_opacity = 0
 chart.add_series(bias_series)
 
-variance_series = AreaSeries()
+# Variance
+variance_data = [[float(x), float(y)] for x, y in zip(complexity, variance, strict=True)]
+variance_data[-1] = {
+    "x": float(complexity[-1]),
+    "y": float(variance[-1]),
+    "dataLabels": {
+        "enabled": True,
+        "format": "Variance",
+        "align": "left",
+        "x": 12,
+        "crop": False,
+        "overflow": "none",
+        "style": _label_style(ANYPLOT_PALETTE[1]),
+    },
+}
+variance_series = SplineSeries()
 variance_series.name = "Variance"
-variance_series.data = [[float(x), float(y)] for x, y in zip(complexity, variance, strict=True)]
+variance_series.data = variance_data
 variance_series.color = ANYPLOT_PALETTE[1]
-variance_series.fill_opacity = 0
 chart.add_series(variance_series)
 
-irreducible_series = AreaSeries()
+# Irreducible Error — shift label down to avoid overlap with Bias²
+irr_data = [[float(x), float(y)] for x, y in zip(complexity, irreducible_error, strict=True)]
+irr_data[-1] = {
+    "x": float(complexity[-1]),
+    "y": float(irreducible_error[-1]),
+    "dataLabels": {
+        "enabled": True,
+        "format": "Irreducible Error",
+        "align": "left",
+        "x": 12,
+        "y": 30,
+        "crop": False,
+        "overflow": "none",
+        "style": _label_style(ANYPLOT_PALETTE[2]),
+    },
+}
+irreducible_series = SplineSeries()
 irreducible_series.name = "Irreducible Error"
-irreducible_series.data = [[float(x), float(y)] for x, y in zip(complexity, irreducible_error, strict=True)]
+irreducible_series.data = irr_data
 irreducible_series.color = ANYPLOT_PALETTE[2]
-irreducible_series.fill_opacity = 0
 irreducible_series.dash_style = "Dot"
 chart.add_series(irreducible_series)
 
-total_series = AreaSeries()
+# Total Error — label placed near x≈8 where the curve is well within the y range
+_total_label_idx = int(round((8.0 - 0.5) / (10.0 - 0.5) * 99))
+total_data = [[float(x), float(y)] for x, y in zip(complexity, total_error, strict=True)]
+total_data[_total_label_idx] = {
+    "x": float(complexity[_total_label_idx]),
+    "y": float(total_error[_total_label_idx]),
+    "dataLabels": {
+        "enabled": True,
+        "format": "Total Error",
+        "align": "left",
+        "x": 12,
+        "y": -10,
+        "crop": False,
+        "overflow": "none",
+        "style": _label_style(ANYPLOT_PALETTE[3]),
+    },
+}
+total_series = SplineSeries()
 total_series.name = "Total Error"
-total_series.data = [[float(x), float(y)] for x, y in zip(complexity, total_error, strict=True)]
+total_series.data = total_data
 total_series.color = ANYPLOT_PALETTE[3]
-total_series.fill_opacity = 0
 total_series.line_width = 8
 chart.add_series(total_series)
 
