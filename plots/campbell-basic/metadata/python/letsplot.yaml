@@ -1,50 +1,56 @@
 library: letsplot
+language: python
 specification_id: campbell-basic
 created: '2026-02-15T21:08:58Z'
-updated: '2026-02-15T21:39:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22043026984
+updated: '2026-05-28T15:53:24Z'
+generated_by: claude-sonnet
+workflow_run: 26584249517
 issue: 4241
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/letsplot/plot.html
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/letsplot/plot-dark.html
 quality_score: 88
 review:
   strengths:
-  - 'Excellent spec compliance: all required features present including 5 mode curves,
-    3 engine order lines, critical speed markers, highlight zones, and proper labeling'
-  - Strong data storytelling with annotation highlighting the most dangerous critical
-    speed and subtitle guiding interpretation
-  - Colorblind-safe palette explicitly chosen with good contrast between all 5 modes
-  - Idiomatic lets-plot usage with layer_tooltips providing rich hover information
-    in the HTML export
-  - Clean code structure following KISS principle with reproducible seed
+  - 'Semantic palette usage — #AE3030 reserved for critical speed markers (danger/resonance)
+    while positions 1-4,6 serve mode curves; elegant skip that preserves palette semantics
+    and reinforces the engineering meaning of ''danger'''
+  - 'Two-tier visual hierarchy: thick colored mode curves dominate over thin muted
+    EO lines over barely-visible risk zones — guides the eye correctly to the most
+    important data layer'
+  - Complete spec implementation including the optional resonance risk zones, on-chart
+    EO line labels AND legend entries, and annotation of the highest-frequency critical
+    speed point
+  - Physically correct data model — engine order slope = order/60 (RPM→Hz), critical
+    speeds found via zero-crossing linear interpolation, realistic gyroscopic speed-dependence
+    for each mode
   weaknesses:
-  - Legend boxes in the upper-left partially overlap the Axial mode data line, reducing
-    clarity in that region
-  - X-axis extends to ~6500 RPM beyond the 6000 RPM data range, wasting canvas space
-    on the right
-  - The 1x engine order label near 5200 RPM slightly overlaps with the 2nd Torsional
-    mode curve
-  - Natural frequency mode curves could show more dramatic speed-dependent variation
-    to better illustrate gyroscopic effects
-  image_description: 'The plot displays a Campbell Diagram with the title "campbell-basic
-    · letsplot · pyplots.ai" centered at the top in bold black text, followed by a
-    gray subtitle explaining that red diamonds mark critical speeds. Five natural
-    frequency mode curves are rendered as thick colored lines: 1st Bending (dark blue),
-    1st Torsional (teal), 2nd Bending (amber/yellow), 2nd Torsional (purple), and
-    Axial (dark gray). Three dashed gray engine order lines (1×, 2×, 3×) extend diagonally
-    from the origin. Red diamond markers appear at each intersection of engine order
-    lines with natural frequency curves, surrounded by faint pinkish rectangular highlight
-    zones indicating resonance risk regions. A red italic annotation "← Axial × 3×
-    (2081 RPM)" points to the highest-frequency critical speed. The x-axis reads "Rotational
-    Speed (RPM)" (0 to ~6,500 with comma formatting), and the y-axis reads "Frequency
-    (Hz)" (0 to 120). Two separate legend boxes sit in the upper-left corner: "Engine
-    Order" showing dashed line styles, and "Natural Frequency" showing the five colored
-    modes. A small caption at the bottom right reads "Data: synthetic rotordynamic
-    model | Highlight zones indicate resonance risk regions." The background is a
-    clean light theme with subtle gray grid lines.'
+  - Annotation text ('Axial × 3×\n(~1950 RPM)') overlaps with mode curves near the
+    top of the chart — slightly awkward placement; consider a horizontal offset or
+    nudge_x/nudge_y to clear the surrounding lines
+  - EO labels ('1×', '2×', '3×') near the origin cluster at low RPM and are small
+    (geom_text size=4mm); increasing to size=5 would improve readability at mobile
+    widths
+  - Resonance risk zones use alpha=0.08 — barely perceptible in both renders; increasing
+    to alpha=0.12-0.15 would make them visible while keeping them subtle
+  - 'LM-02: layer_tooltips() is used but the tooltip format strings are straightforward;
+    more letsplot-distinctive techniques (e.g., geom_crossbar, stat_summary, or the
+    Kotlin-style theme composition) could raise library mastery further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Bold centered title "campbell-basic · python · letsplot · anyplot.ai" in dark #1A1A17 ink, clearly readable. Subtitle in muted gray below. Y-axis label "Frequency (Hz)" and X-axis label "Rotational Speed (RPM)" both dark and readable. Tick labels (0–6,000 RPM / 0–120 Hz) in INK_SOFT, readable. Caption at bottom in italic muted gray. Legend on right with two sections ("Engine Order", "Natural Frequency") clearly legible.
+      Data: Five mode curves in anyplot palette — 1st Bending (#009E73 brand green), 1st Torsional (#C475FD lavender), 2nd Bending (#4467A3 blue), 2nd Torsional (#BD8233 ochre), Axial (#2ABCCD cyan). Three EO lines in muted gray with dashed/longdash/dotdash styles. Red diamonds (#AE3030) mark critical speeds. Very faint reddish resonance risk zones surround each critical point. Small italic red annotation near ~1950 RPM/95 Hz. EO labels "1×", "2×", "3×" near origin.
+      Legibility verdict: PASS — all text readable; annotation and EO origin labels are small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title, subtitle, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0 range) — clearly visible against dark background. No dark-on-dark failures detected. Legend text light-colored and readable. Caption readable.
+      Data: Identical data colors to light render — 1st Bending still #009E73, 1st Torsional #C475FD, 2nd Bending #4467A3, 2nd Torsional #BD8233, Axial #2ABCCD. Red critical speed diamonds unchanged. EO lines rendered in lighter muted tone appropriate for dark surface. Resonance zones remain barely perceptible (alpha=0.08).
+      Legibility verdict: PASS — all chrome correctly flips to light-on-dark; data colors identical across themes.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -52,47 +58,57 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, subtitle=16, axis_title=22,
-          axis_text=18, legend_title=18, legend_text=16), all perfectly readable
+        comment: All font sizes explicitly set; good proportions; title fits ~70%
+          width; minor deduction for small EO origin labels and annotation text (geom_text
+          size=4mm)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend boxes in upper-left slightly overlap Axial mode line; 1x label
-          near right edge slightly overlaps 2nd Torsional curve
+        comment: Annotation text for highest-frequency critical speed slightly overlaps
+          mode curves; otherwise clean
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Mode lines thick (size=2.5), critical markers prominent (size=8 diamonds),
-          EO lines appropriately thinner (0.9)
+        comment: Mode curves and critical diamonds well-sized; resonance risk zones
+          very faint (alpha=0.08) — barely perceptible
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette; redundant encoding via linestyles for EO
+          lines and diamond shape for critical speeds
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Explicit colorblind-safe palette (blue, teal, amber, purple, gray);
-          no red-green confusion
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Legend boxes consume upper-left data region overlapping some data;
-          x-axis extends to 6500 beyond 6000 RPM data range
+        comment: 3200x1800 canvas confirmed (gate passed); good margins; legend well-placed;
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Rotational Speed (RPM) and Frequency (Hz) — descriptive with units
+        comment: 'Both axes descriptive with units: ''Rotational Speed (RPM)'' and
+          ''Frequency (Hz)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; semantic skip of position 5 (#AE3030) for
+          critical markers is a valid exception; backgrounds #FAF8F1/#1A1A17; both
+          renders theme-correct'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -100,22 +116,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, high-contrast light flavor, intentional
-          typography hierarchy, dual-legend styling — clearly above defaults
+        comment: 'Strong design: semantic palette, clear three-layer visual hierarchy
+          (EO lines < mode curves < critical markers), resonance zones, contextual
+          subtitle and caption — well above configured defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, minor grid removed, custom axis lines, generous margins;
-          minor legend-data overlap issue
+        comment: Panel border removed, subtle major-grid only, L-frame axis lines,
+          legend with appropriate box — good refinement; not perfectly minimal but
+          well-polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation highlights most dangerous critical speed, subtitle guides
-          interpretation, highlight zones emphasize risk regions
+        comment: 'Visual hierarchy guides the eye: red diamonds as focal point, faint
+          risk zones add context, annotation highlights most dangerous critical speed,
+          subtitle explains the key marker — clear story told'
     spec_compliance:
       score: 15
       max: 15
@@ -125,54 +144,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Campbell Diagram: natural frequency curves overlaid with
-          engine order excitation lines'
+        comment: 'Correct Campbell diagram: natural frequency curves + engine order
+          lines + critical speed markers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 5 mode curves, 3 EO lines, critical speed
-          markers, highlight zones, labeled modes and orders'
+        comment: 'All spec features present: 5 modes, 3 EO lines, labeled EO lines,
+          critical speed markers, resonance risk zones (optional)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Speed(RPM), Y=Frequency(Hz) correctly mapped; all data visible
+        comment: X=RPM, Y=Hz, full range 0-6000 RPM / 0-120 Hz
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match data
+        comment: Title 'campbell-basic · python · letsplot · anyplot.ai' correct;
+          two-section legend with correct labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 modes with varied speed-dependent behavior, multiple critical intersections;
-          modes could show more dramatic variation
+        comment: 'Shows all aspects: modes increasing and decreasing with speed, multiple
+          EO crossings, labeled intersections, risk zones'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic rotordynamic scenario with plausible mode names and frequency
-          ranges; neutral engineering context
+        comment: Real rotordynamic engineering scenario with realistic mode names
+          (1st Bending, 1st Torsional, 2nd Bending, 2nd Torsional, Axial)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-6000 RPM operating range, 25-105 Hz base frequencies, slight speed-dependent
-          variation — all physically plausible
+        comment: 25-120 Hz natural frequencies and 0-6000 RPM range realistic for
+          industrial rotating machinery; EO slopes physically correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,7 +200,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no functions or classes'
+        comment: 'Clean: imports → constants → data → plot layers → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,49 +212,52 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, lets_plot — all used
+        comment: os, numpy, pandas, lets_plot — all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Well-structured but somewhat verbose with multiple auxiliary DataFrames
+        comment: Clean Pythonic code; semantic comments explain design choices without
+          over-commenting
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale=3 and plot.html; correct output
-    library_features:
-      score: 8
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot grammar with aes, geom layers, scales, theme, flavor,
-          ggsize, ggsave
+        comment: Idiomatic ggplot grammar with multiple layers, scale_color_manual,
+          scale_linetype_manual, guides() with override_aes, proper theme tokens —
+          very good usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with chaining, flavor_high_contrast_light(),
-          guide_legend(override_aes=...) — somewhat distinctive
+        comment: layer_tooltips() with formatted lines is letsplot-specific; HTML
+          export; but doesn't exploit more advanced letsplot features like geom_crossbar,
+          stat_summary, or theme_grey variants
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
-  - grid-styling
   - alpha-blending
