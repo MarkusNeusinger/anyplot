@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: letsplot | Python 3.14
-Quality: pending | Created: 2026-05-28
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-28
 """
 
 import os
