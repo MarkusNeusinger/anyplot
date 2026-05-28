@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: area-basic
 created: '2026-05-28T05:57:58Z'
-updated: '2026-05-28T06:03:32Z'
+updated: '2026-05-28T06:15:15Z'
 generated_by: claude-sonnet
 workflow_run: 26557227664
 issue: 711
@@ -12,48 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Perfect palette compliance: first series uses #009E73, correct warm backgrounds
-    in both themes, chrome adapts correctly for light and dark'
-  - Correct idiomatic Makie area chart using band! for fill and lines! on top as separate
-    layers
-  - All font sizes explicitly set with balanced axis/tick label hierarchy; text readable
-    in both themes
-  - Top and right spines removed, subtle y-only grid at 0.15 opacity — clean visual
-    refinement
-  - Realistic CPU utilization scenario with natural diurnal pattern (two peaks over
-    48 hours), appropriate alpha=0.35 fill
-  - 'Full spec compliance: semi-transparent fill, gridlines, axis labels with units,
-    correct title format'
-  - 'Perfect code structure: KISS layout, Random.seed!(42) reproducibility, clean
-    imports'
+  - 'Perfect palette + theme compliance: brand green first series, warm backgrounds,
+    all chrome tokens correctly flipped between themes with no dark-on-dark or light-on-light
+    failures'
+  - 'Idiomatic Makie area chart: band! + lines! is the canonical clean pattern — no
+    manual polygon workarounds'
+  - 'Excellent data storytelling: diurnal CPU pattern with dashed day separator and
+    Day 1/Day 2 labels creates immediate narrative comprehension'
+  - All font sizes explicitly set with theme-adaptive color tokens throughout every
+    axis element
+  - Realistic neutral data context (CPU utilization) with proper seed for reproducibility
   weaknesses:
-  - 'DE-01/DE-03 LOW: The chart displays data correctly but without visual hierarchy
-    or storytelling emphasis. Consider adding subtle horizontal reference lines at
-    meaningful thresholds (e.g. a 50% utilization line labeled ''Load threshold''),
-    or use a slightly stronger alpha or color contrast at peaks to draw the viewer''s
-    eye to the busiest periods'
-  - 'DE-02 SPARSE GRID: Only one y-gridline at y=50 makes value estimation harder
-    in the 0-50 and 50-100 bands. Add gridlines at y=25 and y=75 (keeping the same
-    0.15 opacity) to improve value reading without cluttering'
-  - 'DE-03 STORY POTENTIAL: The data shows a clear diurnal workload pattern (two business-day
-    peaks). A short subtitle or annotation noting ''Day 1'' / ''Day 2'' regions, or
-    vertical separators at hours 24, would turn a raw chart into a narrative that
-    shows two work cycles'
+  - 'DE-01 has room to grow: design is clean and correct but stops short of publication-ready;
+    a gradient fill from #009E73 to a lighter tint (as the spec suggests) or a subtle
+    peak annotation would push it higher'
+  - 'LM-02 under-leveraged: uses band! and vlines! well but could exploit more Makie-exclusive
+    capabilities such as a gradient colormap in band fill'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Title "area-basic · julia · makie · anyplot.ai" in dark ink — fully readable. Y-axis label "CPU Utilization (%)" and x-axis label "Hour" in dark ink — clear. Tick labels (0, 10, 20… on x; 0, 50, 100 on y) in muted dark (#4A4A44) — all legible. Left and bottom spines in muted ink; top and right spines absent.
-      Data: Semi-transparent teal-green area fill (first palette position #009E73 at alpha≈0.35) with a solid brand-green line on top. One subtle horizontal gridline at y=50 (opacity 0.15). The area shows two peaks (~62% CPU) at hours 10–15 and 33–38 representing a diurnal workload pattern.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "area-basic · julia · makie · anyplot.ai" in dark ink, clearly readable. Y-axis label "CPU Utilization (%)" and x-axis label "Hour" in dark ink. Tick labels in dark gray (INK_SOFT). All text fully readable against light background.
+      Data: Single-series area fill in brand green #009E73 at alpha~0.35 (semi-transparent teal fill); solid #009E73 line on top at linewidth=2.5. Dashed vertical separator at hour 24 with "Day 1" / "Day 2" labels near top of chart. Subtle y-only horizontal grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly visible against the dark background. No dark-on-dark failures observed. Left and bottom spines in muted light color.
-      Data: Area fill and line color are identical to the light render (#009E73) — correct, only chrome flipped. The green is clearly visible and distinguishable on the dark background. One y-gridline at y=50 visible.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and axis labels rendered in light cream (#F0EFE8), tick labels in lighter gray (#B8B7B0). All text clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Area fill and line use identical brand green #009E73 — same hue as light render, appears deeper/more saturated against dark surface as expected. Day separator and labels visible. Brand green reads well on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -77,59 +66,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Area fill and line clearly visible; alpha=0.35 appropriate for single-series
-          area chart
+        comment: Area fill alpha=0.35 and linewidth=2.5 optimally visible for 48-point
+          line data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe brand green on both backgrounds; good contrast
+        comment: Single series brand green, CVD-safe, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed; good margin balance; plot fills canvas
-          well
+        comment: Plot fills canvas well; 0-100% fixed y-range appropriate for CPU
+          utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: CPU Utilization (%) with units; X: Hour — descriptive'
+        comment: Hour and CPU Utilization (%) are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; warm backgrounds correct in both themes; chrome
-          adaptive'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome tokens
+          theme-adaptive'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured — correct palette, spines removed, clean. Not publication-ready:
-          no visual hierarchy, no emphasis on peaks'
+        passed: true
+        comment: Clean and professional, above a plain default with intentional alpha
+          layering and day boundary annotation; not yet publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: spines removed, subtle y-grid at 0.15 opacity.
-          Only one gridline at y=50 limits value-reading precision'
+        passed: true
+        comment: Top/right spines removed, y-only subtle grid (0.15 opacity), custom
+          spine colors from ink tokens
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed but not interpreted. The diurnal story (two work-day
-          peaks) is implicit, not surfaced through visual emphasis or annotation
+        passed: true
+        comment: Diurnal CPU workload with dashed day separator and Day 1/Day 2 labels
+          creates clear narrative
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart with band! fill and lines! overlay
+        comment: Correct area chart using band! + lines! overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.35), gridlines, axis labels with units
+        comment: Semi-transparent fill, gridlines, clear axis labels with units
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hours on x, CPU% on y; full range visible
+        comment: X=Hour, Y=CPU Utilization (%); axes show full 0-100% range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'area-basic · julia · makie · anyplot.ai' exact match; no legend
-          (single series — correct)
+        comment: area-basic · julia · makie · anyplot.ai correct format; no legend
+          needed for single series
     data_quality:
       score: 15
       max: 15
@@ -168,21 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows variation across full range; diurnal peaks and troughs demonstrate
-          area chart's volume-emphasis purpose
+        comment: Shows full area fill, variation, realistic noise on deterministic
+          pattern; two complete diurnal cycles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CPU utilization over 48 hours — neutral, real-world, technology domain
+        comment: Hourly CPU utilization over 48 hours is highly recognizable and neutral;
+          diurnal workload peaks are true to life
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30% base + 28% amplitude realistic for server workloads; clamped
-          to 5-95% avoids impossible extremes
+        comment: CPU values 5-65% with realistic sinusoidal base load plus noise;
+          fixed 0-100% y-axis is correct domain
     code_quality:
       score: 10
       max: 10
@@ -192,7 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Data → Plot → Save structure
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,19 +194,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three used
+        comment: CairoMakie, Colors, Random all used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Julia/Makie; no over-engineering
+        comment: Idiomatic Julia vectorization (clamp.(...), broadcast), clean composition
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2; current API
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct
     library_mastery:
       score: 8
       max: 10
@@ -226,21 +216,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: band! is the idiomatic Makie area primitive; RGBAf color construction;
-          colorant literals; Axis attribute API used correctly
+        comment: band! for area fill, vlines! for vertical marker, RGBAf typed alpha
+          colors, ylims!/xlims! — expertly uses Makie high-level API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: band! is Makie-specific (vs fill_between in matplotlib); RGBAf/colorant
-          patterns are Julia-ecosystem specific. Doesn't push into uniquely Makie
-          territory (e.g. recipes, Observables, layout compositing)
-  verdict: REJECTED
+        passed: true
+        comment: band! (fills between y-lower and y-upper in one call) and RGBAf typed
+          color are Makie-distinctive; could go further with gradient band fill
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
