@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-28
+Quality: 91/100 | Updated: 2026-05-28
 """
 
 import os

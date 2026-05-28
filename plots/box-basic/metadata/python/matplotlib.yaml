@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:35:11Z'
-updated: '2026-05-28T13:34:56Z'
+updated: '2026-05-28T13:46:57Z'
 generated_by: claude-sonnet
 workflow_run: 26576794897
 issue: 689
@@ -12,126 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: all four box plot requirements (median, outliers, whiskers,
-    per-category colors) present and working.'
-  - Realistic neutral salary dataset with deliberate high and low outliers that genuinely
-    showcase the plot type.
-  - Anyplot palette used correctly in canonical order; theme chrome adapts cleanly
-    in both renders.
-  - pe.withStroke path effects on box edges are a polished matplotlib-specific touch.
-  - Data-driven annotations actively guide the reader to the key takeaways.
-  - 'Code quality is exemplary: seed set, modern API, clean linear structure.'
+  - Correct anyplot palette in canonical order with full theme-adaptive chrome in
+    both renders
+  - matplotlib.patheffects.withStroke on box patches adds distinctive depth without
+    visual noise
+  - Three strategic annotations create a clear data narrative; annotation color matches
+    data series for instant identification
+  - Deliberate outlier injection demonstrates feature coverage (varied spread, realistic
+    extremes)
+  - 'All spec requirements met: median line, outliers, 1.5xIQR whiskers, per-category
+    colors'
+  - Notched boxes and mean diamond markers add statistical depth beyond basic box
+    plot
   weaknesses:
-  - The Tightest spread IQR=$11K annotation text box (for Retail, index 4) is placed
-    at xytext=(tightest_idx - 0.8, median + 38) = (3.2, ~88), which lands directly
-    on top of the Healthcare box (center x=3, Q1~78-Q3~107). Move the text box to
-    the right of Retail or below it so it does not overlap any other series.
-  - The Widest spread annotation for Finance uses xytext=(widest_idx + 1.7, ...) which
-    places text between Finance and Healthcare columns; pulling it slightly higher
-    or further right would add breathing room.
-  - Red annotation text (#AE3030) on dark elevated background (#242420) passes but
-    has lower contrast than the other callouts; consider using INK token for annotation
-    text color in dark mode while keeping the box border in the series color.
+  - 'DE-01 not at publication level: path effects are subtle — could push further
+    with a more deliberate typographic hierarchy between annotation labels and axis
+    text'
+  - 'LM-02 gap: path effects and notched boxes are good but do not reach uniquely
+    matplotlib ceiling — could explore ax.bxp() with pre-computed statistics or custom
+    PathPatch for box shapes'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct.
-      Chrome: Title "box-basic · python · matplotlib · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Sector" (x) and "Annual Salary (USD thousands)" (y) in dark INK at 10pt, clearly readable. Tick labels in INK_SOFT (#4A4A44) at 8pt, clearly readable.
-      Data: Five notched box plots. Colors follow anyplot palette in canonical order: Technology #009E73 (green), Finance #C475FD (lavender), Healthcare #4467A3 (blue), Education #BD8233 (ochre), Retail #AE3030 (red). Alpha=0.75 on fills. Mean diamond markers (white fill, dark edge) visible in each box. Dashed whiskers. Outlier dots in INK_MUTED gray. Three annotation callouts with arrows.
-      Key issue: "Tightest spread IQR=$11K" annotation text box (red-bordered) is positioned at data coordinates (3.2, ~88), which overlaps the Healthcare box (centered at x=3, spanning Q1~78 to Q3~107). Arrow curves to Retail (x=5). This creates visual confusion about which series is annotated.
-      Legibility verdict: PASS (text readable) — annotation placement causes overlap issue (VQ-02)
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "box-basic · python · matplotlib · anyplot.ai" readable in dark ink; axis labels "Sector" and "Annual Salary (USD thousands)" clear at 10pt; tick labels at 8pt readable for both axes; all text dark-on-light with good contrast
+      Data: Five notched box plots — Technology #009E73, Finance #C475FD, Healthcare #4467A3, Education #BD8233, Retail #AE3030; dashed whiskers, mean diamond markers (PAGE_BG fill), muted outlier dots; three annotation callouts with palette-matching borders and arrow lines
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct.
-      Chrome: Title and axis labels in light #F0EFE8, clearly readable against dark background. Tick labels in #B8B7B0, clearly readable. No dark-on-dark failures detected.
-      Data: All five data series retain identical colors from light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030. Palette identity preserved. Elevated annotation boxes use #242420. Red annotation text (#AE3030) on dark elevated bg is readable with adequate (if reduced) contrast.
-      Legibility verdict: PASS — all text readable; annotation overlap with Healthcare box same as light render.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and axis labels render in light ink (#F0EFE8); tick labels in #B8B7B0; annotation boxes use elevated dark bg #242420 with palette-color borders; no dark-on-dark failures detected
+      Data: Identical data colors to light render — no hue shift between themes; annotation text for "Tightest spread" correctly uses INK (light) instead of matte-red for dark-mode readability; brand green #009E73 on Technology clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title=12pt, axes=10pt, ticks=8pt, annotations=8pt
-          bold). Readable in both themes. Minor deduction for 8pt annotation text
-          in busy callout area.
+        comment: All font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt,
+          annotations 8pt); balanced proportions; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Tightest spread annotation text box at xytext=(3.2, ~88) overlaps
-          the Healthcare box (x=3, Q1~78-Q3~107) in both renders. Arrow then points
-          to Retail. Creates reader confusion.
+        passed: true
+        comment: Three annotations at distinct x/y positions; no collisions with boxes,
+          whiskers, or each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box widths appropriate, outlier dots visible at alpha=0.65, mean
-          diamonds clearly visible, whisker caps defined.
+        comment: Boxes, whiskers, outliers, median lines, mean diamonds all clearly
+          visible; alpha=0.75 on boxes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; path-effect stroke improves edge definition
-          on muted hues.
+        comment: anyplot palette is CVD-safe; annotation colors provide redundant
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800. Margins well-balanced via subplots_adjust.
-          No content cut off.
+        comment: Good canvas utilization; explicit subplots_adjust; annotations stay
+          within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Annual Salary (USD thousands) with units. X-axis: Sector
-          appropriate.'
+        comment: Y-axis includes units (USD thousands); X-axis descriptive; title
+          format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Technology = #009E73. Positions 1-5 canonical order.
-          Light bg = #FAF8F1, dark bg = #1A1A17. Chrome tokens correct in both themes.'
+        comment: 'First series #009E73; canonical palette order positions 2-5; correct
+          backgrounds; full theme-adaptive chrome'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured-default baseline: notched boxes, path-effect depth,
-          diamond mean markers, dashed whiskers, semi-transparent fills, data-driven
-          callouts. Annotation positioning confusion prevents 6+.'
+        comment: Notched boxes, withStroke path effects on patches, mean diamond markers,
+          coordinated annotation color scheme — clearly above configured defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, INK_SOFT spine colors, y-axis-only grid
-          at alpha=0.15, x-axis tick marks suppressed, alpha=0.75 fills, dashed whisker
-          linestyle.
+        comment: Top/right spines removed; y-only grid alpha=0.15; x-tick marks suppressed;
+          ELEVATED_BG annotation boxes; multiple polished details
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three data-driven annotations guide reader to key insights (highest
-          median, widest/tightest spread). Mean markers add median-vs-mean comparison.
-          Annotation placement reduces payoff.
+        comment: Three targeted annotations highlight highest median, widest spread,
+          tightest spread; color-coded callouts tie insights to categories
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker plot with 5 categories.
+        comment: Correct box-and-whisker plot with notches
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line visible, outliers as dots, whiskers at 1.5xIQR, different
-          colors per category.
+        comment: Median line, outliers as points, 1.5xIQR whiskers, per-category colors
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: sectors, Y: salary values. All data visible.'
+        comment: Categories on x-axis, values on y-axis, all 5 sectors visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: box-basic · python · matplotlib · anyplot.ai — correct format. No
-          legend needed.
+        comment: Title format correct; no legend needed as categories are x-axis tick
+          labels
     data_quality:
       score: 15
       max: 15
@@ -171,23 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all box plot features: varying spreads, deliberate outliers
-          in Technology and Finance (including low-end Finance outlier), different
-          medians, notched confidence bands.'
+        comment: Varied distributions, explicit outlier injection, different medians
+          and IQRs across all categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual salary distributions across 5 common sectors — neutral, realistic,
-          immediately comprehensible.
+        comment: Annual salary by sector — real, neutral, comprehensible; US salary
+          ordering factually correct
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tech ~$115K, Finance ~$110K wide spread, Healthcare ~$94K, Education
-          ~$66K, Retail ~$50K — factually credible US salary ranges.
+        comment: Medians $50K-$115K plausible for US sectors; Finance outliers at
+          $270-290K realistic for senior roles
     code_quality:
       score: 10
       max: 10
@@ -197,61 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → style → save. No functions
-          or classes.'
+        comment: 'Flat script: imports -> tokens -> data -> plot -> style -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: patheffects, pyplot, numpy all used. os/sys used for theme env and
-          path shadowing fix.
+        comment: All three imports actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. strict=False zip appropriate. No fake interactivity.
+        comment: Clean Pythonic structure; strict=False in zip; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png. Uses tick_labels (correct API, not deprecated
-          labels).
+        comment: Saves as plot-{THEME}.png; uses modern tick_labels; no bbox_inches=tight
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: patch_artist=True for colored boxes, Axes-level method, all boxplot
-          property dicts used correctly. Modern tick_labels API.
+        comment: ax.boxplot() with full property customization; Axes-method API; patch_artist=True;
+          correct modern tick_labels parameter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: pe.withStroke path effects on box edges, notched confidence bands,
-          custom connectionstyle per-annotation arc are matplotlib-specific features.
-  verdict: REJECTED
+        comment: matplotlib.patheffects.withStroke on box patches is distinctive;
+          notched boxes and custom meanprops with diamond marker — solid matplotlib-specific
+          usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
