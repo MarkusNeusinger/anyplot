@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: heatmap-basic
 created: '2026-05-28T23:00:06Z'
-updated: '2026-05-28T23:06:45Z'
+updated: '2026-05-28T23:18:33Z'
 generated_by: claude-sonnet
 workflow_run: 26607060944
 issue: 691
@@ -12,126 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Perfect Imprint diverging palette compliance with theme-adaptive DIV_MID — zero-correlation
-    cells blend naturally with both light and dark backgrounds.
-  - 'Complete spec compliance: colorbar, cell annotations, diverging scale, logical
-    variable ordering.'
-  - 'Excellent code quality: deterministic, KISS structure, clean imports, modern
-    ggplot2 API throughout.'
-  - coord_fixed() correctly enforces square cells on the 2400x2400 canvas.
-  - Theme-adaptive chrome tokens applied consistently to all non-data elements (INK,
-    INK_SOFT, ELEVATED_BG, PAGE_BG).
+  - Hierarchical clustering (hclust + as.dist) orders variables to reveal meaningful
+    clusters — analytical value beyond mere display
+  - Theme-adaptive imprint_div midpoint (DIV_MID = PAGE_BG) makes near-zero correlation
+    tiles seamlessly blend with the background in both themes
+  - Strong correlation border highlighting (|r| > 0.7) creates clear visual hierarchy
+    without annotations
+  - Lower triangle masking eliminates redundancy; diagonal text uses INK_SOFT for
+    subtle de-emphasis
+  - Real mtcars data with an insight-naming subtitle elevates storytelling
+  - Both themes render correctly with full chrome token adaptation throughout
   weaknesses:
-  - 'DE-01 LOW: No design differentiation beyond correct palette/token usage — missing
-    variable reordering by correlation similarity (e.g., reorder axes using hclust),
-    no upper/lower triangle masking to reduce visual redundancy, and no diagonal treatment
-    to distinguish self-correlations.'
-  - 'DE-03 LOW: No visual storytelling — the MPG cluster (strong negative correlations
-    with Weight/Displacement/Cylinders/HP) is a compelling narrative that receives
-    no visual emphasis. Consider a subtitle or differentiating strong correlations
-    (|r| > 0.7) via alpha or border contrast.'
-  - 'LM-02 PARTIAL: Does not exploit ggplot2-distinctive hierarchical reordering of
-    axes (using hclust + reorder() to surface correlation clusters) or upper-triangle
-    masking, which would elevate the implementation.'
+  - Cell annotation text (geom_text size=3.0 approx 8.5pt) is slightly small for a
+    2400x2400 canvas — increasing to 3.5-4.0 would improve mobile readability without
+    crowding the tiles
+  - LM-02 could be elevated with a dendrogram sidebar (ggdendro) to make the hierarchical
+    clustering ordering self-explanatory
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct surface color, not pure white
-      Chrome: Title "heatmap-basic · r · ggplot2 · anyplot.ai" in bold near-black #1A1A17, ~65-70% canvas width, clearly readable. Y-axis labels (MPG, Cylinders, Displacement, Horsepower, Rear Axle, Weight, 1/4 Mile, Gears) in #4A4A44, clearly visible. X-axis labels rotated 35°, same color, legible. Legend title "r" in #1A1A17, legend tick labels in #4A4A44.
-      Data: 8x8 symmetric correlation matrix using imprint_div colormap (low=#AE3030, mid=#FAF8F1, high=#4467A3). Strong negative correlations (e.g., MPG-Weight=-0.87) in deep matte red; strong positive correlations (e.g., Cylinders-Displacement=0.90) in medium blue; near-zero correlations blend with background (theme-adaptive midpoint). Cell annotations show 2-decimal values in near-black INK text, clearly readable. First data series not applicable (continuous diverging scale).
-      Legibility verdict: PASS — all text elements clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "heatmap-basic · r · ggplot2 · anyplot.ai" bold size 12, dark INK (#1A1A17), readable. Subtitle size 9, INK_SOFT (#4A4A44), readable. X-axis tick labels rotated 35°, size 9, readable. Y-axis tick labels size 9, readable. All chrome elements clearly visible against light background.
+      Data: Lower-triangle correlation matrix of 8 mtcars variables. Diverging imprint_div colormap: matte red (#AE3030) for strong negative, near-white (#FAF8F1) midpoint for near-zero, blue (#4467A3) for strong positive. Cell annotations with 2-decimal values in dark INK text. Bold borders on |r| > 0.7 cells for visual emphasis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct surface color, not pure black
-      Chrome: Title in near-white #F0EFE8, clearly readable against dark background. Y-axis and X-axis labels in #B8B7B0 (INK_SOFT for dark theme), clearly visible. Legend background #242420 (ELEVATED_BG) with border. Legend text in #B8B7B0, legend title in #F0EFE8.
-      Data: Identical diverging color data as light render — red/blue hues unchanged between themes, confirming only chrome flips. Near-zero cells now approach near-black (theme-adaptive DIV_MID=#1A1A17), by design. Cell annotations in near-white #F0EFE8, readable against both colored tiles and near-black midpoint tiles.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle use INK (#F0EFE8) — near-white, clearly readable. Tick labels use INK_SOFT (#B8B7B0) — medium gray, readable against dark background. No dark-on-dark failures observed. Strong correlation borders use INK (near-white) in dark mode.
+      Data: Tile colors identical to light render — imprint_div data colors unchanged between themes. Theme-adaptive midpoint (DIV_MID = #1A1A17) makes near-zero tiles blend with dark background. Near-white cell text (#F0EFE8) readable on all tile colors across the diverging range.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 12pt bold, axis text 9pt, legend
-          8-10pt, cell annotations 3.5mm (~10pt). Well-proportioned, no overflow,
-          readable at desktop and mobile scale.'
+        comment: All font sizes explicitly set; well-proportioned. Cell annotation
+          text (size=3.0 ~8.5pt) slightly small for 2400x2400 canvas but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; cells are well-spaced; rotated x-axis labels
-          clear.
+        comment: No text overlap in either render. 35 degree x-axis rotation prevents
+          collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap tiles and cell annotations clearly visible; diverging
-          scale shows good dynamic range from -0.87 to 1.00.
+        comment: Tiles clearly visible across full diverging range. Both renders fully
+          legible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red-blue is generally CVD-safe; cell value annotations
-          provide redundant encoding.
+        comment: imprint_div is perceptually uniform and CVD-safe. INK-based cell
+          text adequate contrast on all tile colors.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for symmetric matrix; heatmap + legend
-          fills ~75% of canvas; balanced margins; no content cut off.
+        comment: Square 2400x2400 ideal for symmetric matrix. Good canvas utilization,
+          balanced margins, legend adjacent to plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Row/column tick labels serve as axis identifiers (variable names);
-          separate axis titles correctly omitted; legend labeled 'r' for Pearson correlation.
+        comment: Variable names as tick labels are informative. Subtitle adds insight.
+          Colorbar labeled r correctly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_div exactly: low=#AE3030, high=#4467A3, theme-adaptive
-          midpoint (#FAF8F1 light / #1A1A17 dark). Plot backgrounds correct. Chrome
-          tokens flip correctly.'
+        comment: imprint_div correctly applied (low=#AE3030, high=#4467A3, theme-adaptive
+          midpoint). Backgrounds and chrome tokens correct in both renders.
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Correctly configured with Imprint diverging palette and theme-adaptive
-          chrome. Polished but not publication-level: no variable reordering by correlation
-          distance, no upper/lower triangle optimization, no diagonal treatment.'
+        passed: true
+        comment: 'Clearly above defaults: hierarchical clustering, lower triangle,
+          bold correlation borders, insight subtitle. Strong design.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid blanked (ideal for heatmaps), panel border appropriately kept,
-          generous margins, theme-adaptive cell separator color. Could remove heavy
-          legend border or soften panel border further.
+        passed: true
+        comment: Grid removed, panel border kept, generous margins, ELEVATED_BG legend,
+          PAGE_BG tile gaps, 35 degree label rotation. Noticeably refined.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data is real and meaningful but no visual hierarchy draws attention
-          to key clusters (MPG-Weight-Displacement grouping). No subtitle, no alpha
-          emphasis on strong correlations.
+        passed: true
+        comment: Hierarchical clustering groups Weight/HP/Cyl/Disp vs MPG/Gears clusters.
+          Subtitle names the pattern. Strong correlation borders create emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap via geom_tile().
+        comment: Correct heatmap in matrix format using color intensity.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap for positive/negative values, cell value annotations,
-          colorbar legend, logical variable ordering — all present.
+        comment: Diverging colormap, cell annotations, colorbar legend, hierarchical
+          ordering all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to variable names; reversed Y factor ensures
-          diagonal runs top-left to bottom-right; fill maps to correlation value.
+        comment: x/y correctly assigned to variable names; all data in lower triangle
+          + diagonal.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'heatmap-basic · r · ggplot2 · anyplot.ai'; legend
-          label 'r' is correct.
+        comment: Title heatmap-basic · r · ggplot2 · anyplot.ai correct. Colorbar
+          labeled r.
     data_quality:
       score: 15
       max: 15
@@ -172,21 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: strong positive, strong negative, near-zero, and
-          perfect self-correlations on the diagonal.'
+        comment: Shows strong positive, strong negative, moderate and weak correlations.
+          Full range of heatmap type represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real mtcars built-in dataset; neutral automotive/engineering domain.
+        comment: Real mtcars dataset with genuine vehicle performance metrics. Neutral
+          scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values deterministically computed via cor(); all values
-          in [-1, 1]; factually correct.
+        comment: Correlation values bounded [-1,1] by definition. Specific values
+          are real mtcars data.
     code_quality:
       score: 10
       max: 10
@@ -196,35 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens -> data -> reshape -> plot -> save. No helper functions
-          or classes.'
+        comment: 'Linear flow: imports -> tokens -> data -> reshape -> factor ordering
+          -> plot -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: built-in dataset + cor(), no random generation needed.'
+        comment: Deterministic built-in dataset (mtcars), no stochastic component.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only three imports, all used: ggplot2 (plot), tidyr (pivot_longer),
-          ragg (device).'
+        comment: ggplot2, tidyr, ragg — all three used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean R idiom throughout; sprintf for formatting; factor levels for
-          axis order; no over-engineering.
+        comment: Clean and idiomatic. Index-based lower triangle filtering concise.
+          Separate geom layers for diagonal vs off-diagonal text purposeful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf; modern linewidth= API; ragg::agg_png
-          device.
+        comment: ggsave with sprintf plot-%s.png, ragg::agg_png, 6x6 in, 400dpi correct.
     library_mastery:
       score: 8
       max: 10
@@ -234,28 +223,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Exemplary ggplot2: geom_tile + geom_text layering, aes(fill=) mapping,
-          scale_fill_gradient2 with midpoint, coord_fixed() for square cells, tidyr
-          pivot_longer for wide-to-long reshape, factor levels for discrete axis ordering.'
+        comment: 'Expert ggplot2 grammar: geom_tile, scale_fill_gradient2, coord_fixed,
+          multiple geom layers with conditional subsetting, theme_minimal + theme()
+          override chain.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'Uses coord_fixed() (distinctively ggplot2) and scale_fill_gradient2(midpoint=0)
-          with theme-adaptive midpoint color. Missing: hierarchical axis reordering
-          via hclust, upper/lower triangle masking, or correlation circle pattern.'
-  verdict: REJECTED
+        passed: true
+        comment: Layer composition (multiple geom_tile + geom_text with conditional
+          data subsetting) and coord_fixed() are idiomatic ggplot2 patterns. Could
+          add ggdendro dendrogram for full distinction.
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - tidyr
+  dependencies: []
   techniques:
   - colorbar
   - annotations
+  - layer-composition
   patterns:
   - dataset-loading
   - wide-to-long
   dataprep:
   - correlation-matrix
+  - hierarchical-clustering
   styling:
   - custom-colormap
+  - edge-highlighting
