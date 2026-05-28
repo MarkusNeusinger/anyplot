@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:59:07Z'
-updated: '2026-05-28T03:43:54Z'
+updated: '2026-05-28T04:01:19Z'
 generated_by: claude-sonnet
 workflow_run: 26552665903
 issue: 4134
@@ -12,46 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Semantic zone shading: green/purple plotBands semantically mirror the bias/variance
-    color assignment — thoughtful design decision.'
-  - Total Error visually prioritized via 8px line width (vs 5px for other curves),
-    creating clear hierarchy without extra visual noise.
-  - Complete formula subtitle satisfies the spec requirement elegantly.
-  - Both themes fully theme-adaptive, with correct anyplot palette and background
-    tokens in every text, legend, and chrome element.
-  - plotBands + plotLines used idiomatically — best approach in Highcharts for zone
-    annotations.
+  - 'Full spec compliance: all 5 required features (4 curves, optimal marker, direct
+    labels, formula, zone shading) implemented correctly'
+  - 'Highcharts-native feature usage: plotBands, plotLines, and per-point dataLabels
+    are all distinctively Highcharts'
+  - 'Strong data storytelling: underfitting/overfitting zone shading with color-matched
+    labels, thicker Total Error line, and formula subtitle create clear visual narrative'
+  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, GRID)
+    correctly applied in both light and dark renders'
+  - Deterministic data with mathematically correct bias-variance tradeoff shapes
   weaknesses:
-  - 'AreaSeries with fill_opacity=0 used instead of LineSeries/SplineSeries for the
-    line-only curves. This causes the plotOptions.spline.marker: {enabled: false}
-    to not apply to these series, leaving default markers visible at all 100 data
-    points on Bias squared and Variance. Replace with proper series type or add marker:
-    {enabled: False} directly on each series.'
-  - 'No direct curve annotations: spec requires labeling each curve directly on the
-    plot. Add in-plot text labels near the right-side endpoints of each curve (e.g.,
-    using Highcharts dataLabels on the last point) instead of relying solely on the
-    legend.'
-  - 'All four chart spines remain visible. Remove the top and right axis lines by
-    setting lineWidth: 0 on the right-side and top axis for an L-shaped frame per
-    style guide defaults.'
+  - Bias² and Irreducible Error curve end-labels converge at x=10 (curves only ~0.033
+    units apart); at scaled/mobile sizes the labels appear to touch — shift the Bias²
+    label to x≈7 where separation is ~0.5 units
+  - _label_style helper function is a minor KISS violation; could be inlined as a
+    dict literal
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Title (66px bold, dark #1A1A17) clearly readable. Axis labels (56px dark) and tick labels (44px, secondary color) all legible. Subtitle formula visible. Zone labels ("Underfitting Zone" in #009E73, "Overfitting Zone" in #C475FD) readable against lightly shaded bands. "Optimal" label near vertical dashed line readable.
-      Data: Four curves — Bias² (#009E73, first series ✓), Variance (#C475FD), Irreducible Error (#4467A3, dotted), Total Error (#BD8233, thicker). Optimal point diamond (ochre) at approximately (2.2, 1.6). Shaded zones (green left, purple right).
+      Background: Warm off-white #FAF8F1 - correct anyplot light surface
+      Chrome: Title "curve-bias-variance-tradeoff · python · highcharts · anyplot.ai" bold at ~70% canvas width in dark ink; subtitle "Total Error = Bias² + Variance + Irreducible Error" in secondary ink; Y-axis "Prediction Error" and X-axis "Model Complexity" both in dark ink; tick labels in INK_SOFT; all readable. Zone labels "Underfitting Zone" (green) and "Overfitting Zone" (purple) below x-axis. Curve labels at right edge: Variance (purple), Total Error (orange), Bias² (green), Irreducible Error (blue) - last two are very close at the right edge but readable. "Optimal" dashed vertical line label visible.
+      Data: Bias²=#009E73 (brand green, first series, decreasing), Variance=#C475FD (lavender, increasing), Irreducible Error=#4467A3 (blue, dotted horizontal), Total Error=#BD8233 (ochre, U-shaped, thicker line), Optimal Point diamond in ochre. Zone shading with rgba fills.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title and axis labels flip to light cream (#F0EFE8). Tick labels in lighter secondary (#B8B7B0). All chrome readable against dark background. No dark-on-dark failures observed. Zone labels retain data-palette colors (#009E73 and #C475FD) which remain visible on dark shaded bands. Legend text in light color, legible.
-      Data: All four data colors identical to light render — brand green Bias², lavender Variance, blue dotted Irreducible Error, ochre thick Total Error. Diamond optimal point same ochre.
+      Background: Warm near-black #1A1A17 - correct anyplot dark surface
+      Chrome: Title, subtitle, axis labels, tick labels all render in light ink (#F0EFE8/#B8B7B0). Zone labels light. Curve labels light. Legend uses #242420 elevated background. Grid rgba(240,239,232,0.15). No dark-on-dark failures detected.
+      Data: Colors identical to light render - Bias² green, Variance lavender, Irreducible Error blue (dotted), Total Error ochre. Diamond marker visible. Zone shading visible with rgba fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,50 +52,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; all text readable in both themes.
-          Minor mobile readability concern at 400px scale (~8px equivalent).
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, curve labels 40px, zone labels 48px). Well-proportioned. Minor crowding
+          of Bias² and Irreducible Error labels at x=10 end of curves.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; legend, zone labels, and data well separated.
+        comment: No significant overlap. Bias² and Irreducible Error curve end-labels
+          have ~7px gap at full resolution but appear to touch at scaled sizes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four curves clearly visible with distinct colors; optimal diamond
-          marker readable; shaded zones subtle.
+        comment: All curves clearly visible. Total Error thicker (8px) for emphasis.
+          Diamond optimal point visible. Zone shading subtle but clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 distinct perceptual hue families; no red-green sole signal; CVD-safe
-          palette.
+        comment: CVD-safe anyplot palette. Redundant encoding via linestyle (dotted
+          irreducible) and line weight (thicker total error).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Generous margins, balanced whitespace;
-          legend on right does not crowd data.
+        comment: Good layout. Chart fills ~70-75% of canvas. Legend well-positioned
+          on right. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: Model Complexity, Y-axis: Prediction Error; both descriptive.'
+        comment: Model Complexity and Prediction Error are descriptive. Formula subtitle
+          adds useful context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; canonical anyplot order for series 2-4;
-          correct backgrounds; data colors identical across themes.'
+        comment: 'First series #009E73. Positions 1-4 in canonical order. Backgrounds
+          #FAF8F1/#1A1A17. All chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,25 +106,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic zone colors mirror series palette — thoughtful. Diamond
-          optimal-point marker and formula subtitle add polish. But no direct curve
-          annotations; all four spines visible.
+        comment: Above well-configured defaults. Zone shading, direct curve labels,
+          formula subtitle, diamond optimal marker, variable line weights show intentional
+          design. Not yet publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid subtly styled (0.15 opacity); margins explicit. All four Highcharts
-          spines visible — style guide recommends L-shaped frame.
+        comment: Subtle rgba grid, legend with elevated background and border, zone
+          shading with low-opacity fills, dotted irreducible line. Clear refinement
+          above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Total Error 60% thicker; optimal point marked; zone labels guide
-          viewer through bias-variance story.
+        comment: Zone shading guides viewer to tradeoff. Optimal point marked. Total
+          Error thicker for emphasis. Formula decomposition in subtitle. Clear visual
+          hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-curve spline chart with all four required curves.
+        comment: Four SplineSeries curves correctly represent bias-variance decomposition.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Optimal point, zones, formula all present. Missing: direct in-plot
-          curve annotations (spec says ''label each curve directly on the plot'';
-          uses legend only).'
+        comment: 'All 5 spec features: 4 curves with distinct colors/linestyles, optimal
+          marker (plotLine+diamond), direct curve labels (dataLabels), formula (subtitle),
+          zone shading (plotBands).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Model Complexity, Y = Prediction Error; full range displayed.
+        comment: X=model complexity, Y=prediction error. Bias² decreasing, Variance
+          increasing, Irreducible constant, Total Error U-shaped. All correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title exactly: curve-bias-variance-tradeoff · python · highcharts
-          · anyplot.ai. Legend labels match series.'
+        comment: Title is 'curve-bias-variance-tradeoff · python · highcharts · anyplot.ai'.
+          Legend labels match series.
     data_quality:
       score: 15
       max: 15
@@ -167,87 +166,85 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four curve types; optimal point; zone regions; formula — complete
-          coverage.
+        comment: 'All components shown: 4 curves, U-shaped total error, optimal point,
+          zone regions, formula decomposition.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Canonical ML education concept; neutral theoretical content.
+        comment: Canonical ML education scenario. Theoretical curves with correct
+          shapes. Not controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bias starts ~1.6, decays; Variance grows to ~3.1; minimum total error
-          ~1.6; irreducible noise 0.3 — proportionally sensible.
+        comment: bias_squared=2.0/(1+0.5x) and variance=0.1x^1.5 produce mathematically
+          correct tradeoff shapes. Irreducible=0.3 is a reasonable noise floor.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → chart config → series → export.'
+        comment: _label_style helper function is a minor KISS deviation but practical
+          (used 4 times).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic via mathematical formulas; no randomness.
+        comment: Fully deterministic (np.linspace, no randomness).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used.
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: AreaSeries with fill_opacity=0 used instead of LineSeries/SplineSeries.
-          plotOptions.spline.marker does not apply to AreaSeries, leaving default
-          markers on Bias² and Variance at all 100 data points.
+        passed: true
+        comment: Clean, well-organized. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Highcharts
-          API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of SplineSeries, ScatterSeries, chart.add_series(), to_js_literal(),
+          CDP viewport override, PIL size pinning.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart(container='container'), HighchartsOptions, add_series();
-          proper CDN download, CDP viewport override, PIL canvas pinning. AreaSeries
-          misuse is the idiomatic gap.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: plotBands with custom zone labels is a genuinely distinctive Highcharts
-          feature. plotLines for dashed optimal marker also leverages Highcharts-specific
-          axis annotations.
-  verdict: REJECTED
+        comment: 'Three distinctively Highcharts features: plotBands (zone shading),
+          plotLines (optimal marker), per-point dataLabels (direct curve labeling).'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - html-export
-  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
