@@ -1,154 +1,188 @@
 library: plotly
+language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:58:35Z'
-updated: '2026-01-26T20:01:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21371826048
+updated: '2026-05-28T03:44:45Z'
+generated_by: claude-sonnet
+workflow_run: 26552329072
 issue: 4134
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/plotly/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of all specification requirements including shaded zones,
-    formula annotation, and optimal point marker
-  - Clean, well-structured code following KISS principles with no unnecessary complexity
-  - Good use of Plotly-specific features like vrect for shaded regions and comprehensive
-    layout configuration
-  - Visually clear with distinct line styles (solid, dashed, dotted) enhancing curve
-    differentiation
-  - Proper title format and professional typography throughout
+  - 'Perfect spec compliance: all 4 curves, optimal complexity marker, formula annotation,
+    underfitting/overfitting zone shading all present'
+  - 'Semantically coherent color assignments: brand green for bias (underfitting concern),
+    matte red for total error (loss signal), muted for noise baseline — reinforces
+    the ML narrative'
+  - 'Both themes correctly token-threaded throughout: title, axis labels, tick labels,
+    legend, annotations all adapt; no dark-on-dark or light-on-light failures'
+  - Right-edge direct curve labels reduce legend lookup cognitive load, especially
+    useful for a dense 4-curve plot
+  - 'Idiomatic Plotly: add_vrect() for zones, add_vline() with annotation, xref=paper
+    for margin labels — showcases library-specific strengths'
   weaknesses:
-  - 'Grid-legend spacing: The legend slightly competes visually with the Overfitting
-    zone label'
-  - Color scheme could be more colorblind-accessible (consider a different yellow
-    shade)
+  - 'Minor crowding in upper-left: Underfitting (High Bias) annotation at (x=2.0,
+    y=0.83) is positioned tight against the legend box boundary and close to the optimal-complexity
+    vline — shifting to x~1.5 or lowering y to ~0.77 would give breathing room'
+  - Optimal Complexity vline annotation placed at annotation_position=bottom left
+    lands in a crowded bottom-left region where the vline, Bias squared curve, and
+    Irreducible Error line converge — consider top left or right-side placement for
+    that annotation
   image_description: |-
-    The plot displays a bias-variance tradeoff visualization with four distinct curves on a light background. The x-axis represents "Model Complexity" ranging from "Low" to "High" via "Medium", while the y-axis shows "Prediction Error" from 0 to 0.9. Four curves are rendered:
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "curve-bias-variance-tradeoff · python · plotly · anyplot.ai" centered fontsize=16 in dark ink — readable. Axis labels "Model Complexity" (x) and "Prediction Error" (y) in dark INK fontsize=12 — readable. Tick labels in INK_SOFT fontsize=10 — readable. Legend box in upper-left with elevated background — readable. Zone labels "Underfitting (High Bias)" in green and "Overfitting (High Variance)" in lavender — both readable. Formula annotation box with border — readable. Right-edge curve labels in respective hue colors — readable.
+      Data: Brand green #009E73 dashed for Bias² (first series, correctly assigned); lavender #C475FD dashed for Variance; muted gray dotted for Irreducible Error; matte red #AE3030 solid (thickest) for Total Error. Light green and lavender shaded zones. Red star marker at optimal complexity.
+      Legibility verdict: PASS
 
-    - Bias² (blue dashed): Starts high (~0.5) at low complexity and decreases asymptotically toward zero
-    - Variance (yellow/gold dashed): Starts near zero at low complexity and increases exponentially toward ~0.65 at high complexity
-    - Irreducible Error (gray dotted): A constant horizontal line at 0.1
-    - Total Error (solid red): U-shaped curve showing the sum, with minimum around complexity ~4.3
-
-    The plot features two shaded regions: light blue on the left labeled "Underfitting (High Bias)" and light yellow on the right labeled "Overfitting (High Variance)". A red star marker indicates the optimal complexity point where total error is minimized, with a vertical dashed red line extending down to the x-axis labeled "Optimal Complexity". A formula box displays "Total Error = Bias² + Variance + ε". The legend is positioned in the upper right corner with clear entries for all elements.
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title, axis labels, tick labels all render in light ink (#F0EFE8/#B8B7B0) against dark surface — readable. Legend box uses elevated dark background #242420 — readable. Formula annotation box also uses elevated dark background with light text — readable. Right-edge curve labels adapt via INK token — readable. No dark-on-dark failures observed.
+      Data: All data colors identical to light render — brand green, lavender, muted gray, matte red remain constant across themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt, all perfectly
-          readable
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor crowding: Underfitting zone label close to legend box, Optimal Complexity
+          annotation crowded near x-axis.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, zone labels well-positioned
+        comment: No hard overlaps. Upper-left region (legend + zone label + vline)
+          has visual density that slightly crowds readability.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths (3-5) are excellent for curve visibility, star marker
-          is prominent
+        comment: All curves distinguished by color + dash style; star marker size=16
+          prominent; line widths 3-5px appropriate for 100-point smooth curves.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow/red/gray are distinguishable; blue-yellow could be slightly
-          better for some colorblind types
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Model Complexity and Prediction Error are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 4 distinct hue families; green/red pair differentiated by dash style
+          and thickness; CVD-safe anyplot palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800; margins l=80, r=120, t=80, b=80 with r enlarged
+          for right-edge labels; proportional axis labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.1), legend well-placed but slightly overlaps
-          with zone annotation
+        comment: Model Complexity and Prediction Error are descriptive; title matches
+          required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bias²=#009E73 (first series); Variance=#C475FD (pos 2); Total Error=#AE3030
+          (pos 5, semantic loss); Irreducible Error=INK_MUTED (semantic noise anchor);
+          backgrounds #FAF8F1/#1A1A17.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color assignments, zone shading, star marker, formula annotation
+          with border, right-edge curve labels. Well above default of 4.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines hidden (showline=False), grid opacity 0.15, elevated legend/formula
+          backgrounds, INK_SOFT for tick labels. Solid refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Zone shading explains underfitting/overfitting, optimal complexity
+          anchored, formula ties decomposition, color semantics reinforce ML narrative.
+          Clear focal point.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart showing theoretical curves
+        comment: Correct multi-curve theoretical visualization; all 4 curves present.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Complexity on X, error components on Y correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: All 4 curves present, optimal point marked, formula included, shaded
-          zones added
-      - id: SC-04
-        name: Data Range
+        comment: Optimal complexity marked; curves labeled directly; formula included;
+          underfitting/overfitting zones shaded.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show complete data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: model complexity; Y: prediction error; correct mathematical shapes
+          (bias decreasing, variance increasing, U-shaped total).'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately labels all curve types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format curve-bias-variance-tradeoff · plotly · pyplots.ai
+        comment: Title matches required format; legend labels Bias², Variance, Irreducible
+          Error, Total Error, Optimal Complexity.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all key aspects: decreasing bias, increasing variance, U-shaped
-          total, constant noise; could show slightly more dramatic U-shape'
+        comment: All 4 required curves; optimal marker, formula, zones all present.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: ML education context, neutral and appropriate theoretical visualization
+        comment: ML education concept, neutral theoretical data, no controversial
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Error values 0-0.9 are sensible; optimal point positioning is good
+        comment: Error values 0-0.9 reasonable; complexity range 0.5-10 sensible;
+          optimal point at ~2.8 mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -158,51 +192,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → figure → layout → save structure
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic mathematical functions (no random seed needed)
+        comment: Fully deterministic (mathematical functions only, no RNG).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clear variable naming, well-organized trace -> annotation -> layout
+          flow.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions
-    library_features:
-      score: 3
-      max: 5
+        comment: plot-{THEME}.png + plot-{THEME}.html; explicit width/height/scale;
+          autosize=False.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Plotly-specific features like add_vrect, add_vline, add_annotation;
-          generates both PNG and interactive HTML
+        comment: add_vrect(), add_vline(), xref=paper for right-edge labels, update_layout()
+          comprehensive theming — all idiomatic Plotly patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: add_vrect() unique to Plotly, add_vline() with integrated annotation,
+          xref=paper coordinate system, HTML export — distinctively Plotly capabilities
+          leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
