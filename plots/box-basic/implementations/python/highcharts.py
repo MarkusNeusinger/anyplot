@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
-Library: highcharts 1.10.3 | Python 3.14
-Quality: 92/100 | Updated: 2026-05-28
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-28
 """
 
 import os
