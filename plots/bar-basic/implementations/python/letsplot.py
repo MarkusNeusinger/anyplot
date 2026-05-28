@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-basic: Basic Bar Chart
-Library: letsplot 4.8.2 | Python 3.14
-Quality: pending | Created: 2026-05-28
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-28
 """
 
 import os
