@@ -173,7 +173,7 @@ The bar is strict: AR-09 requires evidence that pixels were *removed*, not merel
 | VQ-04 | Color Accessibility | 2 | 2=colorblind-safe contrast, 1=ok, 0=red-green only |
 | VQ-05 | Layout & Canvas | 4 | 4=perfect, 2=ok, 0=cut-off |
 | VQ-06 | Axis Labels & Title | 2 | 2=with units, 1=descriptive, 0=x/y |
-| VQ-07 | Palette Compliance | 2 | 2=correct Imprint palette / Imprint continuous cmap + theme-correct chrome, 1=partial, 0=non-compliant |
+| VQ-07 | Palette Compliance | 2 | 2=correct Imprint palette / `imprint_seq` or `imprint_div` cmap + theme-correct chrome, 1=partial, 0=non-compliant |
 
 ### VQ-01: Text Legibility (8 Points)
 

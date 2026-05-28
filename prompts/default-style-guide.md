@@ -36,7 +36,7 @@ anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical 
 
 ### Categorical Palette (Imprint, canonical order)
 
-8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 4 is the deferred semantic-red anchor.
+8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 5 is the deferred semantic-red anchor (matte red `#AE3030`) — reached intentionally for bad/loss/error roles, not by ordinal position in every chart.
 
 | # | Hex | Name | Hue family | Role |
 |---|-----|------|------------|------|
@@ -127,7 +127,7 @@ Recommended stroke: 1px solid in the chart's ink color (`palette.neutral(theme)`
 
 ### Colorblind Safety
 
-The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 4 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position 2 of every chart. This keeps red as a free semantic resource rather than spending it on slot 2. Never override the palette with custom categorical hexes unless you have a documented reason.
+The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 5 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position in every chart. This keeps red as a free semantic resource rather than spending it as a default categorical color. Never override the palette with custom categorical hexes unless you have a documented reason.
 
 ---
 
