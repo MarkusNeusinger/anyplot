@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-basic
 created: '2025-12-23T00:48:16Z'
-updated: '2026-05-28T22:57:36Z'
+updated: '2026-05-28T23:09:00Z'
 generated_by: claude-sonnet
 workflow_run: 26606648178
 issue: 691
@@ -12,99 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Correct imprint_div diverging colormap with theme-adaptive midpoint (#FAF8F1
-    light / #1A1A17 dark)'
-  - 'Multi-layer Altair composition: mark_rect base + filtered highlight layer for
-    strong correlations + mark_text annotations'
-  - 'Adaptive cell annotation colors: white on strong-hue cells in light mode, fully
-    white in dark mode'
-  - Bold borders on |r| >= 0.7 cells provide visual hierarchy guiding attention to
-    meaningful relationships
-  - Realistic weather correlation data with injected relationships, seeded for reproducibility
-  - Square 2400x2400 canvas — appropriate for symmetric correlation matrix
-  - 'Clean minimalist layout: grid disabled, no spines, generous padding, corner radius
-    on cells'
+  - Perfect spec compliance — all four required features (diverging colormap, cell
+    annotations, colorbar, logical ordering) present and working
+  - 'Theme adaptation is thorough: backgrounds, chrome tokens, legend fill, and cell
+    text color all correctly flip between light and dark themes'
+  - Adaptive cell annotation text (white for saturated cells, ink for neutral cells)
+    via alt.when().then().otherwise() is sophisticated and idiomatic
+  - Bold-border highlight layer for |r|>=0.7 cells provides effective visual hierarchy
+    and data storytelling without clutter
+  - Physically-motivated weather data with injected correlations is realistic, non-controversial,
+    and covers the full -1 to +1 correlation range
   weaknesses:
-  - 'Near-zero correlation cells blend into the plot background in dark mode (midpoint
-    #1A1A17 = background color) — white cell borders maintain grid visibility but
-    the continuous color gradient loses differentiating power around r≈0'
-  - Diagonal column headers at fontSize=10 are small at thumbnail scale (~400px mobile);
-    could be 11–12 to improve legibility at small sizes
-  - DE-02/DE-03 are functional but not exceptional — the highlight border feature
-    is the main design element; further polish (e.g. subtle inner shadow on cells,
-    refined legend positioning) could lift the visual refinement score
+  - 'DE-01 (6/8): Design is polished but not publication-quality — a direct callout
+    annotation at the dominant correlation pair (Visibility-Cloud Cover r=-0.85) or
+    varied cell opacity for foreground/background separation would push to 8/8'
+  - 'DE-03 (4/6): Visual hierarchy is good but could be more impactful — highlight
+    the single most extreme off-diagonal cell more distinctly than the other high-correlation
+    cells'
+  - 'LM-02 (4/5): Altair distinctive features are strong but could push further with
+    transform_calculate, selection-based interactive highlighting, or alt.condition
+    patterns'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "heatmap-basic · python · altair · anyplot.ai" in bold dark ink, clearly readable. Two subtitle lines in muted gray are legible. Y-axis title "Weather Variable" is visible. Diagonal column headers at fontSize=10 rotated -45° are readable. Row labels on left are clear. Colorbar legend ("Correlation") with title and tick labels (−1.0 to 1.0) are fully visible.
-      Data: 8×8 correlation matrix rendered in imprint_div diverging colormap — deep red (#AE3030) for strong negative correlations, near-white/cream (#FAF8F1) for near-zero, deep blue (#4467A3) for strong positive. Cell value annotations in bold white on strongly-colored cells and dark ink on near-neutral cells. Bold dark borders highlight cells with |r| >= 0.7 (including diagonal 1.00 cells and Visibility–Cloud Cover at -0.85).
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "heatmap-basic · python · altair · anyplot.ai" in bold dark ink, two subtitle lines in muted INK_MUTED — all readable. Y-axis title "Weather Variable" in dark INK. X-axis tick labels rotated -45° at top, Y-axis tick labels left — all in INK_SOFT, clearly readable. Legend title "Correlation" and tick labels (-1, -0.5, 0, +0.5, +1) readable in dark ink.
+      Data: Cells colored with imprint_div (matte-red #AE3030 → off-white midpoint → blue #4467A3). First data series / colormap anchors use the correct Imprint palette endpoints. Cell text annotations in white for darkly-colored cells, dark ink for near-neutral cells — all readable. Bold borders on |r|>=0.7 cells visible.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, warm near-black.
-      Chrome: Title in bold warm white (#F0EFE8), clearly visible. Subtitle text in muted light gray, legible. Y-axis title and row labels in light gray — readable. Diagonal column headers in light gray — readable. Colorbar legend title and tick labels in light text — visible. No dark-on-dark failures observed.
-      Data: Colors are identical to light render at the extremes — deep red for −0.85, deep blue for +1.00, matching the light render. Near-zero cells render in very dark brown/near-black that blends with the near-black background (expected: dark midpoint = #1A1A17). White cell borders maintain grid structure; bold white text annotations make all values readable regardless. Bold highlight borders are slightly harder to distinguish in dark mode (INK border on dark background has lower contrast) but are visible.
-      Legibility verdict: PASS — all chrome text is light on dark; cell annotations are white throughout in dark mode so remain readable; no critical dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title, subtitle, axis labels, tick labels, legend text all appear in light #F0EFE8 / #B8B7B0 tones against the dark background. No dark-on-dark failures — all chrome elements are clearly readable. Bold borders on high-correlation cells use light INK token, clearly visible.
+      Data: Data colors (red-to-blue diverging scale) are identical to light render — only chrome flips. Cell text annotations are uniformly light #F0EFE8 in dark theme (unconditional light color in dark branch). Legend gradient identical to light render.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, annotations all readable in both themes. Diagonal
-          column headers at fontSize=10 are slightly small at mobile scale.
+        comment: All font sizes explicitly set (title=14, subtitle=11, axis labels=12,
+          cell annotations=11, legend=12/11); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Annotations fit within cells. Legend
-          positioned outside chart area.
+        comment: No overlapping text; rotated x-axis tick labels at top well-spaced;
+          cell annotations fit without crowding
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Strong/weak correlations clearly visible. Near-zero cells blend
-          into dark background (imprint_div midpoint = #1A1A17 by design) but white
-          borders maintain grid structure and text annotations remain readable.'
+        comment: All 64 cells clearly visible; annotation values readable; bold border
+          overlay effective
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_div is CVD-safe; text annotations provide redundant encoding.
+        comment: Imprint diverging colormap (red-blue) CVD-safe; adaptive cell text
+          color ensures annotation contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Square 2400x2400 correct for symmetric matrix.
-          Good proportions, generous padding, nothing clipped.
+        comment: Square 2400x2400 appropriate for symmetric matrix; heatmap ~65% canvas
+          with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis title 'Weather Variable' descriptive. Title follows spec format.
-          No x-axis title needed (variable names serve as labels).
+        comment: Y-axis titled 'Weather Variable'; descriptive variable names; no
+          units needed for dimensionless correlations
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div diverging cmap (#AE3030 → theme-adaptive midpoint →
-          #4467A3) correctly used for signed correlation data. Backgrounds #FAF8F1
-          / #1A1A17 correct. Chrome is theme-adaptive.'
+        comment: 'imprint_div colormap (#AE3030 -> theme-adaptive midpoint -> #4467A3);
+          backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -112,23 +110,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom imprint_div palette, bold border highlights for |r|>=0.7,
-          corner radius, theme-adaptive annotation colors — well above generic defaults.
+        comment: Custom Imprint diverging colormap, adaptive cell text color via alt.when(),
+          bold-border highlight, rounded corners, top-oriented x-axis — clearly above
+          defaults but not quite publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Grid disabled, no spines (strokeWidth=0), clean padding. Good but
-          no exceptional refinement beyond basics.
+        comment: Grid removed, chart frame stroke=0, white cell separators, elevated
+          legend background, soft axis tokens — highly polished
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Bold borders create visual hierarchy guiding attention to strong
-          relationships. Two-line subtitle explains interpretation. Beyond default
-          but not deeply narrative.
+        comment: Subtitle names dominant link (r≈-0.85 Visibility-Cloud Cover), bold
+          borders create visual hierarchy — good storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct matrix heatmap using mark_rect.
+        comment: Correct matrix heatmap with color-intensity encoding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap (positive/negative values), cell value annotations,
-          colorbar legend, logical ordering.
+        comment: Diverging colormap, cell annotations, colorbar, logical ordering
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=column vars, Y=row vars, color=correlation value. All 8 variables
-          visible on both axes.
+        comment: x=Column:N, y=Row:N, color=value:Q; all 64 cells correctly rendered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-basic · python · altair · anyplot.ai' correct. Legend
-          title 'Correlation' with gradient bar.
+        comment: Title exactly 'heatmap-basic · python · altair · anyplot.ai'; legend
+          titled 'Correlation' with -1 to +1 range
     data_quality:
       score: 15
       max: 15
@@ -169,23 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8x8 = 64-cell symmetric correlation matrix. Diagonal = 1.0. All heatmap
-          features demonstrated including diverging colors and value annotations.
+        comment: 'Full range: strong positive, strong negative, near-zero, diagonal
+          self-correlation — all aspects demonstrated'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weather variables with scientifically plausible correlations (Temperature~Humidity,
-          Cloud Cover~Precipitation, Visibility inversely~Cloud Cover). Neutral scientific
-          domain.
+        comment: Weather variable correlation matrix — neutral, real-world scientific
+          scenario with physically realistic injected correlations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation domain [-1, 1] is correct. Values span the full range
-          with realistic distribution.
+        comment: np.corrcoef constrains to [-1,1] by construction; seed=42; correlation
+          magnitudes match meteorological expectations
     code_quality:
       score: 10
       max: 10
@@ -195,64 +191,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear: path fix → imports → theme tokens → data → chart → save/pad;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, PIL. os/sys for path and
-          theme handling.'
+        comment: All imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear layer composition structure. sys.path fix is necessary for
-          self-import prevention.
+        comment: Clean Altair chain API; alt.when().then().otherwise() idiomatic;
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API
-          used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; Altair 6.1.0 API correct
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Layer composition (+), proper encoding types (N/Q), alt.Axis/Title/Legend/Scale
-          correctly used. alt.when().then().otherwise() is idiomatic Altair 5+ conditional
-          encoding.
+        comment: 'Expert Altair usage: layer composition, proper N/Q encoding, configure_*
+          theming, transform_filter, orient=top axis'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.when().then().otherwise() conditional color encoding, transform_filter
-          on highlight layer, multi-layer composition with shared data — all distinctively
-          Altair.
+        comment: alt.when().then().otherwise() conditional encoding (Altair 5+ API),
+          layer composition, transform_filter, top-oriented axis — strong but one
+          step below ceiling
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
+  - colorbar
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
+  - matrix-construction
   dataprep:
   - correlation-matrix
   styling:

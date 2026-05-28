@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-28
+Quality: 94/100 | Updated: 2026-05-28
 """
 
 import os
