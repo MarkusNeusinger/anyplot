@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-basic
 created: '2025-12-23T00:22:58Z'
-updated: '2026-05-28T09:37:55Z'
+updated: '2026-05-28T09:48:10Z'
 generated_by: claude-sonnet
 workflow_run: 26566436346
 issue: 612
@@ -16,38 +16,35 @@ quality_score: 88
 review:
   strengths:
   - 'Effective highlight strategy: brand green (#009E73) for the leader bar (Organic
-    Search), muted gray for all others — viewer attention is directed instantly to
-    the key insight'
+    Search), muted gray for all others — viewer attention directed instantly to the
+    key insight'
+  - Bars sorted descending for immediate rank readability — strongest channel is leftmost,
+    weakest rightmost
   - 'Strong data storytelling: descriptive two-line title with embedded insight +
-    star annotation showing exact value and percentage share creates a self-contained
-    narrative'
-  - 'Both themes fully adapted: warm off-white (#FAF8F1) light / near-black (#1A1A17)
-    dark backgrounds with correct token-driven text and chrome in each render'
+    annotation showing exact value and percentage share creates a self-contained narrative'
+  - 'Both themes fully adapted: warm off-white / near-black backgrounds with correct
+    token-driven text and chrome in each render'
   - All seven value labels visible above bars, enabling precise reading alongside
-    visual comparison — no overlap or clipping
-  - Realistic, neutral dataset (Q4 2025 website traffic by channel, 7 categories)
-    fits the spec use-case example perfectly and shows meaningful value range
+    visual comparison
   weaknesses:
-  - Bars are not sorted by value — presenting channels in original insertion order
-    rather than descending visit count misses an opportunity to strengthen ranking
-    readability and data storytelling
   - Dotted/dashed y-grid lines (pygal default) instead of subtle solid thin lines
-    preferred by the style guide
-  - Standard pygal border/spine chrome retained — no spine removal; the chart frame
-    makes it look slightly less refined than it could be
-  - 'DE-01 borderline: beyond the color-highlight choice the visual design stays close
-    to pygal defaults (flat bars, standard font weight, no further typographic hierarchy)'
+    preferred by the style guide — set grid stroke style if exposed by pygal Style
+    API
+  - Standard pygal spine/border frame retained — removing or reducing the chart border
+    would improve visual refinement
+  - value_font_size=36 is the smallest text in the hierarchy; bumping to 42 would
+    improve legibility at mobile widths
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Two-line title ("bar-basic · python · pygal · anyplot.ai" / "Organic Search leads Q4 2025 traffic at 28% share") in dark ink, clearly readable. Y-axis label "Visits (Q4 2025)" vertical on left, X-axis label "Channel" horizontal below — both clearly legible. Tick labels on both axes (channel names on x, "0" to "150,000" on y) are well-sized and readable. Subtle dotted horizontal y-grid lines.
-      Data: Seven vertical bars. First bar (Organic Search) in brand green (#009E73), remaining six bars in muted gray (INK_MUTED token). Value labels above each bar. Star annotation "★ 142,500 (28% of total)" on the leader bar. Rounded bar corners add polish.
+      Chrome: Two-line title ("bar-basic · python · pygal · anyplot.ai" / "Organic Search leads Q4 2025 traffic at 28% share") in dark ink, clearly readable. Y-axis label "Visits (Q4 2025)" vertical on left, X-axis label "Channel" horizontal below — both legible and proportionate. Tick labels well-sized on both axes (channel names on x, 0 to 150,000 on y). Subtle dotted horizontal y-grid lines.
+      Data: Seven vertical bars sorted descending. First bar (Organic Search) in brand green (#009E73), remaining six in muted gray (INK_MUTED token #6B6A63). Value labels above each bar. Custom annotation with exact count and percentage share on the leader bar. Rounded bar corners.
       Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
       Chrome: Same two-line title rendered in light ink (#F0EFE8), clearly visible against dark background. Axis labels and tick labels all in light text, fully legible. No dark-on-dark failures observed.
-      Data: Data colors are identical to the light render — brand green Organic Search bar, muted gray for the other six bars. The muted gray appears slightly lighter (as expected from the INK_MUTED dark-theme token #A8A79F), maintaining visual distinctness against the dark background. Value labels and annotations all readable.
+      Data: Data colors are identical to the light render — brand green Organic Search bar, muted gray (#A8A79F dark-theme token) for the other six bars. The lighter gray on dark background maintains visual distinctness. Value labels and annotation readable.
       Legibility verdict: PASS — all text is clearly readable against the near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
@@ -59,21 +56,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text explicitly sized and readable in both themes. Minor: star
-          annotation slightly crowded near the 150,000 gridline in light render.'
+        comment: 'All text explicitly sized and readable in both themes. Minor: value
+          labels at value_font_size=36 are the smallest element; marginally small
+          above shorter bars at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No overlapping elements in either render; sorted descending prevents
+          crowded category labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: All 7 bars clearly visible in both themes; green leader bar stands
-          out immediately.
+          out immediately against muted peers.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -85,20 +84,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas, good proportions, no clipping or overflow.
+        comment: 3200x1800 canvas confirmed (gate passed), good proportions, no clipping
+          or overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in required format, axis labels descriptive with units.
+        comment: Title in required format with descriptive prefix; axis labels descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series brand green #009E73; non-highlighted bars use semantic
-          muted anchor; backgrounds correct for both themes.'
+          muted anchor correctly; backgrounds correct for both themes.'
     design_excellence:
       score: 12
       max: 20
@@ -109,23 +110,24 @@ review:
         max: 8
         passed: true
         comment: Deliberate highlight encoding (green leader + gray others) plus two-line
-          title with embedded insight elevates above generic defaults; otherwise standard
-          pygal styling.
+          title with embedded insight elevates above generic defaults; rounded bars
+          add refinement. Otherwise standard pygal styling.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean layout, value labels well-placed; dotted y-grid (not preferred
-          solid), standard pygal spine/border retained.
+        comment: Clean layout, y-axis grid only, no legend for single-series (correct).
+          Dotted y-grid lines (style guide prefers solid). Standard pygal spine/border
+          frame retained.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point (green leader bar), descriptive subtitle states
-          the insight, star annotation adds percentage context. Bars not sorted by
-          value — ranking structure could be stronger.
+        comment: Clear focal point on leader bar (green vs gray), sorted descending
+          for immediate rank readability, descriptive subtitle states key insight,
+          annotation adds percentage context.
     spec_compliance:
       score: 15
       max: 15
@@ -141,14 +143,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Value labels, highlight encoding, consistent bar widths, adequate
-          spacing — all per spec.
+        comment: Value labels above bars, highlight encoding, consistent bar widths,
+          adequate spacing between bars.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, numeric visits on y-axis, all 7 categories
+        comment: Categories on x-axis, numeric visits on y-axis; all 7 categories
           shown.
       - id: SC-04
         name: Title & Legend
@@ -173,15 +175,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Q4 2025 website traffic by channel — realistic, neutral, no controversial
-          framing.
+        comment: Q4 2025 website traffic by acquisition channel — realistic, neutral,
+          no controversial framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 18,900–142,500 are realistic traffic figures; 7 categories
-          in the 3-15 recommended range.
+        comment: Values 18,900-142,500 are realistic traffic figures; 7 categories
+          in the 3-15 recommended range; y-axis ceiling 150,000 appropriate.
     code_quality:
       score: 10
       max: 10
@@ -209,7 +211,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: sys.path workaround documented; lambda formatters used cleanly.
+        comment: sys.path workaround commented; sorted_pairs pattern clean; lambda
+          formatters used appropriately.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -226,14 +229,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Style object correctly configured; per-bar dict API used; y_labels,
-          x_labels, add() all idiomatic pygal usage.
+        comment: Style object correctly configured; per-bar dict API used for individual
+          color overrides; y_labels, x_labels, add() all idiomatic pygal usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-bar formatter lambda with star character, rounded_bars parameter,
+        comment: Per-bar formatter lambda for highlighted bar, rounded_bars parameter,
           truncate_label, both PNG and interactive HTML export — clearly pygal-specific
           features.
   verdict: APPROVED
