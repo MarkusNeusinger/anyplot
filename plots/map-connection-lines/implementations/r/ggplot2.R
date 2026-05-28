@@ -6,6 +6,7 @@
 library(ggplot2)
 library(dplyr)
 library(ragg)
+if (!requireNamespace("maps", quietly = TRUE)) install.packages("maps", repos = "https://cran.r-project.org")
 
 set.seed(42)
 
@@ -64,7 +65,7 @@ airports$hjust <- c(1.1, 1.1, -0.1, -0.1,
                     -0.1,  1.1,  1.1, -0.1)
 airports$vjust <- c(0.5, 1.5, 0.5, 0.5,
                     0.5, 0.5, 1.5, 0.5,
-                    0.5, 1.5, 1.5, 1.5)
+                    0.5, 1.5, -0.5, 1.5)
 
 # Routes: international flight connections with annual passengers (millions)
 routes_raw <- data.frame(
@@ -124,7 +125,17 @@ graticule_v <- data.frame(lon = seq(-180, 180, by = 60))
 title_str  <- "Global Flight Routes · map-connection-lines · r · ggplot2 · anyplot.ai"
 title_size <- max(round(12 * 67 / nchar(title_str)), 8L)
 
+world_map <- map_data("world")
+
 p <- ggplot() +
+  # Base map: country borders for geographic context
+  geom_polygon(
+    data    = world_map,
+    mapping = aes(x = long, y = lat, group = group),
+    fill    = INK_MUTED,
+    color   = NA,
+    alpha   = 0.15
+  ) +
   # Horizontal graticule lines
   geom_hline(
     data    = graticule_h,
@@ -165,7 +176,7 @@ p <- ggplot() +
     mapping = aes(x = lon, y = lat, label = city,
                   hjust = hjust, vjust = vjust),
     color   = INK_SOFT,
-    size    = 2.0,
+    size    = 2.4,
     fontface = "plain"
   ) +
   scale_color_gradient(
