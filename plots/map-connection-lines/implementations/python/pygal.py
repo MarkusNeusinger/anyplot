@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-28
@@ -131,7 +131,8 @@ coastlines = [
     [(173, -41), (175, -37), (178, -38), (177, -44), (170, -46), (168, -45), (173, -41)],
 ]
 
-# Plot
+# Plot - colors ordered: routes first (pos 0-2 = brand green/lavender/blue),
+# then airports (pos 3), then coastlines last (pos 4 = INK_MUTED)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=OCEAN_BG,
@@ -141,11 +142,11 @@ custom_style = Style(
     guide_stroke_color=GRID_COLOR,
     guide_stroke_dasharray="2,6",
     colors=(
-        INK_MUTED,  # Coastlines (geographic context)
-        "#009E73",  # Routes < 2M (anyplot palette pos 1)
-        "#C475FD",  # Routes 2-3M (anyplot palette pos 2)
-        "#4467A3",  # Routes > 3M (anyplot palette pos 3)
+        "#009E73",  # Routes < 2M (anyplot palette pos 0 — brand green, first series)
+        "#C475FD",  # Routes 2-3M (anyplot palette pos 1)
+        "#4467A3",  # Routes > 3M (anyplot palette pos 2)
         INK,  # Airports (theme-adaptive endpoint markers)
+        INK_MUTED,  # Coastlines (geographic context, drawn last)
     ),
     opacity=0.65,
     opacity_hover=0.95,
@@ -181,124 +182,80 @@ chart = pygal.XY(
     margin_bottom=130,
 )
 
-# Coastlines as geographic context
+n_segments = 20
+
+
+def build_bezier_curves(route_list):
+    curves = []
+    for route in route_list:
+        o_lat, o_lon = route["origin_lat"], route["origin_lon"]
+        d_lat, d_lon = route["dest_lat"], route["dest_lon"]
+        label = f"{route['origin_city']} → {route['dest_city']}: {route['volume']}K passengers"
+        mid_lon = (o_lon + d_lon) / 2
+        mid_lat = (o_lat + d_lat) / 2
+        dx, dy = d_lon - o_lon, d_lat - o_lat
+        length = np.sqrt(dx * dx + dy * dy)
+        if length > 0:
+            perp_x, perp_y = -dy / length, dx / length
+            # Pacific-crossing routes: flip perpendicular to arc northward over the pole
+            if abs(d_lon - o_lon) > 150:
+                perp_x, perp_y = -perp_x, -perp_y
+            offset_amount = min(length * 0.15, 20.0)
+            ctrl_lon = mid_lon + perp_x * offset_amount
+            ctrl_lat = mid_lat + perp_y * offset_amount
+        else:
+            ctrl_lon, ctrl_lat = mid_lon, mid_lat
+        for i in range(n_segments + 1):
+            t = i / n_segments
+            lon = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
+            lat = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
+            curves.append({"value": (lon, lat), "label": label})
+        curves.append({"value": (None, None)})
+    return curves
+
+
+low_routes = [r for r in route_data if r["volume"] < 2000]
+medium_routes = [r for r in route_data if 2000 <= r["volume"] <= 3000]
+high_routes = [r for r in route_data if r["volume"] > 3000]
+
+# Routes added first — occupy palette positions 0-2 (brand green, lavender, blue)
+chart.add(
+    "Routes < 2M",
+    build_bezier_curves(low_routes),
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 3, "linecap": "round", "opacity": 0.55},
+)
+chart.add(
+    "Routes 2-3M",
+    build_bezier_curves(medium_routes),
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 5, "linecap": "round", "opacity": 0.60},
+)
+chart.add(
+    "Routes > 3M",
+    build_bezier_curves(high_routes),
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 8, "linecap": "round", "opacity": 0.65},
+)
+
+# Airport markers — palette position 3 (INK, theme-adaptive)
+airport_points = []
+for code, (lat, lon, city) in airports.items():
+    airport_points.append({"value": (lon, lat), "label": f"{city} ({code})"})
+
+chart.add("Airports", airport_points, stroke=False, dots_size=16)
+
+# Coastlines last — palette position 4 (INK_MUTED), low opacity so routes show through
 coastline_points = []
 for coastline in coastlines:
     for lon, lat in coastline:
         coastline_points.append({"value": (lon, lat), "label": "Coastline"})
     coastline_points.append({"value": (None, None)})
 
-chart.add("Coastlines", coastline_points, stroke=True, show_dots=False, stroke_style={"width": 2, "opacity": 0.45})
-
-# Route volume categories
-low_routes = [r for r in route_data if r["volume"] < 2000]
-medium_routes = [r for r in route_data if 2000 <= r["volume"] <= 3000]
-high_routes = [r for r in route_data if r["volume"] > 3000]
-
-n_segments = 20
-
-# Low volume routes (<2M passengers)
-low_curves = []
-for route in low_routes:
-    o_lat, o_lon = route["origin_lat"], route["origin_lon"]
-    d_lat, d_lon = route["dest_lat"], route["dest_lon"]
-    label = f"{route['origin_city']} → {route['dest_city']}: {route['volume']}K passengers"
-    mid_lon = (o_lon + d_lon) / 2
-    mid_lat = (o_lat + d_lat) / 2
-    dx, dy = d_lon - o_lon, d_lat - o_lat
-    length = np.sqrt(dx * dx + dy * dy)
-    if length > 0:
-        perp_x, perp_y = -dy / length, dx / length
-        offset_amount = min(length * 0.15, 20.0)
-        ctrl_lon = mid_lon + perp_x * offset_amount
-        ctrl_lat = mid_lat + perp_y * offset_amount
-    else:
-        ctrl_lon, ctrl_lat = mid_lon, mid_lat
-    for i in range(n_segments + 1):
-        t = i / n_segments
-        lon = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
-        lat = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
-        low_curves.append({"value": (lon, lat), "label": label})
-    low_curves.append({"value": (None, None)})
-
-chart.add(
-    "Routes < 2M",
-    low_curves,
-    stroke=True,
-    show_dots=False,
-    stroke_style={"width": 3, "linecap": "round", "opacity": 0.55},
-)
-
-# Medium volume routes (2-3M passengers)
-medium_curves = []
-for route in medium_routes:
-    o_lat, o_lon = route["origin_lat"], route["origin_lon"]
-    d_lat, d_lon = route["dest_lat"], route["dest_lon"]
-    label = f"{route['origin_city']} → {route['dest_city']}: {route['volume']}K passengers"
-    mid_lon = (o_lon + d_lon) / 2
-    mid_lat = (o_lat + d_lat) / 2
-    dx, dy = d_lon - o_lon, d_lat - o_lat
-    length = np.sqrt(dx * dx + dy * dy)
-    if length > 0:
-        perp_x, perp_y = -dy / length, dx / length
-        offset_amount = min(length * 0.15, 20.0)
-        ctrl_lon = mid_lon + perp_x * offset_amount
-        ctrl_lat = mid_lat + perp_y * offset_amount
-    else:
-        ctrl_lon, ctrl_lat = mid_lon, mid_lat
-    for i in range(n_segments + 1):
-        t = i / n_segments
-        lon = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
-        lat = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
-        medium_curves.append({"value": (lon, lat), "label": label})
-    medium_curves.append({"value": (None, None)})
-
-chart.add(
-    "Routes 2-3M",
-    medium_curves,
-    stroke=True,
-    show_dots=False,
-    stroke_style={"width": 5, "linecap": "round", "opacity": 0.60},
-)
-
-# High volume routes (>3M passengers)
-high_curves = []
-for route in high_routes:
-    o_lat, o_lon = route["origin_lat"], route["origin_lon"]
-    d_lat, d_lon = route["dest_lat"], route["dest_lon"]
-    label = f"{route['origin_city']} → {route['dest_city']}: {route['volume']}K passengers"
-    mid_lon = (o_lon + d_lon) / 2
-    mid_lat = (o_lat + d_lat) / 2
-    dx, dy = d_lon - o_lon, d_lat - o_lat
-    length = np.sqrt(dx * dx + dy * dy)
-    if length > 0:
-        perp_x, perp_y = -dy / length, dx / length
-        offset_amount = min(length * 0.15, 20.0)
-        ctrl_lon = mid_lon + perp_x * offset_amount
-        ctrl_lat = mid_lat + perp_y * offset_amount
-    else:
-        ctrl_lon, ctrl_lat = mid_lon, mid_lat
-    for i in range(n_segments + 1):
-        t = i / n_segments
-        lon = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
-        lat = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
-        high_curves.append({"value": (lon, lat), "label": label})
-    high_curves.append({"value": (None, None)})
-
-chart.add(
-    "Routes > 3M",
-    high_curves,
-    stroke=True,
-    show_dots=False,
-    stroke_style={"width": 8, "linecap": "round", "opacity": 0.65},
-)
-
-# Airport markers as endpoint layer
-airport_points = []
-for code, (lat, lon, city) in airports.items():
-    airport_points.append({"value": (lon, lat), "label": f"{city} ({code})"})
-
-chart.add("Airports", airport_points, stroke=False, dots_size=16)
+chart.add("Coastlines", coastline_points, stroke=True, show_dots=False, stroke_style={"width": 2, "opacity": 0.25})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
