@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' bar-basic: Basic Bar Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-05-28
 
 library(ggplot2)
 library(ragg)
@@ -24,23 +23,48 @@ departments <- c(
   "Engineering", "R&D", "Operations", "Sales",
   "Marketing", "Finance", "Design", "HR"
 )
-budgets <- c(48.5, 42.1, 35.7, 31.2, 22.8, 18.4, 14.9, 11.3)
+budgets     <- c(48.5, 42.1, 35.7, 31.2, 22.8, 18.4, 14.9, 11.3)
+mean_budget <- mean(budgets)
 
 df <- data.frame(
   department = factor(departments, levels = departments),
-  budget     = budgets
+  budget     = budgets,
+  highlight  = ifelse(departments == "Engineering", "top", "rest")
 )
 
 # Plot
 plot_title <- "bar-basic · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = department, y = budget)) +
-  geom_col(fill = ANYPLOT_PALETTE[1], width = 0.70) +
+p <- ggplot(df, aes(x = department, y = budget, fill = highlight)) +
+  geom_col(width = 0.70) +
+  geom_hline(
+    yintercept = mean_budget,
+    linetype   = "dashed",
+    color      = INK_SOFT,
+    linewidth  = 0.5
+  ) +
+  annotate(
+    "text",
+    x      = 5,
+    y      = mean_budget,
+    label  = sprintf("avg $%.1fM", mean_budget),
+    vjust  = -0.4,
+    hjust  = 0,
+    size   = 2.5,
+    color  = INK_SOFT
+  ) +
   geom_text(
     aes(label = sprintf("$%.1fM", budget)),
     vjust = -0.5,
     size  = 2.8,
     color = INK_SOFT
+  ) +
+  scale_fill_manual(
+    values = c(
+      "top"  = ANYPLOT_PALETTE[1],
+      "rest" = adjustcolor(ANYPLOT_PALETTE[1], alpha.f = 0.45)
+    ),
+    guide = "none"
   ) +
   scale_y_continuous(
     expand = expansion(mult = c(0, 0.18)),
@@ -62,6 +86,7 @@ p <- ggplot(df, aes(x = department, y = budget)) +
     axis.text          = element_text(color = INK_SOFT, size = 8),
     plot.title         = element_text(color = INK,      size = 12, face = "bold"),
     axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.5),
+    axis.line.y        = element_blank(),
     axis.ticks         = element_blank(),
     plot.margin        = margin(t = 20, r = 20, b = 10, l = 10, unit = "pt")
   )
