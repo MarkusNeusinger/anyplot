@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.area import LineSeries
 from highcharts_core.options.series.bubble import BubbleSeries
 from PIL import Image
 from selenium import webdriver
@@ -29,7 +30,6 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # anyplot categorical palette positions 1–5
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
-# Semi-transparent fills for bubble areas (alpha 0.65)
 PALETTE_RGBA = [
     "rgba(0,158,115,0.65)",
     "rgba(196,117,253,0.65)",
@@ -38,32 +38,39 @@ PALETTE_RGBA = [
     "rgba(174,48,48,0.65)",
 ]
 
-# Data - Tech companies by sector (Revenue vs Growth Rate, Market Cap as bubble size)
+# Data — 50 tech companies by sector (Revenue vs Growth Rate, Market Cap as bubble size)
 np.random.seed(42)
 
 sector_names = ["Cloud & SaaS", "E-Commerce", "Semiconductors", "Social & Media", "Fintech"]
-revenues = [
-    [12, 38, 68, 125, 200, 330, 500],
-    [25, 75, 155, 270, 420, 600],
-    [5, 45, 95, 170, 300, 460],
-    [8, 52, 110, 185, 245, 390, 550],
-    [15, 82, 140, 220],
+# Base revenues: 10 companies per sector spanning startups to mega-caps
+revenues_base = [
+    [8, 18, 35, 58, 85, 130, 195, 280, 380, 500],
+    [15, 40, 80, 140, 230, 340, 460, 560, 600, 650],
+    [5, 20, 50, 100, 165, 240, 340, 440, 540, 620],
+    [6, 25, 60, 110, 175, 240, 310, 400, 510, 610],
+    [10, 35, 70, 120, 190, 280, 370, 460, 540, 590],
 ]
+# Growth rates: high for small companies, declining with scale (inverse relationship)
 growth_base = [
-    [48, 35, 42, 28, 22, 15, 10],
-    [40, 30, 18, 14, 12, 6],
-    [52, 33, 25, 20, 16, 8],
-    [55, 38, 30, 22, 18, 12, 7],
-    [45, 28, 20, 15],
+    [54, 46, 40, 34, 28, 22, 17, 13, 10, 7],
+    [44, 35, 27, 20, 15, 11, 9, 7, 6, 4],
+    [58, 44, 35, 27, 20, 15, 12, 9, 7, 5],
+    [60, 50, 38, 30, 23, 17, 13, 10, 8, 5],
+    [48, 38, 30, 22, 16, 11, 9, 7, 6, 5],
 ]
 
-# Build series with realistic variation
 all_series = []
+all_rev_flat = []
+all_grw_flat = []
+
 for i, sector_name in enumerate(sector_names):
-    n = len(revenues[i])
-    rev = np.array(revenues[i], dtype=float) + np.random.uniform(-3, 3, n)
+    n = len(revenues_base[i])
+    rev = np.array(revenues_base[i], dtype=float) + np.random.uniform(-3, 3, n)
     grw = np.array(growth_base[i], dtype=float) + np.random.uniform(-2, 2, n)
     cap = rev * (1 + grw / 100) * np.random.uniform(2.5, 7, n)
+
+    all_rev_flat.extend(revenues_base[i])
+    all_grw_flat.extend(growth_base[i])
 
     data = [
         {"x": round(float(rev[j]), 1), "y": round(float(grw[j]), 1), "z": round(float(cap[j]), 1)} for j in range(n)
@@ -75,6 +82,23 @@ for i, sector_name in enumerate(sector_names):
     s.color = PALETTE_RGBA[i]
     s.marker = {"lineWidth": 2, "lineColor": ANYPLOT_PALETTE[i]}
     all_series.append(s)
+
+# Power regression across all sectors: growth = a * revenue^b (b < 0 → inverse)
+arr_x = np.array(all_rev_flat, dtype=float)
+arr_y = np.array(all_grw_flat, dtype=float)
+b_coef, log_a = np.polyfit(np.log(arr_x), np.log(arr_y), 1)
+a_coef = np.exp(log_a)
+trend_x = np.linspace(5, 660, 100)
+trend_y = np.clip(a_coef * trend_x**b_coef, 0, 70)
+
+trend = LineSeries()
+trend.name = "Trend: revenue ↑ → growth ↓"
+trend.data = list(zip(trend_x.tolist(), trend_y.tolist(), strict=True))
+trend.color = INK_SOFT
+trend.dash_style = "LongDash"
+trend.line_width = 4
+trend.enable_mouse_tracking = False
+trend.marker = {"enabled": False}
 
 # Create chart
 chart = Chart(container="container")
@@ -95,16 +119,14 @@ chart.options.title = {
 }
 
 chart.options.subtitle = {
-    "text": "Bubble size represents Market Capitalization — Tech companies by sector",
+    "text": "Bubble size = Market Cap — dashed trend confirms inverse revenue–growth relationship",
     "style": {"fontSize": "44px", "color": INK_SOFT},
 }
 
 chart.options.x_axis = {
     "title": {"text": "Revenue (Billion USD)", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
-    "gridLineWidth": 1,
-    "gridLineColor": GRID,
-    "gridLineDashStyle": "Dot",
+    "gridLineWidth": 0,
     "lineColor": INK_SOFT,
     "lineWidth": 1,
     "tickColor": INK_SOFT,
@@ -176,6 +198,7 @@ chart.options.plot_options = {
 
 for s in all_series:
     chart.add_series(s)
+chart.add_series(trend)
 
 # Download Highcharts JS files (inline required for headless Chrome file:// URLs)
 req = urllib.request.Request(
