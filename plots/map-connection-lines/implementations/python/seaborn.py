@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-21
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,241 +13,310 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 
 
-# Set seaborn style and context for large canvas
-sns.set_theme(style="whitegrid")
-sns.set_context("talk", font_scale=1.2)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Sample data: Major international flight routes
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = ANYPLOT_PALETTE[0]  # green — connection lines
+PORT_COLOR = ANYPLOT_PALETTE[2]  # blue — port markers
+
+LAND_COLOR = "#D8D3C4" if THEME == "light" else "#2D2D26"
+LAND_EDGE = INK_MUTED
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: Major global maritime shipping routes (cargo in million TEUs / year)
 np.random.seed(42)
+
+ports = pd.DataFrame(
+    {
+        "city": ["Shanghai", "Los Angeles", "Rotterdam", "Singapore", "Busan", "Dubai", "New York", "Mumbai"],
+        "lat": [31.2, 33.7, 51.9, 1.3, 35.1, 25.0, 40.7, 18.9],
+        "lon": [121.5, -118.3, 4.5, 103.8, 129.0, 55.1, -74.0, 72.8],
+    }
+)
 
 routes = pd.DataFrame(
     {
         "origin": [
-            "New York",
-            "London",
-            "Tokyo",
-            "Sydney",
-            "Dubai",
+            "Shanghai",
+            "Shanghai",
+            "Shanghai",
             "Singapore",
+            "Busan",
+            "Rotterdam",
+            "Singapore",
+            "Busan",
+            "Dubai",
             "Los Angeles",
-            "Paris",
-            "Hong Kong",
-            "Frankfurt",
-            "New York",
-            "London",
-            "Dubai",
-            "Singapore",
-            "Tokyo",
         ],
-        "origin_lat": [
-            40.7128,
-            51.5074,
-            35.6762,
-            -33.8688,
-            25.2048,
-            1.3521,
-            34.0522,
-            48.8566,
-            22.3193,
-            50.1109,
-            40.7128,
-            51.5074,
-            25.2048,
-            1.3521,
-            35.6762,
-        ],
-        "origin_lon": [
-            -74.0060,
-            -0.1278,
-            139.6503,
-            151.2093,
-            55.2708,
-            103.8198,
-            -118.2437,
-            2.3522,
-            114.1694,
-            8.6821,
-            -74.0060,
-            -0.1278,
-            55.2708,
-            103.8198,
-            139.6503,
-        ],
+        "origin_lat": [31.2, 31.2, 31.2, 1.3, 35.1, 51.9, 1.3, 35.1, 25.0, 33.7],
+        "origin_lon": [121.5, 121.5, 121.5, 103.8, 129.0, 4.5, 103.8, 129.0, 55.1, -118.3],
         "dest": [
-            "London",
-            "Dubai",
-            "Singapore",
-            "Hong Kong",
-            "Singapore",
-            "Sydney",
-            "Tokyo",
-            "New York",
-            "Tokyo",
-            "Dubai",
-            "Paris",
-            "New York",
-            "Sydney",
-            "Tokyo",
             "Los Angeles",
+            "Rotterdam",
+            "Singapore",
+            "Rotterdam",
+            "Los Angeles",
+            "New York",
+            "Dubai",
+            "Rotterdam",
+            "Rotterdam",
+            "Busan",
         ],
-        "dest_lat": [
-            51.5074,
-            25.2048,
-            1.3521,
-            22.3193,
-            1.3521,
-            -33.8688,
-            35.6762,
-            40.7128,
-            35.6762,
-            25.2048,
-            48.8566,
-            40.7128,
-            -33.8688,
-            35.6762,
-            34.0522,
-        ],
-        "dest_lon": [
-            -0.1278,
-            55.2708,
-            103.8198,
-            114.1694,
-            103.8198,
-            151.2093,
-            139.6503,
-            -74.0060,
-            139.6503,
-            55.2708,
-            2.3522,
-            -74.0060,
-            151.2093,
-            139.6503,
-            -118.2437,
-        ],
-        "passengers": [850, 620, 480, 390, 520, 410, 680, 790, 550, 430, 720, 810, 350, 490, 640],
+        "dest_lat": [33.7, 51.9, 1.3, 51.9, 33.7, 40.7, 25.0, 51.9, 51.9, 35.1],
+        "dest_lon": [-118.3, 4.5, 103.8, 4.5, -118.3, -74.0, 55.1, 4.5, 4.5, 129.0],
+        "cargo_mteu": [13.2, 10.5, 12.1, 8.4, 5.6, 3.9, 7.2, 3.5, 5.2, 4.1],
     }
 )
 
-# Normalize passenger counts for line width (2-8 range)
-routes["line_width"] = (
-    2
-    + (routes["passengers"] - routes["passengers"].min())
-    / (routes["passengers"].max() - routes["passengers"].min())
-    * 6
-)
+cargo_min = routes["cargo_mteu"].min()
+cargo_max = routes["cargo_mteu"].max()
+routes["line_width"] = 1.2 + (routes["cargo_mteu"] - cargo_min) / (cargo_max - cargo_min) * 5.0
 
-# Get unique airports for point plotting
-airports_origin = routes[["origin", "origin_lat", "origin_lon"]].rename(
-    columns={"origin": "city", "origin_lat": "lat", "origin_lon": "lon"}
-)
-airports_dest = routes[["dest", "dest_lat", "dest_lon"]].rename(
-    columns={"dest": "city", "dest_lat": "lat", "dest_lon": "lon"}
-)
-airports = pd.concat([airports_origin, airports_dest]).drop_duplicates(subset="city")
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Draw simple world map outline (simplified coastline representation)
-continents_x = [
-    [-170, -130, -120, -100, -80, -70, -60, -80, -100, -120, -140, -170, -170],  # North America
-    [-80, -70, -60, -40, -35, -40, -55, -70, -80, -80],  # South America
-    [-10, 0, 10, 30, 40, 30, 20, 10, 0, -10, -10],  # Europe
-    [-20, 0, 20, 40, 50, 40, 20, 0, -20, -20],  # Africa
-    [40, 60, 80, 100, 120, 140, 150, 140, 120, 100, 80, 60, 40, 40],  # Asia
-    [110, 120, 140, 150, 155, 150, 140, 120, 110, 110],  # Australia
+# Continent polygons (lon, lat) — simplified outlines for geographic context
+land_polygons = [
+    # North America
+    (
+        np.array([-170, -140, -125, -120, -117, -90, -83, -80, -77, -66, -65, -80, -100, -140, -170]),
+        np.array([72, 72, 50, 34, 22, 16, 10, 10, 8, 47, 52, 62, 68, 70, 72]),
+    ),
+    # South America
+    (
+        np.array([-80, -50, -35, -40, -43, -52, -65, -72, -75, -80]),
+        np.array([8, 0, -5, -22, -23, -33, -55, -48, -30, 8]),
+    ),
+    # Europe
+    (
+        np.array([-10, 5, 15, 22, 28, 36, 30, 20, 25, 28, 15, 5, -5, -10, -8, -10]),
+        np.array([36, 43, 38, 44, 41, 40, 46, 55, 64, 72, 70, 60, 56, 50, 44, 36]),
+    ),
+    # Africa
+    (
+        np.array([-18, -18, -12, 10, 25, 35, 43, 42, 36, 28, 18, 0, -18]),
+        np.array([15, 20, 30, 37, 32, 22, 12, 0, -18, -35, -35, 5, 15]),
+    ),
+    # Asia (simplified — main landmass tracing coast then Arctic closure)
+    (
+        np.array(
+            [
+                26,
+                36,
+                46,
+                58,
+                62,
+                68,
+                75,
+                85,
+                98,
+                103,
+                115,
+                122,
+                130,
+                142,
+                160,
+                168,
+                158,
+                148,
+                130,
+                120,
+                108,
+                90,
+                80,
+                60,
+                60,
+                70,
+                100,
+                140,
+                100,
+                70,
+                50,
+                36,
+                26,
+            ]
+        ),
+        np.array(
+            [
+                42,
+                36,
+                22,
+                18,
+                18,
+                22,
+                18,
+                8,
+                10,
+                1,
+                22,
+                38,
+                35,
+                45,
+                68,
+                62,
+                52,
+                50,
+                45,
+                42,
+                52,
+                58,
+                60,
+                65,
+                70,
+                72,
+                76,
+                72,
+                56,
+                50,
+                40,
+                40,
+                42,
+            ]
+        ),
+    ),
+    # Australia
+    (np.array([114, 116, 130, 142, 153, 148, 136, 122, 114]), np.array([-22, -34, -33, -38, -28, -18, -15, -18, -22])),
 ]
-continents_y = [
-    [70, 70, 50, 50, 30, 25, 30, 15, 15, 30, 50, 60, 70],  # North America
-    [10, 10, 0, -5, -20, -35, -55, -55, -20, 10],  # South America
-    [35, 40, 45, 50, 60, 70, 70, 60, 50, 45, 35],  # Europe
-    [35, 35, 30, 20, 0, -20, -35, -35, -20, 35],  # Africa
-    [45, 50, 55, 60, 70, 70, 55, 40, 20, 10, 20, 30, 35, 45],  # Asia
-    [-15, -15, -20, -25, -35, -40, -35, -30, -20, -15],  # Australia
-]
 
-for cx, cy in zip(continents_x, continents_y, strict=True):
-    ax.fill(cx, cy, color="#E8E8E8", edgecolor="#CCCCCC", linewidth=1, alpha=0.5, zorder=0)
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw connection lines with varying width based on passenger volume (inline curve calculation)
-n_points = 50
+# Draw continents
+for lons, lats in land_polygons:
+    ax.fill(lons, lats, color=LAND_COLOR, edgecolor=LAND_EDGE, linewidth=0.5, alpha=0.9, zorder=0)
+
+# Draw connection lines (Bezier arcs with antimeridian handling)
+n_points = 80
 t = np.linspace(0, 1, n_points)
 
 for _, row in routes.iterrows():
     lon1, lat1 = row["origin_lon"], row["origin_lat"]
     lon2, lat2 = row["dest_lon"], row["dest_lat"]
 
-    # Calculate midpoint and curve height based on distance
+    # Unwrap lon2 so the curve takes the shorter path (handles Pacific crossing)
+    diff = lon2 - lon1
+    if diff > 180:
+        lon2 -= 360
+    elif diff < -180:
+        lon2 += 360
+
     mid_lon = (lon1 + lon2) / 2
     mid_lat = (lat1 + lat2) / 2
     dist = np.sqrt((lon2 - lon1) ** 2 + (lat2 - lat1) ** 2)
-    curve_height = dist * 0.15
+    curve_height = dist * 0.13
 
-    # Quadratic Bezier curve interpolation
     lons = (1 - t) ** 2 * lon1 + 2 * (1 - t) * t * mid_lon + t**2 * lon2
     lats = (1 - t) ** 2 * lat1 + 2 * (1 - t) * t * (mid_lat + curve_height) + t**2 * lat2
 
-    ax.plot(lons, lats, color="#306998", linewidth=row["line_width"], alpha=0.4, solid_capstyle="round", zorder=1)
+    # Wrap to [-180, 180] and split at antimeridian discontinuities
+    lons_w = ((lons + 180) % 360) - 180
+    breaks = np.where(np.abs(np.diff(lons_w)) > 90)[0] + 1
+    starts = np.concatenate([[0], breaks])
+    ends = np.concatenate([breaks, [n_points]])
 
-# Plot airport points using seaborn scatterplot
+    for s, e in zip(starts, ends, strict=False):
+        if e > s + 1:
+            ax.plot(
+                lons_w[s:e],
+                lats[s:e],
+                color=BRAND,
+                linewidth=row["line_width"],
+                alpha=0.55,
+                solid_capstyle="round",
+                zorder=2,
+            )
+
+# Port markers via seaborn scatterplot
 sns.scatterplot(
-    data=airports,
+    data=ports,
     x="lon",
     y="lat",
-    s=400,
-    color="#FFD43B",
-    edgecolor="#306998",
-    linewidth=2,
+    s=220,
+    color=PORT_COLOR,
+    edgecolor=PAGE_BG,
+    linewidth=1.5,
     ax=ax,
-    zorder=3,
+    zorder=4,
     legend=False,
 )
 
-# Add city labels with custom offsets to avoid overlap in crowded regions
+# City labels with custom offsets to avoid overlap
 label_offsets = {
-    "London": (-45, 12),
-    "Paris": (-35, -18),
-    "Frankfurt": (10, 12),
-    "Hong Kong": (-55, -15),
-    "Tokyo": (10, 10),
-    "Singapore": (10, -15),
-    "Dubai": (10, 10),
-    "Sydney": (10, 10),
-    "New York": (10, 10),
-    "Los Angeles": (-70, -15),
+    "Shanghai": (8, -16),  # below dot to separate from Busan label
+    "Los Angeles": (-72, -16),
+    "Rotterdam": (-68, 8),
+    "Singapore": (8, -16),
+    "Busan": (8, 8),
+    "Dubai": (8, 8),
+    "New York": (-65, 8),
+    "Mumbai": (-55, -16),
 }
 
-for _, row in airports.iterrows():
-    offset = label_offsets.get(row["city"], (10, 10))
+for _, row in ports.iterrows():
+    dx, dy = label_offsets.get(row["city"], (8, 8))
     ax.annotate(
         row["city"],
         xy=(row["lon"], row["lat"]),
-        xytext=offset,
+        xytext=(dx, dy),
         textcoords="offset points",
-        fontsize=14,
+        fontsize=8,
         fontweight="bold",
-        color="#333333",
-        zorder=4,
+        color=INK,
+        zorder=5,
     )
 
-# Styling with degree units on axis labels
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
-ax.set_title("map-connection-lines · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
+# Style
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
-ax.set_aspect("equal", adjustable="box")
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.set_xlabel("Longitude (°)", fontsize=10, color=INK)
+ax.set_ylabel("Latitude (°)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for sp in ("left", "bottom"):
+    ax.spines[sp].set_color(INK_SOFT)
+ax.grid(True, alpha=0.12, linewidth=0.5, color=INK)
 
-# Add legend showing actual passenger ranges (not categorical)
-min_pass, max_pass = routes["passengers"].min(), routes["passengers"].max()
+title = "map-connection-lines · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+
+# Legend showing cargo volume scale
+min_vol, max_vol = routes["cargo_mteu"].min(), routes["cargo_mteu"].max()
+mid_vol = (min_vol + max_vol) / 2
 legend_elements = [
-    Line2D([0], [0], color="#306998", linewidth=2, alpha=0.6, label=f"{min_pass}k passengers"),
-    Line2D([0], [0], color="#306998", linewidth=5, alpha=0.6, label=f"{(min_pass + max_pass) // 2}k passengers"),
-    Line2D([0], [0], color="#306998", linewidth=8, alpha=0.6, label=f"{max_pass}k passengers"),
+    Line2D([0], [0], color=BRAND, linewidth=1.5, alpha=0.7, label=f"{min_vol:.1f}M TEU"),
+    Line2D([0], [0], color=BRAND, linewidth=3.5, alpha=0.7, label=f"{mid_vol:.1f}M TEU"),
+    Line2D([0], [0], color=BRAND, linewidth=6.0, alpha=0.7, label=f"{max_vol:.1f}M TEU"),
 ]
-ax.legend(handles=legend_elements, loc="lower left", fontsize=14, title="Annual Passengers", title_fontsize=16)
+ax.legend(
+    handles=legend_elements,
+    loc="lower left",
+    fontsize=8,
+    title="Annual Cargo",
+    title_fontsize=8,
+    framealpha=0.9,
+    edgecolor=INK_SOFT,
+)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
