@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: campbell-basic
 created: '2026-02-15T21:07:43Z'
-updated: '2026-05-28T15:37:41Z'
+updated: '2026-05-28T15:52:56Z'
 generated_by: claude-sonnet
 workflow_run: 26584134677
 issue: 4241
@@ -12,43 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Semantic color use: red (#AE3030) for critical speeds with palette position 5
-    correctly skipped for mode curves is the right design decision'
-  - Operating zone plotBands with 'Idle' and 'Normal Operating Range' labels add genuine
-    engineering context without cluttering
-  - Critical speed detection using sign-change interpolation with fractional position
-    is correct and produces accurate intersection coordinates
-  - Both theme renders use full adaptive tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
-    INK_MUTED, GRID) throughout all chart options
-  - EO data label filter with endpoint-only display avoids label clutter while still
-    annotating the engine order lines
+  - 'Excellent spec coverage: all required Campbell Diagram elements correctly implemented
+    (5 natural frequency modes, 3 engine order lines, critical speed zero-crossing
+    detection, operating zone bands)'
+  - 'Technically accurate physics modeling: gyroscopic effects (some modes increase,
+    others decrease with speed), correct RPM-to-Hz conversion (slope = order/60) for
+    engine order lines'
+  - 'Strong semantic color treatment: brand green (#009E73) for 1st Bending, matte
+    red (position 5) reserved for critical speed markers — intentional departure from
+    ordinal order justified by danger semantics'
+  - 'Dual critical speed visualization: red diamond scatter markers + dotted vertical
+    plot lines + semi-transparent plot bands combine for layered resonance danger
+    emphasis'
+  - 'Clean visual hierarchy: solid thick colored curves (modes) vs. dashed gray EO
+    lines vs. diamond markers creates three immediately distinguishable element classes'
+  - 'Both light and dark renders pass theme-readability with correct backgrounds (#FAF8F1
+    / #1A1A17), theme-adaptive chrome tokens correctly threaded through all text/grid/legend
+    elements'
+  - PIL safety net correctly pins canvas to exactly 3200x1800 in case of Chrome rounding
+    drift
   weaknesses:
-  - X-axis label 'Rotational Speed (RPM)' at 56px sits close to the bottom canvas
-    edge — increase marginBottom from 130 to 160 or spacingBottom from 40 to 60 to
-    give the label more breathing room
-  - Highcharts default full-frame (all four spines) is present; removing top and right
-    axis lines would significantly improve visual refinement per style guide
-  - The '1x' EO endpoint label (at 6000 RPM, ~100 Hz) may be obscured by or overlap
-    with the floating legend box — adjust label_x offset or filter anchor to ensure
-    visibility
+  - Legend itemStyle fontSize is 36px, below the recommended 44px for highcharts at
+    3200x1800 — at mobile scaling (~400px width) the legend text could drop below
+    a readable size; increase legend itemStyle fontSize to 44px
+  - The 1x EO data label (aligned right with x=-60 offset) is placed at the end of
+    the 1x line (~6000 RPM, 100 Hz), which may overlap with or be obscured by the
+    floating legend box at the right side — consider shifting the legend x to -160
+    or using a label_y offset to avoid the overlap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
-      Chrome: Title "campbell-basic · python · highcharts · anyplot.ai" in bold dark ink, clearly readable. Subtitle "Natural Frequencies vs Rotational Speed — Turbine Rotor" in smaller muted ink. Y-axis label "Frequency (Hz)" and X-axis label "Rotational Speed (RPM)" clearly labeled with units. Tick labels in INK_SOFT dark gray. Legend box with elevated warm-white background (#FFFDF6) listing all 9 series — all labels readable. X-axis label sits tight at bottom edge but all pixels visible (not clipped).
-      Data: Five mode curves in anyplot canonical order — 1st Bending #009E73 (brand green), 2nd Bending lavender, 1st Torsional blue, Axial ochre, 2nd Torsional cyan. Three dashed gray EO lines from origin. Red diamond markers for critical speeds. Green and blue plot band shading for operating zones.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "campbell-basic · python · highcharts · anyplot.ai" in dark bold text, clearly readable. Subtitle "Natural Frequencies vs Rotational Speed — Turbine Rotor" in muted dark text, readable. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in dark text with appropriate weight. Tick labels (0-6000 RPM, 0-120 Hz) in secondary dark text, clearly readable. Legend box top-right with white-ish background, dark border, readable entries for all 9 series.
+      Data: Five natural frequency curves — brand green (#009E73, 1st Bending), lavender (#C475FD, 2nd Bending), blue (#4467A3, 1st Torsional), ochre (#BD8233, Axial), cyan (#2ABCCD, 2nd Torsional). Three dashed gray engine order lines (1x, 2x, 3x EO). Red diamond critical speed markers (#AE3030) at intersections. Light green "Idle" band (0-800 RPM) and light blue "Normal Operating Range" band (3000-5000 RPM). "3x" data label visible at top of 3x EO line. Dotted red vertical lines at critical speed positions.
+      Legibility verdict: PASS — all text readable on warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
-      Chrome: Title and all labels use light cream text (#F0EFE8 primary, #B8B7B0 secondary) — all clearly readable against dark background. No dark-on-dark failures detected. Legend uses elevated dark background (#242420) with border. Grid lines are subtle white-dotted, unobtrusive. Tick labels and axis labels all legible.
-      Data: All five mode colors are identical to light render — brand green 1st Bending visibly distinct on dark surface, all other palette colors retain identity. Critical speed diamonds in same red. EO dashed lines in light muted gray. Plot band fills still visible as subtle dark tints.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. Subtitle in muted light text, readable. Axis labels in light text, clearly readable. Tick labels in secondary light text, readable. Legend box with dark elevated background (#242420) and light text — all entries readable. No dark-on-dark failures detected.
+      Data: All five natural frequency curves in identical colors to light render — brand green (1st Bending), lavender (2nd Bending), blue (1st Torsional), ochre (Axial), cyan (2nd Torsional). Same dashed gray EO lines and red diamond critical speed markers. Operating zone bands still subtly visible. Data colors are identical to light render — only chrome (background, text, grid, legend frame) has flipped.
+      Legibility verdict: PASS — all text readable against warm near-black background, theme tokens correctly applied throughout.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,51 +64,60 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; X-axis label tight at bottom edge
-          (all pixels visible, not clipped)
+        comment: 'All font sizes explicitly set (title 66px, axis labels 56px, tick
+          labels 44px). Minor: legend itemStyle at 36px is below the 44px recommendation
+          — could affect mobile readability. Both themes fully readable.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No major overlaps; minor crowding risk near legend/plot-band labels
-          in upper-right area
+        comment: No visible text overlaps in either render. Operating zone labels
+          (Idle, Normal Operating Range) are well-separated from EO data labels and
+          critical speed markers.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All mode curves, EO lines, and critical speed diamonds clearly distinguishable
+        comment: Five mode curves with distinct colors clearly visible. Dashed gray
+          EO lines distinguishable from solid mode curves. Red diamond critical speed
+          markers clearly visible at all intersections.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; red used semantically for critical speeds;
-          EO lines in neutral gray
+        comment: Anyplot CVD-safe palette. EO lines use theme-adaptive muted gray
+          with distinct dashed linestyle as redundant encoding. Critical speeds use
+          semantic red distinct from all modes.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correctly 3200x1800; X-axis label tight at bottom — more marginBottom/spacingBottom
-          would help
+        comment: Correct 3200x1800 canvas. Generous margins (marginRight:160, marginBottom:160).
+          Floating legend uses top-right space efficiently. No content clipped at
+          canvas borders.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct anyplot format with subtitle; axis labels include
-          units (RPM, Hz)
+        comment: 'X-axis: ''Rotational Speed (RPM)'' with units. Y-axis: ''Frequency
+          (Hz)'' with units. Title follows exact format ''campbell-basic · python
+          · highcharts · anyplot.ai''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; positions 2-4, 6 for modes (correctly skipping
-          5 for semantic red); backgrounds #FAF8F1/#1A1A17'
+        comment: First series (#009E73 brand green). Positions 1-4 then position 6
+          (cyan), intentionally skipping position 5 (matte red) to reserve it for
+          semantic critical speed markers. Engine order lines use INK_MUTED (theme-adaptive).
+          Correct backgrounds in both renders.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -108,22 +125,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: operating zone plotBands, critical speed plotLines,
-          subtitle, elevated legend box, semantic color choices'
+        comment: 'Strong design clearly above library defaults: intentional semantic
+          color reservation for critical speeds, dual operating zone visualization
+          (bands + labels), visual hierarchy separating three element classes (curves/lines/markers),
+          professional subtitle adding context.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Highcharts full-frame (all four spines) not removed; dotted grid
-          and elevated legend show refinement; top/right spine removal needed
+        passed: true
+        comment: Subtle dotted grid lines. No chart border (plotBorderWidth:0). Styled
+          legend with background, border, and rounded corners. L-shaped axis frame
+          (left + bottom lines only). Operating zone bands add contextual layers without
+          visual noise.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: solid modes vs dashed EO lines vs diamond
-          markers; operating zones guide viewer; critical speeds are focal points'
+        comment: 'Visual hierarchy guides viewer: thick colored mode curves as primary
+          data, thin dashed gray EO lines as reference context, red diamond markers
+          as focal points for resonance danger. Operating zone labels (Idle, Normal
+          Operating Range) provide engineering context. Dual critical speed emphasis
+          (markers + vertical dotted lines) creates clear focal points.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +157,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Campbell diagram with natural frequency curves, diagonal
-          EO lines, and intersection markers
+        comment: 'Correct Campbell Diagram: natural frequency curves overlaid with
+          engine order excitation lines, critical speed intersections marked.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 modes, 3 EO lines, critical speed markers, mode labels, EO labels,
-          operating zones shaded
+        comment: 'All spec features present: 5 natural frequency modes (spec: 4-5),
+          3 engine order lines (1x/2x/3x), critical speed markers (red diamonds),
+          mode labels in legend, EO line labels (data labels in chart + legend), operating
+          zone shading (optional per spec, implemented).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=RPM 0-6000, Y=Hz 0-120, EO lines from origin with correct slope,
-          realistic gyroscopic effects
+        comment: 'X-axis: Rotational Speed (RPM) 0-6000. Y-axis: Frequency (Hz) 0-120.
+          All modes visible across full speed range. EO lines correctly drawn from
+          origin with slope = order/60.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'campbell-basic · python · highcharts · anyplot.ai';
-          legend lists all 9 series accurately
+        comment: 'Title: ''campbell-basic · python · highcharts · anyplot.ai'' — correct
+          format. Legend distinguishes all series types: natural freq modes, EO lines,
+          and critical speed markers all separately labeled.'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +193,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full Campbell diagram coverage: modes, EO lines, intersection detection,
-          operating zones, critical speed verticals'
+        comment: 'Shows all Campbell Diagram aspects: modes with gyroscopic variation
+          (some increase, some decrease with speed), EO lines with correct diagonal
+          slope, critical speed intersections found via zero-crossing detection, operating
+          zone context.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine rotor rotordynamics with realistic frequency ranges (18-100
-          Hz), RPM sweep (0-6000), plausible gyroscopic effects
+        comment: Turbine rotor rotordynamic analysis — specific, realistic, neutral
+          engineering scenario. Not generic or abstract.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-120 Hz covers all modes with margin; X-axis 0-6000 RPM;
-          tick intervals (1000 RPM / 10 Hz) well-chosen
+        comment: 0-6000 RPM realistic for turbines. Natural frequencies 18-95 Hz physically
+          plausible for rotor modes. Gyroscopic effects modeled with realistic magnitudes.
+          Numpy seed ensures reproducibility.
     code_quality:
       score: 10
       max: 10
@@ -190,34 +221,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; loops for modes and EO lines appropriate; no unnecessary
-          abstraction
+        comment: 'Linear structure: imports → data → chart config → series → export.
+          Appropriate loops for multi-series iteration. No unnecessary functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic noise
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: All imports are used. numpy, PIL, selenium, urllib.request all needed
+          for data + export pipeline.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Sign-change interpolation for critical speed detection is clean and
-          correct; helpful color comment
+        comment: Clean, appropriate complexity for a multi-layer specialized chart.
+          No fake UI elements. Loop structure over modes/orders is appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; CDP override applied;
-          PIL safety net included
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes. Correct
+          output format.
     library_mastery:
       score: 7
       max: 10
@@ -227,15 +260,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart(container='container'), to_js_literal(), add_series();
-          all four canvas-size sync points aligned; CDP override + PIL safety net
+        comment: 'Correct use of LineSeries, ScatterSeries, HighchartsOptions, chart.add_series().
+          plot bands and plot lines used via axis configuration. to_js_literal() for
+          HTML generation. Minor: LineSeries imported from area module rather than
+          canonical line module.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts-specific plotBands, plotLines, dataLabels with filter
-          property, styled floating legend with elevated background
+        comment: 'Uses multiple Highcharts-distinctive features: plotBands for operating
+          zone shading with labels, plotLines for critical speed vertical markers,
+          data labels with filter property for EO line labeling, custom tooltip with
+          HTML formatting, HTML artifact generation alongside PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -243,6 +280,7 @@ impl_tags:
   - pillow
   techniques:
   - html-export
+  - hover-tooltips
   - annotations
   patterns:
   - data-generation
@@ -250,3 +288,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
