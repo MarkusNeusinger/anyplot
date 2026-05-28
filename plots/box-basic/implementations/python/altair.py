@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — salary distributions across five departments
 np.random.seed(42)
@@ -41,10 +41,16 @@ for dept, (mean, std, n) in params.items():
 
 df = pd.DataFrame(records)
 
+# Annotation — Engineering has the highest median salary
+eng_median = df[df["Department"] == "Engineering"]["Salary"].median()
+annotation_df = pd.DataFrame(
+    [{"Department": "Engineering", "Salary": 138000, "Label": f"highest median  ${eng_median:,.0f}"}]
+)
+
 # Plot
 title = "box-basic · python · altair · anyplot.ai"
 
-chart = (
+boxplot = (
     alt.Chart(df)
     .mark_boxplot(
         size=90,
@@ -67,6 +73,16 @@ chart = (
             alt.Tooltip("q3(Salary):Q", title="Q3", format="$,.0f"),
         ],
     )
+)
+
+annotation = (
+    alt.Chart(annotation_df)
+    .mark_text(align="center", baseline="middle", color="#009E73", fontSize=10, fontWeight="bold")
+    .encode(x=alt.X("Department:N", sort=departments), y=alt.Y("Salary:Q"), text="Label:N")
+)
+
+chart = (
+    alt.layer(boxplot, annotation)
     .properties(
         width=620,
         height=320,
@@ -74,7 +90,7 @@ chart = (
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title(title, fontSize=16, anchor="start", offset=10),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
