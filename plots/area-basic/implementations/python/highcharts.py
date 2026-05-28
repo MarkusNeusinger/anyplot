@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
-Library: highcharts 1.10.3 | Python 3.14.2
-Quality: 93/100 | Created: 2025-12-23
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,14 +14,23 @@ import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.area import AreaSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
+
 # Data - Daily website visitors over a month
 np.random.seed(42)
 days = np.arange(1, 31)
-# Simulate website traffic with weekly pattern and growth trend
 base_traffic = 2000 + days * 50  # Growth trend
 weekly_pattern = 300 * np.sin(2 * np.pi * days / 7)  # Weekly cycle
 noise = np.random.normal(0, 200, len(days))
@@ -34,92 +44,96 @@ peak_visitors = int(np.max(visitors))
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "area",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 300,
-    "marginLeft": 220,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 160,
+    "marginLeft": 180,
     "marginRight": 100,
-    "spacingBottom": 40,
+    "marginTop": 120,
 }
 
 # Title
-chart.options.title = {
-    "text": "area-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
-}
+title = "area-basic · python · highcharts · anyplot.ai"
+chart.options.title = {"text": title, "style": {"fontSize": "66px", "color": INK, "fontWeight": "bold"}}
 
-# Subtitle for data context
 chart.options.subtitle = {
-    "text": "Daily Website Visitors Over One Month \u2014 Weekend Dips with Steady Growth",
-    "style": {"fontSize": "42px", "color": "#666666"},
+    "text": "Daily Website Visitors Over One Month — Weekend Dips with Steady Growth",
+    "style": {"fontSize": "34px", "color": INK_SOFT},
 }
 
-# X-axis with weekend plotBands (day 1 = Monday, so days 6-7, 13-14, 20-21, 27-28 are weekends)
+# Weekend plotBands with theme-aware tint
+band_color = "rgba(0,158,115,0.06)" if THEME == "light" else "rgba(0,158,115,0.12)"
 weekend_bands = []
 for d in range(1, 31):
     weekday = (d - 1) % 7  # 0=Mon, 5=Sat, 6=Sun
     if weekday in (5, 6):
-        weekend_bands.append({"from": d - 0.5, "to": d + 0.5, "color": "rgba(48, 105, 152, 0.05)"})
+        weekend_bands.append({"from": d - 0.5, "to": d + 0.5, "color": band_color})
 
 chart.options.x_axis = {
-    "title": {"text": "Day of Month", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "36px"}, "y": 45},
+    "title": {"text": "Day of Month", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.08)",
-    "tickInterval": 1,
+    "gridLineColor": GRID,
+    "tickInterval": 5,
     "plotBands": weekend_bands,
-    "crosshair": {"width": 2, "color": "rgba(48, 105, 152, 0.3)", "dashStyle": "Dash"},
 }
 
-# Y-axis with plotLine at peak
 chart.options.y_axis = {
-    "title": {"text": "Daily Visitors", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Daily Visitors", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.08)",
+    "gridLineColor": GRID,
     "min": 1500,
+    "max": peak_visitors + 150,
     "startOnTick": False,
+    "endOnTick": False,
     "plotLines": [
         {
             "value": peak_visitors,
-            "color": "rgba(192, 57, 43, 0.5)",
-            "width": 3,
+            "color": "#AE3030",
+            "width": 2,
             "dashStyle": "Dot",
             "label": {
-                "text": f"\u25b2 Peak: {peak_visitors:,} visitors (Day {peak_day})",
+                "text": f"▲ Peak: {peak_visitors:,} visitors (Day {peak_day})",
                 "align": "left",
                 "x": 10,
                 "y": -10,
-                "style": {"fontSize": "32px", "color": "rgba(192, 57, 43, 0.8)", "fontWeight": "bold"},
+                "style": {"fontSize": "32px", "color": "#AE3030", "fontWeight": "bold"},
             },
             "zIndex": 5,
         }
     ],
 }
 
-# Plot options with semi-transparent fill and gradient
+# Fill gradient using brand color
+fill_start = "rgba(0,158,115,0.45)" if THEME == "light" else "rgba(0,158,115,0.35)"
+fill_end = "rgba(0,158,115,0.02)"
+
 chart.options.plot_options = {
     "area": {
         "fillColor": {
             "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-            "stops": [[0, "rgba(48, 105, 152, 0.5)"], [1, "rgba(48, 105, 152, 0.02)"]],
+            "stops": [[0, fill_start], [1, fill_end]],
         },
-        "lineWidth": 4,
-        "marker": {"enabled": True, "radius": 6, "fillColor": "#306998", "lineWidth": 2, "lineColor": "#ffffff"},
-        "color": "#306998",
-        "tooltip": {"headerFormat": "<b>Day {point.x}</b><br/>", "pointFormat": "Visitors: {point.y:,.0f}"},
-        "states": {"hover": {"lineWidthPlus": 2}},
+        "lineWidth": 3,
+        "marker": {"enabled": True, "radius": 5, "fillColor": BRAND, "lineWidth": 2, "lineColor": PAGE_BG},
+        "color": BRAND,
     }
 }
 
-# Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "36px", "fontWeight": "normal"},
+    "itemStyle": {"color": INK_SOFT, "fontSize": "44px", "fontWeight": "normal"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "align": "right",
     "verticalAlign": "top",
     "layout": "horizontal",
@@ -127,15 +141,15 @@ chart.options.legend = {
     "y": 60,
 }
 
-# Credits off
 chart.options.credits = {"enabled": False}
 
-# Tooltip styling
 chart.options.tooltip = {
-    "style": {"fontSize": "28px"},
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderColor": "#306998",
+    "style": {"fontSize": "30px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
+    "headerFormat": "<b>Day {point.x}</b><br/>",
+    "pointFormat": "Visitors: {point.y:,.0f}",
 }
 
 # Add series
@@ -145,8 +159,11 @@ series.name = "Website Visitors"
 chart.add_series(series)
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+_req = urllib.request.Request(
+    "https://code.highcharts.com/highcharts.js",
+    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.highcharts.com/"},
+)
+with urllib.request.urlopen(_req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -157,29 +174,43 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
+
+# PIL safety net — pin to exact 3200×1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
