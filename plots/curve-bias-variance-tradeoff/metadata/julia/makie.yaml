@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: curve-bias-variance-tradeoff
 created: '2026-05-28T03:43:58Z'
-updated: '2026-05-28T03:50:40Z'
+updated: '2026-05-28T04:02:10Z'
 generated_by: claude-sonnet
 workflow_run: 26552870984
 issue: 4134
@@ -12,109 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct anyplot palette in canonical order (green Bias², lavender Variance, blue
-    Total Error, ochre Irreducible Error)
-  - Shaded underfitting/overfitting zones using vspan! add excellent visual context
-  - Optimal complexity point clearly marked with vertical line, scatter marker, and
-    bold annotation
-  - Formula annotation 'Total Error = Bias² + Variance + Irreducible Error' included
-    per spec
-  - 'Full theme-adaptive chrome: all tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG, ELEVATED_BG)
-    correctly applied in both renders'
-  - 'No dark-on-dark failures in dark render — all text clearly readable against #1A1A17
-    background'
-  - Clean KISS code structure with idiomatic Makie primitives (vspan!, vlines!, axislegend)
-  - 'Redundant encoding: different linestyles for Variance (dash) and Irreducible
-    Error (dot) alongside color differentiation'
-  - Legend placed within the axis with axislegend (idiomatic Makie pattern)
-  - 'Warm backgrounds (#FAF8F1 light / #1A1A17 dark) correct in both renders'
+  - All 4 required curves (Bias², Variance, Total Error, Irreducible Error) rendered
+    with correct shapes — decreasing bias, increasing variance, U-shaped total, constant
+    irreducible
+  - Shaded underfitting/overfitting zones using vspan! with very low alpha (0.07)
+    elegantly separate the two regimes without competing with data
+  - Optimal complexity point marked with vertical dashed line plus scatter marker
+    with stroke — immediately draws the eye
+  - Direct curve labels placed on the plot (spec requirement) plus a legend — redundant
+    labeling aids comprehension
+  - Formula annotation 'Total Error = Bias² + Variance + Irreducible Error' connects
+    the visual to the math
+  - 'Correct anyplot palette in canonical order: #009E73 Bias², #C475FD Variance,
+    #4467A3 Total Error, #BD8233 Irreducible Error, plus distinct linestyles for redundant
+    encoding'
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are fully readable with proper
+    theme-adaptive chrome throughout
+  - 'All font sizes explicitly set: titlesize=20, labels=14, ticks=12, annotations=12'
+  - 'Uses idiomatic CairoMakie primitives: vspan!, vlines!, axislegend with elevated
+    ELEVATED_BG and frame styling'
+  - 'Perfect code structure: KISS, reproducible seed, clean imports, correct output
+    filename pattern'
   weaknesses:
-  - Formula annotation 'Total Error = Bias² + Variance + Irreducible Error' at fontsize=10
-    is illegible at mobile scale (400px srcset) — increase to fontsize=12 minimum
-  - Zone labels 'Underfitting (High Bias)' and 'Overfitting (High Variance)' at fontsize=11
-    are very small at mobile scale — increase to 12-13
-  - Spec explicitly requests direct curve labels on the plot ('Use annotations to
-    label each curve directly on the plot') — the implementation only provides a legend;
-    add text! labels positioned near the end of each curve
-  - Total Error and Bias² both use :solid linestyle — only 3 distinct linestyles for
-    4 curves; change Total Error to :dashdot to make all 4 linestyles distinct as
-    implied by the spec ('distinct colors and line styles')
-  - 'Design Excellence is limited: DE-01=5/8, DE-02=4/6, DE-03=4/6 — consider a bolder
-    title font, tighter typography hierarchy, and possibly increasing Total Error
-    linewidth more dramatically to signal its primacy as the key curve'
+  - Direct curve labels (Bias², Variance, Total Error, Irreducible Error) use fontsize=12,
+    which is the smallest text in the chart — consider bumping to 13-14pt so they
+    remain readable when the image is scaled to mobile widths (~400px)
+  - Formula annotation at fontsize=12 right-aligned at the bottom right is easy to
+    overlook — consider increasing to 13pt or adding a subtle background rect to make
+    it stand out
+  - 'DE-01/DE-02: Zone shading is at alpha=0.07, making it barely perceptible — bumping
+    to 0.10-0.12 would make the underfitting/overfitting regions more visually distinct
+    without overwhelming the data'
+  - 'LM-02: The implementation could showcase more distinctly Makie-native features,
+    such as using Makie''s Observable/Lift pattern for the optimal-point annotation
+    or a Colorbar for a gradient effect on a secondary element'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
-      Chrome: Title "curve-bias-variance-tradeoff · julia · makie · anyplot.ai" in bold dark ink, clearly readable at ~65% of plot width. Axis labels "Model Complexity" (x) and "Prediction Error" (y) in dark ink at size 14, balanced. Tick labels (0, 5, 10 / 0.0, 0.5, 1.0) in INK_SOFT, clearly readable. Top/right spines removed, left/bottom spines in INK_SOFT.
-      Data: Four curves — green solid (#009E73) for Bias² (decreasing), lavender dashed (#C475FD) for Variance (increasing), blue solid (#4467A3) for Total Error (U-shaped, thicker at 3.0), ochre dotted (#BD8233) for Irreducible Error (constant at 0.15). Light green shaded zone (underfitting, left of optimal), light lavender zone (overfitting, right). Dashed vertical reference line at optimal complexity ~3. Blue scatter marker at the minimum of Total Error. "Optimal" text annotation in bold dark ink above the marker. Zone labels "Underfitting (High Bias)" and "Overfitting (High Variance)" in INK_MUTED. Formula annotation at bottom-right in small INK_MUTED text. Legend at upper right with ELEVATED_BG fill and INK_SOFT frame.
-      Legibility verdict: PASS at desktop. PARTIAL FAIL at mobile (400px): formula text (fontsize=10) and zone labels (fontsize=11) are illegible/very hard to read at mobile scale; title and axis labels remain readable.
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
+      Chrome: Title "curve-bias-variance-tradeoff · julia · makie · anyplot.ai" at titlesize=20, dark ink (#1A1A17) — fully readable. Axis labels "Model Complexity" (x) and "Prediction Error" (y) in dark ink at 14pt — readable. Tick labels (0.0, 0.5, 1.0 on y; 0, 5, 10 on x) in INK_SOFT at 12pt — readable. Top/right spines removed; left/bottom spines in INK_SOFT. Subtle y-only grid at alpha=0.12.
+      Data: Four curves — green solid (Bias², #009E73) decreasing from ~1.1 to ~0.1; lavender dashed (Variance, #C475FD) increasing from ~0 to ~1.2; blue dash-dot (Total Error, #4467A3) U-shaped with minimum at ~x=4.5; ochre dotted (Irreducible Error, #BD8233) horizontal at y=0.15. Very subtle green/lavender zone shading at alpha=0.07. Optimal point marked by dashed vertical line plus circle marker. Zone labels ("Underfitting (High Bias)", "Overfitting (High Variance)") in INK_MUTED. "Optimal" label above marker. Direct curve labels on plot. Formula annotation at bottom right.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all rendered in light-colored text (INK = #F0EFE8 / INK_SOFT = #B8B7B0), clearly readable against dark background. No dark-on-dark failures. Grid lines (y-axis only) are subtly visible in light alpha. Spines and tick marks in INK_SOFT. Legend has ELEVATED_BG (#242420) fill, barely distinguishable from background — subtle but present.
-      Data: All four curve colors are identical to the light render — green, lavender, blue, ochre — confirming data-color stability across themes. Shaded zones appear as dark translucent overlays (darker greenish / darker lavender). "Optimal" annotation in light #F0EFE8 is clearly visible. Formula text is INK_MUTED (#A8A79F) and readable at desktop but still small.
-      Legibility verdict: PASS at desktop. Same mobile-scale issues as light render — formula and zone text too small at 400px.
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title in light #F0EFE8 — clearly readable. Axis labels and tick labels in B8B7B0 INK_SOFT — readable against dark background. Spines in INK_SOFT. Subtle grid. Legend box using ELEVATED_BG (#242420) with frame. No dark-on-dark failures.
+      Data: All four curves render with identical colors to the light render — #009E73 Bias², #C475FD Variance, #4467A3 Total Error, #BD8233 Irreducible Error. The shaded zones are slightly more perceptible against the dark background. Zone labels, optimal marker, and all annotations readable in the muted token color.
+      Legibility verdict: PASS — all text readable against the warm near-black background. Data colors are identical between renders.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout; desktop readability perfect.
-          Mobile (400px): formula annotation (fontsize=10) illegible, zone labels
-          (fontsize=11) very small.'
+        comment: All font sizes explicitly set; title proportioned well at 55% width;
+          direct curve labels at 12pt are the smallest text and may be marginal at
+          mobile scales
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in either render. Zone labels, Optimal
-          annotation, and formula all placed in clear space.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four curves clearly visible with appropriate linewidths. Optimal
-          scatter marker at markersize=14 is prominent. Dotted Irreducible Error line
-          at linewidth=2.0 is distinguishable.
+        comment: 80-point curves with linewidth 2.5-3.0 are clearly visible; distinct
+          linestyles (solid, dash, dashdot, dot) provide redundant encoding; optimal
+          scatter at markersize=14 with stroke
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 series with distinct anyplot palette colors plus redundant linestyle
-          encoding (solid/dash/dot). CVD-safe palette used. Good contrast.
+        comment: Anyplot palette is CVD-safe; redundant linestyle encoding means no
+          reliance on color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (not found). Landscape 3200x1800. Plot fills canvas
-          well with generous margins. Data occupies main area without crowding. No
-          content cut off.
+        comment: Canvas 3200x1800 confirmed (gate passed); plot fills canvas well;
+          legend at right center, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Model Complexity'' and ''Prediction Error''.
-          No units needed for theoretical constructs.'
+        comment: 'Descriptive labels: ''Model Complexity'' (x), ''Prediction Error''
+          (y); title format correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical anyplot palette in correct order: #009E73 (Bias²), #C475FD
-          (Variance), #4467A3 (Total Error), #BD8233 (Irreducible Error). Both backgrounds
-          correct (#FAF8F1 / #1A1A17). All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73; positions 2-4 follow canonical order; background
+          #FAF8F1 light / #1A1A17 dark; all chrome theme-adaptive'
     design_excellence:
       score: 13
       max: 20
@@ -124,28 +125,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a configured default: uses shaded zones, multiple annotation
-          types, optimal point marker. Intentional hierarchy with thicker Total Error
-          line. Not yet publication-ready polish.'
+        comment: 'Clearly above configured defaults: zone shading, optimal point marker
+          with stroke, direct curve labels, formula annotation. Not quite ''strong
+          design'' level but intentionally designed.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed, y-axis-only grid at 12%
-          alpha, tick colors using INK_SOFT. Clean but not perfectly polished — legend
-          frame could be more subtle.'
+        comment: Spines removed (top/right), subtle y-only grid at alpha=0.12, elevated
+          legend background with frame, no minor gridlines. Zone alpha at 0.07 is
+          barely perceptible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: shaded zones label underfitting/overfitting regions,
-          optimal point explicitly annotated, formula contextualizes the relationship.
-          Visual hierarchy through Total Error being thicker. Goes beyond raw data
-          display.'
+        comment: 'Viewer immediately understands the bias-variance concept: zones
+          separate underfitting/overfitting, optimal point highlighted, Total Error
+          curve thicker (3.0 vs 2.5/2.0) emphasizes the key metric, formula anchors
+          the math.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,32 +154,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-curve line plot for bias-variance tradeoff with all
-          4 required curves.
+        comment: Multi-curve line plot showing all required components of bias-variance
+          tradeoff
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Most features present: 4 curves, shaded zones, optimal marker, vertical
-          line, formula annotation. Missing: spec asks for direct curve labels (''annotate
-          each curve directly on the plot'') but only legend is provided; Total Error
-          and Bias² share :solid linestyle (only 3 distinct styles for 4 curves).'
+        comment: 'All spec features present: 4 curves with distinct colors/linestyles,
+          optimal point marked, direct curve labels, formula annotation, shaded underfitting/overfitting
+          zones'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Model Complexity, Y = Prediction Error. All 4 curves correctly
-          mapped with appropriate mathematical functions.
+        comment: X=Model Complexity, Y=Prediction Error; curves behave correctly (bias
+          decreasing, variance increasing, total U-shaped, irreducible constant)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'curve-bias-variance-tradeoff · julia · makie · anyplot.ai'
-          correct. Legend labels Bias², Variance, Total Error, Irreducible Error are
-          accurate.
+        comment: Title 'curve-bias-variance-tradeoff · julia · makie · anyplot.ai'
+          correct; legend shows Bias², Variance, Total Error, Irreducible Error with
+          matching colors/styles
     data_quality:
       score: 15
       max: 15
@@ -189,23 +189,21 @@ review:
         max: 6
         passed: true
         comment: 'All aspects shown: decreasing bias, increasing variance, constant
-          irreducible error, U-shaped total error, optimal minimum clearly visible,
-          underfitting and overfitting zones.'
+          irreducible noise, U-shaped total, optimal point where total is minimized'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Correct theoretical ML construct as specified. Canonical formulation
-          with smooth curves for educational clarity. Not abstract labels.
+        comment: Standard ML education visualization, neutral theoretical concept,
+          not controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematical formulation (bias_sq=1/(1+x)+0.02, variance=x^1.4/22,
-          noise=0.15) produces realistic tradeoff with optimal at ~3 complexity and
-          reasonable y-range.
+        comment: Normalized error values [0,1.3] are appropriate for theoretical demonstration;
+          optimal point at complexity~4.5 is mathematically correct
     code_quality:
       score: 10
       max: 10
@@ -215,33 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data → plot → save. No
-          functions or classes.'
+        comment: 'Clean flat structure: constants → data → plot → save, no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set. Data is deterministic mathematical functions.
+        comment: Random.seed!(42) set; data is deterministic by formula
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three are used.
+        comment: CairoMakie (plotting), Colors (colorant strings), Random (seed) —
+          all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Julia/Makie code. RGBAf alpha construction is appropriate.
-          No over-engineering.
+        comment: Clean, idiomatic Julia/Makie; appropriate complexity for a 4-curve
+          annotated plot; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct API.
+        comment: Saves as plot-$(THEME).png; current CairoMakie API; px_per_unit=2
+          with size=(1600,900) produces correct 3200x1800
     library_mastery:
       score: 7
       max: 10
@@ -251,24 +251,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Makie usage: vspan!, vlines!, axislegend, proper
-          Axis attribute setup. axislegend is particularly idiomatic vs. external
-          Legend placement.'
+        comment: Uses vspan!, vlines!, axislegend, RGBAf, colorant strings, stroke
+          attributes — all idiomatic CairoMakie. Axis constructed with full attribute
+          keyword block.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses vspan! (Makie-specific vertical span primitive), axislegend
-          (Makie convenience), colorant"#hex" from Colors.jl (Julia ecosystem). Some
-          library-specific features but not deeply exploiting Makie's recipe system
-          or layout grammar.
-  verdict: REJECTED
+        comment: vspan! for shaded regions is distinctly Makie; axislegend with ELEVATED_BG
+          frame styling; typed RGBAf color construction with alpha; strokewidth/strokecolor
+          on scatter marker. Solid use but not exploring more advanced Makie-exclusive
+          territory.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []

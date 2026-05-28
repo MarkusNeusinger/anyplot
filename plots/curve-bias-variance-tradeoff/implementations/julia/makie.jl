@@ -1,7 +1,7 @@
 # anyplot.ai
 # curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-05-28
+# Quality: 89/100 | Created: 2026-05-28
 
 using CairoMakie
 using Colors
