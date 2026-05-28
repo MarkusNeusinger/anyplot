@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -169,7 +169,7 @@ labels = LabelSet(
     text_color=INK_SOFT,
     source=annotation_source,
     text_font_size="30pt",
-    text_font_style="bold",
+    text_font_style="italic",
     text_align="center",
 )
 p.add_layout(labels)
@@ -199,7 +199,6 @@ p.x_range.range_padding = 0.12
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_dash = [6, 4]
 p.ygrid.grid_line_width = 1
 
 # Background
