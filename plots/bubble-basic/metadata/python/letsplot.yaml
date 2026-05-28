@@ -1,60 +1,50 @@
 library: letsplot
+language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:31:09Z'
-updated: '2026-02-16T20:55:14Z'
-generated_by: claude-opus-4-6
-workflow_run: 20448654800
-issue: 0
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/letsplot/plot.html
-quality_score: 86
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-28T17:45:46Z'
+generated_by: claude-sonnet
+workflow_run: 26591305637
+issue: 755
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of lets-plot distinctive layer_tooltips() with formatted lines —
-    a feature unique to this library
-  - LOESS trend line with confidence band adds analytical value and visual storytelling
-  - Custom colorblind-safe palette starting with Python Blue (#306998) with well-chosen
-    complementary colors
-  - All text sizes explicitly configured for the 4800x2700 export resolution
-  - Rich realistic market analysis scenario with 5 sectors and 3 clearly mapped variables
+  - 'Perfect spec compliance: scale_size_area, alpha=0.7, size legend with custom
+    breaks, optional color categorization — all spec requirements fully met'
+  - 'Excellent theme-adaptive chrome: all tokens correctly applied in both themes;
+    dark render has no dark-on-dark issues'
+  - LOESS trendline with confidence band adds genuine analytical value and visual
+    hierarchy
+  - Realistic, nuanced market analysis data with per-sector distributions and economically
+    meaningful negative correlation
+  - layer_tooltips with formatted output leverages letsplot interactive HTML export
+    effectively
   weaknesses:
-  - 'Layout balance could improve: the dual legend (size + color) on the right compresses
-    the plot area horizontally'
-  - Some bubble overlap in the 160-180 revenue range where Finance and Energy sectors
-    cluster
-  - Data generation code is slightly verbose with the nested dictionary pattern
-  image_description: 'The plot displays a bubble chart with Revenue (Million USD)
-    on the x-axis (ranging 0-190) and Growth Rate (%) on the y-axis (ranging 4-26).
-    Bubble size encodes Market Share (%) with a discrete size legend showing values
-    at 5, 10, 15, 20, and 25. Five business sectors are color-coded: Technology (dark
-    blue), Healthcare (orange), Finance (teal green), Energy (purple), and Consumer
-    Goods (pink/red). A LOESS trend line in dark gray with a light gray confidence
-    band reveals a clear negative relationship — higher revenue companies tend to
-    have lower growth rates. The layout uses a minimal theme with light gray major
-    gridlines, no minor gridlines, and a right-positioned legend panel with a subtle
-    gray background. The title reads "bubble-basic · letsplot · pyplots.ai" in the
-    top-left corner. Approximately 45 data points are spread across the canvas with
-    good variation in both position and size. The largest bubbles appear in the Finance
-    and Energy sectors (higher market share), while Technology and Consumer Goods
-    tend to have smaller bubbles but higher growth rates.'
+  - 'DE-01 could be stronger: design is above defaults but lacks FiveThirtyEight-level
+    polish; could add subtle outlier labels for stronger focal point'
+  - LM-02 underutilizes letsplot-specific capabilities beyond tooltips; letsplot built-in
+    features could add more distinctiveness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "bubble-basic · python · letsplot · anyplot.ai" in dark ink #1A1A17; axis labels "Revenue (Million USD)" and "Growth Rate (%)" in dark ink; tick labels in INK_SOFT #4A4A44; legend text in INK_SOFT — all clearly readable
+      Data: Five sectors in anyplot palette order: Technology=#009E73 (brand green), Healthcare=#C475FD (lavender), Finance=#4467A3 (blue), Energy=#BD8233 (ochre), Consumer Goods=#AE3030 (matte red); alpha=0.7 bubbles; LOESS trendline in dark gray with confidence band
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light #F0EFE8; axis labels in light ink; tick labels in INK_SOFT #B8B7B0; legend boxes adapt to elevated dark #242420 — all clearly readable; no dark-on-dark failures
+      Data: Colors identical to light render — Technology=#009E73, Healthcare=#C475FD, Finance=#4467A3, Energy=#BD8233, Consumer Goods=#AE3030; LOESS line adapts to light gray #B8B7B0 on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,69 +52,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, legend title 16pt, legend text 14pt'
+        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          legend=10); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor bubble overlap in dense revenue ranges (160-180), but all text
-          fully readable
+        comment: No text overlaps; bubble overlaps handled with alpha=0.7
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good sizing with max_size=24 and alpha=0.7 for ~45 points; smallest
-          bubbles visible but could be slightly larger
+        comment: 45 medium-density data points; max_size=22; all size levels clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette; alpha=0.7; no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: blue, orange, teal, purple, red with good
-          differentiation'
-      - id: VQ-05
-        name: Layout Balance
-        score: 2
-        max: 4
-        passed: false
-        comment: Legend panel takes considerable horizontal space, compressing the
-          plot area; some wasted space in upper-right
+        comment: Plot fills ~65-70% of canvas height; two bottom legends well-positioned;
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Revenue (Million USD), Growth Rate (%)'
+        comment: Revenue (Million USD) and Growth Rate (%) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Technology=#009E73; all 5 sectors in canonical palette
+          order; backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome correct'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom 5-color palette starting with Python Blue,
-          LOESS trend adds analytical depth, legend has subtle background'
+        comment: 'Above configured defaults: theme-adaptive chrome tokens, LOESS trendline,
+          custom size legend breaks, guide override_aes'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: minor grid removed, major grid subtly styled (0.3/light gray),
-          theme_minimal, explicit margins'
+        comment: theme_minimal + subtle RULE grid (rgba 0.15 opacity) + minor grid
+          removed + generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: LOESS trend guides interpretation of negative
-          revenue-growth relationship, sector clustering visible'
+        comment: LOESS trendline creates clear focal point showing negative revenue-growth
+          relationship; multi-dimensional encoding guides viewer
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,52 +127,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart via geom_point with size aesthetic
+        comment: Correct bubble chart with geom_point size aesthetic and scale_size_area
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: x/y/size mapping, transparency, size legend,
-          color grouping, area-based scaling'
+        comment: 'All spec requirements: area scaling, alpha=0.7, size legend, color
+          categories'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=revenue, Y=growth_rate, Size=market_share correctly assigned
+        comment: x=revenue, y=growth_rate, size=market_share, color=sector; all axes
+          show full range
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data; size legend uses
-          discrete breaks
+        comment: Title matches required format exactly; legend labels match sector
+          names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good variation across sectors with visible clustering and size differences
+        comment: 'Shows all bubble chart aspects: size variation, color categorization,
+          overlapping with transparency, trend'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Market analysis: companies by revenue, growth rate, market share
-          across 5 neutral business sectors'
+        comment: Market analysis with 5 industry sectors — realistic, neutral, business-comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic values: revenue 10-200M, growth 4-26%, market share 2-30%'
+        comment: Revenue 10-200M USD, growth 4-28%, market share 2-30% — all plausible;
+          negative correlation economically realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,7 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports to data to plot to save flow, no functions/classes
+        comment: 'Clean linear structure: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,21 +194,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, explicit import style
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Slightly verbose sector dictionary pattern for data generation
+        passed: true
+        comment: Pythonic; zip(..., strict=True) elegant; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale=3, also exports HTML
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html; correct API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -219,13 +216,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert ggplot grammar: proper aes, scale_size_area, theme_minimal
-          + custom theme, guide_legend overrides'
+        comment: Expert ggplot grammar usage; scale_size_area is idiomatic; guides
+          with override_aes follows ggplot idiom
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses lets-plot layer_tooltips() with format/line builders (distinctive),
-          guide_legend override_aes, HTML export
+        comment: layer_tooltips() with custom format strings is distinctively letsplot;
+          HTML output alongside PNG leverages interactive nature; could go further
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
