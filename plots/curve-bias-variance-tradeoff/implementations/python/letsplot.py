@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-28
@@ -53,7 +53,7 @@ total_at_lbl = bias_at_lbl + var_at_lbl + irred_at_lbl
 label_df = pd.DataFrame(
     {
         "complexity": [x_lbl + 0.3] * 4,
-        "error": [bias_at_lbl + 0.05, var_at_lbl + 0.05, irred_at_lbl - 0.12, total_at_lbl + 0.04],
+        "error": [bias_at_lbl + 0.15, var_at_lbl + 0.05, irred_at_lbl - 0.22, total_at_lbl + 0.04],
         "label": ["Bias²", "Variance", "Irred.\nError", "Total\nError"],
         "component": pd.Categorical(component_order, categories=component_order),
     }
@@ -88,7 +88,8 @@ title_size = max(11, round(16 * 67 / title_n)) if title_n > 67 else 16
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major_x=element_blank(),
     panel_grid_major_y=element_line(color=INK_SOFT, size=0.12),
     panel_grid_minor=element_blank(),
@@ -105,6 +106,7 @@ plot = (
         data=under_df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         fill="#009E73",
+        color=PAGE_BG,
         alpha=0.06,
         inherit_aes=False,
     )
@@ -112,13 +114,14 @@ plot = (
         data=over_df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         fill="#AE3030",
+        color=PAGE_BG,
         alpha=0.06,
         inherit_aes=False,
     )
-    + geom_line(aes(linetype="component"), size=1.0)
+    + geom_line(aes(linetype="component"), size=1.0, tooltips=layer_tooltips(["component", "error"]))
     + geom_vline(xintercept=optimal_complexity, linetype="dotdash", color=INK_SOFT, size=0.65)
     + geom_text(
-        data=zone_df, mapping=aes(x="x", y="y", label="label"), inherit_aes=False, color=INK_SOFT, size=2.9, hjust=0.5
+        data=zone_df, mapping=aes(x="x", y="y", label="label"), inherit_aes=False, color=INK_SOFT, size=3.3, hjust=0.5
     )
     + geom_text(data=opt_df, mapping=aes(x="x", y="y", label="label"), inherit_aes=False, color=INK, size=3.2, hjust=0)
     + geom_text(
@@ -126,7 +129,7 @@ plot = (
         mapping=aes(x="x", y="y", label="label"),
         inherit_aes=False,
         color=INK_SOFT,
-        size=2.7,
+        size=3.3,
         hjust=0.5,
     )
     + geom_text(
@@ -142,7 +145,7 @@ plot = (
     + scale_y_continuous(limits=[-0.15, 3.45])
     + labs(x="Model Complexity", y="Prediction Error", title=title_str)
     + ggsize(800, 450)
-    + theme_minimal()
+    + theme_classic()
     + anyplot_theme
 )
 
