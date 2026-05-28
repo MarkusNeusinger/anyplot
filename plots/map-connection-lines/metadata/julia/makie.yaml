@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: map-connection-lines
 created: '2026-05-28T01:16:19Z'
-updated: '2026-05-28T01:23:31Z'
+updated: '2026-05-28T01:48:34Z'
 generated_by: claude-sonnet
 workflow_run: 26547828821
 issue: 3746
@@ -12,44 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-conne
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Dual encoding of passenger volume (line width + sequential colormap) creates strong
-    visual hierarchy
-  - Mathematically correct great circle arc interpolation via spherical linear interpolation
-    (SLERP)
-  - NaN-break technique for anti-meridian crossing handled correctly
-  - All theme tokens properly threaded through every visual element — perfect dark
-    mode adaptation
-  - 'Correct imprint_seq colormap (#009E73 → #4467A3) for continuous single-polarity
-    data'
-  - Clean Makie layout system usage with Fixed(90) colorbar column sizing
-  - Airport label offsets carefully chosen to minimize overlap in dense European cluster
+  - Implements true great-circle arcs via SLERP — geodesically correct and clearly
+    curved on the world map
+  - Dual-encoding of passenger volume through both line color (sequential green→blue
+    colormap) and linewidth gives redundant, CVD-friendly encoding
+  - Manually-crafted continent polygon data and theme-adaptive land fills produce
+    a convincing base map without any external geo library
+  - 'Full spec compliance: great-circle paths, alpha transparency, endpoint markers
+    with INK strokes, colorbar with units, manual label offsets to reduce clutter'
+  - 'Perfect code quality: flat procedural script, Random.seed!(42), no unused imports,
+    saves plot-$(THEME).png with px_per_unit=2'
   weaknesses:
-  - 'Missing base map (coastlines/country borders): The spec explicitly requires geographic
-    context. Without coastlines or country borders, viewers cannot identify ocean
-    vs land or geographic regions. Add coastlines using GeoMakie.jl if available in
-    CI, or draw simplified outlines using poly! with a natural earth dataset.'
-  - 'Arc transparency outside spec range: alpha=0.75f0 is above the spec''s recommended
-    0.3-0.6. Reduce to 0.5f0 to better handle overlapping routes.'
-  - 'Empty southern hemisphere: No routes south of Singapore (except Sydney). The
-    lower ~40% of the canvas is empty. Consider cropping latitude limits to roughly
-    -50 to 75° to make better use of canvas.'
-  - Airport label font size at fontsize=10 is small — increase to 11-12 for better
-    mobile readability.
+  - Airport labels in the Western Europe cluster (London/Paris/Frankfurt) are noticeably
+    crowded; all three markers land within ~10° of each other and even with manual
+    offsets the labels compete for space — consider bumping label fontsize to 11 or
+    thinning the cluster by merging Frankfurt into a nearby label group
+  - Base figure fontsize is 12 rather than the recommended 14; individual element
+    sizes override it, but the slight downward shift leaves tick labels (10pt) marginally
+    small at mobile width (~400px)
+  - 'VQ-02 minor: arc lines in the North-Atlantic corridor pile up (London↔NewYork,
+    Paris↔NewYork, Frankfurt↔NewYork all share the same visual corridor) — a slightly
+    lower alpha (0.35–0.40) would improve layering legibility'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Global Air Routes · map-connection-lines · julia · makie · anyplot.ai" in bold dark (#1A1A17) text — readable. Axis labels "Longitude" and "Latitude" in dark text — readable. Tick labels in muted dark (#4A4A44) — readable. Colorbar label "Passengers (M / year)" readable.
-      Data: Great circle arcs colored via sequential colormap #009E73 (low volume) → #4467A3 (high volume), with variable line width (thin for low-volume, thick for high-volume routes). Airport markers are #009E73 circles with dark stroke. City labels in muted dark text with manual offsets.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct light surface.
+      Chrome: Title "Global Air Routes · map-connection-lines · julia · makie · anyplot.ai" at ~19pt is fully readable and spans ~70% of the canvas width. "Longitude" / "Latitude" axis labels are clearly visible (13pt). Tick labels (-180, -120, … 180 / -30, 0, 30, 60) are readable at 10pt. Colorbar label "Passengers (M / year)" is clear. All chrome is dark ink on the warm-cream surface.
+      Data: Connection arcs colored from brand green (#009E73, low volume) to blue (#4467A3, high volume); line widths scale from 1pt (low) to ~4.5pt (high), giving a visually clear volume hierarchy. Airport endpoints are green dots (#009E73) with dark strokes. Continent polygons are rendered in a warm beige fill with subtle tan coastlines. Very faint graticule lines at 30° intervals provide geographic reference without competing with data. Colorbar on the right side shows the ~3.4M–12.5M range.
+      Legibility verdict: PASS — all title, axis, tick, and label text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels, colorbar label all rendered in light cream text (#F0EFE8 / #B8B7B0 range) — clearly readable. No dark-on-dark failures observed.
-      Data: Arc colors are identical to light render (same green→blue sequential gradient, same variable width). Airport markers retain the same #009E73 green. Data colors preserved across themes as required.
-      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title, axis labels, and tick labels all appear in light (#F0EFE8 / #B8B7B0) tones against the dark background — no dark-on-dark failures observed. Colorbar label and tick values are visible.
+      Data: Arc colors are identical to the light render (green→blue sequential scale unchanged); continent fills switch to a darker gray matching the dark theme; coastline strokes shift to a slightly lighter muted gray. Airport markers remain the same brand green (#009E73), clearly visible on the dark surface. Graticule lines are slightly more visible (higher alpha token in dark mode) but remain subtle.
+      Legibility verdict: PASS — all text elements are clearly readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,49 +58,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; airport labels at fontsize=10 are
-          small but readable at full resolution
+        comment: All chrome text readable in both themes; slight label crowding in
+          the European airport cluster and tick labels are marginally small at mobile
+          widths
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: European cluster labels (London/Paris/Frankfurt) use manual offsets;
-          no observable overlap
+        comment: Manual label offsets mostly work but London/Paris/Frankfurt labels
+          are close; North-Atlantic arc corridor is busy
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arcs clearly visible with variable width + color; markers visible
-          with dark stroke
+        comment: Arcs, markers, and colorbar all clearly visible; alpha=0.5 appropriate
+          for 15 connections
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue is CVD-safe; marker strokes add contrast
+        comment: Sequential green→blue uses two anyplot palette anchors; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout; southern hemisphere (-90 to -35 lat) is empty with no
-          routes, creating slight imbalance
+        comment: Canvas gate passed (3200x1800); colorbar at Fixed(90) well proportioned;
+          no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are descriptive; title correctly formatted
-          with descriptive prefix
+        comment: Longitude/Latitude descriptive; colorbar label has units (M / year);
+          title follows spec format with descriptive prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'ANYPLOT_SEQ = cgrad([#009E73, #4467A3]) is correct imprint_seq;
-          backgrounds #FAF8F1/#1A1A17 correct'
+        comment: 'Sequential colormap uses #009E73→#4467A3 (anyplot palette); airport
+          markers use brand green; backgrounds #FAF8F1 / #1A1A17 correct'
     design_excellence:
       score: 13
       max: 20
@@ -112,24 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Dual encoding (width + color) is thoughtful; missing coastlines significantly
-          detracts from map aesthetic
+        comment: 'Above default: custom continent polygons, graticule lines, and dual-encoded
+          volume demonstrate design intentionality'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed; graticule at low alpha; Fixed(90) colorbar sizing;
-          no data grid appropriate for map
+        comment: 'Above default: top/right spines removed, grid replaced by subtle
+          graticule, theme-adaptive land fills and coast strokes'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Variable width makes high-volume routes stand out; color reinforces
-          hierarchy; storytelling hampered by no base map
+        comment: 'Above default: dual encoding (color + line width) tells the passenger-volume
+          story clearly; colorbar makes encoding explicit'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,52 +137,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connection lines map with great circle arcs via spherical
-          interpolation
+        comment: Correct connection-lines map with great-circle arcs on a geographic
+          base
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing base map (coastlines/country borders) — explicitly required
-          by spec; alpha=0.75 outside recommended 0.3-0.6
+        passed: true
+        comment: Great-circle arcs (SLERP), line thickness encoding, color intensity
+          encoding, endpoint markers, base map, alpha transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude Y=latitude correctly assigned; all airports and connections
-          visible
+        comment: Longitude/Latitude axes; 15 connections within 10-100 spec range;
+          full world extent shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format
+        comment: 'Title: ''Global Air Routes · map-connection-lines · julia · makie
+          · anyplot.ai'' — correct format; colorbar with units'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows arcs, variable width, color encoding, endpoint markers, labels,
-          colorbar; missing geographic context
+        comment: Great-circle arcs, dual-encoded volume, endpoint markers, base map,
+          graticule, airport labels all implemented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Major world airports with realistic annual passenger volumes
+        comment: Real-world major airports (London, NYC, Dubai, etc.) with plausible
+          passenger volumes (3.4–12.5M/year); neutral geopolitically
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 3.4-12.5M passengers/year realistic for major international routes
+        comment: 15 connections between 10 hubs; volumes realistic for major international
+          routes; global geographic extent
     code_quality:
       score: 10
       max: 10
@@ -192,35 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level script: tokens -> data -> graticule -> arcs -> markers
-          -> labels -> colorbar -> save'
+        comment: Flat procedural script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42) at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random — all used, none unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Correct SLERP math for great circles; NaN-break for anti-meridian;
-          no fake UI
+        comment: SLERP calculation correct, NaN insertion for antimeridian, well-organized
+          const data, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png correctly
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2) correct
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,22 +229,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of Makie grid layout, colsize! Fixed(), colorant strings,
-          RGBAf(), all standard Makie primitives
+        comment: Native poly!, lines!, scatter!, text!, Colorbar; uses colsize! for
+          layout; RGBAf and cgrad correctly
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Makie composable grid layout with Fixed() column sizing is distinctive;
-          NaN-break useful but not Makie-specific
-  verdict: REJECTED
+        passed: true
+        comment: colsize!(fig.layout, 2, Fixed(90)) for Makie layout system; poly!
+          for continent fills; NaN-terminated segments for antimeridian handling;
+          Colorbar with tellheight=false
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
