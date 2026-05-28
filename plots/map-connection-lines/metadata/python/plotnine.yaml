@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:30:11Z'
-updated: '2026-05-28T00:59:24Z'
+updated: '2026-05-28T01:08:38Z'
 generated_by: claude-sonnet
 workflow_run: 26547479539
 issue: 3746
@@ -15,39 +15,42 @@ preview_html_dark: null
 quality_score: 85
 review:
   strengths:
-  - Mathematically correct great-circle arc computation (SLERP) — geodesic paths are
-    genuine, not just straight lines
-  - Full theme adaptation including land fill/border colors adapting to light/dark
-    — thoughtful geographic theming
-  - 'Correct imprint_seq continuous colormap (#009E73 → #4467A3) with appropriate
-    palette token usage'
-  - 'Perfect spec compliance: all required features present (arcs, markers, basemap,
-    transparency, color encoding)'
-  - Realistic real-world data with accurate airport coordinates and plausible passenger
-    volumes
-  - Clean idiomatic plotnine usage with geom_path group aesthetic for arc paths
+  - Correct great-circle arc computation using the Slerp formula with 50 intermediate
+    points per route
+  - Dual encoding of passenger volume (color gradient + line width) is both spec-compliant
+    and visually effective
+  - Theme-adaptive land fill colors (LAND_FILL/LAND_BORDER tokens) correctly flip
+    between light and dark themes
+  - Dynamic title font-size scaling (max(8, round(12 * 67 / n))) prevents overflow
+    for the long mandated title
+  - 'Perfect palette compliance: imprint_seq gradient stops (#009E73 to #4467A3),
+    correct background tokens, all chrome adaptive'
+  - '15/15 on data quality: real IATA airport codes, realistic passenger volumes,
+    comprehensive 6-continent coverage'
   weaknesses:
-  - Arc lines (size=0.85) are slightly thin for 3200×1800 canvas — increase to 1.2–1.4
-    for better mobile-scale visibility
-  - 'Single-channel volume encoding (color only): encode arc thickness by volume alongside
-    color using scale_size_continuous for stronger visual hierarchy and data storytelling'
-  - Enclosed panel_border (all 4 spines) gives a boxed rigidity — use panel_border=element_blank()
-    for a cleaner frameless map look
+  - Continent polygon outlines are very coarse hand-crafted approximations (simple
+    convex polygons) — minimal geographic context and reduced map polish; use a proper
+    world geometry dataset if feasible within plotnine-only constraints
+  - Flight arcs at the low end of the size range (0.5) may be hard to distinguish
+    from grid lines at smaller viewing sizes; minimum line size should be raised to
+    0.8
+  - 'LM-02 limited: geographic computation is entirely in numpy/pandas; no plotnine-specific
+    statistical transforms or distinctive features beyond standard geom layering'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title 'Global Flight Routes · map-connection-lines · python · plotnine · anyplot.ai' in dark ink (#1A1A17), bold, spans ~75% of width. Axis labels 'Longitude (°)' and 'Latitude (°)' in dark ink at 10pt. Tick labels at 8pt in secondary ink (#4A4A44). Legend on right with title 'Passengers (thousands/yr)' in dark ink, values in secondary ink. Grid lines extremely subtle (alpha=0.12). Continent polygons in muted warm-gray.
-      Data: 25 great-circle arcs colored green (#009E73) to blue (#4467A3) by passenger volume. Airport markers are BRAND green (#009E73) filled circles with darker stroke. Colors are data-accurate.
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface token
+      Chrome: Title "Global Flight Routes · map-connection-lines · python · plotnine · anyplot.ai" in dark ink, dynamically sized ~10pt, spans ~85% of width without overflow. Axis labels "Longitude (°)" and "Latitude (°)" in dark INK at 10pt. Tick labels in INK_SOFT at 8pt — all clearly readable. Legend "Passengers (thousands/yr)" readable with INK/INK_SOFT tokens on elevated #FFFDF6 background.
+      Data: 25 flight arcs colored via imprint_seq gradient (#009E73 green → #4467A3 blue) encoding passenger volume, alpha=0.55. Line width range 0.5–2.0 also encodes volume. Airport markers as green-filled circles (fill=#009E73, stroke=INK_SOFT). Continent polygons in #E0DED4 with #BCBBB1 border. Grid lines faint (alpha=0.12).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light ink (#F0EFE8), all axis labels and tick labels in secondary light ink (#B8B7B0). Legend box uses elevated dark bg (#242420). Continent polygons in dark warm-charcoal (#282824). Grid lines remain subtle.
-      Data: Arc colors identical to light render — green-to-blue gradient unchanged (data palette immutability confirmed). Airport markers retain BRAND green fill.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures detected. Brand green #009E73 remains visible on dark surface.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface token
+      Chrome: Title, axis labels, tick labels, and legend text all in light-colored ink (#F0EFE8 primary, #B8B7B0 secondary). No dark-on-dark failures detected. Legend box uses #242420 elevated background with soft INK_SOFT border. All text clearly readable against dark surface.
+      Data: Flight arc colors identical to light render — same #009E73→#4467A3 gradient, same alpha and size encoding. Airport markers same green fill. Continent polygons shift to dark gray (#282824 fill, #3A3A30 border). Data colors theme-invariant as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -55,47 +58,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; minor
-          deduction for boxy panel border
+        comment: All font sizes explicitly set (dynamic title, axis_title=10, axis_text=8,
+          legend=8). Both renders fully readable. Title spans ~85% of width — acceptable
+          for this title length.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlap; arc overlap at hub airports is inherent to chart
-          type
+        comment: Flight arcs converge densely in Europe/Atlantic corridor as expected.
+          Airport markers cluster slightly near European hubs but distinguishable.
+          No text overlaps.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Arcs at size=0.85 slightly thin for 3200x1800 canvas; markers well-sized
+        comment: Airport markers (size=3.5) clearly visible as filled green circles.
+          Flight arcs (0.5-2.0 range, alpha=0.55) visible with appropriate density.
+          Thinnest routes could be slightly more prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient CVD-safe; no red-green reliance
+        comment: Sequential green-to-blue gradient is colorblind-safe. Alpha blending
+          provides adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout, legend integrated; some empty polar space inherent to
-          map extent
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with proportionate
+          margins. Legend positioned right without crowding. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) with units; descriptive title prefix
+        comment: Longitude (°) and Latitude (°) provide units. Title follows correct
+          optional-prefix format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (#009E73→#4467A3); correct backgrounds; data colors immutable
-          across themes
+        comment: 'scale_color_gradient(low=#009E73, high=#4467A3) matches imprint_seq
+          spec. Airport fill=BRAND (#009E73). Background #FAF8F1/#1A1A17. All chrome
+          tokens theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -105,24 +115,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: theme-adaptive land colors, two-tone markers, gradient
-          colormap. Not yet publication-level.'
+        comment: 'Above generic defaults: theme-adaptive land fill tokens, dual encoding
+          of passenger volume (color+width), clean gradient legend. Not publication-ready
+          due to rough polygon basemap.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minor grid off, major grid very subtle, legend themed. Panel border
-          appropriate for map but somewhat heavy.
+        comment: Panel border removed, minor grid blanked, major grid at subtle alpha=0.12,
+          legend uses elevated background. Rough simplified continent polygons reduce
+          overall map polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Color gradient encodes volume; hub airports emerge from arc density.
-          Missing: thickness encoding would strengthen hierarchy.'
+        comment: Dual encoding creates clear visual hierarchy. London/Dubai hub pattern
+          visually apparent from route convergence. Good focal point emergence without
+          explicit annotation.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,25 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connection lines map with great-circle arcs, basemap, endpoint markers
+        comment: Connection lines map with great-circle arcs correctly implemented.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Curved arcs, color encoding, markers, basemap, transparency all present
+        comment: 'Great circle arcs, dual encoding, airport markers, alpha transparency,
+          base map all present. Minor deduction: continent polygons are very coarse
+          hand-crafted approximations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon→x, Lat→y, volume→color; all routes visible
+        comment: Longitude on X, Latitude on Y, passenger volume on color and size.
+          All airports geographically positioned correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labeled correctly
+        comment: Title matches optional-prefix format. Legend label Passengers (thousands/yr)
+          is descriptive.
     data_quality:
       score: 15
       max: 15
@@ -158,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 25 routes, 15 airports, all continents, volume variation, hub structure
-          visible
+        comment: 25 routes across 15 airports on 6 continents. Wide volume range 1400-4200k/yr.
+          Hub-and-spoke, long-haul, and regional routes all represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real IATA codes, accurate coordinates, plausible passenger volumes,
-          neutral topic
+        comment: Real IATA airport codes with approximately correct coordinates. Neutral
+          universally comprehensible aviation scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Airport locations factually accurate; 1400-4200k/yr realistic for
-          major international routes
+        comment: Passenger volumes plausible. JFK-LHR at 4.2M/yr realistic for the
+          busiest transatlantic corridor.
     code_quality:
       score: 10
       max: 10
@@ -183,31 +200,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions or classes; sys.path guard is necessary
+        comment: 'Linear flow: imports → tokens → data → plot layers → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported symbols are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Correct inline SLERP, Pythonic zip(..., strict=True), no fake UI
+        comment: Inline great-circle computation is clean. sys.path guard for self-import
+          is necessary and well-placed. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png correctly.
     library_mastery:
       score: 6
       max: 10
@@ -217,16 +236,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong idiomatic use: geom_path with group aesthetic, scale_color_gradient,
-          coord_cartesian, layered geoms'
+        comment: Grammar-of-graphics layering (geom_polygon + geom_path + geom_point)
+          well-composed. Group aesthetic on geom_path correctly handles multi-path
+          routes. Theme customization idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Grammar-of-graphics layering used well but mirrors ggplot2-R closely;
-          no uniquely plotnine-exclusive technique
-  verdict: REJECTED
+        comment: The grouping pattern in geom_path is plotnine-idiomatic. Core geographic
+          computation done entirely in numpy/pandas outside plotnine. No stat transforms,
+          position adjustments, or other distinctive plotnine features leveraged.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -235,8 +256,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
   - alpha-blending
   - custom-colormap
