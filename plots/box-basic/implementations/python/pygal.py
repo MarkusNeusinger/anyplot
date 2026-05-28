@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-28
@@ -96,10 +96,20 @@ for category in categories:
 svg_string = chart.render().decode("utf-8")
 
 # Increase box fill opacity (pygal hardcodes subtle-fill at 0.2)
-svg_string = svg_string.replace(".subtle-fill{fill-opacity:.2}", ".subtle-fill{fill-opacity:.7}")
+# Also add ink-colored border stroke to each box for publication-ready borders
+svg_string = svg_string.replace(
+    ".subtle-fill{fill-opacity:.2}", f".subtle-fill{{fill-opacity:.7;stroke:{INK_SOFT};stroke-width:4}}"
+)
+
+# Thicken series lines (whiskers + median) and remove heavy chart border
+extra_css = ".series line{stroke-width:5}.background{stroke:none}"
+svg_string = svg_string.replace("</style>", extra_css + "</style>", 1)
 
 # Enlarge outlier dots (pygal hardcodes r=3 for box outliers)
-svg_string = re.sub(r'(<circle[^>]*) r="3" (class="subtle-fill)', r'\1 r="15" \2', svg_string)
+svg_string = re.sub(r'(<circle[^>]*) r="3" (class="subtle-fill)', r'\1 r="20" \2', svg_string)
+
+# Format y-axis tick labels with comma separators (e.g. 80000 → 80,000)
+svg_string = re.sub(r">(\d{5,})<", lambda m: f">{int(m.group(1)):,}<", svg_string)
 
 # Add storytelling subtitle annotation
 annotation_svg = (
