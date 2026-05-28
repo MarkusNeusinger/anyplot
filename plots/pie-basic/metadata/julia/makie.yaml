@@ -1,0 +1,257 @@
+library: makie
+language: julia
+specification_id: pie-basic
+created: '2026-05-28T11:55:58Z'
+updated: '2026-05-28T12:25:10Z'
+generated_by: claude-sonnet
+workflow_run: 26572186705
+issue: 678
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct anyplot palette in canonical order (Python=#009E73 first, then lavender,
+    blue, ochre, red) with all colors identical across light/dark renders
+  - Slice explosion implemented via Makie's translate! scene-graph API — idiomatic,
+    not a matplotlib-style explode= argument
+  - Dominant slice (Python 36%) emphasized with both physical explosion AND a bolder/larger
+    percentage label (17pt vs 13pt for others), creating clear visual hierarchy
+  - Legend includes percentage values alongside category names, providing dual data
+    access without needing to read both legend and labels
+  - 'Theme-adaptive chrome correctly implemented: INK/INK_SOFT tokens thread through
+    title and legend labels, backgrounds flip cleanly between #FAF8F1 and #1A1A17'
+  - All spines, grid, and tick marks hidden — appropriate minimal chrome for a pie
+    chart
+  - 'Full spec compliance: percentage labels on all slices, distinct colors, legend,
+    and exploded slice'
+  weaknesses:
+  - Canvas utilization slightly uneven — there is noticeably more blank space below
+    the pie circle than above it, suggesting the DataAspect() + limits! combination
+    pushes the visible area upward relative to the canvas center
+  - Title font size calculation results in size 20 (correct), but the title reads
+    slightly compressed at this size relative to the canvas width — borderline but
+    acceptable
+  - Legend swatch colors look very small relative to legend text at the 2400x2400
+    canvas; rowgap=14 is reasonable but the swatches could be slightly larger for
+    mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Bold title "Primary Programming Language · pie-basic · julia · makie · anyplot.ai" in dark near-black ink, clearly readable. No axis labels or tick labels (correctly suppressed for pie). Legend labels in dark ink on elevated-bg (#FFFDF6).
+      Data: Five pie slices in anyplot canonical order — Python (#009E73 green, 36%), JavaScript (#C475FD lavender, 29.5%), Java (#4467A3 blue, 17%), C/C++ (#BD8233 ochre, 11.5%), TypeScript (#AE3030 red, 6%). Python slice is physically exploded outward. White percentage labels inside each slice; dominant slice label is bold and 17pt. Legend on the right shows category name + percentage.
+      Legibility verdict: PASS — all text elements clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title rendered in light cream (#F0EFE8-equivalent INK token) — clearly visible against dark background. Legend labels appear in light color. No dark-on-dark failures detected.
+      Data: Identical palette colors to light render — Python green, JavaScript lavender, Java blue, C/C++ ochre, TypeScript red — all correctly theme-independent. White percentage labels remain visible against their respective colored slices.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures; chrome correctly adapts while data colors remain constant
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title adaptive formula gives 20pt;
+          percentage labels 13/17pt; legend 14pt. Readable in both themes. Minor:
+          6% TypeScript label tight but visible.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps detected in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All slices clearly visible; even smallest (6%) slice is distinguishable
+          with readable label
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Anyplot palette is CVD-safe; white labels on colored slices provide
+          adequate contrast; PAGE_BG stroke separates slices
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Pie + right-side legend fills most of canvas, but slight vertical
+          imbalance — more blank space below pie than above
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id format; no axis labels needed for
+          pie (correctly omitted)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Python=#009E73; canonical order positions 1-5; backgrounds
+          #FAF8F1/#1A1A17; theme chrome correctly adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: explode effect, dual-weight labels
+          for emphasis, frame-less legend with percentage values. Not publication-ready
+          but shows intentional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines/grid/ticks suppressed; frame-less legend; PAGE_BG stroke
+          separates slices cleanly; adequate padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Exploded Python slice + bolder label creates clear focal point; viewer
+          immediately identifies dominant language
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pie chart with all slices proportional to values
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage labels on all slices, distinct colors, legend, exploded
+          largest slice — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 5 categories mapped correctly; values sum to 100%
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive} · pie-basic · julia · makie · anyplot.ai
+          format; legend labels match categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows varying slice sizes from dominant (36%) to small (6%), covering
+          the full range of pie chart use cases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Programming language market share is a real, neutral, comprehensible
+          scenario; values align with survey data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum to exactly 100%; proportions plausible for developer survey
+          data (Python dominance is real)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → constants → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data; no random seed needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plotting), Colors (colorant"#..."), Printf (@sprintf)
+          — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: let block for explosion is idiomatic Julia; minor verbosity in duplicate
+          text! blocks but not a significant issue
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2 — correct
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: pie! recipe, translate! for explosion, Legend as layout element,
+          colsize!/colgap! — all Makie-idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: translate! on p.plots[i] for slice explosion uses Makie's scene-graph
+          transformation system — genuinely Makie-distinctive; GridLayout composition
+          also Makie-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - edge-highlighting
