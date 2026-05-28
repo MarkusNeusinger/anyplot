@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 88/100 | Created: 2026-02-15
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,30 +13,43 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A36"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Modes: positions 1,2,3,4,6 — skip #AE3030 (pos 5), reserved for critical markers
+MODE_COLORS = [ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2], ANYPLOT_PALETTE[3], ANYPLOT_PALETTE[5]]
+CRIT_COLOR = ANYPLOT_PALETTE[4]  # #AE3030 — semantic: danger/resonance risk
+
 # Data
 np.random.seed(42)
 speed_rpm = np.linspace(0, 6000, 80)
 max_freq = 120
 
-# Natural frequency modes (Hz) with realistic speed-dependent variation
-# Gyroscopic effects: forward whirl modes increase, backward whirl modes decrease
+# Natural frequencies with pronounced speed-dependent variation (gyroscopic effects)
 modes = {
-    "1st Bending": 25 + 0.0008 * speed_rpm + np.random.normal(0, 0.15, 80),
-    "1st Torsional": 48 - 0.0005 * speed_rpm + np.random.normal(0, 0.12, 80),
-    "2nd Bending": 72 + 0.0025 * speed_rpm + np.random.normal(0, 0.18, 80),
-    "2nd Torsional": 88 + 0.0006 * speed_rpm + np.random.normal(0, 0.14, 80),
-    "Axial": 105 - 0.0004 * speed_rpm + np.random.normal(0, 0.10, 80),
+    "1st Bending": 25 + 0.0035 * speed_rpm + np.random.normal(0, 0.15, 80),
+    "1st Torsional": 48 - 0.0030 * speed_rpm + np.random.normal(0, 0.12, 80),
+    "2nd Bending": 72 + 0.0045 * speed_rpm + np.random.normal(0, 0.18, 80),
+    "2nd Torsional": 88 + 0.0012 * speed_rpm + np.random.normal(0, 0.14, 80),
+    "Axial": 105 - 0.0025 * speed_rpm + np.random.normal(0, 0.10, 80),
 }
+mode_order = list(modes.keys())
 
-# Build long-format DataFrame for natural frequency modes
 modes_df = pd.concat(
     [pd.DataFrame({"Speed": speed_rpm, "Frequency": freq, "Mode": name}) for name, freq in modes.items()],
     ignore_index=True,
 )
 
-# Engine order lines: frequency = order * speed_rpm / 60
+# Engine order excitation lines (freq = order × RPM / 60)
 orders = [1, 2, 3]
-order_labels = ["1\u00d7", "2\u00d7", "3\u00d7"]
+order_labels = ["1×", "2×", "3×"]
 
 eo_df = pd.concat(
     [
@@ -50,7 +65,7 @@ eo_df = pd.concat(
     ignore_index=True,
 )
 
-# Find critical speed intersections (EO lines crossing mode curves)
+# Critical speeds: intersections of EO lines with mode curves
 critical_rows = []
 for order, olabel in zip(orders, order_labels):
     eo_at = order * speed_rpm / 60
@@ -61,41 +76,35 @@ for order, olabel in zip(orders, order_labels):
             cs = speed_rpm[idx] + t * (speed_rpm[idx + 1] - speed_rpm[idx])
             cf = order * cs / 60
             if cf <= max_freq:
-                critical_rows.append({"Speed": cs, "Frequency": cf, "Intersection": f"{mname} \u00d7 {olabel}"})
-
+                critical_rows.append({"Speed": cs, "Frequency": cf, "Intersection": f"{mname} × {olabel}"})
 crit_df = pd.DataFrame(critical_rows)
 
-# Highlight zones around critical speeds
+# Resonance risk zones around critical speeds
 zone_df = pd.DataFrame(
     [
-        {"xmin": r["Speed"] - 150, "xmax": r["Speed"] + 150, "ymin": r["Frequency"] - 3.5, "ymax": r["Frequency"] + 3.5}
+        {"xmin": r["Speed"] - 150, "xmax": r["Speed"] + 150, "ymin": r["Frequency"] - 3, "ymax": r["Frequency"] + 3}
         for _, r in crit_df.iterrows()
     ]
 )
 
-# EO label positions along each line
+# EO direct labels: positioned below mode curves (< 25 Hz) in low-RPM region
 eo_label_df = pd.DataFrame(
     [
-        {"Speed": spd, "Frequency": eo * spd / 60 + 2.5, "Label": lbl}
-        for eo, lbl, spd in zip(orders, order_labels, [5200, 3400, 2200])
+        {"Speed": 1200, "Frequency": 1 * 1200 / 60 + 2, "Label": "1×"},
+        {"Speed": 500, "Frequency": 2 * 500 / 60 + 2, "Label": "2×"},
+        {"Speed": 250, "Frequency": 3 * 250 / 60 + 2, "Label": "3×"},
     ]
 )
 
-# Colorblind-safe palette (blue-teal-amber-purple-gray) — avoids red-green confusion
-mode_colors = ["#306998", "#17A589", "#D4A017", "#8E44AD", "#5D6D7E"]
-mode_order = list(modes.keys())
-eo_color = "#AAAAAA"
-crit_color = "#C0392B"
-
-# Annotate the most dangerous critical speed (highest frequency intersection)
+# Annotation for the highest-frequency critical speed (resonance risk highlight)
 danger_idx = crit_df["Frequency"].idxmax()
 danger_row = crit_df.loc[danger_idx]
 annot_df = pd.DataFrame(
     [
         {
-            "Speed": danger_row["Speed"] + 250,
-            "Frequency": danger_row["Frequency"] + 5,
-            "Label": f"\u2190 {danger_row['Intersection']}\n    ({int(danger_row['Speed'])} RPM)",
+            "Speed": danger_row["Speed"],
+            "Frequency": danger_row["Frequency"] + 8,
+            "Label": f"{danger_row['Intersection']}\n({int(danger_row['Speed'])} RPM)",
         }
     ]
 )
@@ -106,11 +115,11 @@ plot = (
     + geom_rect(
         data=zone_df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
-        fill=crit_color,
+        fill=CRIT_COLOR,
         alpha=0.08,
         color="transparent",
     )
-    + geom_line(data=eo_df, mapping=aes(x="Speed", y="Frequency", linetype="Order"), color=eo_color, size=0.9)
+    + geom_line(data=eo_df, mapping=aes(x="Speed", y="Frequency", linetype="Order"), color=INK_MUTED, size=0.9)
     + geom_line(
         data=modes_df,
         mapping=aes(x="Speed", y="Frequency", color="Mode"),
@@ -125,8 +134,8 @@ plot = (
     + geom_point(
         data=crit_df,
         mapping=aes(x="Speed", y="Frequency"),
-        color=crit_color,
-        fill=crit_color,
+        color=CRIT_COLOR,
+        fill=CRIT_COLOR,
         size=8,
         shape=18,
         tooltips=layer_tooltips()
@@ -140,50 +149,51 @@ plot = (
     + geom_text(
         data=eo_label_df,
         mapping=aes(x="Speed", y="Frequency", label="Label"),
-        color="#777777",
+        color=INK_MUTED,
         size=14,
         fontface="bold",
     )
     + geom_text(
         data=annot_df,
         mapping=aes(x="Speed", y="Frequency", label="Label"),
-        color=crit_color,
-        size=12,
+        color=CRIT_COLOR,
+        size=11,
         fontface="italic",
-        hjust=0,
+        hjust=0.5,
     )
-    + scale_color_manual(name="Natural Frequency", values=mode_colors, limits=mode_order)
-    + scale_linetype_manual(name="Engine Order", values=["dashed", "dashed", "dashed"])
-    + scale_y_continuous(limits=[0, max_freq], expand=[0, 2])
-    + scale_x_continuous(limits=[0, 6200], format=",d")
-    + guides(linetype=guide_legend(override_aes={"color": eo_color}))
+    + scale_color_manual(name="Natural Frequency", values=MODE_COLORS, limits=mode_order)
+    + scale_linetype_manual(name="Engine Order", values=["dashed", "longdash", "dotdash"], limits=order_labels)
+    + scale_y_continuous(limits=[0, max_freq], expand=[0.01, 0])
+    + scale_x_continuous(limits=[0, 6000], expand=[0.01, 0], format=",d")
+    + guides(linetype=guide_legend(override_aes={"color": INK_MUTED}))
     + labs(
-        title="campbell-basic \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Red diamonds mark critical speeds where engine order excitations cross natural frequency modes",
+        title="campbell-basic · python · letsplot · anyplot.ai",
+        subtitle="Red diamonds mark critical speeds where engine order lines cross natural frequency modes",
         x="Rotational Speed (RPM)",
         y="Frequency (Hz)",
-        caption="Data: synthetic rotordynamic model | Highlight zones indicate resonance risk regions",
+        caption="Data: synthetic rotordynamic model | Shaded zones indicate resonance risk regions",
     )
-    + flavor_high_contrast_light()
     + theme(
-        plot_title=element_text(size=28, hjust=0.5, face="bold"),
-        plot_subtitle=element_text(size=16, hjust=0.5, color="#555555"),
-        plot_caption=element_text(size=13, color="#888888", face="italic"),
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        legend_title=element_text(size=18, face="bold"),
-        legend_text=element_text(size=16),
-        legend_position=[0.02, 0.98],
-        legend_justification=[0, 1],
-        legend_background=element_rect(fill="white", color="#CCCCCC", size=0.5),
-        panel_grid_major=element_line(color="#E5E5E5", size=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.4),
         panel_grid_minor=element_blank(),
-        axis_line=element_line(color="#BBBBBB", size=0.5),
-        plot_margin=[40, 20, 20, 20],
+        panel_border=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        axis_title=element_text(color=INK, size=12),
+        axis_text=element_text(color=INK_SOFT, size=10),
+        plot_title=element_text(color=INK, size=16, face="bold", hjust=0.5),
+        plot_subtitle=element_text(color=INK_MUTED, size=11, hjust=0.5),
+        plot_caption=element_text(color=INK_MUTED, size=10, face="italic"),
+        legend_position="right",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT, size=10),
+        legend_title=element_text(color=INK, size=11, face="bold"),
+        plot_margin=[20, 20, 20, 20],
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
