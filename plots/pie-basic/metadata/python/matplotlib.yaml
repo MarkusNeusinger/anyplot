@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: pie-basic
 created: '2025-12-23T00:34:31Z'
-updated: '2026-05-28T11:28:42Z'
+updated: '2026-05-28T11:44:23Z'
 generated_by: claude-sonnet
 workflow_run: 26571272971
 issue: 678
@@ -12,41 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance — all 4 required features implemented (percentage labels,
-    distinct colors, legend, exploded slice).
-  - 'Correct anyplot palette: brand green first, canonical positions 1→5, data colors
-    identical across both renders.'
-  - Theme-adaptive chrome works correctly in both renders — no dark-on-dark or light-on-light
-    failures.
-  - Real 2024 cloud market share data with accurate proportions — excellent data quality.
-  - Correct canvas size (6×6 @ dpi=400 = 2400×2400 px square) without bbox_inches
-    drift.
-  - Clean KISS code structure; fully deterministic; no over-engineering.
+  - 'Full spec compliance: percentage labels, distinct anyplot palette colors, legend,
+    exploded largest slice — all four required features present'
+  - Center medallion using matplotlib.patches.Circle demonstrates library-native primitive
+    drawing capability and adds meaningful data context (year + topic)
+  - 'Correct square 2400×2400 canvas for pie chart; palette positions 1–5 in canonical
+    order; backgrounds #FAF8F1 / #1A1A17 both correct'
+  - 'Theme adaptation is thorough: textprops color=INK, legend frame facecolor=ELEVATED_BG/edgecolor=INK_SOFT,
+    center text color=INK/INK_MUTED — dark render passes legibility check'
+  - Clean, linear code with no functions/classes; only used imports; deterministic
+    hardcoded data
   weaknesses:
-  - Design sophistication at well-configured default level — no standout aesthetic
-    choice lifts it to publication-ready (DE-01 4/8).
-  - Unused vertical whitespace between title and pie top, and between pie bottom and
-    legend — square canvas not fully utilized.
-  - Library mastery does not showcase a matplotlib-distinctive capability beyond standard
-    pie chart parameters (LM-02 2/5).
+  - Center medallion 'Global Cloud' text is fontsize=7pt (≈39 source px); at mobile
+    400px display width this becomes ~6–7 px — borderline unreadable for supplementary
+    context text. Raise to fontsize=8 or 9.
+  - 'Design Excellence is restrained: beyond the center medallion the composition
+    is standard. No visual hierarchy emphasis beyond the exploded slice. Consider
+    adding a subtle radial gradient or outer glow to the exploded AWS slice to reinforce
+    the focal point.'
+  - Legend is positioned at bbox_to_anchor=(0.5, -0.08) which places it just below
+    the axes; with tight_layout() there is limited bottom breathing room. Increasing
+    bottom margin slightly (e.g. plt.subplots_adjust(bottom=0.12)) would add whitespace
+    between pie and legend.
+  - 'Minor spatial pressure around the Alibaba Cloud slice (4%): the small wedge,
+    its 4.0% percentage label, and the ''Alibaba Cloud'' external label are close
+    together. No overlap in renders, but labeldistance=1.15 causes the label to sit
+    close to the ''Google Cloud'' label. Consider pctdistance=0.80 for very small
+    slices.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "pie-basic · python · matplotlib · anyplot.ai" in dark #1A1A17 text — clearly readable. Category labels (AWS, Azure, Google Cloud, Alibaba Cloud, Others) in dark ink around pie exterior — all readable. Legend "Cloud Providers" title and labels in #4A4A44 — readable. No axis labels (appropriate for pie chart).
-      Data: AWS #009E73 brand green (31.0%, exploded), Others #AE3030 matte red (29.0%), Azure #C475FD lavender (25.0%), Google Cloud #4467A3 blue (11.0%), Alibaba Cloud #BD8233 ochre (4.0%). Bold white percentage labels inside slices. First series is #009E73 ✓.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "pie-basic · python · matplotlib · anyplot.ai" in dark ink at top — clear and readable. Category labels ("AWS", "Azure", "Others", "Google Cloud", "Alibaba Cloud") in dark text outside slices — all readable. Legend at bottom with "Cloud Providers" title, three-column layout, dark text — readable. Center medallion shows "2024" (bold) and "Global Cloud" (smaller) in dark ink.
+      Data: Five slices using anyplot palette positions 1–5: AWS=#009E73 (green, exploded, 31.0%), Azure=#C475FD (lavender, 25.0%), Others=#AE3030 (matte red, 29.0%), Google Cloud=#4467A3 (blue, 11.0%), Alibaba Cloud=#BD8233 (ochre, 4.0%). White percentage labels in bold on each slice. White wedge edge separators on PAGE_BG color.
+      Legibility verdict: PASS — all text readable against light background. "Global Cloud" at fontsize=7 is small but still discernible at full resolution. No dark-on-dark or light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title visible in light #F0EFE8 text — clearly readable. Category labels in light text around pie exterior — readable, no dark-on-dark failures. Legend text in #B8B7B0 on #242420 elevated background — readable. No axis labels.
-      Data: All 5 slice colors identical to light render (#009E73, #AE3030, #C475FD, #4467A3, #BD8233). Bold white percentage labels readable on all slice colors. Wedge edges use #1A1A17 (background color) — creates subtle dark outlines; slices distinguishable by color.
-      Legibility verdict: PASS — all text clearly readable against dark background. No dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light cream text — readable. Category labels appear in light/cream color (INK=#F0EFE8 in dark mode via textprops color=INK) — readable. Legend text in INK_SOFT (#B8B7B0) — readable against #242420 elevated background. Center medallion "2024" in INK (light cream) and "Global Cloud" in INK_MUTED (#A8A79F) — readable.
+      Data: Same five slices with identical data colors as light render — AWS=#009E73, Azure=#C475FD, Others=#AE3030, Google Cloud=#4467A3, Alibaba Cloud=#BD8233 — palette is theme-stable as required. White percentage labels remain white on colored slices — readable. Wedge edges use dark PAGE_BG as separator.
+      Legibility verdict: PASS — no dark-on-dark failures. All chrome elements correctly use light tokens in dark theme. Brand green #009E73 remains clearly visible on near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,80 +64,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 12pt, slice labels 10pt, pct
-          labels 9pt, legend 8pt). All text readable in both themes. Minor deduction:
-          outer category labels slightly large near the small 4% Alibaba Cloud slice.'
+        comment: 'All text readable in both themes; textprops color=INK adapts correctly;
+          white bold percentage labels readable on colored slices. Minor: ''Global
+          Cloud'' center text at fontsize=7 is small (~6px at mobile 400px width).'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions in either render. Category labels, percentage
-          labels, and legend well-separated.
+        comment: No significant overlaps. Minor spatial pressure near the small Alibaba
+          Cloud 4% slice — label and pct are close to Google Cloud label but no actual
+          overlap in renders.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 slices clearly visible including the small 4% Alibaba Cloud
-          slice. Bold white percentage labels readable on all slice colors.
+        comment: All five slices clearly visible including the small 4% Alibaba Cloud
+          ochre slice. Exploded AWS slice prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe. White percentage labels provide strong
-          contrast against all slice hues.
+        comment: CVD-safe anyplot palette; no red-green sole signal conflict (all
+          5 slices are distinctly different hues).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas appropriate for pie chart. Pie fills ~65%
-          of canvas. Legend well-positioned below. Balanced margins.
+        comment: Correct square 2400x2400 canvas for pie chart (figsize=(6,6) dpi=400).
+          Canvas gate passed. Good proportions; legend fits within canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for pie chart. Title correct format. Legend
-          title Cloud Providers is descriptive.
+        comment: No x/y axes on pie (correct). Title is exact required format. Legend
+          title 'Cloud Providers' is descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First slice #009E73 brand green. Canonical positions 1-5. Background
-          #FAF8F1 light / #1A1A17 dark. Chrome adapts correctly. Data colors identical
-          across both themes.'
+        comment: 'First category AWS=#009E73 (brand green). Positions 1-5 in canonical
+          order. Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Palette colors
+          identical across both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correct palette, exploded slice, styled legend. Sits at well-configured
-          default level — no standout aesthetic choice lifts it above a carefully-tuned
-          library default.
+        passed: true
+        comment: Center medallion with Circle patches adds data context and library
+          showcase. Exploded slice for emphasis. Clean wedge edge colors. Beyond median
+          but not exceptional design.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Legend frame styled with theme-adaptive fill and edge. Wedge edges
-          use background color for clean separation. Unused vertical whitespace between
-          title and pie top, and between pie bottom and legend.
+        passed: true
+        comment: Themed legend with ELEVATED_BG fill and INK_SOFT border. Center ring
+          with subtle INK_MUTED stroke. Clean wedge edges using PAGE_BG color. Pie
+          chart appropriately has no spines/grid.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 'Exploded AWS slice creates focal point. Cloud market share data
-          tells coherent story. Visual hierarchy achieved. Slight deduction: no additional
-          emphasis beyond spec-required explode.'
+        passed: true
+        comment: Exploded AWS slice directs attention to market leader. Center year/topic
+          context anchors the data temporally. Clear cloud market dominance narrative
+          visible at a glance.
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart implementation.
+        comment: Correct pie chart with ax.pie().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Percentage labels, distinct colors, legend, exploded largest slice
-          (AWS) — all present.
+        comment: 'All four required features present: percentage labels (autopct),
+          distinct colors (anyplot palette), legend for identification, exploded largest
+          slice (AWS at explode=0.08).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 categories mapped correctly. Values sum to 100.
+        comment: 5 companies (within 3-8 range), positive values summing to 100, plausible
+          real-world cloud market share. Angles proportional to values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title pie-basic · python · matplotlib · anyplot.ai exactly correct.
-          Legend labels match data categories.
+        comment: 'Title: ''pie-basic · python · matplotlib · anyplot.ai'' — exact
+          required format. Legend labels match category names exactly.'
     data_quality:
       score: 15
       max: 15
@@ -167,23 +180,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates slice size variation from 4% to 31%, exploded emphasis,
-          percentage labels, full categorical coverage.
+        comment: Shows parts-to-whole relationship with 5 meaningful categories, percentage
+          labels, proportional slices, and emphasis via explosion.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global cloud infrastructure market share 2024 with real company names.
-          Business domain, neutral, non-controversial.
+        comment: Global cloud infrastructure market share 2024 — real-world, neutral
+          business data. AWS 31%, Azure 25%, Google Cloud 11%, Alibaba Cloud 4%, Others
+          29% are plausible figures consistent with public reporting.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AWS ~31%, Azure ~25%, Google Cloud ~11%, Alibaba Cloud ~4%, Others
-          ~29% accurately reflect documented 2024 cloud market share. Values sum to
-          100.
+        comment: Percentage data summing to 100. Sensible proportions — largest provider
+          (AWS) meaningfully larger than smallest named provider (Alibaba Cloud 4%).
     code_quality:
       score: 10
       max: 10
@@ -193,35 +206,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Theme tokens → Data → Plot → Save. No functions or
-          classes.
+        comment: Linear code, no functions or classes, straightforward flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data. No random seed needed.
+        comment: Deterministic hardcoded data — no randomness, no seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and matplotlib.pyplot imported, both used.
+        comment: 'Only three imports, all used: os (ANYPLOT_THEME), matplotlib.pyplot,
+          matplotlib.patches.Circle.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No over-engineering or fake UI.
+        comment: Appropriate complexity, no fake UI, clean loop for autotext styling.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches=tight. Current matplotlib
-          API.
+        comment: Saves as plot-{THEME}.png at dpi=400. No bbox_inches='tight' (library
+          rule compliance). Current matplotlib 3.10.x API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -229,20 +242,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.pie() (Axes method). Correct use of wedgeprops, textprops,
-          autopct, pctdistance, startangle. Legend built from wedge handles correctly.
+        comment: Uses ax.pie() with autopct, textprops, wedgeprops, pctdistance, labeldistance.
+          Proper legend with bbox_to_anchor. tight_layout(). Iterates autotexts to
+          style individually — idiomatic pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses matplotlib-specific pie parameters (wedgeprops, pctdistance,
-          textprops) but these are standard pie API surface — nothing uniquely showcases
-          matplotlib capabilities.
-  verdict: REJECTED
+        passed: true
+        comment: Center medallion uses matplotlib.patches.Circle via ax.add_patch()
+          — a library-distinctive primitive drawing feature. Demonstrates direct artist
+          manipulation beyond the high-level pie API.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
+  - annotations
   - custom-legend
   patterns:
   - explicit-figure
