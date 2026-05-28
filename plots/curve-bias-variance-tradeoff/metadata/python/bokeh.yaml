@@ -1,164 +1,186 @@
 library: bokeh
+language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:58:10Z'
-updated: '2026-01-26T20:01:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21371825982
+updated: '2026-05-28T03:40:20Z'
+generated_by: claude-sonnet
+workflow_run: 26552395767
 issue: 4134
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/bokeh/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of all spec requirements including the formula, shaded
-    zones, optimal point marker, and direct curve labels
-  - 'Good use of Bokeh-specific features: ColumnDataSource, BoxAnnotation for zones,
-    Span for optimal line, Label for annotations'
-  - Clean color scheme with good contrast between all four curves
-  - Well-sized text elements that are all readable at full resolution
-  - Proper title format following the spec-id · library · pyplots.ai convention
+  - 'Full spec compliance: all 4 required curves (Bias², Variance, Irreducible Error,
+    Total Error), optimal point marker, zone shading, formula annotation, and direct
+    curve labels all present'
+  - 'Excellent Bokeh-idiomatic usage: BoxAnnotation for zone shading, Span for optimal
+    vertical line, multiple Label overlays, ColumnDataSource, dual HTML+PNG output'
+  - Theme adaptation correct and complete in both renders — no dark-on-dark failures,
+    backgrounds match anyplot spec
+  - 'Strong educational narrative: underfitting/overfitting zone shading guides the
+    viewer through the key ML concept'
+  - Clean flat code structure with proper seed and all required output artifacts
   weaknesses:
-  - Axis labels lack units (though for this theoretical plot, unitless may be acceptable)
-  - Irreducible Error label text appears somewhat faint due to gray color on light
-    background
-  - Could benefit from HoverTool for interactivity (though this is PNG export)
-  image_description: 'The plot displays the classic Bias-Variance Tradeoff visualization
-    with four distinct curves on a light gray background. The blue curve (Bias²) starts
-    high around 4 on the left and decreases asymptotically as model complexity increases.
-    The yellow/gold curve (Variance) starts near zero and increases as complexity
-    grows. The gray dashed horizontal line represents Irreducible Error at approximately
-    0.5. The red curve (Total Error) shows the characteristic U-shape, being the sum
-    of all components. A green vertical dashed line marks the optimal complexity point
-    around x=3.2 where total error is minimized, with a green circular marker at that
-    intersection. The plot includes shaded regions: a blue-tinted area on the left
-    labeled "Underfitting (High Bias)" and a yellow-tinted area on the right labeled
-    "Overfitting (High Variance)". The formula "Total Error = Bias² + Variance + Irreducible
-    Error" appears near the top. Each curve has direct labels. The legend in the top-right
-    shows all four series. Axes are labeled "Model Complexity" (x-axis) and "Prediction
-    Error" (y-axis). The title correctly follows the format "curve-bias-variance-tradeoff
-    · bokeh · pyplots.ai".'
+  - (High Bias) and (High Variance) sub-labels at 20pt are slightly small relative
+    to the 3200x1800 canvas; raise to 24pt to match the Underfitting/Overfitting labels
+  - Top-left text stack (formula at y=4.88, Underfitting at y=4.55, (High Bias) at
+    y=4.17) is tight — marginally crowded; add 0.15–0.2 units vertical separation
+  - Optimal annotation blends into surrounding text rather than standing out as the
+    key insight — consider a callout box or bolder styling to make the minimum-error
+    point the visual hero
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "curve-bias-variance-tradeoff · python · bokeh · anyplot.ai" bold dark INK, clearly readable. Axis labels "Model Complexity" / "Prediction Error" in INK at 42pt, readable. Tick labels in INK_SOFT at 34pt, readable. All annotations readable.
+      Data: Total Error = #009E73 (brand green, thickest line), Bias² = #4467A3 (blue, decreasing), Variance = #C475FD (purple, increasing), Irreducible Error = INK_SOFT dashed (neutral reference). Blue-tinted underfitting zone and purple-tinted overfitting zone. Optimal marker (green scatter, size=20). Formula annotation top-left.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title, axis labels, tick labels all rendered in light tokens (#F0EFE8 / #B8B7B0). All readable against dark background. No dark-on-dark failures detected.
+      Data: Colors IDENTICAL to light render — green, blue, purple, dashed grey. Zone shading colors retained. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text is clearly readable at full size. Title, axis labels, annotations,
-          and legend are all appropriately sized.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. All labels are well-positioned and
-          clearly visible.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Lines are thick and clearly visible. The irreducible error label
-          text is somewhat faint (gray on light background).
+        comment: 50pt title, 42pt axis labels, 34pt ticks per bokeh guide; all readable
+          in both themes; minor deduction for 20pt zone sub-labels being slightly
+          small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Formula/zone label stack is tight but non-overlapping; no data-text
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 curves clearly visible with 4-7px line widths; optimal marker
+          size=20 prominent; dashed style differentiates irreducible error
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: 'Good color choices: blue, yellow/gold, gray, red, and green are
-          distinguishable. No red-green as only difference.'
+        comment: anyplot CVD-safe palette; dashed linestyle provides redundant encoding
+          for irreducible error
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent canvas utilization with balanced margins. The plot fills
-          the space well.
+        comment: Canvas gate passed (3200x1800); min_border_* correct; no clipping
+          on either render
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but without units.
+        comment: Model Complexity and Prediction Error are descriptive; title matches
+          required format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle. Legend could be positioned better.
+        comment: 'Total Error = #009E73 first series; blue/purple swap semantically
+          justified for ML education context; irreducible error uses INK_SOFT neutral;
+          backgrounds correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Zone shading, direct curve labels, formula annotation, and optimal-point
+          marker show deliberate design intent above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-grid only at alpha=0.12, outline_line_color=None, elevated-bg legend
+          — clean restrained chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone shading creates narrative structure; optimal point clearly marked;
+          formula reinforces mathematical relationship
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct theoretical curve visualization with multiple lines.
+        comment: Correct multi-line chart for bias-variance tradeoff
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis correctly shows model complexity, Y-axis shows prediction
-          error.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: 4 curves, optimal point marked, annotations
-          on curves, formula displayed, shaded underfitting/overfitting zones.'
-      - id: SC-04
-        name: Data Range
+        comment: All 4 curves, optimal marker, vertical line, direct labels, formula,
+          zone shading all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately (0-10.5 x, 0-5.5 y).
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Model Complexity, Y: Prediction Error; curves mathematically
+          correct'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify all four series.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: curve-bias-variance-tradeoff · bokeh · pyplots.ai'
+        comment: Title matches required format; legend labels all 4 curves
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all aspects: decreasing bias, increasing variance, constant
-          irreducible error, U-shaped total error, and optimal point.'
+        comment: 'All aspects shown: 4 curves, optimal point, zone annotations, formula'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Uses theoretical/generic ML context which is appropriate, but context
-          is implicit rather than explicit real-world scenario.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Error values are sensible (0-5 range), complexity scale 0-10 is reasonable.
+        comment: Standard ML education domain, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y 0-5.5 covers all data; X 0-10.5 for model complexity; plausible
+          theoretical values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,52 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure. No functions or classes.
+        comment: No functions or classes; flat sequential script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh components).
+        comment: All imports used; sys.path manipulation necessary due to bokeh.py
+          filename conflict
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean readable code at appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png which is correct, but relies on selenium-dependent
-          export_png.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly; uses Selenium
+          pattern per bokeh guide
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, BoxAnnotation, Span, and Label which are Bokeh-specific
-          features. Could have used more interactive features like HoverTool.
+        comment: ColumnDataSource, BoxAnnotation, Span, Label all used correctly;
+          min_border_* properly set; Selenium export follows bokeh guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: BoxAnnotation for zone shading, Span for vertical line, Label overlays,
+          dual HTML+PNG output — strong use of Bokeh-specific models
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
+  - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
