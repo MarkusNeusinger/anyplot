@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -105,19 +105,27 @@ ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.xaxis.grid(True, alpha=0.08, linewidth=0.5)
 
-# Refine legend — theme-adaptive frame and text
+# Move legend first, then configure the resulting object to avoid losing changes
+sns.move_legend(ax, "upper right", frameon=True)
 legend = ax.get_legend()
-legend.set_title("Income Tier / Population (M)", prop={"size": 7})
+legend.set_title("Income Tier / Population (M)", prop={"size": 8})
 legend.get_title().set_fontweight("semibold")
 legend.get_title().set_color(INK)
-for text in legend.get_texts():
-    text.set_fontsize(7)
-    text.set_color(INK)
+tier_names = {t[0] for t in tier_params}
+for handle, text_obj in zip(legend.legend_handles, legend.texts, strict=False):
+    text_obj.set_fontsize(8)
+    text_obj.set_color(INK)
+    # Size handles (non-tier labels): override colors so they're visible in dark mode
+    if text_obj.get_text() not in tier_names:
+        try:
+            handle.set_facecolor(INK_SOFT)
+            handle.set_edgecolor(INK_SOFT)
+        except AttributeError:
+            pass
 legend.set_frame_on(True)
 legend.get_frame().set_alpha(0.92)
 legend.get_frame().set_edgecolor(INK_SOFT)
 legend.get_frame().set_facecolor(ELEVATED_BG)
-sns.move_legend(ax, "upper right", frameon=True)
 
 # Save — no bbox_inches='tight' to preserve exact 3200×1800 canvas
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
