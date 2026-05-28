@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-28
@@ -27,6 +27,7 @@ from lets_plot import (
     scale_fill_manual,
     scale_y_continuous,
     theme,
+    theme_classic,
 )
 
 
@@ -56,7 +57,7 @@ data = []
 for cat, (mean, std) in distributions.items():
     n = np.random.randint(50, 100)
     values = np.random.normal(mean, std, n)
-    outliers = np.random.choice([mean + 3.5 * std, mean - 2.5 * std], size=3)
+    outliers = np.array([mean + 2.5 * std, mean + 3.0 * std, mean + 3.5 * std])
     values = np.concatenate([values, outliers])
     data.extend([(cat, v) for v in values])
 
@@ -78,11 +79,11 @@ pct_diff = (sorted_medians.iloc[-1]["median_salary"] - sorted_medians.iloc[0]["m
     0
 ]["median_salary"]
 
-# Single combined annotation — placed left of center to avoid crowding the high-salary box
+# Annotation placed in HR column (lowest data range) well above its outliers (~$90k max)
 annot_df = pd.DataFrame(
     {
-        "department": ["Sales"],
-        "y": [overall_mean + 7000],
+        "department": ["HR"],
+        "y": [overall_mean + 38000],
         "lbl": [f"Avg: ${overall_mean:,.0f}   |   {high_dept[:3]}. +{pct_diff:.0%} vs {low_dept[:3]}."],
     }
 )
@@ -95,7 +96,7 @@ plot = (
     + geom_boxplot(
         alpha=0.85,
         size=1.2,
-        outlier_size=4,
+        outlier_size=2.5,
         outlier_shape=21,
         outlier_color=INK_SOFT,
         width=0.78,
@@ -123,6 +124,7 @@ plot = (
         data=annot_df,
         size=3,
         color=INK_MUTED,
+        fill="transparent",
         fontface="italic",
         inherit_aes=False,
     )
@@ -133,18 +135,22 @@ plot = (
         title=title,
         subtitle="Salary distributions by department, ordered by median",
     )
+    + theme_classic()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color="transparent"),
         plot_title=element_text(size=16, color=INK, face="bold"),
         plot_subtitle=element_text(size=12, color=INK_SOFT),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
         axis_ticks=element_blank(),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line=element_blank(),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_border=element_blank(),
         legend_position="none",
         plot_margin=[10, 10, 10, 10],
     )
