@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: pie-basic
 created: '2026-05-28T11:43:34Z'
-updated: '2026-05-28T11:49:48Z'
+updated: '2026-05-28T12:03:33Z'
 generated_by: claude-sonnet
 workflow_run: 26572096243
 issue: 678
@@ -12,37 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Correct anyplot palette applied in canonical order; both themes render cleanly
-    with proper chrome adaptation
-  - Elegant use of theme_void() for clean pie chart presentation
-  - Smart label suppression (if_else pct >= 5) prevents crowding on the tiny IT slice
-    (4%)
-  - Cumulative-sum ymid calculation correctly accounts for ggplot2 reversed stacking
-    order
-  - Fully deterministic data with realistic, neutral budget-allocation context
-  - Both themes pass readability checks with no dark-on-dark or light-on-light issues
-  - Clean flat script structure with perfect code quality score
+  - Full spec compliance — percentage labels, distinct colors, legend, and exploded
+    largest slice all present and correct
+  - Clever explode implementation via xmin/xmax offsets in geom_rect + coord_polar
+    — non-trivial ggplot2 technique
+  - Complete theme-adaptive chrome — INK, INK_SOFT, PAGE_BG, ELEVATED_BG correctly
+    threaded through all elements
+  - 'Correct anyplot palette in canonical slot order starting with #009E73 for R&D'
+  - Correct 2400x2400 square canvas for a symmetric chart type
+  - Clean linear code with named palette and factor-level ordering for deterministic
+    legend
   weaknesses:
-  - 'Missing explode effect: spec explicitly requires slightly exploding the largest
-    or smallest slice for emphasis — in ggplot2 coord_polar this is achieved by offsetting
-    the target slice x aesthetic to ~1.1–1.15 for the largest slice (R&D 32%)'
-  - 'Title left-biased on canvas: hjust=0.5 centers over the ggplot2 plot panel not
-    the full canvas including legend — add plot.title.position = plot to theme() to
-    center over the full figure width'
+  - Minor center-hole artifact (white dot light / dark dot dark) at polar origin —
+    caused by geom_rect xmin=0.5 not filling true center; visually noticeable
+  - 'Slice dividers (color = PAGE_BG) vanish in dark mode — #1A1A17 border on #1A1A17
+    background; adjacent slice colors provide separation but explicit dividers are
+    lost — fix by using semi-transparent INK_SOFT color for borders'
+  - 'Design excellence held back by defaults: no annotation callout on exploded slice,
+    legend frame box is heavier than needed'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface
-      Chrome: Title "pie-basic · r · ggplot2 · anyplot.ai" in bold dark (#1A1A17) text, readable. Legend "Department" title in dark ink, category labels in INK_SOFT (#4A4A44). All text clearly readable.
-      Data: 6 pie slices — R&D 32% (#009E73 brand green), Marketing 22% (#C475FD lavender), Operations 18% (#4467A3 blue), Sales 14% (#BD8233 ochre), HR 10% (#AE3030 red), IT 4% (#2ABCCD cyan, no label). Bold off-white percentage labels on slices. Slice dividers in PAGE_BG off-white.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "pie-basic · r · ggplot2 · anyplot.ai" in bold dark INK (#1A1A17), clearly readable. Legend box with elevated #FFFDF6 fill, INK_SOFT border, INK title "Department", INK_SOFT legend labels — all readable. No axis labels (theme_void, appropriate for pie chart).
+      Data: R&D (32%) = #009E73 brand green, exploded outward. Marketing (22%) = #C475FD lavender. Operations (18%) = #4467A3 blue. Sales (14%) = #BD8233 ochre. HR (10%) = #AE3030 matte red. IT (~4%) = #2ABCCD cyan, tiny slice, no label by design. White percentage labels (#FAF8F1) on slice faces in bold — readable against colored backgrounds.
+      Minor artifact: small white dot at polar origin center where exploded R&D slice creates a gap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title and legend text flip to light cream (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark issues detected. Legend box has dark elevated background (#242420) with visible border.
-      Data: All 6 slice colors identical to light render — anyplot palette correctly theme-independent. Slice dividers flip to near-black (PAGE_BG = #1A1A17 in dark mode). Brand green #009E73 clearly visible on dark surface.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title switches to light #F0EFE8 ink — clearly readable against dark background. Legend uses elevated #242420 fill, #B8B7B0 border, light text — all readable. No dark-on-dark failures.
+      Data: All 6 slice colors identical to light render — only chrome flips. Slice dividers (color = PAGE_BG = #1A1A17) become invisible against the dark background, but adjacent slice colors provide visual separation. White percentage labels (#FAF8F1) remain readable against colored slice backgrounds.
+      Minor artifact: small dark dot at polar origin center — dark-mode equivalent of light render artifact.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,75 +57,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes correctly set. All text readable in both themes. Minor:
-          title left-biased on canvas due to hjust=0.5 centering over plot panel only.'
+        comment: Title, legend, slice labels readable in both themes. Smaller slice
+          labels (10%, 14%) slightly compact but legible. White hardcoded label color
+          works as slice backgrounds provide contrast.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. IT slice label correctly suppressed
-          below 5%.
+        comment: No text/data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All slices clearly visible. Bold white percentage labels readable
-          on all colored slices in both themes.
+        comment: All 6 slices clearly visible. Minor center-hole artifact from geom_rect+coord_polar
+          approach (white dot light / dark dot dark) is noticeable but not functional.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe. Adequate contrast throughout.
+        comment: Anyplot palette is CVD-safe; 6 distinct hue families used.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas 2400x2400 correct square. Good margins. Minor: title visually
-          left-of-center on full canvas due to legend taking right ~30%.'
+        comment: 2400x2400 square canvas correct for symmetric pie. Pie offset left
+          for legend — expected. Good margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (theme_void). Title correctly formatted.
+        comment: Title correctly formatted. No axis labels needed for pie chart.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'R&D first = #009E73, canonical palette order, correct backgrounds,
-          data colors identical across themes.'
+        comment: 'First series R&D = #009E73. Canonical slots 1-6. Backgrounds #FAF8F1
+          light / #1A1A17 dark.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Default-level implementation. Palette applied correctly, theme_void
-          appropriate, but no design elevation beyond the template.
+        comment: Named palette with factor ordering, explode effect, bold slice labels,
+          clean theme_void layout. Professional but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: theme_void produces clean minimal look. PAGE_BG-colored slice dividers
-          create elegant separation. Styled legend box.
+        comment: theme_void removes grid/axes. Styled legend with elevated background.
+          Slice borders vanish in dark mode (PAGE_BG color issue).
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Data ordered by size descending. Percentage labels provide quantitative
-          context. Missing explode effect would have added focal point.
+        comment: Exploded R&D slice highlights largest budget item. Descending order
+          aids readability. Percentage labels tell the story directly.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,51 +133,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart via geom_col + coord_polar(theta=y).
+        comment: Correct pie chart via geom_rect + coord_polar.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Percentage labels, distinct colors, legend present. Missing: explode
-          effect on largest/smallest slice.'
+        passed: true
+        comment: Percentage labels on slices, distinct colors, legend, largest slice
+          exploded — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Budget allocation context, 6 departments within 3-8 spec range, plausible
-          values.
+        comment: Department names and amounts correctly mapped; 6 categories within
+          3-8 spec range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title pie-basic · r · ggplot2 · anyplot.ai correct. Legend Department
-          with correct labels.
+        comment: Title exact match. Legend titled Department with all 6 entries.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows parts-to-whole, 6 categories, percentage labeling, color coding,
-          legend. Missing explode limits full feature showcase.
+        comment: All spec features covered. IT slice (4%) unlabeled by design — acceptable.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual budget allocation by department is highly realistic and neutral.
+        comment: Annual budget allocation by department — real-world plausible and
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values total 100M, proportions realistic and varied.
+        comment: 6 departments, varied percentages 4-32%, sensible budget scale.
     code_quality:
       score: 10
       max: 10
@@ -184,32 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: No functions or classes; linear pipeline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic.
+        comment: Data is hardcoded, deterministic without seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg — all used.
+        comment: ggplot2, dplyr (used for arrange/mutate/pipe), ragg all justified.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clever ymid cumsum calculation for label placement. Correct label
-          suppression for small slices.
+        comment: Clean cumsum-based position computation; named palette; theme tokens
+          properly threaded.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ragg::agg_png.
+        comment: Saves as plot-{THEME}.png via ragg::agg_png. Correct API.
     library_mastery:
       score: 7
       max: 10
@@ -219,19 +221,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot2 pie approach. Idiomatic scale_fill_manual, theme_void,
-          labs, theme layers.
+        comment: geom_rect + coord_polar is standard ggplot2 pie approach. scale_fill_manual
+          with named values, factor-level ordering, mutate pipeline — all idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_polar distinctively ggplot2. theme_void well-chosen. Manual
-          cumulative-sum label placement shows library depth.
+        comment: coord_polar is distinctive ggplot2 feature. Explode via xmin/xmax
+          offset in polar coordinates is non-trivial. Named palette with factor level
+          control.
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
   - polar-projection
   - annotations
