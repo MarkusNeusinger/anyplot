@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -285,6 +285,21 @@ for _, row in ports.iterrows():
         zorder=5,
     )
 
+# Storytelling annotation: highlight world's busiest shipping lane
+# Arc point at t≈0.2 for Shanghai→LA route (east of Japan, ~146°E 37°N)
+ax.annotate(
+    "World's busiest lane\nShanghai → Los Angeles: 13.2M TEU",
+    xy=(146, 37),
+    xytext=(138, 66),
+    textcoords="data",
+    fontsize=7.5,
+    color=INK,
+    ha="center",
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.8, "shrinkA": 3, "shrinkB": 4},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.88},
+    zorder=6,
+)
+
 # Style
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
@@ -295,7 +310,8 @@ ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for sp in ("left", "bottom"):
     ax.spines[sp].set_color(INK_SOFT)
-ax.grid(True, alpha=0.12, linewidth=0.5, color=INK)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.5, color=INK)
+ax.xaxis.grid(False)
 
 title = "map-connection-lines · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
