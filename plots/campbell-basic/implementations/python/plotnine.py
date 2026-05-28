@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-28
@@ -149,7 +149,7 @@ plot = (
         df_band,
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         fill=BAND_COLOR,
-        alpha=0.08,
+        alpha=0.13,
         color="none",
         inherit_aes=False,
     )
@@ -173,7 +173,7 @@ plot = (
         eo_labels,
         aes("Speed", "Frequency", label="label"),
         color=INK_MUTED,
-        size=3.0,
+        size=3.5,
         fontstyle="italic",
         fontweight="bold",
         inherit_aes=False,
@@ -194,7 +194,7 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.12),
         panel_grid_minor=element_blank(),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
+        panel_border=element_blank(),
         axis_line=element_line(color=INK_SOFT, size=0.3),
         plot_title=element_text(size=12, ha="center", face="bold", color=INK),
         axis_title=element_text(size=10, color=INK),
@@ -230,7 +230,7 @@ if annot_speed is not None:
             y=annot_freq + 5,
             label=f"Critical: {int(round(annot_speed))} RPM",
             color=CRITICAL_COLOR,
-            size=2.8,
+            size=3.5,
             ha="left",
             fontstyle="italic",
         )
@@ -238,7 +238,7 @@ if annot_speed is not None:
 
 # Operating range label
 plot = plot + annotate(
-    "text", x=3250, y=104, label="Operating Range", color=BAND_COLOR, size=2.8, alpha=0.8, fontweight="bold"
+    "text", x=3250, y=104, label="Operating Range", color=BAND_COLOR, size=3.5, alpha=0.8, fontweight="bold"
 )
 
 plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
