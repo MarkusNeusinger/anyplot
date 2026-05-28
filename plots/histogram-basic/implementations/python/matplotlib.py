@@ -1,97 +1,100 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: matplotlib 3.10.8 | Python 3.14.0
-Quality: 92/100 | Created: 2025-12-23
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-28
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import to_rgba
 
 
-# Data - Simulate exam scores with slight left skew (realistic grade distribution)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
+MEAN_COLOR = "#AE3030"  # matte red — semantic anchor for reference/alert
+
+# Data - exam scores with slight left skew and high-performer cluster
 np.random.seed(42)
 base = np.random.normal(loc=72, scale=12, size=450)
 high_cluster = np.random.normal(loc=88, scale=4, size=50)
 scores = np.clip(np.concatenate([base, high_cluster]), 0, 100)
 
+# Title
+title = "histogram-basic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
-n, bins, patches = ax.hist(scores, bins=25, color="#306998", edgecolor="white", linewidth=1.5, alpha=0.85)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Shade bars by height using patch manipulation (matplotlib-distinctive)
+n, bins, patches = ax.hist(scores, bins=25, color=BRAND, linewidth=0.8)
+
+# Intensity-graded bar coloring via patch manipulation (matplotlib-distinctive)
 max_count = max(n)
-base_color = to_rgba("#306998")
+base_rgba = to_rgba(BRAND)
 for count, patch in zip(n, patches, strict=True):
-    intensity = 0.5 + 0.5 * (count / max_count)
-    patch.set_facecolor((*base_color[:3], intensity * 0.85))
+    intensity = 0.65 + 0.35 * (count / max_count)
+    patch.set_facecolor((*base_rgba[:3], intensity * 0.85))
+    patch.set_edgecolor(to_rgba(INK_SOFT, alpha=0.35))
 
-# Data storytelling: annotate key distribution features
+# Key statistics
 mean_score = np.mean(scores)
-median_score = np.median(scores)
 y_max = max(n)
+pct_above_80 = 100 * np.sum(scores >= 80) / len(scores)
 
-# Mean line with annotation
-ax.axvline(mean_score, color="#E34F26", linewidth=2.5, linestyle="--", zorder=5)
+# Combined mean/median line — values nearly equal, indicating symmetric distribution
+ax.axvline(mean_score, color=MEAN_COLOR, linewidth=2.5, linestyle="--", zorder=5)
 ax.annotate(
-    f"Mean: {mean_score:.1f}",
-    xy=(mean_score, y_max * 0.92),
-    xytext=(mean_score - 18, y_max * 0.96),
-    fontsize=15,
+    f"Mean ≈ Median: {mean_score:.0f}",
+    xy=(mean_score, y_max * 0.90),
+    xytext=(mean_score - 20, y_max * 0.97),
+    fontsize=8,
     fontweight="bold",
-    color="#E34F26",
-    arrowprops={"arrowstyle": "->", "color": "#E34F26", "lw": 1.8},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#E34F26", "alpha": 0.9},
+    color=MEAN_COLOR,
+    arrowprops={"arrowstyle": "->", "color": MEAN_COLOR, "lw": 1.8},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": MEAN_COLOR, "alpha": 0.9},
     zorder=6,
 )
 
-# Median line with annotation
-ax.axvline(median_score, color="#4B8BBE", linewidth=2.5, linestyle=":", zorder=5)
+# High-performer cluster annotation with percentage insight
 ax.annotate(
-    f"Median: {median_score:.1f}",
-    xy=(median_score, y_max * 0.82),
-    xytext=(median_score + 8, y_max * 0.88),
-    fontsize=15,
-    fontweight="bold",
-    color="#4B8BBE",
-    arrowprops={"arrowstyle": "->", "color": "#4B8BBE", "lw": 1.8},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#4B8BBE", "alpha": 0.9},
-    zorder=6,
-)
-
-# Highlight high-performer cluster with a bracket annotation
-ax.annotate(
-    "High-performer\ncluster",
+    f"High-performer cluster\n{pct_above_80:.0f}% scored above 80",
     xy=(88, y_max * 0.35),
-    xytext=(95, y_max * 0.60),
-    fontsize=14,
+    xytext=(96, y_max * 0.58),
+    fontsize=8,
     fontstyle="italic",
-    color="#555555",
+    color=INK_SOFT,
     ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#555555", "lw": 1.5, "connectionstyle": "arc3,rad=-0.2"},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "#FFF9C4", "edgecolor": "#CCCCCC", "alpha": 0.9},
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5, "connectionstyle": "arc3,rad=-0.2"},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
     zorder=6,
 )
-
-# Shade the high-performer region using axvspan (matplotlib-distinctive)
-ax.axvspan(80, 100, alpha=0.06, color="#FFB300", zorder=0)
 
 # Labels and styling
-ax.set_xlabel("Exam Score (points)", fontsize=20)
-ax.set_ylabel("Frequency (count)", fontsize=20)
-ax.set_title("histogram-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Exam Score (points)", fontsize=10, color=INK)
+ax.set_ylabel("Frequency (count)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Spine removal (library convention: remove top + right)
+# Spine removal
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 # Subtle y-axis grid
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Ensure y-axis starts at zero
+# Y-axis starts at zero
 ax.set_ylim(bottom=0)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
