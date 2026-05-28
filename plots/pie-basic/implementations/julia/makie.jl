@@ -1,7 +1,7 @@
 # anyplot.ai
 # pie-basic: Basic Pie Chart
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-05-28
+# Quality: pending | Created: 2026-05-28
 
 using CairoMakie
 using Colors
@@ -12,6 +12,7 @@ const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const LABEL_FG    = colorant"#FFFFFF"
 
 const ANYPLOT_PALETTE = [
     colorant"#009E73",
@@ -21,34 +22,35 @@ const ANYPLOT_PALETTE = [
     colorant"#AE3030",
 ]
 
-# Data — primary programming language (developer survey)
-const categories = ["Python", "JavaScript", "Java", "C / C++", "TypeScript"]
-const values     = [36.0, 29.5, 17.0, 11.5, 6.0]
-const total      = sum(values)
-const pct        = values ./ total .* 100
+const categories  = ["Python", "JavaScript", "Java", "C / C++", "TypeScript"]
+const values      = [36.0, 29.5, 17.0, 11.5, 6.0]
+const total       = sum(values)
+const fracs       = values ./ total
+const pct         = fracs .* 100
 
-# Wedge angles: start at top (π/2), sweep clockwise
-const fracs   = values ./ total
-const cum     = cumsum(vcat(0.0, fracs))
-const θ_start = [π / 2 - cum[i]     * 2π for i in 1:length(values)]
-const θ_end   = [π / 2 - cum[i + 1] * 2π for i in 1:length(values)]
+const explode_idx = argmax(values)
+const explode_r   = 0.08
 
-const explode_idx = argmax(values)  # Python — largest slice
-const explode_r   = 0.07
+# Cumulative fractions for angle calculations (matches pie! counterclockwise convention)
+const cum        = cumsum(vcat(0.0, fracs))
+const PIE_OFFSET = Float64(π / 2)
 
 const title_str = "Primary Programming Language · pie-basic · julia · makie · anyplot.ai"
-const title_fs  = round(Int, 20 * min(1.0, 67.0 / length(title_str)))
+const title_fs  = round(Int, 20 * min(1.0, 66.0 / length(title_str)))
 
 fig = Figure(
     size            = (1200, 1200),
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
+    figure_padding  = 40,
 )
 
 ax = Axis(
     fig[1, 1];
     title              = title_str,
     titlesize          = title_fs,
+    titlefont          = :bold,
+    titlegap           = 24,
     titlecolor         = INK,
     aspect             = DataAspect(),
     backgroundcolor    = PAGE_BG,
@@ -64,25 +66,45 @@ ax = Axis(
     yticklabelsvisible = false,
 )
 
-for i in 1:length(values)
-    θ_mid = (θ_start[i] + θ_end[i]) / 2
-    dx = i == explode_idx ? explode_r * cos(θ_mid) : 0.0
-    dy = i == explode_idx ? explode_r * sin(θ_mid) : 0.0
+# High-level Makie pie! recipe — idiomatic slice rendering
+p = pie!(
+    ax, fracs;
+    color       = ANYPLOT_PALETTE[1:length(categories)],
+    strokecolor = PAGE_BG,
+    strokewidth = 3,
+    offset      = PIE_OFFSET,
+)
 
-    θs = LinRange(θ_start[i], θ_end[i], 150)
-    xs = vcat([dx], dx .+ cos.(θs))
-    ys = vcat([dy], dy .+ sin.(θs))
-    poly!(ax, Point2f.(xs, ys); color = ANYPLOT_PALETTE[i], strokecolor = PAGE_BG, strokewidth = 3)
-
-    lx = dx + 0.62 * cos(θ_mid)
-    ly = dy + 0.62 * sin(θ_mid)
-    text!(ax, lx, ly;
-          text     = @sprintf("%.1f%%", pct[i]),
-          align    = (:center, :center),
-          fontsize = 14,
-          color    = colorant"#FAF8F1",
-    )
+# Explode the dominant slice by translating its child polygon outward
+let θ = PIE_OFFSET + (cum[explode_idx] + fracs[explode_idx] / 2) * 2π
+    translate!(p.plots[explode_idx], Vec3f(explode_r * cos(θ), explode_r * sin(θ), 0))
 end
+
+# Percentage labels at arc midpoints; dominant slice gets bolder, larger label
+for i in 1:length(values)
+    θ  = PIE_OFFSET + (cum[i] + fracs[i] / 2) * 2π
+    ex = i == explode_idx ? explode_r * cos(θ) : 0.0
+    ey = i == explode_idx ? explode_r * sin(θ) : 0.0
+    if i == explode_idx
+        text!(ax, ex + 0.62 * cos(θ), ey + 0.62 * sin(θ);
+              text     = @sprintf("%.1f%%", pct[i]),
+              align    = (:center, :center),
+              fontsize = 17,
+              font     = :bold,
+              color    = LABEL_FG,
+        )
+    else
+        text!(ax, ex + 0.62 * cos(θ), ey + 0.62 * sin(θ);
+              text     = @sprintf("%.1f%%", pct[i]),
+              align    = (:center, :center),
+              fontsize = 13,
+              color    = LABEL_FG,
+        )
+    end
+end
+
+# Explicit limits so the translated slice stays fully in view
+limits!(ax, -1.2, 1.2, -1.2, 1.2)
 
 legend_entries = [PolyElement(color = ANYPLOT_PALETTE[i], strokecolor = :transparent) for i in 1:length(categories)]
 legend_labels  = [@sprintf("%s  %.1f%%", categories[i], pct[i]) for i in 1:length(categories)]
@@ -95,12 +117,13 @@ Legend(
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK,
     labelsize       = 14,
-    rowgap          = 12,
+    rowgap          = 14,
     halign          = :left,
     valign          = :center,
-    padding         = (12, 12, 12, 12),
+    padding         = (16, 16, 16, 16),
 )
 
 colsize!(fig.layout, 1, Relative(0.68))
+colgap!(fig.layout, 1, 20)
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
