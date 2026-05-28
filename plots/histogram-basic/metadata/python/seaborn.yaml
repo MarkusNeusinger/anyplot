@@ -1,132 +1,139 @@
 library: seaborn
+language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:05Z'
-updated: '2026-02-13T22:29:56Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447577411
-issue: 0
-python_version: 3.14.0
+updated: '2026-05-28T07:43:58Z'
+generated_by: claude-sonnet
+workflow_run: 26560723458
+issue: 654
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/seaborn/plot.png
-preview_html: null
-quality_score: 95
-impl_tags:
-  dependencies: []
-  techniques:
-  - twin-axes
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling with annotated mean/median, mode labels with arrows,
-    and sample size — the viewer immediately understands the bimodal distribution
-    pattern
-  - 'Strong use of seaborn-distinctive features: rugplot for individual observations,
-    separate kdeplot overlay, and set_theme with custom rc params'
-  - Sophisticated visual design with custom theme, intentional color hierarchy (Python
-    Blue primary, orange/green for statistics), and polished details (spine alpha,
-    grid styling, facecolor)
-  - Multimodal data generation that showcases histogram capabilities (central tendency,
-    spread, bimodality, tail behavior)
-  - Clean KISS code structure with proper reproducibility (seed=42)
+  - Bimodal e-commerce data tells a compelling story (budget vs premium shoppers)
+    with annotated modes and mean/median divergence
+  - Correct use of sns.histplot + sns.kdeplot + sns.rugplot — seaborn-distinctive
+    layered approach
+  - 'Perfect anyplot palette compliance: bars in #009E73, KDE in #4467A3, mean #AE3030,
+    median #BD8233'
+  - Theme-adaptive chrome correctly implemented via sns.set_theme rc params; dark
+    render is fully readable with no dark-on-dark issues
+  - Dollar-formatted x-axis, descriptive labels with units, and sample size footnote
+    all add professional polish
+  - All font sizes explicitly set with sensible hierarchy (12/10/8/7.5/7pt)
+  - Clean KISS structure, np.random.seed(42), no deprecated APIs
   weaknesses:
-  - Mean (74.8) and median (75.1) vertical lines nearly coincide, making them hard
-    to distinguish visually — consider using data with greater mean/median separation
-    to better showcase both reference lines
-  - The Secondary mode ~92 pts annotation arrow points to the upper-right corner area
-    rather than clearly to the secondary peak bars, making it slightly disconnected
-    from its target
-  image_description: The plot displays a histogram of exam scores for 500 students,
-    using blue (#306998) bars with white edges across 30 bins spanning approximately
-    30 to 110 points on the x-axis. A dark blue KDE density curve overlays the histogram
-    via a twin y-axis (with hidden ticks/labels). A subtle rug plot along the x-axis
-    shows individual observations. Two vertical reference lines mark the mean (74.8,
-    orange dashed) and median (75.1, green dash-dot), each with labeled annotation
-    boxes. Arrow annotations call out the primary mode (~72 pts) and secondary mode
-    (~92 pts). The title reads "histogram-basic · seaborn · pyplots.ai" and a sample
-    size note "n = 500 students" appears in the upper right. The y-axis is labeled
-    "Frequency (count)" and x-axis "Exam Score (points)". Top and right spines are
-    removed, with a light gray grid on the y-axis only. The bimodal distribution is
-    clearly visible with the larger peak around 70-75 and a secondary peak around
-    90-95.
+  - Annotation text at 7.5pt and footnote at 7pt are on the small side for the 3200×1800
+    canvas; consider 8.5pt and 8pt respectively
+  - The plot is quite visually busy with five overlaid layers (histogram, KDE, rugplot,
+    two reference lines, two annotations); minor readability tension in the left peak
+    zone
+  - DE-01 is strong but not quite publication-level (FiveThirtyEight) — the overall
+    aesthetic is sophisticated but could benefit from a more distinctive typographic
+    or layout touch
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "histogram-basic · python · seaborn · anyplot.ai" in dark ink at fontsize=12, clearly readable. X-axis label "Order Amount (USD)" and Y-axis label "Number of Orders" both at fontsize=10, readable. Dollar-formatted tick labels ($0–$1,200) and count tick labels (0–200+) at fontsize=8, readable. Annotation text "Budget shoppers ~$45" and "Premium shoppers ~$350" at fontsize=7.5 (italic), small but readable. Footnote "n = 750 orders" at fontsize=7, legible.
+      Data: Histogram bars in #009E73 (brand green) with thin off-white bar edges. KDE overlay in #4467A3 (blue, palette pos. 3) via twin axis — shows clear bimodal humps. Mean line in #AE3030 (red dashed) and median line in #BD8233 (ochre dash-dot). Rugplot in #009E73 at bottom (very subtle, alpha=0.05). Arrows from annotations point to each peak.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title and axis labels in light/cream text (#F0EFE8 equivalent) — clearly readable against dark background. Tick labels light-colored. Annotation text in light-gray (#B8B7B0). Annotation arrows in light-gray. Legend box in elevated dark (#242420) with light text. Footnote muted but legible. Grid lines subtle light-on-dark.
+      Data: Bars still #009E73 (identical to light render). KDE line still #4467A3. Mean line still #AE3030. Median line still #BD8233. Data colors are identical between themes — only chrome (background, text, grid, legend box) has flipped.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark issues detected. Brand green visible and clear on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, annotations 13pt'
+        comment: 'All font sizes explicitly set (12/10/8/7.5/7pt). Good proportions,
+          balanced axis labels, readable in both themes. Minor: annotation text at
+          7.5pt and footnote at 7pt are on the small side for a 3200x1800 canvas.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Mean and median lines nearly coincide (74.8 vs 75.1); label boxes
-          offset vertically to mitigate but still slightly crowded
+        comment: No overlapping text or data elements. Annotation text is well-positioned
+          in the sparse zone between the two modes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 bins for 500 data points well-chosen, white edge colors provide
-          clear bin separation
+        comment: Histogram bars, KDE overlay, reference lines all clearly visible.
+          Rugplot intentionally subtle (alpha=0.05) — appropriate for supplementary
+          layer.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, dark blue, orange, green palette mostly accessible; orange
-          vs green lines use dash pattern as secondary encoding
+        comment: Good contrast across all elements. Different line styles (dashed
+          vs dash-dot) provide redundant encoding for mean/median. CVD-safe anyplot
+          palette.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized with balanced margins
+        comment: Good canvas utilization. Legend in sparse upper-right zone. Balanced
+          margins via subplots_adjust. Legend placement avoids data overlap.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Exam Score (points), Frequency (count)'
+        comment: 'X: ''Order Amount (USD)'' — descriptive with units. Y: ''Number
+          of Orders'' — descriptive. Title follows required format exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bars in #009E73 (pos. 1), KDE in #4467A3 (pos. 3), mean in #AE3030
+          (pos. 5), median in #BD8233 (pos. 4). Light bg #FAF8F1, dark bg #1A1A17.
+          Chrome fully theme-adaptive.'
     design_excellence:
-      score: 18
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom sns.set_theme with intentional facecolor, grid styling, edge
-          colors, font hierarchy. Clearly above configured defaults
+        comment: 'Strong design: correct anyplot palette, intentional typography hierarchy,
+          multi-layer approach (hist + KDE + rugplot + annotations + reference lines).
+          Above defaults but not quite FiveThirtyEight publication level.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, remaining spines at alpha 0.4, subtle grid,
-          custom facecolor, polished details
+        comment: 'Good: top/right spines removed, y-axis-only grid at alpha=0.15,
+          balanced margins via subplots_adjust. Well-polished tick sizing and label
+          formatting.'
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent: mean/median annotated with values, bimodal peaks labeled
-          with arrows, sample size noted'
+        comment: 'Good: bimodal structure clearly identified and labeled. Annotations
+          directly tell the viewer ''Budget shoppers ~$45'' and ''Premium shoppers
+          ~$350''. Mean vs median divergence highlighted in legend. Clear visual hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with frequency bins
+        comment: 'Correct chart type: sns.histplot with stat=''count'', bin edges
+          visible, no gaps.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges, readable labels, appropriate bin count, Y-axis starts
-          at zero
+        comment: Clear bin edges (edgecolor=PAGE_BG), readable axis labels with units,
+          appropriate bin count (40 bins for 750 pts), y-axis starts at zero.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = exam scores, Y = frequency count, all data visible
+        comment: 'X: continuous variable (Order Amount). Y: count frequency. Full
+          data range visible (0-1200).'
       - id: SC-04
-        name: Title Format
+        name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: histogram-basic · seaborn · pyplots.ai matches required format
+        comment: Title exactly 'histogram-basic · python · seaborn · anyplot.ai'.
+          Legend labels 'Mean $195' and 'Median $71' match computed statistics.
     data_quality:
       score: 15
       max: 15
@@ -165,20 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multimodal distribution demonstrates central tendency, spread, bimodality,
-          and tail behavior
+        comment: Bimodal distribution shows central tendency divergence (mean >> median),
+          bin pattern, skewed tail, and two distinct population segments.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam scores for 500 students — plausible educational scenario
+        comment: 'E-commerce order amounts: real-world neutral business scenario.
+          Budget shoppers (~$45) and premium shoppers (~$350) are plausible segments.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Exam scores in 30-100+ range with realistic means and spreads
+        comment: 'Order amounts $5-1200: realistic range. Two lognormal modes at $45
+          and $350 are commercially plausible. n=750 appropriate for histogram.'
     code_quality:
       score: 10
       max: 10
@@ -188,33 +200,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Imports → Data → Theme → Plot → Style → Save'
+        comment: 'Flat script: imports → constants → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: os, sys (path workaround), matplotlib.pyplot, matplotlib.ticker,
+          numpy, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriate complexity
+        comment: Clean Pythonic code. Twin axis for KDE is an appropriate technique.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, no deprecated functions
+        comment: Saves to plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          0.14+ API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -222,13 +238,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses sns.histplot, sns.kdeplot, sns.rugplot, sns.set_theme — all
-          axes-level API
+        comment: Uses sns.histplot (seaborn's modern histogram API with stat= parameter),
+          sns.kdeplot, sns.rugplot, sns.set_theme — all high-level seaborn APIs.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: sns.rugplot (distinctive), sns.kdeplot as separate overlay, sns.set_theme
-          with custom rc params
+        comment: Uses sns.rugplot (seaborn-distinctive individual observation layer)
+          and the histplot+kdeplot+rugplot trio that is a seaborn signature pattern.
+          Twinx technique for scale-independent KDE overlay is library-characteristic.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
