@@ -1,7 +1,7 @@
 # anyplot.ai
 # box-basic: Basic Box Plot
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-05-28
+# Quality: 83/100 | Created: 2026-05-28
 
 using CairoMakie
 using Colors
