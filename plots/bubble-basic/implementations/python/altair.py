@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-28
@@ -24,7 +24,7 @@ stage_colors = ANYPLOT_PALETTE[:4]
 
 # Data — tech startup metrics: funding vs revenue, sized by employees, colored by stage
 np.random.seed(42)
-n = 40
+n = 49
 
 stages = np.random.choice(["Seed", "Series A", "Series B", "Growth"], size=n, p=[0.25, 0.30, 0.25, 0.20])
 
@@ -59,7 +59,7 @@ outlier = pd.DataFrame(
 df = pd.concat([df, outlier], ignore_index=True)
 
 # Flag top-3 companies by revenue for storytelling annotations
-top3_idx = df["Revenue ($M)"].nlargest(3).index
+top3_idx = df["Revenue ($M)"].nlargest(3).index.tolist()
 df["label"] = ""
 for i in top3_idx:
     df.loc[i, "label"] = f"{df.loc[i, 'Stage']} · ${df.loc[i, 'Funding ($M)']}M"
@@ -109,12 +109,16 @@ bubbles = (
     )
 )
 
-# Annotation layer for top-3 revenue companies
-annotations = (
-    alt.Chart(df[df["label"] != ""])
-    .mark_text(align="right", dx=-10, dy=-10, fontSize=10, fontWeight="bold")
+# Annotation layers — sort by revenue descending and alternate dy to prevent collision
+_labeled = df[df["label"] != ""].sort_values("Revenue ($M)", ascending=False).reset_index(drop=True)
+_dy_offsets = [-15, 12, -15]
+_annotation_layers = [
+    alt.Chart(_labeled.iloc[[k]])
+    .mark_text(align="right", dx=-10, dy=_dy_offsets[k], fontSize=10, fontWeight="bold")
     .encode(x="Funding ($M):Q", y="Revenue ($M):Q", text="label:N", color=alt.value(INK))
-)
+    for k in range(len(_labeled))
+]
+annotations = alt.layer(*_annotation_layers)
 
 chart = (
     (bubbles + annotations)
@@ -135,7 +139,7 @@ chart = (
             subtitlePadding=4,
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
