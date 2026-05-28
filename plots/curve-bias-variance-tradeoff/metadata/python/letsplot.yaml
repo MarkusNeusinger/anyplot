@@ -1,158 +1,193 @@
 library: letsplot
+language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:58:07Z'
-updated: '2026-01-26T20:00:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21371825978
+updated: '2026-05-28T03:57:46Z'
+generated_by: claude-sonnet
+workflow_run: 26552734266
 issue: 4134
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/letsplot/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of the theoretical bias-variance tradeoff visualization
-  - Clear differentiation of all four curve components with distinct colors
-  - Good use of annotations to label underfitting and overfitting regions
-  - Formula annotation adds educational value
-  - Proper use of lets-plot ggplot2-style grammar
-  - Clean, readable code structure with appropriate data generation
+  - 'Perfect spec compliance: all 4 curves, optimal marker, formula annotation, shaded
+    zones all implemented'
+  - 'Semantic color exception correctly applied: Total Error (#AE3030 matte red) as
+    error/loss anchor with code comment explaining reasoning'
+  - Excellent data storytelling with shaded underfitting/overfitting zones, zone labels,
+    and formula annotation
+  - 'Correct theme adaptation throughout: INK/INK_SOFT tokens applied to all chrome
+    elements, both renders pass legibility check'
+  - HTML tooltip output using layer_tooltips — genuine lets-plot interactivity, not
+    simulated
+  - Canvas correctly 3200x1800 (ggsize(800,450) + scale=4), gate passed
   weaknesses:
-  - Could add shaded regions to better indicate underfitting/overfitting zones (spec
-    suggests this)
-  - Grid lines could be more subtle (lower alpha)
-  - Axis labels lack units (though unitless is acceptable for normalized theoretical
-    values)
-  image_description: 'The plot displays a bias-variance tradeoff visualization on
-    a clean white background using the lets-plot library. It shows four curves: a
-    blue "Bias²" curve that decreases from ~2.0 to ~0.4 as model complexity increases;
-    a yellow "Variance" curve that increases from ~0.0 to ~1.6; a gray horizontal
-    "Irreducible Error" line at ~0.3; and a red "Total Error" curve showing the characteristic
-    U-shape with minimum around complexity 4. A vertical dashed black line marks the
-    "Optimal Complexity" point. Text annotations label the "Underfitting (High Bias)"
-    zone on the left and "Overfitting (High Variance)" zone on the right. The formula
-    "Total Error = Bias² + Variance + Irreducible Error" appears at the bottom. The
-    legend is positioned on the right side. All text is clearly legible with appropriate
-    sizing. The title follows the correct format: "curve-bias-variance-tradeoff ·
-    letsplot · pyplots.ai".'
+  - Annotation text sizes (geom_text size=3.2-3.3) produce small labels for zone labels,
+    formula, and curve labels — readable at full resolution but small for mobile;
+    raise to size=3.8-4.2
+  - Minor visual crowding in upper-middle area between formula annotation (y=2.80)
+    and zone labels (y=3.12) — not an overlap but visually busy; shift formula to
+    y=2.55 or zone labels to y=3.30 for breathing room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "curve-bias-variance-tradeoff · python · letsplot · anyplot.ai" in dark ink (#1A1A17), spans ~70-75% of plot width. Axis labels "Model Complexity" and "Prediction Error" in dark ink. Tick labels in INK_SOFT (#4A4A44). Zone labels, formula annotation, and optimal complexity label all readable.
+      Data: Bias² (#009E73 green, dashed), Variance (#C475FD purple, long-dash), Irreducible Error (#4467A3 blue, dotted), Total Error (#AE3030 red, solid). Subtle shaded zones: green-tinted left (underfitting), red-tinted right (overfitting), alpha=0.06. Vertical dot-dash reference line at optimal complexity ~3.8.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title and axis labels in light ink (#F0EFE8). Tick labels in INK_SOFT (#B8B7B0). Zone labels, formula annotation, curve labels in INK_SOFT — all clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Curve colors identical to light render — Bias² green, Variance purple, Irreducible Error blue, Total Error red — palette is theme-independent as required. Shaded zones very subtle on dark background but still distinguishable.
+      Legibility verdict: PASS — all text readable against dark background, INK_SOFT token (#B8B7B0) correctly applied to secondary chrome elements
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: All text is clearly readable at full resolution; title, axis labels,
-          annotations, and legend are all appropriately sized
+        comment: Title, axis labels, ticks properly sized and readable in both themes.
+          Annotation text (geom_text size=3.2-3.3mm) is small for zone labels and
+          curve labels — readable at full resolution but slightly cramped for mobile.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; annotations are well-positioned
+        comment: 'Minor visual crowding in upper-middle area: formula annotation at
+          y=2.80 and zone labels at y=3.12 are in the same vertical band but do not
+          actually overlap. Curve labels at right edge well-positioned.'
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick enough (size=2) to be clearly visible, curves are
-          well-differentiated
+        comment: All 4 curves clearly visible with distinct colors and line styles
+          (dashed, longdash, dotted, solid). Shaded regions subtly visible at alpha=0.06.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colors (blue, yellow, gray, red) are distinct and colorblind-safe
+        comment: CVD-safe anyplot palette with redundant linestyle encoding — excellent
+          combination for accessibility.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout but the plot could utilize slightly more of the canvas
-          width
+        comment: Canvas correctly 3200x1800 (ggsize(800,450) + scale=4), canvas gate
+          passed. Title ~70-75% width as expected. Axis labels balanced. No overflow.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Model Complexity, Prediction Error) but no units
+        comment: Model Complexity and Prediction Error correct. Title matches required
+          format exactly.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is visible but could be more subtle; legend is well-placed
+        comment: 'Pos1=#009E73 (Bias², always first), Pos2=#C475FD (Variance), Pos3=#4467A3
+          (Irreducible Error), Pos5=#AE3030 (Total Error — valid semantic exception:
+          error/bad→red). Backgrounds #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above-average: semantic color assignment with reasoning, shaded
+          zones, direct curve labeling, formula annotation. Clear intentional design
+          hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: theme_classic() L-shaped spines, very thin y-only grid (size=0.12),
+          legend suppressed. Shaded zones add mild visual weight but at alpha=0.06
+          are appropriately subtle.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: shaded zones communicate underfitting/overfitting, vertical
+          line marks optimal point, zone labels explain concepts, formula reinforces
+          educational framing, direct labels reduce cognitive load.'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct multi-line curve plot showing bias-variance decomposition
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis is model complexity, Y-axis is prediction error, correctly
-          mapped
-      - id: SC-03
+        comment: Correct multi-line bias-variance tradeoff curve chart.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has all 4 curves, optimal complexity marker, formula annotation,
-          zone labels; could use shaded regions
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features: 4 curves with colors+linestyles, optimal
+          complexity marked, curve labels, formula annotation, shaded zones.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data is visible within the axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=model complexity, Y=prediction error, all 4 components correctly
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all four components
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: curve-bias-variance-tradeoff · letsplot · pyplots.ai'
+        comment: Title exactly correct. No legend replaced by direct curve labels
+          — appropriate choice.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all key aspects: decreasing bias², increasing variance, constant
-          irreducible error, U-shaped total error, optimal point'
+        comment: 'Shows all aspects: bias squared, variance, irreducible noise floor,
+          total error U-shape, optimal point, over/underfitting zones.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Theoretical/educational context appropriate for ML learning
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are sensible for normalized error metrics
+        comment: Theoretically sound curves, mathematically computed optimal point,
+          realistic noise floor of 0.25.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: x in [0.5,10] reasonable, y in [-0.15,3.45] covers all curves, optimal
+          at ~3.8 mathematically computed.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,50 +195,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Linear script, no functions/classes. Multiple DataFrames appropriate
+          for rich annotation layers.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, lets_plot)
+        comment: os, numpy, pandas, lets_plot — all used, none superfluous.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Adaptive title_size formula, well-named DataFrames, semantic choice
+          comments.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: uses path parameter which is fine but less common'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar, theme_classic() + custom override pattern,
+          ggsize + scale=4, scale_color_manual + scale_linetype_manual.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom_line, geom_vline, geom_text, scale_color_manual,
-          theme_minimal; could leverage more interactive features
+        comment: layer_tooltips for HTML interactivity (lets-plot-specific), geom_rect
+          for shaded zones, scale_linetype_manual, HTML export alongside PNG.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - wide-to-long
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
