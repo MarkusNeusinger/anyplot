@@ -1,57 +1,59 @@
 library: matplotlib
+language: python
 specification_id: area-basic
 created: '2025-12-23T00:46:12Z'
-updated: '2026-02-12T22:25:50Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447957143
-issue: 0
-python_version: 3.14.2
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-basic/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-28T05:37:32Z'
+generated_by: claude-sonnet
+workflow_run: 26556532653
+issue: 711
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - gradient-fill
-  - alpha-blending
-  - grid-styling
-  - custom-colormap
 review:
   strengths:
-  - Gradient fill using imshow clipped to a PathPatch is a creative, distinctively
-    matplotlib technique that produces a visually appealing result
-  - Viral post annotation with arrow adds genuine data storytelling
-  - Weekend dips and upward trend in synthetic data showcase realistic area chart
-    patterns
-  - All font sizes explicitly set per library guidelines (24/20/16pt hierarchy)
-  - Clean spine removal and subtle gridlines create polished visual refinement
+  - Correct area chart with fill_between + line overlay in brand green (#009E73)
+  - Perfect theme adaptation — all chrome tokens (INK, INK_SOFT, PAGE_BG) wired through
+    correctly; dark render has light text, light render has dark text, no dark-on-dark
+    failures
+  - 'Clear data storytelling: upward trend with weekend dips and an annotated viral
+    spike on day 18 creates an immediate focal point'
+  - All font sizes explicitly set per style-guide recommendations; well-proportioned
+    title with descriptive prefix
+  - 'Perfect spec compliance: semi-transparent fill (alpha=0.35), y-axis grid, clear
+    axis labels'
+  - Realistic and neutral dataset — daily website visitors with realistic patterns
+    (weekend dips, noise, viral event)
+  - Clean KISS structure with np.random.seed(42), all imports used, saves plot-{THEME}.png
+    with no bbox_inches=tight
   weaknesses:
-  - 'Some vertical headroom above the spike creates wasted canvas space (VQ-05: 2/4)'
-  - 'The imshow+PathPatch approach is slightly over-engineered compared to fill_between
-    with a gradient (CQ-04: 1/2)'
-  - Could benefit from one additional annotation (e.g., labeling weekend pattern or
-    overall trend) to reach full storytelling marks
-  image_description: The plot shows a basic area chart titled "Website Traffic · area-basic
-    · matplotlib · pyplots.ai". The x-axis represents "Day of Month" (1–30), and the
-    y-axis represents "Daily Visitors (count)" (0–~8500). The area below the line
-    is filled with a vertical gradient transitioning from light blue (#d6e6f5) at
-    the bottom to dark Python Blue (#306998) near the data line, at alpha 0.6. The
-    solid line on top is dark blue with linewidth 3. The data shows an upward trend
-    from ~3000 visitors to ~5000, with visible weekend dips (around days 6–7, 13–14,
-    20–21, 27–28). A prominent spike reaches ~8200 on day 18, annotated with "Viral
-    post" in bold blue text with an arrow pointing to the peak. Top and right spines
-    are removed. Subtle y-axis gridlines at alpha 0.2 aid value estimation. Layout
-    is clean with balanced margins.
+  - Gradient fill not implemented — spec notes it as a consideration for visual appeal;
+    a matplotlib LinearSegmentedColormap gradient from baseline to line color would
+    elevate the aesthetic further
+  - 'DE-01 ceiling: design is clean and above defaults but not yet at publication/FiveThirtyEight
+    level — gradient fill and slightly more refined typography hierarchy (e.g. bolder
+    title weight) would push it higher'
+  - 'LM-02: fill_between + annotate with arrowprops are correct and idiomatic but
+    not particularly distinctive — using matplotlib PathPatch or axvline + axhspan
+    for weekend shading would showcase more library-specific capability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches the required light surface exactly, not pure white.
+      Chrome: Title "Website Traffic · area-basic · python · matplotlib · anyplot.ai" in dark ink (~75-80% of canvas width, expected for the mandated format). X-axis label "Day of Month" and Y-axis label "Daily Visitors" both at 10pt in dark ink. Tick labels in INK_SOFT (#4A4A44) at 8pt — clearly readable. Subtle horizontal grid lines at alpha=0.15. Top and right spines removed; left and bottom spines in INK_SOFT.
+      Data: Brand green (#009E73) area fill at alpha=0.35 from y=0 to the visitors line, with a solid brand-green line at linewidth=2.5 on top. "Viral post" annotation with arrow pointing to the day-18 spike at ~8200 visitors; arrow in INK_SOFT, text in dark INK. Upward trend clearly visible from ~3000 to ~5000 visitors, weekend dips visible as periodic dips, spike on day 18 is the dominant visual feature.
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — matches required dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8) — fully readable. Axis labels "Day of Month" and "Daily Visitors" in light INK. Tick labels in INK_SOFT (#B8B7B0, light gray) — clearly visible against dark background. Subtle horizontal grid lines appear as faint white lines. Left and bottom spines in light INK_SOFT.
+      Data: Brand green (#009E73) area fill with alpha=0.35 — identical color to light render, the semi-transparency produces a slightly darker green fill on the dark surface which looks appropriate. Solid brand-green line at linewidth=2.5. "Viral post" annotation text renders in light cream (INK=#F0EFE8), arrow in light gray (INK_SOFT=#B8B7B0) — both clearly visible on dark background.
+      Legibility verdict: PASS — all text elements readable against the warm near-black background. No dark-on-dark failures detected. Data colors are identical to the light render (only chrome flips).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,65 +61,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotation 16pt'
+        comment: All font sizes explicitly set (title=scaled 12pt, xlabel=10pt, ylabel=10pt,
+          ticks=8pt); well-proportioned in both renders; title ~75-80% width as expected
+          for mandated format
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements; viral post annotation arrow positioned at
+          (22, 6600) clear of data and other text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line width 3 is good, gradient fill clearly visible; area chart doesn't
-          need markers
+        comment: 30 data points; linewidth=2.5 and fill at alpha=0.35 perfectly adapted
+          to density — both line and fill clearly visible
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series using brand green #009E73; CVD-safe, good contrast
+          on both backgrounds'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single Python Blue color scheme, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 2
-        max: 4
-        passed: false
-        comment: Good proportions but noticeable vertical headroom above spike (~12%
-          padding); some wasted space at top
+        comment: figsize=(8,4.5) dpi=400 → 3200x1800; subplots_adjust with balanced
+          margins; plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Day of Month and Daily Visitors (count) — descriptive with units
+        comment: 'Descriptive labels: ''Day of Month'', ''Daily Visitors''; title
+          correctly formatted with descriptive prefix'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds #FAF8F1/#1A1A17; all
+          chrome tokens theme-adaptive'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Gradient fill via imshow+clip is sophisticated, custom colormap,
-          professional polish, clearly above defaults
+        comment: 'Above well-configured defaults: custom brand color, semi-transparent
+          fill, spine removal, subtle grid — but not at FiveThirtyEight level; no
+          gradient fill'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle gridlines, clean tight_layout; could add faint
-          x-axis grid for day identification
+        comment: Top/right spines removed, y-axis-only grid at alpha=0.15, spine colors
+          set to INK_SOFT, explicit subplots_adjust margins — real refinement above
+          defaults
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Viral post annotation tells a story, weekend dips and upward trend
-          provide narrative; could annotate one more pattern
+        comment: 'Clear focal point: viral spike on day 18 annotated with arrow; upward
+          trend, weekend dips, and anomaly create a comprehensible narrative; viewer
+          immediately sees the event'
     spec_compliance:
       score: 15
       max: 15
@@ -127,51 +143,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic area chart with filled area below line
+        comment: 'Correct area chart: fill_between from y=0 to line + line overlay'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill, gridlines, clear labels with units, gradient
-          fill from bottom to line
+        comment: Semi-transparent fill (alpha=0.35) ✓; y-axis gridlines ✓; clear axis
+          labels with descriptive names ✓; gradient fill is 'consider' only — not
+          required
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=days, Y=visitors correctly assigned
+        comment: x=days 1-30 (continuous), y=visitors; xlim(1,30) and ylim(0, max*1.06)
+          show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches required format; no legend needed for single
-          series
+        comment: 'Title format: ''Website Traffic · area-basic · python · matplotlib
+          · anyplot.ai'' — correct with descriptive prefix; no legend needed for single
+          series'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows upward trend, weekend dips, viral spike, noise; good variety
+        comment: Shows upward trend, periodic weekend dips, random noise, and viral
+          spike anomaly — comprehensive area chart feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic over a month is a real, neutral, comprehensible scenario
+        comment: Daily website visitors over a month — real, neutral, comprehensible
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2000-8200 daily visitors is realistic for a medium website
+        comment: Baseline 3000-5000 visitors, weekend dip ~1200, noise ~300, viral
+          spike to 8200 — all plausible for a mid-sized website
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,7 +201,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions/classes
+        comment: 'Linear flow: imports → tokens → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,22 +214,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.colors, pyplot, numpy, PathPatch, Path)
+        comment: Only os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: imshow+PathPatch gradient is clever but slightly over-engineered
-          vs fill_between; visual payoff justifies partial credit
+        passed: true
+        comment: Clean Pythonic code; no over-engineering; appropriate complexity
+          for the visualization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, no deprecated APIs
+        comment: Saves plot-{THEME}.png; no bbox_inches=tight; current matplotlib
+          API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,13 +238,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses axes methods correctly; imshow+clip is lower-level than fill_between
-          but demonstrates deep knowledge
+        comment: Uses Axes methods throughout (ax.fill_between, ax.plot, ax.annotate,
+          ax.set_xlabel etc.); not pyplot calls; fill_between is the idiomatic matplotlib
+          area chart approach
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Gradient fill via imshow clipped to PathPatch is a distinctively
-          matplotlib technique
+        comment: fill_between for area fill and annotate with arrowprops are matplotlib-specific;
+          demonstrates library knowledge above generic; weekend shading or axvspan
+          could further showcase distinctiveness
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
