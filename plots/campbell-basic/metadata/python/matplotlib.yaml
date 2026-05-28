@@ -1,118 +1,138 @@
 library: matplotlib
+language: python
 specification_id: campbell-basic
 created: '2026-02-15T21:08:00Z'
-updated: '2026-02-15T21:36:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22043026882
+updated: '2026-05-28T15:32:02Z'
+generated_by: claude-sonnet
+workflow_run: 26583312050
 issue: 4241
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Excellent differentiation between critical speeds inside vs outside operating
-    range using marker shape, size, opacity, and annotation styling — creates strong
-    visual hierarchy
-  - Sophisticated end-of-line label de-collision algorithm prevents overlap at the
-    right edge
-  - Rotated engine order labels with white background boxes are elegant and readable
-  - Operating range shading with dotted boundaries is tasteful and informative
-  - Linear interpolation for finding exact intersection points is mathematically sound
-  - Comprehensive two-column legend covers all visual elements without cluttering
+  - 'Correct anyplot palette usage throughout: first series #009E73, canonical order
+    for remaining modes, amber semantic anchor for caution/warning (in-range critical
+    speeds)'
+  - 'Semantic marker differentiation: amber diamonds for in-range critical speeds
+    vs muted gray circles for out-of-range — guides viewer to operationally relevant
+    intersections'
+  - Angle-matched engine order line labels follow the line direction — professional
+    engineering chart convention
+  - End-of-line de-collision algorithm cleanly separates the 5 close-packed mode labels
+    on the right margin
+  - 'Fully theme-adaptive: both renders pass the readability check with no dark-on-dark
+    or light-on-light failures'
+  - 'Perfect spec compliance: all 5 modes, 3 EO lines, operating range, intersection
+    markers, and legend fully implemented'
   weaknesses:
-  - Right-edge mode labels for Axial and 1st Torsional are vertically close despite
-    de-collision logic — the minimum gap could be slightly larger
-  - Legend font size (11pt) is smaller than the recommended 16pt in library rules,
-    though appropriate given 9 legend entries
-  - Imports from three separate matplotlib submodules (lines, patches, ticker) adds
-    minor verbosity
-  image_description: The plot displays a Campbell Diagram with 5 natural frequency
-    mode curves (1st Bending in dark blue, 2nd Bending in orange, 1st Torsional in
-    cyan, Axial in purple, 3rd Bending in brown) plotted against rotational speed
-    from 0 to 6,000 RPM on the x-axis and frequency from 0 to 120 Hz on the y-axis.
-    Three dashed gray engine order lines (1x, 2x, 3x) extend diagonally from the origin
-    with rotated labels on white background boxes. A light blue shaded band marks
-    the operating range (2,500-4,500 RPM) with dotted vertical boundary lines and
-    an italic "Operating Range" label at the bottom. Critical speed intersections
-    outside the operating range appear as semi-transparent red circles, while those
-    inside appear as larger red diamond markers with annotated mode labels in red-bordered
-    boxes connected by arrow lines. End-of-line mode labels in bold matching colors
-    appear at the right edge with vertical de-collision. The title reads "campbell-basic
-    · matplotlib · pyplots.ai" in medium weight. A two-column legend in the upper-left
-    distinguishes all element types. Top and right spines are removed, subtle grids
-    are applied, and the x-axis uses thousand separators.
+  - 'Critical speed annotation zone (2500-4500 RPM) is visually dense: 4 annotation
+    boxes + their arrow connectors + the mode curves + dashed EO lines all overlap
+    in this region — consider reducing annotation box padding or using shorter label
+    text to reduce crowding'
+  - 7pt font for end-of-line mode labels and critical speed annotation text is small;
+    at mobile scale (400px wide) these labels may be marginal — consider 8pt minimum
+    for annotation text
+  - DE-01 and DE-02 could be improved with a more intentional typographic hierarchy
+    (e.g. slightly bolder mode labels at line ends, consistent fontweight choices
+    across annotation types)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "campbell-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt, comma-formatted. Legend in upper-left with ELEVATED_BG (#FFFDF6) frame. All text is readable.
+      Data: 5 mode curves in anyplot palette — 1st Bending #009E73 (green), 2nd Bending #C475FD (lavender), 1st Torsional #4467A3 (blue), Axial #BD8233 (ochre), 3rd Bending #AE3030 (matte red). Engine order lines in INK_SOFT dashed. Critical speeds outside operating range: gray circles. Critical speeds inside operating range: amber (#DDCC77) diamonds with annotated boxes.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels render in light cream (#F0EFE8), tick labels in soft warm-gray (#B8B7B0). Legend frame uses #242420 elevated dark surface. All text clearly readable against the dark background. No dark-on-dark failure detected — tick labels, annotations, and mode labels all use light-theme-appropriate token colors.
+      Data: All five mode curve colors are identical to the light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030. Amber diamonds remain clearly visible on the dark background. Data palette unchanged between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 11pt, annotations 10-14pt'
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
+          annotations 7pt). 7pt annotation text is marginally small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: De-collision logic for end-of-line labels works well; Axial and 1st
-          Torsional right-edge labels are close but readable
+        comment: De-collision logic works for end-of-line labels. Minor crowding in
+          the operating range zone with 4 annotation boxes plus arrows plus mode lines.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths of 2.8 well-suited; critical markers appropriately sized
-          (s=200/350)
+        comment: Mode curves at linewidth=2.5 clearly distinct. Engine order lines
+          visible at 1.5 dashed. Amber diamond markers (s=110) prominent.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'anyplot palette is CVD-safe. Redundant encodings: linestyle and
+          marker shape.'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue, orange, cyan, purple, brown palette is colorblind-distinguishable
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization; right-edge labels extend slightly beyond
-          plot area
+        comment: 3200x1800px canvas. Right margin used for end-of-line labels (legitimate).
+          Excellent proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Rotational Speed (RPM) and Frequency (Hz) with units
+        comment: Rotational Speed (RPM) and Frequency (Hz) both descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for modes 2-5, amber semantic
+          anchor for in-range critical speeds, correct backgrounds #FAF8F1/#1A1A17,
+          theme-adaptive chrome.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Near publication-ready: custom palette, rotated EO labels with white
-          boxes, differentiated critical speed markers'
+        comment: 'Well above defaults: semantic marker differentiation, angle-matched
+          EO labels, de-colliding end labels, amber-bordered annotation boxes. Professional
+          engineering chart feel.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grids, spines removed/thinned, generous whitespace, elegant
-          operating range shading
+        comment: Top/right spines removed, kept spines at linewidth=0.6, subtle y-axis
+          grid at alpha=0.15, comma-formatted ticks, generous margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: diamond markers + annotations emphasize
-          critical speeds in operating range vs translucent circles outside'
+        comment: 'Clear hierarchy: operating range highlighted, in-range critical
+          speeds distinguished and annotated. Viewer guided to operationally dangerous
+          intersections.'
     spec_compliance:
       score: 15
       max: 15
@@ -122,52 +142,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Campbell Diagram with frequency vs RPM overlay
+        comment: Correct Campbell diagram with natural frequency curves, engine order
+          lines from origin, and critical speed markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: 5 modes, 3 engine orders, critical speed markers,
-          labels, legend, operating range'
+        comment: 'All spec features: 5 modes, 3 EO lines (1x-3x), intersection markers,
+          mode labels, EO labels, operating range shading, clean legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=RPM, Y=Hz correctly assigned
+        comment: 'X: RPM 0-6000; Y: Frequency Hz 0-120. All data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; comprehensive legend with all element types
+        comment: Title is 'campbell-basic · python · matplotlib · anyplot.ai'. Legend
+          labels match all series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows modes with varied gyroscopic behavior; both in-range and out-of-range
-          critical speeds visible
+        comment: 'All Campbell diagram features: modes with different gyroscopic behaviors,
+          both in-range and out-of-range critical speeds, three EO orders.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic rotordynamics scenario with standard engineering mode names
+        comment: Turbomachinery rotordynamic context with realistic mode names, operating
+          range 2500-4500 RPM, neutral engineering scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Baseline frequencies 18-92 Hz and 0-6000 RPM are realistic for rotating
-          machinery
+        comment: Speed range 0-6000 RPM and base frequencies 18-92 Hz are factually
+          reasonable for shaft bending modes in mid-speed rotating machinery.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,34 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot, save'
+        comment: Clean Imports -> Data -> Plot -> Save, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data from formulas, no randomness
+        comment: Fully deterministic, all data computed analytically.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used; minor verbosity importing from separate matplotlib
-          submodules
+        comment: All imports (os, matplotlib.pyplot, numpy, Line2D, Patch, FuncFormatter)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean intersection-finding with linear interpolation; Pythonic loops
+        comment: Clean and Pythonic. De-collision algorithm and linear interpolation
+          for zero-crossings are appropriately complex.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight
+        comment: Saves as plot-{THEME}.png at dpi=400, no bbox_inches='tight'.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -210,14 +234,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes methods throughout, FuncFormatter, axvspan, proper tight_layout
+        comment: Consistent Axes methods, FuncFormatter, fig.subplots_adjust, annotation_clip=False.
+          Fully idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Custom legend with Line2D/Patch handles, FuncFormatter, rotation_mode
-          anchor, axvspan
+        comment: Uses FuncFormatter, Line2D and Patch custom legend handles, axvspan,
+          styled annotations. Above generic but not deeply distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -227,10 +252,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - interpolation
   styling:
   - alpha-blending
   - grid-styling
-  - edge-highlighting
