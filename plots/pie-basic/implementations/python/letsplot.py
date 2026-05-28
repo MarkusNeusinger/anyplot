@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-28
 """
 
 import os
@@ -17,6 +16,7 @@ from lets_plot import (
     ggsize,
     labs,
     layer_labels,
+    layer_tooltips,
     scale_fill_manual,
     theme,
     theme_void,
@@ -46,9 +46,12 @@ data = {
 # Colors: anyplot positions 1–4, muted for "Others" (rest category)
 colors = [ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2], ANYPLOT_PALETTE[3], ANYPLOT_MUTED]
 
-# Title — minimal required format (42 chars, fits at default 16px)
+# Title — minimal required format
 title = "pie-basic · python · letsplot · anyplot.ai"
 title_size = 16
+
+# Rich HTML tooltips — letsplot-specific interactivity
+pie_tooltips = layer_tooltips().title("@company").format("@share", "{.1f}%").line("Market share|@share")
 
 # Plot — square canvas (600×600 × scale=4 = 2400×2400 px)
 plot = (
@@ -63,17 +66,24 @@ plot = (
         color=PAGE_BG,
         spacer_width=1.0,
         spacer_color=PAGE_BG,
-        labels=layer_labels().line("@{share}").format("share", "{.1f}%").size(10),
+        labels=layer_labels().line("@{share}").format("share", "{.1f}%").size(11),
+        tooltips=pie_tooltips,
     )
     + scale_fill_manual(values=colors)
-    + labs(title=title, subtitle="OPPO's 8.8% slice is the smallest — 'Others' dominate at 35%", fill="Brand")
+    + labs(
+        title=title,
+        subtitle="OPPO's 8.8% slice is the smallest — 'Others' dominate at 35%",
+        fill="Brand",
+        caption="Global smartphone market share, 2024",
+    )
     + ggsize(600, 600)
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_title=element_text(size=title_size, hjust=0.5, face="bold", color=INK),
-        plot_subtitle=element_text(size=9, hjust=0.5, color=INK_SOFT),
-        legend_title=element_text(size=12, color=INK),
+        plot_subtitle=element_text(size=11, hjust=0.5, color=INK_SOFT),
+        plot_caption=element_text(size=9, hjust=0.5, color=ANYPLOT_MUTED),
+        legend_title=element_text(size=12, face="bold", color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         plot_margin=[20, 20, 20, 20],
