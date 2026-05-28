@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -109,7 +109,7 @@ for i in range(len(categories)):
             x=lx,
             y=ly,
             text=f"{percentages[i]:.0f}%",
-            text_font_size="28pt",
+            text_font_size="34pt",
             text_color=slice_label_colors[i],
             text_font_style="bold",
             text_align="center",
@@ -126,7 +126,7 @@ legend = Legend(
     items=legend_items,
     location="center",
     orientation="horizontal",
-    label_text_font_size="26pt",
+    label_text_font_size="34pt",
     label_text_color=INK_SOFT,
     glyph_width=40,
     glyph_height=40,
@@ -144,7 +144,7 @@ p.title.align = "center"
 p.title.text_color = INK
 p.axis.visible = False
 p.grid.visible = False
-p.outline_line_color = None
+p.outline_line_color = PAGE_BG
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
