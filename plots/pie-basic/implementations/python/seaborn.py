@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-28
+Quality: 83/100 | Created: 2026-05-28
 """
 
 import os

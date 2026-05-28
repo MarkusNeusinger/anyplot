@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: pie-basic
 created: '2026-05-28T11:21:08Z'
-updated: '2026-05-28T11:27:24Z'
+updated: '2026-05-28T11:39:21Z'
 generated_by: claude-sonnet
 workflow_run: 26571367198
 issue: 678
@@ -12,120 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: all four required features (percentage labels, distinct
-    colors, legend, explode emphasis) present and well-executed.'
-  - 'Semantic color intelligence: brand green (#009E73) for market leader AWS, muted
-    anchor for ''Others'' — correct palette application.'
-  - Real-world data (2024 cloud market share) with plausible, factually grounded proportions.
-  - Theme-adaptive chrome correctly threaded through title, autotext, and legend in
-    both light and dark renders.
-  - Clean KISS code — deterministic data, no bbox_inches='tight', correct canvas size.
-  - Edge color matching page background creates clean, professional slice separation
-    between wedges.
+  - 'Excellent palette compliance: first series #009E73, canonical order, semantically
+    appropriate muted anchor for Others'
+  - 'All spec requirements fully implemented: percentage labels, legend, distinct
+    colors, exploded largest slice'
+  - Correct seaborn theming approach for a chart type seaborn does not natively support
+  - 'Strong data storytelling: exploded dominant slice, muted catch-all, center annotation'
+  - 'Perfect code quality: clean KISS structure, deterministic, correct output'
   weaknesses:
-  - Library Mastery is constrained — seaborn has no native pie chart primitive so
-    the entire chart uses ax.pie() (matplotlib). Use sns.set_palette() explicitly
-    and explore incorporating at least one seaborn-native element to differentiate
-    from pure matplotlib.
-  - 'DE-01 limited by generic visual footprint — consider converting to a donut chart
-    (wedgeprops={''width'': 0.65}) with a center label, bold title, and subtle label
-    backgrounds on small slices for better mobile readability.'
-  - Noticeable whitespace gap between the bottom of the pie and the legend — tighten
-    by reducing subplots_adjust bottom and adjusting bbox_to_anchor y-offset.
+  - 'Percentage label contrast issue in light mode: autotext.set_color(INK) uses dark
+    #1A1A17 on dark slice colors (Google Cloud blue #4467A3 and IBM Cloud red #AE3030),
+    producing ~2.3:1 contrast ratio. Fix by computing per-slice luminance and using
+    white text on dark slices, dark text on light slices.'
+  - In dark mode, light text on lavender (#C475FD) for the 22% Microsoft Azure label
+    has slightly reduced contrast — same adaptive label color logic would resolve
+    this.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "pie-basic · python · seaborn · anyplot.ai" in dark ink at fontsize=12 — fully readable. Percentage labels (32%, 22%, 11%, 6%, 5%, 24%) in dark ink at fontsize=8 inside each slice — readable. Legend with elevated warm background and soft gray border; legend text in INK_SOFT (dark secondary) — readable.
-      Data: Six slices — Amazon AWS in brand green #009E73 (exploded), Microsoft Azure in lavender #C475FD, Google Cloud in blue #4467A3, Alibaba Cloud in ochre #BD8233, IBM Cloud in matte red #AE3030, Others in muted gray INK_MUTED. Slice edges use page background color for clean separation.
-      Legibility verdict: PASS — all text is clearly readable against the light background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "pie-basic · python · seaborn · anyplot.ai" bold dark ink, clearly readable. Legend labels in dark ink with subtle frame. No axis labels needed for pie chart.
+      Data: Donut-style pie chart (ring width 65%). Amazon AWS (32%) brand green #009E73, exploded. Microsoft Azure (22%) lavender #C475FD. Google Cloud (11%) blue #4467A3. Alibaba Cloud (6%) ochre #BD8233. IBM Cloud (5%) matte red #AE3030. Others (24%) muted gray #6B6A63. Center annotation "Cloud/Market/2024" in INK_SOFT.
+      Legibility verdict: PARTIAL FAIL — percentage labels use dark INK #1A1A17 unconditionally. On dark slices (blue #4467A3, red #AE3030), contrast ratio ~2.3:1, below readable threshold.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface.
-      Chrome: Title in light cream (#F0EFE8) — fully readable against dark background. Percentage labels inside slices in light cream — readable against all slice backgrounds including small red and ochre wedges. Legend box uses elevated dark background (#242420) with light-gray text (#B8B7B0) and soft gray border — readable.
-      Data: All six pie slice colors are identical to the light render (green, lavender, blue, ochre, red, muted gray) — data color consistency across themes confirmed.
-      Legibility verdict: PASS — no dark-on-dark issues; all text clearly readable against the dark background.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and legend text are light-colored #F0EFE8, clearly readable against dark background. Legend uses elevated background #242420. No dark-on-dark failures observed.
+      Data: Slice colors identical to light render — green, lavender, blue, ochre, red, muted gray. Percentage labels use INK #F0EFE8 (light), readable on dark slices. Donut hole clearly visible as dark center circle.
+      Legibility verdict: PARTIAL PASS — light text on lavender slice (22%, #C475FD) slightly reduced contrast but readable. All other labels clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, labels 8pt, legend 8pt);
-          readable in both themes. Percentage labels at 8pt in small wedges are tight
-          at mobile scale.
+        comment: All font sizes explicitly set. Dark INK on dark slices (blue/red)
+          gives ~2.3:1 contrast in light mode.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; labels fit inside all wedges.
+        comment: No overlapping text. pctdistance=0.78 placement works cleanly in
+          ring.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All slices clearly visible and proportional; muted gray for Others
-          appropriately de-emphasized.
+        comment: All 6 slices visible including small 5% and 6% wedges.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: anyplot palette is CVD-safe; muted anchor still distinguishable.
+        passed: false
+        comment: CVD-safe palette, but low contrast for pct labels on dark slices
+          in light mode.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for pie. Pie well-centered but noticeable
-          gap between bottom of pie and legend creates slightly unbalanced lower whitespace.
+        comment: Square 2400x2400 canvas appropriate. Chart fills ~60% of canvas diameter
+          with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Pie chart has no axis labels by design; title correctly formatted.
+        comment: Correct mandated title format. Descriptive legend labels. No axis
+          labels needed.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; canonical anyplot order followed;
-          Others uses muted semantic anchor; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive
-          in both renders.'
+        comment: 'First series #009E73, canonical order, muted anchor for Others,
+          correct backgrounds, data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured with thoughtful palette and semantic color choices.
-          Looks like a polished configured default rather than exceptional design.
+        comment: 'Above default: donut design with center annotation, semantic muted
+          Others, exploded dominant slice.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Edge highlighting using page background, elevated legend box, muted
-          legend text. Slightly awkward whitespace gap between pie and legend.
+        comment: No grid, background-colored wedge separators, generous whitespace,
+          subtle legend frame.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Exploded AWS slice + brand green creates clear focal point for market
-          leader. Muted Others de-emphasizes catch-all. Story about AWS dominance
-          is communicated through visual hierarchy.
+        comment: Exploded AWS slice draws eye to market leader, muted Others de-emphasizes
+          catch-all, center annotation contextualizes.
     spec_compliance:
       score: 15
       max: 15
@@ -135,53 +129,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart.
+        comment: Pie chart implemented. Donut variant (ring width 65%) is accepted
+          pie chart variation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Percentage labels on slices, distinct colors, legend, largest slice
-          exploded — all present.
+        comment: Percentage labels, distinct colors, legend, and exploded largest
+          slice all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to slice angles; all 6 categories visible
-          with accurate proportions.
+        comment: All 6 categories correctly mapped with proportional angles, sum to
+          100%.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'pie-basic · python · seaborn · anyplot.ai'; legend labels
-          match data categories.
+        comment: Title is exactly pie-basic · python · seaborn · anyplot.ai. Legend
+          labels match data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Varied slice sizes (5%-32%); catch-all Others category; explode and
-          muted-color techniques demonstrated.
+        comment: Shows varying slice sizes, dominant share, mid-range, and small slices.
+          One catch-all Others slightly limits coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global cloud computing market share (2024 estimates) — real, neutral
-          business scenario.
+        comment: 2024 global cloud market share with real companies, neutral business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions plausible for 2024 cloud market; values sum to 100%;
-          AWS at 32% and Azure at 22% consistent with known figures.
+        comment: AWS ~32%, Azure ~22%, Google ~11% aligns with established 2024 market
+          estimates. Values sum to 100%.
     code_quality:
       score: 10
       max: 10
@@ -191,34 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → style → save. No functions
-          or classes.'
+        comment: 'Linear: imports -> tokens -> palette -> data -> plot -> save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is deterministic; no random generation needed.
+        comment: Fully deterministic hardcoded data, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, seaborn — all used.
+        comment: Only os, matplotlib.pyplot, seaborn. All used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake UI elements.
+        comment: Clean Pythonic code, no fake interactive elements, good use of wedgeprops.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and facecolor; no bbox_inches='tight'.
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG), no
+          bbox_inches='tight'.
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -226,20 +222,20 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() is the correct seaborn idiom for configuring the
-          matplotlib backend when the plot type has no native seaborn equivalent.
-          Chart itself is ax.pie() (matplotlib).
+        comment: Correct use of sns.set_theme(), sns.set_palette(), sns.color_palette()
+          for theming. Core plotting via ax.pie() since seaborn has no pie chart API.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No seaborn-specific plot functions used — seaborn has no sns.pieplot.
-          Implementation is essentially matplotlib with a seaborn theme wrapper.
-  verdict: REJECTED
+        comment: Uses sns.color_palette() as indexable ColorPalette object. Inherently
+          limited by lack of seaborn native pie chart function.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - explicit-figure
