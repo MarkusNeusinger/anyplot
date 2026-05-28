@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-28
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 85/100 | Created: 2026-05-28
 """
 
 import os
