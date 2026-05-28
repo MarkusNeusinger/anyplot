@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-basic: Basic Area Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-28
+Quality: 90/100 | Updated: 2026-05-28
 """
 
 import os
