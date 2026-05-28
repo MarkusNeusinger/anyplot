@@ -1,8 +1,19 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: seaborn 0.13.2 | Python 3.14.0
-Quality: 95/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-28
 """
+
+import os as _os
+import sys
+
+
+# Prevent the local matplotlib.py in this directory from shadowing the package
+_script_dir = _os.path.realpath(_os.path.dirname(_os.path.abspath(__file__)))
+sys.path[:] = [p for p in sys.path if _os.path.realpath(p if p else ".") != _script_dir]
+del _script_dir, _os
+
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -10,133 +21,133 @@ import numpy as np
 import seaborn as sns
 
 
-# Data - simulated exam scores with multimodal distribution
-np.random.seed(42)
-main_group = np.random.normal(loc=72, scale=10, size=350)
-high_achievers = np.random.normal(loc=92, scale=4, size=120)
-low_tail = np.random.uniform(30, 50, size=30)
-values = np.concatenate([main_group, high_achievers, low_tail])
+THEME = os.getenv("ANYPLOT_THEME", "light")
 
-# Statistics for storytelling
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = ANYPLOT_PALETTE[0]
+
+# Data — e-commerce order amounts: two clearly separated spending segments
+# Budget shoppers (~$45) and premium shoppers (~$350) produce a bimodal distribution;
+# mean >> median due to the right tail, giving well-separated reference lines.
+np.random.seed(42)
+budget = np.random.lognormal(np.log(45), 0.3, 400)
+premium = np.random.lognormal(np.log(350), 0.35, 350)
+values = np.concatenate([budget, premium])
+values = values[(values > 5) & (values <= 1200)]
+
 mean_val = np.mean(values)
 median_val = np.median(values)
 
-# Seaborn theme — leverages sns.set_theme for cohesive styling
 sns.set_theme(
-    style="whitegrid",
+    style="ticks",
     rc={
-        "axes.facecolor": "#FAFBFC",
-        "figure.facecolor": "#FFFFFF",
-        "grid.color": "#E0E4E8",
-        "grid.alpha": 0.5,
-        "grid.linewidth": 0.6,
-        "axes.edgecolor": "#BBBFC4",
-        "axes.linewidth": 0.8,
-        "font.family": "sans-serif",
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Histogram — seaborn axes-level API with stat="count"
-sns.histplot(values, bins=30, color="#306998", edgecolor="white", linewidth=1.0, alpha=0.82, stat="count", ax=ax)
+# Histogram
+sns.histplot(values, bins=40, color=BRAND, edgecolor=PAGE_BG, linewidth=0.5, alpha=0.88, stat="count", ax=ax)
 
-# Separate KDE overlay — seaborn kdeplot for styled density curve
+# KDE overlay via twin axis — seaborn-distinctive, shows both modes as humps
 ax2 = ax.twinx()
-sns.kdeplot(values, color="#1A3A5C", linewidth=2.5, alpha=0.85, ax=ax2)
+sns.kdeplot(values, color=ANYPLOT_PALETTE[2], linewidth=1.5, ax=ax2)
 ax2.set_ylabel("")
 ax2.set_yticks([])
-ax2.spines["top"].set_visible(False)
-ax2.spines["right"].set_visible(False)
+for sp in ax2.spines.values():
+    sp.set_visible(False)
 
-# Rug plot — seaborn-distinctive feature showing individual observations
-sns.rugplot(values, color="#306998", alpha=0.08, height=0.02, ax=ax)
+# Rugplot — individual observations
+sns.rugplot(values, color=BRAND, alpha=0.05, height=0.025, ax=ax)
 
-# Storytelling: annotate mean and median lines
-ax.axvline(mean_val, color="#D35400", linewidth=2, linestyle="--", alpha=0.85, zorder=5)
-ax.axvline(median_val, color="#27AE60", linewidth=2, linestyle="-.", alpha=0.85, zorder=5)
+# Reference lines for distributional statistics
+mean_line = ax.axvline(mean_val, color=ANYPLOT_PALETTE[4], linewidth=1.5, linestyle="--", zorder=5)
+med_line = ax.axvline(median_val, color=ANYPLOT_PALETTE[3], linewidth=1.5, linestyle="-.", zorder=5)
 
 y_top = ax.get_ylim()[1]
 
-# Mean label — placed to the right of the mean line, mid-height
-ax.text(
-    mean_val + 1.5,
-    y_top * 0.52,
-    f"Mean\n{mean_val:.1f}",
-    fontsize=13,
-    fontweight="bold",
-    color="#D35400",
-    ha="left",
-    va="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#D35400", "alpha": 0.9},
-)
-# Median label — placed to the left of the median line, mid-height
-ax.text(
-    median_val - 1.5,
-    y_top * 0.38,
-    f"Median\n{median_val:.1f}",
-    fontsize=13,
-    fontweight="bold",
-    color="#27AE60",
-    ha="right",
-    va="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#27AE60", "alpha": 0.9},
-)
-
-# Storytelling: label the two modes with arrows from empty regions
+# Mode annotations: text placed in the gap between peaks, arrows point to peak tops
 ax.annotate(
-    "Primary mode\n~72 pts",
-    xy=(70, y_top * 0.88),
-    xytext=(42, y_top * 0.88),
-    fontsize=13,
+    "Budget shoppers\n~$45",
+    xy=(46, y_top * 0.88),
+    xytext=(185, y_top * 0.80),
+    fontsize=7.5,
     fontstyle="italic",
-    color="#555555",
+    color=INK_SOFT,
     ha="center",
     va="center",
-    arrowprops={"arrowstyle": "-|>", "color": "#888888", "lw": 1.3},
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 0.9},
 )
 ax.annotate(
-    "Secondary mode\n~92 pts",
-    xy=(91, y_top * 0.72),
-    xytext=(105, y_top * 0.80),
-    fontsize=13,
+    "Premium shoppers\n~$350",
+    xy=(355, y_top * 0.42),
+    xytext=(600, y_top * 0.60),
+    fontsize=7.5,
     fontstyle="italic",
-    color="#555555",
+    color=INK_SOFT,
     ha="center",
     va="center",
-    arrowprops={"arrowstyle": "-|>", "color": "#888888", "lw": 1.3},
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 0.9},
 )
 
-# Style — typography hierarchy
-ax.set_title("histogram-basic · seaborn · pyplots.ai", fontsize=24, fontweight="semibold", color="#1A1A2E", pad=16)
-ax.set_xlabel("Exam Score (points)", fontsize=20, color="#333333", labelpad=10)
-ax.set_ylabel("Frequency (count)", fontsize=20, color="#333333", labelpad=10)
-ax.tick_params(axis="both", labelsize=16, colors="#555555")
+# Legend labels reference lines in the sparse upper-right region
+ax.legend(
+    [mean_line, med_line],
+    [f"Mean  ${mean_val:.0f}", f"Median ${median_val:.0f}"],
+    fontsize=8,
+    loc="upper right",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    framealpha=0.92,
+)
 
-# Layout — tighten x-axis to data range, remove top/right spines
-ax.set_xlim(25, 110)
+# Typography
+ax.set_title("histogram-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.set_xlabel("Order Amount (USD)", fontsize=10, color=INK, labelpad=6)
+ax.set_ylabel("Number of Orders", fontsize=10, color=INK, labelpad=6)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+
+# X-axis dollar formatting
+ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${int(x):,}"))
+ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+
+ax.set_xlim(0, 1200)
 ax.set_ylim(bottom=0)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_alpha(0.4)
-ax.spines["bottom"].set_alpha(0.4)
-ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
-ax.yaxis.grid(True)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 ax.xaxis.grid(False)
 
-# Subtitle with sample size
+# Sample size footnote (lower-right, clear of annotations)
 ax.text(
     0.99,
-    0.97,
-    f"n = {len(values)} students",
+    0.04,
+    f"n = {len(values):,} orders",
     transform=ax.transAxes,
-    fontsize=13,
-    color="#777777",
+    fontsize=7,
+    color=INK_MUTED,
     ha="right",
-    va="top",
+    va="bottom",
     fontstyle="italic",
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.09, right=0.97, top=0.90, bottom=0.13)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
