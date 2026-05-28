@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -28,7 +28,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot palette — semantic assignments for this spec
 COLOR_TOTAL = "#009E73"  # brand green — first/most prominent (U-shaped key curve)
@@ -113,7 +112,7 @@ p.add_layout(
     Label(x=5.8, y=3.85, text="Total Error", text_font_size="28pt", text_color=COLOR_TOTAL, text_font_style="bold")
 )
 p.add_layout(
-    Label(x=optimal_complexity + 0.25, y=optimal_error + 0.28, text="Optimal", text_font_size="22pt", text_color=INK)
+    Label(x=optimal_complexity + 0.25, y=optimal_error + 0.28, text="Optimal", text_font_size="26pt", text_color=INK)
 )
 
 # Formula annotation
@@ -151,16 +150,15 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-# Grid
-p.xgrid.grid_line_color = INK
+# Grid — Y-axis grid only for line charts
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.12
 p.ygrid.grid_line_alpha = 0.12
 
 # Background and chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Legend
 p.legend.location = "top_right"
