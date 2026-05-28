@@ -1,60 +1,55 @@
 library: plotly
+language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:13Z'
-updated: '2026-02-13T22:26:11Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447576989
-issue: 0
-python_version: 3.14.0
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/plotly/plot.html
+updated: '2026-05-28T07:34:51Z'
+generated_by: claude-sonnet
+workflow_run: 26560808878
+issue: 654
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/plotly/plot-dark.html
 quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
 review:
   strengths:
-  - Excellent data storytelling with three labeled population clusters and percentage
-    breakdowns — immediately communicates the distribution's story
-  - Multimodal data generation with three realistic student groups creates a compelling,
-    feature-rich histogram
-  - 'Clean visual refinement: subtle dotted gridlines, custom background, white bar
-    edge lines, well-positioned annotations with styled boxes'
-  - HTML-formatted annotations and hovertemplate leverage Plotly-specific capabilities
-    effectively
-  - 'Perfect spec compliance: correct bin sizing, no gaps, zero-based y-axis, descriptive
-    labels with units'
+  - 'Excellent data storytelling: three annotated student clusters with exact percentages
+    reveal educational performance groups at a glance'
+  - Correct anyplot palette and theme-adaptive chrome in both light and dark renders
+    — no dark-on-dark or chrome failures
+  - Deliberately multimodal distribution data (three mixing gaussians) shows distribution
+    shape with realistic context
+  - Mean and median reference lines with custom annotation legend using palette positions
+    3 and 4 — colorblind-safe pair (ochre/blue)
+  - 'Full spec compliance: bargap=0, thin PAGE_BG bar edges, rangemode=tozero, nbinsx=20,
+    descriptive axis labels with units'
   weaknesses:
-  - Mean/median reference lines use red vs green color distinction — problematic for
-    red-green colorblind users. Consider using blue/orange or varying line width more
-    dramatically in addition to dash patterns.
-  image_description: 'The plot displays a histogram of student exam scores on a light
-    gray background (#f8f9fc) with steel-blue bars (rgba(48,105,152,0.85)). The x-axis
-    is labeled "Score (points)" ranging from 30 to ~105, and the y-axis is labeled
-    "Frequency (count)" ranging from 0 to ~45. Bars have no gaps and subtle white
-    edge lines. The distribution is clearly multimodal: a dominant peak around 70-75
-    (reaching ~44 count), a secondary peak near 85-90 (~26 count), and a small cluster
-    around 40-45 (~6 count). Two vertical reference lines appear near score 73-74:
-    a red dashed line for Median (73.8) and a green dotted line for Mean (72.9), though
-    they overlap significantly. A legend box in the upper-left shows both values.
-    Three annotation callouts with arrows identify the clusters: "Main cluster — 77%
-    of students" at the peak, "High achievers — 17% of students" on the right, and
-    "Struggling — 6% of students" on the left. The title "histogram-basic · plotly
-    · pyplots.ai" is centered at the top. Y-axis has subtle dotted gridlines; x-axis
-    has no grid. Overall a clean, well-organized, publication-quality histogram.'
+  - 'DE-01 moderate: strong design but not yet publication-ready — annotation boxes
+    could have subtler borders (e.g. border-width 0.5), typography hierarchy could
+    push title weight higher (bold) to better separate it from axis labels'
+  - 'DE-02: only bottom x-axis spine shown (y-axis showline=False) — consider adding
+    left y-axis spine for classic L-frame, which would give the chart a more defined
+    plot boundary without adding clutter'
+  - 'LM-02: core histogram usage is fairly standard; implementation could leverage
+    Plotly-distinctive features more deeply (e.g. go.FigureWidget, rangeslider, or
+    layout annotations using plotly_white xaxis.mirror for spine mirroring)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "histogram-basic · python · plotly · anyplot.ai" centered in dark ink, clearly readable; x-axis label "Score (points)" and y-axis label "Frequency (count)" in dark text with units; tick labels in INK_SOFT (#4A4A44), readable at all sizes
+      Data: 20-bin histogram bars in brand green #009E73 with opacity 0.85 and thin white (PAGE_BG) separating edges; ochre dashed median line (#BD8233) and blue dotted mean line (#4467A3) at x≈73-74; reference legend annotation box (top-left) with elevated cream background showing median 73.8 and mean 72.9; three cluster annotations with arrows: "Main cluster 77% of students" (center), "High achievers 17% of students" (right), "Struggling 6% of students" (lower-left); y-axis dotted grid only, subtle; data reveals a right-skewed multimodal distribution
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct dark surface
+      Chrome: title in light ink (#F0EFE8), fully readable; axis labels in light text, readable; tick labels in INK_SOFT (#B8B7B0) for dark mode, readable; all annotation boxes use elevated dark background (#242420) with light INK text — no dark-on-dark failures observed
+      Data: histogram bars remain identical brand green #009E73 — identical to light render confirming data colors are theme-independent; mean/median reference lines same ochre/blue as light render; dotted y-grid in theme-adaptive rgba(240,239,232,0.15) — subtle but visible
+      Legibility verdict: PASS — all text visible against dark background; INK_SOFT tick labels (#B8B7B0) are clearly distinguishable on near-black; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,43 +57,54 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 15pt. All perfectly readable.'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=15);
+          well-proportioned in both renders; title spans ~55% of canvas width — good
+          for 46-char title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Annotations well-positioned with arrows pointing
-          to correct regions.
+        comment: Four annotation boxes well-spaced; no text overlaps bars or other
+          text; arrows are clean
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with 0.85 alpha, well-sized for 235 data points.
-          White edge lines add definition.
+        comment: Bars clearly visible with 0.85 opacity and white separating edges;
+          mean/median lines distinguishable by style (dashed vs dotted) and color
+          (ochre vs blue)
       - id: VQ-04
         name: Color Accessibility
         score: 2
-        max: 4
-        passed: false
-        comment: Mean/median lines use red vs green — problematic for colorblind users.
-          Dash patterns differ but legend relies on colored HTML spans.
+        max: 2
+        passed: true
+        comment: Ochre+blue reference lines are CVD-safe pair; brand green bars have
+          high contrast on both backgrounds
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas, balanced margins. Good proportions.
+        comment: Plot fills canvas well with balanced margins (l=80, r=40, t=80, b=60);
+          no content cut off; annotations well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Score (points) and Frequency (count) — descriptive with units.
+        comment: '''Score (points)'' and ''Frequency (count)'' — both descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; reference lines use palette positions
+          3 (#4467A3) and 4 (#BD8233); backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 17
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -106,22 +112,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color scheme, refined typography hierarchy, styled annotation
-          boxes with borders/backgrounds. Strong design above defaults.
+        comment: 'Strong design: consistent annotation styling, intentional color
+          hierarchy (bars+lines+boxes), clearly above library defaults. Not yet FiveThirtyEight-level
+          — typography could push title to bold/heavier weight, annotation borders
+          could be more refined'
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: y-axis only dotted grid, bottom x-axis spine only
+          (y showline=False), white bar edges, consistent elevated annotation boxes.
+          Missing left y-axis spine for L-frame completeness'
+      - id: DE-03
+        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Subtle dotted y-grid, custom background, white bar edges, generous
-          whitespace. High polish.
-      - id: DE-03
-        name: Data Storytelling
-        score: 6
-        max: 6
-        passed: true
-        comment: Three annotations identify distinct student populations with percentages,
-          mean/median reference lines with legend. Excellent narrative.
+        comment: 'Excellent storytelling: three labeled student groups with exact
+          percentages reveal performance segmentation; mean/median statistical anchors;
+          multimodal data deliberately chosen to show distribution shape. Very strong
+          for a basic histogram spec'
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chart type using go.Histogram.
+        comment: go.Histogram correctly used
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges, no gaps, readable labels, appropriate bin count,
-          Y-axis starts at zero.
+        comment: bargap=0 (no gaps), PAGE_BG bar edges (thin visible edges), nbinsx=20
+          (appropriate count), rangemode=tozero (y-axis from zero), readable axis
+          labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to score values, Y shows frequency counts correctly.
+        comment: Continuous score variable on x-axis, count on y-axis — correct histogram
+          mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format histogram-basic · plotly · pyplots.ai correct and centered.
+        comment: Title 'histogram-basic · python · plotly · anyplot.ai' matches required
+          format; mean/median reference lines labeled in annotation box
     data_quality:
       score: 15
       max: 15
@@ -160,20 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multimodal distribution with three distinct clusters. Shows central
-          tendency, spread, and multimodality.
+        comment: Three mixing Gaussians produce multimodal distribution showing spread,
+          skew, multiple modes, and outlier tail — covers all histogram features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam scores scenario — realistic, neutral, education-related.
+        comment: Exam score distribution for students — educational context, neutral,
+          clearly comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 0-100, realistic distribution, N=235 within recommended range.
+        comment: Scores 0-100, main cluster at 72, high achievers at 88, struggling
+          at 45 — realistic academic proportions; 235 total observations
     code_quality:
       score: 10
       max: 10
@@ -183,32 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → plot → save. No functions/classes.'
+        comment: 'Linear flow: imports → theme tokens → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. No over-engineering.
+        comment: Appropriate complexity; repeated add_annotation calls are justified
+          by the storytelling; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (4800x2700 via scale=3) and plot.html. Current
-          API.
+        comment: Saves plot-{THEME}.png (3200x1800) and plot-{THEME}.html; current
+          API
     library_mastery:
       score: 9
       max: 10
@@ -218,13 +236,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Figure/go.Histogram, add_shape, add_annotation, update_layout
-          — all idiomatic Plotly patterns.
+        comment: go.Histogram, add_shape, add_annotation, update_layout — all idiomatic
+          Plotly patterns; yref='paper' for reference lines is the correct Plotly
+          approach
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HTML-formatted annotations, hovertemplate, write_html for interactive
-          export, paper-referenced shapes. Distinctively Plotly.
+        comment: HTML-formatted annotation text (<span style='color:...'>), yref='paper'
+          shapes, custom hovertemplate, HTML file output alongside PNG — distinctly
+          Plotly. Core histogram itself is generic, but the annotation+shape combination
+          showcases Plotly's strength
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
