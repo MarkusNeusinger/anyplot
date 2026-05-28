@@ -1,125 +1,139 @@
 library: plotnine
+language: python
 specification_id: box-basic
 created: '2025-12-23T00:36:35Z'
-updated: '2026-02-14T22:25:19Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447781993
-issue: 0
-python_version: '3.14'
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - groupby-aggregation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-28T13:45:54Z'
+generated_by: claude-sonnet
+workflow_run: 26577310505
+issue: 689
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent data storytelling with three targeted annotations that guide the viewer
-    through key insights (salary gap, outlier explanation, distribution tightness)
-  - Custom cohesive muted palette anchored on Python Blue with good colorblind accessibility
-  - 'Strong use of plotnine-specific features: stat_summary for diamond median markers,
-    annotate label with styled backgrounds, lambda-based tick formatters'
-  - Well-crafted data with realistic salary distributions showing variety in medians,
-    spreads, and outlier patterns
-  - Clean, well-structured code following KISS principles with all explicit font sizing
+  - 'Full spec compliance: median line, outliers, whiskers at 1.5*IQR, and distinct
+    colors per category all correctly implemented via geom_boxplot + stat_summary'
+  - 'Excellent data storytelling: bracket annotation shows Engineering vs Support
+    salary gap, callout identifies Sales high outliers as senior hires, italic note
+    highlights Support tight distribution'
+  - 'Correct theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders use
+    proper background tokens, theme-adaptive INK/INK_SOFT/INK_MUTED throughout text
+    and annotations'
+  - Departments ordered by ascending median salary (Support to Engineering) making
+    the progressive hierarchy immediately readable
+  - Diamond median markers via stat_summary(geom='point', shape='D') add precision
+    beyond the standard box, and the anyplot palette is applied in canonical order
   weaknesses:
-  - The Senior hires above market rate annotation connector segment is too short and
-    does not clearly point to the Sales outlier cluster — a curved arrow or longer
-    segment would improve clarity
-  - The dashed reference line spans the full plot width rather than specifically connecting
-    Support and Engineering boxes, slightly diluting its purpose as a gap indicator
-  image_description: 'The plot displays 5 box-and-whisker plots arranged horizontally,
-    one per department (Support, Marketing, Sales, Research, Engineering), with salary
-    on the y-axis ranging from $20k to $160k. Each box uses a distinct muted color:
-    light blue for Support, peach/orange for Marketing, lavender/pink for Sales, mint
-    green for Research, and dark Python Blue for Engineering. Outliers appear as red
-    dots — notably 4 clustered Sales outliers near $130k-$140k and one Research outlier
-    near $17k and one Engineering outlier near $130k. Black diamond markers indicate
-    medians within each box. Three annotations provide narrative: (1) bold blue text
-    at top reading "Engineering earns $39k more than Support" with a dashed blue reference
-    line spanning the full width at ~$144k, (2) a pink-background label "Senior hires
-    above market rate" with a small red connector segment near the Sales outliers,
-    and (3) italic gray text "Narrow spread (σ ≈ $8k)" below the Support box. The
-    title "box-basic · plotnine · pyplots.ai" is large and bold at the top. Axis labels
-    read "Department" (x) and "Salary ($)" (y) with dollar-formatted tick labels.
-    The background is clean white with subtle horizontal gridlines only.'
+  - Annotation text at size=4.0 and 3.8 (plotnine mm units ≈ 11–11.4pt) is readable
+    at 3200px full resolution but borderline at mobile scaling (~400px width); increase
+    bracket annotation to size=4.5 and 'Narrow spread' to size=4.2 for safer mobile
+    readability
+  - 'Design refinement is solid but could push further: tick marks on both axes are
+    already removed, but the box whisker lines use color=INK_SOFT which creates a
+    slight visual heaviness — consider color=''#B8B7B0'' equivalent for less dominant
+    whiskers'
+  - 'LM-02 (Library Mastery): implementation correctly uses grammar of graphics composition
+    and stat_summary, but misses an opportunity to use position_dodge or explicit
+    stat layers that would showcase deeper plotnine-specific capability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "box-basic · python · plotnine · anyplot.ai" in dark ink at 12pt, clearly visible at top. X-axis label "Department" and Y-axis label "Salary ($)" both dark and readable at 10pt. Tick labels (e.g. "$20k", "$40k") in INK_SOFT at 8pt — all legible. Subtle horizontal-only grid lines at ~15% opacity.
+      Data: 5 box plots in anyplot palette canonical order: Support=green (#009E73), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Research=ochre (#BD8233), Engineering=muted-red (#AE3030). Each box has a dark diamond median marker. Sales shows 3-4 high outliers near $130-140k; Research shows one low outlier near $18k. Bracket annotation at top: "Engineering earns $39k more than Support" with segment ticks. Label box "Senior hires\nabove market rate" with connector to Sales outlier cluster. Italic text "Narrow spread\n(σ ≈ $8k)" below Support box at $24k.
+      Legibility verdict: PASS — all text is readable against light background; annotation text (size 4.0, 3.8) is borderline small at mobile scale but readable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light cream/off-white text — clearly visible against dark background. No dark-on-dark failures detected. Grid lines visible in subtle light-on-dark style. Annotation texts correctly rendered in light INK (#F0EFE8) and INK_MUTED (#A8A79F).
+      Data: Box plot colors are IDENTICAL to light render — green, lavender, blue, ochre, red — confirming palette colors are theme-independent. Diamond median markers appear in light cream (#F0EFE8) in the dark render (correctly using INK token which flips to light). Callout fill uses ELEVATED_BG (#242420) — correct dark elevated surface.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; brand green #009E73 remains clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          base=14. All text perfectly readable.'
+        comment: Title (12pt), axis labels (10pt), tick labels (8pt) all explicitly
+          set and readable. Annotation text (size=4.0 plotnine mm ≈ 11pt) readable
+          at full 3200px but borderline at mobile 400px scaling.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations well-positioned.
+        comment: No critical overlaps. 'Senior hires' label box is slightly crowded
+          near the Research box whisker area but does not overlap data or other text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box widths, outlier size, diamond markers all appropriately sized.
+        comment: All 5 box plots, median diamonds, outlier dots, whiskers, and annotations
+          clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Muted palette is colorblind-safe with good contrast.
+        comment: anyplot palette is CVD-safe. Five categories use 5 distinct hue families
+          with adequate ΔE separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, balanced margins, good canvas utilization.
+        comment: Canvas gate passed (3200×1800). Title proportionally sized. No clipping.
+          Bracket annotation fits within coord_cartesian bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Department and Salary ($).'
+        comment: 'X: ''Department'', Y: ''Salary ($)'' with units. Title exactly ''box-basic
+          · python · plotnine · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Support) = #009E73. Five categories use canonical
+          anyplot palette positions 1-5. Backgrounds #FAF8F1 light / #1A1A17 dark.
+          Both themes correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom cohesive palette, intentional hierarchy, refined theme. Strong
-          design above defaults.
+        comment: 'Above-default: bracket annotation, diamond median markers, ordered
+          categorical axis all show design intent. Not exceptional but clearly thought
+          through.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Removed chrome, subtle gridlines, clean white background. Well polished.
+        comment: theme_minimal base + explicit panel_border removal, x-grid removed,
+          minor grid removed, axis ticks removed on both axes. Solid refinement stack.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Three annotations guide the viewer. Minor: connector segment for
-          Senior hires label is too short.'
+        comment: 'Three distinct insights annotated: Engineering vs Support wage gap
+          (bracket), Sales senior hires (callout), Support tight spread (italic note).
+          Clear visual hierarchy from ordered categories.'
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker plot type.
+        comment: Correct box-and-whisker plot via geom_boxplot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, outliers, whiskers at 1.5*IQR, different colors per
-          category — all present.
+        comment: Median line in box ✓, outliers displayed ✓, whiskers at 1.5*IQR (default)
+          ✓, different colors per category ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, values on Y — correct.
+        comment: X=department, Y=salary. All 5 departments with 60-120+ data points
+          each. Full data range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend hidden appropriately since x-axis
-          labels identify categories.
+        comment: Title exactly 'box-basic · python · plotnine · anyplot.ai'. Legend
+          hidden (appropriate — categories labeled on x-axis).
     data_quality:
       score: 15
       max: 15
@@ -159,19 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Different medians, varying spreads, outliers in multiple departments.
+        comment: '5 departments with different medians, spreads, outlier patterns.
+          Covers all box plot features: IQR box, median, whiskers, outliers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department salary comparison — real business scenario, neutral topic.
+        comment: Department salary distributions are realistic and neutral. Values
+          ($55k-$95k median) match US tech company ranges.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary ranges ($40k-$135k) plausible for department types shown.
+        comment: Y range $20k-$160k appropriate. 60-120+ points per category. Outlier
+          simulation for Sales is plausible.
     code_quality:
       score: 10
       max: 10
@@ -181,47 +199,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No functions or classes.'
+        comment: No functions or classes. Linear sequential script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used. sys/os for path fix and env var. All plotnine imports
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Clean grammar of graphics composition. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, no deprecated functions.
+        comment: Saves as plot-{THEME}.png. Correct API usage.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of ggplot2 grammar: layered composition, aes, scales,
-          themes.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: stat_summary for diamond median markers, annotate label with styled
-          backgrounds, lambda tick formatters.
+        comment: 'Proper grammar of graphics: aes() mappings, geom layers, scale_*,
+          coord_*, labs(), theme() composition. stat_summary for median overlay is
+          idiomatic plotnine/ggplot2.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_summary(geom='point') for median diamond is distinctly ggplot-style.
+          Multiple annotate() geom types (text, segment, label) is plotnine-native.
+          pd.Categorical ordering integrates with plotnine axis ordering.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
