@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:29:42Z'
-updated: '2026-05-28T01:02:04Z'
+updated: '2026-05-28T01:12:12Z'
 generated_by: claude-sonnet
 workflow_run: 26547549072
 issue: 3746
@@ -12,47 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-conne
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - 'Excellent real-world data: 14 real airports with accurate IATA codes and coordinates,
-    realistic passenger volumes (1,100K-4,200K/year)'
-  - 'Strong multivariate encoding: both color AND line width encode volume categories,
-    improving readability for CVD users'
-  - 'Correct theme adaptation: ocean background, chrome colors, and airport markers
-    all switch correctly between light and dark themes'
-  - Creative use of pygal.XY for geographic visualization — the best feasible approach
-    given pygal's lack of native map support
-  - Interactive HTML output correctly generated with per-route tooltips showing origin-destination
-    and passenger volume
+  - Correct anyplot palette with brand green (#009E73) as first series (Routes < 2M),
+    semantic ordering through palette positions 1-3 for route volume tiers
+  - Variable line widths (3/5/8px) elegantly encode passenger volume — thin light
+    routes give way to thick prominent high-volume connections
+  - 'Ocean-blue plot_background (#E8F3F9 light / #0C1822 dark) provides excellent
+    geographic context without custom non-palette colors for data'
+  - All 14 airports and 28 international routes positioned with accurate real-world
+    coordinates; passenger volumes (1100K–4200K) are realistic
+  - Bezier curves correctly approximate geodesic arcs, and the Pacific-crossing flip
+    logic handles routes crossing the antimeridian
+  - 'Both renders fully theme-adaptive: INK airport markers flip from black dots to
+    white dots, all text flips correctly, no dark-on-dark failures'
+  - HTML interactive output (plot-{THEME}.html) leverages pygal's signature feature
+    alongside PNG output
   weaknesses:
-  - 'First series added (Coastlines) occupies color position 0 (INK_MUTED), displacing
-    #009E73 from the first slot — fix by reordering the colors tuple so Routes < 2M
-    is color-0 and Coastlines is color-4, and moving coastlines to the last chart.add()
-    call with lower opacity (~0.25) so it reads as background'
-  - Bezier curve calculation block is copy-pasted three times for low/medium/high
-    routes — consolidate into a single loop over a list of (routes, label, stroke_style)
-    tuples
-  - Pacific-crossing routes (LAX-HND, LAX-SYD, SYD-SIN) produce flat planar curves
-    that don't approximate the polar great-circle path — for abs(dest_lon - origin_lon)
-    > 150deg, flip the perpendicular offset direction to arc northward over the pole
-  - Coastlines are visually crude (short polyline segments) — more segment points
-    or smoother sampling would improve geographic fidelity
+  - Helper function build_bezier_curves() deviates from KISS 'no functions/classes'
+    convention — the three add() calls could inline the curve generation loop to keep
+    the flat Imports→Data→Plot→Save structure
+  - Route density in the Europe/Middle East cluster (LHR, CDG, FRA, DXB all interconnected)
+    creates some visual overlap in the central plot area; slightly higher per-tier
+    opacity differentiation or z-ordering could improve readability in that region
+  - Coastline geometry is a manually approximated polyline set — country borders are
+    absent, limiting geographic context to rough continent outlines rather than recognizable
+    landmasses
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 page background; light-blue ocean fill #E8F3F9 inside the plot area
-      Chrome: Title "map-connection-lines · python · pygal · anyplot.ai" in dark ink — readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark ink — readable. Tick labels (-160 to 160 on X, -60 to 80 on Y) in muted ink — readable. Legend at bottom with 5 entries in readable dark text.
-      Data: Coastlines in grey (INK_MUTED), Routes < 2M in brand green #009E73 (thin, 3px), Routes 2-3M in lavender #C475FD (medium, 5px), Routes > 3M in blue #4467A3 (thick, 8px), Airports as prominent black dots
-      Legibility verdict: PASS — all text readable against the warm off-white background
+      Background: Warm off-white #FAF8F1 page background; plot area uses a custom light-blue ocean tint (#E8F3F9) providing geographic context
+      Chrome: Title "map-connection-lines · python · pygal · anyplot.ai" rendered in dark ink at the top — fully readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark ink with clear unit notation. Tick labels (-160 to 160, -60 to 80) in muted dark tone, all readable. Bottom legend with 5 entries (Routes < 2M, Routes 2-3M, Routes > 3M, Airports, Coastlines) — clear and well-spaced.
+      Data: 28 Bezier-arc routes displayed in three color tiers — #009E73 green (thin, low volume), #C475FD lavender (medium, mid volume), #4467A3 blue (thick, high volume). Airport endpoint markers as solid black dots (dots_size=16). Coastlines as thin muted-gray outlines at low opacity (0.25).
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 page background; dark ocean fill #0C1822 inside the plot area
-      Chrome: Title and axis labels in light off-white (#F0EFE8) — readable against the dark background. Tick labels in muted light tone — readable. Legend at bottom in light text — readable. No dark-on-dark failures found.
-      Data: Route colors are identical to light render — brand green #009E73, lavender #C475FD, blue #4467A3. Coastlines in muted grey (lighter INK_MUTED variant). Airport markers as white dots (theme-adaptive INK = #F0EFE8 in dark mode). Colors are invariant across themes as required.
-      Legibility verdict: PASS — all text readable against the warm near-black background
+      Background: Warm near-black #1A1A17 page background; plot area uses dark ocean tint (#0C1822) maintaining the geographic metaphor in the dark theme
+      Chrome: Title and axis labels render in light cream (#F0EFE8) — clearly readable against the near-black background. Tick labels in light muted tone, all readable. Legend entries in light text on dark background — no dark-on-dark failures observed.
+      Data: Route colors are identical to the light render (#009E73 green / #C475FD lavender / #4467A3 blue) — only chrome flips. Airport markers flip from black to white dots (INK token correctly theme-adapted). Coastlines remain as subtle low-opacity lines.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures; brand green #009E73 remains visible on dark ocean background
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,107 +61,116 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44, value=36). Both themes readable.
+        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44, value=36). Readable in both themes. Minor deduction: tick label
+          density in longitude axis is tight at full canvas size.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Route lines overlap in busy hub area (expected for connection map),
-          no text overlaps.
+        comment: Expected route overlap in Europe/Middle East cluster (LHR/CDG/FRA/DXB
+          quadrant). Legend and labels clean, no text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Routes visible with varying widths (3px/5px/8px) and transparency.
-          Airport markers prominent.
+        comment: Route lines clearly visible with tier-appropriate widths (3/5/8px).
+          Airport markers prominent (dots_size=16). Coastlines appropriately subtle
+          at 0.25 opacity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three route categories use anyplot palette positions 1-3 (green/lavender/blue),
-          CVD-safe. Width also encodes volume.
+        comment: Anyplot palette is CVD-safe. Three-tier color (green/lavender/blue)
+          is distinguishable under all major CVD types.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout. Map fills ~70% of canvas. Legend at bottom well-positioned.
-          Minor lateral padding imbalance.
+        comment: Canvas 3200x1800. Margins 70/120/130. All elements within bounds.
+          No clipping detected. Legend at bottom well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (deg) and Latitude (deg) are descriptive with units.
+        comment: 'X: ''Longitude (°)'', Y: ''Latitude (°)'' — descriptive with units.
+          Title: ''map-connection-lines · python · pygal · anyplot.ai''.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Partial: Coastlines series occupies color position 0 with INK_MUTED,
-          violating ''first series = #009E73''. Route series correctly use anyplot
-          palette positions 1-3. Backgrounds theme-correct.'
+        passed: true
+        comment: 'First series #009E73 (brand green). Palette positions 1-3 in canonical
+          order for route tiers. Airport markers use INK (theme-adaptive neutral).
+          Coastlines use INK_MUTED. Page backgrounds #FAF8F1/#1A1A17 correct. Chrome
+          fully theme-adaptive in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic default: custom ocean fill, multivariate encoding
-          (color+width), distinct airport layer. Limited by pygal''s crude geographic
-          rendering.'
+        comment: 'Strong design: ocean-tinted plot_background for geographic context,
+          three-tier color+width encoding, semantic palette assignment. Clearly above
+          defaults. Not quite publication-ready due to limited geographic detail.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom ocean background, subtle grid, route transparency. Some refinement
-          over defaults.
+        comment: Ocean background provides context, coastlines at 0.25 opacity don't
+          compete with routes, subtle grid with custom alpha. Legend at bottom with
+          explicit column count. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Volume hierarchy visible via color and line width. Hub airports emerge
-          naturally. Viewer can identify busiest routes.
+        comment: Visual hierarchy from thin green (low-traffic) to thick blue (high-traffic)
+          guides the viewer to busiest routes. Three tiers create a clear traffic
+          story. No annotations needed for this chart type.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct approach for pygal: XY coordinate chart with geographic
-          connection lines. No native geographic projection (pygal limitation).'
+        comment: Connection lines map with curved arcs between origin-destination
+          pairs. Correct chart type.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Curved lines, width/color encoding, endpoint markers, transparency,
-          coastlines all present. Missing: true geodesic great-circle paths for Pacific
-          routes.'
+        comment: Curved lines (Bezier arcs) ✓, line thickness encodes volume ✓, location
+          markers at endpoints ✓, transparency applied ✓, geographic context (coastlines)
+          ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y. Correct axis ranges cover all airports.
+        comment: Longitude on X, Latitude on Y. Full global range (-180 to 180, -60
+          to 80). Volume encoded through both color and line width.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive.
+        comment: Title 'map-connection-lines · python · pygal · anyplot.ai' matches
+          required format. Legend labels (Routes < 2M, Routes 2-3M, Routes > 3M, Airports,
+          Coastlines) match data.
     data_quality:
       score: 15
       max: 15
@@ -170,23 +180,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three volume tiers, global spread, hub airports,
-          endpoint markers.'
+        comment: 28 routes between 14 major global airports. Volume data encoded through
+          line weight and color. Geographic distribution spans all continents. Three
+          distinct traffic tiers shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real airports with IATA codes, accurate coordinates, realistic passenger
-          volumes (1,100K-4,200K/year).
+        comment: Real airports (JFK, LHR, DXB, HND, SIN, SYD, etc.) with realistic
+          passenger volumes in thousands per year. Neutral aviation data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate coordinates. Volume relationships realistic.
+        comment: Airport coordinates accurate. Passenger volumes (1100K-4200K per
+          year) realistic for long-haul international routes.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -194,32 +206,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Linear structure with no functions/classes. Bezier calculation copy-pasted
-          three times.
+        comment: Helper function build_bezier_curves() deviates from strict KISS (no
+          functions). The function is justified for DRY but adds structure beyond
+          the flat pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set. Data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys manipulation justified for filename conflict.
+        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 14-line Bezier calculation block repeated verbatim three times.
+        comment: Well-organized, clear comments explaining palette assignments. The
+          sys.path manipulation is justified for the pygal.py filename conflict. No
+          fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
     library_mastery:
       score: 7
       max: 10
@@ -229,16 +244,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct pygal.XY usage, Style object, dict-format series data with
-          tooltips, per-series stroke parameters, legend_at_bottom with columns.
+        comment: Good idiomatic use of pygal.XY with full Style configuration, render_to_png,
+          render() for HTML, stroke/dots per series. Per-series stroke_style dict
+          is idiomatic pygal.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's interactive HTML export with route tooltips, per-series
-          stroke_style with linecap/opacity, legend column control.
-  verdict: REJECTED
+        comment: HTML interactive output leverages pygal's signature interactive SVG
+          feature. Creative use of XY chart for geographic coordinate mapping. Per-series
+          show_dots/stroke control is distinctively pygal.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
