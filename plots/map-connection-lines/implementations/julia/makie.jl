@@ -1,7 +1,7 @@
 # anyplot.ai
 # map-connection-lines: Connection Lines Map (Origin-Destination)
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-05-28
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 84/100 | Created: 2026-05-28
 
 using CairoMakie
 using Colors
