@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -53,6 +53,7 @@ chart.options.chart = {
     "marginLeft": 180,
     "marginRight": 100,
     "marginTop": 120,
+    "plotBorderWidth": 0,
 }
 
 # Title
@@ -65,7 +66,7 @@ chart.options.subtitle = {
 }
 
 # Weekend plotBands with theme-aware tint
-band_color = "rgba(0,158,115,0.06)" if THEME == "light" else "rgba(0,158,115,0.12)"
+band_color = "rgba(0,158,115,0.06)" if THEME == "light" else "rgba(0,158,115,0.22)"
 weekend_bands = []
 for d in range(1, 31):
     weekday = (d - 1) % 7  # 0=Mon, 5=Sat, 6=Sun
@@ -77,8 +78,7 @@ chart.options.x_axis = {
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
-    "gridLineWidth": 1,
-    "gridLineColor": GRID,
+    "gridLineWidth": 0,
     "tickInterval": 5,
     "plotBands": weekend_bands,
 }
@@ -123,23 +123,12 @@ chart.options.plot_options = {
             "stops": [[0, fill_start], [1, fill_end]],
         },
         "lineWidth": 3,
-        "marker": {"enabled": True, "radius": 5, "fillColor": BRAND, "lineWidth": 2, "lineColor": PAGE_BG},
+        "marker": {"enabled": True, "radius": 9, "fillColor": BRAND, "lineWidth": 2, "lineColor": PAGE_BG},
         "color": BRAND,
     }
 }
 
-chart.options.legend = {
-    "enabled": True,
-    "itemStyle": {"color": INK_SOFT, "fontSize": "44px", "fontWeight": "normal"},
-    "backgroundColor": ELEVATED_BG,
-    "borderColor": INK_SOFT,
-    "borderWidth": 1,
-    "align": "right",
-    "verticalAlign": "top",
-    "layout": "horizontal",
-    "x": -40,
-    "y": 60,
-}
+chart.options.legend = {"enabled": False}
 
 chart.options.credits = {"enabled": False}
 
