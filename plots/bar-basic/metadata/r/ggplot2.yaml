@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bar-basic
 created: '2026-05-28T09:38:44Z'
-updated: '2026-05-28T09:44:58Z'
+updated: '2026-05-28T09:55:00Z'
 generated_by: claude-sonnet
 workflow_run: 26566737269
 issue: 612
@@ -12,40 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Perfect theme adaptation: all chrome tokens correctly flip between light/dark;
-    data color stays constant; backgrounds match #FAF8F1 / #1A1A17 exactly'
-  - Bars sorted in descending order — best practice for bar charts, creates immediate
-    visual ranking
-  - Value labels above every bar ($X.XM format) — eliminates need to reference y-axis
-    for precise readings
-  - Deterministic, realistic business data with clear domain context (annual department
-    budgets)
-  - Clean code following KISS structure with explicit font sizes throughout; all theme
-    tokens correctly applied
+  - Highlight-the-leader technique using alpha variation of a single palette hue is
+    elegant and immediately communicates insight without a legend
+  - 'Perfect theme adaptation: both renders pass readability checks with correct backgrounds
+    and all chrome tokens threaded through'
+  - Average reference line adds context without cluttering the chart
+  - Descending sort order + explicit value labels maximise readability for a comparison
+    bar chart
   weaknesses:
-  - 'DE-01 MODERATE: Design lacks visual emphasis — all bars are the same green with
-    no focal point highlighting the leading department; use alpha variation to dim
-    non-leading bars or add a mean reference line'
-  - 'DE-02 MINOR: Left y-axis spine still visible alongside grid lines — redundant
-    with y-only grid; add axis.line.y = element_blank() to complete minimal-chrome
-    aesthetic'
-  - 'LM-02 MINOR: Missing ggplot2-distinctive polish — add geom_hline for mean reference
-    line or use grammar-of-graphics stat patterns native to ggplot2'
+  - DE-01 could reach 8/8 with slightly more typographic polish (e.g., subtitle or
+    source note, minor spacing refinements)
+  - LM-02 limited to 3/5 — the highlight pattern is idiomatic ggplot2 but replicable
+    in other libraries with minor changes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — not pure white, correct anyplot surface
-      Chrome: Title "bar-basic · r · ggplot2 · anyplot.ai" bold, dark ink (~#1A1A17), top-left; axis labels "Department" (x) and "Annual Budget (USD Millions)" (y) in dark ink, size 10pt; tick labels in soft dark ink (#4A4A44), size 8pt; subtle horizontal grid lines (y-axis only); bottom x-axis line
-      Data: 8 bars in brand green (#009E73) descending from Engineering ($48.5M) to HR ($11.3M); value labels above each bar in soft ink (#4A4A44)
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "bar-basic · r · ggplot2 · anyplot.ai" bold dark text ~45-50% canvas width; Y-axis "Annual Budget (USD Millions)" and X-axis "Department" labels clearly readable; tick labels ($0M–$50M, department names) in dark secondary ink — all readable
+      Data: Engineering bar in full brand green #009E73; all other 7 bars in 45%-alpha variant of #009E73 (mint-teal); dashed average line at $28.1M in dark gray; value labels above each bar; subtle horizontal y-axis grid lines only
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — not pure black, correct anyplot dark surface
-      Chrome: Title in off-white (#F0EFE8), clearly readable; axis labels and tick labels in warm light gray (#B8B7B0); value labels above bars in same light gray — readable against dark background; grid lines subtle and visible; no dark-on-dark failures detected
-      Data: Bar colors are identical green (#009E73) — unchanged from light render as required; bars clearly distinguishable from near-black background
-      Legibility verdict: PASS — all text readable against dark background; chrome correctly inverted; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all axis/tick labels flip to light-colored text (#F0EFE8 primary, #B8B7B0 secondary); all text clearly readable; no dark-on-dark failures detected
+      Data: Engineering bar remains full brand green #009E73 — identical to light render; other bars appear as darker teal (same alpha on dark surface); dashed average line and annotation visible in lighter gray
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,80 +49,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
-          geom_text 2.8mm); well-proportioned in both themes; no overflow; readable
-          at full and mobile scale
+        comment: All sizes explicitly set (title=12pt, axis=10pt, ticks=8pt); well-proportioned
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between value labels, tick labels, or category names;
-          adequate bar spacing
+        comment: Bar labels, average annotation, tick labels — no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible in both themes; brand green contrasts well on
-          both warm-white and near-black backgrounds; width=0.70 appropriate for 8
-          categories
+        comment: Bars well-sized; highlighted Engineering bar immediately distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green; high luminance contrast on both surfaces;
-          CVD-safe
+        comment: Single palette hue with alpha variation; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well with balanced margins; y-axis expansion handles
-          value labels; good proportions throughout
+        comment: Canvas well-utilized, generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Annual Budget (USD Millions)'' with units; X-axis: ''Department'';
-          title format matches spec exactly'
+        comment: 'Y: ''Annual Budget (USD Millions)'' with units; X: ''Department'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); light bg #FAF8F1; dark bg #1A1A17;
-          data color identical across themes; all chrome tokens theme-adaptive'
+        comment: 'First/highlight series #009E73; backgrounds #FAF8F1/#1A1A17; chrome
+          theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured ggplot2 default: correct brand color, bold title,
-          clean layout, sorted bars. No visual emphasis or design element elevates
-          it beyond a polished default'
+        passed: true
+        comment: Intentional highlight-the-leader pattern with alpha variation; clean
+          minimal chrome; clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinements: y-axis-only grid, x-axis grid removed, ticks disabled,
-          subtle adjustcolor grid, custom axis line on x. Clearly above minimal defaults
-          but y-axis spine still visible'
+        passed: true
+        comment: Y-only grid, no tick marks, no legend box, x-axis line only, custom
+          backgrounds
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Descending sort creates ranking hierarchy; value labels eliminate
-          grid reference need. Clear visual story but no focal point highlight on
-          leading bar
+        passed: true
+        comment: Descending order + full-green highlight on Engineering + average
+          reference line creates focal point and visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart using geom_col()
+        comment: Correct vertical bar chart via geom_col()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths (width=0.70), value labels above bars, single
-          color, all spec requirements met
+        comment: Consistent bar widths, value labels, single-color with highlight,
+          adequate spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, budget values on y-axis; all 8 departments
-          shown; full data range visible
+        comment: Category → x, budget value → y; all 8 bars visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bar-basic · r · ggplot2 · anyplot.ai' matches {spec-id} ·
-          {language} · {library} · anyplot.ai exactly; no legend (single series —
-          correct omission)
+        comment: Title is 'bar-basic · r · ggplot2 · anyplot.ai'; no legend (appropriate
+          for single-series highlight)
     data_quality:
       score: 15
       max: 15
@@ -171,23 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all bar chart aspects: varied heights, ranked comparison,
-          8 categories within 3-15 spec recommendation, clear value differences'
+        comment: 8 categories with varied values, descending order, highlight, reference
+          line, value labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Annual corporate department budgets: real, neutral, professional
-          business scenario; all department names standard and recognizable'
+        comment: 'Annual departmental budgets: neutral, real-world business scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget range $11.3M-$48.5M plausible for mid-to-large company; Engineering
-          highest budget realistic for tech-focused companies; relative proportions
-          sensible
+        comment: $11.3M-$48.5M range plausible for a mid-sized company; proportions
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -197,55 +176,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data → plot → save;
-          no functions or classes'
+        comment: 'Linear: tokens → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data; no random elements; set.seed
-          not needed
+        comment: Data fully deterministic (hardcoded values)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported; both used
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic R/ggplot2; appropriate complexity; no over-engineering
+        comment: Clean idiomatic R; adjustcolor() for alpha; named factor values in
+          scale_fill_manual()
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf; uses ragg::agg_png; current
-          API
+        comment: Saves as plot-${THEME}.png; uses current API (linewidth= not deprecated
+          size=)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Strong idiomatic usage: geom_col() for precomputed values, factor()
-          with explicit levels for ordering (common gotcha avoided), expansion(mult=c(0,0.18))
-          for scale control, theme layering via theme_minimal()+theme()'
+        comment: 'Expertly uses grammar of graphics: geom_col(), scale_fill_manual(),
+          expansion(mult=), theme_minimal() + theme overrides'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses ggplot2-specific expansion(), adjustcolor() for grid alpha,
-          factor() ordered levels. Missing advanced ggplot2 features like geom_hline
-          reference lines, faceting, or statistical transforms
-  verdict: REJECTED
+        passed: true
+        comment: ggplot2-native highlight pattern via named factor levels in scale_fill_manual(),
+          R's adjustcolor(), factor-level ordering for sorted bars
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -253,4 +229,4 @@ impl_tags:
   patterns: []
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
