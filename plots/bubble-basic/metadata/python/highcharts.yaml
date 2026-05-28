@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:31:13Z'
-updated: '2026-05-28T17:45:58Z'
+updated: '2026-05-28T17:58:39Z'
 generated_by: claude-sonnet
 workflow_run: 26591194435
 issue: 755
@@ -12,46 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correct anyplot palette with semi-transparent fills and solid contrasting borders
-    — deliberate technique for overlapping bubbles
-  - 'Full theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders are
-    fully readable with no dark-on-dark issues'
-  - Highcharts-native bubbleLegend with custom format (3480B/0B) explains the size
-    dimension clearly
-  - 'All spec features implemented: x/y position, bubble size (area-scaled), transparency,
-    color categories, size legend'
-  - 'Perfect font sizing hierarchy: title (66px), axis labels (56px), tick labels
-    (44px) — all explicitly set'
-  - np.random.seed(42) ensures reproducibility; PIL canvas pin guards against dimension
-    drift
-  - Realistic tech company dataset with natural inverse revenue–growth relationship
-    visible in data
+  - Full anyplot palette (positions 1-5) used correctly with semi-transparent RGBA
+    fills and solid outline strokes
+  - 'Correct sizeBy: area for perceptually accurate bubble scaling'
+  - Bubble size legend (bubbleLegend) integrated into legend panel
+  - Power regression trend line overlay with descriptive subtitle explaining the inverse
+    relationship
+  - All font sizes explicitly set per style guide (title 66px, axis labels 56px, ticks
+    44px)
+  - 'Perfect theme-adaptive chrome: both light and dark renders fully readable'
+  - CDP viewport override + PIL pin ensures exact 3200x1800 canvas
+  - Transparent alpha (0.65) handles bubble overlap appropriately for 50-point dataset
   weaknesses:
-  - Data count (~30 points) is below the spec-recommended minimum of 50; consider
-    expanding each sector to at least 10 companies
-  - 'Design Excellence is the main gap: DE-03 lacks explicit visual storytelling —
-    add a reference line, annotation, or size-normalized quadrant labels to highlight
-    the inverse revenue-growth relationship'
-  - 'DE-02: both axis grid lines enabled (dot style); prefer y-axis-only grid for
-    bubble/scatter as the spec style guide recommends, and remove or dim x-axis spine
-    to reduce chrome'
-  - 'DE-01: the floating legend overlaps the plot area at upper-right — repositioning
-    outside or anchoring to a dedicated sidebar column would improve polish'
+  - 'LM-02: The bubbleLegend and area-based sizing are Highcharts-specific, but the
+    overall library feature usage could go further - e.g., using Highcharts drilldown
+    or point.events for more distinctive showcase'
+  - 'DE-02: Axis spine lines (lineColor) are still present on both axes; removing
+    them or using a pure L-frame would increase visual refinement'
+  - 'DE-03: The story is communicated via subtitle but no individual data point annotations
+    or outlier callouts help the viewer focus on specific insights within the cluster'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly themed, NOT pure white.
-      Chrome: Title "bubble-basic · python · highcharts · anyplot.ai" bold dark text, spans ~75% width (expected for the long mandated format). Subtitle "Bubble size represents Market Capitalization — Tech companies by sector" visible below in muted dark text. X-axis label "Revenue (Billion USD)" and Y-axis label "Growth Rate (%)" both readable in dark INK. Tick labels (0, 100, 200 … 600 on X; 0, 10, 20 … 60 on Y) visible in INK_SOFT. Floating legend upper-right with bubble-size reference circles labeled "3480B" and "0B", plus five colored sector swatches — all legible against ELEVATED_BG (#FFFDF6) box.
-      Data: 5 sectors in anyplot palette order — Cloud & SaaS (#009E73 green), E-Commerce (#C475FD lavender), Semiconductors (#4467A3 blue), Social & Media (#BD8233 ochre), Fintech (#AE3030 red). Semi-transparent fills (0.65 alpha) with solid-border markers. Bubble sizes vary from small (low-revenue startups) to very large (E-Commerce ~x=600, y=5, dominant rightmost bubble). Clear inverse revenue–growth pattern visible in layout.
-      Legibility verdict: PASS — all text fully readable on warm off-white surface.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white
+      Chrome: Title "bubble-basic · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT (#4A4A44) below. X-axis label "Revenue (Billion USD)" and Y-axis label "Growth Rate (%)" both dark and clearly legible. Tick labels (0–600 on x, 0–80 on y) readable at secondary ink color. Legend panel top-right with bubble size legend (0B–3714B).
+      Data: 5 sectors in anyplot palette order — Cloud & SaaS green (#009E73), E-Commerce purple (#C475FD), Semiconductors blue (#4467A3), Social & Media ochre (#BD8233), Fintech red (#AE3030). Semi-transparent RGBA fills (0.65) with solid palette-color outlines. Dashed trend line in INK_SOFT. Bubbles range from small to large across revenue axis.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly themed, NOT pure black.
-      Chrome: Title in light INK (#F0EFE8), clearly visible. Subtitle, axis labels, tick labels in light INK_SOFT (#B8B7B0) — all readable against the dark surface. Legend box uses ELEVATED_BG (#242420) with light-colored text; "3480B", "0B", and sector labels all legible. No dark-on-dark failures found.
-      Data: Bubble fill colors identical to light render in hex; they appear more saturated/vibrant on the dark background due to alpha blending physics (expected). The solid colored borders (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) are theme-independent and confirm palette identity. Brand green #009E73 (Cloud & SaaS) clearly visible.
-      Legibility verdict: PASS — all text readable against the warm near-black surface. No dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Subtitle, axis labels, tick labels all in light secondary ink (#B8B7B0). Legend box uses elevated dark bg (#242420). No dark-on-dark failures.
+      Data: Data series colors IDENTICAL to light render — green, purple, blue, ochre, red series unchanged. Dashed trend line adapts to INK_SOFT light value (#B8B7B0). Brand green #009E73 clearly visible against dark background.
+      Legibility verdict: PASS — full theme inversion with no readability issues; no dark-on-dark text failures detected.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,79 +56,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 66px, axis labels 56px, tick
-          labels 44px); both renders fully readable; title at ~75% width is expected
-          for the long mandated format
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, legend 44px, bubble legend 36px). Proportions correct. Both themes
+          fully readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; bubbles overlap slightly but semi-transparent fills
-          (0.65 alpha) + borders ensure all are distinguishable
+        comment: No text overlap. Bubble overlap handled by alpha=0.65 and solid outlines.
+          Legend clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: minSize=20, maxSize=120 appropriate for 30 data points; alpha-blended
-          fills + solid borders give excellent visibility even on overlapping bubbles
+        comment: 50 bubbles with minSize=20/maxSize=120px well-adapted to medium density.
+          Smallest bubbles visible, largest don't overwhelm.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; 5 sectors use distinct hue families;
-          0.65 alpha maintains distinguishability
+        comment: anyplot CVD-safe palette. Semi-transparent fills with solid outlines
+          provide redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas with balanced margins; legend well-placed
-          in upper-right; no clipping
+        comment: Plot fills canvas well. Balanced margins (spacing [30,40,40,40]).
+          No content cut off. Legend well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Revenue (Billion USD)'' — with units. Y: ''Growth Rate (%)''
-          — with units'
+        comment: Revenue (Billion USD) and Growth Rate (%) both descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (#009E73 green) correct; canonical palette order for
-          all 5 sectors; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+        comment: 'First series #009E73 green. All 5 anyplot palette positions in canonical
+          order. Correct backgrounds (#FAF8F1 light, #1A1A17 dark). Theme chrome fully
+          adaptive.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: deliberate semi-transparent fills
-          + solid contrasting borders, styled bubble-size reference legend, subtitle,
-          floating legend with rounded corners. Not yet at FiveThirtyEight level.'
+        comment: 'Clearly above configured defaults: semi-transparent fills with solid
+          outlines, power regression overlay, bubble legend, subtitle storytelling.
+          Not FiveThirtyEight level but strong.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dotted grid (0.15 opacity) on both axes is refined; generous spacing
-          (30/40/40/40); L-shaped axes. Could improve by using y-axis-only grid for
-          scatter.
+        comment: Y-axis dotted grid (15% opacity), X-axis no grid, generous spacing,
+          legend border + rounded corners. Axis spine lines still present on both
+          axes.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: The inverse revenue–growth relationship is visible in the data layout,
-          but no explicit emphasis (reference line, annotation, callout) guides the
-          viewer to the key insight. Default score.
+        passed: true
+        comment: Trend line + subtitle explicitly guide viewer to the inverse relationship
+          insight. Bubble sizes encode third dimension. No individual annotation for
+          specific outliers.
     spec_compliance:
       score: 15
       max: 15
@@ -144,56 +138,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart type using Highcharts BubbleSeries
+        comment: Correct BubbleSeries with x/y/z mapping.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/z variables mapped; sizeBy=area (correct perceptual scaling);
-          alpha 0.65 transparency; bubbleLegend for size reference; 5 categories by
-          color
+        comment: 'sizeBy: area, alpha 0.65, bubbleLegend, categorical color for sectors,
+          50 data points.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Revenue on X, Growth Rate on Y, Market Cap as Z (bubble size) — all
-          correct
+        comment: X=Revenue, Y=Growth Rate, Z=Market Cap. All axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bubble-basic · python · highcharts · anyplot.ai';
-          legend labels match sector names
+        comment: Title exactly 'bubble-basic · python · highcharts · anyplot.ai'.
+          Legend labels match sector names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 3-variable encoding, 5 categories, size variation, overlapping
-          bubbles with transparency. 30 data points is slightly below the spec-recommended
-          50 minimum.
+        comment: Full range of bubble sizes, varying density, trend line, multi-sector
+          comparison all demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world tech company scenario (Cloud & SaaS, E-Commerce, Semiconductors,
-          Social & Media, Fintech); neutral business topic; specific sector names
+        comment: Tech sector financial metrics (revenue vs growth vs market cap) —
+          real-world neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue $5B–$600B, growth rates 6–55%, market caps proportional to
-          revenue × growth — all realistic for tech sector. Inverse revenue–growth
-          relationship is economically accurate.
+        comment: Revenue $5-650B, growth 4-60%, inverse relationship — factually plausible
+          for tech mega-caps.
     code_quality:
       score: 10
       max: 10
@@ -203,53 +193,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → series loop → chart options
-          → export. No functions or classes.'
+        comment: 'Linear: imports → data → plot config → export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random generation
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used
+        comment: All imports used. No unused dependencies.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; PIL canvas-pin guard is a good safety
-          net
+        comment: Clean, Pythonic. Power regression is appropriate complexity. RGBA
+          pattern for semi-transparency is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current highcharts-core
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of BubbleSeries, HighchartsOptions, add_series(), to_js_literal().
-          Good use of plotOptions.bubble.sizeBy and zMin. Slightly below expert level.
+        comment: BubbleSeries, HighchartsOptions, to_js_literal(), add_series(), bubbleLegend
+          — all idiomatic highcharts-core patterns. CDP override for exact viewport
+          sizing.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts-specific bubbleLegend with custom label format; HTML
-          tooltip with per-point formatting; CDP viewport override is a Highcharts-specific
-          workflow requirement
-  verdict: REJECTED
+        comment: 'bubbleLegend (Highcharts-specific size legend) and sizeBy: area
+          are genuinely library-distinctive. LongDash style and inline JS embedding
+          for headless Chrome are also specific.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -260,7 +251,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
