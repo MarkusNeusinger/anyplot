@@ -90,7 +90,7 @@ lines!(ax, complexity, bias_sq;
 lines!(ax, complexity, variance;
     color = ANYPLOT_PALETTE[2], linewidth = 2.5, linestyle = :dash, label = "Variance")
 lines!(ax, complexity, total_err;
-    color = ANYPLOT_PALETTE[3], linewidth = 3.0, linestyle = :solid, label = "Total Error")
+    color = ANYPLOT_PALETTE[3], linewidth = 3.0, linestyle = :dashdot, label = "Total Error")
 lines!(ax, complexity, irreducible_err;
     color = ANYPLOT_PALETTE[4], linewidth = 2.0, linestyle = :dot, label = "Irreducible Error")
 
@@ -105,20 +105,42 @@ scatter!(ax, [opt_complexity], [opt_total];
 # Zone labels
 text!(ax, complexity[4], maximum(total_err) * 0.78;
     text = "Underfitting\n(High Bias)",
-    color = INK_MUTED, fontsize = 11, align = (:left, :center))
+    color = INK_MUTED, fontsize = 13, align = (:left, :center))
 text!(ax, opt_complexity + 0.3, maximum(total_err) * 0.78;
     text = "Overfitting\n(High Variance)",
-    color = INK_MUTED, fontsize = 11, align = (:left, :center))
+    color = INK_MUTED, fontsize = 13, align = (:left, :center))
 
 # Optimal label
 text!(ax, opt_complexity, opt_total + 0.03;
     text = "Optimal",
     color = INK, fontsize = 11, align = (:center, :bottom), font = :bold)
 
+# Direct curve labels (spec requirement: annotate each curve directly on the plot)
+lbl_bias_x   = 2.0
+lbl_bias_y   = 1.0 / (1.0 + lbl_bias_x) + 0.02
+lbl_var_x    = 8.5
+lbl_var_y    = (lbl_var_x ^ 1.4) / 22.0
+lbl_tot_x    = 7.5
+lbl_tot_y    = (1.0 / (1.0 + lbl_tot_x) + 0.02) + ((lbl_tot_x ^ 1.4) / 22.0) + 0.15
+lbl_irr_x    = 5.0
+
+text!(ax, lbl_bias_x, lbl_bias_y + 0.03;
+    text = "Bias²",
+    color = ANYPLOT_PALETTE[1], fontsize = 12, align = (:center, :bottom), font = :bold)
+text!(ax, lbl_var_x, lbl_var_y + 0.03;
+    text = "Variance",
+    color = ANYPLOT_PALETTE[2], fontsize = 12, align = (:center, :bottom), font = :bold)
+text!(ax, lbl_tot_x, lbl_tot_y + 0.03;
+    text = "Total Error",
+    color = ANYPLOT_PALETTE[3], fontsize = 12, align = (:center, :bottom), font = :bold)
+text!(ax, lbl_irr_x, 0.15 + 0.03;
+    text = "Irreducible Error",
+    color = ANYPLOT_PALETTE[4], fontsize = 12, align = (:center, :bottom), font = :bold)
+
 # Formula annotation
 text!(ax, complexity[end], irreducible_err[1] + 0.01;
     text = "Total Error = Bias² + Variance + Irreducible Error",
-    color = INK_MUTED, fontsize = 10, align = (:right, :bottom))
+    color = INK_MUTED, fontsize = 12, align = (:right, :bottom))
 
 # Legend
 axislegend(ax;
