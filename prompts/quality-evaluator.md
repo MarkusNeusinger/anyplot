@@ -108,7 +108,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
     "vq04_color_accessibility": {"score": 2, "max": 2, "note": "CVD-safe contrast beyond palette choice"},
     "vq05_layout_canvas": {"score": 2, "max": 4, "note": "Balanced but some wasted space"},
     "vq06_axis_labels_title": {"score": 2, "max": 2, "note": "Descriptive labels with units"},
-    "vq07_palette_compliance": {"score": 1, "max": 2, "note": "anyplot palette used but first series used #AE3030 instead of brand #009E73"}
+    "vq07_palette_compliance": {"score": 1, "max": 2, "note": "Imprint palette used but first series used #AE3030 instead of brand #009E73"}
   },
 
   "design_excellence": {
@@ -194,7 +194,7 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 ### Step 1: Visual Quality (30 pts)
 
-**Inspect BOTH `plot-light.png` AND `plot-dark.png`.** The data colors (anyplot palette positions 1–8) must be identical across themes; only chrome (background, text, grid, legend frame) flips. If only one render is provided, that is a pipeline failure — flag in `weaknesses`, score VQ-07 accordingly.
+**Inspect BOTH `plot-light.png` AND `plot-dark.png`.** The data colors (Imprint palette positions 1–8) must be identical across themes; only chrome (background, text, grid, legend frame) flips. If only one render is provided, that is a pipeline failure — flag in `weaknesses`, score VQ-07 accordingly. Always refer to the palette as **Imprint** (capitalised) in your review notes — never "anyplot palette".
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
@@ -204,7 +204,7 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette choice)? No red-green as sole distinguishing signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title ≤ ~90% width, balanced axis labels, no overflow? |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
-| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses anyplot palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot background is `#FAF8F1` (light) / `#1A1A17` (dark) — never pure white/black? Both renders theme-correct? |
+| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot background is `#FAF8F1` (light) / `#1A1A17` (dark) — never pure white/black? Both renders theme-correct? |
 
 **Proportional sizing notes (apply to VQ-01 / VQ-02 / VQ-05 holistically — no separate item):**
 - Title comfortably ~50–70% of plot width. The mandated `{spec-id} · {lang} · {lib} · anyplot.ai` title is ~67 chars and naturally fills 70–85% at the style-guide default fontsize — **expected, not a deduction**. Only deduct if title overflows past ~90% / clips edges, or fontsize is too generous for the title length.

@@ -120,7 +120,7 @@ ggsave(
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical
 Palette"). First series is **always** `#009E73`.
 
 ```r
@@ -143,7 +143,7 @@ geom_point(color = ANYPLOT_PALETTE[1])
 scale_color_manual(values = ANYPLOT_PALETTE)
 scale_fill_manual(values  = ANYPLOT_PALETTE)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Continuous — only the two Imprint palette-derived cmaps are allowed:
 # Sequential (single-polarity)
 scale_color_gradient(low = "#009E73", high = "#4467A3")
 scale_fill_gradient(low  = "#009E73", high = "#4467A3")

@@ -98,7 +98,7 @@ geom_tile()      # Heatmap
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
 ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
@@ -112,7 +112,7 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 + scale_color_manual(values=ANYPLOT_PALETTE)
 + scale_fill_manual(values=ANYPLOT_PALETTE)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Continuous — only the two Imprint palette-derived cmaps are allowed:
 from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gradient, scale_fill_gradient2
 # Sequential (single-polarity)
 + scale_color_gradient(low='#009E73', high='#4467A3')

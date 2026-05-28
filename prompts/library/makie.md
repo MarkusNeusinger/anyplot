@@ -124,7 +124,7 @@ canonical `resolution` values above, this is what produces 3200×1800 or
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md`
+Use the Imprint palette (see `prompts/default-style-guide.md`
 "Categorical Palette"). First series is **always** `#009E73`.
 
 ```julia
@@ -146,7 +146,7 @@ scatter!(ax, x, y; color = ANYPLOT_PALETTE[1])
 # Multi-series — categorical
 scatter!(ax, x, y; color = group, colormap = ANYPLOT_PALETTE)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed.
+# Continuous — only the two Imprint palette-derived cmaps are allowed.
 using ColorSchemes
 const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])                                    # sequential / single-polarity
 const _midpoint   = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"                         # theme-adaptive

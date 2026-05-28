@@ -135,7 +135,7 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
 ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
@@ -149,7 +149,7 @@ p.scatter(x, y, color=ANYPLOT_PALETTE[0])
 for i, group in enumerate(groups):
     p.scatter(..., color=ANYPLOT_PALETTE[i], legend_label=group)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed.
+# Continuous — only the two Imprint palette-derived cmaps are allowed.
 # Build a 256-stop ramp by interpolating between the endpoints:
 import numpy as np
 def _lerp_hex(c0, c1, t):

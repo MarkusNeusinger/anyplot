@@ -104,10 +104,10 @@ sns.boxplot(data=df, x='group', y='value', hue='group', palette='Set2', legend=F
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-# anyplot palette — canonical order, first series always #009E73
+# Imprint palette — canonical order, first series always #009E73
 ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
@@ -123,7 +123,7 @@ sns.scatterplot(data=df, x='x', y='y', hue='category', palette=ANYPLOT_PALETTE[:
 sns.set_palette(ANYPLOT_PALETTE)
 ```
 
-## Continuous-data Palettes (anyplot cmaps only)
+## Continuous-data Palettes (Imprint cmaps only)
 
 ```python
 from matplotlib.colors import LinearSegmentedColormap
@@ -139,7 +139,7 @@ imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpo
 # Forbidden: any other cmap (viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow).
 ```
 
-Never use seaborn's `palette='Set2'`/`'tab10'`/`'colorblind'` for categorical data — they override the anyplot brand identity. The only continuous cmaps allowed are the two anyplot palette-derived cmaps above.
+Never use seaborn's `palette='Set2'`/`'tab10'`/`'colorblind'` for categorical data — they override the Imprint brand identity. The only continuous cmaps allowed are the two Imprint palette-derived cmaps above.
 
 ## Theme-adaptive Chrome (seaborn mapping)
 

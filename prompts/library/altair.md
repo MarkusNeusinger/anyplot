@@ -120,7 +120,7 @@ chart = chart.interactive()
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
 ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
@@ -136,7 +136,7 @@ alt.Chart(df).mark_circle().encode(
     color=alt.Color('category:N', scale=alt.Scale(range=ANYPLOT_PALETTE)),
 )
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Continuous — only the two Imprint palette-derived cmaps are allowed:
 # Sequential: two-stop range
 alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#4467A3']))
 # Diverging: three-stop range with domainMid at 0

@@ -173,7 +173,7 @@ The bar is strict: AR-09 requires evidence that pixels were *removed*, not merel
 | VQ-04 | Color Accessibility | 2 | 2=colorblind-safe contrast, 1=ok, 0=red-green only |
 | VQ-05 | Layout & Canvas | 4 | 4=perfect, 2=ok, 0=cut-off |
 | VQ-06 | Axis Labels & Title | 2 | 2=with units, 1=descriptive, 0=x/y |
-| VQ-07 | Palette Compliance | 2 | 2=correct anyplot palette / anyplot continuous cmap + theme-correct chrome, 1=partial, 0=non-compliant |
+| VQ-07 | Palette Compliance | 2 | 2=correct Imprint palette / Imprint continuous cmap + theme-correct chrome, 1=partial, 0=non-compliant |
 
 ### VQ-01: Text Legibility (8 Points)
 
@@ -234,7 +234,7 @@ This check covers **contrast and CVD safety beyond palette choice** — e.g., ad
 | 1 | Acceptable but not optimal |
 | 0 | Red-green as only distinguishing feature, or critical contrast failures |
 
-**Note:** Palette choice itself (correct anyplot palette, correct continuous cmap) is scored separately in **VQ-07**. VQ-04 is about how the palette is *applied* — spacing, alpha, luminance — not which palette was picked.
+**Note:** Palette choice itself (correct Imprint palette, correct continuous cmap) is scored separately in **VQ-07**. VQ-04 is about how the palette is *applied* — spacing, alpha, luminance — not which palette was picked.
 
 ### VQ-05: Layout Balance & Canvas Utilization (4 Points)
 
@@ -260,18 +260,18 @@ This check covers **contrast and CVD safety beyond palette choice** — e.g., ad
 
 ### VQ-07: Palette Compliance (2 Points)
 
-The implementation must use the **anyplot categorical palette** (defined in `prompts/default-style-guide.md` "Categorical Palette") for categorical data and one of the **anyplot continuous colormaps** (`imprint_seq` or `imprint_div`) for continuous data — no other cmaps. Both light and dark renders are inspected — the data colors (positions 1–8) must be identical across themes; only the theme-adaptive chrome (background, text, grid, legend box) may flip. Three semantic anchors (`#DDCC77` amber, theme-adaptive `neutral` and `muted`) sit outside the categorical pool and are only used intentionally for their semantic role.
+The implementation must use the **Imprint categorical palette** (defined in `prompts/default-style-guide.md` "Categorical Palette") for categorical data and one of the **Imprint continuous colormaps** (`imprint_seq` or `imprint_div`) for continuous data — no other cmaps. Both light and dark renders are inspected — the data colors (positions 1–8) must be identical across themes; only the theme-adaptive chrome (background, text, grid, legend box) may flip. Three semantic anchors (`#DDCC77` amber, theme-adaptive `neutral` and `muted`) sit outside the categorical pool and are only used intentionally for their semantic role. Always refer to the palette as **Imprint** (capitalised) in your review notes — never "anyplot palette".
 
 | Points | Criterion |
 |--------|-----------|
-| 2 | Perfect palette + perfect theme chrome: first categorical series is `#009E73`; if multi-series, colors come from the anyplot palette — canonical order (`#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`) by default, or reassigned to palette members that match strong semantic cues (grass→green, wood→ochre, blood→red, sky→blue); continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other cmaps; plot background is `#FAF8F1` (light) or `#1A1A17` (dark) — never pure white/black; text, grid, and legend-box colors are theme-correct in both renders |
-| 1 | Partial compliance: palette is the anyplot palette but first series is not `#009E73`; OR continuous data uses an anyplot cmap but the wrong polarity (e.g. `imprint_seq` on diverging-polarity data); OR chrome is mostly theme-correct with one or two off elements (e.g., dark render has one black label) |
+| 2 | Perfect palette + perfect theme chrome: first categorical series is `#009E73`; if multi-series, colors come from the Imprint palette — canonical order (`#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`) by default, or reassigned to palette members that match strong semantic cues (grass→green, wood→ochre, blood→red, sky→blue); continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other cmaps; plot background is `#FAF8F1` (light) or `#1A1A17` (dark) — never pure white/black; text, grid, and legend-box colors are theme-correct in both renders |
+| 1 | Partial compliance: palette is the Imprint palette but first series is not `#009E73`; OR continuous data uses an Imprint cmap but the wrong polarity (e.g. `imprint_seq` on diverging-polarity data); OR chrome is mostly theme-correct with one or two off elements (e.g., dark render has one black label) |
 | 0 | Non-compliant: legacy `#306998` (Python Blue) or legacy variant-D hexes (`#9418DB`, `#B71D27`, `#16B8F3`, `#D359A7`, `#BA843E`) still present; categorical palette is arbitrary custom hexes, `Set2`, `tab10`, or `colorblind`; continuous data uses `jet`/`hsv`/`rainbow`; categorical palette applied to continuous data (banding); plot background is pure `#FFFFFF`/`#000000`; or chrome is wrong-theme (e.g., dark page with dark text) |
 
 **Evaluation steps for VQ-07:**
 1. Look at `plot-light.png`: does the primary data series render in `#009E73`? Does the background look like `#FAF8F1`?
 2. Look at `plot-dark.png`: is the data series still `#009E73` (identical to light)? Is the background `#1A1A17`? Is all text light-colored?
-3. If multi-series, confirm the next colors in order match anyplot palette positions 2–N (or the semantic-exception assignment when category labels imply real-world colors).
+3. If multi-series, confirm the next colors in order match Imprint palette positions 2–N (or the semantic-exception assignment when category labels imply real-world colors).
 4. If continuous: check the source code for `cmap=` / `scheme=` / `color_continuous_scale=`. Reject anything other than `imprint_seq` (single-polarity) or `imprint_div` (diverging). Common rejections: `jet`/`hsv`/`rainbow`/`viridis`/`cividis`/`BrBG`/`Reds`/`Blues`/`Greens` — all forbidden.
 5. If either render fails theme-chrome (unreadable text, wrong background), score drops accordingly.
 

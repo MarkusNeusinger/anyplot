@@ -107,10 +107,10 @@ ax.boxplot(data, tick_labels=group_names)  # Right
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
 
 ```python
-# anyplot palette (imprint) — 8 hues, use positions 1→N in canonical order
+# Imprint palette — 8 hues, use positions 1→N in canonical order
 ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 # Semantic anchors — outside the categorical pool, reached intentionally
@@ -122,7 +122,7 @@ color = ANYPLOT_PALETTE[0]  # '#009E73'
 # Multi-series: take the first N colors in order, don't cherry-pick
 ax.set_prop_cycle(color=ANYPLOT_PALETTE[:N])
 
-# Continuous data — only the two anyplot palette-derived cmaps are allowed
+# Continuous data — only the two Imprint palette-derived cmaps are allowed
 # (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):
 from matplotlib.colors import LinearSegmentedColormap
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
@@ -134,7 +134,7 @@ imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpo
 
 ## Theme-adaptive Chrome (matplotlib mapping)
 
-The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the anyplot palette data colors stay constant.
+The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the Imprint palette data colors stay constant.
 
 ```python
 import os

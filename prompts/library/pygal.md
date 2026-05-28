@@ -115,7 +115,7 @@ chart = pygal.Bar(
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`. For pygal, the palette is always passed via the `Style` object — see the Sizing + Theme section above.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`. For pygal, the palette is always passed via the `Style` object — see the Sizing + Theme section above.
 
 ```python
 ANYPLOT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
@@ -126,7 +126,7 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 custom_style = Style(..., colors=ANYPLOT_PALETTE)
 
 # Continuous data: pygal doesn't have built-in cmaps. Interpolate manually
-# between the anyplot palette-derived endpoints — never substitute viridis
+# between the Imprint palette-derived endpoints — never substitute viridis
 # or any other named cmap.
 def _lerp_hex(c0, c1, t):
     r0, g0, b0 = (int(c0[i:i+2], 16) for i in (1, 3, 5))

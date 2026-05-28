@@ -96,11 +96,11 @@ geom_density()     # Density
 ## Scales
 
 ```python
-# Categorical — use anyplot palette (see Colors section below)
+# Categorical — use Imprint palette (see Colors section below)
 + scale_color_manual(values=ANYPLOT_PALETTE)
 + scale_fill_manual(values=ANYPLOT_PALETTE)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Continuous — only the two Imprint palette-derived cmaps are allowed:
 + scale_color_gradient(low='#009E73', high='#4467A3')                              # sequential
 + scale_fill_gradient(low='#009E73',  high='#4467A3')
 + scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)  # diverging
@@ -136,7 +136,7 @@ geom_density()     # Density
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
 ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
