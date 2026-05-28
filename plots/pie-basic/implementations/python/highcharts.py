@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28

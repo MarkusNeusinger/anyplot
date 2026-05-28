@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: pie-basic
 created: '2025-12-23T00:36:27Z'
-updated: '2026-05-28T11:40:01Z'
+updated: '2026-05-28T11:48:37Z'
 generated_by: claude-sonnet
 workflow_run: 26571912196
 issue: 678
@@ -15,35 +15,35 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all four required features (percentage labels, distinct
-    colors, legend, exploded slice) implemented correctly'
-  - 'Excellent palette compliance: brand green first, correct ordinal positions, INK_MUTED
-    semantic anchor for Others role'
-  - Narrative subtitle with contextual insight adds genuine data storytelling value
-  - Highcharts-specific features (shadow, crookedLine connectors, hover halo, allowPointSelect)
-    demonstrate library mastery
-  - Full theme adaptation with no dark-on-dark failures
+  - Perfect spec compliance — all four required features (percentages, distinct colors,
+    legend, exploded slice) implemented correctly
+  - Correct anyplot palette with semantic muted anchor for Others category — shows
+    palette rule understanding
+  - 'Full theme adaptation: both light and dark renders pass legibility check with
+    no dark-on-dark failures'
+  - Informative subtitle adds real storytelling value without cluttering the chart
+  - Clean, idiomatic Highcharts code with all canonical patterns (CDP override, PIL
+    pinning, inline JS)
   weaknesses:
-  - Excess vertical whitespace between subtitle and pie chart body; tightening the
-    layout (larger pie size ~78% or reduced spacingTop) would improve visual balance
-  - Alibaba (4%) and Google Cloud (11%) data label connector lines are relatively
-    close at the lower edge of the pie — consider adjusting startAngle or increasing
-    connector distance to spread labels further apart
+  - 'DE-01 has room to grow: shadow could be slightly more nuanced; the elevated legend
+    box frame adds visual weight — consider whether it is needed at this size'
+  - 'DE-02 minor: the legend border box, while refined, could be omitted for cleaner
+    minimalism on a pie chart with a bottom-aligned legend'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Bold title fully readable in dark ink; two-line subtitle with contextual statistics clearly visible; data labels with percentage values (38px) and connector lines all readable; horizontal legend with framed box at bottom readable
-      Data: AWS = #009E73 (brand green, slightly exploded), Azure = #C475FD (lavender), Google Cloud = #4467A3 (blue), Alibaba = #BD8233 (ochre), Others = INK_MUTED dark gray (#6B6A63); all 5 slices clearly distinguishable
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "Cloud Infrastructure Market Share · pie-basic · python · highcharts · anyplot.ai" in dark bold ink at ~70% canvas width. Two-line subtitle in secondary ink. Legend at bottom with elevated-bg box and subtle border. All text uses dark INK/INK_SOFT tokens — fully readable.
+      Data: Five pie slices — AWS (31%, #009E73 brand green, exploded), Azure (25%, #C475FD lavender), Others (29%, INK_MUTED warm gray), Google Cloud (11%, #4467A3 blue), Alibaba (4%, #BD8233 ochre). External data labels with crookedLine connectors show name and percentage.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title, subtitle, data labels, and legend all render in light tones (INK=#F0EFE8, INK_SOFT=#B8B7B0); all readable against dark background; no dark-on-dark failures observed
-      Data: Categorical colors identical to light render for positions 1-4 (green/lavender/blue/ochre); "Others" shifts to INK_MUTED dark token (#A8A79F medium-light gray — theme-adaptive semantic anchor, correct by design)
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title, subtitle, data labels, and legend text all render in light ink (INK = #F0EFE8 in dark theme). Connector lines visible. Legend box uses elevated dark background #242420 with subtle border.
+      Data: All five slice colors identical to light render — brand green, lavender, blue, ochre, muted gray. Data color identity confirmed across themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable against near-black background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,73 +51,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, subtitle, data labels, and legend all readable in both themes;
-          adaptive fontsize scaling handles long prefixed title correctly
+        comment: Title, subtitle, data labels, and legend readable in both themes.
+          Subtitle italic line slightly small but legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels well-spaced overall; Alibaba and Google Cloud labels share
-          lower zone due to small adjacent slices but remain non-overlapping
+        comment: External labels with connectors well-separated. Alibaba/Google Cloud
+          labels close but distinct.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All slices visible with connector-line labels; Alibaba 4% slice is
-          very narrow but labeled; no invisible elements
+        comment: All five slices clearly visible including small Alibaba 4% wedge.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; 5 perceptually distinct hues
+        comment: anyplot palette used; CVD-safe. Muted anchor for Others is appropriately
+          subdued.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas ideal for pie; canvas gate passed; noticeable
-          empty whitespace between subtitle and pie body
+        comment: 2400x2400 square canvas; canvas gate passed. Pie centered with good
+          breathing room.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (pie chart); title is descriptive with domain context
+        comment: No axes for pie chart. Descriptive title; clear legend labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First slice = #009E73 brand green; positions 1-4 in order; INK_MUTED
-          for Others (correct semantic anchor); backgrounds #FAF8F1/#1A1A17 both correct'
+        comment: AWS=#009E73 first; palette positions 1-4 in order; Others uses INK_MUTED
+          semantic anchor. Correct backgrounds both themes.
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Genuine design intent: exploded AWS slice, narrative subtitle, shadow
-          effects, crookedLine connectors, muted Others color, intentional startAngle'
+        comment: Above default. Informative subtitle with insight, shadow on slices,
+          exploded AWS slice, custom startAngle=-135.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Refined connector lines, slice border using PAGE_BG, legend with
-          border and rounded symbols, shadow depth
+        comment: Above default. PAGE_BG slice borders, crookedLine connectors, elevated
+          legend box with subtle border.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtitle states key insight; exploded AWS slice draws eye to dominant
-          player
+        comment: Above default. Subtitle tells the story explicitly; exploded slice
+          creates focal point on AWS.
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic pie chart
+        comment: Basic pie chart — correct type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Percentage labels, distinct colors, legend, exploded largest slice
-          — all implemented
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories, correct values summing to 100%
+        comment: 5 categories correctly mapped; realistic cloud market share proportions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Cloud Infrastructure Market Share · pie-basic · python
-          · highcharts · anyplot.ai'' — correct prefixed format; legend labels match'
+        comment: Title format correct with descriptive prefix. Legend labels match
+          categories.
     data_quality:
       score: 15
       max: 15
@@ -157,22 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Proportional slices, percentage labels, legend, exploded emphasis
-          slice — all key pie features demonstrated
+        comment: 'Full feature set: slices, external percentage labels, legend, emphasis.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cloud infrastructure market share 2024 — real, neutral, widely reported
-          dataset with domain-plausible values
+        comment: Cloud infrastructure market share 2024 — real-world, neutral, plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to 100%, 5 categories within spec's 3-8 range, proportions
-          domain-plausible
+        comment: Values sum to 100%; proportions match known market-share approximations.
     code_quality:
       score: 10
       max: 10
@@ -182,31 +179,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat sequential structure
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Static hardcoded data; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used
+        comment: All imports used; none redundant.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: zip-loop for series data is clean; no fake UI
+        comment: Clean, no fake UI. Dynamic title fontsize scaling.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 8
       max: 10
@@ -216,15 +213,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: PieSeries, Chart(container='container'), add_series(), to_js_literal(),
-          CDP viewport override, PIL dimension pinning — canonical highcharts pattern
+        comment: Correct PieSeries usage, inline JS download, CDP viewport override,
+          PIL dimension pinning.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: allowPointSelect, slicedOffset explosion, shadow config, softConnector
-          with crookedLine, hover halo states, startAngle — Highcharts-native features
+        comment: sliced:true for exploded slice, shadow on plotOptions, connectorShape:crookedLine,
+          softConnector, allowPointSelect, startAngle, HTML subtitle, states.hover.
   verdict: APPROVED
 impl_tags:
   dependencies:
