@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-basic: Basic Bar Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -24,11 +24,15 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 ANYPLOT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 BRAND = ANYPLOT_PALETTE[0]
 
-# Data — website traffic by channel (Q4 2025)
-categories = ["Organic Search", "Direct", "Social Media", "Email", "Referral", "Paid Ads", "Affiliates"]
-values = [142500, 98700, 87300, 53200, 41800, 72600, 18900]
+# Data — website traffic by channel (Q4 2025), sorted descending for ranking readability
+categories_raw = ["Organic Search", "Direct", "Social Media", "Email", "Referral", "Paid Ads", "Affiliates"]
+values_raw = [142500, 98700, 87300, 53200, 41800, 72600, 18900]
 
-max_idx = values.index(max(values))
+sorted_pairs = sorted(zip(values_raw, categories_raw, strict=False), reverse=True)
+values, categories = zip(*sorted_pairs, strict=False)
+values, categories = list(values), list(categories)
+
+max_idx = 0  # descending sort puts leader first
 total = sum(values)
 
 # Per-bar data — highlight leader with brand green, muted for the rest
