@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:31:30Z'
-updated: '2026-05-28T17:41:50Z'
+updated: '2026-05-28T17:53:18Z'
 generated_by: claude-sonnet
 workflow_run: 26590972340
 issue: 755
@@ -15,41 +15,40 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Excellent Gapminder-style dataset that creates natural regional storytelling through
-    spatial clustering
-  - Correct use of scale_size_area for area-proportional bubble sizing matching spec
-    requirement
-  - Full theme-adaptive chrome with proper INK/INK_SOFT/PAGE_BG tokens — both renders
-    pass readability
-  - 'Clean spec compliance: all required features present, correct title format, both
-    legends well-organized'
-  - Lambda-based axis label formatting ($10k style) adds professional polish
+  - Correct use of scale_size_area() ensures perceptually accurate area-based bubble
+    sizing as required by spec
+  - Gapminder-inspired dataset is compelling, realistic, and immediately recognizable
+    — tells a clear story about the wealth-health relationship
+  - 'Theme-adaptive chrome is fully threaded: PAGE_BG, ELEVATED_BG, INK, INK_SOFT
+    all applied to every chrome element in both renders'
+  - geom_smooth trend line adds meaningful analytical value without cluttering the
+    plot
+  - Custom axis label formatting ($Xk) and Y-only horizontal grid are thoughtful design
+    choices that elevate readability
   weaknesses:
-  - No marker stroke/outline to separate overlapping bubbles of similar color — add
-    white/ink stroke to geom_point
-  - Full bidirectional major grid adds clutter — remove vertical grid lines via panel_grid_major_x=element_blank()
-    keeping only horizontal
-  - No visual emphasis on GDP-life expectancy correlation — add geom_smooth(method=lm)
-    trend line to make the story explicit and leverage plotnine stat layers
-  - grammar-of-graphics distinctive features (stat_smooth, facet_wrap) unused — stat_smooth
-    trend line would raise LM-02
-  - Dark theme Population (M) size-guide circles appear near-black on dark legend
-    background — add explicit stroke or fill to size guide keys
+  - Data point count is 40 (4 regions x 10) which falls just under the spec's recommended
+    minimum of 50 — increase to ~60-80 points for a richer distribution
+  - Middle East & Africa legend label runs within 2-3 px of the right canvas margin;
+    add right padding (e.g., plot_margin or adjust figure_size width slightly) to
+    prevent potential clipping on exact-pixel renders
+  - Population values use raw lognormal output producing one very large outlier bubble
+    that visually dominates the lower-left cluster — consider capping or scaling the
+    population values so bubble sizes span a tighter 10-100 range per spec guidance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "bubble-basic · python · plotnine · anyplot.ai" in dark ink (#1A1A17), ~60% canvas width. Axis labels "GDP per Capita (USD thousands)" and "Life Expectancy (years)" in dark ink with units. Tick labels ($10k–$70k+, 60–88) in INK_SOFT (#4A4A44) — all clearly readable. Subtle bidirectional major grid at 0.15 alpha.
-      Data: Four color groups — Asia-Pacific (#009E73 green, first series correct), Europe (#C475FD lavender), Americas (#4467A3 blue), Middle East & Africa (#BD8233 ochre). Bubble sizes area-proportional via scale_size_area. Alpha=0.65 for overlap handling. Two legends: Population (M) with size circles at 5/25/75, Region with colored dots. Legend background is elevated (#FFFDF6).
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "bubble-basic · python · plotnine · anyplot.ai" in dark INK (#1A1A17), axis labels "GDP per Capita (USD thousands)" and "Life Expectancy (years)" in INK (#1A1A17), tick labels in INK_SOFT (#4A4A44) — all clearly readable. Custom $Xk tick formatting on X-axis. Y-axis-only horizontal grid lines at 15% opacity, subtle. Legend on right with ELEVATED_BG (#FFFDF6) fill, INK_SOFT border.
+      Data: First series Asia-Pacific = #009E73 green (correct); Europe = #C475FD lavender; Americas = #4467A3 blue; Middle East & Africa = #BD8233 ochre. Bubbles sized by population with area-based scaling. Alpha=0.65 handles overlap. Faint linear trend line in INK_SOFT threads through all data.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels render in light text (#F0EFE8) against dark surface — all readable. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. Grid lines remain subtle. Legend background uses #242420 (ELEVATED_BG dark). Population (M) size-guide circles appear near-black (default fill) on the #242420 legend background — marginally less clear than in light theme but still discernible. No dark-on-dark text failures.
-      Data: Colors are identical to light render — green, lavender, blue, ochre data series unchanged as required. Brand green #009E73 clearly visible on dark surface.
-      Legibility verdict: PASS — all text readable; minor note on size legend circle visibility in dark theme (not a failure, aesthetic minor issue)
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light #F0EFE8, axis labels in #F0EFE8, tick labels in #B8B7B0 — all clearly readable against dark background. No dark-on-dark failures. Legend background is #242420 (ELEVATED_BG dark), visually elevated. Grid lines adapt correctly (subtle light lines on dark surface).
+      Data: Colors identical to light render — green, lavender, blue, ochre maintain same saturation and hue. Only chrome (background, text, legend frame) flips between themes. #009E73 green remains clearly visible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,73 +56,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
-          legend=8). Well-proportioned in both renders. Minor: 8pt legend at mobile
-          scale is marginal.'
+        comment: Font sizes explicitly set; readable in both themes. Slight tightness
+          in right-side legend margin.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element collisions. Legend and data area cleanly
-          separated.
+        comment: No text-on-text or text-on-data collisions; overlapping bubbles handled
+          with alpha=0.65
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 40 data points, bubbles well-sized with alpha=0.65. Tiniest low-population
-          dots marginally small but intentional.
+        comment: All bubbles visible; smallest size-5 dots present but quite small;
+          40 data points slightly sparse
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; 4 perceptually-distinct hues.
+        comment: anyplot palette slots 1-4; CVD-safe; no red-green sole-signal encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well. Two-legend layout proportional and clean.
+        comment: Canvas gate passed; good proportions; Middle East & Africa legend
+          label sits within 2-3px of right canvas margin — not clipped but tight
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units.
+        comment: Both axes have descriptive labels with units; title matches required
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical palette order, correct backgrounds
-          #FAF8F1/#1A1A17, theme chrome correct in both renders.'
+        comment: 'First series #009E73 green correct; anyplot palette[:4] used; backgrounds
+          #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default. Custom palette and theme tokens present.
-          No marker outlines, no spine emphasis beyond minimal defaults.
+        passed: true
+        comment: 'Above-default polish: custom $ axis labels, stroke=0.4 on markers,
+          trend line layer adds analytical depth'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Panel border removed, minor grid absent, major grid at 0.15 alpha,
-          elevated legend background. Bidirectional grid adds some clutter.
+        passed: true
+        comment: panel_border removed, L-shape axis lines, X-grid blanked, minor grid
+          removed, ELEVATED_BG legend frame
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Smart Gapminder-style dataset creates natural clustering. No explicit
-          visual hierarchy (trend line, annotation, focal point) to guide viewer.
+        passed: true
+        comment: Trend line makes GDP-life expectancy correlation explicit; four-region
+          split creates clear geographic clusters
     spec_compliance:
       score: 15
       max: 15
@@ -133,54 +133,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: scatter + third quantitative variable via
-          size.'
+        comment: 'Correct bubble chart: x/y position + size third dimension'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: scale_size_area (area-proportional), alpha=0.65, size legend with
-          breaks, color-by-region — all present.
+        comment: scale_size_area (area-based), alpha=0.65 (transparency), size legend,
+          optional color categorization
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: GDP per capita X, life expectancy Y, population as size. All data
-          visible.
+        comment: GDP per capita on X, life expectancy on Y, population on size; full
+          data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'bubble-basic · python · plotnine · anyplot.ai'. Both Population
-          (M) and Region legends correct.
+        comment: Title is exactly bubble-basic · python · plotnine · anyplot.ai; legend
+          labels match data categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Full feature set: varied sizes, overlapping bubbles with alpha,
-          size legend, color-by-category, meaningful 3-variable relationship.'
+        comment: All three spec dimensions shown plus optional color; trend line adds
+          analytical layer; 40 points slightly under 50-point recommendation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GDP per capita vs life expectancy vs population by world region —
-          real, neutral, comprehensible economic scenario.
+        comment: Gapminder-inspired GDP/life-expectancy/population dataset; real-world
+          plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GDP $3k-$85k, life expectancy 52-88, lognormal population. Regional
-          ordering factually plausible.
+        comment: GDP $3k-$85k, life expectancy 52-88 years, population lognormal —
+          all domain-realistic
     code_quality:
       score: 10
       max: 10
@@ -190,31 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
+        comment: Flat script, no classes or functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used; no stray imports.
+        comment: All imports used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Lambda axis labels idiomatic. No over-engineering.
+        comment: Clean grammar-of-graphics composition; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400, width=8, height=4.5 (3200x1800).
+        comment: Saves as plot-{THEME}.png via plot.save()
     library_mastery:
       score: 7
       max: 10
@@ -224,20 +223,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: scale_size_area, scale_x_continuous with lambda, pd.Categorical for
-          legend ordering, layered theme. Above defaults but not fully expert.
+        comment: Proper ggplot+aes+geom+scale+theme layering; scale_size_area, scale_color_manual,
+          scale_x_continuous with label lambdas all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: scale_size_area is ggplot2/plotnine-distinctive. Lambda label formatting
-          idiomatic. No stat transforms or faceting — advanced grammar-of-graphics
-          features unused.
-  verdict: REJECTED
+        passed: true
+        comment: geom_smooth with inherit_aes=False is plotnine-native layer-composition;
+          scale_size_area is library-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
