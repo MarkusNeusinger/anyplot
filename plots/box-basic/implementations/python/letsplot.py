@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
-Library: letsplot 4.8.2 | Python 3.14
-Quality: 90/100 | Created: 2025-12-23
+Library: letsplot | Python 3.13
+Quality: pending | Updated: 2026-05-28
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -14,7 +16,6 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
-    flavor_high_contrast_light,
     geom_boxplot,
     geom_hline,
     geom_text,
@@ -31,10 +32,18 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
 # Data
 np.random.seed(42)
-categories = ["Engineering", "Marketing", "Sales", "HR", "Finance"]
-data = []
 distributions = {
     "Engineering": (85000, 15000),
     "Marketing": (65000, 12000),
@@ -43,8 +52,8 @@ distributions = {
     "Finance": (75000, 14000),
 }
 
-for cat in categories:
-    mean, std = distributions[cat]
+data = []
+for cat, (mean, std) in distributions.items():
     n = np.random.randint(50, 100)
     values = np.random.normal(mean, std, n)
     outliers = np.random.choice([mean + 3.5 * std, mean - 2.5 * std], size=3)
@@ -53,46 +62,43 @@ for cat in categories:
 
 df = pd.DataFrame(data, columns=["department", "salary"])
 
-# Compute medians for annotation labels
+# Median labels per box
 medians = df.groupby("department")["salary"].median().reset_index()
 medians.columns = ["department", "median_salary"]
 medians["label"] = medians["median_salary"].apply(lambda x: f"${x:,.0f}")
 
-# Insight: compare highest vs lowest median departments
-sorted_medians = medians.sort_values("median_salary")
-low_dept = sorted_medians.iloc[0]
-high_dept = sorted_medians.iloc[-1]
-pct_diff = (high_dept["median_salary"] - low_dept["median_salary"]) / low_dept["median_salary"]
-insight_text = f"+{pct_diff:.0%} vs. {low_dept['department']}"
-
-# Overall mean for reference line
+# Overall mean reference line
 overall_mean = df["salary"].mean()
 
-# Annotation dataframes
-insight_df = pd.DataFrame(
+# Insight: highest vs lowest median department
+sorted_medians = medians.sort_values("median_salary")
+low_dept = sorted_medians.iloc[0]["department"]
+high_dept = sorted_medians.iloc[-1]["department"]
+pct_diff = (sorted_medians.iloc[-1]["median_salary"] - sorted_medians.iloc[0]["median_salary"]) / sorted_medians.iloc[
+    0
+]["median_salary"]
+
+# Single combined annotation — placed left of center to avoid crowding the high-salary box
+annot_df = pd.DataFrame(
     {
-        "department": [high_dept["department"]],
-        "y": [high_dept["median_salary"] + 22000],
-        "lbl": [f"{high_dept['department'][:3]}. {insight_text}"],
+        "department": ["Sales"],
+        "y": [overall_mean + 7000],
+        "lbl": [f"Avg: ${overall_mean:,.0f}   |   {high_dept[:3]}. +{pct_diff:.0%} vs {low_dept[:3]}."],
     }
-)
-mean_label_df = pd.DataFrame(
-    {"department": [high_dept["department"]], "y": [overall_mean + 3000], "lbl": [f"Avg: ${overall_mean:,.0f}"]}
 )
 
 # Plot
-# Wong colorblind-safe palette (no two similar blues)
-colors = ["#0072B2", "#E69F00", "#D55E00", "#009E73", "#CC79A7"]
+title = "box-basic · python · letsplot · anyplot.ai"
 
 plot = (
     ggplot(df, aes(x=as_discrete("department", order=1, order_by="..middle.."), y="salary", fill="department"))
     + geom_boxplot(
         alpha=0.85,
         size=1.2,
-        outlier_size=5,
+        outlier_size=4,
         outlier_shape=21,
-        outlier_color="#333333",
-        width=0.72,
+        outlier_color=INK_SOFT,
+        width=0.78,
         tooltips=layer_tooltips()
         .title("@department")
         .line("Median|$@{..middle..}")
@@ -101,61 +107,50 @@ plot = (
         .line("Min|$@{..ymin..}")
         .line("Max|$@{..ymax..}"),
     )
-    + scale_fill_manual(values=colors)
-    # Median value labels above each box
+    + scale_fill_manual(values=ANYPLOT_PALETTE)
     + geom_text(
         aes(x="department", y="median_salary", label="label"),
         data=medians,
-        size=11,
-        color="#333333",
+        size=4,
+        color=INK,
         fontface="bold",
         nudge_y=5000,
         inherit_aes=False,
     )
-    # Overall mean reference line
-    + geom_hline(yintercept=overall_mean, color="#888888", size=0.8, linetype="dashed")
+    + geom_hline(yintercept=overall_mean, color=INK_MUTED, size=0.8, linetype="dashed")
     + geom_text(
         aes(x="department", y="y", label="lbl"),
-        data=mean_label_df,
-        size=10,
-        color="#666666",
+        data=annot_df,
+        size=3,
+        color=INK_MUTED,
         fontface="italic",
-        hjust=0.5,
-        inherit_aes=False,
-    )
-    # Key insight annotation
-    + geom_text(
-        aes(x="department", y="y", label="lbl"),
-        data=insight_df,
-        size=11,
-        color="#1E4F72",
-        fontface="bold italic",
         inherit_aes=False,
     )
     + scale_y_continuous(format="${,.0f}")
     + labs(
         x="Department",
         y="Annual Salary (USD)",
-        title="box-basic \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Salary distributions across five departments, ordered by median",
+        title=title,
+        subtitle="Salary distributions by department, ordered by median",
     )
-    + flavor_high_contrast_light()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        plot_subtitle=element_text(size=16, color="#555555"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=16, color=INK, face="bold"),
+        plot_subtitle=element_text(size=12, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_ticks=element_blank(),
+        axis_line=element_line(color=INK_SOFT),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#DDDDDD", size=0.5),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
         legend_position="none",
-        plot_background=element_rect(fill="white", color="white"),
-        plot_margin=[10, 35, 10, 10],
+        plot_margin=[10, 10, 10, 10],
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
