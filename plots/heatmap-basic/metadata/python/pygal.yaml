@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-basic
 created: '2025-12-23T00:50:51Z'
-updated: '2026-05-28T23:02:37Z'
+updated: '2026-05-28T23:25:25Z'
 generated_by: claude-sonnet
 workflow_run: 26606814649
 issue: 691
@@ -12,120 +12,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Creative HorizontalStackedBar-as-heatmap approach correctly works around pygal
-    lack of native heatmap type
-  - Brightness-adaptive annotation text (white on dark cells, dark on light cells)
-    is a sophisticated implementation detail
-  - 'imprint_seq (#009E73 to #4467A3) correctly applied for single-polarity continuous
-    data'
-  - Complete theme adaptation — both renders are correct and visually consistent
-  - Peak annotations with amber (#DDCC77) add genuine data storytelling
-  - Reproducible with np.random.seed(42)
-  - Saves both PNG and HTML artifacts
+  - Creative heatmap implementation using HorizontalStackedBar with per-cell color
+    dicts — clever pygal workaround for a chart type the library lacks natively
+  - Sophisticated SVG post-processing adds colorbar, month column headers, subtitle,
+    and peak annotations all within the SVG layer
+  - 'Brightness-adaptive cell text colors (white vs dark) ensure readability across
+    the full #009E73→#4467A3 gradient'
+  - Categorical data sorted by average traffic creates natural visual hierarchy with
+    Finance at top
+  - Amber peak annotations (▼ Year-end peak, ▼ Summer peak) guide the viewer to the
+    most informative seasonal patterns
+  - Both themes correctly adapt chrome while preserving identical data colors
   weaknesses:
-  - Dec column header and Visits (k) colorbar label overlap in the top-right corner
-    — increase margin_right or shift colorbar further right
-  - Year-end peak annotation (col_j=11, center of Dec column) extends rightward into
-    the colorbar strip — shorten text, left-align, or shift x position left by ~0.5
-    cell widths
-  - Cell value annotations use value_font_size=26 SVG units; increase to 36 (library
-    guide default) for better legibility at 2400x2400
-  - Row ordering is neither alphabetical nor sorted by magnitude — sort categories
-    descending by mean traffic so the visual pattern is easier to read
+  - Colorbar tick labels are at font-size 28px — slightly small relative to the 2400×2400
+    canvas; increasing to 32–34px would improve readability at mobile widths
+  - SVG post-processing section is 110+ lines of regex/string injection, making the
+    code harder to follow than necessary for its functional purpose
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "heatmap-basic · python · pygal · anyplot.ai" in dark ink — clearly readable. "Content Category" rotated y-axis label in dark ink, "Month" bold x-axis label, month headers (Jan–Dec) above grid — all readable. Subtitle in muted ink below title. Minor: "Dec" header and "Visits (k)" colorbar label collide in top-right corner.
-      Data: imprint_seq gradient (#009E73 green → #4467A3 blue); low traffic = teal, high traffic = blue-purple. First palette anchor #009E73 used as low-end. Cell value annotations in brightness-adaptive white/dark text. Colorbar on right with 60-stop gradient. Amber (#DDCC77) peak annotations.
-      Legibility verdict: PASS (minor Dec/colorbar label overlap noted)
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "heatmap-basic · python · pygal · anyplot.ai" in dark ink at top (~60% canvas width), clearly readable. Subtitle "Monthly website traffic (thousands of visits) by content category" in INK_SOFT below title. Month column headers (Jan–Dec) rendered in dark bold 32px text just above the grid. Y-axis label "Content Category" rotated 90°, bold, readable. X-axis label "Month" bold at bottom. Row labels (Finance, Tech, Health, Food, Travel, Science, Sports, Culture) in default INK rendered by pygal, clearly legible. Colorbar to the right with "Visits (k)" header and tick labels (170, 112, 54) in INK_SOFT.
+      Data: Heatmap grid of 8 categories × 12 months. Color gradient runs from #009E73 (brand green, low values ~54k) to #4467A3 (blue, high values ~173k) — imprint_seq sequential colormap. Each cell shows the actual traffic value (54–173) in white or dark text adapted to background brightness. Finance row shows the darkest blues (highest traffic), Culture/Sports rows show greener shades (lower traffic). Amber (▼ Year-end peak, ▼ Summer peak) annotations mark Finance-Dec and Travel-Aug cells.
+      Legibility verdict: PASS — all text clearly readable on the warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: All text flips to light ink (#F0EFE8/B8B7B0). Title, row labels, month headers, axis labels, colorbar labels all clearly readable in white/light text. No dark-on-dark failures detected. Same "Dec"/"Visits (k)" proximity issue persists but no canvas clipping.
-      Data: imprint_seq gradient colors are identical to the light render — only chrome elements flipped. Cell value annotations still brightness-adaptive and readable. Colorbar gradient unchanged. Amber annotations still visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. Subtitle in secondary light text (INK_SOFT dark variant). Month headers, row labels, axis titles, and colorbar labels all render in light/cream text — fully legible. No dark-on-dark failures observed.
+      Data: Heatmap cell colors are identical to the light render — the #009E73→#4467A3 gradient is unchanged; only the background and chrome flip. Cell value annotations maintain their brightness-adaptive colors (white or near-black depending on cell luminance). Amber peak annotations (▼ Year-end peak, ▼ Summer peak) retain their #DDCC77 color, clearly visible on the dark surface.
+      Legibility verdict: PASS — all text clearly readable on the warm near-black background; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title and axis labels well-sized; cell value font_size=26 is below
-          the recommended 36 for 2400x2400
+        comment: All font sizes explicitly set throughout. Title at 66px, label 56px,
+          major_label 44px, value 36px, month headers 32px bold, axis titles 40px
+          bold. Colorbar tick labels at 28px are slightly small for the 2400px canvas
+          — minor deduction. Both themes fully readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Dec month header overlaps Visits (k) colorbar label top-right; Year-end
-          peak annotation extends into colorbar region
+        comment: Peak annotations positioned at cell_h*0.82, numeric values centered
+          at cell_h*0.5 — ~80px vertical separation at this canvas size. No actual
+          text overlap detected in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cells, colorbar, annotations clearly visible in both themes
+        comment: All 96 heatmap cells clearly visible with distinct colors across
+          the gradient. Values readable in both themes. Colorbar gradient well-rendered
+          with 60 stops.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe; no red-green sole signal
+        comment: 'Sequential colormap from #009E73 (green) to #4467A3 (blue) is CVD-safe
+          with distinguishable hue+luminance variation. Brightness-adaptive cell text
+          ensures adequate contrast on all cell colors.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 2400x2400 correct for square heatmap; minor right-side crowding with
-          colorbar/annotation/header collision
+        comment: Square 2400x2400 canvas appropriate for heatmap. Plot fills ~75%
+          of canvas. Balanced margins (top=200, bottom=100, left=300, right=450).
+          Colorbar with labels fits within canvas bounds. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month, Content Category, Visits (k) colorbar label with subtitle
-          for context
+        comment: '''Month'' x-axis and ''Content Category'' y-axis labels present,
+          bold, descriptive. Colorbar labeled ''Visits (k)'' with tick values.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 to #4467A3) for continuous single-polarity
-          data; backgrounds #FAF8F1/#1A1A17 correct'
+        comment: 'Sequential imprint_seq colormap (#009E73 → #4467A3) for single-polarity
+          continuous data. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Data colors
+          identical between themes. Chrome correctly adapts. Amber (#DDCC77) used
+          correctly for peak annotations.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Brightness-adaptive annotation text, amber peak annotations, subtitle
-          — above default
+        comment: Above well-configured default (4). Custom Imprint gradient colormap,
+          brightness-adaptive text, sorted categories by average traffic, subtitle,
+          peak annotations with amber semantic color. Not quite 'strong design' (6)
+          level but clearly shows intentional design decisions.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean grid layout, generous margins; right-side crowding slightly
-          diminishes polish
+        comment: No grid lines (appropriate for heatmap), generous margins, spacing=0
+          for seamless cell grid, rounded_bars=1. Clean layout. No legend frame clutter.
+          Good visual refinement above library defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Summer and year-end peak annotations guide viewer to seasonal insights;
-          subtitle sets context
+        comment: Amber peak annotations (Year-end peak for Finance, Summer peak for
+          Travel) actively guide the viewer to seasonal insights. Sorted categories
+          by average traffic create visual hierarchy. Subtitle provides context. Clear
+          focal points established.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,88 +144,97 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: HorizontalStackedBar used as heatmap simulation; visually reads as
-          correct grid heatmap
+        comment: Heatmap correctly implemented using HorizontalStackedBar with per-cell
+          color overrides — a valid pygal workaround producing a visually correct
+          heatmap.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colorbar and value annotations present; row ordering is arbitrary
-          — not alphabetical or by magnitude
+        comment: 'All required features present: colorbar legend, value annotations
+          in cells, sequential colormap (appropriate for all-positive data), rows
+          ordered by magnitude.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Months on x-axis, categories on y-axis, color encodes traffic intensity
-          — all 8x12 cells rendered
+        comment: Months as columns, content categories as rows, traffic values mapped
+          to color intensity. All 96 cells rendered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly heatmap-basic · python · pygal · anyplot.ai; colorbar
-          serves as legend
+        comment: Title is exactly 'heatmap-basic · python · pygal · anyplot.ai'. Colorbar
+          serves as the legend with 'Visits (k)' header and tick values.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Variation across time and category, seasonal patterns, full heatmap
-          format demonstrated
+        comment: 'Shows clear cross-category and cross-month variation. Demonstrates
+          seasonal patterns, relative category ranking, and value range. All key heatmap
+          features visible. Minor deduction: no bimodal/surprising distribution pattern.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly website traffic in thousands for content categories — realistic
-          and neutral
+        comment: Monthly website traffic by content category is a real-world, neutral
+          business analytics scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 51-177 thousands of visits, internally consistent and plausible
+        comment: Traffic values 54–173k monthly visits are plausible for a medium
+          website. Seasonal patterns (Travel peaking summer, Finance higher year-end)
+          are realistic.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or classes; top-level procedural script
+        comment: 'No functions or classes. Sequential script. Minor deduction: SVG
+          post-processing section is 110+ lines of regex/string manipulation, making
+          the code somewhat hard to follow — necessary given pygal''s limitations
+          but verbose.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib workaround for pygal naming collision
-          is justified
+        comment: All imports used. The importlib approach is necessary to avoid filename
+          collision with the pygal module name.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG post-processing complex but necessary; logically organized
+        comment: Clean Pythonic code. SVG post-processing complexity is justified
+          by pygal's architectural constraints. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
     library_mastery:
       score: 8
       max: 10
@@ -224,17 +244,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Style object, per-datum color dict, chart parameters at construction
+        comment: Correct pygal.Style usage for all theme tokens. Idiomatic HorizontalStackedBar
+          with per-item color dicts. chart.render(is_unicode=True) for SVG manipulation.
+          Good use of pygal's configuration options (spacing=0, range, margins).
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: SVG output post-processing for colorbar/headers/annotations; HorizontalStackedBar
-          geometry simulates heatmap grid
+        comment: SVG post-processing is a key pygal-distinctive technique enabled
+          by its SVG output. Per-item color dicts in chart.add() are a pygal-specific
+          feature. HTML export preserves pygal's native interactive SVG. Brightness-adaptive
+          text via SVG regex injection is clever and pygal-idiomatic.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - colorbar
   - annotations
@@ -242,7 +267,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  - matrix-construction
+  dataprep: []
   styling:
   - custom-colormap
