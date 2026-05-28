@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -84,7 +84,7 @@ fig.add_vline(
     line=dict(color=TOTAL_COLOR, width=2, dash="dash"),
     annotation_text="Optimal<br>Complexity",
     annotation_position="bottom left",
-    annotation_font=dict(size=11, color=TOTAL_COLOR),
+    annotation_font=dict(size=12, color=TOTAL_COLOR),
 )
 
 # Zone labels — separated horizontally from the top-left legend
@@ -112,6 +112,53 @@ fig.add_annotation(
     borderpad=6,
 )
 
+# Direct curve labels at the right edge of each curve
+_y_bias = float(bias_squared[-1])
+_y_var = float(variance[-1])
+_y_irred = float(irreducible_error[-1])
+_y_total = float(total_error[-1])
+
+fig.add_annotation(
+    x=1.02,
+    xref="paper",
+    y=_y_total,
+    yref="y",
+    text="Total Error",
+    showarrow=False,
+    xanchor="left",
+    font=dict(size=11, color=TOTAL_COLOR),
+)
+fig.add_annotation(
+    x=1.02,
+    xref="paper",
+    y=_y_var,
+    yref="y",
+    text="Variance",
+    showarrow=False,
+    xanchor="left",
+    font=dict(size=11, color=VARIANCE_COLOR),
+)
+fig.add_annotation(
+    x=1.02,
+    xref="paper",
+    y=_y_irred,
+    yref="y",
+    text="Irred. Error",
+    showarrow=False,
+    xanchor="left",
+    font=dict(size=11, color=IRRED_COLOR),
+)
+fig.add_annotation(
+    x=1.02,
+    xref="paper",
+    y=_y_bias,
+    yref="y",
+    text="Bias²",
+    showarrow=False,
+    xanchor="left",
+    font=dict(size=11, color=BIAS_COLOR),
+)
+
 title = "curve-bias-variance-tradeoff · python · plotly · anyplot.ai"
 
 fig.update_layout(
@@ -131,6 +178,8 @@ fig.update_layout(
         gridwidth=1,
         linecolor=INK_SOFT,
         zerolinecolor=INK_SOFT,
+        showline=False,
+        mirror=False,
     ),
     yaxis=dict(
         title=dict(text="Prediction Error", font=dict(size=12, color=INK)),
@@ -141,6 +190,8 @@ fig.update_layout(
         gridwidth=1,
         linecolor=INK_SOFT,
         zerolinecolor=INK_SOFT,
+        showline=False,
+        mirror=False,
     ),
     legend=dict(
         x=0.02,
@@ -152,7 +203,7 @@ fig.update_layout(
         bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    margin=dict(l=80, r=40, t=80, b=80),
+    margin=dict(l=80, r=120, t=80, b=80),
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
