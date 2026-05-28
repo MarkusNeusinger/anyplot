@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: area-basic
 created: '2025-12-23T00:48:44Z'
-updated: '2026-05-28T05:54:08Z'
+updated: '2026-05-28T06:03:18Z'
 generated_by: claude-sonnet
 workflow_run: 26556947525
 issue: 711
@@ -12,56 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Correct area chart with fill=True and opacity=0.40, exactly meeting spec semi-transparency
-    range
-  - 'Anyplot palette applied correctly: brand green first series, palette positions
-    2-4 for trend/peak/low markers'
-  - Theme-adaptive chrome works perfectly in both light and dark renders — no dark-on-dark
-    failures
-  - Realistic website traffic dataset with weekly cyclical patterns and overall growth
-    trend makes the chart credible
-  - Data storytelling through trend line (+34 visitors/day) and peak/low markers guides
-    the viewer to key insights
-  - Cubic interpolation (interpolate=cubic, precision=250) creates beautiful smooth
-    curves distinctive to pygal
-  - Deterministic hardcoded data ensures full reproducibility without seeds
-  - Code is clean KISS structure with the clever sys.path workaround for the file
-    naming conflict
-  - HTML interactive output correctly generated alongside PNG — leverages pygal native
-    interactivity
+  - 'Palette and dual-theme implementation are textbook-correct: anyplot palette in
+    canonical order, all chrome tokens derived from ANYPLOT_THEME, both renders visually
+    identical data colors with flipped chrome.'
+  - Cubic interpolation with opacity=0.47 fill produces a smooth, polished area chart
+    visually superior to a linear-segment default.
+  - Peak/low sparse-series markers are an idiomatic pygal technique that delivers
+    clear data storytelling without fake UI.
+  - sys.path fixup is a subtle but necessary correctness detail that prevents shadowing
+    the pygal package with this file.
+  - 'All spec requirements satisfied: semi-transparent fill, gridlines, labeled axes,
+    realistic visitor data with weekly pattern.'
   weaknesses:
-  - Design sophistication is above generic but not at strong-design level — the overall
-    impression is well-configured pygal rather than publication-ready; improve DE-01
-    by refining the legend presentation, adding a subtle annotation for the overall
-    trend insight, and tightening the visual hierarchy between the primary area series
-    and secondary overlay markers
-  - Visual refinement (DE-02) is limited by pygal defaults — the legend colored squares
-    and spacing use library defaults; explore reducing legend_box_size and tightening
-    legend_font_size contrast between series labels, and ensure the plot frame is
-    visually minimal
-  - 'Library Mastery LM-02: the implementation uses cubic interpolation and HTML export
-    well, but value_formatter/x_value_formatter could be leveraged more expressively
-    in the tooltip to show percentage change or context; pygal-specific features like
-    sparklines or gauge sub-charts are not used, keeping this at generic area-chart
-    usage'
-  - 'LM-01 partial: per-series fill=True in chart.add() is the correct pygal pattern
-    but stroke=False for point series is awkward — using pygal Dot chart or XY chart
-    for the peak/low markers would be more idiomatic'
+  - 'DE-01: Full chart border frame not suppressed — pygal renders a full border by
+    default; setting border_colors or stroke_opacity to match PAGE_BG would soften
+    the enclosing box for a lighter visual feel.'
+  - 'DE-02: Trend line stroke width (3) is too close to main area stroke width (5);
+    reducing trend to width=2 and widening dasharray (e.g. ''16, 8'') would improve
+    visual hierarchy.'
+  - 'VQ-01 (minor): data-point dot size (dots_size=12) could be slightly larger (14-16)
+    to stay readable when scaled to mobile thumbnail width (~400 px).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — matches spec exactly, not pure white
-      Chrome: Title "Daily Website Visitors · area-basic · python · pygal · anyplot.ai" rendered in dark ink, clearly visible and takes ~75-80% of canvas width as expected for the mandated long format. Y-axis label "Visitors" and X-axis label "Day of Month" visible in dark ink. Tick labels (1, 5, 10, 15, 20, 25, 30 on X; 1,000–2,000+ on Y) clearly readable. Legend at bottom shows four series with small colored squares in default pygal style — readable.
-      Data: Primary area series in brand green (#009E73) with smooth cubic-interpolated curves and 0.40 opacity fill, clearly visible. Dashed lavender (#C475FD) trend line runs upward-right. Blue (#4467A3) oversized dot marks the peak (Day 24, 2,150 visitors). Ochre (#BD8233) oversized dot marks the low (Day 6, 890 visitors). Subtle dotted horizontal grid lines provide value reference.
-      Legibility verdict: PASS — all text elements clearly visible against the warm off-white background, no "light on light" failures.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "Daily Website Visitors · area-basic · python · pygal · anyplot.ai" spans ~75% of plot width at font size 66 — readable and proportionate. Y-axis label "Visitors" and x-axis label "Day of Month" are clear. Tick labels at major day intervals (1, 5, 10, 15, 20, 25, 30) and visitor counts (1000–2000) are legible. Legend at bottom with four labeled entries.
+      Data: Main area filled with brand green #009E73 (opacity 0.47) with cubic interpolation; dashed lavender (#C475FD) trend line; large blue (#4467A3) peak dot at day 24 (2150); large ochre (#BD8233) low dot at day 6 (890). Horizontal grid lines subtle.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — matches spec exactly, not pure black
-      Chrome: Title in light cream/white text, clearly readable. Y-axis and X-axis labels in light text, all tick labels clearly visible. Legend at bottom with light-colored text labels. No dark-on-dark failures observed anywhere — all text uses the correct light theme tokens.
-      Data: Data colors are identical to the light render — brand green area fill (#009E73), lavender dashed trend (#C475FD), blue peak dot (#4467A3), ochre low dot (#BD8233). All series retain the same visual identity across themes as required.
-      Legibility verdict: PASS — all text elements clearly visible against the dark near-black background. Theme adaptation is correct throughout.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title, axis labels, tick labels, and legend text all flip to light-colored text, fully readable. No dark-on-dark failures observed.
+      Data: Colors identical to light render — brand green area, lavender trend line, blue peak dot, ochre low dot. Only chrome elements flip between themes.
+      Legibility verdict: PASS — all text clearly readable against the dark background; brand green #009E73 remains strong on dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,61 +57,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44, value=36). Well-proportioned in both renders. Minor: legend text
-          and colored squares are slightly large at mobile scale but readable at full
-          canvas size.'
+        comment: All text readable in both themes; dot markers at data points slightly
+          small at mobile thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap anywhere in either render. Legend at bottom
-          is clear and separated. Trend line and area series do not create visual
-          confusion.
+        comment: No collisions; legend entries well-spaced at bottom
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area fill at opacity=0.40 (within spec 0.3-0.5 range). Dots at size=12
-          clearly visible for 30 data points. Peak/low markers at size=22 are prominent.
-          Trend dashed line clearly distinguishable.
+        comment: Area fill clear; all 30 data dots visible; peak/low markers large
+          and distinctive; trend line differentiated via dashing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe by design. Four series use distinct hue
-          families (green, purple, blue, ochre) with strong perceptual separation.
-          No red-green as sole signal.
+        comment: Four-series anyplot palette is CVD-safe with sufficient perceptual
+          separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas (gate passed). Plot fills approximately
-          65-70% of canvas. Balanced margins (top=60, bottom=120, left=80, right=40).
-          Legend close to plot at bottom. Nothing cut off.
+        comment: 3200x1800 canvas correct; generous margins; title ~75% width; no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes descriptive prefix 'Daily Website Visitors' followed
-          by spec-id/lang/lib/anyplot.ai. X-axis 'Day of Month' and Y-axis 'Visitors'
-          are descriptive and contextually clear.
+        comment: Descriptive prefix + mandatory format; axis labels descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series in brand green #009E73. Palette positions 2-4 used
-          in canonical order for trend/peak/low. Background #FAF8F1 in light, #1A1A17
-          in dark. All chrome (text, grid) theme-adaptive. Data colors identical between
-          themes.'
+        comment: 'First series #009E73; canonical palette order; correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -134,28 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above a generic library default — the peak/low markers, smooth cubic
-          curves, dashed trend line, and semi-transparent fill show design intent.
-          However the overall impression is 'well-configured pygal' rather than 'publication-ready.'
-          Legend squares are library defaults. Not yet at FiveThirtyEight level.
+        comment: Cubic interpolation, semi-transparent fill, dashed trend line, large
+          peak/low markers add polish; no spine removal
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: dotted grid lines (guide_stroke_dasharray=3,3),
-          explicit margins, L-shaped axes (no visible top/right border). Legend at
-          bottom avoids obscuring data. However legend box styling and overall chrome
-          are still default pygal presentation.'
+        comment: Y-axis-only grid; legend at bottom; custom margins; trend/area stroke
+          weight hierarchy could be stronger
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: area fill (primary story) > trend line (context)
-          > peak/low markers (focal points). The trend label ''+34 visitors/day''
-          quantifies the upward slope. Weekly cyclical pattern is visible in the smooth
-          curves. Viewer is guided to the peak and low.'
+        comment: Weekly rhythm visible in waveform; upward trend line contextualizes
+          growth; peak/low markers highlight key values
     spec_compliance:
       score: 15
       max: 15
@@ -165,34 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.Line with fill=True correctly implements an area chart. Area
-          below line is filled with semi-transparent green. Smooth cubic interpolation
-          enhances the visual.
+        comment: pygal.Line with fill=True is idiomatic pygal area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (0.40 opacity) ✓. Y-axis gridlines ✓. Clear
-          axis labels ✓. 30 data points within 20-500 range ✓. Continuous day-of-month
-          x-axis ✓. Optional gradient fill not implemented but not required.
+        comment: Semi-transparent fill (opacity=0.47), gridlines, axis labels, full
+          month of data
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Day of Month (days 1-30). Y-axis: Visitors (890-2150 range).
-          All 30 data points visible. Axis shows full data range with appropriate
-          tick spacing.'
+        comment: Continuous day-of-month x-axis; visitor magnitude y-axis; area fill
+          encodes volume
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Daily Website Visitors · area-basic · python · pygal ·
-          anyplot.ai'' — correct optional descriptive prefix + spec-id · python ·
-          pygal · anyplot.ai format. Legend labels: ''Daily Visitors'', ''Trend (+34
-          visitors/day)'', ''Peak: 2,150'', ''Low: 890'' — all meaningful and descriptive.'
+        comment: Title follows {Descriptive Title} · {spec-id} · python · pygal ·
+          anyplot.ai format; legend matches series
     data_quality:
       score: 15
       max: 15
@@ -202,27 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full area chart features: filled area emphasizing magnitude,
-          smooth trend line, peak and low annotation markers, weekly cyclical patterns
-          in data, overall growth trajectory visible. Comprehensive demonstration.'
+        comment: 30 data points; three weekly phases; trend line; peak/low annotations
+          — comprehensive area chart demonstration
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitors over a month is a completely realistic, neutral,
-          business/tech scenario. The weekly cyclical pattern (weekend dips) and four
-          distinct phases (baseline, recovery, growth, plateau) reflect real-world
-          traffic behavior.
+        comment: Daily visitor counts (890-2150) are realistic; weekly weekend-dip
+          pattern is plausible; trend quantified
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range 890-2150 visitors/day — plausible for a medium-sized
-          website. Weekend dips to ~900-1000 and weekday peaks to 1900-2150 reflect
-          realistic traffic ratios (~2:1). Monthly growth from ~1200 to ~1700+ average
-          is aggressive but plausible for a growing site.
+        comment: Y-axis range appropriate for mid-traffic website; 30-day span; sensible
+          tick intervals
     code_quality:
       score: 10
       max: 10
@@ -232,40 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: sys.path fix → imports → theme tokens → palette
-          → data → trend calc → title → style → chart → series → labels → save. No
-          functions or classes.'
+        comment: No functions or classes; clean top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded as literal lists. Trend and peak/low are computed
-          deterministically from the data. Fully reproducible without seeds.
+        comment: All data hardcoded; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pygal, pygal.style.Style imported. All are used (os
-          for ANYPLOT_THEME env, sys for the self-import workaround, pygal and Style
-          for chart creation).
+        comment: Only os, sys, pygal, pygal.style.Style; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The sys.path manipulation to avoid self-import (file named pygal.py
-          conflicting with the pygal package) is clever and necessary. Title font
-          size scaling formula is elegant. Peak/low sparse series construction is
-          slightly verbose but clear.
+        comment: sys.path fixup handles naming collision; sparse None-padded series
+          for markers is idiomatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via render_to_png() and plot-{THEME}.html
-          via render(). Both outputs required for interactive pygal — correctly generated.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (required for pygal
+          interactive)
     library_mastery:
       score: 7
       max: 10
@@ -275,27 +224,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly uses Style object for all theme tokens, per-series options
-          in chart.add() (fill, show_dots, stroke_style), x_labels for axis, value_formatter
-          and x_value_formatter for tooltip formatting, render_to_png and render()
-          for output. Expert-level pygal usage.
+        comment: Style object for all theming; render_to_png and render() correct;
+          formatters configured
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses cubic interpolation (interpolate=cubic, interpolation_precision=250)
-          and tooltip_fancy_mode=True with custom formatters — these are distinctly
-          pygal features. HTML interactive output is pygal's signature. However, the
-          peak/low markers using sparse None-padded series with stroke=False is an
-          awkward workaround rather than a distinctive pattern.
-  verdict: REJECTED
+        comment: Cubic interpolation with precision=250; tooltip_fancy_mode; sparse
+          None-value series; HTML interactive export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  patterns:
-  - manual-ticks
+  - hover-tooltips
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending

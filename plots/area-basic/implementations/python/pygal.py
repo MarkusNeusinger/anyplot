@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-basic: Basic Area Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-28
+Quality: 89/100 | Updated: 2026-05-28
 """
 
 import os
