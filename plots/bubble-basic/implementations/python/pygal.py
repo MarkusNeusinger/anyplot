@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-28
@@ -57,14 +57,24 @@ tier_colors = tuple(
     for i in range(n_tiers)
 )
 
+# ANYPLOT_AMBER marks the focal city (9th color in the series cycle)
+ANYPLOT_AMBER = "#DDCC77"
+style_colors = tier_colors + (ANYPLOT_AMBER,)
+
 # Tier labels serve as the size legend (green-space percentage ranges)
 bin_edges_pct = np.linspace(gs_min, gs_max, n_tiers + 1)
 tier_labels = [f"{bin_edges_pct[t]:.0f}–{bin_edges_pct[t + 1]:.0f}% green" for t in range(n_tiers)]
 
-# Group cities by green-space tier
+# Focal city: highest commute time — visual anchor for data storytelling
+focal_idx = int(np.argmax(commute_time))
+focal_tier = int(tier_bins[focal_idx])
+
+# Group cities by green-space tier, excluding focal city
 tier_data = {t: [] for t in range(n_tiers)}
 for i in range(n_cities):
-    t = tier_bins[i]
+    if i == focal_idx:
+        continue
+    t = int(tier_bins[i])
     tier_data[t].append(
         {
             "value": (round(float(population_density[i]), 1), round(float(commute_time[i]), 1)),
@@ -76,6 +86,18 @@ for i in range(n_cities):
         }
     )
 
+focal_point_data = [
+    {
+        "value": (round(float(population_density[focal_idx]), 1), round(float(commute_time[focal_idx]), 1)),
+        "label": (
+            f"★ Peak Congestion  |  "
+            f"Density: {population_density[focal_idx]:,.0f}/km²  |  "
+            f"Commute: {commute_time[focal_idx]:.1f} min  |  "
+            f"Green space: {green_space_pct[focal_idx]:.0f}%"
+        ),
+    }
+]
+
 # Style — theme-adaptive, anyplot sizing
 custom_style = Style(
     background=PAGE_BG,
@@ -83,7 +105,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=tier_colors,
+    colors=style_colors,
     opacity=0.70,
     opacity_hover=0.95,
     title_font_size=66,
@@ -116,19 +138,22 @@ chart = pygal.XY(
     show_y_guides=True,
     x_value_formatter=lambda x: f"{x:,.0f}",
     value_formatter=lambda x: f"{x:.1f}",
-    margin_top=40,
-    margin_bottom=150,
-    margin_left=30,
-    margin_right=30,
+    margin_top=80,
+    margin_bottom=200,
+    margin_left=100,
+    margin_right=80,
     tooltip_border_radius=8,
     tooltip_fancy_mode=True,
     print_values=False,
     truncate_legend=30,
-    spacing=20,
+    spacing=30,
 )
 
 for t in range(n_tiers):
     chart.add(tier_labels[t], tier_data[t] if tier_data[t] else [], dots_size=tier_sizes[t])
+
+# Focal city rendered last in ANYPLOT_AMBER — stands out as a visual anchor
+chart.add("★ Peak Congestion", focal_point_data, dots_size=tier_sizes[focal_tier] + 8)
 
 # Save
 chart.render_to_file(f"plot-{THEME}.html")
