@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: pie-basic
 created: '2025-12-23T00:36:17Z'
-updated: '2026-05-28T11:46:24Z'
+updated: '2026-05-28T11:58:11Z'
 generated_by: claude-sonnet
 workflow_run: 26572005715
 issue: 678
@@ -15,34 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 quality_score: 88
 review:
   strengths:
-  - 'Excellent semantic color choice: ANYPLOT_MUTED for ''Others'' is exactly the
-    right semantic anchor for a rest/other category'
-  - Full theme adaptation with all chrome tokens (title, subtitle, legend title, legend
-    text, legend background, plot background) correctly switching between light/dark
-  - Storytelling subtitle paired with exploded OPPO slice creates a clear narrative
-    focal point
-  - OPPO (smallest slice) is correctly identified and exploded per spec requirements
-  - Flat, deterministic, well-structured code with no unnecessary complexity
+  - 'Perfect palette compliance: anyplot canonical order, theme-adaptive muted for
+    Others rest category, correct backgrounds in both themes'
+  - 'All four spec requirements met precisely: percentage labels, distinct colors,
+    legend, exploded smallest slice (OPPO)'
+  - 'Genuine data storytelling: subtitle + exploded slice + muted Others creates a
+    clear, viewer-guided narrative'
+  - Correct square canvas (2400x2400) appropriate for symmetric pie chart; all text
+    explicitly sized
+  - 'letsplot-distinctive features used well: layer_tooltips with formatted lines,
+    layer_labels, interactive HTML export'
   weaknesses:
-  - 'DE-01/DE-02: Design is functional and correct but not visually distinctive —
-    no typographic refinements or additional polish beyond standard void theme'
-  - 'VQ-01: Subtitle size=9 is at the minimum; consider bumping to 10-11 for better
-    scalability on smaller display sizes'
-  - 'LM-02: Could leverage more letsplot-specific capabilities (e.g., custom tooltip
-    formatting in the HTML export, or additional layer styling using letsplot-specific
-    theme elements)'
+  - 'Percentage label text color inside slices is not explicitly set via a theme token
+    — relies on lets-plot auto-contrast. For mid-luminance fills (ochre #BD8233),
+    auto-contrast may produce inconsistent readability across themes. Add .color(INK)
+    or .color(PAGE_BG) to layer_labels to explicitly control label contrast.'
+  - 'DE-02 visual refinement limited: spacer and stroke are good, but legend frame
+    could use tighter spacing to pie and a more deliberate border color using INK_SOFT
+    in both themes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "pie-basic · python · letsplot · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT muted text, readable at size=9. Legend "Brand" title in INK, legend labels in INK_SOFT, both readable.
-      Data: Apple (brand green #009E73, 23.1%), Samsung (lavender #C475FD, 19.4%), Xiaomi (blue #4467A3, 13.7%), OPPO (ochre #BD8233, 8.8%), Others (ANYPLOT_MUTED grey, 35.0%). First series correctly #009E73. Percentage labels as white text on slices, clearly visible.
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "pie-basic · python · letsplot · anyplot.ai" in bold dark text; subtitle and caption visible in secondary ink. Legend "Brand" with company names clearly readable.
+      Data: Apple=green #009E73, Samsung=lavender #C475FD, Xiaomi=blue #4467A3, OPPO=ochre #BD8233, Others=muted gray. OPPO slice slightly exploded. Percentage labels inside all slices visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title in light text (#F0EFE8), clearly readable. Subtitle in #B8B7B0 muted light text, readable. Legend uses elevated dark background (#242420) with lighter text. No dark-on-dark failures observed.
-      Data: All 5 slice colors identical to light render — Apple green, Samsung lavender, Xiaomi blue, OPPO ochre, Others muted grey. Data colors confirmed theme-independent.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title, subtitle, caption, and legend text all rendered in light ink. Legend background appears as elevated dark surface (#242420). No dark-on-dark failures observed.
+      Data: Colors identical to light render — green Apple, lavender Samsung, blue Xiaomi, ochre OPPO, muted gray Others. OPPO slice remains exploded. Percentage labels remain readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -53,47 +55,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; subtitle at size=9 is at minimum
-          but legible
+        comment: All sizes explicitly set; minor deduction for auto-contrast on slice
+          labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No element or text collisions in either render
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 slices clearly distinguishable with distinct colors
+        comment: All slices and percentage labels clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; no red-green as sole signal
+        comment: anyplot CVD-safe palette, adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct square 2400x2400 canvas; well-proportioned layout with generous
-          margins
+        comment: Correct 2400x2400 square canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for pie; title matches required format; subtitle
-          is descriptive
+        comment: Pie chart with proper title, subtitle, and caption
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical palette order, ANYPLOT_MUTED for
-          Others, correct backgrounds'
+        comment: anyplot canonical order, muted for Others, correct backgrounds both
+          themes
     design_excellence:
       score: 12
       max: 20
@@ -103,22 +103,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic ANYPLOT_MUTED for Others, stroke matching PAGE_BG, informative
-          subtitle — above default
+        comment: 'Above defaults: exploded slice, muted Others, narrative subtitle,
+          legend elevation'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: theme_void appropriate for pie; elevated legend background; plot_margin
-          adds breathing room
+        comment: theme_void appropriate; spacer/stroke polish; above default but theme_void
+          is expected
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle names key insight; exploded OPPO slice creates clear visual
-          focal point on smallest category
+        comment: Subtitle + exploded OPPO + muted Others creates clear viewer-guided
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic pie chart using geom_pie
+        comment: Correct pie chart via geom_pie
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Percentage labels, distinct colors, legend, exploded smallest slice
-          — all present
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: slice=share, fill=company, 5 companies with correct values summing
-          to 100%
+        comment: Slice sizes correctly proportional to share values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; Brand legend with all category
-          labels
+        comment: Title format correct; legend labeled Brand with company names
     data_quality:
       score: 15
       max: 15
@@ -159,22 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All pie chart aspects demonstrated: proportional slices, labels,
-          legend, color coding, emphasis'
+        comment: 'All pie chart features: proportional slices, labels, legend, exploded
+          slice, rest category'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global smartphone market share (2024) — realistic, neutral, verifiable
-          data
+        comment: Global smartphone market share 2024 — real, neutral, recognizable
+          brands
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 categories (within 3-8 spec range); plausible market share percentages
-          summing to 100%
+        comment: Values sum exactly to 100.0%; proportions match known 2024 market
+          data
     code_quality:
       score: 10
       max: 10
@@ -190,25 +188,25 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data — no random elements
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used; no extraneous imports
+        comment: All 14 lets_plot symbols and os are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; layer_labels format chain is clean
+        comment: Clean and concise; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -218,19 +216,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar with geom_pie, scale_fill_manual, theme_void;
-          layer_labels is idiomatic letsplot
+        comment: Idiomatic ggplot grammar with letsplot-specific geom_pie params,
+          layer_labels, scale_fill_manual
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_labels chained API, spacer_width/spacer_color, stroke_side='both',
-          explode as data aesthetic
+        comment: layer_tooltips with rich formatting, layer_labels, HTML export, explode
+          aesthetic, spacer_width/stroke_side
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns: []
   dataprep: []

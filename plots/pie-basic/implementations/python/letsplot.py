@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
 Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-28
 """
 
 import os
