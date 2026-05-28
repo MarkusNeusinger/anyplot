@@ -21,7 +21,7 @@ review:
     caption bumped to INK + bold to match the Peak 1/2 labels'' visual weight.'
   - Faithful raincloud anatomy in horizontal orientation — cloud above, box on baseline,
     rain below — exactly matching the spec's mandatory geometry.
-  - 'Anyplot palette applied correctly: Control = #009E73 (first series), with semantic
+  - 'Imprint palette applied correctly: Control = #009E73 (first series), with semantic
     red #AE3030 reserved for the median tick + median value labels.'
   - 'Theme-adaptive chrome flips cleanly: data hues identical between light and dark
     renders, only background/text/box-fill flip.'
@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette CVD-safe; semantic red reserved for median signal
+        comment: Imprint palette CVD-safe; semantic red reserved for median signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4

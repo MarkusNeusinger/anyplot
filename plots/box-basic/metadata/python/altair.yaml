@@ -38,7 +38,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
       Chrome: Title "box-basic · python · altair · anyplot.ai" is bold, dark ink, left-aligned, ~40-45% canvas width — readable. X-axis label "Department" and Y-axis label "Salary (USD)" both dark ink, clearly readable. Tick labels in dollar format ($40,000–$140,000) are readable. Subtle grid lines at 15% opacity.
-      Data: Engineering=#009E73 (green), Marketing=#C475FD (lavender), Sales=#4467A3 (blue), HR=#BD8233 (ochre), Finance=#AE3030 (matte red) — canonical anyplot palette order. White median lines clearly visible in all 5 boxes. Outliers as open circles: Marketing (3), Sales (1 high ~$138k), Engineering (1 low ~$57k), HR (1 low ~$35k). A small green annotation "highest median $..." appears near the top of the Engineering column at y≈138,000 — present but very small at fontSize=10.
+      Data: Engineering=#009E73 (green), Marketing=#C475FD (lavender), Sales=#4467A3 (blue), HR=#BD8233 (ochre), Finance=#AE3030 (matte red) — canonical Imprint palette order. White median lines clearly visible in all 5 boxes. Outliers as open circles: Marketing (3), Sales (1 high ~$138k), Engineering (1 low ~$57k), HR (1 low ~$35k). A small green annotation "highest median $..." appears near the top of the Engineering column at y≈138,000 — present but very small at fontSize=10.
       Legibility verdict: PASS — all primary text (title, axis labels, tick labels) clearly readable; annotation small but not a primary element.
 
     Dark render (plot-dark.png):
@@ -107,7 +107,7 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional polish with custom anyplot palette, white median stroke
+        comment: Professional polish with custom Imprint palette, white median stroke
           for contrast, data annotation adding focal interest. Above baseline.
       - id: DE-02
         name: Visual Refinement

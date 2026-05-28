@@ -97,7 +97,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Uses #B71D27 (anyplot palette pos 3) — correct semantic exception
+        comment: 'Uses #B71D27 (Imprint palette pos 3) — correct semantic exception
           for financial loss. Backgrounds and chrome correct in both themes.'
     design_excellence:
       score: 13

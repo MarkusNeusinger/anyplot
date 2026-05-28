@@ -21,7 +21,7 @@ review:
   - 'Smart outlier display: fliersize=0 paired with a semi-transparent stripplot (alpha=0.25,
     jitter=0.2) shows both the box summary and full raw-data distribution simultaneously
     — superior to default flier rendering'
-  - Correct anyplot palette applied in canonical order (#009E73 first), no legend
+  - Correct Imprint palette applied in canonical order (#009E73 first), no legend
     needed since color maps to x-axis categories, clean despined layout
   - Full theme-adaptive chrome with all tokens (INK, INK_SOFT, PAGE_BG) threaded to
     every element including tick_params colors — both renders are clean and readable
@@ -44,7 +44,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), clearly not pure white — correct anyplot surface.
       Chrome: Title "box-basic · python · seaborn · anyplot.ai" at fontsize 12, dark ink (#1A1A17), spans ~68% of plot width — well-proportioned. X-axis label "City Zone" and Y-axis label "PM2.5 (ug/m3)" in dark ink at 10pt, clearly readable. Tick labels at 8pt in INK_SOFT (#4A4A44) — visible. Top and right spines removed; only left and bottom L-frame visible. Subtle horizontal y-axis grid lines (alpha=0.15).
-      Data: 5 categories (Park, Residential, Commercial, Downtown, Industrial) colored green (#009E73), purple (#C475FD), blue (#4467A3), ochre (#BD8233), red (#AE3030) — anyplot palette positions 1–5 in canonical order. Boxes show clear distribution spread. Park is narrow and low (~5–15 ug/m3), Industrial is wide and high (~28–88 ug/m3) with a heavy right-skewed tail. Stripplot overlay (size=3, alpha=0.25) visible as faint dots within each category. Industrial zone has high-value outliers clearly visible near y=90–97.
+      Data: 5 categories (Park, Residential, Commercial, Downtown, Industrial) colored green (#009E73), purple (#C475FD), blue (#4467A3), ochre (#BD8233), red (#AE3030) — Imprint palette positions 1–5 in canonical order. Boxes show clear distribution spread. Park is narrow and low (~5–15 ug/m3), Industrial is wide and high (~28–88 ug/m3) with a heavy right-skewed tail. Stripplot overlay (size=3, alpha=0.25) visible as faint dots within each category. Industrial zone has high-value outliers clearly visible near y=90–97.
       Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; categories distinguished by both position
+        comment: CVD-safe Imprint palette; categories distinguished by both position
           and color
       - id: VQ-05
         name: Layout & Canvas
@@ -113,7 +113,7 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: custom anyplot palette, professional domain (PM2.5
+        comment: 'Above default: custom Imprint palette, professional domain (PM2.5
           air quality), no legend, clean minimal aesthetic — between well-configured
           (4) and strong design (6)'
       - id: DE-02

@@ -26,7 +26,7 @@ review:
   - Departments ordered by ascending median salary (Support to Engineering) making
     the progressive hierarchy immediately readable
   - Diamond median markers via stat_summary(geom='point', shape='D') add precision
-    beyond the standard box, and the anyplot palette is applied in canonical order
+    beyond the standard box, and the Imprint palette is applied in canonical order
   weaknesses:
   - Annotation text at size=4.0 and 3.8 (plotnine mm units ≈ 11–11.4pt) is readable
     at 3200px full resolution but borderline at mobile scaling (~400px width); increase
@@ -43,7 +43,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white
       Chrome: Title "box-basic · python · plotnine · anyplot.ai" in dark ink at 12pt, clearly visible at top. X-axis label "Department" and Y-axis label "Salary ($)" both dark and readable at 10pt. Tick labels (e.g. "$20k", "$40k") in INK_SOFT at 8pt — all legible. Subtle horizontal-only grid lines at ~15% opacity.
-      Data: 5 box plots in anyplot palette canonical order: Support=green (#009E73), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Research=ochre (#BD8233), Engineering=muted-red (#AE3030). Each box has a dark diamond median marker. Sales shows 3-4 high outliers near $130-140k; Research shows one low outlier near $18k. Bracket annotation at top: "Engineering earns $39k more than Support" with segment ticks. Label box "Senior hires\nabove market rate" with connector to Sales outlier cluster. Italic text "Narrow spread\n(σ ≈ $8k)" below Support box at $24k.
+      Data: 5 box plots in Imprint palette canonical order: Support=green (#009E73), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Research=ochre (#BD8233), Engineering=muted-red (#AE3030). Each box has a dark diamond median marker. Sales shows 3-4 high outliers near $130-140k; Research shows one low outlier near $18k. Bracket annotation at top: "Engineering earns $39k more than Support" with segment ticks. Label box "Senior hires\nabove market rate" with connector to Sales outlier cluster. Italic text "Narrow spread\n(σ ≈ $8k)" below Support box at $24k.
       Legibility verdict: PASS — all text is readable against light background; annotation text (size 4.0, 3.8) is borderline small at mobile scale but readable at full resolution.
 
     Dark render (plot-dark.png):
@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe. Five categories use 5 distinct hue families
+        comment: Imprint palette is CVD-safe. Five categories use 5 distinct hue families
           with adequate ΔE separation.
       - id: VQ-05
         name: Layout & Canvas
@@ -105,7 +105,7 @@ review:
         max: 2
         passed: true
         comment: 'First series (Support) = #009E73. Five categories use canonical
-          anyplot palette positions 1-5. Backgrounds #FAF8F1 light / #1A1A17 dark.
+          Imprint palette positions 1-5. Backgrounds #FAF8F1 light / #1A1A17 dark.
           Both themes correct.'
     design_excellence:
       score: 13

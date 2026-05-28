@@ -43,7 +43,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID_COLOR = "#4A4A4433" if THEME == "light" else "#B8B7B033"
 
-# anyplot palette — semantic exception: loss/down → red, recovery → green
+# Imprint palette — semantic exception: loss/down → red, recovery → green
 DRAWDOWN_COLOR = "#AE3030"  # palette pos 3
 RECOVERY_COLOR = "#009E73"  # palette pos 1
 

@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three temperature colors from anyplot palette; size redundant
+        comment: All three temperature colors from Imprint palette; size redundant
           encoding aids CVD accessibility
       - id: VQ-05
         name: Layout & Canvas
@@ -104,7 +104,7 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: 'Data colors use anyplot palette with valid semantic exception (temp:
+        comment: 'Data colors use Imprint palette with valid semantic exception (temp:
           blue/green/red). BUT light plot_background is #eae6df instead of mandated
           #FAF8F1 — minor deviation for geographic map metaphor'
     design_excellence:

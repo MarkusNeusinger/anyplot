@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 PCT_COLOR = "#FFFDF6" if THEME == "light" else "#F0EFE8"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — diversified balanced fund allocation
 PORTFOLIO_TOTAL = 1_000_000
@@ -33,7 +33,7 @@ categories = {
 
 cat_labels = list(categories.keys())
 cat_weights = [sum(assets.values()) for assets in categories.values()]
-cat_colors = ANYPLOT_PALETTE[:4]
+cat_colors = IMPRINT_PALETTE[:4]
 
 holdings = []
 holding_weights = []

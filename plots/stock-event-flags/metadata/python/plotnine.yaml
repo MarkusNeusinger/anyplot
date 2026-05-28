@@ -18,7 +18,7 @@ review:
   - Clean layered grammar-of-graphics composition — price line, LOWESS trend, dashed
     reference lines, connector segments, flag markers, and text labels all stack elegantly
     without visual conflicts
-  - 'Correct anyplot palette in canonical order with full semantic color assignment:
+  - 'Correct Imprint palette in canonical order with full semantic color assignment:
     Earnings=#009E73, Dividend=#C475FD, News=#4467A3, Split=#BD8233'
   - Redundant encoding with distinct marker shapes (square/diamond/triangle/circle)
     per event type plus size hierarchy (Earnings markers larger) is a strong accessibility
@@ -93,7 +93,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette with redundant shape encoding; CVD-safe
+        comment: Imprint palette with redundant shape encoding; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3

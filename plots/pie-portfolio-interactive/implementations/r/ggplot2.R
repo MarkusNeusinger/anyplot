@@ -15,7 +15,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
-ANYPLOT_PALETTE <- c(
+IMPRINT_PALETTE <- c(
   "#009E73",  # 1 — Equities (brand green)
   "#C475FD",  # 2 — Fixed Income (lavender)
   "#4467A3",  # 3 — Alternatives (blue)
@@ -24,7 +24,7 @@ ANYPLOT_PALETTE <- c(
 
 # Portfolio holdings ordered by asset class
 cat_levels <- c("Equities", "Fixed Income", "Alternatives", "Cash")
-cat_colors <- setNames(ANYPLOT_PALETTE, cat_levels)
+cat_colors <- setNames(IMPRINT_PALETTE, cat_levels)
 
 holdings <- data.frame(
   holding  = c(

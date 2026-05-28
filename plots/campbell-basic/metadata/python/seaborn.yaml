@@ -47,7 +47,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct anyplot light surface
       Chrome: Title "campbell-basic · python · seaborn · anyplot.ai" in dark ink at top — fully readable. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in dark ink, both with units. Tick labels in dark secondary ink, 8pt — readable. L-shaped spine (top/right removed). Subtle grid at low alpha.
-      Data: Five natural frequency curves in anyplot palette order — 1st Bending (#009E73 green, nearly flat ~15–26 Hz), 2nd Bending (#C475FD lavender, declining ~44–28 Hz), 1st Torsional (#4467A3 blue, rising ~52–73 Hz), Axial (#BD8233 ochre, nearly flat ~68–63 Hz), 3rd Bending (#AE3030 red, rising ~82–100 Hz). Three dashed gray engine order lines (3x, 2x, 1x) with rounded box labels. Amber (#DDCC77) shaded band from 2800–4200 RPM with "Operating Range" annotation. One large red circle marks the critical speed in the operating range (~4000 RPM / 65 Hz); several small muted gray circles mark out-of-range critical speeds. Mode labels on right edge outside the axis frame, each colored to match its curve.
+      Data: Five natural frequency curves in Imprint palette order — 1st Bending (#009E73 green, nearly flat ~15–26 Hz), 2nd Bending (#C475FD lavender, declining ~44–28 Hz), 1st Torsional (#4467A3 blue, rising ~52–73 Hz), Axial (#BD8233 ochre, nearly flat ~68–63 Hz), 3rd Bending (#AE3030 red, rising ~82–100 Hz). Three dashed gray engine order lines (3x, 2x, 1x) with rounded box labels. Amber (#DDCC77) shaded band from 2800–4200 RPM with "Operating Range" annotation. One large red circle marks the critical speed in the operating range (~4000 RPM / 65 Hz); several small muted gray circles mark out-of-range critical speeds. Mode labels on right edge outside the axis frame, each colored to match its curve.
       Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
@@ -88,7 +88,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 5 anyplot palette colors span distinct hue families. Engine order
+        comment: 5 Imprint palette colors span distinct hue families. Engine order
           lines use INK_SOFT (gray), clearly distinct from colored mode curves. Red
           vs muted gray for critical speed status is distinguishable by both color
           and size.
@@ -112,7 +112,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series (1st Bending) = #009E73. Modes use anyplot palette
+        comment: 'First series (1st Bending) = #009E73. Modes use Imprint palette
           positions 1-5 in canonical order. Amber operating range uses #DDCC77 semantic
           anchor correctly. Backgrounds #FAF8F1 light / #1A1A17 dark. Theme chrome
           correct in both renders.'

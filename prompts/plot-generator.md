@@ -84,7 +84,7 @@ charts rendered by different engines defeat the point.
 - Different idiomatic API choice that plays to this library's strengths
 
 The shared anchors are the **spec**, the **library prompt**, and the **base style
-guide** (anyplot palette, theme-adaptive chrome). Everything else is this
+guide** (Imprint palette, theme-adaptive chrome). Everything else is this
 implementation's own decision.
 
 ## Output
@@ -107,7 +107,7 @@ THEME       = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND       = "#009E73"  # anyplot palette position 1 — ALWAYS first series
+BRAND       = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 
 # Data
 np.random.seed(42)
@@ -468,7 +468,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 **Aesthetic requirements from style guide:**
 - Follow minimalism: every element must earn its place
 - Remove top and right spines by default
-- **Use anyplot palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. Plus 3 semantic anchors outside the pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest). Never invent custom hexes for categorical data.
+- **Use the Imprint palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. Plus 3 semantic anchors outside the pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest). Never invent custom hexes for categorical data. When referring to the palette in code comments, metadata, or review notes, always call it **Imprint** (not "anyplot palette").
 - Continuous data: `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark). No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Color restraint: 2-3 colors ideal, 4-5 max. For n≥5, add redundant encoding (marker shape, linestyle, label) — see "Series count guidance" in default-style-guide.md.
 - **Theme-adaptive chrome** (background, text, grid, spines, legend, annotations) — read `ANYPLOT_THEME` from env, use the token palette from `prompts/default-style-guide.md`. Plot background: `#FAF8F1` light / `#1A1A17` dark. Never pure white or black.

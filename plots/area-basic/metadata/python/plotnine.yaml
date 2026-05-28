@@ -84,7 +84,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; adequate contrast between green area and
+        comment: CVD-safe Imprint palette; adequate contrast between green area and
           blue trend line.
       - id: VQ-05
         name: Layout & Canvas
@@ -105,7 +105,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. LOWESS uses #4467A3 (anyplot palette
+        comment: 'First series #009E73 correct. LOWESS uses #4467A3 (Imprint palette
           pos 3). Backgrounds #FAF8F1 / #1A1A17. All theme chrome tokens correct in
           both renders.'
     design_excellence:

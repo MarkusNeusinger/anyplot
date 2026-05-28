@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Correct anyplot palette in canonical order for all 4 series (AAPL=#009E73, GOOGL=#9418DB,
+  - Correct Imprint palette in canonical order for all 4 series (AAPL=#009E73, GOOGL=#9418DB,
     MSFT=#B71D27, SPY=#16B8F3)
   - 'Full theme-adaptive chrome: backgrounds, text, grid, legend frame, and annotation
     all flip correctly between light and dark renders'
@@ -75,14 +75,14 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 lines clearly visible with distinct anyplot palette colors; linewidth
+        comment: 4 lines clearly visible with distinct Imprint palette colors; linewidth
           2.0-3.0 appropriate for 252 trading days; reference line at 100 visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-optimized; 4 series distinguishable by hue,
+        comment: Imprint palette is CVD-optimized; 4 series distinguishable by hue,
           luminance, and trajectory — not relying on red-green alone.
       - id: VQ-05
         name: Layout & Canvas

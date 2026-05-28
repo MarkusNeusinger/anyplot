@@ -14,7 +14,7 @@ const THEME       = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
@@ -64,11 +64,11 @@ ax = Axis(
 
 # Area fill (semi-transparent)
 band!(ax, hours, zeros(n), cpu_usage;
-    color = (ANYPLOT_PALETTE[1], 0.35))
+    color = (IMPRINT_PALETTE[1], 0.35))
 
 # Line on top
 lines!(ax, hours, cpu_usage;
-    color     = ANYPLOT_PALETTE[1],
+    color     = IMPRINT_PALETTE[1],
     linewidth = 2.5)
 
 # Day boundary — vertical dashed separator at hour 24

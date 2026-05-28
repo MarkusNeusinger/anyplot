@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. Redundant encoding via line styles and
+        comment: Imprint palette is CVD-safe. Redundant encoding via line styles and
           weights ensures distinguishability beyond color alone.
       - id: VQ-05
         name: Layout & Canvas

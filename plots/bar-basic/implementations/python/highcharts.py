@@ -28,8 +28,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 ANYPLOT_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 # Data — product sales by category, sorted descending
 categories = ["Electronics", "Clothing", "Home & Garden", "Sports", "Books", "Toys"]

@@ -41,7 +41,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface. No pure white.
       Chrome: Title "pie-portfolio-interactive · python · plotly · anyplot.ai" in dark INK (#1A1A17), clear and fully visible at ~60% canvas width. Center annotation "ESG Portfolio" in bold dark INK at fontsize 22 — strong focal point. Toggle buttons ("All Holdings" / "By Category") in ELEVATED_BG with INK_SOFT border — readable. Legend at bottom with ELEVATED_BG box, INK_SOFT border, INK_SOFT text for 4 category entries — readable.
-      Data: Donut chart with 11 slices. Colors — Sustainable Equities: #009E73 (brand green), Technology: #4467A3 (blue), Green Fixed Income: #C475FD (lavender), Real Assets: #BD8233 (ochre). All from anyplot palette with semantic mapping. First series #009E73 PASS. White separators (PAGE_BG, width=3) between segments add clean definition. Percentage labels inside slices all visible.
+      Data: Donut chart with 11 slices. Colors — Sustainable Equities: #009E73 (brand green), Technology: #4467A3 (blue), Green Fixed Income: #C475FD (lavender), Real Assets: #BD8233 (ochre). All from Imprint palette with semantic mapping. First series #009E73 PASS. White separators (PAGE_BG, width=3) between segments add clean definition. Percentage labels inside slices all visible.
       Legibility verdict: PASS — all title, annotation, toggle, and legend text clearly readable against #FAF8F1 background. No light-on-light issues.
 
     Dark render (plot-dark.png):
@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. Four distinct hue families used. White
+        comment: Imprint palette is CVD-safe. Four distinct hue families used. White
           separator lines add contrast between adjacent same-family segments.
       - id: VQ-05
         name: Layout & Canvas
@@ -103,7 +103,7 @@ review:
         max: 2
         passed: true
         comment: 'First category (Sustainable Equities) → #009E73 PASS. Semantic exception
-          correctly applied: all 4 colors from anyplot palette. Background #FAF8F1/#1A1A17
+          correctly applied: all 4 colors from Imprint palette. Background #FAF8F1/#1A1A17
           PASS. Chrome theme-adaptive PASS.'
     design_excellence:
       score: 13

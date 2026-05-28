@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Correct anyplot palette in canonical order (Python=#009E73 first, then lavender,
+  - Correct Imprint palette in canonical order (Python=#009E73 first, then lavender,
     blue, ochre, red) with all colors identical across light/dark renders
   - Slice explosion implemented via Makie's translate! scene-graph API — idiomatic,
     not a matplotlib-style explode= argument
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; white labels on colored slices provide
+        comment: Imprint palette is CVD-safe; white labels on colored slices provide
           adequate contrast; PAGE_BG stroke separates slices
       - id: VQ-05
         name: Layout & Canvas

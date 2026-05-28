@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# anyplot palette
+# Imprint palette
 COLOR_PRICE = "#009E73"  # position 1 — brand green
 COLOR_VOLUME = "#C475FD"  # position 2
 COLOR_RSI = "#AE3030"  # position 3

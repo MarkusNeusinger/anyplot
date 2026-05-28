@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_FILL = "#E8E4DB" if THEME == "light" else "#2A2A25"
 MAP_BORDER = "#B0AC9F" if THEME == "light" else "#4A4A44"
 
-# anyplot palette for the four store categories
+# Imprint palette for the four store categories
 CATEGORY_COLORS = {
     "Grocery": "#009E73",  # position 1 — brand green
     "Electronics": "#C475FD",  # position 2 — purple

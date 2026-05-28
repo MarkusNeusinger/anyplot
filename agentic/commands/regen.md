@@ -107,9 +107,9 @@ Concrete signals of copying (when the spec is silent on them):
 - Same example domain (web traffic vs. stock prices vs. weather is a real, distinguishing choice)
 - Same aspect ratio outside the spec's allowed range hint
 - Same visual variant when the spec lists multiple (e.g. plain line vs. filled-area vs. min/max-highlighted)
-- Same chrome / annotation choices beyond the mandated anyplot palette + theme palette
+- Same chrome / annotation choices beyond the mandated Imprint palette + theme palette
 
-Data colors (anyplot palette positions 1–7) are mandated and **don't** count as copying — that's the style guide.
+Data colors (Imprint palette positions 1–7) are mandated and **don't** count as copying — that's the style guide.
 
 **For each cluster of identical impls, flag only ONE library, not all of them.** When several libraries share
 the same data formula or scenario, switching just one breaks the identity cleanly — the others keep their
@@ -227,7 +227,7 @@ chart.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")  # if interactive lib
 ```
 
-Data colors (anyplot palette positions 1–7) **must be identical across both themes**; only chrome flips.
+Data colors (Imprint palette positions 1–7) **must be identical across both themes**; only chrome flips.
 
 If the spec itself genuinely needs improvement, edit `plots/{SPEC_ID}/specification.md` and note it in the log entry
 in step 2g.
@@ -320,7 +320,7 @@ plots/$SPEC_ID/implementations/python/.regen-preview/$LIBRARY/plot-light.png
 plots/$SPEC_ID/implementations/python/.regen-preview/$LIBRARY/plot-dark.png
 ```
 
-Cross-check both: data shapes/positions/colors must be identical (anyplot palette positions 1–7), only the chrome
+Cross-check both: data shapes/positions/colors must be identical (Imprint palette positions 1–7), only the chrome
 (background, text, grid, legend box) flips. If a render breaks (wrong-theme text, missing data, cut-off
 content), that's a real defect — fix it before scoring.
 

@@ -22,7 +22,7 @@ processors = ["Visa", "Mastercard", "PayPal", "Amex", "Apple Pay", "Others"]
 market_share = [38, 26, 18, 7, 5, 6]
 rankings = [1, 2, 3, 4, 5, 6]
 
-# Colors - anyplot palette positions 1-6
+# Colors - Imprint palette positions 1-6
 colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Pure pie chart (no donut hole — per spec)

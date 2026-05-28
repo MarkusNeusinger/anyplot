@@ -78,7 +78,7 @@ opt_df = pd.DataFrame({"x": [optimal_complexity + 0.25], "y": [optimal_error + 0
 # Formula annotation
 formula_df = pd.DataFrame({"x": [5.25], "y": [2.80], "label": ["Total Error = Bias² + Variance + Irreducible Error"]})
 
-# anyplot palette: Bias²=pos1 (green), Variance=pos2 (purple), Irred.=pos3 (blue), Total=red (semantic error)
+# Imprint palette: Bias²=pos1 (green), Variance=pos2 (purple), Irred.=pos3 (blue), Total=red (semantic error)
 color_values = ["#009E73", "#C475FD", "#4467A3", "#AE3030"]
 linetype_values = ["dashed", "longdash", "dotted", "solid"]
 

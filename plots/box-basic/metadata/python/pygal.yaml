@@ -22,7 +22,7 @@ review:
     department and the salary gap, creating genuine narrative value
   - Comma-formatted y-axis tick labels via SVG regex (80,000 vs 80000) adds professional
     polish
-  - 'Perfect anyplot palette compliance: Engineering=#009E73 first, canonical order
+  - 'Perfect Imprint palette compliance: Engineering=#009E73 first, canonical order
     through HR, correct #FAF8F1/#1A1A17 backgrounds, theme-adaptive chrome in both
     renders'
   - 'Complete spec compliance: Tukey whiskers, visible outlier dots, median line,
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 5-color anyplot palette is CVD-safe by design with max-min delta-E
+        comment: 5-color Imprint palette is CVD-safe by design with max-min delta-E
           optimization.
       - id: VQ-05
         name: Layout & Canvas

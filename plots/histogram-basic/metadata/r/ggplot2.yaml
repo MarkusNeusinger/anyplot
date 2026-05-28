@@ -19,7 +19,7 @@ review:
     computation — idiomatic ggplot2 multi-layer grammar technique that avoids geom_density()'s
     density-scale limitation
   - Median reference line + annotation creates a clear visual focal point; ochre (#BD8233)
-    as a semantic 'reference' color is a well-reasoned anyplot palette choice
+    as a semantic 'reference' color is a well-reasoned Imprint palette choice
   - 'Both themes render correctly: warm off-white (#FAF8F1) in light, near-black (#1A1A17)
     in dark, with all chrome (title, axis labels, ticks, grid, density line) adapting
     properly via INK/INK_SOFT tokens'

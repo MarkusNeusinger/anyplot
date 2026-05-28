@@ -18,7 +18,7 @@ review:
   - Spec-faithful raincloud composition built from Makie primitives — cloud above
     baseline (band! + lines! envelope), box centered on baseline (poly! + Rect2f),
     and rain jittered below (scatter!) — visual metaphor unambiguous in both themes.
-  - Anyplot palette in canonical order with brand green `#009E73` assigned to Baseline;
+  - Imprint palette in canonical order with brand green `#009E73` assigned to Baseline;
     PALETTE_BY_CAT keeps colors stable per category after the sort, so data colors
     are pixel-identical between light and dark renders.
   - 'Theme-adaptive chrome wired all the way through: PAGE_BG, INK, INK_SOFT, ELEVATED_BG
@@ -99,7 +99,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette (green/lavender/blue/ochre) is CVD-safe; box outline
+        comment: Imprint palette (green/lavender/blue/ochre) is CVD-safe; box outline
           and median tick provide contrast independent of hue.
       - id: VQ-05
         name: Layout & Canvas

@@ -525,8 +525,10 @@ export function PalettePage() {
   return (
     <>
       <Helmet>
-        <title>palette | anyplot.ai</title>
-        <meta name="description" content="The anyplot imprint palette — 8 colorblind-safe categorical hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia." />
+        <title>imprint palette | anyplot.ai</title>
+        <meta name="description" content="Imprint palette — 8 colorblind-safe categorical hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses." />
+        <meta property="og:title" content="imprint palette | anyplot.ai" />
+        <meta property="og:description" content="Imprint — a colorblind-safe categorical palette of 8 hues plus 3 semantic anchors. Used by every plot on anyplot.ai." />
         <link rel="canonical" href="https://anyplot.ai/palette" />
       </Helmet>
 

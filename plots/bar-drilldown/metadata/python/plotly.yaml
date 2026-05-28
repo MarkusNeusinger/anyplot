@@ -40,7 +40,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white.
       Chrome: Title "2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai" at top center in dark ink, clearly readable. Axis labels "Quarter" (x) and "Revenue ($K)" (y) in dark ink at appropriate size. Tick labels in muted dark ink (INK_SOFT). Dropdown widget top-left with "▶ 2024 Annual — All Quarters" in matching theme colors.
-      Data: Four bars using anyplot palette — Q1 green (#009E73), Q2 purple (#9418DB), Q3 red (#B71D27), Q4 sky blue (#16B8F3). Q1–Q3 rendered at 0.7 opacity, Q4 at full opacity emphasizing holiday peak. Value labels ($1.24M, $1.68M, $2.14M, $2.38M) above each bar. "★ Holiday Peak" annotation in Q4 blue color at upper right.
+      Data: Four bars using Imprint palette — Q1 green (#009E73), Q2 purple (#9418DB), Q3 red (#B71D27), Q4 sky blue (#16B8F3). Q1–Q3 rendered at 0.7 opacity, Q4 at full opacity emphasizing holiday peak. Value labels ($1.24M, $1.68M, $2.14M, $2.38M) above each bar. "★ Holiday Peak" annotation in Q4 blue color at upper right.
       Footer: "Click a quarter bar to drill into monthly detail · use the dropdown to navigate back" in muted ink — readable but small (size=10).
       Legibility verdict: PASS — all text readable, no light-on-light issues.
 
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is colorblind-safe. 4 colors with sufficient perceptual
+        comment: Imprint palette is colorblind-safe. 4 colors with sufficient perceptual
           contrast.
       - id: VQ-05
         name: Layout & Canvas

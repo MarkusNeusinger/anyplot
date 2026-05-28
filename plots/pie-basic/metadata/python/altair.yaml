@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 quality_score: 90
 review:
   strengths:
-  - 'Excellent anyplot palette compliance: 6 categories in canonical order, correct
+  - 'Excellent Imprint palette compliance: 6 categories in canonical order, correct
     theme-adaptive chrome in both renders'
   - 'Clever Altair-specific technique: radiusOffset + transform_filter split to implement
     exploded slice without manual coordinate math'
@@ -37,7 +37,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white
       Chrome: Title "pie-basic · python · altair · anyplot.ai" in dark ink, clearly readable. Subtitle "Global Cloud Infrastructure Market Share" in lighter ink. Legend "Provider" title in dark ink, labels in muted ink — all readable.
-      Data: 6 slices using anyplot palette in canonical order: AWS green (#009E73), Azure lavender (#C475FD), Google Cloud blue (#4467A3), Alibaba ochre (#BD8233), Oracle red (#AE3030), Others cyan (#2ABCCD). First series (AWS) correctly uses brand green. Percentage labels colored by slice (encoding override), positioned outside pie. AWS slice exploded with radiusOffset=25.
+      Data: 6 slices using Imprint palette in canonical order: AWS green (#009E73), Azure lavender (#C475FD), Google Cloud blue (#4467A3), Alibaba ochre (#BD8233), Oracle red (#AE3030), Others cyan (#2ABCCD). First series (AWS) correctly uses brand green. Percentage labels colored by slice (encoding override), positioned outside pie. AWS slice exploded with radiusOffset=25.
       Legibility verdict: PASS — all text readable against warm off-white background.
 
     Dark render (plot-dark.png):
@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; 6 distinct hues well-separated perceptually.
+        comment: Imprint palette is CVD-safe; 6 distinct hues well-separated perceptually.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

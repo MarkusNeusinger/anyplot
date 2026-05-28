@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 83
 review:
   strengths:
-  - Correct anyplot palette in canonical order with brand green (#009E73) as first
+  - Correct Imprint palette in canonical order with brand green (#009E73) as first
     series (Equities)
   - Theme-adaptive chrome fully threaded through titlecolor, labelcolor, backgroundcolor
     — no dark-on-dark failures in either render
@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used — colorblind-safe by design. No red-green as
+        comment: Imprint palette used — colorblind-safe by design. No red-green as
           sole signal.
       - id: VQ-05
         name: Layout & Canvas

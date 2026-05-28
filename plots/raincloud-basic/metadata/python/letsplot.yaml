@@ -25,7 +25,7 @@ review:
   - Theme-adaptive chrome wired through tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
     RULE) so both light (#FAF8F1) and dark (#1A1A17) renders are fully legible — no
     dark-on-dark or light-on-light failures, no pure black/white backgrounds.
-  - 'Canonical anyplot palette in canonical order: Control = #009E73 (brand green,
+  - 'Canonical Imprint palette in canonical order: Control = #009E73 (brand green,
     first series), Treatment A = #C475FD lavender, Treatment B = #4467A3 blue. Data
     colors are identical across light and dark — only chrome flips.'
   - 'Strong data storytelling: italic-gray annotations with arrows highlight Treatment

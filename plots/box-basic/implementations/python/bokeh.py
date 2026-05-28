@@ -33,7 +33,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — test scores across 4 classes with varying distributions
 np.random.seed(42)
@@ -96,7 +96,7 @@ p = figure(
 )
 
 # Boxes (q1–q3)
-cmap = factor_cmap("cat", palette=ANYPLOT_PALETTE[:4], factors=categories)
+cmap = factor_cmap("cat", palette=IMPRINT_PALETTE[:4], factors=categories)
 box_width = 0.7
 
 p.vbar(

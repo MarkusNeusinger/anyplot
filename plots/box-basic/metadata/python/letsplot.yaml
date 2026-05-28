@@ -42,7 +42,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
       Chrome: Title "box-basic · python · letsplot · anyplot.ai" bold dark text, clearly readable. Subtitle readable. Axis labels "Department" and "Annual Salary (USD)" dark and legible. Tick labels dark on light, clearly visible. Annotation text "Avg: $72,853 | Eng. +59% vs HR." is very small (size=3) and barely readable — marginally too small but technically present.
-      Data: Five box plots with anyplot palette colors: HR=ochre (#BD8233), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Finance=matte red (#AE3030), Engineering=green (#009E73). Ordered left-to-right by ascending median salary. Median labels bold inside each box. Outlier dots visible above whiskers. Dashed mean reference line.
+      Data: Five box plots with Imprint palette colors: HR=ochre (#BD8233), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Finance=matte red (#AE3030), Engineering=green (#009E73). Ordered left-to-right by ascending median salary. Median labels bold inside each box. Outlier dots visible above whiskers. Dashed mean reference line.
       Legibility verdict: PASS (primary text excellent; annotation text marginally too small)
 
     Dark render (plot-dark.png):
@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Five distinct anyplot palette hues; CVD-safe
+        comment: Five distinct Imprint palette hues; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4

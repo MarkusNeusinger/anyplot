@@ -24,7 +24,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Tile provider — switch here to try alternatives:
 #   {"type": "OpenStreetMap"}                — standard street map (default)
@@ -105,7 +105,7 @@ chart_config = {
         {
             "type": "mappoint",
             "name": "Cities",
-            "color": ANYPLOT_PALETTE[0],
+            "color": IMPRINT_PALETTE[0],
             "data": mappoint_data,
             "cursor": "pointer",
             "marker": {"symbol": "circle", "lineColor": PAGE_BG, "lineWidth": 2, "fillOpacity": 0.85},

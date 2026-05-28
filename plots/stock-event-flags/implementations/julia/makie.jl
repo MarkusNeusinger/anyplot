@@ -16,7 +16,7 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Anyplot palette positions 1→3 for event types; position 5 for negative reactions
+# Imprint palette positions 1→3 for event types; position 5 for negative reactions
 const COLOR_EARNINGS = colorant"#009E73"  # 1 — brand green (quarterly earnings)
 const COLOR_DIVIDEND = colorant"#C475FD"  # 2 — lavender   (dividend payments)
 const COLOR_NEWS     = colorant"#4467A3"  # 3 — blue        (analyst / news events)

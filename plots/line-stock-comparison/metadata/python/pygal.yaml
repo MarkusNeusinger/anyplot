@@ -19,7 +19,7 @@ review:
     legend, multi-series) implemented correctly
   - 'Excellent data storytelling: best-performer emphasis via stroke width, year-end
     returns in legend labels, dashed baseline at 100'
-  - Correct anyplot palette in canonical order with theme-adaptive chrome across both
+  - Correct Imprint palette in canonical order with theme-adaptive chrome across both
     renders
   - Idiomatic pygal usage with advanced label management (x_labels_major, monthly-only
     ticks)
@@ -72,7 +72,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette used; colorblind-safe
+        comment: Imprint palette used; colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3

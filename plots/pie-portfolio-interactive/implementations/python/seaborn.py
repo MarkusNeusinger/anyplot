@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — semantic: green=equities (growth), blue=fixed income (stability), ochre=alternatives
+# Imprint palette — semantic: green=equities (growth), blue=fixed income (stability), ochre=alternatives
 CATEGORY_BASES = {"Equities": "#009E73", "Fixed Income": "#4467A3", "Alternatives": "#BD8233"}
 
 sns.set_theme(

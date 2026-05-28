@@ -24,7 +24,7 @@ review:
     frequency, meaningful RSI overbought/oversold bands, and a moving average secondary
     series'
   - Canvas-compliant figsize=(8, 4.5), dpi=400 without bbox_inches='tight'
-  - Correct anyplot palette order with semantic color assignments
+  - Correct Imprint palette order with semantic color assignments
   weaknesses:
   - 'LM-02 is limited: seaborn''s contribution is mostly theming and line plots; the
     multi-panel crosshair mechanics are pure matplotlib (axvline, annotate, fill_between,
@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette CVD-safe. Data series distinguished by color and
+        comment: Imprint palette CVD-safe. Data series distinguished by color and
           panel position. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas

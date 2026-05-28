@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 81
 review:
   strengths:
-  - 'Correct anyplot palette in canonical order (green → lavender → blue → ochre →
+  - 'Correct Imprint palette in canonical order (green → lavender → blue → ochre →
     red → cyan) with #009E73 as first series'
   - Perfect spec compliance — percentage labels, legend, exploded largest slice (R&D),
     and distinct colors all implemented
@@ -43,7 +43,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
       Chrome: Title "pie-basic · python · plotnine · anyplot.ai" in dark ink, positioned top-left; all text clearly readable against the light background. Legend "Department" title and category labels in dark INK/INK_SOFT tones, readable. Legend box has a slightly elevated warm background with a subtle border.
-      Data: Six pie slices in anyplot palette order — R&D (#009E73 brand green, 32%, slightly exploded), Marketing (#C475FD lavender, 22%), Operations (#4467A3 blue, 18%), Human Resources (#BD8233 ochre, 13%), IT Infrastructure (#AE3030 red, 11%), Administration (#2ABCCD cyan, 4% — very thin sliver). Percentage labels in white text inside the five larger slices; Administration (4%) has no label by design.
+      Data: Six pie slices in Imprint palette order — R&D (#009E73 brand green, 32%, slightly exploded), Marketing (#C475FD lavender, 22%), Operations (#4467A3 blue, 18%), Human Resources (#BD8233 ochre, 13%), IT Infrastructure (#AE3030 red, 11%), Administration (#2ABCCD cyan, 4% — very thin sliver). Percentage labels in white text inside the five larger slices; Administration (4%) has no label by design.
       Legibility verdict: PASS — all text readable. Minor note: white text on lavender (22%) and ochre (13%) slices has borderline contrast (~2.5:1) but is visually readable at canvas size.
 
     Dark render (plot-dark.png):
@@ -85,7 +85,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette used. Six distinct hue families clearly
+        comment: CVD-safe Imprint palette used. Six distinct hue families clearly
           distinguishable. No red-green as sole distinguishing signal.
       - id: VQ-05
         name: Layout & Canvas

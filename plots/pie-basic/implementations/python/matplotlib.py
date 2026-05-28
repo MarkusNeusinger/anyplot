@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot categorical palette — positions 1→5
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — global cloud infrastructure market share (2024)
 companies = ["AWS", "Azure", "Google Cloud", "Alibaba Cloud", "Others"]
@@ -37,7 +37,7 @@ wedges, texts, autotexts = ax.pie(
     labels=companies,
     autopct="%1.1f%%",
     explode=explode,
-    colors=ANYPLOT_PALETTE,
+    colors=IMPRINT_PALETTE,
     startangle=90,
     textprops={"fontsize": 10, "color": INK},
     wedgeprops={"linewidth": 2, "edgecolor": PAGE_BG},

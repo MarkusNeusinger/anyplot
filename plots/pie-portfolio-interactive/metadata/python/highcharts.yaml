@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-portf
 quality_score: 90
 review:
   strengths:
-  - Perfect anyplot palette compliance with correct theme-adaptive chrome in both
+  - Perfect Imprint palette compliance with correct theme-adaptive chrome in both
     renders
   - Highcharts drilldown feature is genuinely distinctive and fully implemented (nested
     series, breadcrumbs, accessibility module)
@@ -37,7 +37,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface
       Chrome: Title "pie-portfolio-interactive · python · highcharts · anyplot.ai" in dark ink (#1A1A17), bold, ~75% canvas width. Subtitle "Click slices to explore individual holdings" in secondary ink (#4A4A44). Data labels ("Cash: 8.0%", "Alternatives: 12.0%", "Fixed Income: 25.0%", "Equities: 55.0%") in dark ink with connector lines. Legend at bottom with bordered elevated box (#FFFDF6), labels in secondary ink.
-      Data: Equities (55%) in #009E73 brand green, Fixed Income (25%) in #C475FD lavender, Alternatives (12%) in #4467A3 blue, Cash (8%) in #BD8233 ochre — canonical anyplot palette order.
+      Data: Equities (55%) in #009E73 brand green, Fixed Income (25%) in #C475FD lavender, Alternatives (12%) in #4467A3 blue, Cash (8%) in #BD8233 ochre — canonical Imprint palette order.
       Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
@@ -76,7 +76,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette with four perceptually distinct hues. CVD-safe.
+        comment: Imprint palette with four perceptually distinct hues. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -106,7 +106,7 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default. Uses anyplot palette and donut form
+        comment: Well-configured library default. Uses Imprint palette and donut form
           with subtitle. Not at FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement

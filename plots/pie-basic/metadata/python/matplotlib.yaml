@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: percentage labels, distinct anyplot palette colors, legend,
+  - 'Full spec compliance: percentage labels, distinct Imprint palette colors, legend,
     exploded largest slice — all four required features present'
   - Center medallion using matplotlib.patches.Circle demonstrates library-native primitive
     drawing capability and adds meaningful data context (year + topic)
@@ -46,7 +46,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white.
       Chrome: Title "pie-basic · python · matplotlib · anyplot.ai" in dark ink at top — clear and readable. Category labels ("AWS", "Azure", "Others", "Google Cloud", "Alibaba Cloud") in dark text outside slices — all readable. Legend at bottom with "Cloud Providers" title, three-column layout, dark text — readable. Center medallion shows "2024" (bold) and "Global Cloud" (smaller) in dark ink.
-      Data: Five slices using anyplot palette positions 1–5: AWS=#009E73 (green, exploded, 31.0%), Azure=#C475FD (lavender, 25.0%), Others=#AE3030 (matte red, 29.0%), Google Cloud=#4467A3 (blue, 11.0%), Alibaba Cloud=#BD8233 (ochre, 4.0%). White percentage labels in bold on each slice. White wedge edge separators on PAGE_BG color.
+      Data: Five slices using Imprint palette positions 1–5: AWS=#009E73 (green, exploded, 31.0%), Azure=#C475FD (lavender, 25.0%), Others=#AE3030 (matte red, 29.0%), Google Cloud=#4467A3 (blue, 11.0%), Alibaba Cloud=#BD8233 (ochre, 4.0%). White percentage labels in bold on each slice. White wedge edge separators on PAGE_BG color.
       Legibility verdict: PASS — all text readable against light background. "Global Cloud" at fontsize=7 is small but still discernible at full resolution. No dark-on-dark or light-on-light failures.
 
     Dark render (plot-dark.png):
@@ -87,7 +87,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; no red-green sole signal conflict (all
+        comment: CVD-safe Imprint palette; no red-green sole signal conflict (all
           5 slices are distinctly different hues).
       - id: VQ-05
         name: Layout & Canvas
@@ -155,7 +155,7 @@ review:
         max: 4
         passed: true
         comment: 'All four required features present: percentage labels (autopct),
-          distinct colors (anyplot palette), legend for identification, exploded largest
+          distinct colors (Imprint palette), legend for identification, exploded largest
           slice (AWS at explode=0.08).'
       - id: SC-03
         name: Data Mapping

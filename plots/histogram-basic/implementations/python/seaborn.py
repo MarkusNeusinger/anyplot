@@ -29,8 +29,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 # Data — e-commerce order amounts: two clearly separated spending segments
 # Budget shoppers (~$45) and premium shoppers (~$350) produce a bimodal distribution;
@@ -68,7 +68,7 @@ sns.histplot(values, bins=40, color=BRAND, edgecolor=PAGE_BG, linewidth=0.5, alp
 
 # KDE overlay via twin axis — seaborn-distinctive, shows both modes as humps
 ax2 = ax.twinx()
-sns.kdeplot(values, color=ANYPLOT_PALETTE[2], linewidth=1.5, ax=ax2)
+sns.kdeplot(values, color=IMPRINT_PALETTE[2], linewidth=1.5, ax=ax2)
 ax2.set_ylabel("")
 ax2.set_yticks([])
 for sp in ax2.spines.values():
@@ -78,8 +78,8 @@ for sp in ax2.spines.values():
 sns.rugplot(values, color=BRAND, alpha=0.05, height=0.025, ax=ax)
 
 # Reference lines for distributional statistics
-mean_line = ax.axvline(mean_val, color=ANYPLOT_PALETTE[4], linewidth=1.5, linestyle="--", zorder=5)
-med_line = ax.axvline(median_val, color=ANYPLOT_PALETTE[3], linewidth=1.5, linestyle="-.", zorder=5)
+mean_line = ax.axvline(mean_val, color=IMPRINT_PALETTE[4], linewidth=1.5, linestyle="--", zorder=5)
+med_line = ax.axvline(median_val, color=IMPRINT_PALETTE[3], linewidth=1.5, linestyle="-.", zorder=5)
 
 y_top = ax.get_ylim()[1]
 

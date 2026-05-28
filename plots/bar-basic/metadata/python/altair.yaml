@@ -79,7 +79,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Palette-defined colors only; anyplot palette is CVD-safe by design
+        comment: Palette-defined colors only; Imprint palette is CVD-safe by design
       - id: VQ-05
         name: Layout & Canvas
         score: 4

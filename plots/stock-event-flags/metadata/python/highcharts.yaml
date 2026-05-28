@@ -106,7 +106,7 @@ review:
         max: 2
         passed: true
         comment: 'Semantic exception justified for finance (bull=#009E73, bear=#AE3030).
-          Flag colors from anyplot palette positions 2,3,4,6. Backgrounds #FAF8F1/#1A1A17
+          Flag colors from Imprint palette positions 2,3,4,6. Backgrounds #FAF8F1/#1A1A17
           correct. Chrome fully theme-adaptive.'
     design_excellence:
       score: 13

@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette (green/purple/red) is colorblind-safe by design.
+        comment: Imprint palette (green/purple/red) is colorblind-safe by design.
           White stroke on circles aids differentiation.
       - id: VQ-05
         name: Layout & Canvas

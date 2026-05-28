@@ -185,20 +185,20 @@ If you can't get the screenshot to land on exact dims, the PIL pad-or-crop snipp
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
                    "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 ANYPLOT_AMBER = "#DDCC77"  // warning / caution (outside the categorical pool)
 
 # Single-series via chart-level colors (first is used)
-chart.options.colors = ANYPLOT_PALETTE[:1]
+chart.options.colors = IMPRINT_PALETTE[:1]
 
 # Multi-series: assign the full palette; highcharts picks per-series in order
-chart.options.colors = ANYPLOT_PALETTE
+chart.options.colors = IMPRINT_PALETTE
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed.
+# Continuous — only the two Imprint palette-derived cmaps are allowed.
 # Sequential (single-polarity, heatmap/treemap):
 chart.options.color_axis = {
     'minColor': '#009E73',

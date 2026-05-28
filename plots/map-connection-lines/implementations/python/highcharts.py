@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_LAND = "#E8E6DE" if THEME == "light" else "#272724"
 MAP_BORDER = "#CCCAC2" if THEME == "light" else "#3A3A37"
 
-# anyplot palette — imprint_seq for connection line gradient
+# Imprint palette — imprint_seq for connection line gradient
 BRAND = "#009E73"  # airport markers (categorical position 1)
 FLOW_END = "#4467A3"  # imprint_seq end color
 

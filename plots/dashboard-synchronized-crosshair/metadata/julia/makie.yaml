@@ -30,9 +30,9 @@ review:
     the three Axis objects — add xticklabelsize = 12, yticklabelsize = 12 to each
     Axis to match style-guide defaults
   - 'Palette ordering concern: volume bars render as bright sky blue and RSI line
-    as purple in both renders, but ANYPLOT_PALETTE[2]=#9418DB (purple) and ANYPLOT_PALETTE[3]=#B71D27
+    as purple in both renders, but IMPRINT_PALETTE[2]=#9418DB (purple) and IMPRINT_PALETTE[3]=#B71D27
     (red) are assigned respectively — rendered colors do not match code assignments;
-    consider using ANYPLOT_PALETTE[4]=#16B8F3 for volume and ANYPLOT_PALETTE[2]=#9418DB
+    consider using IMPRINT_PALETTE[4]=#16B8F3 for volume and IMPRINT_PALETTE[2]=#9418DB
     for RSI to match what is actually rendered, and avoid red RSI line clashing with
     red overbought zone fill'
   - Crosshair RSI value is 51.7 (neutral territory), contradicting the intended RSI
@@ -105,8 +105,8 @@ review:
         max: 2
         passed: false
         comment: 'First series correctly uses #009E73. Volume bars appear as bright
-          sky blue and RSI as purple/violet in both renders, not matching ANYPLOT_PALETTE[2]=#9418DB
-          (purple) for volume and ANYPLOT_PALETTE[3]=#B71D27 (red) for RSI per code.
+          sky blue and RSI as purple/violet in both renders, not matching IMPRINT_PALETTE[2]=#9418DB
+          (purple) for volume and IMPRINT_PALETTE[3]=#B71D27 (red) for RSI per code.
           Background and chrome are theme-correct.'
     design_excellence:
       score: 12

@@ -74,7 +74,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Two anyplot palette hues (green + blue) — colorblind-safe, no red-green
+        comment: Two Imprint palette hues (green + blue) — colorblind-safe, no red-green
           sole signal.
       - id: VQ-05
         name: Layout & Canvas

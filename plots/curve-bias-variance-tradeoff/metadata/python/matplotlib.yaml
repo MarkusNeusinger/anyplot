@@ -71,7 +71,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette in canonical order; dashed linestyle as redundant
+        comment: Imprint palette in canonical order; dashed linestyle as redundant
           encoding; no red-green-only signaling.
       - id: VQ-05
         name: Layout & Canvas

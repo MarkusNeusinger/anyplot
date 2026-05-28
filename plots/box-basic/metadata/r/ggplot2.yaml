@@ -17,7 +17,7 @@ review:
   strengths:
   - 'Exemplary multi-layer composition: jitter + boxplot + stat_summary diamond mean
     markers layered with clear visual hierarchy'
-  - 'Correct anyplot palette positions 1-5 in canonical order, first series Engineering
+  - 'Correct Imprint palette positions 1-5 in canonical order, first series Engineering
     = #009E73'
   - Theme tokens fully wired through all chrome elements — no dark-on-dark or light-on-light
     failures in either render
@@ -35,7 +35,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface.
       Chrome: Title "box-basic · r · ggplot2 · anyplot.ai" rendered in dark #1A1A17 ink at size 12, clearly visible. Subtitle in muted gray, readable. Y-axis label "Annual Salary (USD)" and X-axis label "Department" in dark ink at size 10, well-proportioned. Tick labels ($40k–$160k, department names) in INK_SOFT at size 8, all readable. Y-axis horizontal grid lines are subtle (linewidth 0.2). No top/right borders.
-      Data: Five department box plots — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), Design (#BD8233 ochre), Research (#AE3030 red). Anyplot palette positions 1–5 in canonical order. Jitter points scattered behind each box (matching fill colors, alpha=0.25). Diamond mean markers (white fill, INK_SOFT outline) clearly visible within each box. Research visually highest and widest.
+      Data: Five department box plots — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), Design (#BD8233 ochre), Research (#AE3030 red). Imprint palette positions 1–5 in canonical order. Jitter points scattered behind each box (matching fill colors, alpha=0.25). Diamond mean markers (white fill, INK_SOFT outline) clearly visible within each box. Research visually highest and widest.
       Legibility verdict: PASS — all text readable, no overflow, no clipping.
 
     Dark render (plot-dark.png):
@@ -74,7 +74,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette CVD-safe. Diamond mean markers use white fill + dark
+        comment: Imprint palette CVD-safe. Diamond mean markers use white fill + dark
           outline for contrast.
       - id: VQ-05
         name: Layout & Canvas
@@ -107,7 +107,7 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Multi-layer (jitter+box+mean diamond) is thoughtful. Anyplot palette,
+        comment: Multi-layer (jitter+box+mean diamond) is thoughtful. Imprint palette,
           clean typography with subtitle, suppressed legend. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement

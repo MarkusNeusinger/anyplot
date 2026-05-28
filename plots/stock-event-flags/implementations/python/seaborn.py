@@ -36,8 +36,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 sns.set_theme(
     style="ticks",
@@ -72,12 +72,12 @@ df = pd.DataFrame({"date": dates, "close": price})
 # so sns.regplot overlays correctly without a secondary axis
 df["x_mpl"] = mdates.date2num(df["date"].values)
 
-# Event type styling — anyplot palette positions 2–5
+# Event type styling — Imprint palette positions 2–5
 event_colors = {
-    "earnings": ANYPLOT_PALETTE[1],
-    "dividend": ANYPLOT_PALETTE[2],
-    "split": ANYPLOT_PALETTE[3],
-    "news": ANYPLOT_PALETTE[4],
+    "earnings": IMPRINT_PALETTE[1],
+    "dividend": IMPRINT_PALETTE[2],
+    "split": IMPRINT_PALETTE[3],
+    "news": IMPRINT_PALETTE[4],
 }
 event_markers = {"earnings": "s", "dividend": "D", "split": "^", "news": "o"}
 

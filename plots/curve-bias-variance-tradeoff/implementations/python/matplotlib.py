@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — positions 1→3 for the three active curves; muted for the reference baseline
+# Imprint palette — positions 1→3 for the three active curves; muted for the reference baseline
 C_BIAS = "#009E73"  # position 1 — green   (Bias²)
 C_VARIANCE = "#C475FD"  # position 2 — lavender (Variance)
 C_TOTAL = "#4467A3"  # position 3 — blue     (Total Error, the primary curve)

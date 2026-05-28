@@ -17,7 +17,7 @@ review:
   strengths:
   - Creative center annotation (55%/Equities/10 holdings) creates a clear focal point
   - Category totals in legend labels provide portfolio overview at a glance
-  - 'Correct anyplot palette with #009E73 as first series; both themes pass readability
+  - 'Correct Imprint palette with #009E73 as first series; both themes pass readability
     checks'
   - Per-item hover tooltip labels via pygal native JS expose individual holding details
   - SVG center annotation elegantly injected into pygal output pipeline
@@ -71,7 +71,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; three distinct hue families (green/purple/blue)
+        comment: CVD-safe Imprint palette; three distinct hue families (green/purple/blue)
       - id: VQ-05
         name: Layout & Canvas
         score: 4

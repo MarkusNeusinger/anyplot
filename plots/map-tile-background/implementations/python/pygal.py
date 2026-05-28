@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Semantic color exception: temperature carries strong cold→blue / hot→red expectation
-# (anyplot palette positions 3, 1, 5 in semantic role order)
+# (Imprint palette positions 3, 1, 5 in semantic role order)
 COLOR_COOL = "#4467A3"  # blue  — cool stations (annual mean < 12 °C)
 COLOR_MILD = "#009E73"  # green — mild stations (12–22 °C)
 COLOR_WARM = "#AE3030"  # red   — warm stations (> 22 °C)

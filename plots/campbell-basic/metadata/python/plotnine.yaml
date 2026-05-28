@@ -18,7 +18,7 @@ review:
   - 'Correct Campbell diagram with all required components: 5 natural frequency modes,
     3 engine order excitation lines, critical speed intersection diamonds, and operating
     range shading'
-  - 'Custom anyplot palette applied in canonical order with first series (1st Bending)
+  - 'Custom Imprint palette applied in canonical order with first series (1st Bending)
     correctly using #009E73 brand green'
   - 'Thoughtful multi-encoding: color differentiates modes, linetype differentiates
     modes from EO lines, and line weight (1.5 vs 0.8) reinforces the distinction'
@@ -53,7 +53,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 fills the outer plot area; panel area matches. Operating range band (2000–4500 RPM) is a very light blue-grey overlay.
       Chrome: Title "campbell-basic · python · plotnine · anyplot.ai" is bold, centered, clearly readable in dark ink. Axis labels "Rotational Speed (RPM)" and "Natural Frequency (Hz)" are clearly readable. Tick labels (0–6000 RPM / 0–110 Hz) are readable in INK_SOFT grey. Subtle horizontal grid lines do not compete with data. No spines.
-      Data: Five natural frequency curves in canonical anyplot palette order — 1st Bending (#009E73 green, lowest curve ~18–27 Hz), 2nd Bending (#C475FD lavender, ~45→33 Hz decreasing), 1st Torsional (#4467A3 blue, ~52→67 Hz increasing), 2nd Torsional (#BD8233 ochre, ~75→82 Hz), Axial (#AE3030 red, ~90 Hz nearly flat). Three dashed grey EO lines from origin (1×, 2×, 3×). Red diamond critical-speed markers at intersections. Italic small "1×", "2×", "3×" labels along EO lines. Dotted red vertical guide to "Critical: 1180 RPM" annotation near x=1180 RPM. "Operating Range" text label in blue inside the band.
+      Data: Five natural frequency curves in canonical Imprint palette order — 1st Bending (#009E73 green, lowest curve ~18–27 Hz), 2nd Bending (#C475FD lavender, ~45→33 Hz decreasing), 1st Torsional (#4467A3 blue, ~52→67 Hz increasing), 2nd Torsional (#BD8233 ochre, ~75→82 Hz), Axial (#AE3030 red, ~90 Hz nearly flat). Three dashed grey EO lines from origin (1×, 2×, 3×). Red diamond critical-speed markers at intersections. Italic small "1×", "2×", "3×" labels along EO lines. Dotted red vertical guide to "Critical: 1180 RPM" annotation near x=1180 RPM. "Operating Range" text label in blue inside the band.
       Legibility verdict: PASS — all primary text clearly readable. Minor: annotation and EO inline labels are small (size=3.5 mm) but still legible at full resolution.
 
     Dark render (plot-dark.png):
@@ -96,7 +96,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'CVD-safe anyplot palette. Dual encoding: color + linetype (solid
+        comment: 'CVD-safe Imprint palette. Dual encoding: color + linetype (solid
           vs dashed) for modes vs EO lines. No red-green sole signal.'
       - id: VQ-05
         name: Layout & Canvas
@@ -128,7 +128,7 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom anyplot palette, operating range band, EO
+        comment: 'Strong design: custom Imprint palette, operating range band, EO
           italic labels, dotted guide line to critical annotation, variable line weights.
           Clearly above defaults.'
       - id: DE-02

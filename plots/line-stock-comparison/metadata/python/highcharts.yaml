@@ -19,7 +19,7 @@ review:
     reference, legend, datetime axis, multiple series)'
   - 'Excellent data quality: realistic semiconductor sector vs SPY context with plausible
     2024 trajectories; NVDA, AMD, INTC, SPY are ideal choices'
-  - 'Full anyplot palette compliance: first series #009E73, correct backgrounds, chrome
+  - 'Full Imprint palette compliance: first series #009E73, correct backgrounds, chrome
     flips correctly between themes'
   - Good use of Highcharts-specific plotLines for both the NVDA peak vertical marker
     and the baseline horizontal reference — idiomatic library feature
@@ -101,7 +101,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series NVDA = #009E73; anyplot palette canonical order; backgrounds
+        comment: 'First series NVDA = #009E73; Imprint palette canonical order; backgrounds
           #FAF8F1/#1A1A17; chrome flips correctly'
     design_excellence:
       score: 13

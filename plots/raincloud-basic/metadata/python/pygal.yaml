@@ -18,7 +18,7 @@ review:
   - 'Correct raincloud geometry in both renders: half-violin clouds rise above each
     category baseline, the boxplot sits centered on the baseline, and jittered rain
     points fall below — the cloud-above / rain-below metaphor reads cleanly.'
-  - 'Anyplot palette applied correctly and identically across themes: Control = brand
+  - 'Imprint palette applied correctly and identically across themes: Control = brand
     green #009E73, Treatment A = lavender #C475FD, Treatment B = blue #4467A3. Only
     chrome flips (PAGE_BG, INK tokens).'
   - 'Repair feedback from attempt 1 fully addressed: dark-mode box fill switched from
@@ -85,7 +85,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe by construction (max-min ΔE across protan/deutan/tritan).
+        comment: Imprint palette is CVD-safe by construction (max-min ΔE across protan/deutan/tritan).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -236,7 +236,7 @@ review:
         max: 5
         passed: true
         comment: Pygal Style + XY chart used correctly; per-series colors derived
-          from the same anyplot palette. The chart is partly a host for hand-drawn
+          from the same Imprint palette. The chart is partly a host for hand-drawn
           SVG.
       - id: LM-02
         name: Distinctive Features

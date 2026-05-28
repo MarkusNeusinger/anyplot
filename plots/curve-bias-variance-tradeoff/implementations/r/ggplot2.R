@@ -16,7 +16,7 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # --- Data ---
 n            <- 100
@@ -42,7 +42,7 @@ df_long <- data.frame(
     component  = factor(rep(components, each = n), levels = components)
 )
 
-curve_colors    <- setNames(ANYPLOT_PALETTE, components)
+curve_colors    <- setNames(IMPRINT_PALETTE, components)
 curve_linetypes <- c("Bias²" = "solid", "Variance" = "longdash",
                      "Total Error" = "solid", "Irreducible Error" = "dotted")
 curve_lwidths   <- c("Bias²" = 1.0, "Variance" = 1.0,
@@ -72,16 +72,16 @@ p <- ggplot(df_long,
     annotate("text", x = optimal_x + 0.2, y = optimal_y - 0.04,
              label = "Optimal", color = INK_SOFT, size = 2.8, hjust = 0) +
     annotate("text", x = 1.4, y = bias_ann_y,
-             label = "Bias²", color = ANYPLOT_PALETTE[1],
+             label = "Bias²", color = IMPRINT_PALETTE[1],
              size = 3.2, hjust = 0, fontface = "bold") +
     annotate("text", x = 8.5, y = var_ann_y,
-             label = "Variance", color = ANYPLOT_PALETTE[2],
+             label = "Variance", color = IMPRINT_PALETTE[2],
              size = 3.2, hjust = 0.5, fontface = "bold") +
     annotate("text", x = 3.0, y = tot_ann_y,
-             label = "Total Error", color = ANYPLOT_PALETTE[3],
+             label = "Total Error", color = IMPRINT_PALETTE[3],
              size = 3.0, hjust = 0.5, fontface = "bold") +
     annotate("text", x = 7.0, y = 0.10,
-             label = "Irreducible Error", color = ANYPLOT_PALETTE[4],
+             label = "Irreducible Error", color = IMPRINT_PALETTE[4],
              size = 2.8, hjust = 0.5) +
     scale_x_continuous(
         breaks = c(1, optimal_x, 10),

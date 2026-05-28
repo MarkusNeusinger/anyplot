@@ -43,7 +43,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot categorical palette — 5 hues, canonical order, first always #009E73
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 CRITICAL_COLOR = "#AE3030"  # semantic red — critical speed / danger
 BAND_COLOR = "#4467A3"  # blue — operating range reference zone
 
@@ -60,7 +60,7 @@ modes = {
 }
 
 mode_names = list(modes.keys())
-mode_colors = dict(zip(mode_names, ANYPLOT_PALETTE, strict=True))
+mode_colors = dict(zip(mode_names, IMPRINT_PALETTE, strict=True))
 
 df_modes = pd.DataFrame(
     [

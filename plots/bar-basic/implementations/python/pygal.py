@@ -21,8 +21,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
-BRAND = ANYPLOT_PALETTE[0]
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+BRAND = IMPRINT_PALETTE[0]
 
 # Data — website traffic by channel (Q4 2025), sorted descending for ranking readability
 categories_raw = ["Organic Search", "Direct", "Social Media", "Email", "Referral", "Paid Ads", "Affiliates"]
@@ -46,7 +46,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=ANYPLOT_PALETTE,
+    colors=IMPRINT_PALETTE,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,

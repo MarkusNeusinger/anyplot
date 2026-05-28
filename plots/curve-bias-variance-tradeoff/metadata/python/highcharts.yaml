@@ -74,7 +74,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette. Redundant encoding via linestyle (dotted
+        comment: CVD-safe Imprint palette. Redundant encoding via linestyle (dotted
           irreducible) and line weight (thicker total error).
       - id: VQ-05
         name: Layout & Canvas

@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.22)" if THEME == "light" else "rgba(240,239,232,0.22)"
 
 # anyplot categorical palette
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data
 np.random.seed(42)
@@ -77,7 +77,7 @@ ohlc_data = [
     for i in range(n_days)
 ]
 
-# Events with anyplot palette colors (semantic exception: bull=#009E73, bear=#AE3030 for candlestick)
+# Events with Imprint palette colors (semantic exception: bull=#009E73, bear=#AE3030 for candlestick)
 events = [
     {"date": dates[15], "type": "earnings", "label": "Q4", "title": "Q4 Earnings Beat"},
     {"date": dates[30], "type": "dividend", "label": "D", "title": "Dividend $0.88"},
@@ -90,10 +90,10 @@ events = [
 
 # Flag series colors: palette positions 2-6 (position 1 used for bullish, 5 for bearish)
 event_styles = {
-    "earnings": {"color": ANYPLOT_PALETTE[1], "shape": "squarepin", "text_color": "#ffffff"},
-    "dividend": {"color": ANYPLOT_PALETTE[2], "shape": "flag", "text_color": "#ffffff"},
-    "news": {"color": ANYPLOT_PALETTE[3], "shape": "flag", "text_color": "#ffffff"},
-    "split": {"color": ANYPLOT_PALETTE[5], "shape": "circlepin", "text_color": "#1A1A17"},
+    "earnings": {"color": IMPRINT_PALETTE[1], "shape": "squarepin", "text_color": "#ffffff"},
+    "dividend": {"color": IMPRINT_PALETTE[2], "shape": "flag", "text_color": "#ffffff"},
+    "news": {"color": IMPRINT_PALETTE[3], "shape": "flag", "text_color": "#ffffff"},
+    "split": {"color": IMPRINT_PALETTE[5], "shape": "circlepin", "text_color": "#1A1A17"},
 }
 
 flags_by_type = {}
