@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-15
+Library: letsplot | Python 3.14
+Quality: pending | Created: 2026-05-28
 """
+
+import os
 
 import numpy as np
 from lets_plot import (
@@ -19,7 +21,7 @@ from lets_plot import (
     labs,
     layer_tooltips,
     scale_color_identity,
-    scale_fill_viridis,
+    scale_fill_gradient,
     scale_x_discrete,
     scale_y_discrete,
     theme,
@@ -29,6 +31,12 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Monthly energy consumption (kWh) by building zone
 np.random.seed(42)
@@ -49,13 +57,14 @@ zone_col = np.tile(zones, n_months).tolist()
 month_col = np.repeat(months, n_zones).tolist()
 kwh_col = values.flatten().tolist()
 
-# Adaptive text color: white on dark cells, dark on light cells
+# Adaptive text color: dark on green cells (low kWh), white on blue cells (high kWh)
+# Imprint sequential: low → #009E73 (bright green), high → #4467A3 (dark blue)
 median_val = int(np.median(kwh_col))
-text_color = ["#ffffff" if v > median_val else "#1a1a2e" for v in kwh_col]
+text_color = ["#FAF8F1" if v > median_val else "#1A1A17" for v in kwh_col]
 
 data = {"Zone": zone_col, "Month": month_col, "kWh": kwh_col, "label_color": text_color}
 
-# Heatmap with perceptually-uniform viridis colormap and interactive tooltips
+# Heatmap with Imprint sequential colormap (brand green → blue)
 plot = (
     ggplot(data, aes(x="Zone", y="Month", fill="kWh"))
     + geom_tile(
@@ -66,31 +75,33 @@ plot = (
         .line("Energy: @kWh kWh")
         .line("Median: " + str(median_val) + " kWh"),
     )
-    + geom_text(aes(label="kWh", color="label_color"), size=14, fontface="bold")
+    + geom_text(aes(label="kWh", color="label_color"), size=3.5, fontface="bold")
     + scale_color_identity()
-    + scale_fill_viridis(
-        option="viridis", direction=-1, name="Energy (kWh)", guide=guide_colorbar(barwidth=18, barheight=300, nbin=256)
+    + scale_fill_gradient(
+        low="#009E73", high="#4467A3", name="Energy (kWh)", guide=guide_colorbar(barwidth=10, barheight=200, nbin=256)
     )
     + scale_x_discrete(limits=zones)
     + scale_y_discrete(limits=months[::-1])
-    + labs(x="Building Zone", y="Month", title="heatmap-basic · letsplot · pyplots.ai")
+    + labs(x="Building Zone", y="Month", title="heatmap-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=26, face="bold", color="#1a1a2e"),
-        axis_title=element_text(size=20, color="#2d2d44"),
-        axis_text_x=element_text(size=16, face="bold", color="#2d2d44"),
-        axis_text_y=element_text(size=16, color="#2d2d44"),
-        legend_text=element_text(size=14),
-        legend_title=element_text(size=16, face="bold"),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text_x=element_text(size=10, face="bold", color=INK_SOFT),
+        axis_text_y=element_text(size=10, color=INK_SOFT),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, face="bold", color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid=element_blank(),
-        plot_background=element_rect(fill="#fafafa", color="#fafafa"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         plot_margin=[40, 20, 20, 20],
     )
-    + ggsize(1600, 900)
+    + ggsize(600, 600)
 )
 
-# Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+# Square canvas: ggsize(600, 600) × scale=4 → 2400×2400 px
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
-# Save HTML for interactive tooltips (lets-plot distinctive feature)
-ggsave(plot, "plot.html", path=".")
+# HTML for interactive tooltips
+ggsave(plot, f"plot-{THEME}.html", path=".")
