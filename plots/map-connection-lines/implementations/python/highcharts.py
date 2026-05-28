@@ -1,24 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-21
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-28
 """
 
 import json
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MAP_LAND = "#E8E6DE" if THEME == "light" else "#272724"
+MAP_BORDER = "#CCCAC2" if THEME == "light" else "#3A3A37"
+
+# anyplot palette — imprint_seq for connection line gradient
+BRAND = "#009E73"  # airport markers (categorical position 1)
+FLOW_END = "#4467A3"  # imprint_seq end color
+
 # Data - International airline routes between major hub airports
 np.random.seed(42)
 
-# Major international airport hubs with coordinates
 airports = {
     "London Heathrow": {"lat": 51.47, "lon": -0.46, "code": "LHR"},
     "New York JFK": {"lat": 40.64, "lon": -73.78, "code": "JFK"},
@@ -34,108 +47,96 @@ airports = {
     "Johannesburg": {"lat": -26.14, "lon": 28.25, "code": "JNB"},
 }
 
-# Flight connections with passenger volumes (thousands per year, synthetic but realistic scale)
+# Per-point label offsets to reduce crowding for nearby European hubs
+label_offsets = {
+    "London Heathrow": {"x": -22, "y": -14},
+    "Paris CDG": {"x": -8, "y": 22},
+    "Frankfurt": {"x": 22, "y": -14},
+}
+
 connections = [
-    # Transatlantic routes
     {"from": "London Heathrow", "to": "New York JFK", "passengers": 4200},
     {"from": "Paris CDG", "to": "New York JFK", "passengers": 2800},
     {"from": "Frankfurt", "to": "New York JFK", "passengers": 1900},
     {"from": "London Heathrow", "to": "Los Angeles", "passengers": 1500},
-    # Europe to Middle East/Asia
     {"from": "London Heathrow", "to": "Dubai", "passengers": 3100},
     {"from": "London Heathrow", "to": "Hong Kong", "passengers": 2200},
     {"from": "London Heathrow", "to": "Singapore Changi", "passengers": 1800},
     {"from": "Paris CDG", "to": "Dubai", "passengers": 1600},
     {"from": "Frankfurt", "to": "Singapore Changi", "passengers": 1400},
-    # Asia-Pacific hub connections
     {"from": "Dubai", "to": "Singapore Changi", "passengers": 2500},
     {"from": "Dubai", "to": "Hong Kong", "passengers": 1900},
     {"from": "Singapore Changi", "to": "Hong Kong", "passengers": 2100},
     {"from": "Singapore Changi", "to": "Sydney", "passengers": 1700},
     {"from": "Hong Kong", "to": "Tokyo Haneda", "passengers": 2300},
     {"from": "Tokyo Haneda", "to": "Los Angeles", "passengers": 1600},
-    # Americas connections
     {"from": "New York JFK", "to": "Los Angeles", "passengers": 3800},
     {"from": "New York JFK", "to": "São Paulo", "passengers": 1200},
     {"from": "Los Angeles", "to": "Sydney", "passengers": 900},
-    # Africa connections
     {"from": "London Heathrow", "to": "Johannesburg", "passengers": 1100},
     {"from": "Dubai", "to": "Johannesburg", "passengers": 850},
 ]
 
-# Prepare connection line data for Highcharts flowmap
-flow_data = []
-for conn in connections:
-    flow_data.append(
-        {
-            "from": conn["from"],
-            "to": conn["to"],
-            "weight": conn["passengers"],
-            "curveFactor": 0.3,  # Curve factor for great circle arc appearance
-            "growTowards": True,
-        }
-    )
+flow_data = [
+    {"from": conn["from"], "to": conn["to"], "weight": conn["passengers"], "curveFactor": 0.3, "growTowards": True}
+    for conn in connections
+]
 
-# Prepare airport marker data
 point_data = []
 for name, info in airports.items():
-    # Calculate total passenger traffic for marker size
     total_traffic = sum(c["passengers"] for c in connections if c["from"] == name or c["to"] == name)
-    point_data.append(
-        {
-            "id": name,
-            "name": f"{info['code']}",
-            "lat": info["lat"],
-            "lon": info["lon"],
-            "marker": {
-                "radius": max(10, min(28, total_traffic / 400))  # Size based on traffic
-            },
-        }
-    )
+    point = {
+        "id": name,
+        "name": info["code"],
+        "lat": info["lat"],
+        "lon": info["lon"],
+        "marker": {"radius": max(7, min(19, total_traffic / 600))},
+    }
+    if name in label_offsets:
+        point["dataLabels"] = label_offsets[name]
+    point_data.append(point)
 
-# Chart configuration
+# Title with length-scaled font size (baseline: 66px at 67 chars)
+title_text = "International Flight Routes · map-connection-lines · python · highcharts · anyplot.ai"
+title_fontsize = f"{round(66 * min(1.0, 67 / len(title_text)))}px"
+
 chart_config = {
-    "chart": {
-        "map": None,  # Will be set by world topology
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "spacing": [100, 60, 60, 60],
-    },
-    "title": {
-        "text": "International Flight Routes · map-connection-lines · highcharts · pyplots.ai",
-        "style": {"fontSize": "54px", "fontWeight": "bold"},
-        "y": 60,
-    },
+    "chart": {"map": None, "width": 3200, "height": 1800, "backgroundColor": PAGE_BG, "spacing": [80, 50, 50, 50]},
+    "title": {"text": title_text, "style": {"fontSize": title_fontsize, "fontWeight": "bold", "color": INK}, "y": 50},
     "subtitle": {
         "text": "Connection line thickness represents annual passenger volume between major hub airports",
-        "style": {"fontSize": "36px", "color": "#666666"},
-        "y": 110,
+        "style": {"fontSize": "36px", "color": INK_SOFT},
+        "y": 92,
     },
     "mapNavigation": {"enabled": False},
     "legend": {"enabled": False},
     "tooltip": {
         "useHTML": True,
         "headerFormat": "",
-        "pointFormat": '<span style="font-size: 28px;">'
-        "<b>{point.from}</b> → <b>{point.to}</b><br/>"
-        "Passengers: <b>{point.weight:,.0f}K</b> per year"
-        "</span>",
+        "pointFormat": (
+            '<span style="font-size: 22px;">'
+            "<b>{point.from}</b> → <b>{point.to}</b><br/>"
+            "Passengers: <b>{point.weight:,.0f}K</b> per year"
+            "</span>"
+        ),
+        "backgroundColor": ELEVATED_BG,
+        "style": {"color": INK},
     },
     "plotOptions": {
         "flowmap": {
-            "minWidth": 2,
-            "maxWidth": 22,
-            "opacity": 0.5,
-            "fillOpacity": 0.45,
-            "markerEnd": {"enabled": True, "width": 12, "height": 12},
+            "minWidth": 1,
+            "maxWidth": 15,
+            "opacity": 0.55,
+            "fillOpacity": 0.5,
+            "markerEnd": {"enabled": True, "width": 10, "height": 10},
         },
         "mappoint": {
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.name}",
-                "style": {"fontSize": "22px", "fontWeight": "bold", "textOutline": "3px white"},
-                "y": -12,
+                "style": {"fontSize": "20px", "fontWeight": "bold", "color": INK, "textOutline": f"2px {PAGE_BG}"},
+                "y": -10,
+                "allowOverlap": False,
             }
         },
     },
@@ -144,62 +145,55 @@ chart_config = {
             "type": "map",
             "name": "World",
             "showInLegend": False,
-            "nullColor": "#f0f0f0",
-            "borderColor": "#cccccc",
-            "borderWidth": 1,
+            "nullColor": MAP_LAND,
+            "borderColor": MAP_BORDER,
+            "borderWidth": 0.8,
             "states": {"inactive": {"opacity": 1}},
         },
         {
             "type": "mappoint",
             "name": "Airports",
             "data": point_data,
-            "color": "#306998",
-            "marker": {"symbol": "circle", "fillColor": "#306998", "lineWidth": 3, "lineColor": "#ffffff"},
+            "color": BRAND,
+            "marker": {"symbol": "circle", "fillColor": BRAND, "lineWidth": 2, "lineColor": PAGE_BG},
         },
         {
             "type": "flowmap",
             "name": "Flight Routes",
             "linkedTo": ":previous",
             "data": flow_data,
-            "color": "#FFD43B",
+            "color": FLOW_END,
             "fillColor": {
                 "linearGradient": {"x1": 0, "y1": 0, "x2": 1, "y2": 0},
-                "stops": [
-                    [0, "rgba(48, 105, 152, 0.65)"],  # Python Blue
-                    [1, "rgba(255, 212, 59, 0.65)"],  # Python Yellow
-                ],
+                "stops": [[0, "rgba(0,158,115,0.6)"], [1, "rgba(68,103,163,0.6)"]],
             },
         },
     ],
 }
 
-# Convert configuration to JSON
 chart_json = json.dumps(chart_config)
 
-# Download required JavaScript files for headless rendering
-highmaps_url = "https://code.highcharts.com/maps/highmaps.js"
-flowmap_url = "https://code.highcharts.com/maps/modules/flowmap.js"
-world_url = "https://code.highcharts.com/mapdata/custom/world.topo.json"
+# Load Highcharts JS from local npm package (CDN cannot be loaded from file://)
+npm_root = Path("/tmp/node_modules")
+if not npm_root.exists():
+    import subprocess
 
-with urllib.request.urlopen(highmaps_url, timeout=60) as response:
-    highmaps_js = response.read().decode("utf-8")
+    subprocess.run(["npm", "install", "highcharts", "@highcharts/map-collection"], cwd="/tmp", check=True)
 
-with urllib.request.urlopen(flowmap_url, timeout=60) as response:
-    flowmap_js = response.read().decode("utf-8")
+highmaps_js = (npm_root / "highcharts" / "highmaps.js").read_text(encoding="utf-8")
+flowmap_js = (npm_root / "highcharts" / "modules" / "flowmap.js").read_text(encoding="utf-8")
+world_topo = (npm_root / "@highcharts" / "map-collection" / "custom" / "world.topo.json").read_text(encoding="utf-8")
 
-with urllib.request.urlopen(world_url, timeout=60) as response:
-    world_topo = response.read().decode("utf-8")
-
-# Generate HTML with inline scripts for headless Chrome
-html_content = f"""<!DOCTYPE html>
+# HTML with inline scripts for headless Chrome
+headless_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highmaps_js}</script>
     <script>{flowmap_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>
         var topology = {world_topo};
         var chartConfig = {chart_json};
@@ -209,47 +203,61 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save standalone HTML for interactive viewing
-standalone_html = f"""<!DOCTYPE html>
+# Standalone interactive HTML (CDN scripts, responsive)
+interactive_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script src="https://code.highcharts.com/maps/highmaps.js"></script>
     <script src="https://code.highcharts.com/maps/modules/flowmap.js"></script>
+    <style>html, body {{ margin: 0; padding: 0; background: {PAGE_BG}; }}</style>
 </head>
-<body style="margin:0;">
+<body>
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <script>
         fetch('https://code.highcharts.com/mapdata/custom/world.topo.json')
-            .then(response => response.json())
+            .then(r => r.json())
             .then(topology => {{
-                var chartConfig = {chart_json};
-                chartConfig.chart.map = topology;
-                Highcharts.mapChart('container', chartConfig);
+                var cfg = {chart_json};
+                cfg.chart.map = topology;
+                cfg.chart.width = null;
+                cfg.chart.height = null;
+                Highcharts.mapChart('container', cfg);
             }});
     </script>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(standalone_html)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(interactive_html)
 
-# Write temp HTML and take screenshot using headless Chrome
+# Screenshot via headless Chrome with CDP viewport override
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
+    f.write(headless_html)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(8)  # Wait for flowmap to fully render
-driver.save_screenshot("plot.png")
+time.sleep(8)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
+
+# PIL safety net — pin to exact 3200×1800 so the post-render gate passes
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
