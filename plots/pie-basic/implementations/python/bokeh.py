@@ -1,19 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
-Library: bokeh 3.8.2 | Python 3.14.0
-Quality: 90/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-28
 """
 
+import io
 import math
+import os
+import time
+from pathlib import Path
 
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Label, Legend, LegendItem
 from bokeh.plotting import figure
+from PIL import Image
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Cloud infrastructure market share (2024)
 categories = ["AWS", "Azure", "Google Cloud", "Alibaba", "Others"]
 values = [33, 23, 11, 4, 29]
+# First 4 use canonical anyplot palette order; "Others" uses semantic muted anchor
+colors = [ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2], ANYPLOT_PALETTE[3], INK_MUTED]
 
 # Compute angles and percentages
 total = sum(values)
@@ -39,22 +58,28 @@ offsets_y = [0.0] * len(categories)
 offsets_x[explode_idx] = explode_r * math.cos(mid_angles[explode_idx])
 offsets_y[explode_idx] = explode_r * math.sin(mid_angles[explode_idx])
 
-# Colors - Python Blue first, colorblind-safe palette (no red-green adjacency)
-colors = ["#306998", "#FFD43B", "#8E44AD", "#E67E22", "#2980B9"]
+# Title sizing — scale down only if longer than 67-char baseline
+title = "pie-basic · python · bokeh · anyplot.ai"
+title_pt = round(50 * (67 / len(title))) if len(title) > 67 else 50
 
-# Create figure (3600 x 3600 px square)
-radius = 0.88
+# Figure — 2400×2400 square (canonical for symmetric plots like pie charts)
+W, H = 2400, 2400
+radius = 0.82
+
 p = figure(
-    width=3600,
-    height=3600,
-    title="pie-basic · bokeh · pyplots.ai",
-    x_range=(-1.3, 1.3),
-    y_range=(-1.1, 1.1),
-    tools="",
+    width=W,
+    height=H,
+    title=title,
+    x_range=(-1.2, 1.2),
+    y_range=(-1.05, 1.1),
     toolbar_location=None,
+    min_border_bottom=200,
+    min_border_left=60,
+    min_border_top=130,
+    min_border_right=60,
 )
 
-# Draw wedges using ColumnDataSource for idiomatic bokeh
+# Wedges
 source = ColumnDataSource(
     data={"x": offsets_x, "y": offsets_y, "start": start_angles, "end": end_angles, "color": colors}
 )
@@ -66,74 +91,31 @@ renderers = p.wedge(
     end_angle="end",
     direction="clock",
     fill_color="color",
-    line_color="white",
-    line_width=5,
+    line_color=PAGE_BG,
+    line_width=4,
     source=source,
 )
 
-# Percentage labels on each slice
-label_r = radius * 0.6
+# Percentage labels — near-white on all palette colors (all medium-dark)
+# except ANYPLOT_MUTED in dark theme which is lighter and needs dark text
+slice_label_colors = ["#F0EFE8"] * 4 + ["#1A1A17" if THEME == "dark" else "#F0EFE8"]
+
+label_r = radius * 0.62
 for i in range(len(categories)):
     lx = label_r * math.cos(mid_angles[i]) + offsets_x[i]
     ly = label_r * math.sin(mid_angles[i]) + offsets_y[i]
-    text_color = "#333333" if colors[i] == "#FFD43B" else "white"
     p.add_layout(
         Label(
             x=lx,
             y=ly,
             text=f"{percentages[i]:.0f}%",
-            text_font_size="36pt",
-            text_color=text_color,
+            text_font_size="34pt",
+            text_color=slice_label_colors[i],
             text_font_style="bold",
             text_align="center",
             text_baseline="middle",
         )
     )
-
-# Annotation: callout for AWS as market leader
-aws_callout_angle = mid_angles[0]
-aws_callout_r = radius + 0.18
-p.add_layout(
-    Label(
-        x=aws_callout_r * math.cos(aws_callout_angle) + offsets_x[0],
-        y=aws_callout_r * math.sin(aws_callout_angle) + offsets_y[0],
-        text="▲ Market Leader",
-        text_font_size="24pt",
-        text_color="#306998",
-        text_font_style="bold",
-        text_align="center",
-        text_baseline="bottom",
-    )
-)
-
-# Annotation: callout for 'Others' being surprisingly large
-others_callout_angle = mid_angles[4]
-others_callout_r = radius + 0.16
-p.add_layout(
-    Label(
-        x=others_callout_r * math.cos(others_callout_angle) + offsets_x[4],
-        y=others_callout_r * math.sin(others_callout_angle) + offsets_y[4],
-        text="Long-tail rivals ≈ Azure",
-        text_font_size="22pt",
-        text_color="#666666",
-        text_font_style="italic",
-        text_align="center",
-        text_baseline="top",
-    )
-)
-
-# Subtitle annotation for context
-p.add_layout(
-    Label(
-        x=0,
-        y=-1.0,
-        text="Top 4 providers control 71% of the $280B global cloud market",
-        text_font_size="22pt",
-        text_color="#777777",
-        text_align="center",
-        text_baseline="top",
-    )
-)
 
 # Legend with category names and percentages
 legend_items = [
@@ -144,30 +126,49 @@ legend = Legend(
     items=legend_items,
     location="center",
     orientation="horizontal",
-    label_text_font_size="28pt",
-    glyph_width=45,
-    glyph_height=45,
-    spacing=40,
+    label_text_font_size="34pt",
+    label_text_color=INK_SOFT,
+    glyph_width=40,
+    glyph_height=40,
+    spacing=30,
     padding=20,
-    background_fill_alpha=0.0,
-    border_line_color=None,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.9,
+    border_line_color=INK_SOFT,
 )
 p.add_layout(legend, "below")
 
 # Styling
-p.title.text_font_size = "40pt"
+p.title.text_font_size = f"{title_pt}pt"
 p.title.align = "center"
-p.title.text_color = "#2C3E50"
+p.title.text_color = INK
 p.axis.visible = False
 p.grid.visible = False
-p.outline_line_color = None
-p.background_fill_color = "#FAFBFC"
-p.border_fill_color = "#FAFBFC"
-p.min_border_top = 20
-p.min_border_bottom = 10
+p.outline_line_color = PAGE_BG
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save
-export_png(p, filename="plot.png")
-
-output_file("plot.html")
+# Save HTML (interactive catalog artifact)
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome — window is H+200 tall so bokeh canvas fills
+# exactly W×H; PIL crops to the target rect before saving.
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H + 200}",
+    "--hide-scrollbars",
+    "--force-device-scale-factor=1",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H + 200)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+raw = driver.get_screenshot_as_png()
+driver.quit()
+Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")
