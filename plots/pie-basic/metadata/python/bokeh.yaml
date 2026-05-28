@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: pie-basic
 created: '2025-12-23T00:36:23Z'
-updated: '2026-05-28T12:05:08Z'
+updated: '2026-05-28T12:13:31Z'
 generated_by: claude-sonnet
 workflow_run: 26571550520
 issue: 678
@@ -12,50 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'All spec requirements met: percentage labels on every slice, exploded largest
-    slice (AWS), distinct colors, and horizontal legend with category names + percentages'
-  - 'Excellent palette compliance: brand green #009E73 correctly assigned to AWS (first
-    series), canonical palette order for Azure/Google Cloud/Alibaba, and semantically
-    appropriate INK_MUTED anchor for ''Others'''
-  - 'Perfect theme adaptation: warm off-white #FAF8F1 light background, warm near-black
-    #1A1A17 dark background, all chrome tokens correctly flipped between themes'
-  - 'Clean, idiomatic Bokeh code: ColumnDataSource for wedge data, LegendItem with
-    renderer+index pattern for multi-slice legend construction — genuinely Bokeh-specific
-    technique'
-  - Realistic, neutral data (cloud market share 2024) with plausible proportions aligned
-    with known figures
+  - 'Full spec compliance: percentage labels, distinct palette colors, legend with
+    percentages, and exploded largest slice all implemented correctly.'
+  - 'Excellent theme-adaptive implementation: slice label colors flip correctly for
+    the muted Others slice in dark mode, preventing a light-on-light failure.'
+  - Semantic use of the muted anchor for Others is idiomatic and correct; all four
+    canonical palette positions used in order for named cloud providers.
+  - Deterministic, realistic data (2024 cloud market share) with plausible proportions
+    for the domain.
+  - Clean Bokeh code using ColumnDataSource, vectorized wedge, and explicit LegendItem(index=i)
+    construction.
   weaknesses:
-  - Legend text set to 26pt is below the recommended 34pt for Bokeh at 2400x2400 —
-    increase legend label_text_font_size to '34pt' for better mobile readability
-  - Percentage labels inside slices set to 28pt are below the recommended 34pt tick-label
-    equivalent — increase to '34pt' bold
-  - Dark render shows a faint rectangular outline/border artifact around the inner
-    plot area, likely from Bokeh's default outline rendering when outline_line_color=None
-    — set p.outline_line_color='#1A1A17' (PAGE_BG) instead of None to make it invisible
-    on dark surface
-  - 'Design excellence is above-average but not at the 90-point threshold: consider
-    adding a subtitle or source annotation, and explore whether the title could include
-    a descriptive prefix such as ''Cloud Infrastructure Market Share 2024 · pie-basic
-    · python · bokeh · anyplot.ai'' to strengthen data storytelling'
+  - 'DE-01 could be pushed higher: the chart is clean but lacks deliberate typographic
+    or visual hierarchy beyond the explosion — consider de-emphasizing the Others
+    slice label (smaller font or lower opacity) to reinforce the AWS focal point.'
+  - 'LM-02 is limited: the Bokeh-specific LegendItem(index=i) pattern is used but
+    no other distinctly Bokeh features (hover tooltips in the HTML, NumeralTickFormatter,
+    CDSView filtering) are exercised.'
+  - The 4% Alibaba wedge label is tight at 34pt bold inside a narrow slice — readable
+    but marginally close to wedge boundaries; a slight font reduction would add breathing
+    room.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "pie-basic · python · bokeh · anyplot.ai" centered at top in bold dark ink, fully readable. No axis labels (correct for pie). Horizontal legend below chart shows AWS (33%), Azure (23%), Google Cloud (11%), Alibaba (4%), Others (29%) in dark secondary ink — all legible.
-      Data: Five wedge slices — AWS (33%) in brand green #009E73 exploded slightly outward; Azure (23%) in lavender #C475FD; Google Cloud (11%) in blue #4467A3; Alibaba (4%) in ochre #BD8233 (narrow but visible); Others (29%) in muted olive-gray #6B6A63. Bold white percentage labels centered on each slice at 28pt. White (PAGE_BG) separator lines between slices create clean boundaries.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "pie-basic · python · bokeh · anyplot.ai" in dark ink (#1A1A17), centered, clearly readable. No axes (appropriate for pie). Horizontal legend below chart on elevated background box with border; legend labels in dark-soft ink, all readable.
+      Data: 5 slices — AWS (33%) in brand green (#009E73) exploded outward; Azure (23%) in lavender (#C475FD); Google Cloud (11%) in blue (#4467A3); Alibaba (4%) in ochre (#BD8233); Others (29%) in muted gray (#6B6A63). Bold white percentage labels inside each slice at ~62% radius. Slice dividers use PAGE_BG color for clean separation.
+      Legibility verdict: PASS — all text readable against light background; 4% label tight but legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title unchanged text, rendered in light cream #F0EFE8 — clearly readable against dark background. Legend below in secondary light ink (B8B7B0) — legible. Legend background correctly elevated to #242420.
-      Data: Slice colors identical to light render for the four palette positions (green/lavender/blue/ochre). "Others" slice adapts to INK_MUTED dark (#A8A79F — lighter gray) per theme-adaptive semantic anchor design. Percentage label on Others slice is dark #1A1A17 on the lighter gray, providing adequate contrast. Bold light percentage labels on the four palette slices remain readable.
-      Note: A faint thin rectangular outline is visible around the inner plot area in the dark render — likely a Bokeh rendering artifact from outline_line_color=None not being fully suppressed. This is a minor cosmetic issue that does not cause any dark-on-dark text failure.
-      Legibility verdict: PASS — all title, legend, and slice labels are readable. No dark-on-dark failures for text elements.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), readable against dark background. Legend text in medium-light (#B8B7B0) on dark elevated background (#242420) with gray border — all readable. No dark-on-dark failures detected.
+      Data: Identical data colors to light render — green, lavender, blue, ochre all unchanged. Others slice appears as lighter gray (#A8A79F, the dark-theme muted anchor) against the dark background. Others slice percentage label correctly uses dark text (#1A1A17) to maintain readability on the lighter muted surface. All other slice labels remain white/light.
+      Legibility verdict: PASS — all text readable against dark background; theme-adaptive label color on Others slice prevents light-on-light failure.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,55 +57,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes. Title
-          at 50pt correct. Percentage labels at 28pt and legend at 26pt are below
-          recommended 34pt — still readable but slightly small for mobile scaling.
+        comment: All font sizes explicitly set; title scaling formula applied; 34pt
+          labels and legend text; both themes fully legible. Minor tightness on 4%
+          Alibaba label inside narrow wedge.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Percentage labels well-placed at 62% radius. Legend
-          clean below chart.
+        comment: No overlapping text or data elements; legend well-separated below
+          chart.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All slices clearly visible. 4% Alibaba slice is narrow but label
-          readable. Colors distinct.
+        comment: All wedges clearly visible; percentage labels on all slices including
+          narrow 4% wedge are readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. Multiple hue families used. No red-green
-          sole signal.
+        comment: CVD-safe anyplot palette; five hues span distinct perceptual families;
+          muted anchor for Others provides clear semantic separation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Square 2400x2400 canvas appropriate. Good use of space. Minor: faint
-          rectangular border artifact around inner plot in dark render.'
+        comment: Correct 2400x2400 square canvas; no content clipped; pie fills canvas
+          well; legend positioned below.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. No axis labels needed (pie chart). Legend provides
-          category identification.
+        comment: No axes needed for pie chart; title in correct mandatory format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'AWS correctly assigned brand green #009E73. Canonical palette order
-          for positions 2-4. ''Others'' uses INK_MUTED semantic anchor (theme-adaptive
-          by design). Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Both renders
-          theme-correct.'
+        comment: 'AWS uses #009E73 (brand green); positions 2-4 follow canonical palette
+          order; Others uses semantic muted anchor; backgrounds #FAF8F1 light / #1A1A17
+          dark; both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -119,25 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: semantic muted anchor for ''Others'' shows
-          design awareness, exploded slice adds emphasis, white slice separators are
-          clean. Not yet publication-ready.'
+        comment: 'Above default: exploded AWS slice, semantic muted for Others, theme-adaptive
+          slice label colors, clean PAGE_BG slice borders. Not publication-ready —
+          no distinctive typographic hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes and grid explicitly hidden. PAGE_BG slice borders create clean
-          separation. min_border settings provide generous whitespace. Legend with
-          ELEVATED_BG and border polished.
+        comment: Axes and grid hidden (ideal for pie); elevated legend box with border;
+          theme-correct backgrounds; clean slice dividers.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Exploded AWS slice draws visual attention to market leader. Muted
-          'Others' creates visual hierarchy. Percentage labels enable immediate reading.
-          Above default but could be stronger.
+        comment: AWS explosion creates clear focal point; percentage labels on slices
+          guide reader directly; cloud market share data tells a natural business
+          story.
     spec_compliance:
       score: 15
       max: 15
@@ -147,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart with wedge glyphs.
+        comment: Correct pie chart using Bokeh wedge().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Percentage labels on slices, distinct colors, legend, exploded largest
-          slice (AWS) — all spec requirements met.
+        comment: Percentage labels on slices, distinct colors, legend, largest slice
+          exploded.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to wedge angles via proportion. All 5 categories
-          shown.
+        comment: 5 categories summing to 100; wedge angles correctly proportional;
+          clockwise from top.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'pie-basic · python · bokeh · anyplot.ai' — correct format.
-          Legend shows category names with percentages.
+        comment: Title is pie-basic · python · bokeh · anyplot.ai; legend labels match
+          category names with percentages.
     data_quality:
       score: 15
       max: 15
@@ -178,23 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varied slice sizes (4% to 33%), all pie chart features present
-          including small and large slices.
+        comment: Varied slice sizes (4%-33%) show full range; exploded slice demonstrates
+          emphasis technique; legend with percentages covers all reading aids.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cloud infrastructure market share 2024 — real, comprehensible, neutral
-          technology scenario.
+        comment: 2024 cloud infrastructure market share with real companies (AWS,
+          Azure, Google Cloud, Alibaba). Neutral business topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values approximately match known 2024 cloud market share figures
-          (AWS ~33%, Azure ~22-23%, Google ~11%). Proportions plausible and factually
-          grounded.
+        comment: Proportions consistent with broadly accepted 2024 cloud market figures;
+          values sum to 100%.
     code_quality:
       score: 10
       max: 10
@@ -204,35 +194,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential structure: imports → data → compute angles → figure
-          → wedges → labels → legend → styling → save.'
+        comment: 'Linear structure: imports -> theme tokens -> data -> angle computation
+          -> figure -> wedges -> labels -> legend -> styling -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data. No random elements.
+        comment: Fully deterministic hardcoded data; no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io (BytesIO), math (pi, cos, sin), os (getenv),
-          time (sleep), pathlib.Path, bokeh models/io/plotting, PIL.Image, selenium.'
+        comment: 'All imports used: io, math, os, time, pathlib, bokeh modules, PIL,
+          selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Appropriate use of zip(strict=True), list comprehensions.
-          No over-engineering, no fake UI.
+        comment: Clean Pythonic code; zip(strict=True), title-length scaling formula,
+          semantic color assignments. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (via PIL crop) and plot-{THEME}.html. Current
-          Bokeh API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Bokeh
+          3.x API.
     library_mastery:
       score: 7
       max: 10
@@ -242,29 +233,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for wedge data, native p.wedge() glyph, add_layout()
-          for labels and legend, proper output_file + Selenium pattern.
+        comment: ColumnDataSource with vectorized wedge data, add_layout(Label) for
+          slice labels, explicit Legend + LegendItem(index=i) to link items to specific
+          renderer rows. Theme tokens wired to all Bokeh styling properties.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LegendItem with renderer+index is a distinctly Bokeh approach for
-          creating per-slice legend entries from a single multi-wedge renderer. Not
-          trivially replicated in other libraries.
-  verdict: REJECTED
+        comment: Uses LegendItem(renderers=[...], index=i) pattern (Bokeh-specific
+          multi-item legend from single renderer), HTML interactive output artifact,
+          Selenium/PIL screenshot pipeline.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
-  - custom-legend
   - html-export
+  - custom-legend
+  - annotations
   patterns:
   - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting
