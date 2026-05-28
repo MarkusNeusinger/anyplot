@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-26
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,193 +15,197 @@ from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.area import AreaSeries
 from highcharts_core.options.series.scatter import ScatterSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Generate theoretical bias-variance tradeoff curves
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# anyplot palette — first series always #009E73
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — theoretical bias-variance tradeoff curves
 complexity = np.linspace(0.5, 10, 100)
-
-# Bias squared: decreases with complexity (high bias = underfitting)
 bias_squared = 2.0 / (1 + 0.5 * complexity)
-
-# Variance: increases with complexity (high variance = overfitting)
 variance = 0.1 * complexity**1.5
-
-# Irreducible error: constant noise floor
 irreducible_error = np.full_like(complexity, 0.3)
-
-# Total error: sum of all components
 total_error = bias_squared + variance + irreducible_error
 
-# Find optimal complexity (minimum total error)
-optimal_idx = np.argmin(total_error)
-optimal_complexity = complexity[optimal_idx]
-optimal_error = total_error[optimal_idx]
+optimal_idx = int(np.argmin(total_error))
+optimal_complexity = float(complexity[optimal_idx])
+optimal_error = float(total_error[optimal_idx])
 
-# Create chart
+# Chart
+title = "curve-bias-variance-tradeoff · python · highcharts · anyplot.ai"
+
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "spline",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 280,
-    "marginLeft": 200,
-    "marginRight": 300,
-    "spacingBottom": 60,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 180,
+    "marginLeft": 220,
+    "marginRight": 360,
+    "marginTop": 200,
 }
 
-# Title
-chart.options.title = {
-    "text": "curve-bias-variance-tradeoff \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
-}
+chart.options.title = {"text": title, "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK}}
 
-# Subtitle with formula
 chart.options.subtitle = {
-    "text": "Total Error = Bias\u00b2 + Variance + Irreducible Error",
-    "style": {"fontSize": "32px", "color": "#666666"},
+    "text": "Total Error = Bias² + Variance + Irreducible Error",
+    "style": {"fontSize": "44px", "color": INK_SOFT},
 }
 
-# X-axis
 chart.options.x_axis = {
-    "title": {"text": "Model Complexity", "style": {"fontSize": "36px", "fontWeight": "bold"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Model Complexity", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    "gridLineWidth": 1,
     "min": 0,
     "max": 10.5,
     "tickInterval": 1,
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
     "plotBands": [
         {
             "from": 0,
             "to": optimal_complexity,
-            "color": "rgba(48, 105, 152, 0.08)",
+            "color": "rgba(0,158,115,0.10)",
             "label": {
-                "text": "Underfitting<br>(High Bias)",
-                "style": {"fontSize": "28px", "color": "#306998"},
+                "text": "Underfitting Zone",
+                "style": {"fontSize": "48px", "color": ANYPLOT_PALETTE[0], "fontWeight": "bold"},
                 "verticalAlign": "bottom",
-                "y": -60,
+                "align": "center",
+                "y": -55,
             },
         },
         {
             "from": optimal_complexity,
             "to": 11,
-            "color": "rgba(255, 212, 59, 0.12)",
+            "color": "rgba(196,117,253,0.10)",
             "label": {
-                "text": "Overfitting<br>(High Variance)",
-                "style": {"fontSize": "28px", "color": "#B8860B"},
+                "text": "Overfitting Zone",
+                "style": {"fontSize": "48px", "color": ANYPLOT_PALETTE[1], "fontWeight": "bold"},
                 "verticalAlign": "bottom",
-                "y": -60,
+                "align": "center",
+                "y": -55,
             },
         },
     ],
     "plotLines": [
         {
             "value": optimal_complexity,
-            "color": "#2ECC71",
-            "width": 4,
+            "color": INK_SOFT,
+            "width": 3,
             "dashStyle": "Dash",
             "label": {
-                "text": "Optimal<br>Complexity",
-                "style": {"fontSize": "26px", "color": "#2ECC71", "fontWeight": "bold"},
+                "text": "Optimal",
+                "style": {"fontSize": "40px", "color": INK_SOFT},
                 "rotation": 0,
-                "y": 60,
-                "x": 10,
+                "y": 24,
+                "x": 8,
             },
             "zIndex": 5,
         }
     ],
 }
 
-# Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Prediction Error", "style": {"fontSize": "36px", "fontWeight": "bold"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Prediction Error", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    "gridLineWidth": 1,
     "min": 0,
     "max": 3.5,
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
 }
 
-# Legend
 chart.options.legend = {
     "enabled": True,
     "align": "right",
     "verticalAlign": "middle",
     "layout": "vertical",
-    "itemStyle": {"fontSize": "28px", "fontWeight": "normal"},
-    "symbolWidth": 40,
-    "symbolHeight": 20,
-    "itemMarginBottom": 15,
+    "itemStyle": {"fontSize": "44px", "fontWeight": "normal", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "symbolWidth": 44,
+    "symbolHeight": 16,
+    "itemMarginBottom": 12,
+    "padding": 20,
 }
 
-# Plot options
 chart.options.plot_options = {
     "spline": {"lineWidth": 5, "marker": {"enabled": False}},
     "scatter": {"marker": {"radius": 16, "symbol": "circle"}},
 }
 
-# Tooltip
 chart.options.tooltip = {
     "headerFormat": "<b>Complexity: {point.x:.1f}</b><br/>",
     "pointFormat": "{series.name}: <b>{point.y:.3f}</b>",
-    "style": {"fontSize": "24px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "style": {"color": INK, "fontSize": "36px"},
 }
 
-# Create series - Using from_array for proper data handling
-# Bias squared curve
+# Series — anyplot palette positions 1-4 in order
 bias_series = AreaSeries()
-bias_series.name = "Bias\u00b2"
+bias_series.name = "Bias²"
 bias_series.data = [[float(x), float(y)] for x, y in zip(complexity, bias_squared, strict=True)]
-bias_series.color = "#306998"
+bias_series.color = ANYPLOT_PALETTE[0]
 bias_series.fill_opacity = 0
 chart.add_series(bias_series)
 
-# Variance curve
 variance_series = AreaSeries()
 variance_series.name = "Variance"
 variance_series.data = [[float(x), float(y)] for x, y in zip(complexity, variance, strict=True)]
-variance_series.color = "#FFD43B"
+variance_series.color = ANYPLOT_PALETTE[1]
 variance_series.fill_opacity = 0
 chart.add_series(variance_series)
 
-# Irreducible error curve
 irreducible_series = AreaSeries()
 irreducible_series.name = "Irreducible Error"
 irreducible_series.data = [[float(x), float(y)] for x, y in zip(complexity, irreducible_error, strict=True)]
-irreducible_series.color = "#9467BD"
+irreducible_series.color = ANYPLOT_PALETTE[2]
 irreducible_series.fill_opacity = 0
 irreducible_series.dash_style = "Dot"
 chart.add_series(irreducible_series)
 
-# Total error curve (most prominent)
 total_series = AreaSeries()
 total_series.name = "Total Error"
 total_series.data = [[float(x), float(y)] for x, y in zip(complexity, total_error, strict=True)]
-total_series.color = "#E74C3C"
+total_series.color = ANYPLOT_PALETTE[3]
 total_series.fill_opacity = 0
-total_series.line_width = 7
+total_series.line_width = 8
 chart.add_series(total_series)
 
-# Optimal point marker
 optimal_series = ScatterSeries()
 optimal_series.name = "Optimal Point"
-optimal_series.data = [[float(optimal_complexity), float(optimal_error)]]
-optimal_series.color = "#2ECC71"
-optimal_series.marker = {"radius": 18, "symbol": "diamond", "lineWidth": 3, "lineColor": "#ffffff"}
+optimal_series.data = [[optimal_complexity, optimal_error]]
+optimal_series.color = ANYPLOT_PALETTE[3]
+optimal_series.marker = {"radius": 18, "symbol": "diamond", "lineWidth": 3, "lineColor": PAGE_BG}
 chart.add_series(optimal_series)
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS (required for headless Chrome — CDN blocked on file://)
+_req = urllib.request.Request(
+    "https://code.highcharts.com/highcharts.js",
+    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.highcharts.com/"},
+)
+with urllib.request.urlopen(_req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# HTML with inline scripts — all 4 canvas dimensions kept in sync
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -208,32 +213,44 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Screenshot via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone is eaten by Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact 3200×1800 — guards against ±1-2 px rounding from CDP
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
