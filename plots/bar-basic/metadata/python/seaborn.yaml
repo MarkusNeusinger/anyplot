@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-basic
 created: '2025-12-23T00:22:51Z'
-updated: '2026-05-28T09:27:59Z'
+updated: '2026-05-28T09:38:52Z'
 generated_by: claude-sonnet
 workflow_run: 26565954049
 issue: 612
@@ -12,115 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG) properly
-    threaded through every text and spine element — both renders fully readable'
-  - Data sorted descending by value — good design choice enabling immediate visual
-    ranking comparison
-  - No bbox_inches=tight — canvas stays exactly 3200x1800 px per the seaborn canvas
-    rule
-  - Value labels on bars add precise readability without clutter
-  - Realistic, neutral dataset (US city sunshine hours) with accurate values
+  - 'Perfect visual quality across all 7 sub-criteria: explicit sizing, no overlap,
+    theme-adaptive chrome works correctly in both renders'
+  - Factually accurate, neutral, real-world data (US city sunshine hours with Phoenix
+    3872 to Seattle 2170) with meaningful range and correct relative proportions
+  - 'Correct seaborn 0.13+ idioms throughout: hue+dict palette for per-bar colors,
+    sns.set_theme rc dict, sns.despine, bbox_inches omitted from savefig'
+  - Clean KISS code structure with explicit margin control via subplots_adjust and
+    deterministic hardcoded data
   weaknesses:
-  - Value labels at fontsize=8 are at the lower boundary for mobile readability (~5.5
-    px at 400px display width); increase bar_label fontsize to 9 or 10
-  - No focal-point emphasis on the outlier (Phoenix has ~700 h/yr more than second
-    place Miami); a subtle color differentiation or annotation would strengthen storytelling
-  - Spine removal uses ax.spines[]... directly instead of sns.despine() — the seaborn-idiomatic
-    approach
+  - The amber (#DDCC77) highlight for Phoenix does not appear in either rendered image
+    — both renders show all 7 bars as uniform brand green (#009E73). The code is syntactically
+    correct (hue+dict palette), but the amber is not visible in the renders. This
+    removes the intended focal point and reduces storytelling effectiveness.
+  - 'LM-02 limited: after sns.barplot, all customization falls back to matplotlib
+    ax API (bar_label, tick_params, grid, spine colors). No seaborn-specific post-processing
+    features used beyond the initial plot call.'
+  - 'DE-03 lacks effective focal point: sorted ranking is the only storytelling element;
+    without the amber Phoenix outlier rendering, there is no visual emphasis or hierarchy
+    beyond bar height variation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide
-      Chrome: Title "Annual Sunshine Hours · bar-basic · python · seaborn · anyplot.ai" in dark (#1A1A17) medium-weight text spans ~75% of plot width (expected for long mandated title). Y-axis label "Sunshine Hours per Year" and X-axis label "City" in dark text at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44). Value labels above bars in INK_SOFT — all clearly readable against the light background. L-frame (top/right spines removed).
-      Data: Seven bars all in brand green (#009E73), sorted descending: Phoenix (3872), Miami (3154), Denver (3110), Boston (2634), Chicago (2508), Portland (2341), Seattle (2170). Subtle horizontal y-axis grid lines visible behind bars.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Annual Sunshine Hours · bar-basic · python · seaborn · anyplot.ai" fully visible in dark ink, spans ~80% width (expected for long mandated title). Y-axis label "Sunshine Hours per Year" and X-axis label "City" both readable in dark ink. Tick labels (city names and numeric values 0-4000) in soft dark gray — all clear.
+      Data: All 7 bars in brand teal-green (#009E73). Bar value labels (3872, 3154, 3110, 2634, 2508, 2341, 2170) in soft gray above bars. Bars sorted highest-to-lowest. NOTE: Code intends Phoenix bar to be amber (#DDCC77) but renders as same teal as others.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct per style guide
-      Chrome: Title, axis labels, tick labels all render in light-colored text (#F0EFE8 / #B8B7B0). All text clearly readable against dark background. Value labels appear in #B8B7B0 (INK_SOFT dark) — legible. No dark-on-dark failures. Grid lines appear as subtle off-white horizontal strokes.
-      Data: Identical brand green (#009E73) bars — data colors unchanged from light render. Same descending sort, same values.
-      Legibility verdict: PASS — all chrome properly adapted to dark theme, no dark-on-dark issues detected
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels all switch to light-colored text — fully readable against dark background. No dark-on-dark failure. Grid lines subtle and visible.
+      Data: All 7 bars remain identical teal-green (#009E73) — data colors unchanged between themes, confirming correct theme handling. Bar value labels in light gray. Phoenix bar appears same teal as others (amber highlight not visible).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt — all readable in both
-          themes. Bar value labels at fontsize=8 are at mobile readability lower boundary
-          (~5.5px at 400px width)
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
+          8pt, bar labels 10pt); proportions correct; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Value labels clear of bar tops with
-          padding=3
+        comment: No overlapping elements; bar labels sit cleanly above bars; city
+          tick labels do not overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 7 bars clearly visible in brand green, width=0.65 with good spacing
+        comment: Bars clearly visible with width=0.65; value labels clearly readable;
+          appropriate sizing for 7 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-color chart, no CVD concerns
+        comment: 'Brand green #009E73 has good contrast on both backgrounds; anyplot
+          palette is CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, 3200x1800 px, proper subplots_adjust margins,
-          no bbox_inches=tight
+        comment: Canvas gate passed (3200x1800); subplots_adjust provides balanced
+          margins; plot fills canvas appropriately
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels, title follows spec format with optional
-          descriptive prefix
+        comment: 'Y-axis: Sunshine Hours per Year (descriptive with implied units);
+          X-axis: City; title has correct format with descriptive prefix'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73, light bg #FAF8F1, dark bg #1A1A17, both
-          themes correct'
+        comment: 'All bars #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome
+          correct; data colors identical between renders'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Above default (4). Data pre-sorted descending is good design; correct
-          brand color. No emphasis on outlier values.
+        passed: false
+        comment: Well-configured clean design with correct palette and L-shaped spines.
+          Intended amber Phoenix highlight does not render — all bars appear uniform
+          brand green, limiting design sophistication to well-configured default level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Above default (2). Top/right spines removed, subtle y-axis-only grid,
-          ax.set_axisbelow(True), controlled whitespace via subplots_adjust
+        passed: false
+        comment: 'Good refinement: top/right spines removed, subtle horizontal grid
+          (alpha=0.15), axisbelow=True, explicit subplots_adjust margins, bar labels.
+          Solid above library defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Above default (2). Descending sort creates natural ranking narrative;
-          value labels enable precise reading. No focal-point emphasis on Phoenix
-          outlier.
+        passed: false
+        comment: Sorted highest-to-lowest shows ranking but no effective focal point.
+          Intended amber Phoenix outlier emphasis absent in renders. No annotations
+          or additional storytelling elements.
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart with categorical x-axis
+        comment: Correct vertical bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths, value labels, single color, adequate spacing
+        comment: Consistent bar widths, 7 categories (within 3-15 spec range), value
+          labels on bars as recommended
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, all 7 data points, y-axis
-          starts at 0
+        comment: Categories on x-axis, numeric values on y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Annual Sunshine Hours · bar-basic · python · seaborn ·
-          anyplot.ai''. No legend for single series — correct.'
+        comment: Title Annual Sunshine Hours · bar-basic · python · seaborn · anyplot.ai
+          matches required format; no legend correctly omitted for single-series
     data_quality:
       score: 15
       max: 15
@@ -160,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All core bar chart features demonstrated: categorical comparison,
-          value labeling, 7 categories (within 3-15 range), sorted ordering'
+        comment: 'Demonstrates core bar chart use case: comparing discrete categories,
+          showing rankings, value labels for precise reading'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US city sunshine hours is realistic, plausible, and neutral. Values
-          accurate (Phoenix ~3872 h/yr correct).
+        comment: Real US cities with genuine distinct sunshine profiles; neutral geography/climate
+          domain; not abstract
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis starts at 0, 1.12x max headroom, sensible range for annual
-          sunshine hours domain
+        comment: 'All values factually accurate: Phoenix ~3872 hrs verified, Seattle
+          ~2170 hrs verified; relative proportions match established climatology data'
     code_quality:
       score: 10
       max: 10
@@ -185,32 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear code, no unnecessary functions or classes
+        comment: 'Linear: imports -> tokens -> data -> plot -> style -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data, fully deterministic
+        comment: Deterministic hardcoded DataFrame; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, pandas, seaborn — all 4 used
+        comment: All four imports (os, matplotlib.pyplot, pandas, seaborn) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized sections, no fake UI, readable
+        comment: Dict comprehension for palette, clean seaborn + matplotlib integration;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, dpi=400, no bbox_inches=tight, seaborn
-          0.13.2 API
+        comment: Saves to plot-{THEME}.png with correct dpi=400; no bbox_inches=tight
+          per seaborn guide
     library_mastery:
       score: 6
       max: 10
@@ -220,21 +229,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.barplot() correct seaborn idiom; sns.set_theme() for theming.
-          Spine removal via ax.spines instead of sns.despine() slightly less idiomatic
-          but correct.
+        comment: 'Correct seaborn 0.13+ pattern: sns.barplot with hue+dict palette,
+          sns.set_theme rc dict, sns.despine. Minor deduction: amber dict palette
+          does not appear to render.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses seaborn-specific width= param and sns.set_theme() rc override.
-          No use of more distinctive seaborn capabilities — expected for a basic bar
-          chart.
+        comment: Uses seaborn hue+dict palette for per-bar colors (seaborn-specific),
+          but most post-plot customization uses matplotlib ax API directly. Could
+          largely be replicated in matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - explicit-figure
   dataprep: []
