@@ -1,15 +1,254 @@
 library: plotnine
+language: python
 specification_id: area-basic
 created: '2025-12-23T00:48:00Z'
-updated: '2026-02-12T22:45:48Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447970072
-issue: 0
-python_version: 3.14.2
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-basic/plotnine/plot.png
-preview_html: null
-quality_score: 95
+updated: '2026-05-28T05:52:58Z'
+generated_by: claude-sonnet
+workflow_run: 26556880529
+issue: 711
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: correct area chart with geom_ribbon + geom_line, semi-transparent
+    fill (alpha=0.35), gridlines, and descriptive axis labels with units'
+  - 'Excellent data storytelling: LOWESS trend line with labelled peak and maintenance
+    dip annotations, plus a subtitle that narrates the monthly pattern'
+  - 'Full theme adaptation: all chrome tokens (backgrounds, text, grid) correctly
+    switch between light (#FAF8F1) and dark (#1A1A17) surfaces with no dark-on-dark
+    failures'
+  - 'Clean, idiomatic plotnine code: grammar-of-graphics layering (geom_ribbon + geom_line
+    + geom_smooth), lambda scale labels, and explicit theme() overrides for every
+    size/color element'
+  - 'Realistic, neutral scenario: daily website visitors with plausible magnitudes
+    (3,000–8,000/day) and real-world patterns (weekly cycles, maintenance window,
+    upward trend)'
+  weaknesses:
+  - '''Maintenance: 3,242'' annotation uses INK_MUTED italic at geom size 3.5mm, placing
+    muted-gray text inside the green fill area — in the dark render this is readable
+    but borderline faint; consider bumping to size=4.0 and using INK_SOFT instead
+    of INK_MUTED for this annotation'
+  - '''Trend (LOWESS)'' annotation label sits very close to the blue LOWESS line and
+    visually merges with it in both renders; offsetting the y-position by +400 or
+    using ha=''left'' with a small nudge would improve separation'
+  - 'LM-02 could be higher: the geom_ribbon + geom_smooth(method=''lowess'') combination
+    is distinctively plotnine/ggplot grammar but the implementation doesn''t push
+    any further (e.g. stat_smooth confidence band, geom_area with a gradient fill
+    stop, or scale_color_manual for the LOWESS layer legend)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
+      Chrome: Bold dark title "area-basic · python · plotnine · anyplot.ai" occupies ~75% of width at 12pt; italic muted subtitle below it. Y-axis label "Daily Visitors (count)" and X-axis label "Date (January 2024)" both in dark INK at 10pt, balanced in size. Tick labels (Jan 01, Jan 08 … and 4,000 / 6,000 / 8,000) in INK_SOFT at 8pt — clearly readable. Subtle horizontal grid lines at 15% opacity.
+      Data: Brand green #009E73 area fill with alpha=0.35 and matching solid line at size=1.5. Blue #4467A3 LOWESS smooth line. Three annotations: bold "Peak: 8,213" at top-right (INK, bold), italic muted "Maintenance: 3,242" mid-chart (INK_MUTED, italic — faint but legible), and blue "Trend (LOWESS)" label near the smooth line.
+      Legibility verdict: PASS — all text readable against the warm off-white background; "Maintenance" annotation is faint but identifiable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
+      Chrome: Title text is light (#F0EFE8-range INK) on dark background — clearly readable. Subtitle, axis labels, and tick labels all render in lighter INK_SOFT/INK_MUTED tones against the dark surface — no dark-on-dark failures observed. Grid lines remain subtle.
+      Data: #009E73 area fill color is identical to the light render (same brand green, alpha blends differently on dark base producing a darker teal fill). Blue #4467A3 LOWESS line remains clearly visible. "Peak: 8,213" annotation in light INK is prominent. "Trend (LOWESS)" in blue is readable against the dark background. "Maintenance: 3,242" in muted gray (#A8A79F) on the dark green fill area is the least legible element but still identifiable.
+      Legibility verdict: PASS — no dark-on-dark failure; all elements are readable. Minor concern: "Maintenance: 3,242" annotation is borderline faint due to muted gray on dark teal fill.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title, axis labels, ticks well-proportioned.
+          Minor: ''Maintenance'' annotation uses INK_MUTED at size 3.5mm — borderline
+          faint in dark render but still readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text overlap. 'Trend (LOWESS)' annotation sits close to
+          the LOWESS line but text is fully readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Area fill, line, and LOWESS smooth are all clearly visible and well-sized
+          for 31 data points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette; adequate contrast between green area and
+          blue trend line.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed. Plot fills ~65% of canvas with balanced
+          margins. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: ''Daily Visitors (count)'', X: ''Date (January 2024)'' — both
+          descriptive with context/units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. LOWESS uses #4467A3 (anyplot palette
+          pos 3). Backgrounds #FAF8F1 / #1A1A17. All theme chrome tokens correct in
+          both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: warm background, brand palette, typographic
+          hierarchy (bold title, italic subtitle, styled annotations). Not quite FiveThirtyEight-level
+          but clearly intentional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-grid (alpha=0.15), very subtle x-grid (alpha=0.08), minor
+          grid hidden, y-ticks removed, x-axis line retained. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle, peak annotation, maintenance annotation, and LOWESS trend
+          create narrative. Visual hierarchy through annotation styles guides the
+          reader.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart via geom_ribbon + geom_line with semi-transparent
+          fill.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill (alpha=0.35), gridlines, descriptive axis labels
+          with units — all spec features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=datetime dates, Y=visitor count. 31 data points within spec range
+          (20-500).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'area-basic · python · plotnine · anyplot.ai' matches required
+          format exactly. No legend needed (single series with annotation labels).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows trend, weekly cycles, peak, maintenance dip, plateau — comprehensive
+          coverage of area chart features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic scenario, January 2024, plausible magnitudes, neutral
+          business context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 3,000–8,200 visitors/day realistic for a mid-size site. Weekly cycles,
+          maintenance dip, and upward trend all plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported names are used in the implementation.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Dynamic title fontsize scaling is appropriate. No
+          over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5
+          parameters.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ggplot grammar: geom_ribbon for area, geom_smooth(method=''lowess''),
+          scale_y_continuous with lambda labels, annotate(), theme() with element_*
+          classes.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_ribbon + geom_smooth LOWESS combination is distinctively plotnine/ggplot
+          grammar, but implementation doesn't push further into uniquely plotnine
+          territory (e.g. stat layers, geom_area aesthetic mapping).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,214 +259,5 @@ impl_tags:
   dataprep:
   - time-series
   styling:
-  - gradient-fill
-  - grid-styling
   - alpha-blending
-review:
-  strengths:
-  - Excellent gradient fill technique using 24 stacked geom_ribbon layers creating
-    a smooth bottom-to-top gradient effect
-  - Strong data storytelling with three well-placed annotations (peak, maintenance
-    dip, trend) plus narrative subtitle
-  - LOWESS trend line using plotnine native geom_smooth is a distinctive library feature
-  - Thoughtful data generation with weekly cycles, upward trend, maintenance dip,
-    and plateau showing diverse area chart features
-  - Publication-quality styling with custom colors, refined gridlines, and intentional
-    typographic hierarchy
-  weaknesses:
-  - The 24-layer gradient approach with functools.reduce adds code complexity; a single
-    geom_ribbon with appropriate alpha could be simpler
-  - LM-02 could reach 5/5 with additional plotnine-specific features like scale_*_gradient
-    or custom stat layers
-  image_description: 'The plot displays a basic area chart of daily website visitors
-    over January 2024. A dark blue line (#1e4d6d, size 1.8) traces the daily values,
-    with the area below filled using a smooth gradient effect created by 24 stacked
-    semi-transparent blue ribbon layers, transitioning from light at the bottom to
-    deeper blue near the line. A gold/yellow LOWESS trend line runs through the data
-    showing the overall upward trajectory. The title "area-basic · plotnine · pyplots.ai"
-    is bold at 24pt, with an italic subtitle describing the upward trend with weekly
-    cycles, a mid-month maintenance dip, and a brief plateau. Three annotations are
-    present: "Peak: 8,213" in bold dark blue near the top-right, "Maintenance: 3,242"
-    in italic gray near the mid-month dip, and "Trend (LOWESS)" in bold gold labeling
-    the trend line. The x-axis shows dates (Jan 01 through Jan 29) labeled "Date (January
-    2024)", the y-axis shows comma-formatted values labeled "Daily Visitors (count)".
-    The panel has a light gray (#f8f9fa) background with subtle gridlines, white plot
-    background, and balanced margins in a 16:9 aspect ratio.'
-  criteria_checklist:
-    visual_quality:
-      score: 30
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis_title 20pt, axis_text
-          16pt, base text 14pt. All perfectly readable.'
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements. All annotations well-positioned.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Line size 1.8 clearly visible, gradient fill distinct, LOWESS trend
-          easily distinguishable.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue and gold are colorblind-safe with strong contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 4
-        passed: true
-        comment: 16:9 canvas well-utilized, balanced margins, plot fills majority
-          of space.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Date (January 2024) and Daily Visitors
-          (count).'
-    design_excellence:
-      score: 17
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 7
-        max: 8
-        passed: true
-        comment: Custom Python Blue + gold palette, intentional typographic hierarchy,
-          refined backgrounds. Approaching publication quality.
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Minor gridlines removed, panel/plot backgrounds customized, axis
-          ticks styled, subtle major gridlines.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Three meaningful annotations (peak, maintenance dip, trend) plus
-          narrative subtitle guide the viewer.
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct area chart with filled region below line.
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Semi-transparent fill via gradient layers, gridlines, clear axis
-          labels with units, gradient fill.
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X=datetime, Y=numeric visitors correctly mapped. 31 data points within
-          spec range.
-      - id: SC-04
-        name: Title Format
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Correct format: area-basic · plotnine · pyplots.ai. No legend needed
-          for single series.'
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Shows upward trend, weekly cycles, maintenance dip, plateau period,
-          and peak.
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Website traffic over a month — real, comprehensible, neutral scenario.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Values 3,000-8,200 daily visitors, realistic for a mid-sized website.
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Imports, Data, Plot, Save structure. No function/class definitions.
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) present.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used.
-      - id: CQ-04
-        name: Code Elegance
-        score: 1
-        max: 2
-        passed: false
-        comment: 24-layer gradient with functools.reduce is creative but verbose;
-          simpler approach possible.
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png, dpi=300.
-    library_mastery:
-      score: 9
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of plotnine grammar of graphics: ggplot + aes + geom
-          + labs + scale + theme composition.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: geom_smooth(method=lowess) is a distinctive plotnine feature, stacked
-          geom_ribbon layers, annotate for callouts.
-  verdict: APPROVED
+  - grid-styling
