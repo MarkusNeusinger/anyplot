@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -84,7 +84,7 @@ for mode, color in zip(modes, mode_colors, strict=True):
 # End-of-line labels — de-collide vertically (increased min_gap for cleaner separation)
 end_vals = [(mode[-1], label, color) for mode, label, color in zip(modes, mode_labels, mode_colors, strict=True)]
 end_vals.sort(key=lambda x: x[0])
-min_gap = 6.0
+min_gap = 7.5
 positions = [v[0] for v in end_vals]
 for i in range(1, len(positions)):
     if positions[i] - positions[i - 1] < min_gap:
@@ -141,7 +141,7 @@ in_op = (cs_arr >= op_min) & (cs_arr <= op_max)
 
 if np.any(~in_op):
     ax.scatter(
-        cs_arr[~in_op], cf_arr[~in_op], s=70, color=INK_MUTED, edgecolors=PAGE_BG, linewidth=0.8, zorder=5, alpha=0.45
+        cs_arr[~in_op], cf_arr[~in_op], s=80, color=INK_MUTED, edgecolors=PAGE_BG, linewidth=0.8, zorder=5, alpha=0.55
     )
 
 if np.any(in_op):
@@ -195,7 +195,7 @@ for spine in ("left", "bottom"):
 ax.set_xlim(0, 6000)
 ax.set_ylim(0, y_max)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
-ax.xaxis.grid(True, alpha=0.08, linewidth=0.4, color=INK)
+ax.set_axisbelow(True)
 
 # Legend
 eo_handle = Line2D([0], [0], color=INK_SOFT, linewidth=1.5, linestyle=(0, (8, 4)), alpha=0.7)
@@ -205,7 +205,7 @@ crit_outside = Line2D(
 crit_inside = Line2D(
     [0], [0], marker="D", color="none", markerfacecolor=ANYPLOT_AMBER, markeredgecolor=INK, markersize=7
 )
-op_handle = Patch(facecolor=INK, alpha=0.07, edgecolor="none")
+op_handle = Patch(facecolor=INK, alpha=0.25, edgecolor="none")
 
 handles = [Line2D([0], [0], color=c, linewidth=2.5) for c in mode_colors] + [
     eo_handle,
@@ -231,7 +231,7 @@ leg = ax.legend(
 leg.get_frame().set_facecolor(ELEVATED_BG)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-fig.subplots_adjust(left=0.09, right=0.84, top=0.91, bottom=0.13)
+fig.subplots_adjust(left=0.09, right=0.86, top=0.91, bottom=0.13)
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
