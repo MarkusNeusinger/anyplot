@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -88,7 +88,7 @@ plot = (
         y=157000,
         label=f"Engineering earns ${gap / 1000:.0f}k more than Support",
         color=INK,
-        size=3.5,
+        size=4.0,
         ha="center",
         fontweight="bold",
     )
@@ -101,14 +101,14 @@ plot = (
         x=4.1,
         y=143000,
         label="Senior hires\nabove market rate",
-        size=3.0,
+        size=4.0,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.92,
         label_size=0,
         ha="center",
     )
-    + annotate("segment", x=3.08, xend=3.68, y=136500, yend=141000, color=INK_SOFT, size=0.5, alpha=0.65)
+    + annotate("segment", x=3.08, xend=4.0, y=136500, yend=141000, color=INK_SOFT, size=0.5, alpha=0.65)
     # Support tight distribution insight
     + annotate(
         "text",
@@ -116,7 +116,7 @@ plot = (
         y=24000,
         label="Narrow spread\n(σ ≈ $8k)",
         color=INK_MUTED,
-        size=3.0,
+        size=3.8,
         ha="center",
         fontstyle="italic",
     )
