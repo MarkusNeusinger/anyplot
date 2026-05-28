@@ -1,0 +1,266 @@
+library: ggplot2
+language: r
+specification_id: campbell-basic
+created: '2026-05-28T15:35:40Z'
+updated: '2026-05-28T15:52:36Z'
+generated_by: claude-sonnet
+workflow_run: 26584366119
+issue: 4241
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correct anyplot palette applied in canonical order across all 4 natural frequency
+    modes
+  - Excellent theme-adaptive chrome — all text, backgrounds, and legend adapt correctly
+    to light/dark
+  - 'Complete spec coverage: 4 modes, 3 engine order lines, critical speed markers,
+    critical speed zones, direct inline labels for 1x/2x/3x'
+  - 'Strong visual hierarchy: dashed muted engine order lines vs solid colored natural
+    frequency curves, red diamond markers as clear focal points'
+  - 'Clean ggplot2 idiom: multiple data sources layered via geom layers, factor levels
+    for legend ordering, coord_cartesian for soft axis limits'
+  - L-shaped spine (panel.border removed, axis.line retained) with subtle grid (minor
+    grid off, major at alpha 0.12) — good visual refinement
+  - Deterministic synthetic data with physically correct engine order formula (f =
+    n*RPM/60) and realistic gyroscopic speed variation
+  - Correct canvas (3200x1800, 8in × 4.5in, dpi=400) and output filename (plot-{THEME}.png)
+  weaknesses:
+  - Critical speed zone shading at alpha=0.05 is nearly invisible — consider increasing
+    to alpha=0.08-0.12 for subtle but perceptible emphasis on the resonance risk zones
+  - Engine order lines not represented in the legend — spec calls for a clean legend
+    distinguishing natural frequency curves from engine order lines; direct inline
+    labels compensate but a legend entry (e.g. 'Engine Orders (1x/2x/3x)') would strengthen
+    spec compliance
+  - DE-01 aesthetic sophistication is at the well-configured-library-default level
+    — critical zone shading could be more visually distinctive (e.g., a slightly deeper
+    alpha, a thin vertical dashed rule at each critical speed, or small numeric RPM
+    annotations at the critical markers)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Bold title "campbell-basic · r · ggplot2 · anyplot.ai" in dark #1A1A17 at ~65% plot width. Axis labels "Rotational Speed (RPM)" and "Frequency (Hz)" in dark ink at 10pt, tick labels in dark soft ink at 8pt — all readable. Right-side legend with elevated #FFFDF6 background and soft border, containing "Critical Speed" (red diamond) and "Natural Frequency Mode" section with 4 colored swatches.
+      Data: Four solid natural frequency curves in anyplot canonical order — #009E73 (1st Bending), #C475FD (1st Torsional), #4467A3 (2nd Bending), #BD8233 (Axial). Three dashed gray engine order lines rising from origin, labeled 1x/2x/3x in italic muted text. Red diamond markers (#AE3030) at 8 critical speed intersections. Very faint pink vertical zone bands (alpha=0.05) behind each critical point.
+      Legibility verdict: PASS — all text clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Same title in light near-white #F0EFE8, fully readable. Axis labels and tick labels in light soft #B8B7B0 — readable against dark background. Legend with dark elevated #242420 fill and soft border, light text labels. Grid lines subtle against dark surface. No dark-on-dark text failures observed.
+      Data: Identical data colors to light render — #009E73, #C475FD, #4467A3, #BD8233 lines, red #AE3030 diamond markers. Engine order dashed lines in theme-adaptive muted color. Critical zone shading barely visible (alpha=0.05) but still present.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures. Brand green #009E73 clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
+          legend=8/10). Readable in both themes. Minor: engine order inline labels
+          at geom_text size=3.5mm are slightly small for mobile'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data overlaps. Engine order labels well-positioned to
+          avoid mode curves
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curves at linewidth=1.2, engine orders at 0.7 (appropriate secondary
+          weight), critical markers size=3.5 clearly visible. All elements well-adapted
+          to density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: anyplot palette CVD-safe, theme-adaptive muted ink for secondary
+          lines, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas, plot fills ~70% of width, legend adjacent to plot,
+          balanced 15pt margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Rotational Speed (RPM) and Frequency (Hz) — both descriptive with
+          units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical palette order. Background #FAF8F1
+          light / #1A1A17 dark. Theme chrome correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: anyplot palette, L-spine, subtle
+          grid, elevated legend background, critical zone shading. Not yet at strong-design
+          (6) level — could use stronger zone emphasis or RPM annotations at critical
+          points'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor grid off, major grid subtle (alpha=0.12), L-shaped spine, generous
+          margins, elevated legend box. Clearly above defaults (2), reaches 'some
+          refinement visible' (4) level
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: muted dashed engine orders vs solid colored
+          modes. Red markers as focal point for critical speeds. Zone shading reinforces
+          risk areas. Tells the resonance story, though zones at alpha=0.05 are very
+          faint'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Campbell/interference diagram with all required elements
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 modes, 3 engine orders, critical markers, zone shading, inline
+          labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Speed on X, frequency on Y, all data visible across full 0-6000 RPM
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'campbell-basic · r · ggplot2 · anyplot.ai' correct. Legend
+          labels match data. Engine orders labeled inline
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: multiple mode types (bending/torsional/axial),
+          both increasing and decreasing trends, 3 engine orders, multiple intersections,
+          zone shading'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbomachinery rotordynamics — realistic mode names, speed range
+          (0-6000 RPM), frequency range (30-130 Hz)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically correct engine order formula (f=n*RPM/60), realistic gyroscopic
+          frequency variation, factually correct for industrial turbomachinery
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: tokens → data → plot → save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data (no random numbers)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic R. Loop for critical speed calculation is appropriate
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png. Correct format
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong ggplot2 idiom: grammar of graphics layering, factor levels
+          for ordering, coord_cartesian, scale_color_manual + scale_shape_manual dual
+          legends, setNames for named palette assignment'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multiple data source layers (mode_data, order_data, critical_pts,
+          zone_data, order_labels each with own data= argument) is distinctively ggplot2.
+          geom_rect for background zones. Two independent aesthetic guides via scale_manual()
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - layer-composition
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
