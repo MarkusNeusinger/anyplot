@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:37:08Z'
-updated: '2026-05-28T13:36:04Z'
+updated: '2026-05-28T13:44:46Z'
 generated_by: claude-sonnet
 workflow_run: 26577102275
 issue: 689
@@ -15,39 +15,37 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic
 quality_score: 89
 review:
   strengths:
-  - Full spec compliance — median line, whiskers at 1.5×IQR, outliers as individual
-    points, and distinct colors per category all present
-  - Correct anyplot palette order (green → lavender → blue → ochre for classes A–D)
-  - Strong theme adaptation — both light and dark renders pass all readability checks;
-    median rect color flips cleanly between INK tokens
-  - Insightful annotations labelling the tightest and widest IQR spreads add genuine
-    data storytelling beyond a bare box plot
-  - 'Idiomatic Bokeh usage: ColumnDataSource throughout, factor_cmap for categorical
-    color mapping, Whisker annotation model with sized caps, and LabelSet for annotations'
+  - Full spec compliance — median line at q2 via rect element, whiskers at 1.5×IQR
+    with correct computation, outliers as individual scatter points, per-category
+    anyplot palette colors
+  - Meaningful IQR annotations guide the viewer to key statistical insights (tightest
+    vs. widest spread) rather than just displaying raw data
+  - 'Excellent theme adaptation — both renders fully legible with correct backgrounds
+    (#FAF8F1 light / #1A1A17 dark) and all chrome tokens (text, grid, borders) correctly
+    switching between themes'
+  - 'Idiomatic bokeh usage throughout: factor_cmap for categorical color mapping,
+    Whisker annotation model, LabelSet for labels, ColumnDataSource for all data sources'
   weaknesses:
-  - Grid uses dashed line style (grid_line_dash=[6,4]) — the style guide specifies
-    solid thin lines for grid; remove the dash setting so the ygrid uses a solid 15%-alpha
-    line
-  - Annotation labels use bold font style (text_font_style='bold') which gives them
-    visual weight comparable to axis labels — lighter weight (normal or italic) would
-    better preserve the typography hierarchy
+  - Outlier circles (size=18) are slightly small for sparse data points; increasing
+    to size=24-28 would improve visibility at thumbnail scale per the density heuristic
+    (sparse data → prominent markers)
+  - Annotation text at 30pt is marginally smaller than tick labels at 34pt; matching
+    annotation font size to 34pt would improve typographic consistency
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "box-basic · python · bokeh · anyplot.ai" top-left in dark ink — fully readable. Y-axis label "Test Score (points)" and x-axis label "Class" in italic dark INK — both readable. Tick labels (60–120 on y, Class A–D on x) in INK_SOFT gray — clearly legible. Annotation labels "Tightest spread (IQR = 7.0)" and "Widest spread (IQR = 19.3)" in bold INK_SOFT above Class B and Class C boxes — readable.
-      Data: Four box plots colored Class A = #009E73 (brand green), Class B = #C475FD (lavender), Class C = #4467A3 (blue), Class D = #BD8233 (ochre). First series is brand green ✓. Median shown as near-black rect stripe. Whiskers with caps in INK_SOFT. Outliers as open circles (PAGE_BG fill, INK_SOFT border).
-      Grid: Subtle dashed horizontal y-grid at 15% alpha.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "box-basic · python · bokeh · anyplot.ai" in near-black (#1A1A17), clearly readable. Y-axis label "Test Score (points)" in italic, dark ink. X-axis label "Class" in italic, dark ink. Tick labels in secondary ink (#4A4A44), readable. Y-only grid at 15% opacity — subtle.
+      Data: 4 box plots — Class A in brand green (#009E73), Class B in lavender (#C475FD), Class C in blue (#4467A3), Class D in ochre (#BD8233). Median lines as thick near-black horizontal bars. Whiskers with end caps. Open circle outliers. IQR annotations in italic gray.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface.
-      Chrome: Title in light #F0EFE8 — fully readable. Axis labels "Test Score (points)" and "Class" in light INK — readable. Tick labels in INK_SOFT (#B8B7B0 light gray) on near-black — readable, no dark-on-dark. Annotation labels in INK_SOFT light gray — readable.
-      Data: Box colors identical to light render (green, lavender, blue, ochre) — data palette unchanged ✓. Median rect is now the light INK token (#F0EFE8), showing as a bright white stripe through each box — clearly visible. Whisker lines and caps in light INK_SOFT. Outlier circles appear as dark-filled (PAGE_BG = #1A1A17) with light INK_SOFT border — visible but subtle against the dark background.
-      Grid: Subtle dashed horizontal y-grid at 15% alpha on dark background.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text readable against dark surface.
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light cream (#F0EFE8), clearly readable. Axis labels and tick labels in light tones, readable against dark background. Grid lines subtle. Median lines now render in light cream (INK switches to #F0EFE8 for dark theme), clearly visible through colored boxes.
+      Data: Colors identical to light render — Class A green, Class B lavender, Class C blue, Class D ochre. No theme-adaptive drift in data series colors.
+      Legibility verdict: PASS — no dark-on-dark failures, all text clearly readable against dark background, brand green #009E73 fully visible.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,52 +53,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes match bokeh sizing guide
-          (50pt title, 42pt axis labels, 34pt ticks)
+        comment: 'All font sizes explicitly set: 50pt title, 42pt axis labels, 34pt
+          tick labels, 30pt annotations. All text readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap; annotations above boxes are clear of
-          data
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Boxes, whiskers, median line, and outlier points all clearly visible
-          in both themes
+        comment: Box plots and whiskers well-sized. Outlier circles (size=18) slightly
+          small for sparse data; should be 24-28.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct palette hues with good CVD separation; no red-green-only
-          signal
+        comment: CVD-safe anyplot palette, good contrast between boxes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, min_border values set, no clipping, canvas gate
-          passed
+        comment: 3200x1800 canvas, generous min_border margins, no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; y-axis 'Test Score (points)' has units; x-axis
-          'Class' descriptive
+        comment: 'Y-axis: ''Test Score (points)'' with units; X-axis: ''Class''; both
+          descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Class A = #009E73 first; canonical palette order; correct background
-          tokens in both themes'
+        comment: 'First series (Class A) is #009E73; palette in canonical order; backgrounds
+          #FAF8F1 light / #1A1A17 dark; all chrome theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -108,22 +103,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean design with proper palette, annotations add storytelling; above
-          default but not exceptional
+        comment: Above default. Annotations with IQR values, alpha fill, theme-adaptive
+          median line. Not quite publication-quality but clearly above configured
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines L-shaped, tick marks removed, grid subtle — but grid uses
-          dashed style contrary to style guide's solid preference
+        comment: X-grid disabled, Y-grid at alpha=0.15, tick marks disabled, no outer
+          border, generous min_border spacing — solid refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotations explicitly call out tightest (Class B IQR=7.0) and widest
-          (Class C IQR=19.3) spreads — genuine story
+        comment: IQR annotations explicitly highlight tightest (Class B) and widest
+          (Class C) spreads, guiding viewer to key insights.
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker plot
+        comment: Correct box-and-whisker plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, outliers as points, whiskers at 1.5*IQR, distinct colors
-          per category
+        comment: Median line (rect at q2), outliers as scatter, whiskers at 1.5xIQR,
+          different colors per category — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x-axis, test scores on y-axis, all 4 classes shown
+        comment: Categories on X, test scores on Y, all data correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'box-basic · python · bokeh · anyplot.ai' correct; no legend
-          appropriate (x-axis labels identify categories)
+        comment: Title 'box-basic · python · bokeh · anyplot.ai' matches format exactly.
+          No legend needed (x-axis labels identify categories).
     data_quality:
       score: 15
       max: 15
@@ -163,21 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Q1, median, Q3, whiskers, outliers all shown; 4 classes with varied
-          distributions
+        comment: Varied distributions (tight Class B, wide Class C), outliers from
+          multiple classes, different medians — excellent coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores across 4 classes — neutral, realistic, educational context
+        comment: Test scores across 4 classes — neutral, real-world educational scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores in 45–122 range; Class D outliers above 100 (extra credit)
-          are plausible
+        comment: Score range 45-125 realistic; some outliers exceed 100 (plausible
+          for bonus-point scenarios).
     code_quality:
       score: 10
       max: 10
@@ -187,32 +183,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward procedural script
+        comment: 'Linear script: imports → data → stats → plot → output.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path fix for naming collision is necessary
-          and explained
+        comment: All imports (io, os, sys, time, Path, PIL, numpy, bokeh, selenium)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; clean data pipeline
+        comment: Clean, appropriate complexity, no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API.
     library_mastery:
       score: 7
       max: 10
@@ -222,15 +218,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource throughout, factor_cmap for categorical colors,
-          x_range for categorical axis, add_layout for models
+        comment: Uses ColumnDataSource throughout, factor_cmap for categorical coloring,
+          x_range for categorical axis — clearly above default idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Whisker annotation model (Bokeh-specific), factor_cmap transform,
-          LabelSet annotation, HTML export artifact
+        comment: factor_cmap (bokeh-specific transform), Whisker annotation model
+          (bokeh-specific), LabelSet (bokeh annotation layer with CDS) — genuinely
+          bokeh-distinctive features.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -242,9 +239,8 @@ impl_tags:
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting
