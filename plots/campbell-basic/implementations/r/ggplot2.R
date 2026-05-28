@@ -62,15 +62,28 @@ for (n in 1:3) {
 }
 critical_pts <- do.call(rbind, critical_rows)
 
-# Engine order label positions (just below each line's high-speed terminus)
+# Semi-transparent shading bands centered on each critical speed
+zone_data <- data.frame(
+  xmin = critical_pts$speed - 150,
+  xmax = critical_pts$speed + 150,
+  ymin = 0,
+  ymax = y_max
+)
+
+# Engine order label positions — "3x" nudged extra to avoid Axial mode overlap
 order_labels <- data.frame(
   speed     = c(5700, 3550, 2050),
-  frequency = c(5700 / 60, 2 * 3550 / 60, 3 * 2050 / 60) + 4,
+  frequency = c(5700 / 60 + 4, 2 * 3550 / 60 + 4, 3 * 2050 / 60 + 10),
   label     = c("1x", "2x", "3x")
 )
 
 # Build plot
 p <- ggplot() +
+  geom_rect(
+    data = zone_data,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = CRITICAL_COLOR, alpha = 0.05, inherit.aes = FALSE
+  ) +
   geom_line(
     data = order_data,
     aes(x = speed, y = frequency, group = order),
@@ -89,7 +102,7 @@ p <- ggplot() +
   geom_text(
     data = order_labels,
     aes(x = speed, y = frequency, label = label),
-    color = INK_MUTED, size = 2.8, hjust = 0.5, fontface = "italic"
+    color = INK_MUTED, size = 3.5, hjust = 0.5, fontface = "italic"
   ) +
   scale_color_manual(
     name   = "Natural Frequency Mode",
