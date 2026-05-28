@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-28
+Quality: 89/100 | Updated: 2026-05-28
 """
 
 import os
