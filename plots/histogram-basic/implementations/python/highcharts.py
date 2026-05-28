@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-28
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-28
 """
 
 import os
