@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: plotnine | Python 3.14
-Quality: 95/100 | Updated: 2026-05-28
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-28
 """
 
 import os
