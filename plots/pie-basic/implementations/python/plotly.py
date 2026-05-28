@@ -1,103 +1,115 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
-Library: plotly 6.5.2 | Python 3.14.0
-Quality: 91/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-28
 """
+
+import os
 
 import plotly.graph_objects as go
 
 
-# Data - Market share of cloud providers (2024)
-categories = ["AWS", "Azure", "Google Cloud", "Alibaba", "IBM", "Others"]
-values = [31, 24, 11, 4, 3, 27]
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Colors - Python Blue first, cohesive palette avoiding adjacent red-green
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#C5A3FF", "#E07B54", "#8FBDD3"]
+# Data - Digital payment processor market share (2024)
+processors = ["Visa", "Mastercard", "PayPal", "Amex", "Apple Pay", "Others"]
+market_share = [38, 26, 18, 7, 5, 6]
+rankings = [1, 2, 3, 4, 5, 6]
 
-# Create donut chart (pie with hole) for modern aesthetic
+# Colors - anyplot palette positions 1-6
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+
+# Pure pie chart (no donut hole — per spec)
 fig = go.Figure(
     data=[
         go.Pie(
-            labels=categories,
-            values=values,
-            textinfo="percent+label",
-            textposition="outside",
-            textfont={"size": 20, "color": "#2D3436"},
-            hovertemplate="%{label}<br>%{value}% market share<br>(%{percent})<extra></extra>",
-            marker={"colors": colors, "line": {"color": "white", "width": 3}},
-            pull=[0.06, 0, 0, 0, 0, 0],
+            labels=processors,
+            values=market_share,
+            customdata=rankings,
+            texttemplate="%{label}<br>%{percent:.0%}",
+            textposition="inside",
+            insidetextorientation="horizontal",
+            textfont={"size": 13, "color": "#FFFFFF"},
+            hovertemplate=("<b>%{label}</b><br>%{value}% market share<br>Rank #%{customdata} globally<extra></extra>"),
+            marker={"colors": colors, "line": {"color": PAGE_BG, "width": 3}},
+            pull=[0.08, 0, 0, 0, 0, 0],
             sort=False,
-            hole=0.35,
             direction="clockwise",
             rotation=90,
-            domain={"x": [0.05, 0.75], "y": [0.0, 0.95]},
+            domain={"x": [0.02, 0.70], "y": [0.07, 0.93]},
         )
     ]
 )
 
-# Center annotation inside the donut hole
+# Market leader callout (above legend)
 fig.add_annotation(
-    text="<b>Cloud<br>Market<br>2024</b>",
-    x=0.40,
-    y=0.475,
+    text="<b>Market Leader</b><br>Visa leads<br>with 38% share",
+    x=0.86,
+    y=0.88,
     xref="paper",
     yref="paper",
     showarrow=False,
-    font={"size": 22, "color": "#306998", "family": "Arial Black, sans-serif"},
+    font={"size": 9, "color": colors[0], "family": "Arial, sans-serif"},
     xanchor="center",
     yanchor="middle",
+    bgcolor=ELEVATED_BG,
+    bordercolor=colors[0],
+    borderwidth=1,
+    borderpad=6,
+    align="center",
 )
 
-# Callout annotation for AWS leadership - positioned in bottom-right near AWS slice
+# Source note
 fig.add_annotation(
-    text="<b>AWS</b> leads with <b>31%</b> market share",
-    x=0.82,
-    y=0.18,
+    text="Source: Industry estimates, 2024",
+    x=0.36,
+    y=0.02,
     xref="paper",
     yref="paper",
-    showarrow=True,
-    ax=20,
-    ay=50,
-    arrowhead=2,
-    arrowsize=1.2,
-    arrowwidth=2,
-    arrowcolor="#306998",
-    font={"size": 16, "color": "#2D3436", "family": "Arial, sans-serif"},
-    bordercolor="#306998",
-    borderwidth=2,
-    borderpad=8,
-    bgcolor="rgba(48, 105, 152, 0.08)",
+    showarrow=False,
+    font={"size": 9, "color": INK_MUTED, "family": "Arial, sans-serif"},
+    xanchor="center",
+    yanchor="bottom",
 )
 
 # Layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "pie-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#2D3436", "family": "Arial, sans-serif"},
+        "text": (
+            "pie-basic · python · plotly · anyplot.ai"
+            f"<br><span style='font-size:11px;color:{INK_SOFT}'>"
+            "Global digital payment market share, 2024</span>"
+        ),
+        "font": {"size": 16, "color": INK, "family": "Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
+        "y": 0.98,
     },
     legend={
-        "font": {"size": 18, "color": "#2D3436"},
+        "font": {"size": 12, "color": INK_SOFT},
         "orientation": "v",
         "yanchor": "middle",
         "y": 0.5,
         "xanchor": "left",
-        "x": 0.82,
-        "bgcolor": "rgba(255,255,255,0.8)",
-        "bordercolor": "#E0E0E0",
+        "x": 0.74,
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    template="plotly_white",
-    margin={"t": 80, "b": 50, "l": 40, "r": 60},
-    paper_bgcolor="#FAFAFA",
-    plot_bgcolor="#FAFAFA",
-    uniformtext={"minsize": 16, "mode": "hide"},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    margin={"t": 60, "b": 35, "l": 20, "r": 20},
+    uniformtext={"minsize": 10, "mode": "hide"},
 )
 
-# Save as PNG (4800x2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
