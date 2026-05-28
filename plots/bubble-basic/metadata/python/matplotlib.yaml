@@ -1,15 +1,255 @@
 library: matplotlib
+language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:30:44Z'
-updated: '2026-02-16T20:40:05Z'
-generated_by: claude-opus-4-6
-workflow_run: 20448650412
-issue: 0
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 96
+updated: '2026-05-28T17:36:38Z'
+generated_by: claude-sonnet
+workflow_run: 26590425898
+issue: 755
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec compliance with all required bubble chart features
+  - Excellent data quality with realistic tech company scenario and accurate scaling
+  - Perfect code quality with KISS structure, reproducibility, and clean imports
+  - Near-perfect visual quality with all font sizes explicitly set and both themes
+    readable
+  - Annotations with path effects and curved arrows highlight notable data points
+  - Dual legend system (sector color + market cap size) is well-implemented
+  - Proper area-based bubble size scaling for perceptual accuracy
+  - Zero reference line adds interpretive context
+  weaknesses:
+  - DE-01 could be more publication-ready — while annotations and dual legends elevate
+    the design, a stronger visual focal point or descriptive title prefix would push
+    toward FiveThirtyEight-level polish
+  - 'LM-02: patheffects and add_artist usage are library-specific, but a stronger
+    showcase of matplotlib-unique capabilities (e.g. inset axes for size legend, custom
+    marker path, or more distinctive arrowstyle) would raise mastery score'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct cream surface
+      Chrome: Title "bubble-basic · python · matplotlib · anyplot.ai" in dark near-black ink, ~70% of canvas width (expected for mandated format). Axis labels "Annual Revenue ($B)" and "Revenue Growth Rate (%)" in dark ink at 10pt. Tick labels in secondary ink at 8pt. All text fully readable against light background.
+      Data: Bubbles in 4 anyplot palette colors — Cloud/SaaS in #009E73 (brand green), E-Commerce in #C475FD (lavender), Semiconductors in #4467A3 (blue), Social Media in #BD8233 (ochre). Alpha=0.65 gives transparency for overlapping bubbles. Sizes scale from small dots to large circles representing $25B–$380B market cap.
+      Legends: Sector legend (upper right) and Market Cap size legend (lower left) both styled with elevated background and ink-soft borders. All legend text readable.
+      Annotations: Three labeled outliers with curved arrows — "High-Growth Unicorn" (upper left), "Market Leader" (mid-right), "Breakout Performer" (center). Path effects give annotations white stroke for readability.
+      Zero growth line: Subtle horizontal reference line at y=0.
+      Legibility verdict: PASS — all text clearly readable, proper hierarchy maintained.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Same title and labels now rendered in light near-white ink (#F0EFE8 / #B8B7B0). All text clearly visible against dark background. No dark-on-dark failures detected. Tick labels appear in light secondary ink. Legend text is light.
+      Data: Bubble colors are identical to light render — same #009E73 green, #C475FD lavender, #4467A3 blue, #BD8233 ochre. Data color identity across themes confirmed. Edgecolors have flipped to #1A1A17 (dark PAGE_BG) for the dark theme.
+      Legends: Both legend boxes use elevated dark bg #242420, borders in ink-soft light tone. All legend text readable in light color.
+      Annotations: Annotation text in light ink with dark stroke — readable against dark background. Arrow colors in INK_SOFT (light).
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt,
+          legend 8pt, annotations 8pt bold). Readable in both themes. Well-proportioned.
+          Minor point held for annotation text at borderline 8pt when scaled to mobile.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Bubble overlaps handled via alpha=0.65. Annotations
+          well-separated with offsets.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 41 data points in 30-100 density range. Size range (30–610 pts²)
+          gives good visibility at all market cap levels. Alpha=0.65 appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 anyplot palette colors are CVD-safe. Alpha blending on overlapping
+          sectors doesn't create confusion.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed (no gate failure). Plot fills canvas well
+          with balanced margins via subplots_adjust. Both legends in corners, no overlap.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Annual Revenue ($B)'', Y: ''Revenue Growth Rate (%)'' — both
+          descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Cloud/SaaS) = #009E73 brand green. Multi-series uses
+          canonical palette order. Light bg #FAF8F1, dark bg #1A1A17. Chrome correctly
+          theme-adapted in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above a well-configured default: annotations with path effects,
+          dual legend system, reference zero line, intentional hierarchy. Not yet
+          ''publication-ready FiveThirtyEight-level'' — lacks a strong single focal
+          point or descriptive title prefix.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed (clean for scatter/bubble), y-axis-only grid at
+          alpha=0.15, generous whitespace, custom legend frames. Approaching 'every
+          detail polished'.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three annotated outliers with curved arrows guide viewer to interesting
+          companies. Zero reference line contextualizes growth. Color-by-sector creates
+          visual groupings. Negative revenue-growth correlation is visible. Not quite
+          'viewer immediately sees the insight' level.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bubble chart with x, y, and size dimensions.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: area-based scaling, alpha transparency (0.65),
+          size legend, color by category, visible min/max bubbles.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Revenue, Y=Growth Rate, Size=Market Cap. All data visible with
+          appropriate axis limits.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'bubble-basic · python · matplotlib · anyplot.ai'. Both
+          sector and size legends correctly labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all bubble chart aspects: x/y/size encoding, multiple categories,
+          positive and negative growth, outliers, varying market caps.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech company financial metrics — neutral business scenario. Realistic
+          and comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue $5-120B, growth -10% to +55%, market cap up to $380B — all
+          plausible for tech companies. Negative growth included.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Clean flow: imports → tokens → data → plot
+          → style → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, matplotlib.patheffects, matplotlib.pyplot,
+          numpy.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. zip(strict=True) is a good defensive choice.
+          List comprehension for legend handles. No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight' (correct). Current
+          matplotlib API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Axes methods throughout (ax.scatter, ax.annotate, ax.yaxis.grid).
+          ax.add_artist() for dual legends is idiomatic. plt.setp() used correctly.
+          Minor: plt.savefig instead of fig.savefig.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: matplotlib.patheffects.withStroke for annotation readability, custom
+          arrowprops with connectionstyle='arc3', ax.add_artist() for dual legend
+          management — all matplotlib-specific. Not quite a 'couldn't be done in another
+          library' level.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -24,211 +264,3 @@ impl_tags:
   - alpha-blending
   - edge-highlighting
   - grid-styling
-review:
-  strengths:
-  - Excellent FiveThirtyEight-inspired visual design with custom background, removed
-    spines, and horizontal-only grid
-  - 'Strong data storytelling: three named annotations guide the viewer to key outliers
-    with curved arrow connections and path effects'
-  - Four-dimensional data encoding (x, y, size, color) with both a size legend and
-    sector color legend — all clearly labeled
-  - Realistic tech company dataset with plausible values across revenue, growth, and
-    market cap
-  - 'Smart use of matplotlib-specific features: dual legends via add_artist, patheffects
-    for text readability, axhline for growth baseline reference'
-  - Clean code structure with concise outlier construction using numpy array concatenation
-  weaknesses:
-  - Minor bubble overlap in the upper-left cluster (low-revenue, high-growth area)
-    reduces individual readability slightly
-  - The Market Leader annotation arrow points into a dense cluster on the right side
-    where several bubbles overlap, making it less clear which specific bubble is being
-    highlighted
-  image_description: 'The plot displays a bubble chart of tech company metrics on
-    a light gray (#FAFAFA) background with a FiveThirtyEight-inspired aesthetic. The
-    X-axis shows "Annual Revenue ($B)" ranging from 0 to 140, and the Y-axis shows
-    "Revenue Growth Rate (%)" from approximately -15% to 60%. Four sectors are color-coded:
-    Cloud/SaaS (steel blue), E-Commerce (orange), Semiconductors (teal/green), and
-    Social Media (purple). Bubble sizes represent market capitalization, with a size
-    legend in the lower left corner showing reference sizes for $25B, $100B, and $300B.
-    Three annotations with arrows highlight notable outliers: "High-Growth Unicorn"
-    in the upper-left cluster, "Breakout Performer" in the center, and "Market Leader"
-    on the right side. All spines are removed, only horizontal grid lines are displayed
-    at low opacity, and a thin reference line sits at 0% growth. A subtle "pyplots.ai"
-    watermark appears in the lower-right corner. The sector color legend is positioned
-    in the upper right. Approximately 41 bubbles are plotted with white edge highlighting
-    and alpha transparency of 0.65.'
-  criteria_checklist:
-    visual_quality:
-      score: 29
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, annotations 13pt with path effects'
-      - id: VQ-02
-        name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Text fully readable; minor bubble overlap in upper-left cluster handled
-          by alpha transparency
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Bubble sizes well-adapted for ~41 data points with alpha=0.65
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue, orange, teal, purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: 16:9 canvas well-utilized, legends placed in corners without obscuring
-          data
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Annual Revenue ($B), Revenue Growth
-          Rate (%)'
-    design_excellence:
-      score: 18
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 7
-        max: 8
-        passed: true
-        comment: FiveThirtyEight-inspired design with custom background, 4-color palette,
-          white-edged bubbles, path effects
-      - id: DE-02
-        name: Visual Refinement
-        score: 6
-        max: 6
-        passed: true
-        comment: All spines removed, subtle horizontal-only grid, custom facecolor,
-          edge highlighting, watermark
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Three annotations guide viewer to outliers; 0% baseline provides
-          context; strong visual hierarchy
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct bubble chart type
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Area-based scaling, alpha transparency, size legend, color encoding
-          all present
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X=revenue, Y=growth, size=market cap correctly mapped
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title in correct format, both sector and size legends clearly labeled
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Full range of revenue, growth (including negative), market cap variation,
-          outliers present
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Tech company metrics — revenue, growth, market cap by sector
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: All values realistic for tech companies
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean imports → data → plot → save flow, no functions/classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean, well-organized, concise outlier construction
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png, dpi=300, no deprecated functions
-    library_features:
-      score: 9
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Axes-based API throughout, proper scatter sizing, ax.add_artist for
-          dual legends
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Multiple legends via add_artist, patheffects, connectionstyle in
-          arrowprops
-  verdict: APPROVED
