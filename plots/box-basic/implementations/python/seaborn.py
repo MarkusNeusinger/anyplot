@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
-Library: seaborn 0.13.2 | Python 3.14
-Quality: 94/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-28
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,126 +12,102 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data — daily PM2.5 air quality readings (ug/m3) across 5 city zones
 np.random.seed(42)
 
-dept_params = {
-    "Engineering": {"loc": 95000, "scale": 15000, "n": 80},
-    "Marketing": {"loc": 75000, "scale": 12000, "n": 60},
-    "Sales": {"loc": 70000, "scale": 20000, "n": 100},
-    "HR": {"loc": 65000, "scale": 10000, "n": 50},
-    "Finance": {"loc": 85000, "scale": 18000, "n": 70},
-}
+zones_config = [
+    ("Park", "normal", 8, 3, 90),
+    ("Residential", "normal", 18, 5, 80),
+    ("Commercial", "normal", 30, 6, 75),
+    ("Downtown", "bimodal", None, None, 100),
+    ("Industrial", "exponential", None, 14, 70),
+]
 
-data = []
-for dept, params in dept_params.items():
-    if dept == "Sales":
-        # Right-skewed distribution to show distributional diversity
-        values = np.random.exponential(scale=15000, size=params["n"]) + 45000
+records = []
+for zone, dist, loc, scale, n in zones_config:
+    if dist == "bimodal":
+        values = np.concatenate([np.random.normal(25, 5, n // 2), np.random.normal(44, 6, n // 2)])
+    elif dist == "exponential":
+        values = np.random.exponential(scale, n) + 28
     else:
-        values = np.random.normal(params["loc"], params["scale"], params["n"])
-    outliers = np.random.uniform(values.min() - 20000, values.max() + 25000, 3)
-    values = np.concatenate([values, outliers])
+        values = np.random.normal(loc, scale, n)
+    values = np.clip(values, 1, None)
     for v in values:
-        data.append({"Department": dept, "Salary": v})
+        records.append({"Zone": zone, "PM2.5 (ug/m3)": v})
 
-df = pd.DataFrame(data)
+df = pd.DataFrame(records)
+zone_order = ["Park", "Residential", "Commercial", "Downtown", "Industrial"]
 
-# Seaborn context for global scaling
-sns.set_context("talk", font_scale=1.1)
+# Theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
 
 # Plot
-palette = ["#306998", "#E8A838", "#4CAF50", "#FF7043", "#9C27B0"]
-
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+palette = dict(zip(zone_order, ANYPLOT_PALETTE, strict=True))
 
 sns.boxplot(
     data=df,
-    x="Department",
-    y="Salary",
-    hue="Department",
+    x="Zone",
+    y="PM2.5 (ug/m3)",
+    hue="Zone",
+    order=zone_order,
+    hue_order=zone_order,
     palette=palette,
-    linewidth=2.5,
+    linewidth=1.5,
     fliersize=0,
-    width=0.6,
+    width=0.55,
     legend=False,
     ax=ax,
 )
 
 sns.stripplot(
     data=df,
-    x="Department",
-    y="Salary",
-    hue="Department",
+    x="Zone",
+    y="PM2.5 (ug/m3)",
+    hue="Zone",
+    order=zone_order,
+    hue_order=zone_order,
     palette=palette,
-    size=5,
-    alpha=0.4,
-    jitter=0.25,
+    size=3,
+    alpha=0.25,
+    jitter=0.2,
     legend=False,
     ax=ax,
 )
 
 # Style
-ax.set_xlabel("Department", fontsize=20)
-ax.set_ylabel("Salary ($)", fontsize=20)
-ax.set_title("box-basic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+title = "box-basic · python · seaborn · anyplot.ai"
+n_chars = len(title)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.set_xlabel("City Zone", fontsize=10, color=INK)
+ax.set_ylabel("PM2.5 (ug/m3)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 sns.despine(ax=ax)
 
-ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"${x / 1000:.0f}K"))
-
-# Tighten y-axis to reduce empty space
-y_min = df["Salary"].min() - 5000
-y_max = df["Salary"].max() + 8000
-ax.set_ylim(y_min, y_max)
-
-# Data storytelling: annotate key insights
-medians = df.groupby("Department")["Salary"].median()
-spreads = df.groupby("Department")["Salary"].apply(lambda x: x.quantile(0.75) - x.quantile(0.25))
-
-highest_dept = medians.idxmax()
-widest_dept = spreads.idxmax()
-
-dept_positions = {dept: i for i, dept in enumerate(dept_params.keys())}
-
-# Annotate highest median (Engineering, position 0)
-ax.annotate(
-    f"Highest median: ${medians[highest_dept] / 1000:.0f}K",
-    xy=(dept_positions[highest_dept], medians[highest_dept]),
-    xytext=(dept_positions[highest_dept] + 1.6, y_max - (y_max - y_min) * 0.05),
-    fontsize=13,
-    fontweight="bold",
-    color="#306998",
-    ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#306998", "lw": 1.8, "connectionstyle": "arc3,rad=-0.2"},
-)
-
-# Annotate widest spread (Finance, position 4)
-ax.annotate(
-    f"Widest IQR: ${spreads[widest_dept] / 1000:.0f}K spread",
-    xy=(dept_positions[widest_dept], medians[widest_dept]),
-    xytext=(dept_positions[widest_dept] - 1.6, y_min + (y_max - y_min) * 0.07),
-    fontsize=13,
-    fontweight="bold",
-    color="#9C27B0",
-    ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#9C27B0", "lw": 1.8, "connectionstyle": "arc3,rad=0.2"},
-)
-
-# Annotate right-skewed Sales distribution
-sales_pos = dept_positions["Sales"]
-sales_q3 = df[df["Department"] == "Sales"]["Salary"].quantile(0.75)
-ax.annotate(
-    "Right-skewed\ndistribution",
-    xy=(sales_pos, sales_q3),
-    xytext=(sales_pos + 0.8, sales_q3 + (y_max - y_min) * 0.13),
-    fontsize=13,
-    fontweight="bold",
-    color="#4CAF50",
-    ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#4CAF50", "lw": 1.8},
-)
-
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

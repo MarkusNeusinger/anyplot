@@ -1,8 +1,15 @@
-""" pyplots.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
-Library: plotnine 0.15.3 | Python 3.14
-Quality: 92/100 | Created: 2025-12-23
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-28
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the plotnine package (script is named plotnine.py)
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
 
 import numpy as np
 import pandas as pd
@@ -24,6 +31,15 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data
 np.random.seed(42)
@@ -50,75 +66,79 @@ df = pd.DataFrame(records)
 dept_order = ["Support", "Marketing", "Sales", "Research", "Engineering"]
 df["department"] = pd.Categorical(df["department"], categories=dept_order, ordered=True)
 
-# Compute medians for storytelling annotations
 medians = df.groupby("department", observed=True)["salary"].median()
 eng_median = medians["Engineering"]
 sup_median = medians["Support"]
 gap = eng_median - sup_median
 
-# Custom palette — cohesive muted tones starting from Python Blue
-palette = ["#7FAACC", "#E8A87C", "#D4A5C9", "#82C9B0", "#306998"]
-
-# Plot with stat_summary and annotate for storytelling
+# Plot
 plot = (
     ggplot(df, aes(x="department", y="salary", fill="department"))
     + geom_boxplot(
-        outlier_size=3.5, outlier_alpha=0.7, outlier_colour="#C0392B", size=0.5, alpha=0.88, width=0.6, color="#444444"
+        outlier_size=2.5, outlier_alpha=0.65, outlier_colour=INK_SOFT, size=0.5, alpha=0.85, width=0.6, color=INK_SOFT
     )
-    # Median diamond markers via stat_summary — distinctive plotnine feature
-    + stat_summary(fun_y=np.median, geom="point", size=5, shape="D", color="#1a1a1a", fill="#1a1a1a")
-    + scale_fill_manual(values=palette)
+    + stat_summary(fun_y=np.median, geom="point", size=4, shape="D", color=INK, fill=INK)
+    + scale_fill_manual(values=ANYPLOT_PALETTE[:5])
     + scale_y_continuous(labels=lambda vals: [f"${v / 1000:.0f}k" for v in vals], breaks=range(20000, 160001, 20000))
-    + coord_cartesian(ylim=(12000, 156000))
-    # Annotation: salary gap between Engineering and Support
+    + coord_cartesian(ylim=(12000, 160000))
+    # Gap annotation — bracket style with ticks at Support (x=1) and Engineering (x=5)
     + annotate(
         "text",
         x=3,
-        y=151000,
+        y=157000,
         label=f"Engineering earns ${gap / 1000:.0f}k more than Support",
-        color="#306998",
-        size=10,
+        color=INK,
+        size=4.0,
         ha="center",
         fontweight="bold",
     )
-    + annotate("segment", x=1, xend=5, y=144000, yend=144000, color="#306998", size=0.6, linetype="dashed", alpha=0.5)
-    # Annotation: Sales outlier cluster callout
+    + annotate("segment", x=1, xend=5, y=152500, yend=152500, color=INK_SOFT, size=0.6, alpha=0.65)
+    + annotate("segment", x=1, xend=1, y=149000, yend=152500, color=INK_SOFT, size=0.6, alpha=0.65)
+    + annotate("segment", x=5, xend=5, y=149000, yend=152500, color=INK_SOFT, size=0.6, alpha=0.65)
+    # Senior hires: diagonal connector from Sales outlier cluster to label
     + annotate(
         "label",
-        x=3.5,
-        y=132000,
+        x=4.1,
+        y=143000,
         label="Senior hires\nabove market rate",
-        size=9,
-        color="#8B0000",
-        fill="#FFF0F0",
-        alpha=0.9,
+        size=4.0,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.92,
         label_size=0,
-        ha="left",
+        ha="center",
     )
-    + annotate("segment", x=3.18, xend=3.42, y=132000, yend=132000, color="#C0392B", size=0.5, alpha=0.5)
-    # Annotation: Support tight distribution insight
+    + annotate("segment", x=3.08, xend=4.0, y=136500, yend=141000, color=INK_SOFT, size=0.5, alpha=0.65)
+    # Support tight distribution insight
     + annotate(
-        "text", x=1, y=28000, label="Narrow spread\n(σ ≈ $8k)", color="#666666", size=8, ha="center", fontstyle="italic"
+        "text",
+        x=1,
+        y=24000,
+        label="Narrow spread\n(σ ≈ $8k)",
+        color=INK_MUTED,
+        size=3.8,
+        ha="center",
+        fontstyle="italic",
     )
-    + labs(x="Department", y="Salary ($)", title="box-basic · plotnine · pyplots.ai")
+    + labs(x="Department", y="Salary ($)", title="box-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14, color="#333333"),
-        plot_title=element_text(size=24, color="#1a1a1a", weight="bold", margin={"b": 14}),
-        axis_title_x=element_text(size=20, color="#222222", margin={"t": 14}),
-        axis_title_y=element_text(size=20, color="#222222", margin={"r": 14}),
-        axis_text=element_text(size=16, color="#555555"),
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK),
+        plot_title=element_text(size=12, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         legend_position="none",
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#e0e0e0", size=0.5),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
         axis_ticks_major_x=element_blank(),
         axis_ticks_major_y=element_blank(),
-        plot_background=element_rect(fill="white", color="white"),
-        panel_background=element_rect(fill="white", color="white"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
