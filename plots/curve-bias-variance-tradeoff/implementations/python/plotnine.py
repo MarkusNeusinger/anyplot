@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-28
@@ -15,6 +15,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_line,
+    geom_rect,
     geom_text,
     geom_vline,
     ggplot,
@@ -72,17 +73,17 @@ def y_at(arr, x_val):
     return float(arr[idx])
 
 
+# Shaded underfitting (left) / overfitting (right) zones
+zone_df = pd.DataFrame(
+    {"xmin": [0.1, opt_x], "xmax": [opt_x, 11.5], "ymin": [0.0, 0.0], "ymax": [y_max * 1.05, y_max * 1.05]}
+)
+
 # Direct curve labels at well-separated positions
 curve_label_df = pd.DataFrame(
     {
-        "x": [2.2, 8.0, 2.5, 5.8],
-        "y": [
-            y_at(bias_sq, 2.2) + 0.06,
-            y_at(variance, 8.0) + 0.05,
-            irreducible - 0.055,
-            y_at(total_error, 5.8) + 0.06,
-        ],
-        "label": ["Bias²", "Variance", "Irred. Error", "Total Error"],
+        "x": [2.2, 8.0, 6.5, 5.8],
+        "y": [y_at(bias_sq, 2.2) + 0.06, y_at(variance, 8.0) + 0.05, irreducible - 0.06, y_at(total_error, 5.8) + 0.06],
+        "label": ["Bias²", "Variance", "Irreducible Error", "Total Error"],
         "component": pd.Categorical(["Bias²", "Variance", "Irreducible Error", "Total Error"], categories=series_order),
     }
 )
@@ -114,12 +115,19 @@ anyplot_theme = theme(
 # Plot
 plot = (
     ggplot(df, aes(x="complexity", y="error", color="component", linetype="component", size="component"))
+    + geom_rect(
+        data=zone_df,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill=INK_MUTED,
+        alpha=0.07,
+        inherit_aes=False,
+    )
     + geom_line()
     + geom_vline(xintercept=opt_x, color=INK_MUTED, linetype="dashed", size=0.5, inherit_aes=False)
     + geom_text(
         data=curve_label_df,
         mapping=aes(x="x", y="y", label="label", color="component"),
-        size=3.2,
+        size=3.5,
         ha="left",
         inherit_aes=False,
     )
@@ -127,7 +135,7 @@ plot = (
         data=opt_label_df,
         mapping=aes(x="x", y="y", label="label"),
         color=INK_MUTED,
-        size=2.8,
+        size=3.2,
         ha="left",
         inherit_aes=False,
     )
@@ -135,7 +143,7 @@ plot = (
         data=formula_df,
         mapping=aes(x="x", y="y", label="label"),
         color=INK_SOFT,
-        size=2.5,
+        size=3.2,
         ha="center",
         inherit_aes=False,
     )
