@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-basic: Basic Area Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-28
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-28
 """
 
 import os
