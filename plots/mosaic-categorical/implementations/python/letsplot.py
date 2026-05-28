@@ -39,7 +39,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — Titanic survival cross-tabulated by passenger class
 categories_1 = ["First Class", "Second Class", "Third Class", "Crew"]
@@ -136,7 +136,7 @@ plot = (
         tooltips=tooltips,
     )
     + geom_text(aes(x="x_center", y="y_center", label="label"), size=13, color="white", fontface="bold")
-    + scale_fill_manual(values=OKABE_ITO[:2], name="Survival Status")
+    + scale_fill_manual(values=IMPRINT[:2], name="Survival Status")
     + scale_x_continuous(name="Passenger Class  (width ∝ count)", breaks=x_breaks, labels=categories_1, limits=[0, 100])
     + scale_y_continuous(name="Survival Rate (%)", limits=[0, 100], breaks=[0, 25, 50, 75, 100])
     + labs(

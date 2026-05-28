@@ -35,7 +35,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "rgba(26,26,23,0.08)" if THEME == "light" else "rgba(240,239,232,0.08)"
 
 # Okabe-Ito palette - first series is brand green
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: A/B test results showing conversion rates with 95% CI
 categories = ["Control", "Variant A", "Variant B", "Variant C", "Variant D"]
@@ -57,7 +57,7 @@ plot = (
     ggplot(df, aes(x="category", y="value", fill="category"))
     + geom_bar(stat="identity", width=0.68, show_legend=False, alpha=0.92)
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.23, size=1.3, color=INK_SOFT, alpha=0.85)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(
         title="bar-error · letsplot · anyplot.ai",
         x="Test Group",

@@ -17,7 +17,7 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 # embed alpha into hex — ggplot2 element_line lacks alpha parameter
 GRID_COLOR  <- adjustcolor(INK_SOFT, alpha.f = if (THEME == "dark") 0.22 else 0.35)
 
-ANYPLOT_PALETTE <- c("#009E73", "#9418DB", "#B71D27", "#16B8F3")
+IMPRINT <- c("#009E73", "#C475FD", "#AE3030", "#4467A3")
 
 # Data — approximately 1 year of trading days starting Jan 2023
 all_dates     <- seq(as.Date("2023-01-03"), by = "day", length.out = 400)
@@ -86,14 +86,14 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
     geom_rect(
         data = svb_region,
         aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-        fill = "#B71D27", alpha = 0.07,
+        fill = "#AE3030", alpha = 0.07,
         inherit.aes = FALSE
     ) +
     # Subtle fill ribbon under NVDA to emphasize outperformance
     geom_ribbon(
         data = nvda_df,
         aes(x = date, ymin = 100, ymax = rebased),
-        fill = ANYPLOT_PALETTE[1], alpha = 0.12, inherit.aes = FALSE
+        fill = IMPRINT[1], alpha = 0.12, inherit.aes = FALSE
     ) +
     # Reference line at 100
     geom_hline(yintercept = 100, color = INK_SOFT, linewidth = 0.5,
@@ -113,11 +113,11 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
     # Styled callout boxes using annotate(geom="label") — distinctively ggplot2
     # SVB label at y=145 clears the stock cluster; color-coded to match the shaded region
     annotate("label", x = as.Date("2023-03-11"), y = 145,
-             label = "SVB Collapse", color = "#B71D27",
+             label = "SVB Collapse", color = "#AE3030",
              fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
              angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
     annotate("label", x = ai_surge_date, y = 102,
-             label = "NVDA AI Surge", color = ANYPLOT_PALETTE[1],
+             label = "NVDA AI Surge", color = IMPRINT[1],
              fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
              angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
     annotate("label", x = rate_peak_date, y = 102,
@@ -126,7 +126,7 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
              angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
     # clip="off" enables end-of-line labels and off-axis annotations outside the panel
     coord_cartesian(clip = "off") +
-    scale_color_manual(values = setNames(ANYPLOT_PALETTE, tickers), name = NULL) +
+    scale_color_manual(values = setNames(IMPRINT, tickers), name = NULL) +
     scale_x_date(date_labels = "%b '%y", date_breaks = "2 months") +
     labs(
         title    = "line-stock-comparison · r · ggplot2 · anyplot.ai",

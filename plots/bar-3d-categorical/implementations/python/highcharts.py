@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: quarterly revenue ($ thousands) for five product categories
 categories = ["Electronics", "Clothing", "Food", "Sports", "Books"]
@@ -122,13 +122,13 @@ chart.options.legend = {
     "layout": "vertical",
 }
 
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 for i, quarter in enumerate(quarters):
     series = ColumnSeries()
     series.name = quarter
     series.data = sales_data[quarter]
-    series.color = OKABE_ITO[i]
+    series.color = IMPRINT[i]
     # Emphasize Q4 (peak quarter) with a prominent border to guide the viewer
     if quarter == "Q4":
         series.border_color = INK_SOFT

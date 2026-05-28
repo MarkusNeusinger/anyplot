@@ -26,12 +26,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-FORECAST_BG = "rgba(213,94,0,0.06)" if THEME == "light" else "rgba(213,94,0,0.10)"
+FORECAST_BG = "rgba(196, 117, 253, 0.06)" if THEME == "light" else "rgba(196, 117, 253, 0.10)"
 
 # Okabe-Ito palette (sequential positions)
 BRAND = "#009E73"  # position 1 — historical data
-FORECAST_COLOR = "#D55E00"  # position 2 — forecast line
-CI_COLOR = "#0072B2"  # position 3 — both CI bands (opacity differentiates)
+FORECAST_COLOR = "#C475FD"  # position 2 — forecast line
+CI_COLOR = "#4467A3"  # position 3 — both CI bands (opacity differentiates)
 
 # Theme-adaptive CI fill opacity for dark-mode distinction
 FILL_OP_80 = 0.30 if THEME == "light" else 0.40

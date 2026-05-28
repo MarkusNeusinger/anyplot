@@ -36,7 +36,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)
@@ -74,7 +74,7 @@ plot = (
     ggplot(df, aes(x="Condition", y="Reaction Time"))
     + geom_violin(aes(fill="Condition"), alpha=0.4, size=1.2)
     + geom_jitter(aes(color="Condition"), width=0.12, height=0, size=3.5, alpha=0.85)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),

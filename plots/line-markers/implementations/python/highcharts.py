@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Stock price tracking with different patterns
 np.random.seed(42)
@@ -49,7 +49,7 @@ chart_config = {
         "spacingBottom": 50,
         "style": {"color": INK},
     },
-    "colors": OKABE_ITO,
+    "colors": IMPRINT,
     "title": {"text": "line-markers · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}},
     "xAxis": {
         "title": {"text": "Day", "style": {"fontSize": "22px", "color": INK}},
@@ -87,20 +87,20 @@ chart_config = {
         {
             "name": "Stock A",
             "data": [[int(d), round(float(p), 1)] for d, p in zip(days, stock_a, strict=False)],
-            "color": OKABE_ITO[0],
-            "marker": {"symbol": "circle", "fillColor": OKABE_ITO[0]},
+            "color": IMPRINT[0],
+            "marker": {"symbol": "circle", "fillColor": IMPRINT[0]},
         },
         {
             "name": "Stock B",
             "data": [[int(d), round(float(p), 1)] for d, p in zip(days, stock_b, strict=False)],
-            "color": OKABE_ITO[1],
-            "marker": {"symbol": "diamond", "fillColor": OKABE_ITO[1]},
+            "color": IMPRINT[1],
+            "marker": {"symbol": "diamond", "fillColor": IMPRINT[1]},
         },
         {
             "name": "Stock C",
             "data": [[int(d), round(float(p), 1)] for d, p in zip(days, stock_c, strict=False)],
-            "color": OKABE_ITO[2],
-            "marker": {"symbol": "triangle", "fillColor": OKABE_ITO[2]},
+            "color": IMPRINT[2],
+            "marker": {"symbol": "triangle", "fillColor": IMPRINT[2]},
         },
     ],
 }

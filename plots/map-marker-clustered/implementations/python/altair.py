@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_FILL = "#E8E6DF" if THEME == "light" else "#2A2A27"
 MAP_STROKE = "#B8B7B0" if THEME == "light" else "#4A4A44"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]  # imprint canonical slot order
 
 # Data — store locations across the United States
 np.random.seed(42)
@@ -108,7 +108,7 @@ background = (
 )
 
 category_colors = alt.Scale(
-    domain=["retail", "food", "services"], range=[ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2]]
+    domain=["retail", "food", "services"], range=[IMPRINT[0], IMPRINT[1], IMPRINT[2]]
 )
 
 # Hover selection on cluster circles — gates spider lines and member-point reveal

@@ -62,7 +62,7 @@ df = pd.DataFrame(
 )
 
 # Colors - colorblind-friendly palette with distinct hues
-colors = ["#E69F00", "#56B4E9", "#009E73", "#CC79A7"]  # Orange, Sky Blue, Teal, Pink
+colors = ["#AE3030", "#2ABCCD", "#009E73", "#BD8233"]  # Orange, Sky Blue, Teal, Pink
 
 n_selected = selected.sum()
 n_total = len(df)

@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 YANG_COLOR = "#009E73"  # Bluish green (brand)
-YIN_COLOR = "#D55E00"  # Vermillion
+YIN_COLOR = "#AE3030"  # imprint red — bearish
 
 # Generate realistic stock price data (simulated random walk)
 np.random.seed(42)

@@ -29,7 +29,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series - always
-CI_COLOR = "#D55E00"  # Second series - confidence interval
+CI_COLOR = "#C475FD"  # Second series - confidence interval
 
 # Data - Performance metrics by department with confidence intervals
 np.random.seed(42)

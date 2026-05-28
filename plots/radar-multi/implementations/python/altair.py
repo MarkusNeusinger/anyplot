@@ -33,7 +33,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Product comparison across key attributes
 categories = ["Price", "Quality", "Durability", "Support", "Features", "Design"]
@@ -112,7 +112,7 @@ value_label_df = pd.DataFrame(value_label_records)
 
 # Series list and colors
 series_list = ["Product A", "Product B", "Product C"]
-color_scale = alt.Scale(domain=series_list, range=OKABE_ITO)
+color_scale = alt.Scale(domain=series_list, range=IMPRINT)
 
 # Chart dimensions for square output (base size with 3x scale factor)
 chart_width = 1600
@@ -155,7 +155,7 @@ value_labels = (
 
 # Create filled polygons for each series
 fill_layers = []
-for series_name, fill_color in zip(series_list, OKABE_ITO, strict=True):
+for series_name, fill_color in zip(series_list, IMPRINT, strict=True):
     series_df = df[df["series"] == series_name].copy()
 
     # Use mark_area for proper polygon fill

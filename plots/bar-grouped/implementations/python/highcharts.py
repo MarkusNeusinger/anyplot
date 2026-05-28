@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Quarterly revenue by product line (realistic business scenario)
 categories = ["Q1", "Q2", "Q3", "Q4"]
@@ -122,7 +122,7 @@ for i, (product_name, values) in enumerate(products.items()):
     series = ColumnSeries()
     series.name = product_name
     series.data = values
-    series.color = OKABE_ITO[i]
+    series.color = IMPRINT[i]
     chart.add_series(series)
 
 # Download Highcharts JS for inline embedding (required for headless Chrome)

@@ -1,159 +1,212 @@
 library: highcharts
+language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:30:05Z'
-updated: '2026-01-21T16:33:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21217354302
+updated: '2026-05-28T01:01:49Z'
+generated_by: claude-sonnet
+workflow_run: 26547619494
 issue: 3746
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Highcharts flowmap module specifically designed for connection
-    line visualizations
-  - Gradient fill from Python blue to Python yellow creates visually appealing route
-    lines
-  - Dynamic marker sizing based on total traffic volume at each airport
-  - Both interactive HTML and static PNG outputs provided
-  - Well-structured realistic data with actual airport codes and plausible passenger
-    volumes
-  - Proper use of curveFactor for great circle arc appearance
-  - Arrow markers on route endpoints indicate direction
+  - Expert use of Highcharts flowmap module — directional tapering (growTowards),
+    arrowheads (markerEnd), and curveFactor all configured correctly for a polished
+    connection-lines map
+  - 'Gradient fillColor on flow lines correctly implements imprint_seq (brand green
+    #009E73 → blue #4467A3) with transparency, giving the routes an on-brand look'
+  - Airport markers scaled by total route traffic (max/min clamped) providing a second
+    traffic-volume encoding beyond line thickness
+  - Theme-adaptive map land/border colors (MAP_LAND, MAP_BORDER) flip correctly between
+    light and dark renders — map chrome is fully integrated with the anyplot token
+    system
+  - Custom label offsets for crowded European hub trio (LHR/CDG/FRA) reduce label
+    collision in a dense geographic cluster
+  - Title fontsize scales linearly with title length (66 × 67/n) so the long mandated
+    string fits without overflow
+  - PIL safety-net correctly pins output to exact 3200×1800 regardless of headless
+    Chrome rounding
+  - 'Spec fully covered: 20 realistic airline routes, variable-width flows, geographic
+    base map, airport point markers, transparency in 0.3–0.6 range'
+  - Perfect spec compliance and data quality — real IATA codes, authentic major hub
+    airports, plausible passenger volumes with LHR-JFK as the busiest route
   weaknesses:
-  - European hub labels (LHR, CDG, FRA) are slightly crowded due to geographic proximity
-  image_description: The plot displays a world map visualization with international
-    flight routes between major hub airports. The base map shows continental outlines
-    in light gray (#f0f0f0) with subtle borders (#cccccc). Twelve airport locations
-    are marked with blue circular markers (#306998) of varying sizes based on total
-    traffic volume. The airport codes (LHR, JFK, LAX, CDG, FRA, DXB, SIN, HKG, HND,
-    GRU, JNB, SYD) are displayed as labels near each marker. Connection lines (flowmap
-    arcs) are drawn between airports with a gradient fill from blue to yellow, representing
-    flight routes. The line thickness varies based on passenger volume - the thickest
-    lines connect major hubs like London-New York and New York-Los Angeles. The map
-    uses a standard world projection showing all continents. The title reads "International
-    Flight Routes · map-connection-lines · highcharts · pyplots.ai" with a subtitle
-    explaining that line thickness represents annual passenger volume.
+  - 'Airport data labels (IATA codes) are set to 20px — well below the recommended
+    44px tick-label floor for 3200×1800 canvas. At mobile scale (~400px wide) these
+    3-letter codes become marginal. Consider bumping to 28–32px with allowOverlap:
+    false still active'
+  - European hub cluster (LHR/CDG/FRA) remains visually crowded despite label offsets
+    — the three green dots and three code labels are still tightly packed in the top-center.
+    Increasing the offset distances or using a leader-line approach would help
+  - No legend or colorbar for the thickness-to-passengers encoding — the subtitle
+    explains it in words but a visual scale (thin→thick line swatch) would significantly
+    aid interpretation and strengthen data storytelling (DE-03)
+  - 'DE-01 headroom: the gradient fill is a nice touch but the overall composition
+    lacks a clear focal point. Highlighting the two or three busiest routes (e.g.
+    LHR-JFK and LHR-DXB) with a slightly warmer/brighter color or a bolder stroke
+    would elevate the design from ''correct'' to ''publication-ready'''
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface matching #FAF8F1 — correct anyplot light theme background. No pure white.
+      Chrome: Title "International Flight Routes · map-connection-lines · python · highcharts · anyplot.ai" rendered in dark INK (#1A1A17) at ~51px (scaled from 66px baseline for 86-char title) — clearly readable. Subtitle in INK_SOFT at 36px — readable. Airport IATA code labels (LHR, JFK, DXB, SIN, HKG, HND, LAX, CDG, FRA, SYD, GRU, JNB) rendered at 20px in bold dark text — visible but small.
+      Data: Airport markers in brand green (#009E73), sized by total route traffic (7–19px radius). Connection flowmap lines rendered with gradient fill: brand green (#009E73 rgba) at origin fading to blue (#4467A3 rgba) at destination, opacity 0.55. Variable line width (1–15px) encodes passenger volume. Directional arrowheads visible on flow lines. World base map in warm gray (#E8E6DE land, #CCCAC2 borders).
+      Legibility verdict: PASS — all text readable against light background. European hub cluster (LHR/CDG/FRA) is slightly crowded but legible. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark theme. No pure black.
+      Chrome: Title and subtitle rendered in light INK (#F0EFE8) — clearly readable against dark surface. Airport IATA labels in light-colored text with dark outline effect. No dark-on-dark text issues detected. Border/tick colors appropriately adapted.
+      Data: Airport markers remain identical brand green (#009E73) — color identity preserved across themes. Flowmap gradient (green→blue) unchanged. Map land (#272724) and border (#3A3A37) colors flip to dark-appropriate tones while preserving the geographic context.
+      Legibility verdict: PASS — all text readable against dark background. Data colors identical to light render (only chrome flips). Brand green remains clearly visible. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and subtitle are clearly readable; airport code labels are
-          small but legible at full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Minor overlap at European hub labels (LHR, CDG, FRA are close together)
-          but still readable
+        comment: Title, subtitle explicitly sized and well-proportioned. Airport IATA
+          labels at 20px (intentionally small for map context) — visible but at the
+          lower edge for mobile readability.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Good overall; custom label offsets mitigate European hub crowding
+          (LHR/CDG/FRA) but the cluster remains slightly dense.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers and connection lines are clearly visible with good sizing
-          for data density; flowmap arcs are distinct
+        comment: Airport markers clearly visible in brand green, sized by traffic.
+          Flowmap lines with variable width and 0.55 opacity are distinctly visible
+          without clutter.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-yellow gradient is colorblind-safe; no red-green conflicts
+        comment: Brand green markers on both warm-light and near-black backgrounds
+          pass contrast. Gradient blue is CVD-safe against the green marker.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Map uses canvas well but could center better; some empty space at
-          bottom
+        comment: World map well-centered with generous spacing. Minor wasted space
+          in the southern hemisphere where route density is low.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for maps - correctly omitted as geographic context is provided
+        comment: Geographic map — no traditional axes. Title and descriptive subtitle
+          cover the labeling requirement.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend disabled (appropriate for this dense visualization); base
-          map provides geographic context
+        comment: 'Airport markers #009E73 (brand green, first series). Flowmap gradient:
+          rgba(0,158,115,0.6) → rgba(68,103,163,0.6) = imprint_seq with transparency
+          (correct for single-polarity traffic weight). Backgrounds #FAF8F1 / #1A1A17.
+          Full theme-adaptive chrome.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: on-brand gradient flowmap, traffic-scaled
+          markers, directional arrowheads. Missing a clear focal point or emphasis
+          on the busiest routes that would lift this to publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Theme-adaptive map land/border colors, transparent flow lines, marker
+          outlines using PAGE_BG for definition. Good refinement for a map context.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding (line width + marker size) for traffic volume creates
+          visual hierarchy. Subtitle explains the encoding. No legend/colorbar for
+          the thickness scale limits interpretability.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct chart type: geographic map with connection lines/flowmap'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/destination coordinates correctly mapped; weight drives line
-          thickness
-      - id: SC-03
+        comment: 'Correct: geographic connection-lines map using Highcharts flowmap
+          for curved arcs + mappoint series for airports + base map layer.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Curved lines, markers at endpoints, transparency, base map present;
-          gradient color encoding could be more pronounced
-      - id: SC-04
-        name: Data Range
+        comment: Curved arcs ✓, line thickness encoding ✓, endpoint markers ✓, transparency
+          0.55 ✓, base map with borders ✓.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All routes visible within map bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lat/lon correctly mapped for all 12 airports. Connection weight correctly
+          driving flowmap width.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend disabled appropriately; subtitle explains encoding
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses required format: map-connection-lines · highcharts · pyplots.ai'
+        comment: 'Title: ''International Flight Routes · map-connection-lines · python
+          · highcharts · anyplot.ai'' matches {Descriptive} · {spec-id} · {lang} ·
+          {lib} · anyplot.ai format. Legend disabled (single-series flow map — appropriate).'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows diverse routes: transatlantic, Europe-Asia, Asia-Pacific,
-          Americas, Africa connections'
+        comment: 20 routes spanning all major intercontinental corridors. Variable-width
+          flows, variable-size markers, global geographic spread including Southern
+          hemisphere airports.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real airport codes and realistic flight route patterns; neutral business/travel
-          scenario
+        comment: Real IATA codes, authentic major hub airports, neutral aviation topic.
+          No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Passenger volumes (850K-4200K) are realistic for major hub routes
+        comment: LHR-JFK at 4200K passengers/year is realistic (one of the world's
+          busiest routes). Dubai as Asia-Europe hub well-represented. Smaller values
+          for less-trafficked routes (LAX-SYD 900K) are plausible.
     code_quality:
       score: 10
       max: 10
@@ -163,54 +216,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → config → render → save'
+        comment: 'Clean linear flow: imports → tokens → data → config → HTML/screenshot
+          → save. No unnecessary abstractions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) at the start
+        comment: np.random.seed(42) set. Data is hardcoded so seed is technically
+          not required, but good practice maintained.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (json, tempfile, time, urllib.request, Path,
-          numpy, selenium)
+        comment: 'All imports used: json, os, tempfile, time, pathlib, numpy, PIL,
+          selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API
+        comment: Label offset dict for crowded European hubs, title fontsize scaling
+          formula, and traffic-proportional marker radii are all clean and purposeful.
+          No over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current Highcharts
+          Maps + flowmap API used.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly uses highmaps.js + flowmap.js module, mappoint series,
+          map topology, linkedTo for route-airport linkage. All Highcharts Maps patterns
+          followed idiomatically.
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of Highcharts Maps with flowmap module, world topology,
-          gradient fills, marker end arrows, and interactive HTML export
+        comment: Highcharts flowmap with growTowards (directional tapering), markerEnd
+          arrowheads, curveFactor, linearGradient fillColor — these are Highcharts
+          Maps-specific features not replicable in other libraries without custom
+          code.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
+  - hover-tooltips
   - gradient-fill
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - gradient-fill
+  - edge-highlighting

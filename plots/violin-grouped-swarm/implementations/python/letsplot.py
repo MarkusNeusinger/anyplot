@@ -39,7 +39,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Drug efficacy across dosage levels and treatment groups
 np.random.seed(42)
@@ -74,8 +74,8 @@ plot = (
     ggplot(df, aes(x="Dosage", y="Efficacy Score", fill="Group", color="Group"))
     + geom_violin(alpha=0.5, position=position_dodge(width=0.75), size=0.6, trim=False)
     + geom_point(alpha=0.6, size=2.0, position=position_jitterdodge(jitter_width=0.1, dodge_width=0.75))
-    + scale_fill_manual(values=OKABE_ITO[:2])
-    + scale_color_manual(values=OKABE_ITO[:2])
+    + scale_fill_manual(values=IMPRINT[:2])
+    + scale_color_manual(values=IMPRINT[:2])
     + labs(
         x="Dosage Level",
         y="Efficacy Score",

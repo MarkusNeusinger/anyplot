@@ -19,10 +19,10 @@ INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 WATER_BG    <- if (THEME == "light") "#CDDFF0" else "#101E2A"
 LAND_FILL   <- if (THEME == "light") "#E0EBD5" else "#263322"
 
-ANYPLOT_PALETTE <- c(
+IMPRINT <- c(
     "#009E73",  # 1: Music venues
-    "#9418DB",  # 2: Sports venues
-    "#B71D27"   # 3: Arts venues
+    "#C475FD",  # 2: Sports venues
+    "#AE3030"   # 3: Arts venues
 )
 categories <- c("Music", "Sports", "Arts")
 
@@ -95,7 +95,7 @@ p <- ggplot() +
         fontface = "bold"
     ) +
     scale_fill_manual(
-        values = setNames(ANYPLOT_PALETTE, categories),
+        values = setNames(IMPRINT, categories),
         name   = "Venue Type"
     ) +
     scale_size_area(

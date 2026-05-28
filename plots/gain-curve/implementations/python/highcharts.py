@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#D55E00"  # Okabe-Ito position 2 for baseline
+ACCENT = "#C475FD"  # Okabe-Ito position 2 for baseline
 
 # Data: Customer response model with predicted probabilities
 np.random.seed(42)

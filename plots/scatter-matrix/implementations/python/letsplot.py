@@ -20,7 +20,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris-like dataset with 4 variables
 np.random.seed(42)
@@ -87,7 +87,7 @@ for i, var_y in enumerate(variables):
             p = (
                 ggplot(df_plot, aes(x=var_x, fill="Species"))
                 + geom_histogram(alpha=0.7, bins=15, position="identity")
-                + scale_fill_manual(values=OKABE_ITO)
+                + scale_fill_manual(values=IMPRINT)
                 + theme_minimal()
                 + theme(
                     axis_title=element_blank(),
@@ -104,7 +104,7 @@ for i, var_y in enumerate(variables):
             p = (
                 ggplot(df_plot, aes(x=var_x, y=var_y, color="Species"))
                 + geom_point(size=3.5, alpha=0.7)
-                + scale_color_manual(values=OKABE_ITO)
+                + scale_color_manual(values=IMPRINT)
                 + theme_minimal()
                 + theme(
                     axis_title=element_blank(),
@@ -149,7 +149,7 @@ legend_df = pd.DataFrame({"x": [1, 2, 3], "y": [1, 2, 3], "Species": ["Setosa", 
 legend_plot = (
     ggplot(legend_df, aes(x="x", y="y", color="Species"))
     + geom_point(size=8)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + theme_void()
     + theme(
         legend_position="bottom",

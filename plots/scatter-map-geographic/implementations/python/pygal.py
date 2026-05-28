@@ -21,7 +21,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Earthquake data with latitude, longitude, magnitude, and depth
 np.random.seed(42)
@@ -50,14 +50,14 @@ for d_norm in depth_normalized:
     if d_norm < 0.5:
         # Light to medium: positions 1 and 2
         t = d_norm * 2
-        c1 = int(OKABE_ITO[0][1:], 16)
-        c2 = int(OKABE_ITO[1][1:], 16)
+        c1 = int(IMPRINT[0][1:], 16)
+        c2 = int(IMPRINT[1][1:], 16)
     else:
         # Medium to dark: positions 2 and 3
         t = (d_norm - 0.5) * 2
-        c1 = int(OKABE_ITO[1][1:], 16)
-        c2 = int(OKABE_ITO[2][1:], 16)
-    colors_depth.append(OKABE_ITO[0])  # Use first Okabe-Ito color for all points
+        c1 = int(IMPRINT[1][1:], 16)
+        c2 = int(IMPRINT[2][1:], 16)
+    colors_depth.append(IMPRINT[0])  # Use first Okabe-Ito color for all points
 
 # Create custom style
 custom_style = Style(
@@ -66,7 +66,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(OKABE_ITO[0],),
+    colors=(IMPRINT[0],),
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

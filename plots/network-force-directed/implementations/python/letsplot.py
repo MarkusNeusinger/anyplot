@@ -42,7 +42,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Okabe-Ito categorical palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: 50-node social network with 3 communities
 np.random.seed(42)
@@ -150,7 +150,7 @@ plot = (
         alpha=0.92,
         tooltips=layer_tooltips().line("Team: @Team").line("Connections: @Connections"),
     )
-    + scale_color_manual(values=OKABE_ITO, name="Team")
+    + scale_color_manual(values=IMPRINT, name="Team")
     + scale_size_identity(guide="none")
     + scale_alpha_identity(guide="none")
     + coord_fixed(ratio=1)

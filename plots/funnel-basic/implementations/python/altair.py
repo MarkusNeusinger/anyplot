@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette — first stage is brand green (#009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — sales funnel example from the specification
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
@@ -43,7 +43,7 @@ bars = (
         x=alt.X("x_start:Q", axis=None, scale=x_scale),
         x2="x_end:Q",
         y=alt.Y("stage:N", sort=stages, axis=alt.Axis(title=None, labelPadding=18, ticks=False, domain=False)),
-        color=alt.Color("stage:N", scale=alt.Scale(domain=stages, range=OKABE_ITO), legend=None),
+        color=alt.Color("stage:N", scale=alt.Scale(domain=stages, range=IMPRINT), legend=None),
         tooltip=[
             alt.Tooltip("stage:N", title="Stage"),
             alt.Tooltip("value:Q", title="Count", format=","),

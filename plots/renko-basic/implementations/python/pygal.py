@@ -20,9 +20,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette: bullish (up) uses #009E73, bearish (down) uses #D55E00
+# imprint semantic anchors: bullish (up) uses #009E73 green, bearish (down) uses #AE3030 red
 BULLISH = "#009E73"  # Okabe-Ito position 1 (brand green)
-BEARISH = "#D55E00"  # Okabe-Ito position 2 (vermillion)
+BEARISH = "#AE3030"  # imprint red — bearish
 
 # Generate synthetic stock price data (6 months of daily closes)
 n_days = 180

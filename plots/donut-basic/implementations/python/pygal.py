@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical palette — first series is always brand green
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data — Annual budget allocation by department (USD thousands)
 categories = ["Engineering", "Operations", "Marketing", "Sales", "Support"]
@@ -41,7 +41,7 @@ custom_style = Style(
     foreground=INK_SOFT,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     font_family=font,
     title_font_family=font,
     label_font_family=font,

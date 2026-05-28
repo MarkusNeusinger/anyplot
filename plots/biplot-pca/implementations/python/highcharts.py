@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"  # Okabe-Ito position 1
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]  # Positions 1-3 for species
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]  # Positions 1-3 for species
 
 # Data - Iris dataset for PCA
 np.random.seed(42)
@@ -129,7 +129,7 @@ for i, species in enumerate(target_names):
     series = ScatterSeries()
     series.name = species.capitalize()
     series.data = [{"x": float(scores[j, 0]), "y": float(scores[j, 1])} for j in range(len(y)) if mask[j]]
-    series.color = OKABE_ITO[i]
+    series.color = IMPRINT[i]
     series.marker = {"radius": 8}
     chart.add_series(series)
 
@@ -143,7 +143,7 @@ chart.options.plot_options = {
 }
 
 # Set colors for chart-level consistency
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 # Download Highcharts JS with retries and fallback CDN URLs
 cdn_urls = [

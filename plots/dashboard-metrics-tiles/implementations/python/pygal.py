@@ -30,10 +30,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Semantic status colors (Okabe-Ito positions)
-STATUS_COLORS = {"good": "#009E73", "warning": "#E69F00", "critical": "#D55E00"}
+STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}  # imprint semantic anchors
 CHANGE_POSITIVE = "#009E73"
-CHANGE_NEGATIVE = "#D55E00"
-SPARKLINE_COLOR = "#0072B2"  # Okabe-Ito position 3
+CHANGE_NEGATIVE = "#AE3030"  # imprint red — negative change
+SPARKLINE_COLOR = "#4467A3"  # Okabe-Ito position 3
 
 # Data
 np.random.seed(42)
@@ -230,7 +230,7 @@ html_parts = [
         .metric-value {{ color: {INK}; font-size: 38px; font-weight: bold; margin-bottom: 8px; }}
         .metric-change {{ font-size: 16px; font-weight: 600; margin-bottom: 12px; }}
         .change-pos {{ color: #009E73; }}
-        .change-neg {{ color: #D55E00; }}
+        .change-neg {{ color: #C475FD; }}
         .trend-separator {{ border: none; border-top: 1px solid {INK_SOFT}; margin: 0 0 6px; }}
         .trend-label {{ font-size: 12px; color: {INK_SOFT}; margin-bottom: 6px; }}
         .sparkline {{ width: 100%; height: 70px; overflow: hidden; }}

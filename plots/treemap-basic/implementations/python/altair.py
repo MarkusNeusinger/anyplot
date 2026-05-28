@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Market capitalization by sector and company (in billions USD)
 data = [
@@ -102,7 +102,7 @@ min_area_for_label = width * height * 0.02
 # Map categories to colors using Okabe-Ito palette
 color_map = {}
 for i, cat in enumerate(sorted_cats):
-    color_map[cat] = OKABE_ITO[i % len(OKABE_ITO)]
+    color_map[cat] = IMPRINT[i % len(IMPRINT)]
 
 # Treemap rectangles with borders matching theme
 stroke_color = INK_SOFT

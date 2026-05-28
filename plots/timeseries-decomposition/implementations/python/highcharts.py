@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for decomposition components
-COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 COMPONENT_NAMES = ["Original", "Trend", "Seasonal", "Residual"]
 
 # Data - Monthly airline passengers (classic time series dataset)

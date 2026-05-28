@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 
 # Train a model for partial dependence
 np.random.seed(42)

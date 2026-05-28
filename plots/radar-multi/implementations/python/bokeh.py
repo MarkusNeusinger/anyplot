@@ -21,7 +21,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Product comparison across 6 attributes
 categories = ["Performance", "Reliability", "Features", "Support", "Price Value", "Ease of Use"]
@@ -115,15 +115,15 @@ for idx, (product_name, values) in enumerate(products.items()):
     fill_renderer = p.patch(
         x_vals,
         y_vals,
-        fill_color=OKABE_ITO[idx],
+        fill_color=IMPRINT[idx],
         fill_alpha=0.25,
-        line_color=OKABE_ITO[idx],
+        line_color=IMPRINT[idx],
         line_width=4,
         line_alpha=0.9,
     )
 
     # Draw points at vertices
-    p.scatter(x_vals[:-1], y_vals[:-1], size=22, fill_color=OKABE_ITO[idx], line_color=PAGE_BG, line_width=3, alpha=0.9)
+    p.scatter(x_vals[:-1], y_vals[:-1], size=22, fill_color=IMPRINT[idx], line_color=PAGE_BG, line_width=3, alpha=0.9)
 
     legend_items.append((product_name, [fill_renderer]))
 

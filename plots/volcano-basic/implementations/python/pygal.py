@@ -17,11 +17,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (colorblind-safe)
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # position 1: green (brand)
-    "#D55E00",  # position 2: vermillion (up-regulated)
-    "#0072B2",  # position 3: blue (down-regulated)
-    "#CC79A7",  # position 4: reddish purple
+    "#C475FD",  # position 2: vermillion (up-regulated)
+    "#4467A3",  # position 3: blue (down-regulated)
+    "#BD8233",  # position 4: reddish purple
 )
 
 custom_style = Style(
@@ -30,7 +30,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -125,8 +125,8 @@ down_points = [
 # Add data series (NOT in legend - these are reference lines)
 # Gray for non-significant (neutral, not from Okabe-Ito)
 chart.add("Not Significant", not_sig_points, color="#888888")
-chart.add("Up-regulated", up_points, color=OKABE_ITO[1])  # #D55E00 vermillion
-chart.add("Down-regulated", down_points, color=OKABE_ITO[2])  # #0072B2 blue
+chart.add("Up-regulated", up_points, color="#AE3030")  # imprint red — up-regulated (semantic)
+chart.add("Down-regulated", down_points, color="#4467A3")  # imprint blue — down-regulated
 
 # Add threshold lines as separate series
 # These won't appear in legend due to no hover text, but will render as lines

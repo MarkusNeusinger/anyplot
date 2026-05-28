@@ -111,7 +111,7 @@ chart_options = {
         {
             "name": "Female",
             "data": female_values,
-            "color": "#D55E00",  # Okabe-Ito position 2
+            "color": "#C475FD",  # Okabe-Ito position 2
         },
     ],
     "credits": {"enabled": False},

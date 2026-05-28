@@ -21,12 +21,12 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Okabe-Ito palette (first series always #009E73) + accessible extensions for 10 entities
 COLORS = [
     "#009E73",  # Okabe-Ito pos 1 — brand green, always first
-    "#D55E00",  # Okabe-Ito pos 2 — vermillion
-    "#0072B2",  # Okabe-Ito pos 3 — blue
-    "#CC79A7",  # Okabe-Ito pos 4 — reddish purple
-    "#E69F00",  # Okabe-Ito pos 5 — orange
-    "#56B4E9",  # Okabe-Ito pos 6 — sky blue
-    "#F0E442",  # Okabe-Ito pos 7 — yellow
+    "#C475FD",  # Okabe-Ito pos 2 — vermillion
+    "#4467A3",  # Okabe-Ito pos 3 — blue
+    "#BD8233",  # Okabe-Ito pos 4 — reddish purple
+    "#AE3030",  # Okabe-Ito pos 5 — orange
+    "#2ABCCD",  # Okabe-Ito pos 6 — sky blue
+    "#954477",  # Okabe-Ito pos 7 — yellow
     "#332288",  # accessible extension — deep indigo
     "#117733",  # accessible extension — deep green
     "#882255",  # accessible extension — deep crimson

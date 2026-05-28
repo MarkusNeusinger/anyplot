@@ -17,9 +17,9 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
-ANYPLOT_PALETTE <- c(
-    "#009E73", "#9418DB", "#B71D27", "#16B8F3",
-    "#99B314", "#D359A7", "#BA843E"
+IMPRINT <- c(
+    "#009E73", "#C475FD", "#AE3030", "#4467A3",
+    "#99B314", "#954477", "#BD8233"
 )
 
 # 200 trading days of synthetic stock data
@@ -52,9 +52,9 @@ df <- tibble::tibble(
 )
 
 metric_colors <- c(
-    "Price (USD)" = ANYPLOT_PALETTE[1],
-    "Volume (M)"  = ANYPLOT_PALETTE[2],
-    "RSI (14)"    = ANYPLOT_PALETTE[3]
+    "Price (USD)" = IMPRINT[1],
+    "Volume (M)"  = IMPRINT[2],
+    "RSI (14)"    = IMPRINT[3]
 )
 
 event_date <- dates[120]

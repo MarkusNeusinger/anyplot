@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Product purchase journey: Channel -> Category -> Outcome
 np.random.seed(42)
@@ -87,9 +87,9 @@ ribbon_colors = []
 
 # Color by first dimension (Channel) - using Okabe-Ito palette
 channel_colors = {
-    "Online": OKABE_ITO[0],  # #009E73
-    "Store": OKABE_ITO[1],  # #D55E00
-    "Mobile": OKABE_ITO[2],  # #0072B2
+    "Online": IMPRINT[0],  # #009E73
+    "Store": IMPRINT[1],  # #C475FD
+    "Mobile": IMPRINT[2],  # #4467A3
 }
 
 # Track running position within each category box
@@ -238,7 +238,7 @@ for dim in dimensions:
     p.add_layout(label)
 
 # Add legend - centered bottom for better balance
-legend_items = [("Online", OKABE_ITO[0]), ("Store", OKABE_ITO[1]), ("Mobile", OKABE_ITO[2])]
+legend_items = [("Online", IMPRINT[0]), ("Store", IMPRINT[1]), ("Mobile", IMPRINT[2])]
 legend_x_start = 0.8
 legend_y = -0.02
 for i, (name, color) in enumerate(legend_items):

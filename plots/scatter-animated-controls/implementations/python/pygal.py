@@ -32,7 +32,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series is brand green)
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data: Simulated country development metrics over years
 np.random.seed(42)
@@ -94,7 +94,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -106,10 +106,10 @@ custom_style = Style(
 
 # Region-color mapping using Okabe-Ito (only 4 colors for 4 regions)
 region_colors = {
-    "Asia": OKABE_ITO[0],  # #009E73 - brand green
-    "Europe": OKABE_ITO[1],  # #D55E00 - vermillion
-    "Africa": OKABE_ITO[2],  # #0072B2 - blue
-    "Americas": OKABE_ITO[3],  # #CC79A7 - reddish purple
+    "Asia": IMPRINT[0],  # #009E73 - brand green
+    "Europe": IMPRINT[1],  # #C475FD - vermillion
+    "Africa": IMPRINT[2],  # #4467A3 - blue
+    "Americas": IMPRINT[3],  # #BD8233 - reddish purple
 }
 
 # Create interactive HTML with slider control
@@ -277,15 +277,15 @@ html_template = """<!DOCTYPE html>
                 <span>Asia</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #D55E00;"></div>
+                <div class="legend-color" style="background: #C475FD;"></div>
                 <span>Europe</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #0072B2;"></div>
+                <div class="legend-color" style="background: #4467A3;"></div>
                 <span>Africa</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #CC79A7;"></div>
+                <div class="legend-color" style="background: #BD8233;"></div>
                 <span>Americas</span>
             </div>
         </div>

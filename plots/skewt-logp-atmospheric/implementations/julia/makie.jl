@@ -14,14 +14,14 @@ const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const OKABE_ITO   = [
+const IMPRINT   = [
     colorant"#009E73",
-    colorant"#D55E00",
-    colorant"#0072B2",
-    colorant"#CC79A7",
-    colorant"#E69F00",
-    colorant"#56B4E9",
-    colorant"#F0E442",
+    colorant"#C475FD",
+    colorant"#4467A3",
+    colorant"#BD8233",
+    colorant"#AE3030",
+    colorant"#2ABCCD",
+    colorant"#954477",
 ]
 
 # Skew-T parameters and thermodynamic constants
@@ -275,25 +275,25 @@ if any(cape_mask)
         vcat(par_xs_c, reverse(env_xs_c)),
         vcat(ys_c,     reverse(ys_c)),
     )
-    cape_fill = RGBAf(OKABE_ITO[5].r, OKABE_ITO[5].g, OKABE_ITO[5].b, 0.22f0)
+    cape_fill = RGBAf(IMPRINT[5].r, IMPRINT[5].g, IMPRINT[5].b, 0.22f0)
     poly!(ax, cape_pts; color = cape_fill, strokewidth = 0, label = "CAPE")
 end
 
 # Lifted parcel trace (smooth, fine resolution)
 parcel_xs_fine = [skew_x(T, P) for (T, P) in zip(parcel_Ts_fine, P_FINE)]
 lines!(ax, parcel_xs_fine, y_p.(P_FINE);
-       color = OKABE_ITO[4], linewidth = 2.0, linestyle = :dashdotdot,
+       color = IMPRINT[4], linewidth = 2.0, linestyle = :dashdotdot,
        label = "Lifted parcel")
 
 # LCL marker
 lcl_x = skew_x(T_LCL_C, P_LCL_hPa)
 lcl_y = y_p(P_LCL_hPa)
 scatter!(ax, [lcl_x], [lcl_y];
-         color = OKABE_ITO[4], markersize = 10, marker = :diamond, strokewidth = 0)
+         color = IMPRINT[4], markersize = 10, marker = :diamond, strokewidth = 0)
 text!(ax, lcl_x + 1.5, lcl_y;
       text    = "LCL",
       fontsize = 9,
-      color   = OKABE_ITO[4],
+      color   = IMPRINT[4],
       align   = (:left, :center))
 
 # Sounding profiles
@@ -302,14 +302,14 @@ TD_xs  = [skew_x(Td, P) for (Td, P) in zip(TD_OBS, P_OBS)]
 obs_ys = y_p.(P_OBS)
 
 lines!(ax, T_xs, obs_ys;
-       color = OKABE_ITO[1], linewidth = 3.5, label = "Temperature")
+       color = IMPRINT[1], linewidth = 3.5, label = "Temperature")
 scatter!(ax, T_xs, obs_ys;
-         color = OKABE_ITO[1], markersize = 7, strokewidth = 0)
+         color = IMPRINT[1], markersize = 7, strokewidth = 0)
 
 lines!(ax, TD_xs, obs_ys;
-       color = OKABE_ITO[2], linewidth = 3.5, linestyle = :dash, label = "Dewpoint")
+       color = IMPRINT[2], linewidth = 3.5, linestyle = :dash, label = "Dewpoint")
 scatter!(ax, TD_xs, obs_ys;
-         color = OKABE_ITO[2], markersize = 7, strokewidth = 0)
+         color = IMPRINT[2], markersize = 7, strokewidth = 0)
 
 axislegend(ax;
     position        = :rt,

@@ -41,10 +41,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — positions 1-6 in order
 C_TEMP = "#009E73"  # position 1: temperature profile (primary series)
-C_DEWPT = "#D55E00"  # position 2: dewpoint profile
-C_DRY = "#E69F00"  # position 5: dry adiabats (background reference)
-C_MOIST = "#CC79A7"  # position 4: moist adiabats (background reference)
-C_MIX = "#56B4E9"  # position 6: mixing ratio lines (background reference)
+C_DEWPT = "#C475FD"  # position 2: dewpoint profile
+C_DRY = "#AE3030"  # position 5: dry adiabats (background reference)
+C_MOIST = "#BD8233"  # position 4: moist adiabats (background reference)
+C_MIX = "#2ABCCD"  # position 6: mixing ratio lines (background reference)
 
 # Atmospheric sounding data (synthetic radiosonde profile)
 np.random.seed(42)

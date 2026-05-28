@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Iris dataset
 iris = load_iris()
@@ -36,7 +36,7 @@ df["species"] = [iris.target_names[t] for t in iris.target]
 
 # Color mapping for species using Okabe-Ito
 species_names = ["setosa", "versicolor", "virginica"]
-color_map = {name: OKABE_ITO[i] for i, name in enumerate(species_names)}
+color_map = {name: IMPRINT[i] for i, name in enumerate(species_names)}
 df["color"] = df["species"].map(color_map)
 
 # Use 4 variables for the scatter matrix
@@ -87,7 +87,7 @@ for i, var_y in enumerate(variables):
                 bottom=0,
                 left=edges[:-1],
                 right=edges[1:],
-                fill_color=OKABE_ITO[0],
+                fill_color=IMPRINT[0],
                 line_color=PAGE_BG,
                 alpha=0.7,
             )

@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 np.random.seed(42)
 n_days = 300
@@ -53,7 +53,7 @@ combined_df = pd.concat([price_df, sma20_df, sma50_df, sma200_df], ignore_index=
 
 SERIES = ["Close Price", "SMA 20", "SMA 50", "SMA 200"]
 
-color_scale = alt.Scale(domain=SERIES, range=OKABE_ITO)
+color_scale = alt.Scale(domain=SERIES, range=IMPRINT)
 stroke_dash_scale = alt.Scale(domain=SERIES, range=[[0], [8, 4], [4, 4], [2, 2]])
 stroke_width_scale = alt.Scale(domain=SERIES, range=[3.5, 1.5, 1.5, 1.5])
 

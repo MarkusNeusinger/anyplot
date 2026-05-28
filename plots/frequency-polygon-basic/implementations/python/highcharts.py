@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Test scores for three different classes
 np.random.seed(42)
@@ -127,23 +127,23 @@ chart.options.plot_options = {
 series_a = SplineSeries()
 series_a.name = "Class A (Avg: 72)"
 series_a.data = [[float(x), int(y)] for x, y in zip(extended_centers, freq_a_extended, strict=True)]
-series_a.color = OKABE_ITO[0]  # #009E73 - brand green
-series_a.fill_color = OKABE_ITO[0]
-series_a.marker = {"fillColor": OKABE_ITO[0], "lineWidth": 2, "lineColor": PAGE_BG}
+series_a.color = IMPRINT[0]  # #009E73 - brand green
+series_a.fill_color = IMPRINT[0]
+series_a.marker = {"fillColor": IMPRINT[0], "lineWidth": 2, "lineColor": PAGE_BG}
 
 series_b = SplineSeries()
 series_b.name = "Class B (Avg: 80)"
 series_b.data = [[float(x), int(y)] for x, y in zip(extended_centers, freq_b_extended, strict=True)]
-series_b.color = OKABE_ITO[1]  # #D55E00 - vermillion
-series_b.fill_color = OKABE_ITO[1]
-series_b.marker = {"fillColor": OKABE_ITO[1], "lineWidth": 2, "lineColor": PAGE_BG}
+series_b.color = IMPRINT[1]  # #C475FD - vermillion
+series_b.fill_color = IMPRINT[1]
+series_b.marker = {"fillColor": IMPRINT[1], "lineWidth": 2, "lineColor": PAGE_BG}
 
 series_c = SplineSeries()
 series_c.name = "Class C (Bimodal)"
 series_c.data = [[float(x), int(y)] for x, y in zip(extended_centers, freq_c_extended, strict=True)]
-series_c.color = OKABE_ITO[2]  # #0072B2 - blue
-series_c.fill_color = OKABE_ITO[2]
-series_c.marker = {"fillColor": OKABE_ITO[2], "lineWidth": 2, "lineColor": PAGE_BG}
+series_c.color = IMPRINT[2]  # #4467A3 - blue
+series_c.fill_color = IMPRINT[2]
+series_c.marker = {"fillColor": IMPRINT[2], "lineWidth": 2, "lineColor": PAGE_BG}
 
 # Add series to chart
 chart.add_series(series_a)

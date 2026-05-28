@@ -36,7 +36,7 @@ communities = {
 }
 
 # Community colors — Okabe-Ito positions 1-4
-community_colors = {"Tech": "#009E73", "Marketing": "#D55E00", "Finance": "#0072B2", "Design": "#CC79A7"}
+community_colors = {"Tech": "#009E73", "Marketing": "#C475FD", "Finance": "#4467A3", "Design": "#BD8233"}
 
 # Build nodes with community info
 nodes = []
@@ -119,9 +119,9 @@ Highcharts.chart('container', {{
         text: '<span style="font-size:32px;color:{INK_SOFT};">Communication ties across four departments — dense within, sparse between</span><br/>'
             + '<span style="font-size:30px;">'
             + '<span style="color:#009E73;">&#9679;</span> <span style="color:{INK};">Tech</span> &nbsp;&nbsp;&nbsp;'
-            + '<span style="color:#D55E00;">&#9679;</span> <span style="color:{INK};">Marketing</span> &nbsp;&nbsp;&nbsp;'
-            + '<span style="color:#0072B2;">&#9679;</span> <span style="color:{INK};">Finance</span> &nbsp;&nbsp;&nbsp;'
-            + '<span style="color:#CC79A7;">&#9679;</span> <span style="color:{INK};">Design</span>'
+            + '<span style="color:#C475FD;">&#9679;</span> <span style="color:{INK};">Marketing</span> &nbsp;&nbsp;&nbsp;'
+            + '<span style="color:#4467A3;">&#9679;</span> <span style="color:{INK};">Finance</span> &nbsp;&nbsp;&nbsp;'
+            + '<span style="color:#BD8233;">&#9679;</span> <span style="color:{INK};">Design</span>'
             + '</span>',
         style: {{fontSize: '32px', color: '{INK_SOFT}'}}
     }},

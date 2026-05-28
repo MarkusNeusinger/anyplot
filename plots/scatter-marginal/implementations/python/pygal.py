@@ -23,7 +23,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First categorical series
-SECONDARY = "#D55E00"  # For marginals if colored
+SECONDARY = "#C475FD"  # For marginals if colored
 
 # Data - correlated bivariate data with realistic measurement context
 np.random.seed(42)

@@ -22,8 +22,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - first categorical series
-SECONDARY = "#D55E00"  # Position 2
-ACCENT = "#0072B2"  # Position 3
+SECONDARY = "#C475FD"  # Position 2
+ACCENT = "#4467A3"  # Position 3
 
 # Data: Simulated blood pressure readings from two sphygmomanometers
 np.random.seed(42)

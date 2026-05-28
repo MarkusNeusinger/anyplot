@@ -26,12 +26,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73 (brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Budget allocation: departments (inner) and expense categories (outer)
 departments = ["Engineering", "Marketing", "Operations", "Sales"]
 dept_values = [4500000, 2800000, 1900000, 2200000]
-dept_colors = OKABE_ITO
+dept_colors = IMPRINT
 
 # Outer ring: Expense categories with color variants per department
 expenses = [
@@ -41,16 +41,16 @@ expenses = [
     {"name": "Training", "y": 450000, "color": "#38D4A3"},
     {"name": "Software", "y": 350000, "color": "#50EEB2"},
     # Marketing (vermillion family - Okabe-Ito position 2 variants)
-    {"name": "Advertising", "y": 1400000, "color": "#D55E00"},
+    {"name": "Advertising", "y": 1400000, "color": "#C475FD"},
     {"name": "Events", "y": 700000, "color": "#E1791D"},
     {"name": "Content", "y": 400000, "color": "#ED9439"},
     {"name": "Research", "y": 300000, "color": "#F9AF56"},
     # Operations (blue family - Okabe-Ito position 3 variants)
-    {"name": "Facilities", "y": 800000, "color": "#0072B2"},
+    {"name": "Facilities", "y": 800000, "color": "#4467A3"},
     {"name": "IT Support", "y": 600000, "color": "#2287CC"},
     {"name": "Logistics", "y": 500000, "color": "#449CE6"},
     # Sales (reddish purple family - Okabe-Ito position 4 variants)
-    {"name": "Commissions", "y": 1100000, "color": "#CC79A7"},
+    {"name": "Commissions", "y": 1100000, "color": "#BD8233"},
     {"name": "Travel", "y": 600000, "color": "#DB8FBB"},
     {"name": "Client Entertainment", "y": 300000, "color": "#EAA5CF"},
     {"name": "CRM Tools", "y": 200000, "color": "#F9BBE3"},

@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Software Development Project
 tasks_data = {
@@ -94,12 +94,12 @@ df["duration"] = df["end_days"] - df["start_days"]
 
 # Map categories to colors (Okabe-Ito palette)
 category_colors = {
-    "Planning": OKABE_ITO[0],
-    "Design": OKABE_ITO[1],
-    "Development": OKABE_ITO[2],
-    "Testing": OKABE_ITO[3],
-    "Documentation": OKABE_ITO[4],
-    "Deployment": OKABE_ITO[5],
+    "Planning": IMPRINT[0],
+    "Design": IMPRINT[1],
+    "Development": IMPRINT[2],
+    "Testing": IMPRINT[3],
+    "Documentation": IMPRINT[4],
+    "Deployment": IMPRINT[5],
 }
 df["color"] = df["category"].map(category_colors)
 
@@ -132,7 +132,7 @@ plot = (
             "Week 11",
         ],
     )
-    + scale_color_manual(values=OKABE_ITO, name="Phase")
+    + scale_color_manual(values=IMPRINT, name="Phase")
     + labs(title="gantt-basic · letsplot · anyplot.ai", x="Project Timeline", y="Tasks")
     + theme_minimal()
     + theme(

@@ -17,14 +17,14 @@ const INK       = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT  = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT = [
     colorant"#009E73",
-    colorant"#9418DB",
-    colorant"#B71D27",
-    colorant"#16B8F3",
+    colorant"#C475FD",
+    colorant"#AE3030",
+    colorant"#4467A3",
     colorant"#99B314",
-    colorant"#D359A7",
-    colorant"#BA843E",
+    colorant"#954477",
+    colorant"#BD8233",
 ]
 
 # Data: 200 simulated trading days (stock price, volume, RSI)
@@ -70,8 +70,8 @@ vol_hi = maximum(volume)
 grid_col = RGBAf(INK.r, INK.g, INK.b, 0.10)
 
 # Zone fill colors — very low alpha so data is not obscured
-overbought_fill = RGBAf(ANYPLOT_PALETTE[3].r, ANYPLOT_PALETTE[3].g, ANYPLOT_PALETTE[3].b, 0.10)
-oversold_fill   = RGBAf(ANYPLOT_PALETTE[1].r, ANYPLOT_PALETTE[1].g, ANYPLOT_PALETTE[1].b, 0.10)
+overbought_fill = RGBAf(IMPRINT[3].r, IMPRINT[3].g, IMPRINT[3].b, 0.10)
+oversold_fill   = RGBAf(IMPRINT[1].r, IMPRINT[1].g, IMPRINT[1].b, 0.10)
 
 # Figure
 fig = Figure(
@@ -156,17 +156,17 @@ ax3 = Axis(
 linkxaxes!(ax1, ax2, ax3)
 
 # Price line — palette position 1
-lines!(ax1, days, price; color = ANYPLOT_PALETTE[1], linewidth = 2.0)
+lines!(ax1, days, price; color = IMPRINT[1], linewidth = 2.0)
 
 # Volume bars — palette position 2 (canonical order)
-barplot!(ax2, days, volume; color = ANYPLOT_PALETTE[2], strokewidth = 0, width = 0.9)
+barplot!(ax2, days, volume; color = IMPRINT[2], strokewidth = 0, width = 0.9)
 
 # RSI overbought/oversold zone fills using band! — highlights the threshold regions
 band!(ax3, days, fill(70.0, n), fill(100.0, n); color = overbought_fill)
 band!(ax3, days, fill(0.0, n), fill(30.0, n);  color = oversold_fill)
 
 # RSI line — palette position 3 (canonical order)
-lines!(ax3, rsi_days, rsi_vals; color = ANYPLOT_PALETTE[3], linewidth = 2.0)
+lines!(ax3, rsi_days, rsi_vals; color = IMPRINT[3], linewidth = 2.0)
 
 # RSI overbought / oversold reference lines
 hlines!(ax3, [30.0, 70.0];
@@ -197,13 +197,13 @@ vlines!(ax3, [Float64(cx)]; color = cx_line_col, linewidth = 1.5, linestyle = :d
 
 # Value markers at the crosshair position
 scatter!(ax1, [Float64(cx)], [cx_price];
-    color = ANYPLOT_PALETTE[1], markersize = 10,
+    color = IMPRINT[1], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 scatter!(ax2, [Float64(cx)], [cx_volume];
-    color = ANYPLOT_PALETTE[2], markersize = 10,
+    color = IMPRINT[2], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 scatter!(ax3, [Float64(cx)], [cx_rsi];
-    color = ANYPLOT_PALETTE[3], markersize = 10,
+    color = IMPRINT[3], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 
 # Value annotations at crosshair — offset right; for RSI clamp downward when near ceiling

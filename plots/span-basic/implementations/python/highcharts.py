@@ -82,10 +82,10 @@ chart.options.x_axis = {
         {
             "from": 3.5,
             "to": 8.5,
-            "color": "rgba(213,94,0,0.18)",
+            "color": "rgba(174, 48, 48, 0.18)",  # imprint red — crisis band
             "label": {
                 "text": "Financial Crisis",
-                "style": {"fontSize": "40px", "color": "#D55E00", "fontWeight": "bold"},
+                "style": {"fontSize": "40px", "color": "#AE3030", "fontWeight": "bold"},
                 "verticalAlign": "top",
                 "y": 80,
             },
@@ -106,10 +106,10 @@ chart.options.y_axis = {
         {
             "from": 600,
             "to": 1000,
-            "color": "rgba(230,159,0,0.18)",
+            "color": "rgba(174, 48, 48, 0.18)",
             "label": {
                 "text": "Bear Market Zone",
-                "style": {"fontSize": "36px", "color": "#E69F00", "fontWeight": "500"},
+                "style": {"fontSize": "36px", "color": "#AE3030", "fontWeight": "500"},
                 "align": "left",
                 "x": 40,
                 "y": -15,

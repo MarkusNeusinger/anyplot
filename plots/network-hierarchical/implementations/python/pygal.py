@@ -17,7 +17,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Define organizational hierarchy (CEO -> VPs -> Directors -> Managers)
 hierarchy = {
@@ -67,7 +67,7 @@ for level, nodes in levels.items():
         node_positions[node_id] = (x, y)
 
 # Level colors using Okabe-Ito palette
-level_colors = [OKABE_ITO[0], OKABE_ITO[1], OKABE_ITO[2], OKABE_ITO[3]]
+level_colors = [IMPRINT[0], IMPRINT[1], IMPRINT[2], IMPRINT[3]]
 level_names = ["Executive", "VPs", "Directors", "Managers"]
 
 # Create custom style with theme-adaptive colors
@@ -79,7 +79,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="none",
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

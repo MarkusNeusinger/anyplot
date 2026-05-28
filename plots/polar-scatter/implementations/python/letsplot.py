@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (categorical)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Generate synthetic wind measurement data
 np.random.seed(42)
@@ -69,7 +69,7 @@ plot = (
         expand=[0, 0],
     )
     + scale_y_continuous(limits=[0, None], expand=[0, 0.05])
-    + scale_color_manual(values=OKABE_ITO, name="Time of Day")
+    + scale_color_manual(values=IMPRINT, name="Time of Day")
     + labs(title="polar-scatter · letsplot · anyplot.ai", x="", y="Wind Speed (m/s)")
     + theme_minimal()
     + theme(

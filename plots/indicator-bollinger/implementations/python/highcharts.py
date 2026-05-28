@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Generate 120 days of stock price data with Bollinger Bands
 np.random.seed(42)
@@ -205,13 +205,13 @@ Highcharts.chart('container', {{
         }}
     }},
 
-    colors: {json.dumps(OKABE_ITO)},
+    colors: {json.dumps(IMPRINT)},
 
     series: [{{
         type: 'arearange',
         name: 'Bollinger Bands',
         data: {band_json},
-        color: '{OKABE_ITO[2]}',
+        color: '{IMPRINT[2]}',
         fillOpacity: 0.2,
         lineWidth: 0,
         zIndex: 0,
@@ -220,7 +220,7 @@ Highcharts.chart('container', {{
         type: 'line',
         name: 'Upper Band (+2σ)',
         data: {upper_json},
-        color: '{OKABE_ITO[2]}',
+        color: '{IMPRINT[2]}',
         lineWidth: 4,
         dashStyle: 'Dash',
         zIndex: 1
@@ -228,7 +228,7 @@ Highcharts.chart('container', {{
         type: 'line',
         name: 'Lower Band (-2σ)',
         data: {lower_json},
-        color: '{OKABE_ITO[2]}',
+        color: '{IMPRINT[2]}',
         lineWidth: 4,
         dashStyle: 'Dash',
         zIndex: 1
@@ -236,7 +236,7 @@ Highcharts.chart('container', {{
         type: 'line',
         name: '20-Day SMA',
         data: {sma_json},
-        color: '{OKABE_ITO[1]}',
+        color: '{IMPRINT[1]}',
         lineWidth: 5,
         dashStyle: 'Dot',
         zIndex: 2
@@ -244,7 +244,7 @@ Highcharts.chart('container', {{
         type: 'line',
         name: 'Close Price',
         data: {close_json},
-        color: '{OKABE_ITO[0]}',
+        color: '{IMPRINT[0]}',
         lineWidth: 6,
         zIndex: 3
     }}]

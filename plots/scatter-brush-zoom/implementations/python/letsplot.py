@@ -39,10 +39,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is ALWAYS #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Brush rectangle color
-BRUSH_COLOR = "#0072B2"
+BRUSH_COLOR = "#4467A3"
 
 # Data - Generate clustered data for brush selection demonstration
 np.random.seed(42)
@@ -115,7 +115,7 @@ plot = (
     )
     # Plot points with alpha based on selection state
     + geom_point(aes(color="category", alpha="point_alpha"), size=5, tooltips=tooltips)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + scale_alpha_identity()
     + labs(
         x="X Value (units)", y="Y Value (units)", title="scatter-brush-zoom · letsplot · anyplot.ai", color="Category"

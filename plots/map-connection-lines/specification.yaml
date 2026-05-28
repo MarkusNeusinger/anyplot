@@ -6,7 +6,7 @@ title: Connection Lines Map (Origin-Destination)
 
 # Specification tracking
 created: 2026-01-11T22:42:40Z
-updated: 2026-01-11T22:42:40Z
+updated: 2026-05-28T00:30:28Z
 issue: 3746
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - map
-    - flow
   data_type:
     - geospatial
     - numeric

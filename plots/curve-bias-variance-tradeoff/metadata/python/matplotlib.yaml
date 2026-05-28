@@ -1,159 +1,184 @@
 library: matplotlib
+language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:57:33Z'
-updated: '2026-01-26T20:00:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21371826044
+updated: '2026-05-28T03:19:35Z'
+generated_by: claude-sonnet
+workflow_run: 26552195930
 issue: 4134
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/matplotlib/plot.png
-preview_html: null
-quality_score: 94
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of all spec requirements (4 curves, optimal point, zones,
-    formula)
-  - Clear visual hierarchy with appropriate line weights and colors
-  - Well-positioned annotations that do not obstruct data
-  - Good use of shaded regions to indicate underfitting/overfitting zones
-  - Formula annotation in a clean box format
+  - 'Complete spec compliance: all four curves, zones, optimal point, formula annotation,
+    and direct curve labels all implemented'
+  - 'Excellent palette usage: canonical positions 1-3 for active curves, muted anchor
+    correctly used for the reference Irreducible Error baseline'
+  - 'Full theme-adaptive chrome: all text, spines, grids, annotation boxes, and shaded
+    fills flip correctly between light and dark without any dark-on-dark failures'
+  - 'Strong data storytelling: intentional visual hierarchy (Total Error as the thickest
+    primary curve), shaded underfitting/overfitting zones with labeled captions, and
+    annotated optimal complexity point'
   weaknesses:
-  - Variance direct label color (#B8860B dark goldenrod) differs from actual variance
-    line color (#FFD43B bright yellow)
-  - Legend at top duplicates the direct curve labels on the plot, creating some redundancy
-  image_description: The plot displays the classic bias-variance tradeoff visualization
-    with four distinct curves on a 16:9 canvas. The Bias² curve (blue solid line)
-    starts high around 3.6 at low complexity and decreases asymptotically towards
-    0. The Variance curve (golden/yellow solid line) starts at 0 and increases linearly
-    with complexity, reaching about 3 at high complexity. The Irreducible Error (gray
-    dashed horizontal line) is constant at 0.5. The Total Error curve (red solid line,
-    thicker) shows the characteristic U-shape, starting high (~4.2), decreasing to
-    a minimum around complexity 3.3, then increasing. A green dotted vertical line
-    marks the optimal complexity point with a green dot annotation reading "Optimal
-    Complexity". The left region is shaded light blue with "Underfitting (High Bias)"
-    label, and the right region is shaded light yellow with "Overfitting (High Variance)"
-    label. X-axis shows "Low", "Medium", "High" labels for Model Complexity. The formula
-    "Total Error = Bias² + Variance + Irreducible Error" appears in a box at bottom
-    right. Legend is positioned at top center with all four curves labeled. Direct
-    curve labels appear near each line on the right side.
+  - Formula annotation at fontsize=7 is borderline small; at mobile thumbnail widths
+    (~400px the canvas scales ~8x), this drops to ~5px effective height — consider
+    bumping to fontsize=8 to match other secondary labels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "curve-bias-variance-tradeoff · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Model Complexity" (10pt) and "Prediction Error" (10pt) in dark ink, readable. Tick labels (8pt) — "Low", "Medium", "High" on x-axis and 0-5 on y-axis — in INK_SOFT, readable. Zone labels "Underfitting (High Bias)" and "Overfitting (High Variance)" in bold matching series colors, readable.
+      Data: Bias² in #009E73 (brand green), Variance in #C475FD (lavender), Total Error in #4467A3 (blue, thickest), Irreducible Error in INK_MUTED (muted gray, dashed). Shaded zones in matching series colors at low alpha. Optimal point marked with blue scatter dot and annotated arrow.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all in light ink tokens (#F0EFE8 / #B8B7B0), clearly readable against dark surface. Zone labels remain in series colors and are readable. Optimal annotation text appears light-colored and readable. Formula box fill adapts to elevated dark surface #242420.
+      Data: All data colors (green, lavender, blue, muted gray) are identical to light render — only chrome flips as expected.
+      Legibility verdict: PASS — no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, all annotations 16pt
-          - perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: All text elements are well-spaced, no overlapping labels
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Lines have appropriate thickness (2.5-4), but variance label color
-          differs from line color
+        comment: Title, axis labels, tick labels, curve/zone labels all readable in
+          both themes. Formula annotation at fontsize=7 borderline small at mobile
+          widths.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data curves.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four curves clearly visible with appropriate line widths; dashed
+          linestyle for redundant encoding on Irreducible Error.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, gray, red/green are colorblind-distinguishable; different
-          line styles help
+        comment: Anyplot palette in canonical order; dashed linestyle as redundant
+          encoding; no red-green-only signaling.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend near plot
+        comment: Canvas gate passed (3200x1800). Clean layout; no overflow or clipping
+          in either render.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but no units
+        comment: Model Complexity and Prediction Error are descriptive; title follows
+          required format.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but legend duplicates direct curve labels
+        comment: Bias²=#009E73 (pos 1), Variance=#C475FD (pos 2), Total Error=#4467A3
+          (pos 3), Irreducible Error=INK_MUTED. Backgrounds correct; data colors identical
+          across themes.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional visual hierarchy via line thickness, shaded zones, bold
+          zone labels in matching colors, direct curve labels instead of legend. Above-average
+          design effort.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; y-axis-only grid at alpha=0.15; elevated-surface
+          formula annotation box; full theme-adaptive chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point (Total Error thickest), optimal point annotated
+          with arrow, zones with explanatory labels, formula reinforces decomposition.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-curve line plot showing bias-variance decomposition
+        comment: Multi-curve line plot showing bias-variance tradeoff — correct.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=complexity, Y=error values, all curves correctly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: All 4 curves present, optimal point marked, formula included, shaded
-          zones, direct labels
-      - id: SC-04
-        name: Data Range
+        comment: All four curves with distinct colors/linestyles, optimal complexity
+          marked, direct curve labels, formula annotation, shaded zones — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-5 shows all data, X-axis 0-10 covers full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Model Complexity (Low/Medium/High); Y: Prediction Error; all
+          curves follow correct monotonic behavior.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match curve names exactly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format spec-id · library · pyplots.ai
+        comment: 'Title: curve-bias-variance-tradeoff · python · matplotlib · anyplot.ai.
+          No legend — replaced by direct curve labels.'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows decreasing bias, increasing variance, constant noise, U-shaped
-          total error, zones
+        comment: 'All spec aspects shown: four theoretical curves, optimal point,
+          zones, formula.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Theoretical ML curves, appropriate for educational context, though
-          abstract
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Error values 0-5 are sensible for normalized prediction error
+        comment: Standard ML educational visualization; neutral, non-controversial
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100 data points (within 50-100 spec range); prediction error 0-5;
+          complexity 0.1-10 — all plausible.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,54 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save, no functions/classes'
+        comment: No functions or classes; flat, sequential script.
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No np.random.seed() set, but data is deterministic (no randomness
-          used)
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: np.linspace + mathematical formulas, no randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: os, matplotlib.pyplot, numpy — all used, none unused.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Appropriate complexity; clean separation of data, plot, and style
+          steps; no fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 5
-      max: 5
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — no
+          bbox_inches='tight'; correct filename format.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses axvline, axvspan, annotate with arrow, text with bbox, custom
-          legend, tick customization
+        comment: Consistent ax.* method usage; axvspan, axvline, scatter, annotate
+          with arrowprops, tick_params, yaxis.grid — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses axvspan for region shading, annotate with arrowprops dict, transform=ax.transAxes
+          for axes-relative text. Solid matplotlib-specific patterns.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - custom-legend
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting

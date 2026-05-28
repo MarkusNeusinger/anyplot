@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly revenue by product line across regions
 np.random.seed(42)
@@ -106,7 +106,7 @@ all_series = []
 n_series = len(series_names)
 offsets = [(i - (n_series - 1) / 2) * 0.2 for i in range(n_series)]
 
-for series_name, color, offset in zip(series_names, OKABE_ITO, offsets, strict=True):
+for series_name, color, offset in zip(series_names, IMPRINT, offsets, strict=True):
     values = data[series_name]
     # Create scatter points for the markers
     scatter_data = []

@@ -23,10 +23,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito zones: low / mid / high (intuitive + colorblind-safe)
-ZONE_LOW = "#D55E00"  # vermillion (bad)
-ZONE_MID = "#E69F00"  # orange (warning)
-ZONE_HIGH = "#009E73"  # brand bluish green (good)
+# imprint semantic anchors: low / mid / high (red / amber / green)
+ZONE_LOW = "#AE3030"  # imprint red — bad
+ZONE_MID = "#DDCC77"  # imprint amber — warning
+ZONE_HIGH = "#009E73"  # imprint green — good
 
 # Data
 value = 72

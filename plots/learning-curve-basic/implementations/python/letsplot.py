@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Simulate learning curve for a model showing slight overfitting pattern
 np.random.seed(42)
@@ -84,8 +84,8 @@ plot = (
     + geom_ribbon(aes(ymin="Lower", ymax="Upper"), alpha=0.2, color="rgba(0,0,0,0)")
     + geom_line(size=2)
     + geom_point(size=4)
-    + scale_color_manual(values=OKABE_ITO[:2])
-    + scale_fill_manual(values=OKABE_ITO[:2])
+    + scale_color_manual(values=IMPRINT[:2])
+    + scale_fill_manual(values=IMPRINT[:2])
     + scale_y_continuous(limits=[0.55, 1.02])
     + scale_x_continuous(limits=[0, 1700], breaks=list(range(0, 1800, 200)))
     + labs(

@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Simulated country-level metrics over 20 years (Gapminder-style)
 np.random.seed(42)
@@ -67,7 +67,7 @@ for idx, country in enumerate(countries):
                 "gdp_per_capita": gdp,
                 "life_expectancy": life_exp,
                 "population": pop,
-                "color_idx": idx % len(OKABE_ITO),
+                "color_idx": idx % len(IMPRINT),
             }
         )
 
@@ -83,7 +83,7 @@ df_key = df[df["year"].isin(key_years)].copy()
 df_key["year_label"] = df_key["year"].astype(str)
 
 # Create color mapping based on Okabe-Ito palette
-country_colors = {c: OKABE_ITO[i % len(OKABE_ITO)] for i, c in enumerate(countries)}
+country_colors = {c: IMPRINT[i % len(IMPRINT)] for i, c in enumerate(countries)}
 
 # Theme configuration
 anyplot_theme = theme(

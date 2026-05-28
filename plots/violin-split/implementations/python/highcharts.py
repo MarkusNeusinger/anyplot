@@ -26,7 +26,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 
 # Data - Employee satisfaction scores by department, comparing Remote vs Office workers
 np.random.seed(42)

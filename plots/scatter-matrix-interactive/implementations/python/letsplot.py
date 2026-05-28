@@ -42,7 +42,7 @@ GRID_COLOR = "#E8E5DB" if THEME == "light" else "#2A2925"
 ACCENT_COLOR = "#009E73"
 
 # Okabe-Ito palette - first series (#009E73) is always first
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Synthetic iris-like dataset (4 numeric variables, 150 points)
 np.random.seed(42)
@@ -98,7 +98,7 @@ for i, var_y in enumerate(variables):
             p = (
                 ggplot(df, aes(x=var_x, fill="Species"))
                 + geom_histogram(alpha=0.75, bins=16, position="identity")
-                + scale_fill_manual(values=OKABE_ITO)
+                + scale_fill_manual(values=IMPRINT)
                 + labs(x=var_x if show_x_label else "", y="")
                 + theme_minimal()
                 + theme(
@@ -129,8 +129,8 @@ for i, var_y in enumerate(variables):
                     .line(f"{var_x}: @{{{var_x}}}")
                     .line(f"{var_y}: @{{{var_y}}}"),
                 )
-                + scale_color_manual(values=OKABE_ITO)
-                + scale_fill_manual(values=OKABE_ITO)
+                + scale_color_manual(values=IMPRINT)
+                + scale_fill_manual(values=IMPRINT)
                 + labs(x=var_x if show_x_label else "", y=var_y if show_y_label else "")
                 + theme_minimal()
                 + theme(
@@ -179,8 +179,8 @@ legend_df = pd.DataFrame({"x": [1, 2, 3], "y": [0, 0, 0], "Species": ["Setosa", 
 legend_plot = (
     ggplot(legend_df, aes(x="x", y="y", color="Species", fill="Species"))
     + geom_point(size=8, shape=21, alpha=0.85, stroke=0.5)
-    + scale_color_manual(values=OKABE_ITO)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
+    + scale_fill_manual(values=IMPRINT)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),

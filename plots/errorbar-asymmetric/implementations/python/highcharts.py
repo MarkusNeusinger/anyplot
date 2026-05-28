@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - first categorical series
-SECONDARY = "#D55E00"  # Position 2
+SECONDARY = "#C475FD"  # Position 2
 
 # Data - Quarterly sales forecast with asymmetric confidence intervals
 np.random.seed(42)

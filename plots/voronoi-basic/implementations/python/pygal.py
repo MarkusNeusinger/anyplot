@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 np.random.seed(42)
 points = np.random.uniform(0.5, 10.5, size=(25, 2))
@@ -275,7 +275,7 @@ for i, region in enumerate(regions):
 
     polygon = ET.SubElement(cells_g, "polygon")
     polygon.set("points", points_str)
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     polygon.set("fill", color)
     polygon.set("fill-opacity", "0.6")
     polygon.set("stroke", INK_SOFT)
@@ -302,7 +302,7 @@ for i, (px, py) in enumerate(vor.points):
     inner.set("cx", f"{sx:.1f}")
     inner.set("cy", f"{sy:.1f}")
     inner.set("r", "12")
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     inner.set("fill", color)
 
     title = ET.SubElement(inner, "title")

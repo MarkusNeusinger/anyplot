@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for soil types
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -149,7 +149,7 @@ for row_idx, soil in enumerate(soil_types):
                 "marker": {
                     "radius": 12,
                     "symbol": "circle",
-                    "fillColor": OKABE_ITO[row_idx % len(OKABE_ITO)],
+                    "fillColor": IMPRINT[row_idx % len(IMPRINT)],
                     "lineWidth": 2,
                     "lineColor": PAGE_BG,
                 },

@@ -84,7 +84,7 @@ p.add_tools(hover)
 
 # Mark peak frequencies with circles
 peak_freqs = [50, 150, 400]
-peak_colors = ["#D55E00", "#0072B2", "#CC79A7"]  # Okabe-Ito positions 2, 3, 4
+peak_colors = ["#C475FD", "#4467A3", "#BD8233"]  # Okabe-Ito positions 2, 3, 4
 for freq, color in zip(peak_freqs, peak_colors, strict=True):
     freq_idx = np.argmin(np.abs(frequencies - freq))
     peak_amp = amplitude_db[freq_idx]

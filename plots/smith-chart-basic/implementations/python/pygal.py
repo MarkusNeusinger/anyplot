@@ -22,11 +22,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # structural chart elements use positions 5-8 (added after data).
 CHART_COLORS = (
     "#009E73",  # pos 1: "Antenna Z(f)" ← brand green — first data series
-    "#D55E00",  # pos 2: "1 GHz" (Okabe-Ito vermillion)
-    "#0072B2",  # pos 3: "3.5 GHz" (Okabe-Ito blue)
-    "#CC79A7",  # pos 4: "6 GHz" (Okabe-Ito pink/purple)
-    "#E69F00",  # pos 5: unit circle boundary (Okabe-Ito amber)
-    "#56B4E9",  # pos 6: resistance circles (Okabe-Ito sky blue)
+    "#C475FD",  # pos 2: "1 GHz" (Okabe-Ito vermillion)
+    "#4467A3",  # pos 3: "3.5 GHz" (Okabe-Ito blue)
+    "#BD8233",  # pos 4: "6 GHz" (Okabe-Ito pink/purple)
+    "#AE3030",  # pos 5: unit circle boundary (Okabe-Ito amber)
+    "#2ABCCD",  # pos 6: resistance circles (Okabe-Ito sky blue)
     INK_MUTED,  # pos 7: reactance arcs (theme-adaptive muted)
     INK_SOFT,  # pos 8: real axis (theme-adaptive subtle)
 )
@@ -101,12 +101,12 @@ chart.add("6 GHz", [(float(gamma[-1].real), float(gamma[-1].imag))], show_dots=T
 
 # Structural series — added AFTER data to take palette positions 5-8.
 # Named labels eliminate the unlabeled colored squares that caused legend confusion.
-# Unit circle boundary (|Γ| = 1): pos 5 = #E69F00 amber
+# Unit circle boundary (|Γ| = 1): pos 5 = #AE3030 amber
 theta = np.linspace(0, 2 * np.pi, 200)
 unit_circle = [(float(np.cos(t)), float(np.sin(t))) for t in theta]
 chart.add("Unit Circle", unit_circle, show_dots=False, stroke_width=5)
 
-# Constant resistance circles: pos 6 = #56B4E9 sky blue
+# Constant resistance circles: pos 6 = #2ABCCD sky blue
 r_grid = []
 for r in R_CIRCLES:
     x_vals = np.concatenate([np.linspace(-50, -0.01, 100), np.linspace(0.01, 50, 100)])

@@ -43,7 +43,7 @@ data_dict["Placebo"] = np.append(data_dict["Placebo"], [15, 85])
 data_dict["Medium Dose"] = np.append(data_dict["Medium Dose"], [30, 95])
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Calculate box plot statistics inline (KISS - no functions)
 box_data = []
@@ -85,7 +85,7 @@ for i, cat in enumerate(categories):
             "median": round(median, 2),
             "q3": round(q3, 2),
             "high": round(upper_whisker, 2),
-            "color": OKABE_ITO[i],
+            "color": IMPRINT[i],
         }
     )
 
@@ -153,7 +153,7 @@ chart_config = {
             "medianWidth": 6,
             "medianColor": INK,
             "colorByPoint": True,
-            "colors": OKABE_ITO,
+            "colors": IMPRINT,
         },
         "errorbar": {"lineWidth": 8, "whiskerLength": "40%", "color": INK, "stemWidth": 0},
     },
@@ -185,7 +185,7 @@ chart_config = {
             "marker": {
                 "symbol": "circle",
                 "radius": 14,
-                "fillColor": OKABE_ITO[0],
+                "fillColor": IMPRINT[0],
                 "lineColor": PAGE_BG,
                 "lineWidth": 2,
             },

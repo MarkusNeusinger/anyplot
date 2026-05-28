@@ -26,8 +26,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette: positive = brand green, negative = vermillion
 POSITIVE_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
-NEGATIVE_COLOR = "#D55E00"  # Okabe-Ito position 2 (vermillion)
-TOTAL_COLOR = "#0072B2"  # Okabe-Ito position 3 (blue) for start/end totals
+NEGATIVE_COLOR = "#AE3030"  # imprint red — negative
+TOTAL_COLOR = "#4467A3"  # Okabe-Ito position 3 (blue) for start/end totals
 
 # Data - Quarterly financial breakdown from revenue to net income
 categories = [

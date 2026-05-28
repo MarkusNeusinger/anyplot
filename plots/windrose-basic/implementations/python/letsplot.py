@@ -69,7 +69,7 @@ counts["speed_bin"] = pd.Categorical(counts["speed_bin"], categories=speed_order
 counts = counts.sort_values(["direction_bin", "speed_bin"])
 
 # Okabe-Ito palette (cool to warm gradient)
-colors = ["#009E73", "#56B4E9", "#0072B2", "#F0E442", "#E69F00", "#D55E00"]
+colors = ["#009E73", "#2ABCCD", "#4467A3", "#954477", "#AE3030", "#C475FD"]
 
 # Create wind rose using polar bar chart
 plot = (

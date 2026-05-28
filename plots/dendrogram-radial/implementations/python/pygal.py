@@ -30,7 +30,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 custom_style = Style(
     background=PAGE_BG,
@@ -38,7 +38,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=42,
     legend_font_size=26,
     label_font_size=28,
@@ -165,7 +165,7 @@ for i, row in enumerate(Z):
         ch_r = node_radii[child] * R
         ch_theta = node_angles[child]
         cl = node_cluster.get(child, -1)
-        color = OKABE_ITO[cl] if cl >= 0 else INK_SOFT
+        color = IMPRINT[cl] if cl >= 0 else INK_SOFT
         sw = 6 if child < n else 4
 
         # Arc at par_r from par_theta to ch_theta
@@ -199,7 +199,7 @@ elems.append(f'<circle cx="{cx}" cy="{cy}" r="12" fill="{INK_SOFT}" opacity="0.5
 for i in range(n):
     theta = leaf_angles[i]
     lx, ly = polar_xy(R, theta)
-    color = OKABE_ITO[cluster_ids[i]]
+    color = IMPRINT[cluster_ids[i]]
 
     elems.append(f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="15" fill="{color}" opacity="0.95"/>')
 
@@ -226,7 +226,7 @@ elems.append(
 )
 for g in range(6):
     gy = ly0 + 55 + g * 68
-    elems.append(f'<circle cx="{lx0 + 16}" cy="{gy}" r="15" fill="{OKABE_ITO[g]}"/>')
+    elems.append(f'<circle cx="{lx0 + 16}" cy="{gy}" r="15" fill="{IMPRINT[g]}"/>')
     elems.append(
         f'<text x="{lx0 + 44}" y="{gy}" font-family="sans-serif" font-size="26" '
         f'fill="{INK}" dominant-baseline="middle">{group_names[g]}</text>'

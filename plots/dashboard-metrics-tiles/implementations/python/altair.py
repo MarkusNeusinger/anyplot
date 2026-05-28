@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colours mapped to status roles
 GOOD_COLOR = "#009E73"
-WARN_COLOR = "#E69F00"
-CRIT_COLOR = "#D55E00"
+WARN_COLOR = "#DDCC77"  # imprint amber — semantic warning
+CRIT_COLOR = "#AE3030"  # imprint red — semantic critical
 STATUS_COLORS = {"good": GOOD_COLOR, "warning": WARN_COLOR, "critical": CRIT_COLOR}
 
 # Data - KPI metrics with sparkline history

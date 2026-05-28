@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-2)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data: Test scores (%) by department comparing control vs treatment groups
 np.random.seed(42)
@@ -79,7 +79,7 @@ split_violin = (
         y=alt.Y("Score (%):Q", title="Score (%)", scale=alt.Scale(domain=[30, 100])),
         color=alt.Color(
             "Group:N",
-            scale=alt.Scale(domain=["Control", "Treatment"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Control", "Treatment"], range=IMPRINT),
             legend=alt.Legend(
                 title="Group",
                 titleFontSize=20,
@@ -104,7 +104,7 @@ iqr_rule = (
         y=alt.Y("q1:Q", scale=alt.Scale(domain=[30, 100])),
         y2="q3:Q",
         xOffset=alt.XOffset("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=[-20, 20])),
-        color=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=OKABE_ITO)),
+        color=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=IMPRINT)),
     )
 )
 
@@ -117,7 +117,7 @@ median_marker = (
         y=alt.Y("median:Q", scale=alt.Scale(domain=[30, 100])),
         xOffset=alt.XOffset("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=[-20, 20])),
         color=alt.value("white"),
-        stroke=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=OKABE_ITO)),
+        stroke=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=IMPRINT)),
         strokeWidth=alt.value(2),
     )
 )

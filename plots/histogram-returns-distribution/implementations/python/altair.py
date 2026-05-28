@@ -27,8 +27,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito 1 — main distribution bars
-TAIL_COLOR = "#D55E00"  # Okabe-Ito 2 — tail bars beyond ±2σ
-CURVE_COLOR = "#0072B2"  # Okabe-Ito 3 — fitted normal distribution overlay
+TAIL_COLOR = "#C475FD"  # Okabe-Ito 2 — tail bars beyond ±2σ
+CURVE_COLOR = "#4467A3"  # Okabe-Ito 3 — fitted normal distribution overlay
 
 # Data
 np.random.seed(42)

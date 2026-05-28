@@ -25,14 +25,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for region colors
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # 1: brand green
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
-    "#E69F00",  # 5: orange
-    "#56B4E9",  # 6: sky blue
-    "#F0E442",  # 7: yellow
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
+    "#AE3030",  # 5: orange
+    "#2ABCCD",  # 6: sky blue
+    "#954477",  # 7: yellow
 ]
 
 # Data - Major earthquake epicenters (synthetic but realistic data)
@@ -84,7 +84,7 @@ earthquakes = [
 
 # Assign colors by region using Okabe-Ito palette (first 7 regions)
 region_list = ["Japan", "South America", "Indonesia", "North America", "Mediterranean", "Asia", "Pacific", "Caribbean"]
-region_colors = {region: OKABE_ITO[i % len(OKABE_ITO)] for i, region in enumerate(region_list)}
+region_colors = {region: IMPRINT[i % len(IMPRINT)] for i, region in enumerate(region_list)}
 
 # Prepare data for mapbubble series - group by region
 regions_data = {}
@@ -105,7 +105,7 @@ for region, data in regions_data.items():
             "type": "mapbubble",
             "name": region,
             "data": data,
-            "color": region_colors.get(region, OKABE_ITO[0]),
+            "color": region_colors.get(region, IMPRINT[0]),
             "marker": {"fillOpacity": 0.7, "lineWidth": 2, "lineColor": PAGE_BG},
             "minSize": 20,
             "maxSize": 100,

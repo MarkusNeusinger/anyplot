@@ -39,8 +39,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - green
-ACCENT_1 = "#D55E00"  # Position 2 - orange
-ACCENT_2 = "#0072B2"  # Position 3 - blue
+ACCENT_1 = "#C475FD"  # Position 2 - orange
+ACCENT_2 = "#4467A3"  # Position 3 - blue
 
 # Data - Quarterly financial breakdown from revenue to net income
 categories = [

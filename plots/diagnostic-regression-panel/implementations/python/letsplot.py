@@ -24,9 +24,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID_COLOR = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito position 1
-SMOOTHER = "#D55E00"  # Okabe-Ito position 2
-REFERENCE = "#0072B2"  # Okabe-Ito position 3
-CONTOUR = "#CC79A7"  # Okabe-Ito position 4
+SMOOTHER = "#C475FD"  # Okabe-Ito position 2
+REFERENCE = "#4467A3"  # Okabe-Ito position 3
+CONTOUR = "#BD8233"  # Okabe-Ito position 4
 
 CREDIT = "diagnostic-regression-panel · letsplot · anyplot.ai"
 

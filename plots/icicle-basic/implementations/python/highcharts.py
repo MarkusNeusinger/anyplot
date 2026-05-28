@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for main categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - File system hierarchy with folders and files
 hierarchy = {
@@ -42,7 +42,7 @@ hierarchy = {
 }
 
 # Category colors from Okabe-Ito palette
-cat_colors = {"src": OKABE_ITO[0], "docs": OKABE_ITO[1], "tests": OKABE_ITO[2], "assets": OKABE_ITO[3]}
+cat_colors = {"src": IMPRINT[0], "docs": IMPRINT[1], "tests": IMPRINT[2], "assets": IMPRINT[3]}
 
 # Flatten hierarchy into list of nodes with calculated sizes
 all_nodes = []
@@ -93,7 +93,7 @@ level_height = 2300 // (max_level + 1) if max_level > 0 else 500
 for lv in sorted(level_groups.keys()):
     for parent, children in level_groups[lv].items():
         top_cat = parent if parent in cat_colors else "src"
-        color = cat_colors.get(top_cat, OKABE_ITO[0])
+        color = cat_colors.get(top_cat, IMPRINT[0])
 
         total_val = sum(c["value"] for c in children)
         x_pos = 200
@@ -190,10 +190,10 @@ chart_config = f"""
 
                     // Draw legend
                     var cats = [
-                        {{ name: 'src', color: '{OKABE_ITO[0]}' }},
-                        {{ name: 'docs', color: '{OKABE_ITO[1]}' }},
-                        {{ name: 'tests', color: '{OKABE_ITO[2]}' }},
-                        {{ name: 'assets', color: '{OKABE_ITO[3]}' }}
+                        {{ name: 'src', color: '{IMPRINT[0]}' }},
+                        {{ name: 'docs', color: '{IMPRINT[1]}' }},
+                        {{ name: 'tests', color: '{IMPRINT[2]}' }},
+                        {{ name: 'assets', color: '{IMPRINT[3]}' }}
                     ];
 
                     var legendY = 2520;

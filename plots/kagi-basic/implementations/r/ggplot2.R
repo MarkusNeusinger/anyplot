@@ -18,7 +18,7 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 # Kagi-specific colors: yang (uptrend) uses brand green, yin (downtrend) uses vermillion
 COLOR_YANG  <- "#009E73"  # Okabe-Ito position 1 — uptrend
-COLOR_YIN   <- "#D55E00"  # Okabe-Ito position 2 — downtrend
+COLOR_YIN   <- "#AE3030"  # imprint red — downtrend
 
 # --- Generate price data -----------------------------------------------------
 # Daily closing prices over ~6 months with realistic volatility

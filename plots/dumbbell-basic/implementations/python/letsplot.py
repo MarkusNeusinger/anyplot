@@ -40,7 +40,7 @@ GRID = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Okabe-Ito palette — "After" comes first alphabetically → brand green
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 SEGMENT = INK_SOFT
 
 # Data — Employee satisfaction scores before and after policy changes.

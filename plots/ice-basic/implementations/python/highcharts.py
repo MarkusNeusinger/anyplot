@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — ICE lines
-PDP_COLOR = "#D55E00"  # Okabe-Ito position 2 — PDP overlay
+PDP_COLOR = "#C475FD"  # Okabe-Ito position 2 — PDP overlay
 ICE_COLOR = "rgba(0,158,115,0.20)"  # BRAND at 20% opacity
 
 # Data

@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # Data - Quarterly revenue by product category (in thousands)
 categories = ["Q1", "Q2", "Q3", "Q4"]
@@ -46,7 +46,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

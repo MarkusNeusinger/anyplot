@@ -32,9 +32,9 @@ data = {
 # Position 1 (green) for first region, then positions 2-7 for others
 oi_base_colors = (
     "#009E73",  # 1: bluish green
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
 )
 
 color_families = {}

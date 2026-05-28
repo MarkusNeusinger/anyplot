@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first three positions)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris-like flower measurements with categories
 np.random.seed(42)
@@ -57,7 +57,7 @@ for i, cat in enumerate(categories):
 df = pd.DataFrame(data)
 
 # Color scale using Okabe-Ito
-color_scale = alt.Scale(domain=categories, range=OKABE_ITO)
+color_scale = alt.Scale(domain=categories, range=IMPRINT)
 
 # Selection mechanism
 brush = alt.selection_interval()

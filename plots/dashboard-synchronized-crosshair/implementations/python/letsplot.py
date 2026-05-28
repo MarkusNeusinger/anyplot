@@ -44,8 +44,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#E1DFD9" if THEME == "light" else "#32322F"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
-CROSSHAIR_COLOR = ANYPLOT_PALETTE[5]  # #D359A7 pink — visually distinct from all 3 series
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233"]
+CROSSHAIR_COLOR = IMPRINT[5]  # #954477 pink — visually distinct from all 3 series
 
 # Data — stock dashboard: price, volume, RSI over 200 trading days
 np.random.seed(42)
@@ -102,7 +102,7 @@ common_theme = theme(
 # Chart 1: Price
 price_chart = (
     ggplot(df, aes(x="date", y="price"))
-    + geom_line(color=ANYPLOT_PALETTE[0], size=1.5, tooltips=layer_tooltips().line("@date").line("Price|$@price"))
+    + geom_line(color=IMPRINT[0], size=1.5, tooltips=layer_tooltips().line("@date").line("Price|$@price"))
     + geom_path(data=vline_price_df, mapping=aes(x="date", y="y"), color=CROSSHAIR_COLOR, size=1.2, alpha=0.85)
     + geom_point(data=crosshair_price_df, mapping=aes(x="date", y="price"), color=CROSSHAIR_COLOR, size=6)
     + geom_text(
@@ -122,7 +122,7 @@ price_chart = (
 volume_chart = (
     ggplot(df, aes(x="date", xend="date", y="zero", yend="volume"))
     + geom_segment(
-        color=ANYPLOT_PALETTE[1], size=2.0, alpha=0.85, tooltips=layer_tooltips().line("@date").line("Volume|@volume M")
+        color=IMPRINT[1], size=2.0, alpha=0.85, tooltips=layer_tooltips().line("@date").line("Volume|@volume M")
     )
     + geom_path(data=vline_volume_df, mapping=aes(x="date", y="y"), color=CROSSHAIR_COLOR, size=1.2, alpha=0.85)
     + geom_point(data=crosshair_volume_df, mapping=aes(x="date", y="volume"), color=CROSSHAIR_COLOR, size=6)
@@ -142,7 +142,7 @@ volume_chart = (
 # Chart 3: RSI Indicator
 rsi_chart = (
     ggplot(df, aes(x="date", y="rsi"))
-    + geom_line(color=ANYPLOT_PALETTE[2], size=1.5, tooltips=layer_tooltips().line("@date").line("RSI|@rsi"))
+    + geom_line(color=IMPRINT[2], size=1.5, tooltips=layer_tooltips().line("@date").line("RSI|@rsi"))
     + geom_hline(yintercept=70, linetype="dashed", color=INK_SOFT, size=0.8)
     + geom_hline(yintercept=30, linetype="dashed", color=INK_SOFT, size=0.8)
     + geom_path(data=vline_rsi_df, mapping=aes(x="date", y="y"), color=CROSSHAIR_COLOR, size=1.2, alpha=0.85)

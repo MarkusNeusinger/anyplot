@@ -1,160 +1,205 @@
 library: highcharts
+language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:15:31Z'
-updated: '2026-01-21T13:26:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21210864176
+updated: '2026-05-27T23:18:12Z'
+generated_by: claude-sonnet
+workflow_run: 26543379052
 issue: 3749
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of Highstock native flags series with different shapes and colors
-    for each event type
-  - Clean candlestick rendering with proper OHLC data
-  - Well-structured legend showing all event types
-  - Good y-offset positioning to prevent flag overlap
-  - Proper title format following pyplots convention
-  - Includes both PNG and HTML output for interactivity
+  - Native Highstock flags series with multiple shapes (squarepin, circlepin, flag)
+    — a library-exclusive feature unavailable in other charting libraries
+  - 'Semantic finance color exception correctly applied: bullish candles = #009E73,
+    bearish = #AE3030 — respects domain convention while staying within the anyplot
+    palette'
+  - Complete theme adaptation across all chrome tokens (PAGE_BG, INK, INK_SOFT, GRID,
+    ELEVATED_BG) — both renders are clean and correct
+  - Starting price reference line creates a useful narrative anchor for the stock
+    trajectory
+  - Vertical event plotLines at precise dates satisfy the spec's precise date-alignment
+    requirement
+  - onSeries + allowOverlapX:false properly anchors flags to the price series and
+    prevents collision
   weaknesses:
-  - Grid lines are very subtle (almost invisible) - could improve readability
-  - Range selector and navigator are disabled - removes some of Highstock distinctive
-    features
-  image_description: "The plot displays a Highstock candlestick chart showing approximately\
-    \ 120 trading days of stock price data from January to June 2024. The candlesticks\
-    \ show typical OHLC patterns with blue (up/bullish) and red (down/bearish) candles.\
-    \ Seven event flags are positioned above the price series at different y-offsets:\n\
-    \n- Blue square-pin flags labeled \"Q4\" and \"Q1\" for earnings events\n- Green\
-    \ flags labeled \"D\" for dividend events \n- Yellow flags labeled \"N\" for news\
-    \ events\n- A purple circle-pin flag labeled \"S\" for a stock split event\n\n\
-    The title \"stock-event-flags · highcharts · pyplots.ai\" is prominently displayed\
-    \ at the top with a subtitle \"Stock Price with Earnings, Dividends, Splits, and\
-    \ News Events\". The y-axis shows \"Price (USD)\" ranging from $144 to $200, and\
-    \ the x-axis shows bi-weekly date labels. A dashed horizontal line at $180 marks\
-    \ the \"Starting Price\". A legend at the bottom identifies each event type (Stock\
-    \ Price, Earnings, Dividend, News, Split) with colored circles."
+  - 'X-axis gridLines enabled (gridLineWidth:1) — style guide recommends Y-axis-only
+    grid for stock/line charts; the horizontal grid bands compete visually with the
+    7 vertical event plotLines; fix: set xAxis.gridLineWidth:0'
+  - Subtitle font size (38px) is below the tick label baseline (44px) — creates an
+    inverted hierarchy where secondary text is smaller than tertiary tick text; raise
+    to at least 44px to restore correct hierarchy
+  - Grid opacity 0.22 is at the upper end of the 0.15–0.25 acceptable range; reducing
+    to 0.15 would produce a cleaner appearance consistent with the style guide reference
+    value
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface. No pure-white background.
+      Chrome: Bold title "stock-event-flags · python · highcharts · anyplot.ai" in dark INK (#1A1A17) — fully readable. Subtitle "Technology Stock 2024 · Earnings, Dividends, Stock Split, and News Events" in INK_SOFT, slightly smaller. Y-axis label "Price (USD)" in dark ink, rotated 270°, readable. X-axis datetime tick labels (Jan 08, Jan 15…Jun 17) rotated -45°, readable. Legend at bottom: Stock Price / Earnings / Dividend / News / Split — all readable in INK_SOFT on ELEVATED_BG (#FFFDF6) box. "Starting Price" reference label in INK_SOFT at right edge — tertiary, smaller (30px) but legible.
+      Data: Candlestick chart spanning Jan–Jun 2024. Bullish candles = #009E73 (brand green), bearish = #AE3030 (matte red) — semantic finance exception correctly applied. 7 event flags above the price: Q4 / Q1 in lavender squarepins (#C475FD); D dividends in blue flags (#4467A3); N news in ochre flags (#BD8233); S split in cyan circlepin (#2ABCCD). Vertical dashed plotLines at each event date in INK_SOFT. Starting price horizontal reference line (dashed, INK_SOFT).
+      Legibility verdict: PASS — all text is readable against the light background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface. No pure-black background.
+      Chrome: Same title and subtitle, now rendered in light INK (#F0EFE8) — clearly readable against the dark surface. Axis labels, tick labels, and legend text switch to light INK_SOFT (#B8B7B0). Legend box uses ELEVATED_BG (#242420). Grid switches to rgba(240,239,232,0.22). No dark-on-dark failures detected.
+      Data: Data colors are identical to the light render — bullish candles remain #009E73, bearish #AE3030; event flag colors unchanged (lavender, blue, ochre, cyan). Chrome-only flip is clean.
+      Legibility verdict: PASS — all text is readable against the dark background. Data colors maintain identity across both themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: 'Title, axis labels, and tick marks are all clearly readable. Font
-          sizes appropriate for 4800x2700. Minor: flag labels could be slightly larger.'
+        comment: All font sizes explicitly set (66px title, 56px axis, 44px tick,
+          38px subtitle, 30px annotation). Subtitle at 38px slightly below tick baseline
+          of 44px — minor hierarchy inversion. Both renders readable at full size.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text or elements. Flags positioned at different y-offsets
-          to avoid collision.
+        comment: Flags staggered at different y-offsets (earnings=-80, dividend=-115,
+          split=-150, news=-95) preventing mutual overlap. Minor proximity between
+          some flag bottoms and candlestick tops but no actual text overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Candlesticks well-sized for data density. Flags large enough with
-          clear connector lines.
+        comment: Candlestick bars, event flags, vertical plotlines, and reference
+          line all clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue/red for candlesticks (acceptable), colorblind-safe palette
-          for flags (blue, green, purple, yellow).
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space. Slight excess spacing at bottom for legend.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Price (USD)' with proper units. X-axis shows clear
-          date format.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Semantic finance colors (bull/bear) are CVD-safe within the anyplot
+          palette. White text on flag colors provides sufficient contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Canvas gate not triggered (3200x1800 confirmed). Generous marginBottom=280
+          for rotated x-labels and legend. Spacing=60 on all sides. Minor: y-axis
+          tick density ($2 increments) is slightly crowded.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is well-positioned but grid lines are very faint (barely visible).
+        passed: true
+        comment: 'Y-axis: ''Price (USD)'' with $ prefix on tick labels. X-axis: datetime
+          format ''%b %d''. Title: correct spec format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception justified for finance (bull=#009E73, bear=#AE3030).
+          Flag colors from anyplot palette positions 2,3,4,6. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: OHLC candlesticks (more sophisticated than line chart), multiple
+          distinct flag shapes, semantic finance palette exception, contextual subtitle,
+          starting price reference line — clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'rangeSelector/navigator/scrollbar disabled (cleaner), custom GRID
+          opacity 0.22, styled legend with border. However: gridLines on both axes
+          (style guide recommends Y-only), full 4-sided chart frame.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle contextualizes the dataset. Starting price reference line
+          anchors the trajectory narrative. Four distinct event-type colors + shapes
+          guide the viewer. Above default but not exceptional.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stock chart with candlesticks and event flags.
+        comment: Correct Highstock chart with native flags series. Uses Highcharts.stockChart
+          (Highstock API).
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: OHLC data correctly mapped, dates on x-axis, prices on y-axis.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: flags for different event types,
-          distinct icons/colors, connector lines, legend.'
-      - id: SC-04
-        name: Data Range
+        comment: Flag markers for events, distinct icons/colors per event type, vertical
+          dashed connector lines, hover tooltips via Highstock tooltip, multiple event
+          categories (earnings/dividend/split/news).
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range with appropriate padding.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X-axis, Price (USD) on Y-axis, 120 trading days fully visible,
+          OHLC data mapped to candlestick correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all event types and stock price.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: stock-event-flags · highcharts · pyplots.ai'
+        comment: 'Title: ''stock-event-flags · python · highcharts · anyplot.ai''
+          — correct format. Legend: Stock Price / Earnings / Dividend / News / Split
+          — all event types labeled.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all event types (earnings, dividend, split, news) with both
-          bullish and bearish price movements.
+        comment: 'Shows all chart aspects: OHLC candlesticks (bullish and bearish),
+          4 distinct event types, 7 events across 120 trading days, both flag shapes
+          and plotlines.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Real-world scenario: tech company stock with quarterly earnings,
-          dividends, product launches, and stock split.'
+        comment: 'Realistic tech stock scenario for 2024: Q4/Q1 earnings, quarterly
+          dividends ($0.88/$0.92), 2:1 stock split, product launch, partnership announcement
+          — all neutral and plausible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range $144-$200 is realistic for a tech stock.
+        comment: 120 trading days within spec range (60-250). 7 events within range
+          (3-15). Price range $144-200 realistic for a tech stock. Returns distribution
+          using normal(0.0008, 0.018) is financially accurate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,53 +207,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data generation → chart config → export.'
+        comment: 'Flat script: data generation → JSON serialization → HTML construction
+          → Selenium screenshot. No unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42).
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'All imports used, minor: datetime and timedelta imported separately.'
+        comment: np.random.seed(42) set at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, datetime/timedelta,
+          Path, numpy, PIL.Image, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highstock API.
+        comment: Clean structure, no fake UI, appropriate complexity for the task.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL normalization as
+          safety net for exact dimensions.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Highstock with flags series, multiple flag shapes (squarepin,
-          circlepin, flag), candlestick series. Could leverage more interactive features.
+        comment: Uses Highcharts.stockChart (Highstock API), not basic Highcharts.
+          Proper series wiring with id/onSeries. CDN fallback chain with inline embedding
+          for headless Chrome. Selenium + CDP setDeviceMetricsOverride for authoritative
+          dimensions.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: flags series type is exclusively a Highstock feature not natively
+          available in any other charting library. Three distinct pin shapes (squarepin,
+          circlepin, flag), allowOverlapX:false for collision prevention, onSeries
+          anchoring — all Highstock-exclusive capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
+  - annotations
   - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - time-series
-  styling:
-  - grid-styling
+  styling: []

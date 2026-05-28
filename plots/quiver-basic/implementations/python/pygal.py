@@ -25,7 +25,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data — counterclockwise wind rotation around a low-pressure centre (u=-y, v=x)
 np.random.seed(42)
@@ -51,7 +51,7 @@ head_angle = 0.55
 
 num_bins = 3
 wind_labels = ["Calm / Light", "Moderate", "Fresh / Strong"]
-bin_colors = OKABE_ITO[:num_bins]
+bin_colors = IMPRINT[:num_bins]
 
 # Build each arrow as an isolated 9-item segment group, collected per bin
 arrow_bins = [[] for _ in range(num_bins)]

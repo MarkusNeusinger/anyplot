@@ -30,7 +30,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data: Trade network between countries (billions USD)
 np.random.seed(42)
@@ -162,7 +162,7 @@ edge_styles = {
     "low": {"stroke": INK_MUTED, "stroke_width": 3},
     "medium": {"stroke": INK_SOFT, "stroke_width": 10},
     "high": {"stroke": INK, "stroke_width": 18},
-    "very_high": {"stroke": OKABE_ITO[0], "stroke_width": 28},
+    "very_high": {"stroke": IMPRINT[0], "stroke_width": 28},
 }
 
 # Custom style for pygal chart
@@ -172,7 +172,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -283,7 +283,7 @@ for name in nodes.keys():
     label_svg_parts.append(
         f'<text x="{x:.1f}" y="{y + 18:.1f}" text-anchor="middle" '
         f'font-family="system-ui, sans-serif" font-size="50" font-weight="bold" '
-        f'fill="{OKABE_ITO[0]}">{name}</text>'
+        f'fill="{IMPRINT[0]}">{name}</text>'
     )
 
 label_svg_parts.append("</g>")

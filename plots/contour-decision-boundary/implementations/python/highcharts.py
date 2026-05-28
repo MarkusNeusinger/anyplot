@@ -26,7 +26,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - always first series
-SERIES_2 = "#D55E00"
+SERIES_2 = "#C475FD"
 
 # Data: Generate moon-shaped classification dataset
 np.random.seed(42)

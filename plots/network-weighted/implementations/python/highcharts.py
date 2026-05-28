@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: Research collaboration network between university departments
 np.random.seed(42)
@@ -85,7 +85,7 @@ nodes_data = []
 for i, dept in enumerate(departments):
     deg = weighted_degree[dept["id"]]
     marker_size = 50 + 70 * (deg - min_degree) / (max_degree - min_degree)
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     nodes_data.append({"id": dept["id"], "name": dept["name"], "marker": {"radius": int(marker_size)}, "color": color})
 
 # Create links with width based on weight
@@ -151,7 +151,7 @@ html_content = f"""<!DOCTYPE html>
             height: 0;
             margin-right: 20px;
             border-top-style: solid;
-            border-top-color: {OKABE_ITO[0]};
+            border-top-color: {IMPRINT[0]};
         }}
         .legend-line.thin {{ width: 80px; border-top-width: 4px; }}
         .legend-line.medium {{ width: 80px; border-top-width: 14px; }}

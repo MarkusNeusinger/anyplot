@@ -26,13 +26,13 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
 # Okabe-Ito palette (colorblind-safe)
 BRAND = "#009E73"  # Position 1 - brand green
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Route type colors (using Okabe-Ito positions)
 route_colors = {
-    "RE": OKABE_ITO[0],  # Regional Express - brand green
-    "EX": OKABE_ITO[1],  # Express - vermillion
-    "LO": OKABE_ITO[2],  # Local - blue
+    "RE": IMPRINT[0],  # Regional Express - brand green
+    "EX": IMPRINT[1],  # Express - vermillion
+    "LO": IMPRINT[2],  # Local - blue
 }
 
 # Station data: regional rail network
@@ -332,7 +332,7 @@ legend_title.set("font-weight", "bold")
 legend_title.text = "Route Types"
 
 # Legend items
-legend_items = [("RE - Regional Express", OKABE_ITO[0]), ("EX - Express", OKABE_ITO[1]), ("LO - Local", OKABE_ITO[2])]
+legend_items = [("RE - Regional Express", IMPRINT[0]), ("EX - Express", IMPRINT[1]), ("LO - Local", IMPRINT[2])]
 
 for i, (label, color) in enumerate(legend_items):
     ly = legend_y + 30 + i * 35

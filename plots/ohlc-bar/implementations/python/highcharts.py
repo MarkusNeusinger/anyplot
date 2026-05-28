@@ -28,7 +28,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Semantic exception: finance — green=bullish/up, red=bearish/down (anyplot positions 1 and 3)
 UP_COLOR = "#009E73"
-DOWN_COLOR = "#B71D27"
+DOWN_COLOR = "#AE3030"
 
 # Data — 50 trading days of simulated stock prices
 np.random.seed(42)

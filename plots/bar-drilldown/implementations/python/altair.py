@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Hierarchical data: Sales by Region -> Country -> City
 # Children always sum exactly to their parent value
@@ -63,7 +63,7 @@ df = pd.DataFrame(data)
 # Root-level data sorted by value descending for consistent color mapping
 root_df = df[df["parent"].isna()].copy()
 root_order = root_df.sort_values("value", ascending=False)["name"].tolist()
-region_colors = OKABE_ITO[: len(root_order)]
+region_colors = IMPRINT[: len(root_order)]
 
 TITLE = "bar-drilldown · python · altair · anyplot.ai"
 
@@ -127,7 +127,7 @@ chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 # Interactive HTML with full drilldown functionality
 data_json = df.to_json(orient="records")
 id_to_name_json = json.dumps(df.set_index("id")["name"].to_dict())
-okabe_ito_json = json.dumps(OKABE_ITO)
+okabe_ito_json = json.dumps(IMPRINT)
 
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -172,7 +172,7 @@ html_content = f"""<!DOCTYPE html>
     <script>
         const fullData = {data_json};
         const idToName = {id_to_name_json};
-        const OKABE_ITO = {okabe_ito_json};
+        const IMPRINT = {okabe_ito_json};
         const PAGE_BG = "{PAGE_BG}";
         const ELEVATED_BG = "{ELEVATED_BG}";
         const INK = "{INK}";
@@ -216,7 +216,7 @@ html_content = f"""<!DOCTYPE html>
             const items = getChildren(currentParent);
             const sorted = [...items].sort((a, b) => b.value - a.value);
             const names = sorted.map(d => d.name);
-            const colors = names.map((_, i) => OKABE_ITO[i % OKABE_ITO.length]);
+            const colors = names.map((_, i) => IMPRINT[i % IMPRINT.length]);
             const hasChildren = items.some(d => getChildren(d.id).length > 0);
 
             const spec = {{

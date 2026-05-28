@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette — consistent entity colors across all frames
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data — Country GDP rankings (approximate, trillion USD)
 countries = ["USA", "China", "Japan", "Germany", "UK", "India", "France"]
@@ -41,7 +41,7 @@ gdp_data = {
     "France": [1.4, 2.2, 2.7, 2.4, 2.6, 2.9],
 }
 
-country_colors = {country: OKABE_ITO[i] for i, country in enumerate(countries)}
+country_colors = {country: IMPRINT[i] for i, country in enumerate(countries)}
 
 # Create individual pygal charts for each snapshot year
 charts = []
@@ -148,7 +148,7 @@ html_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=18,
     major_label_font_size=16,

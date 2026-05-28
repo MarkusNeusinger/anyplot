@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette: first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Monthly revenue by product category (in thousands $) over 2 years
 months = [
@@ -196,7 +196,7 @@ chart.options.tooltip = {
 }
 
 # Set Okabe-Ito colors
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 # Add series (ordered by average size, largest first per spec)
 series_data = [

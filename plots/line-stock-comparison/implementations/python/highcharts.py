@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233"]
 
 # Data — synthetic semiconductor sector vs S&P 500, 2024 (252 trading days)
 np.random.seed(42)
@@ -127,7 +127,7 @@ chart.options.legend = {
 
 chart.options.plot_options = {"line": {"lineWidth": 3.5, "marker": {"enabled": False}}}
 
-chart.options.colors = ANYPLOT_PALETTE
+chart.options.colors = IMPRINT
 
 for symbol, price_data in prices.items():
     series = LineSeries()

@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Hierarchical data: Company -> Divisions -> Teams -> Sub-teams
 hierarchy = {
@@ -60,7 +60,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK if THEME == "dark" else INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -120,7 +120,7 @@ for level_id, level_node in hierarchy.items():
         zip(level_names, level_values, level_has_children_flags, level_children, strict=True)
     ):
         # Per-bar Okabe-Ito colors: visually distinguish categories and emphasize the dominant bar
-        lcolor = OKABE_ITO[i % len(OKABE_ITO)]
+        lcolor = IMPRINT[i % len(IMPRINT)]
         llabel = f"{lname}: ${lval:,}K — click to drill down" if lhas_child else f"{lname}: ${lval:,}K (leaf node)"
         level_data.append({"value": lval, "label": llabel, "xlink": f"javascript:drillDown('{lcid}')", "color": lcolor})
 
@@ -162,14 +162,14 @@ html_content = f"""<!DOCTYPE html>
         }}
         #breadcrumb {{
             font-size: 20px;
-            color: {OKABE_ITO[0]};
+            color: {IMPRINT[0]};
             font-weight: 600;
             flex: 1;
         }}
         #back-btn {{
             display: none;
             padding: 8px 18px;
-            background: {OKABE_ITO[0]};
+            background: {IMPRINT[0]};
             color: {PAGE_BG};
             border: none;
             border-radius: 4px;
@@ -184,7 +184,7 @@ html_content = f"""<!DOCTYPE html>
             padding: 12px 20px;
             background: {ELEVATED_BG};
             border-radius: 4px;
-            border-left: 4px solid {OKABE_ITO[0]};
+            border-left: 4px solid {IMPRINT[0]};
         }}
         #chart-container svg {{ width: 100%; height: auto; }}
         #chart-container svg a {{ cursor: pointer; }}

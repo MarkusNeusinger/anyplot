@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 COLOR_A = "#009E73"  # Authors — Okabe-Ito position 1
-COLOR_B = "#D55E00"  # Papers — Okabe-Ito position 2
+COLOR_B = "#C475FD"  # Papers — Okabe-Ito position 2
 
 # Data — researcher-paper affiliation network (bibliometrics)
 author_names = [

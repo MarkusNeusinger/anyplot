@@ -25,7 +25,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first position for nodes, others for edge variants if needed)
 BRAND = "#009E73"  # First series, always
-SECONDARY = "#D55E00"  # For arrow highlights if multi-directional
+SECONDARY = "#C475FD"  # For arrow highlights if multi-directional
 
 # Data - Software module dependencies showing import direction
 nodes = [

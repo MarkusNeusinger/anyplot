@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - 3D clustered data demonstrating spatial relationships
 np.random.seed(42)
@@ -93,21 +93,21 @@ series_data = [
         "type": "scatter3d",
         "name": "Cluster A",
         "data": cluster1_data,
-        "color": OKABE_ITO[0],  # Green
+        "color": IMPRINT[0],  # Green
         "marker": {"radius": 14, "symbol": "circle"},
     },
     {
         "type": "scatter3d",
         "name": "Cluster B",
         "data": cluster2_data,
-        "color": OKABE_ITO[1],  # Orange
+        "color": IMPRINT[1],  # Orange
         "marker": {"radius": 14, "symbol": "circle"},
     },
     {
         "type": "scatter3d",
         "name": "Cluster C",
         "data": cluster3_data,
-        "color": OKABE_ITO[2],  # Blue
+        "color": IMPRINT[2],  # Blue
         "marker": {"radius": 14, "symbol": "circle"},
     },
 ]

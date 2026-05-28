@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data - Medical diagnosis based on biomarker level
 np.random.seed(42)
@@ -69,7 +69,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -103,7 +103,7 @@ chart = pygal.XY(
 
 # Add logistic regression curve (main feature) - Okabe-Ito position 1 (green)
 curve_points = [(float(x_curve[i]), float(y_proba[i])) for i in range(len(x_curve))]
-chart.add("Logistic Fit", curve_points, stroke_style={"width": 5}, dots_size=0, show_dots=False, color=OKABE_ITO[0])
+chart.add("Logistic Fit", curve_points, stroke_style={"width": 5}, dots_size=0, show_dots=False, color=IMPRINT[0])
 
 # Add confidence interval bounds - lighter/dashed variations
 ci_upper_pts = [(float(x_curve[i]), float(ci_upper[i])) for i in range(0, len(x_curve), 2)]
@@ -114,7 +114,7 @@ chart.add(
     stroke_style={"width": 2, "dasharray": "8,4"},
     dots_size=0,
     show_dots=False,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
 )
 chart.add(
     "95% CI Lower",
@@ -122,7 +122,7 @@ chart.add(
     stroke_style={"width": 2, "dasharray": "8,4"},
     dots_size=0,
     show_dots=False,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
 )
 
 # Add decision threshold line (y = 0.5)
@@ -138,11 +138,11 @@ chart.add(
 
 # Add data points - Negative (Class 0) - Okabe-Ito position 2 (vermillion)
 negative_pts = [(float(biomarker_levels[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 0]
-chart.add("Negative (0)", negative_pts, stroke=False, dots_size=12, color=OKABE_ITO[1])
+chart.add("Negative (0)", negative_pts, stroke=False, dots_size=12, color=IMPRINT[1])
 
 # Add data points - Positive (Class 1) - Okabe-Ito position 3 (blue)
 positive_pts = [(float(biomarker_levels[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 1]
-chart.add("Positive (1)", positive_pts, stroke=False, dots_size=12, color=OKABE_ITO[2])
+chart.add("Positive (1)", positive_pts, stroke=False, dots_size=12, color=IMPRINT[2])
 
 # Save as PNG and HTML with theme suffix
 chart.render_to_png(f"plot-{THEME}.png")

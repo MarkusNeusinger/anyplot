@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (regions)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: Simulated country metrics over 20 years (Gapminder-style)
 np.random.seed(42)
@@ -127,7 +127,7 @@ for year in years:
 
 # Define regions and color palette using Okabe-Ito
 regions_list = ["North", "South", "East", "West", "Central"]
-color_palette = OKABE_ITO
+color_palette = IMPRINT
 
 # Create figure
 p = figure(

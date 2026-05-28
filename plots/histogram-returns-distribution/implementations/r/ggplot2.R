@@ -14,8 +14,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # Data - 2 years of daily returns for a diversified equity portfolio
 n     <- 504
@@ -58,17 +58,17 @@ ann_y <- max(h$density) * 0.93
 p <- ggplot(df_hist, aes(x = mid, y = density, fill = tail)) +
   geom_col(width = bin_w * 0.90, color = PAGE_BG, linewidth = 0.2, alpha = 0.85) +
   scale_fill_manual(
-    values = c("FALSE" = OKABE_ITO[1], "TRUE" = OKABE_ITO[2]),
+    values = c("FALSE" = IMPRINT[1], "TRUE" = IMPRINT[2]),
     labels = c("FALSE" = "Within ±2σ", "TRUE" = "Beyond ±2σ"),
     name   = NULL
   ) +
   geom_line(
     data = df_norm, aes(x = x, y = y), inherit.aes = FALSE,
-    color = OKABE_ITO[3], linewidth = 1.2
+    color = IMPRINT[3], linewidth = 1.2
   ) +
   geom_vline(
     xintercept = c(mean_ret - 2 * sd_ret, mean_ret + 2 * sd_ret),
-    color      = OKABE_ITO[2], linewidth = 0.7, linetype = "dashed", alpha = 0.7
+    color      = IMPRINT[2], linewidth = 0.7, linetype = "dashed", alpha = 0.7
   ) +
   annotate("label",
     x = ann_x, y = ann_y,

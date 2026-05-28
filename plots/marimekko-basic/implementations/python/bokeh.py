@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Market share across regions with varying market sizes
 regions = ["North America", "Europe", "Asia Pacific", "Latin America"]
@@ -59,7 +59,7 @@ for region in regions:
         rect_y.append(current_y + height / 2)
         rect_widths.append(bar_width * 0.98)
         rect_heights.append(height)
-        rect_colors.append(OKABE_ITO[i])
+        rect_colors.append(IMPRINT[i])
         rect_products.append(product)
         rect_regions.append(region)
         rect_values.append(value)
@@ -174,7 +174,7 @@ for i, product in enumerate(products):
         right=legend_x + box_size / 2,
         top=legend_y_pos + box_size / 2,
         bottom=legend_y_pos - box_size / 2,
-        color=OKABE_ITO[i],
+        color=IMPRINT[i],
         line_color=PAGE_BG,
         line_width=2,
     )

@@ -40,7 +40,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (brand color #009E73 is first series)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Simulated clinical trial survival data for two treatment groups
 np.random.seed(42)
@@ -137,8 +137,8 @@ plot = (
         size=4,
         stroke=2,
     )
-    + scale_color_manual(values=OKABE_ITO)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
+    + scale_fill_manual(values=IMPRINT)
     + labs(
         x="Time (months)",
         y="Survival Probability",

@@ -28,10 +28,10 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+IMPRINT = ("#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233")
 
 # Extended palette: data series use positions 1-4, INK_MUTED reserved for the reference line
-PALETTE_WITH_REF = ANYPLOT_PALETTE[:4] + (INK_MUTED,)
+PALETTE_WITH_REF = IMPRINT[:4] + (INK_MUTED,)
 
 # Data
 np.random.seed(42)

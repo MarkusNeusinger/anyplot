@@ -14,8 +14,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data -------------------------------------------------------------------
 # Quarterly revenue by product category
@@ -47,7 +47,7 @@ p <- ggplot(df, aes(x = quarter, y = revenue, fill = product)) +
     color = INK,
     inherit.aes = FALSE
   ) +
-  scale_fill_manual(values = OKABE_ITO[1:3], name = "Product") +
+  scale_fill_manual(values = IMPRINT[1:3], name = "Product") +
   labs(
     title = "bar-stacked-labeled · R · ggplot2 · anyplot.ai",
     x = "Quarter",

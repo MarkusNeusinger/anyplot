@@ -63,11 +63,11 @@ for i, v in enumerate(shap_vals):
     if v >= 0:
         spacer = cum_starts[i]
         visible = v
-        color = "#D55E00"  # Okabe-Ito vermillion for positive SHAP
+        color = "#AE3030"  # imprint red — positive SHAP
     else:
         spacer = cum_starts[i] + v  # left edge = cum_end
         visible = abs(v)
-        color = "#0072B2"  # Okabe-Ito blue for negative SHAP
+        color = "#4467A3"  # Okabe-Ito blue for negative SHAP
     spacer_data.append({"value": spacer, "color": PAGE_BG})
     shap_data.append({"value": visible, "color": color, "label": f"{v:+.3f}"})
 
@@ -81,7 +81,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(PAGE_BG, "#D55E00"),
+    colors=(PAGE_BG, "#AE3030"),
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

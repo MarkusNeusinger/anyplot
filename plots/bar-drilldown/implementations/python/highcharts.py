@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Download Highcharts JS and drilldown module (inline required for headless Chrome)
 highcharts_url = "https://unpkg.com/highcharts/highcharts.js"
@@ -78,7 +78,7 @@ chart.options.y_axis = {
 
 chart.options.legend = {"enabled": False}
 chart.options.credits = {"enabled": False}
-chart.options.colors = OKABE_ITO
+chart.options.colors = IMPRINT
 
 chart.options.tooltip = {
     "headerFormat": '<span style="font-size: 44px; font-weight: bold">{series.name}</span><br>',

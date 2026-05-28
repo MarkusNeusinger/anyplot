@@ -37,7 +37,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: Energy source mix by country (renewable adoption comparison)
 data = {
@@ -97,7 +97,7 @@ df["source"] = pd.Categorical(
 plot = (
     ggplot(df, aes(x="country", y="value", fill="source"))
     + geom_bar(stat="identity", position="fill", width=0.75, alpha=0.9)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + scale_y_continuous(format=".0%")
     + labs(
         title="bar-stacked-percent · letsplot · anyplot.ai", x="Country", y="Share of Energy Mix", fill="Energy Source"

@@ -21,8 +21,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # anyplot palette positions 1–3
 COLOR_PRICE = "#009E73"
-COLOR_VOLUME = "#9418DB"
-COLOR_INDICATOR = "#B71D27"
+COLOR_VOLUME = "#C475FD"
+COLOR_INDICATOR = "#AE3030"
 
 # Data — stock market: price, volume, momentum indicator
 np.random.seed(42)

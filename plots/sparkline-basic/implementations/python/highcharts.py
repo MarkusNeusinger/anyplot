@@ -26,8 +26,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 # Okabe-Ito categorical palette — identical across themes; only chrome flips.
 LINE_COLOR = "#009E73"
 FILL_COLOR_RGBA = "rgba(0, 158, 115, 0.18)"
-MIN_COLOR = "#D55E00"
-MAX_COLOR = "#0072B2"
+MIN_COLOR = "#C475FD"
+MAX_COLOR = "#4467A3"
 
 # Data — 30 trading days of daily closing prices for a hypothetical mid-cap
 # stock. Geometric random walk with mild positive drift, an earnings-week

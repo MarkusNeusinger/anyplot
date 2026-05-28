@@ -26,8 +26,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"
-SMOOTHER = "#D55E00"
-COOK_COLOR = "#CC79A7"
+SMOOTHER = "#C475FD"
+COOK_COLOR = "#BD8233"
 
 # Data — OLS regression with injected influential observations
 np.random.seed(42)

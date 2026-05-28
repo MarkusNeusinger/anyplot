@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -141,7 +141,7 @@ for idx in range(9):
     y_pos = cell_y + (cell_height - face_size - 60) // 2
 
     species_idx = y_sample[idx]
-    color = OKABE_ITO[species_idx]
+    color = IMPRINT[species_idx]
     label = f"{species_names[species_idx]} #{(idx % 3) + 1}"
 
     faces_svg += create_face_svg(X_norm[idx], color, label, x_pos, y_pos, face_size)
@@ -154,7 +154,7 @@ legend_svg = f"""
 <text x="{legend_x + 35}" y="{legend_y + 60}" font-size="44" font-family="Arial, sans-serif" font-weight="bold" fill="{INK}">Species</text>
 """
 
-for i, (species, color) in enumerate(zip(species_names, OKABE_ITO, strict=True)):
+for i, (species, color) in enumerate(zip(species_names, IMPRINT, strict=True)):
     ly_item = legend_y + 130 + i * 80
     legend_svg += f"""
     <circle cx="{legend_x + 60}" cy="{ly_item}" r="30" fill="{color}" stroke="{INK}" stroke-width="3"/>

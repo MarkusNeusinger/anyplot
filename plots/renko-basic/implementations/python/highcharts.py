@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Bullish (position 1)
-BEARISH = "#D55E00"  # Bearish (position 2)
+BEARISH = "#AE3030"  # imprint red — bearish
 
 # Data - Generate synthetic stock price data
 np.random.seed(42)
