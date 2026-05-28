@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -84,11 +84,11 @@ custom_style = Style(
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=44,
+    legend_font_size=40,
     value_font_size=36,
     stroke_width=2.5,
-    opacity=0.40,
-    opacity_hover=0.60,
+    opacity=0.47,
+    opacity_hover=0.65,
     guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="3,3",
     major_guide_stroke_color=INK_SOFT,
@@ -115,7 +115,7 @@ chart = pygal.Line(
     x_label_rotation=0,
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=28,
+    legend_box_size=20,
     value_formatter=lambda x: f"{x:,.0f}",
     x_value_formatter=lambda x: f"Day {x}",
     interpolate="cubic",
@@ -126,9 +126,7 @@ chart = pygal.Line(
     margin_left=80,
     margin_right=40,
     margin_top=60,
-    spacing=12,
-    show_minor_x_labels=True,
-    show_minor_y_labels=True,
+    spacing=10,
     tooltip_border_radius=8,
     tooltip_fancy_mode=True,
     show_only_major_dots=False,
@@ -137,27 +135,30 @@ chart = pygal.Line(
 # Main area series (brand green — anyplot palette position 1)
 chart.add("Daily Visitors", visitors, fill=True, stroke_style={"width": 5})
 
-# Trend line — dashed, no fill (palette position 2: lavender)
+# Trend line — dashed, no fill (palette position 2: lavender) — secondary context
 chart.add(
     f"Trend (+{slope:.0f} visitors/day)",
     [round(t) for t in trend],
     fill=False,
     show_dots=False,
-    stroke_style={"width": 4, "dasharray": "20, 12"},
+    stroke_style={"width": 3, "dasharray": "20, 12"},
 )
 
-# Peak marker (palette position 3: blue)
+# Peak marker — single-value sparse series; one non-None point needs no stroke suppression
 peak_series = [None] * n
 peak_series[peak_idx] = {
     "value": visitors[peak_idx],
-    "label": f"Peak: {visitors[peak_idx]:,} visitors (Day {peak_idx + 1})",
+    "label": f"Day {peak_idx + 1}: {visitors[peak_idx]:,} visitors (+{round((visitors[peak_idx] / visitors[0] - 1) * 100)}% vs Day 1)",
 }
-chart.add(f"Peak: {visitors[peak_idx]:,}", peak_series, fill=False, show_dots=True, dots_size=22, stroke=False)
+chart.add(f"Peak: {visitors[peak_idx]:,}", peak_series, fill=False, show_dots=True, dots_size=26)
 
-# Low marker (palette position 4: ochre)
+# Low marker — single-value sparse series
 low_series = [None] * n
-low_series[low_idx] = {"value": visitors[low_idx], "label": f"Low: {visitors[low_idx]:,} visitors (Day {low_idx + 1})"}
-chart.add(f"Low: {visitors[low_idx]:,}", low_series, fill=False, show_dots=True, dots_size=22, stroke=False)
+low_series[low_idx] = {
+    "value": visitors[low_idx],
+    "label": f"Day {low_idx + 1}: {visitors[low_idx]:,} visitors ({round((visitors[low_idx] / visitors[0] - 1) * 100):+d}% vs Day 1)",
+}
+chart.add(f"Low: {visitors[low_idx]:,}", low_series, fill=False, show_dots=True, dots_size=26)
 
 # X-axis labels — major every 5th day for clean spacing
 chart.x_labels = [str(d) if d % 5 == 0 or d == 1 else "" for d in days]
