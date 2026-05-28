@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Created: 2026-05-28
+Quality: 90/100 | Created: 2026-05-28
 """
 
 import os

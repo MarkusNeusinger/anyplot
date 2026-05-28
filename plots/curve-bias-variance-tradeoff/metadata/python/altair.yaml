@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-05-28T03:35:47Z'
-updated: '2026-05-28T03:41:38Z'
+updated: '2026-05-28T03:50:02Z'
 generated_by: claude-sonnet
 workflow_run: 26552465050
 issue: 4134
@@ -12,95 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Complete spec compliance: all 4 curves, optimal point, underfitting/overfitting
-    zones, formula annotation, and direct curve labels present and correctly rendered'
-  - Both themes work correctly with no dark-on-dark or light-on-light readability
-    failures; all chrome tokens are theme-adaptive
-  - Layer composition using alt.layer() with heterogeneous mark types (mark_line,
-    mark_rect, mark_rule, mark_text) is idiomatic Altair usage showcasing the library
-    declarative strengths
-  - Shaded zones plus direct curve labels plus formula annotation create a genuinely
-    educational visualization that tells the bias-variance story without a legend
-  - PAD-to-target logic correctly implemented; canvas gate passed
+  - All four spec-required curves correctly implemented with accurate mathematical
+    shapes and proper color/linestyle assignments
+  - Sophisticated use of Altair layer composition model — separate shade layers with
+    fixed fill colors correctly prevent color scale merging with the lines layer
+  - 'Excellent data storytelling: shaded zones, directional zone labels, optimal-point
+    rule, and formula annotation together create a complete educational narrative'
+  - Full theme adaptation with INK tokens applied to all chrome elements; data colors
+    correctly constant between themes
+  - Direct curve labels replace the legend cleanly, reducing visual clutter
+  - Canvas padding implementation correctly follows the altair.md pattern (pad-only,
+    never crop)
   weaknesses:
-  - Formula annotation fontSize=9 is too small for mobile readability (400 px width);
-    increase to at least fontSize=11
-  - Irreducible Error curve label at (2.5, 0.04) is crowded near the zero baseline;
-    reposition to (4.0, 0.16) or similar to lift it above the line and axis
-  - Box frame kept via configure_view(stroke=INK_SOFT) — change to stroke=None to
-    achieve recommended open/L-frame style
-  - Both X and Y axes render grid lines; style guide recommends Y-axis grid only for
-    line charts — add .configure_axisX(grid=False)
+  - 'VQ-02: Total Error direct label at (5.0, 1.62) is within ~0.12 units of the dashed
+    Total Error curve at that x — increase y-offset to ~1.75 for better separation'
+  - 'VQ-01/DE-01: Zone labels (fontsize=10) and formula text (fontsize=11) could be
+    bumped to 11 and 12 respectively for better mobile scaling at ~400 px width'
+  - 'DE-01: Typography hierarchy is functional but could be elevated — making the
+    formula text fontWeight=bold would reinforce visual hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "curve-bias-variance-tradeoff · python · altair · anyplot.ai" bold, clearly readable in dark ink. Axis labels "Model Complexity" (x) and "Prediction Error" (y) in dark ink at appropriate size. Tick labels (0.0–10.0 on x, 0.0–3.5 on y) readable. Zone labels "← Underfitting" / "Overfitting →" in italic muted grey, readable. Formula annotation in muted grey at small size (fontSize=9), borderline legible at full res.
-      Data: Bias² = #009E73 (green, solid), Variance = #C475FD (lavender, solid), Total Error = #4467A3 (blue, dashed), Irreducible Error = #BD8233 (ochre, dotted). First series is brand green. Faint teal underfitting zone and faint red overfitting zone shaded. Dashed vertical rule at optimal complexity ~3.3. Direct curve labels in matching colors.
-      Legibility verdict: PASS (formula annotation at fontSize=9 is small but readable at full canvas; would be near-illegible at 400 px mobile thumbnail)
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "curve-bias-variance-tradeoff · python · altair · anyplot.ai" in dark ink, fully readable (~70% width). X-axis label "Model Complexity" and Y-axis label "Prediction Error" in dark INK at fontSize=12, clearly readable. Tick labels in INK_SOFT at fontSize=10, clearly readable. All chrome text dark-on-light with good contrast.
+      Data: Four curves — Bias² (solid green #009E73, first series correct), Variance (solid lavender #C475FD), Total Error (dashed blue #4467A3, 6-3 dash pattern), Irreducible Error (dotted ochre #BD8233). Shaded green zone (underfitting, opacity=0.07) and shaded red zone (overfitting, opacity=0.07) add context. Vertical dashed grey rule at optimal point. Direct curve labels, zone labels ("← Underfitting", "Overfitting →"), "Optimal" annotation, and formula text all visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels render in light cream/off-white (#F0EFE8 / #B8B7B0 tokens), clearly readable against dark background. Zone labels and formula annotation visible. No dark-on-dark failures detected.
-      Data: Identical colors to light render — #009E73, #C475FD, #4467A3, #BD8233 — confirming only chrome flipped. Shaded zones subtler but still distinguishable. Dashed vertical rule visible in muted grey.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light #F0EFE8-range ink, clearly readable. Axis labels in INK (#F0EFE8) at fontSize=12, readable. Tick labels in INK_SOFT (#B8B7B0) at fontSize=10, readable. Zone labels, formula text, and "Optimal" annotation in muted light tones — all readable. No dark-on-dark failures detected.
+      Data: All four curve colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — correct, only chrome flipped. Shaded zones subtly visible. Brand green #009E73 clearly visible on dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Formula annotation fontSize=9 too small for mobile; curve labels
-          at fontSize=11 borderline. All other text legible in both themes.
+        comment: 'All text readable in both themes. Minor: formula (11px) and zone
+          labels (10px) marginally small for mobile scaling at ~400px width.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Irreducible Error label at (2.5, 0.04) crowded near bottom axis but
-          readable.
+        comment: Generally clean. Total Error direct label at (5.0,1.62) is very close
+          to the dashed line (curve y~1.50 there). Variance label at (8.5,2.06) nearly
+          touching line. No true overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four curves clearly visible; strokeWidth=2.8 appropriate; distinct
-          line styles provide redundant encoding.
+        comment: All four curves clearly distinguishable via color AND linestyle (solid/dashed/dotted).
+          strokeWidth=2.8 appropriate. Shaded zones at opacity=0.07 add context without
+          competing.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used; 4-series with distinct line styles is CVD-safe.
+        comment: CVD-safe anyplot palette. Redundant encoding via linestyle. No red-green
+          pairing as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; layout proportions good; no clipping or overflow
-          in either render.
+        comment: Canvas gate passed. Title ~70% width at fontSize=16. No overflow
+          or clipping. Good whitespace and axis label balance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Model Complexity and Prediction Error descriptive; title in correct
-          format.
+        comment: Model Complexity (X) and Prediction Error (Y) descriptive and correct.
+          Title matches mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical order 1-4 used; correct light/dark backgrounds; chrome
-          theme-adaptive.
+        comment: 'First series #009E73 correct. Positions 1-4 in canonical order.
+          Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical across themes.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -108,22 +110,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Shaded zones, direct curve labels, formula annotation, optimal rule
-          — above default quality.
+        comment: Well above baseline (4). Multi-layer composition, semantic shaded
+          zones, direct curve labels replacing legend, vertical rule at optimal, formula
+          annotation. Theme-adaptive throughout. Typography hierarchy functional but
+          not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Box frame kept (stroke=INK_SOFT); both X and Y axis grids shown;
-          style guide recommends L-frame and Y-only grid for line charts.
+        passed: true
+        comment: X-axis grid removed, Y-axis grid at 12% opacity subtle. configure_view(stroke=None)
+          removes chart border. Legend replaced with direct labels. Clean look.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear focal point at optimal complexity; underfitting/overfitting
-          zones; formula annotation adds educational value.
+        comment: 'Excellent educational narrative: shaded zones with directional arrow
+          labels create immediate story, optimal-point rule provides focal point,
+          formula anchors mathematical concept.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,26 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line curve chart — correct type for bias-variance tradeoff.
+        comment: Correct multi-line curve chart for bias-variance tradeoff.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 4 curves, optimal point, direct labels, formula annotation, shaded
-          zones all present.
+        comment: All 4 curves present. Optimal point marked. Direct curve labels.
+          Formula included. Shaded underfitting/overfitting zones.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Complexity on x, prediction error on y; all curves span full range.
+        comment: 'X: Model Complexity, Y: Prediction Error. All curves correctly computed.
+          Optimal correctly identified at minimum total error.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly correct; no legend (direct labels used — appropriate).
+        comment: Title matches mandated format. Direct curve labels serve as effective
+          legend replacement.
     data_quality:
       score: 15
       max: 15
@@ -162,20 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All spec-required features shown.
+        comment: 'All aspects shown: 4 curves, optimal point, zones, formula.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Theoretical formulas produce realistic U-shaped total error; neutral
-          educational context.
+        comment: Theoretically plausible curve shapes. Neutral educational content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Complexity 0.5-10.0, error 0-3.5; plausible optimal point at ~3.3.
+        comment: Complexity 0.5-10.0, error 0-3.5 sensible for domain. 80 points gives
+          smooth curves.
     code_quality:
       score: 10
       max: 10
@@ -197,21 +204,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. sys.path manipulation is necessary workaround.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean 7-layer composition; no fake interactivity.
+        comment: Separate dataframes for shaded regions avoids color scale merge.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html; PAD-to-target avoids cropping.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Canvas padding correct.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -219,26 +227,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct alt.layer(), encoding type annotations, configure_* API,
-          per-layer Scale objects.
+        comment: alt.layer(), typed encodings, TitleParams, configure_axis/view, explicit
+          Scale domain/range all idiomatic. Minor deduction for sys.path workaround.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Heterogeneous mark types in layer (line, rect, rule, text); separate
-          per-layer color/dash scales.
+        comment: Multi-layer composition, separate color domains per layer preventing
+          scale merge, strokeDash encoding, mark_rect with x2/y2 for shaded zones
+          — good use of Altair's layering model.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   - html-export
   patterns:
   - data-generation
-  - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
