@@ -17,11 +17,19 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const BRAND       = colorant"#009E73"
 
-# Data — product portfolio: price vs customer rating, bubble size = annual sales volume
-n       = 65
-price   = 20.0 .+ 480.0 .* rand(n)
-quality = 1.5  .+ 3.0   .* rand(n)
-sales   = 10.0 .+ 90.0  .* rand(n)
+# Data — product portfolio with a visible narrative:
+#   higher price correlates with better ratings (premium positioning),
+#   but mid-range products (~$150–$280) capture the highest sales volume
+n          = 65
+price_norm = rand(n)                          # uniform [0, 1]
+price      = 20.0 .+ 480.0 .* price_norm     # $20–$500
+
+# Rating rises with price (r ≈ 0.65): premium commands better quality perception
+quality = clamp.(1.5 .+ 2.5 .* price_norm .+ 0.45 .* randn(n), 1.5, 4.5)
+
+# Sales peak at mid-range ~$200 and fall off at both extremes (sweet-spot effect)
+sweet_spot = (price .- 200.0) ./ 160.0
+sales = clamp.(15.0 .+ 80.0 .* exp.(-0.5 .* sweet_spot .^ 2) .+ 8.0 .* randn(n), 10.0, 100.0)
 
 # Scale marker sizes proportional to area (visual area ∝ data value)
 s_min, s_max = extrema(sales)
@@ -91,7 +99,8 @@ Legend(fig[1, 2], legend_elems, string.(ref_vals) .* " units", "Annual Sales";
     framecolor      = INK_SOFT,
     labelcolor      = INK_SOFT,
     titlecolor      = INK,
-    patchsize       = (70, 40),
+    patchsize       = (80, 55),
+    labelsize       = 13,
 )
 
 # Save
