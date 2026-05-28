@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-05-28T03:34:37Z'
-updated: '2026-05-28T03:40:05Z'
+updated: '2026-05-28T03:52:26Z'
 generated_by: claude-sonnet
 workflow_run: 26552529864
 issue: 4134
@@ -12,119 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance — all 4 curves, vertical optimal-complexity marker, formula
-    annotation, direct curve labels, and Low/High x-axis endpoints all delivered
-  - 'Correct anyplot palette in strict canonical order with Bias² = #009E73 as the
-    first series'
-  - 'Proper theme adaptation for both renders: all chrome elements use theme-adaptive
-    tokens (INK, INK_SOFT, INK_MUTED) — no dark-on-dark or light-on-light failures'
-  - 'Excellent redundant encoding: color + linetype (solid/dashed/dotted) + line weight
-    differentiate all 4 series clearly under CVD conditions'
-  - Idiomatic plotnine grammar with combined scale_color_manual + scale_linetype_manual
-    + scale_size_manual is distinctively ggplot2-style
+  - 'Perfect spec compliance: all 4 curves (Bias², Variance, Irreducible Error, Total
+    Error) with correct behavioral properties, optimal complexity marked, shaded underfitting/overfitting
+    zones, and formula annotation'
+  - 'Strong palette compliance: first series (#009E73) correct, canonical palette
+    order, theme-adaptive chrome working correctly in both light and dark renders'
+  - Good visual hierarchy through differentiated line weights (0.7–1.3) and line styles
+    (dashed/dotted/solid), with Total Error as the thickest line
+  - 'Excellent spec coverage: direct curve labels, vertical optimal-complexity line,
+    formula text, and shaded zones — all spec requirements met'
+  - Clean idiomatic plotnine code using pd.Categorical for series ordering, scale_size_manual
+    and scale_linetype_manual for aesthetic control
   weaknesses:
-  - Formula annotation size=2.5 (plotnine mm, ≈7pt, ~39px on the 3200px canvas) is
-    at the absolute minimum floor — increase to size=3.0 or higher so the formula
-    remains readable at mobile thumbnail widths
-  - Curve label size=3.2 (mm) is borderline; 'Irred. Error' abbreviation deviates
-    from the spec's 'Irreducible Error' label — use the full name or confirm abbreviation
-    is acceptable
-  - No shaded underfitting (left) / overfitting (right) zones; spec marks these as
-    'Consider adding' — implementing them would raise DE-01 and DE-03 scores significantly
+  - Helper function y_at() defined at module level violates KISS structure (CQ-01
+    expects flat Imports → Data → Plot → Save with no functions/classes); inline the
+    3-line logic at the call sites or use a list comprehension instead
+  - Formula text and some curve labels are rendered at 3.2–3.5 mm (≈9–10 pt) — readable
+    but on the smaller side; increasing to 3.8–4.0 mm would improve legibility on
+    mobile-scaled views
+  - 'Design Excellence has room to grow: DE-02 whitespace could be more generous (consider
+    increasing plot margins), and DE-03 storytelling could be stronger by making the
+    U-minimum of Total Error more visually prominent (e.g., a dot marker or callout
+    at the optimal point)'
+  - 'LM-02: No truly plotnine-distinctive feature used; consider using stat_smooth
+    or a facet to demonstrate the ggplot2 grammar''s distinctive capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "curve-bias-variance-tradeoff · python · plotnine · anyplot.ai" in dark ink, fully readable. Y-axis label "Prediction Error" and x-axis label "Model Complexity" in dark text at 10pt — readable. Tick labels at 8pt in INK_SOFT, clearly visible. Horizontal grid lines subtle and unobtrusive. Vertical optimal-complexity dashed line in INK_MUTED.
-      Data: Four curves — Bias² (#009E73, green dashed), Variance (#C475FD, lavender dashed), Irreducible Error (#4467A3, blue dotted), Total Error (#BD8233, ochre solid thicker). Direct inline labels in matching colors visible on the plot. Formula annotation "Total Error = Bias² + Variance + Irreducible Error" in upper area — very small (size=2.5mm ≈ 7pt) but readable at full resolution. "Optimal Complexity" label at size=2.8mm also small.
-      Legibility verdict: PASS — all text readable at full resolution; formula and annotation labels marginal at reduced sizes
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
+      Chrome: Title "curve-bias-variance-tradeoff · python · plotnine · anyplot.ai" rendered in dark ink, clearly readable at the top. X-axis label "Model Complexity" and Y-axis label "Prediction Error" both dark and readable. Tick labels ("Low", "High", y-axis numeric values) in INK_SOFT (#4A4A44), legible. Formula text "Total Error = Bias² + Variance + Irreducible Error" small but readable. Curve labels positioned along each line — readable with matched colors.
+      Data: 4 curves — Bias² in green (#009E73, dashed), Variance in lavender (#C475FD, dashed), Irreducible Error in blue (#4467A3, dotted), Total Error in ochre (#BD8233, solid/thicker). Shaded zones (7% alpha) for underfitting left / overfitting right of the optimal complexity dashed vertical line.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0 INK tokens) — clearly readable against the dark background. No dark-on-dark failures observed. Grid lines adapt correctly. Vertical optimal-complexity line uses INK_MUTED dark variant.
-      Data: All four curve colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233) — only chrome flips between themes as expected. Brand green #009E73 retains good contrast on dark surface.
-      Legibility verdict: PASS — all text legible against dark background; same minor annotation size concerns as light render
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
+      Chrome: Title visible in near-white (#F0EFE8), clearly readable. Axis labels and tick labels rendered in light INK_SOFT (#B8B7B0), legible. The "Irreducible Error" curve label in blue (#4467A3) on near-black background has lower contrast than other labels but remains readable. Formula text small but discernible. No dark-on-dark text failures observed.
+      Data: All 4 curve colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233) — only chrome elements (background, text, gridlines) adapted. Shaded zones subtly visible.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures. Minor note: blue (#4467A3) "Irreducible Error" label slightly lower contrast on dark but still legible.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Formula
-          annotation at size=2.5mm (~7pt) is at the minimum floor and marginally readable
-          at full resolution; likely illegible at mobile scale. Optimal Complexity
-          label at size=2.8mm also small.
+        comment: All font sizes explicitly set (title=12pt, axis_title=10pt, axis_text=8pt,
+          geom_text=3.5mm/3.2mm). All readable in both themes. Formula text and curve
+          labels are on the small side (3.2mm) but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with data or other text. Direct labels well-separated.
+        comment: Curve labels well-positioned along respective curves. No overlapping
+          text or data collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 4 curves clearly distinguishable via color + linetype + line-weight
-          redundant encoding.
+        comment: Lines clearly visible with appropriate widths (0.7-1.3). Distinct
+          line styles (dashed/dotted/solid) provide redundant encoding beyond color.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette with redundant linetype encoding. CVD-safe.
+        comment: Anyplot palette is CVD-safe. Redundant encoding via line styles and
+          weights ensures distinguishability beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct. No clipping. Title fits within bounds (~75%
-          width, appropriate).
+        comment: Good canvas utilization. Plot fills canvas well with balanced margins.
+          No clipping or wasted space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with Low/High x-axis endpoints. Title in
-          correct format.
+        comment: Model Complexity and Prediction Error are descriptive. Units not
+          applicable for theoretical curves.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bias² = #009E73 as first series. Canonical palette order. Correct
-          background colors in both themes.'
+        comment: 'First series (Bias²) = #009E73. Subsequent series in canonical palette
+          order. Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default (4). Intentional line weight hierarchy, direct curve
-          labeling, formula annotation. No shaded zones.
+        comment: 'Strong design above defaults: differentiated line weights for hierarchy,
+          shaded zones, direct curve labels replacing legend, formula annotation.
+          Thoughtful and intentional.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only grid, panel border removed, no legend box, axis lines in INK_SOFT.
-          Competent but not highly refined.
+        comment: 'Good refinement: y-axis-only grid with subtle styling, panel border
+          removed, legend replaced with direct labels. Whitespace could be more generous.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Vertical optimal-complexity line, formula annotation, thicker Total
-          Error line. Slightly undercut by small annotation fonts.
+        comment: 'Good storytelling: optimal complexity marked, zones labeled conceptually
+          (underfitting/overfitting implicit from shading), formula displayed, line
+          weight hierarchy. Visual hierarchy guides viewer through the concept.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 4-curve line plot showing theoretical bias-variance decomposition.
+        comment: Correct multi-curve line chart for bias-variance tradeoff.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 4 curves, distinct colors and linetypes, optimal complexity vertical
-          line, direct curve labels, formula annotation. Shaded zones optional per
-          spec.
+        comment: 'All features present: 4 curves with distinct colors/styles, optimal
+          complexity vertical line, direct curve labels, formula annotation, shaded
+          underfitting/overfitting zones.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = model complexity, Y = prediction error. Full data range covered.
+        comment: X=model complexity, Y=prediction error. Bias² decreases, Variance
+          increases, Irreducible Error constant, Total Error U-shaped — all correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Direct inline labels replace legend
-          effectively.
+        comment: 'Title: ''curve-bias-variance-tradeoff · python · plotnine · anyplot.ai''
+          — correct format. No legend needed (direct labels used).'
     data_quality:
       score: 15
       max: 15
@@ -165,55 +174,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four components shown with optimal complexity and formula decomposition.
+        comment: Shows all 4 components of bias-variance decomposition with mathematically
+          correct behavioral properties.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard ML educational visualization, neutral content.
+        comment: Standard ML educational concept. Neutral scientific context, no controversial
+          topics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-1.3, mathematically well-formed curves.
+        comment: Plausible parameter choices. U-shaped total error with clear minimum.
+          Irreducible error at 0.20 is a reasonable noise floor.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat script with one justified small helper function.
+        passed: false
+        comment: Helper function y_at() defined at module level. Otherwise follows
+          Imports → Data → Plot → Save structure cleanly.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic synthetic data.
+        comment: Fully deterministic data — mathematical formulas, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used.
+        comment: All imports used. No extraneous dependencies.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity.
+        comment: Clean, well-organized code with no fake UI elements or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves as plot-{THEME}.png with dpi=400. Current plotnine API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,25 +234,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics construction with correct multi-aesthetic
-          mapping using scale_*_manual.
+        comment: 'Good idiomatic usage: pd.Categorical for series ordering, scale_size_manual
+          + scale_linetype_manual for aesthetic control, proper aes() mappings. Above
+          the default.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'Uses distinctively ggplot2-style patterns: combined scale_*_manual,
-          legend suppression with direct geom_text labeling, pd.Categorical for draw
-          order.'
+        passed: false
+        comment: Uses some grammar-of-graphics features (geom_rect for zones, multiple
+          geom_text layers, scale_size_manual) but nothing uniquely plotnine — same
+          approach works in ggplot2 or letsplot.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
