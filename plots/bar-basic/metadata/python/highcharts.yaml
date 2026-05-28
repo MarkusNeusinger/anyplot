@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: bar-basic
 created: '2025-12-23T00:23:36Z'
-updated: '2026-05-28T09:42:09Z'
+updated: '2026-05-28T09:50:47Z'
 generated_by: claude-sonnet
 workflow_run: 26566534733
 issue: 612
@@ -12,142 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Intentional color emphasis: Electronics bar in brand green #009E73 creates an
-    immediate focal point against the muted grey secondary bars — the viewer''s eye
-    goes straight to the insight'
-  - Subtitle directly states the insight ('Electronics dominates with 4,800 units
-    — 10× more than Toys') making the chart self-explaining without annotations
-  - Average reference line (plotLine at 2,205 units) adds contextual depth and shows
-    which categories are above/below the mean
-  - 'Both themes are fully correct: #FAF8F1 background on light, #1A1A17 on dark —
-    all chrome tokens (INK, INK_SOFT, GRID) adapt properly and no dark-on-dark issues
-    exist'
-  - Data labels above every bar with comma-formatted values enable precise reading
-    without needing to trace to the Y-axis
-  - Bars are sorted descending for natural ranking readability
-  - 'Rounded bar corners (borderRadius: 4) add a polished, modern touch'
-  - HTML artifacts generated alongside PNGs as expected for an interactive library
-  - Code is clean KISS-structured with no classes/functions — straightforward top-to-bottom
-    script
-  - 'Canvas dimension gate passes: PIL pad-or-crop safety net correctly implemented'
+  - Rank-fade opacity design (green highlight → muted descending) creates immediate
+    visual hierarchy
+  - Subtitle editorial voice + average reference line + sorted data combine for strong
+    data storytelling
+  - Fully theme-adaptive chrome across both renders with no legibility issues
+  - Correct use of ANYPLOT_MUTED semantic anchor for secondary bars
+  - All Highcharts library guide best practices followed (CDP override, PIL pinning,
+    inline JS)
   weaknesses:
-  - 'DE-01 below 6: The design is intentional and above default, but the muted secondary
-    bars (all identical grey) make the chart feel somewhat flat — consider varying
-    bar opacity or adding a very subtle rank-gradient within the muted bars to add
-    visual texture and sophistication'
-  - 'DE-01 / DE-02: Top and right axis borders (plot border) are still present in
-    Highcharts default style — explicitly removing them via chart.options.chart =
-    {''plotBorderWidth'': 0} and suppressing the plot frame would increase visual
-    refinement'
-  - 'VQ-01 / VQ-05: The ''Avg: 2,205 units'' plotLine label (align: right, x: -12)
-    sits very close to the right canvas margin — increase right margin slightly (marginRight:
-    120) so the label has breathing room'
-  - 'LM-02: No use of Highcharts-distinctive features beyond plotLines — consider
-    leveraging Highcharts'' native drilldown, color axis, or chart.renderer for something
-    only Highcharts can do elegantly'
+  - 'DE-02: visual refinement relies partially on Highcharts defaults for spine suppression
+    rather than explicit configuration — minor deduction only'
+  - 'DE-01: rank-fade gray bars create a somewhat monochromatic look for 5 of 6 bars
+    — a subtle color tint to the muted bars could add more visual sophistication'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly themed, not pure white.
-      Chrome: Bold title "bar-basic · python · highcharts · anyplot.ai" spans ~70% of canvas width in dark INK color — readable. Subtitle "Electronics dominates with 4,800 units — 10× more than Toys" in INK_SOFT is clearly visible. X-axis label "Product Category" and Y-axis label "Sales (Units)" both readable at appropriate size. Tick labels (0, 1,000, 2,000, 3,000, 4,000, 5,000 on Y; Electronics through Toys on X) are clear. The "Avg: 2,205 units" plot line label on the far right is readable but sits very close to the right canvas margin (~12px offset).
-      Data: Electronics bar in brand green #009E73 is the clear focal point. Remaining 5 bars (Clothing, Home & Garden, Sports, Books, Toys) in muted grey-green (#6B6A63). Data labels (4,800 / 3,100 / 2,200 / 1,700 / 950 / 480) bold and visible above each bar. Dashed average line at 2,205 clearly visible.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "bar-basic · python · highcharts · anyplot.ai" in bold dark text at ~70% canvas width (expected for mandated format). Subtitle in muted secondary tone. Y-axis label "Sales (Units)" and X-axis label "Product Category" clearly visible. Tick labels and data labels all dark-colored.
+      Data: Electronics bar in brand green #009E73. Remaining bars (Clothing, Home & Garden, Sports, Books, Toys) in ANYPLOT_MUTED gray with rank-fade opacity (0.90 → 0.42). Dashed average reference line at ~2,205 units with label. Data labels (4,800 / 3,100 / 2,200 / 1,700 / 950 / 480) above bars.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correctly themed, not pure black.
-      Chrome: Title and subtitle rendered in light cream (#F0EFE8 equivalent) — clearly readable against dark background. X-axis and Y-axis labels in light text — no dark-on-dark failures. Tick labels in lighter secondary text (#B8B7B0 equivalent) — all visible. Dashed avg line and its label are visible against the dark surface. Grid lines subtle.
-      Data: Electronics bar is identical brand green #009E73 — color matches light render exactly. Remaining bars render in adapted muted (#A8A79F), appearing as a light silver-grey that contrasts well against the dark background. Data labels in light INK color clearly visible above bars.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues, data colors are consistent across both themes.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle in light/cream text, clearly readable. Y/X axis labels, tick labels all light-colored. No dark-on-dark failures detected. Average line label visible.
+      Data: Electronics bar still in brand green #009E73 — identical to light render. Secondary bars in lighter grayish-silver (ANYPLOT_MUTED dark token #A8A79F with rank-fade opacity), contrasting well against near-black background. Data labels in light text with dark outline.
+      Legibility verdict: PASS — all text readable, theme adaptation complete
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (66px title, 56px axis labels, 44px
-          tick/data labels). Result is well-proportioned and readable in both themes.
-          Minor deduction: ''Avg: 2,205 units'' label sits very close to right canvas
-          margin with only ~12px clearance.'
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, tick
+          labels 44px). Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements in either render.
-          Category labels, tick labels, and data labels are all clearly separated.
+        comment: No overlapping elements. Data labels above bars without collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 bars all clearly visible with appropriate bar widths. Data labels
-          above bars are bold and readable. Average reference line visible in both
-          themes.
+        comment: All bars visible including lowest-opacity Toys bar. Brand green Electronics
+          bar immediately prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Two-color scheme (brand green + muted grey) is CVD-safe. Strong contrast
-          in both light and dark themes. No red-green reliance as sole distinguisher.
+        comment: Good luminance contrast on both themes. Brand green CVD-safe. No
+          red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well with generous, balanced margins. Plot area
-          occupies ~70% of canvas. Whitespace is intentional and balanced.
+        comment: Plot fills ~65-70% of canvas. Well-balanced margins. No clipped content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Sales (Units)'' with units. X-axis: ''Product Category''
-          descriptive. Title format matches spec exactly.'
+        comment: Y-axis 'Sales (Units)' with units. X-axis 'Product Category' descriptive.
+          Title correct format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Electronics (first series) correctly uses brand green #009E73. Secondary
-          bars use ANYPLOT_MUTED semantic anchor (#6B6A63 light / #A8A79F dark) —
-          valid semantic use for ''other/rest''. Backgrounds #FAF8F1 and #1A1A17 correct.
-          All chrome tokens theme-adaptive.'
+        comment: 'First highlighted bar #009E73. Other bars use ANYPLOT_MUTED (semantically
+          correct for ''other/rest''). Background #FAF8F1/#1A1A17. Theme-adaptive
+          chrome correct.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: intentional color emphasis (green focal bar + muted
-          secondary), subtitle insight, rounded bar corners. Not yet ''strong design''
-          (6) — the uniform muted grey on 5 bars creates a flat visual texture.'
+        comment: 'Clearly above defaults: rank-fade opacity design, editorial subtitle,
+          sorted descending. Strong design with thoughtful color hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: subtle grid (rgba 0.15), legend disabled, credits
-          disabled, generous margins. Minor: Highcharts plot border/frame still slightly
-          visible — explicit plotBorderWidth: 0 would tighten the look.'
+        comment: Subtle Y-axis grid, no bar borders, rounded corners, no legend box.
+          Some reliance on Highcharts defaults for spine suppression.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: color contrast creates clear focal point
-          on Electronics, subtitle directly states ''10× more than Toys'', sorted
-          descending for ranking, average line provides context. Viewer immediately
-          sees the insight.'
+        comment: Green highlight + subtitle insight + average reference line + descending
+          sort tells a clear story. Viewer immediately sees Electronics dominance.
     spec_compliance:
       score: 15
       max: 15
@@ -157,29 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart (ColumnSeries). Bars have consistent widths
-          with appropriate spacing.
+        comment: Correct vertical bar chart (ColumnSeries). All 6 categories displayed.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: consistent bar widths, value labels above
-          bars, color highlighting of top performer, adequate bar spacing.'
+        comment: Consistent bar widths, value labels on bars, adequate spacing, highlighted
+          bar for emphasis per spec note.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: product categories. Y-axis: sales units. All 6 data points
-          visible with correct values.'
+        comment: Categories on x-axis, sales values on y-axis. All data visible with
+          sensible axis range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bar-basic · python · highcharts · anyplot.ai'' exactly
-          matches spec format. Legend appropriately disabled for single-series chart.'
+        comment: Title exactly 'bar-basic · python · highcharts · anyplot.ai'. Legend
+          disabled (appropriate for single-series).
     data_quality:
       score: 15
       max: 15
@@ -189,24 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all bar chart aspects: multiple categories (6), clear value
-          variation (10× range), ranking via sort, reference line for comparison,
-          data labels for precision.'
+        comment: 'Shows all bar chart features: varying heights, sorted ranking, value
+          labels, reference line, wide value range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product sales by retail category — real, neutral, comprehensible
-          business scenario. No controversial content.
+        comment: Product sales by retail category is highly realistic and neutral.
+          Category ordering is commercially plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values 480–4,800 units represent plausible retail category
-          volumes. The 10× spread between Electronics and Toys is realistic for category
-          differentiation.
+        comment: Sales units 480-4800 realistic for mid-size retailer. ~10:1 ratio
+          between top and bottom categories is plausible.
     code_quality:
       score: 10
       max: 10
@@ -216,66 +183,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data → chart config
-          → export. No functions or classes.'
+        comment: 'Linear: imports → theme tokens → data → chart config → series →
+          export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully deterministic (hardcoded arrays). No randomness.
+        comment: Deterministic hardcoded data. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: os, re (format template fix), tempfile, time,
-          urllib.request, pathlib.Path, highcharts_core classes, PIL.Image, selenium.'
+        comment: 'All imports used: os, re, tempfile, time, urllib.request, pathlib,
+          highcharts_core, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. The re.sub format-template workaround is a documented
-          necessity for highcharts-core's to_js_literal(). No fake UI elements.
+        comment: Concise rank-fade loop. Clear variable names. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current highcharts_core
-          API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. CDP override + PIL
+          pinning per library guide.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Chart(container='container'), HighchartsOptions(), ColumnSeries.from_dict(),
+          chart.add_series(). CDP setDeviceMetricsOverride per authoritative guide.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic usage: Chart(container=''container''), HighchartsOptions(),
-          ColumnSeries.from_dict(), chart.add_series(). Dict-style config is appropriate
-          for highcharts-core. Minor: could use chart.options.colors for palette instead
-          of per-point color overrides.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Uses some Highcharts-specific features: plotLines with label for
-          average reference, per-point color data via data_points dict, HTML export
-          alongside PNG. Not yet at level of using drilldown, chart.renderer, or other
-          deeply Highcharts-unique capabilities.'
-  verdict: REJECTED
+        comment: plotLines with inline label, per-point color+opacity in data array,
+          textOutline in dataLabels, HTML tooltip templates, borderRadius on columns.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - html-export
-  - hover-tooltips
-  patterns: []
+  patterns:
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
