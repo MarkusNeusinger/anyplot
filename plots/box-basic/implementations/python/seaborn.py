@@ -18,7 +18,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — daily PM2.5 air quality readings (ug/m3) across 5 city zones
 np.random.seed(42)
@@ -62,7 +62,7 @@ sns.set_theme(
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-palette = dict(zip(zone_order, ANYPLOT_PALETTE, strict=True))
+palette = dict(zip(zone_order, IMPRINT_PALETTE, strict=True))
 
 sns.boxplot(
     data=df,

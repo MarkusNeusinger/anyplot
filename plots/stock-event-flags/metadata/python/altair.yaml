@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 quality_score: 90
 review:
   strengths:
-  - 'Perfect anyplot palette usage: price line #009E73, Earnings #C475FD, Dividend
+  - 'Perfect Imprint palette usage: price line #009E73, Earnings #C475FD, Dividend
     #4467A3, News #BD8233, Split #AE3030 — exact canonical order'
   - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with fully theme-adaptive
     chrome tokens
@@ -90,7 +90,7 @@ review:
         passed: true
         comment: Redundant shape+color encoding for all event types — excellent CVD
           accessibility. 4 distinct shapes (triangle, diamond, circle, square) plus
-          4 distinct anyplot palette colors.
+          4 distinct Imprint palette colors.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

@@ -17,7 +17,7 @@ review:
   strengths:
   - Theme-adaptive tile provider selection (CartoDB Positron for light, Dark Matter
     for dark) — demonstrates multi-provider knowledge
-  - Correct anyplot palette in canonical order with Monument=#009E73 as first series
+  - Correct Imprint palette in canonical order with Monument=#009E73 as first series
   - 'Clean layer composition: tiles → circles → labels → attribution, using mark_image
     for tiles'
   - White stroke (#FFFFFF) on markers provides contrast across diverse tile backgrounds
@@ -39,14 +39,14 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white
       Chrome: Title "map-tile-background · python · altair · anyplot.ai" centered, readable in dark ink; subtitle "European Landmarks by Annual Visitors" in INK_SOFT; all text readable
-      Data: CartoDB Positron tiles provide a light muted geographic basemap of Europe; 20 circular markers with white stroke (#FFFFFF, strokeWidth=2) and opacity=0.85 overlaid; size encodes annual visitors (La Rambla Barcelona at 37M is largest); colors follow anyplot palette canonical order — Monument=#009E73 (green), Historical=#C475FD (lavender), Museum=#4467A3 (blue), Religious=#BD8233 (ochre), Street=#AE3030 (red); "La Rambla" and "Notre-Dame" labeled for top-visited sites; Visitors legend (bottom-left) and Category legend (bottom-right) with ELEVATED_BG fill and INK_SOFT border
+      Data: CartoDB Positron tiles provide a light muted geographic basemap of Europe; 20 circular markers with white stroke (#FFFFFF, strokeWidth=2) and opacity=0.85 overlaid; size encodes annual visitors (La Rambla Barcelona at 37M is largest); colors follow Imprint palette canonical order — Monument=#009E73 (green), Historical=#C475FD (lavender), Museum=#4467A3 (blue), Religious=#BD8233 (ochre), Street=#AE3030 (red); "La Rambla" and "Notre-Dame" labeled for top-visited sites; Visitors legend (bottom-left) and Category legend (bottom-right) with ELEVATED_BG fill and INK_SOFT border
       Notable issue: Attribution text "© CartoDB Positron | © OpenStreetMap contributors" appears at the TOP of the map tile area rather than bottom-right — y-axis inversion bug (Vega-Lite y=chart_height-5 maps to near the top, not the bottom)
       Legibility verdict: PASS — all primary text (title, subtitle, labels, legends) is clearly readable; attribution text is readable but mispositioned
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct, not pure black
       Chrome: Title and subtitle rendered in light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background; "La Rambla" and "Notre-Dame" labels in INK (#F0EFE8 in dark mode) — readable; legend text in INK_SOFT (#B8B7B0) — readable; legend box fill uses ELEVATED_BG (#242420)
-      Data: CartoDB Dark Matter tiles provide dark geographic basemap; all data colors are IDENTICAL to light render (anyplot palette is theme-independent) — Monument green, Historical lavender, Museum blue, Religious ochre, Street red all confirmed matching; white stroke maintains marker visibility on dark tiles
+      Data: CartoDB Dark Matter tiles provide dark geographic basemap; all data colors are IDENTICAL to light render (Imprint palette is theme-independent) — Monument green, Historical lavender, Museum blue, Religious ochre, Street red all confirmed matching; white stroke maintains marker visibility on dark tiles
       No "dark-on-dark" failures observed — no near-black text on near-black background detected
       Attribution: Same y-axis inversion bug places attribution text near the top of the chart
       Legibility verdict: PASS — all text is legible against the dark background; no dark-on-dark failures
@@ -85,7 +85,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used (colorblind-safe hybrid-v3). White stroke (#FFFFFF)
+        comment: Imprint palette used (colorblind-safe hybrid-v3). White stroke (#FFFFFF)
           provides additional contrast on both light and dark tile backgrounds.
       - id: VQ-05
         name: Layout & Canvas

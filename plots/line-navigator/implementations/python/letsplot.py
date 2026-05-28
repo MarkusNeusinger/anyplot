@@ -44,8 +44,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 RULE_FAINT = "rgba(26,26,23,0.08)" if THEME == "light" else "rgba(240,239,232,0.08)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 # Data — 3 years of daily temperature sensor readings
 np.random.seed(42)

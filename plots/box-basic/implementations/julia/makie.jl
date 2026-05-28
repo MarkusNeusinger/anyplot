@@ -15,7 +15,7 @@ const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",
     colorant"#C475FD",
     colorant"#4467A3",
@@ -41,7 +41,7 @@ all_median = median(salaries)
 
 # Engineering (group 1) at full opacity; others dimmed to highlight highest-paid dept
 box_colors = [
-    RGBAf(red(ANYPLOT_PALETTE[g]), green(ANYPLOT_PALETTE[g]), blue(ANYPLOT_PALETTE[g]),
+    RGBAf(red(IMPRINT_PALETTE[g]), green(IMPRINT_PALETTE[g]), blue(IMPRINT_PALETTE[g]),
           g == 1 ? 1.0 : 0.5)
     for g in groups
 ]

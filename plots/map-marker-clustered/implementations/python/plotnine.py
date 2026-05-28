@@ -40,7 +40,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — first series is always #009E73
+# Imprint palette — first series is always #009E73
 CATEGORY_COLORS = {"Retail": "#009E73", "Restaurant": "#C475FD", "Service": "#AE3030", "Entertainment": "#4467A3"}
 
 # Data: US West Coast retail store locations

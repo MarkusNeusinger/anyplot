@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette with redundant linestyle encoding — excellent
+        comment: CVD-safe Imprint palette with redundant linestyle encoding — excellent
           combination for accessibility.
       - id: VQ-05
         name: Layout & Canvas

@@ -38,7 +38,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — annual R&D budget allocation by department
 departments = ["R&D", "Marketing", "Operations", "Human Resources", "IT Infrastructure", "Administration"]
@@ -96,7 +96,7 @@ plot = (
     ggplot()
     + geom_polygon(data=df_wedges, mapping=aes(x="x", y="y", fill="category", group="category"))
     + geom_text(data=df_labels, mapping=aes(x="x", y="y", label="label"), size=4.0, color="white")
-    + scale_fill_manual(values=ANYPLOT_PALETTE)
+    + scale_fill_manual(values=IMPRINT_PALETTE)
     + coord_equal()
     + labs(title=title, fill="Department")
     + theme_void()

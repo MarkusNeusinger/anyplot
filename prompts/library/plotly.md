@@ -80,17 +80,17 @@ For static outputs → `write_image()`.
 Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 fig = go.Figure(go.Scatter(x=x, y=y, mode='markers',
-                           marker=dict(color=ANYPLOT_PALETTE[0])))
+                           marker=dict(color=IMPRINT_PALETTE[0])))
 
 # Multi-series via color_discrete_sequence (plotly express)
 fig = px.scatter(df, x='x', y='y', color='category',
-                 color_discrete_sequence=ANYPLOT_PALETTE)
+                 color_discrete_sequence=IMPRINT_PALETTE)
 
 # Continuous — only the two Imprint palette-derived cmaps are allowed:
 imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]                                            # sequential / single-polarity

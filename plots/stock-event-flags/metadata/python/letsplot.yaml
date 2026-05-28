@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 quality_score: 86
 review:
   strengths:
-  - Semantic color assignment for event types using anyplot palette with financial
+  - Semantic color assignment for event types using Imprint palette with financial
     semantics (Dividend→green, Earnings→blue, News→ochre, Split→red)
   - Redundant encoding with distinct shapes AND colors for each event type — improves
     CVD accessibility
@@ -106,7 +106,7 @@ review:
         max: 2
         passed: true
         comment: 'Valid semantic exception for finance: Dividend→BRAND green, Earnings→blue,
-          News→ochre, Split→red — all anyplot palette members. Backgrounds correct
+          News→ochre, Split→red — all Imprint palette members. Backgrounds correct
           (#FAF8F1 / #1A1A17). Data colors identical across themes.'
     design_excellence:
       score: 13

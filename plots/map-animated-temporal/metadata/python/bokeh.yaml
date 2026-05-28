@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-anima
 quality_score: 92
 review:
   strengths:
-  - Correct anyplot palette with semantic matte-red epicenter marker (#AE3030) — semantically
+  - Correct Imprint palette with semantic matte-red epicenter marker (#AE3030) — semantically
     appropriate for hazard/focal point
   - 'Full spec compliance: play/pause button, time slider, Day-label overlay, tooltip,
     and cumulative alpha-faded trail all present and working'

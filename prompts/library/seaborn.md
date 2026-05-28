@@ -108,19 +108,19 @@ Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palet
 
 ```python
 # Imprint palette — canonical order, first series always #009E73
-ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
-color = ANYPLOT_PALETTE[0]  # '#009E73'
+color = IMPRINT_PALETTE[0]  # '#009E73'
 sns.scatterplot(data=df, x='x', y='y', color=color)
 
 # Multi-series (hue)
-sns.scatterplot(data=df, x='x', y='y', hue='category', palette=ANYPLOT_PALETTE[:N])
+sns.scatterplot(data=df, x='x', y='y', hue='category', palette=IMPRINT_PALETTE[:N])
 
 # Set once globally for a whole figure
-sns.set_palette(ANYPLOT_PALETTE)
+sns.set_palette(IMPRINT_PALETTE)
 ```
 
 ## Continuous-data Palettes (Imprint cmaps only)

@@ -17,7 +17,7 @@ review:
   strengths:
   - 'Excellent data storytelling: three annotated student clusters with exact percentages
     reveal educational performance groups at a glance'
-  - Correct anyplot palette and theme-adaptive chrome in both light and dark renders
+  - Correct Imprint palette and theme-adaptive chrome in both light and dark renders
     — no dark-on-dark or chrome failures
   - Deliberately multimodal distribution data (three mixing gaussians) shows distribution
     shape with realistic context

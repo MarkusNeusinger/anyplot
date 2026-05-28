@@ -161,7 +161,7 @@ clusters = (
     .project(type="albersUsa")
 )
 
-# Count labels — near-white text is readable on all anyplot palette marker colors
+# Count labels — near-white text is readable on all Imprint palette marker colors
 count_labels = (
     alt.Chart(cluster_summary[cluster_summary["count"] > 1])
     .mark_text(fontSize=10, fontWeight="bold", color="#FFFDF6")

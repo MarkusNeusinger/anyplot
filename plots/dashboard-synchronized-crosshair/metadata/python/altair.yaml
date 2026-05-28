@@ -22,7 +22,7 @@ review:
     — correctly uses the same parameter name to link views in Vega-Lite
   - Overbought/oversold reference zones with semi-transparent fills add meaningful
     analytical context to the momentum chart
-  - 'Correct anyplot palette usage in canonical order: green price (#009E73), purple
+  - 'Correct Imprint palette usage in canonical order: green price (#009E73), purple
     volume (#9418DB), red momentum (#B71D27)'
   - Theme adaptation is fully correct in both renders — INK/INK_SOFT tokens applied
     to title, axis labels, tick labels, legend; backgrounds match FAF8F1 / 1A1A17
@@ -84,7 +84,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Three anyplot palette colors used. Good contrast in both themes.
+        comment: Three Imprint palette colors used. Good contrast in both themes.
           CVD-safe palette.
       - id: VQ-05
         name: Layout & Canvas

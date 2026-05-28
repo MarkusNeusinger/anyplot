@@ -44,7 +44,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # anyplot palette position 1
+BRAND = "#009E73"  # Imprint palette position 1
 
 # Data
 np.random.seed(42)
@@ -100,7 +100,7 @@ title = "stock-event-flags · python · letsplot · anyplot.ai"
 n_title = len(title)
 title_fontsize = round(16 * 67 / n_title) if n_title > 67 else 16
 
-# Semantic color mapping — anyplot palette with finance semantics
+# Semantic color mapping — Imprint palette with finance semantics
 # Dividend→green (income), Earnings→blue (reporting), News→ochre, Split→red (major change)
 event_color_map = {"Earnings": "#4467A3", "Dividend": BRAND, "News": "#BD8233", "Split": "#AE3030"}
 # Distinct shapes per event type: diamond, circle, triangle, square

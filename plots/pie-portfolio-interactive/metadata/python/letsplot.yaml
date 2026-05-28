@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Semantic anyplot palette is CVD-safe; pie stroke provides boundary
+        comment: Semantic Imprint palette is CVD-safe; pie stroke provides boundary
           definition.
       - id: VQ-05
         name: Layout & Canvas

@@ -14,11 +14,11 @@ const THEME       = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
-const BRAND = ANYPLOT_PALETTE[1]
+const BRAND = IMPRINT_PALETTE[1]
 
 # Data — average monthly household energy consumption by appliance (kWh)
 appliances = ["Air Conditioning", "Water Heater", "Washer / Dryer", "Refrigerator", "Lighting", "TV / Electronics", "Dishwasher"]

@@ -17,7 +17,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green  (Equities)
     colorant"#C475FD",  # 2 — lavender     (Fixed Income)
     colorant"#4467A3",  # 3 — blue         (Alternatives)
@@ -69,7 +69,7 @@ for i in 1:length(categories)
     outer_pts = [Point2f(cos(t) * r_outer, sin(t) * r_outer) for t in θ]
     inner_pts = [Point2f(cos(t) * r_inner, sin(t) * r_inner) for t in reverse(θ)]
     poly!(ax, vcat(outer_pts, inner_pts);
-          color       = ANYPLOT_PALETTE[i],
+          color       = IMPRINT_PALETTE[i],
           strokewidth = 4,
           strokecolor = PAGE_BG)
 
@@ -98,7 +98,7 @@ text!(ax, 0.0, -0.10;
       align    = (:center, :center))
 
 # Horizontal legend below the chart
-legend_entries = [PolyElement(color = ANYPLOT_PALETTE[i], strokewidth = 0) for i in 1:length(categories)]
+legend_entries = [PolyElement(color = IMPRINT_PALETTE[i], strokewidth = 0) for i in 1:length(categories)]
 legend_labels  = [categories[i] * "  " * string(Int(round(weights[i]))) * "%  \$" * string(Int(round(weights[i]))) * "M" for i in 1:length(categories)]
 
 Legend(

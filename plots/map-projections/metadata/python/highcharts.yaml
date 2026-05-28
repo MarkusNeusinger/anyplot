@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-proje
 quality_score: 87
 review:
   strengths:
-  - 'Perfect anyplot palette compliance: brand green (#009E73) for land, purple (#9418DB)
+  - 'Perfect Imprint palette compliance: brand green (#009E73) for land, purple (#9418DB)
     for graticule, correct warm backgrounds for both themes'
   - 'Excellent code structure: loop-based projection config, inline CDN embedding,
     Selenium CDP viewport override, PIL canvas-pinning safety net'
@@ -77,7 +77,7 @@ review:
         max: 2
         passed: true
         comment: Strong contrast between green land and neutral ocean; colorblind-safe
-          anyplot palette.
+          Imprint palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

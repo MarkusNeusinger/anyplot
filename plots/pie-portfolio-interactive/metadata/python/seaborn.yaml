@@ -18,7 +18,7 @@ review:
   - Dual-ring donut effectively communicates both asset-class aggregates and individual
     holdings simultaneously without requiring interactivity
   - Semantic color assignment (green=equities/growth, blue=fixed income/stability,
-    ochre=alternatives) is clearly justified and uses anyplot palette members correctly
+    ochre=alternatives) is clearly justified and uses Imprint palette members correctly
   - sns.blend_palette() / sns.light_palette() / sns.dark_palette() gradient approach
     for within-category differentiation is a distinctive seaborn usage
   - Theme adaptation is correct and comprehensive across all chrome elements in both
@@ -105,7 +105,7 @@ review:
         max: 2
         passed: true
         comment: 'Equities=#009E73, Fixed Income=#4467A3, Alternatives=#BD8233 — all
-          anyplot palette members with clear semantic justification. Backgrounds #FAF8F1/#1A1A17
+          Imprint palette members with clear semantic justification. Backgrounds #FAF8F1/#1A1A17
           correct. Chrome tokens correct in both themes.'
     design_excellence:
       score: 13

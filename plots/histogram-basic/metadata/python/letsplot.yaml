@@ -79,7 +79,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Green and lavender from anyplot palette are CVD-safe with good perceptual
+        comment: Green and lavender from Imprint palette are CVD-safe with good perceptual
           distance.
       - id: VQ-05
         name: Layout & Canvas

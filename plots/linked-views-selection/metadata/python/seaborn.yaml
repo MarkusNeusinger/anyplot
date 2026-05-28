@@ -17,7 +17,7 @@ review:
   strengths:
   - Full theme adaptation in both light and dark renders with all chrome tokens correctly
     applied
-  - Consistent anyplot palette across all three coordinated panels creates immediate
+  - Consistent Imprint palette across all three coordinated panels creates immediate
     visual coherence
   - Correct canvas dimensions (3200x1800) with no bbox_inches drift; subplots_adjust
     used properly
@@ -38,7 +38,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct anyplot light surface
       Chrome: Title "linked-views-selection · python · seaborn · anyplot.ai" in dark ink (#1A1A17); axis labels in INK (#1A1A17) at 10pt; tick labels in INK_SOFT (#4A4A44) at 8pt; panel subtitles ("Scatter", "Distribution", "Summary") in INK_SOFT at 9pt — all readable
-      Data: Three panels — scatter (Setosa=#009E73, Versicolor=#9418DB, Virginica=#B71D27), layered histogram, bar chart with error bars — correct anyplot palette order
+      Data: Three panels — scatter (Setosa=#009E73, Versicolor=#9418DB, Virginica=#B71D27), layered histogram, bar chart with error bars — correct Imprint palette order
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -77,7 +77,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is colorblind-safe; three-species encoding is unambiguous
+        comment: Imprint palette is colorblind-safe; three-species encoding is unambiguous
       - id: VQ-05
         name: Layout & Canvas
         score: 4

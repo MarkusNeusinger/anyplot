@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data: European landmarks with visitor counts (millions annually)
 np.random.seed(42)
@@ -180,13 +180,13 @@ tile_layer = (
     )
 )
 
-# Category → anyplot palette (canonical positions 1-5)
+# Category → Imprint palette (canonical positions 1-5)
 category_colors = {
-    "Monument": ANYPLOT_PALETTE[0],  # #009E73 green
-    "Historical": ANYPLOT_PALETTE[1],  # #C475FD lavender
-    "Museum": ANYPLOT_PALETTE[2],  # #4467A3 blue
-    "Religious": ANYPLOT_PALETTE[3],  # #BD8233 ochre
-    "Street": ANYPLOT_PALETTE[4],  # #AE3030 red
+    "Monument": IMPRINT_PALETTE[0],  # #009E73 green
+    "Historical": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "Museum": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "Religious": IMPRINT_PALETTE[3],  # #BD8233 ochre
+    "Street": IMPRINT_PALETTE[4],  # #AE3030 red
 }
 
 # Layer 2: landmark circles sized by visitors

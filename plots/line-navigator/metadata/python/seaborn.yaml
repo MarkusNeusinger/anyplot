@@ -88,7 +88,7 @@ review:
         max: 2
         passed: true
         comment: 'Brand green #009E73 for primary series, ochre #BD8233 for selection
-          handles — both from anyplot palette, CVD-safe combination.'
+          handles — both from Imprint palette, CVD-safe combination.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4

@@ -18,14 +18,14 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID_COLOR  <- adjustcolor(INK, alpha.f = 0.12)
 
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 EVENT_COLORS <- c(
-  "Earnings" = ANYPLOT_PALETTE[3],  # blue — financial results
-  "Dividend" = ANYPLOT_PALETTE[4],  # ochre — income
-  "News"     = ANYPLOT_PALETTE[2],  # lavender — analyst / market news
-  "Launch"   = ANYPLOT_PALETTE[6]   # cyan — product / tech
+  "Earnings" = IMPRINT_PALETTE[3],  # blue — financial results
+  "Dividend" = IMPRINT_PALETTE[4],  # ochre — income
+  "News"     = IMPRINT_PALETTE[2],  # lavender — analyst / market news
+  "Launch"   = IMPRINT_PALETTE[6]   # cyan — product / tech
 )
 
 # Generate 190 trading days (weekdays only, Jan–Sep 2023)
@@ -98,13 +98,13 @@ p <- ggplot() +
   geom_rect(
     data = earnings_bands,
     aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
-    fill = ANYPLOT_PALETTE[3], alpha = 0.06, inherit.aes = FALSE
+    fill = IMPRINT_PALETTE[3], alpha = 0.06, inherit.aes = FALSE
   ) +
   # Price line (first categorical series = brand green)
   geom_line(
     data      = price_df,
     aes(x = date, y = close),
-    color     = ANYPLOT_PALETTE[1],
+    color     = IMPRINT_PALETTE[1],
     linewidth = 1.0
   ) +
   # Dashed connectors from price level to flag
@@ -126,7 +126,7 @@ p <- ggplot() +
   geom_point(
     data = miss_row,
     aes(x = date, y = flag_y),
-    shape = 1, size = 6.5, color = ANYPLOT_PALETTE[5], stroke = 1.2,
+    shape = 1, size = 6.5, color = IMPRINT_PALETTE[5], stroke = 1.2,
     inherit.aes = FALSE
   ) +
   # Short labels above flags (size 2.7 for mobile readability)
@@ -145,7 +145,7 @@ p <- ggplot() +
     xend = miss_date + 1,
     y    = miss_close - price_range * 0.08,
     yend = miss_close - price_range * 0.01,
-    color     = ANYPLOT_PALETTE[5],
+    color     = IMPRINT_PALETTE[5],
     linewidth = 0.5,
     curvature = -0.3,
     arrow = arrow(length = unit(0.06, "inches"), type = "closed")
@@ -155,7 +155,7 @@ p <- ggplot() +
     x     = miss_date + 6,
     y     = miss_close - price_range * 0.09,
     label = "Decline\nfollows miss",
-    color = ANYPLOT_PALETTE[5],
+    color = IMPRINT_PALETTE[5],
     size  = 2.2,
     hjust = 0,
     vjust = 1,

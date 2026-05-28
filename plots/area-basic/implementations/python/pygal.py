@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Data — daily website visitors over a month (three distinct phases)
 days = list(range(1, 31))
@@ -73,14 +73,14 @@ trend = [trend_start + slope * i for i in range(n)]
 title = "Daily Website Visitors · area-basic · python · pygal · anyplot.ai"
 title_font_size = round(66 * 67 / len(title)) if len(title) > 67 else 66
 
-# Custom style — anyplot palette, theme-adaptive chrome, canonical font sizes
+# Custom style — Imprint palette, theme-adaptive chrome, canonical font sizes
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=ANYPLOT_PALETTE,
+    colors=IMPRINT_PALETTE,
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
@@ -132,7 +132,7 @@ chart = pygal.Line(
     show_only_major_dots=False,
 )
 
-# Main area series (brand green — anyplot palette position 1)
+# Main area series (brand green — Imprint palette position 1)
 chart.add("Daily Visitors", visitors, fill=True, stroke_style={"width": 5})
 
 # Trend line — dashed, no fill (palette position 2: lavender) — secondary context

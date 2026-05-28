@@ -17,7 +17,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",   # 1 — brand green  (1st Bending)
     colorant"#C475FD",   # 2 — lavender     (2nd Bending)
     colorant"#4467A3",   # 3 — blue         (1st Torsional)
@@ -88,10 +88,10 @@ lines!(ax, speed_eo, eo_freq_2x; color = INK_MUTED, linestyle = :dash, linewidth
 lines!(ax, speed_eo, eo_freq_3x; color = INK_MUTED, linestyle = :dash, linewidth = 1.5)
 
 # Natural frequency curves
-l_1b = lines!(ax, speeds, freq_1b; color = ANYPLOT_PALETTE[1], linewidth = 2.5)
-l_2b = lines!(ax, speeds, freq_2b; color = ANYPLOT_PALETTE[2], linewidth = 2.5)
-l_1t = lines!(ax, speeds, freq_1t; color = ANYPLOT_PALETTE[3], linewidth = 2.5)
-l_ax = lines!(ax, speeds, freq_ax; color = ANYPLOT_PALETTE[4], linewidth = 2.5)
+l_1b = lines!(ax, speeds, freq_1b; color = IMPRINT_PALETTE[1], linewidth = 2.5)
+l_2b = lines!(ax, speeds, freq_2b; color = IMPRINT_PALETTE[2], linewidth = 2.5)
+l_1t = lines!(ax, speeds, freq_1t; color = IMPRINT_PALETTE[3], linewidth = 2.5)
+l_ax = lines!(ax, speeds, freq_ax; color = IMPRINT_PALETTE[4], linewidth = 2.5)
 
 # Critical speed intersection markers
 sc_crit = scatter!(ax, crit_spd, crit_frq;

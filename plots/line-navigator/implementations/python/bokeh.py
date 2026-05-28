@@ -26,7 +26,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # anyplot palette position 1 — ALWAYS first series
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 ANYPLOT_AMBER = "#DDCC77"  # selection highlight (semantic anchor)
 
 # Data — daily sensor readings over 3 years (1095 points)

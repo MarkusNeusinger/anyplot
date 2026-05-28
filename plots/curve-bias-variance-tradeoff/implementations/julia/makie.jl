@@ -17,7 +17,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green (Bias²)
     colorant"#C475FD",  # 2 — lavender (Variance)
     colorant"#4467A3",  # 3 — blue (Total Error)
@@ -80,26 +80,26 @@ ax = Axis(
 
 # Shaded zones (underfitting / overfitting)
 vspan!(ax, complexity[1], opt_complexity;
-    color = RGBAf(ANYPLOT_PALETTE[1].r, ANYPLOT_PALETTE[1].g, ANYPLOT_PALETTE[1].b, 0.07))
+    color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.07))
 vspan!(ax, opt_complexity, complexity[end];
-    color = RGBAf(ANYPLOT_PALETTE[2].r, ANYPLOT_PALETTE[2].g, ANYPLOT_PALETTE[2].b, 0.07))
+    color = RGBAf(IMPRINT_PALETTE[2].r, IMPRINT_PALETTE[2].g, IMPRINT_PALETTE[2].b, 0.07))
 
 # Curves
 lines!(ax, complexity, bias_sq;
-    color = ANYPLOT_PALETTE[1], linewidth = 2.5, linestyle = :solid, label = "Bias²")
+    color = IMPRINT_PALETTE[1], linewidth = 2.5, linestyle = :solid, label = "Bias²")
 lines!(ax, complexity, variance;
-    color = ANYPLOT_PALETTE[2], linewidth = 2.5, linestyle = :dash, label = "Variance")
+    color = IMPRINT_PALETTE[2], linewidth = 2.5, linestyle = :dash, label = "Variance")
 lines!(ax, complexity, total_err;
-    color = ANYPLOT_PALETTE[3], linewidth = 3.0, linestyle = :dashdot, label = "Total Error")
+    color = IMPRINT_PALETTE[3], linewidth = 3.0, linestyle = :dashdot, label = "Total Error")
 lines!(ax, complexity, irreducible_err;
-    color = ANYPLOT_PALETTE[4], linewidth = 2.0, linestyle = :dot, label = "Irreducible Error")
+    color = IMPRINT_PALETTE[4], linewidth = 2.0, linestyle = :dot, label = "Irreducible Error")
 
 # Optimal point vertical line
 vlines!(ax, [opt_complexity]; color = INK_SOFT, linewidth = 1.5, linestyle = :dash)
 
 # Optimal point marker on total error curve
 scatter!(ax, [opt_complexity], [opt_total];
-    color = ANYPLOT_PALETTE[3], markersize = 14, strokewidth = 1.5,
+    color = IMPRINT_PALETTE[3], markersize = 14, strokewidth = 1.5,
     strokecolor = PAGE_BG)
 
 # Zone labels
@@ -126,16 +126,16 @@ lbl_irr_x    = 5.0
 
 text!(ax, lbl_bias_x, lbl_bias_y + 0.03;
     text = "Bias²",
-    color = ANYPLOT_PALETTE[1], fontsize = 12, align = (:center, :bottom), font = :bold)
+    color = IMPRINT_PALETTE[1], fontsize = 12, align = (:center, :bottom), font = :bold)
 text!(ax, lbl_var_x, lbl_var_y + 0.03;
     text = "Variance",
-    color = ANYPLOT_PALETTE[2], fontsize = 12, align = (:center, :bottom), font = :bold)
+    color = IMPRINT_PALETTE[2], fontsize = 12, align = (:center, :bottom), font = :bold)
 text!(ax, lbl_tot_x, lbl_tot_y + 0.03;
     text = "Total Error",
-    color = ANYPLOT_PALETTE[3], fontsize = 12, align = (:center, :bottom), font = :bold)
+    color = IMPRINT_PALETTE[3], fontsize = 12, align = (:center, :bottom), font = :bold)
 text!(ax, lbl_irr_x, 0.15 + 0.03;
     text = "Irreducible Error",
-    color = ANYPLOT_PALETTE[4], fontsize = 12, align = (:center, :bottom), font = :bold)
+    color = IMPRINT_PALETTE[4], fontsize = 12, align = (:center, :bottom), font = :bold)
 
 # Formula annotation
 text!(ax, complexity[end], irreducible_err[1] + 0.01;

@@ -75,7 +75,7 @@ df_clusters = pd.DataFrame(
     }
 )
 
-# anyplot palette — canonical order for categorical data
+# Imprint palette — canonical order for categorical data
 colors = {"Retail": "#009E73", "Warehouse": "#C475FD", "Service Center": "#AE3030"}
 
 # Higher-fidelity US continental boundary polygon (66 vertices vs prior 44)

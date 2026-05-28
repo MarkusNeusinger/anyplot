@@ -17,7 +17,7 @@ review:
   strengths:
   - Perfect spec compliance — pure pie chart (no donut), largest slice exploded (Visa
     0.08 pull), percentage labels on all visible slices, legend with all 6 categories,
-    distinct anyplot palette colors
+    distinct Imprint palette colors
   - 'Flawless palette compliance — first series is #009E73 (Visa), canonical palette
     order maintained across all 6 slices, backgrounds #FAF8F1 (light) / #1A1A17 (dark),
     all theme tokens applied correctly to both renders'
@@ -82,14 +82,14 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 6 slices clearly visible with distinct anyplot palette colors;
+        comment: All 6 slices clearly visible with distinct Imprint palette colors;
           Visa pull (0.08) adds spatial separation for emphasis.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: White text on colored fills provides adequate contrast; anyplot palette
+        comment: White text on colored fills provides adequate contrast; Imprint palette
           is CVD-safe; no red-green-only signals.
       - id: VQ-05
         name: Layout & Canvas

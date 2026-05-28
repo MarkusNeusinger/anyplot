@@ -35,12 +35,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Anyplot palette — semantic mapping for asset classes
+# Imprint palette — semantic mapping for asset classes
 # Equities → green (growth/profit), Fixed Income → blue (safe/conservative)
 # Alternatives → purple, Cash → ochre (store of value)
 CATEGORY_COLORS = {"Equities": "#009E73", "Fixed Income": "#4467A3", "Alternatives": "#C475FD", "Cash": "#BD8233"}
 
-# Anyplot palette positions 1→8 for individual holdings
+# Imprint palette positions 1→8 for individual holdings
 HOLDING_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Portfolio data — institutional multi-asset allocation

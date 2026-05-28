@@ -116,7 +116,7 @@ review:
         max: 2
         passed: true
         comment: 'Price line uses #009E73 (brand green) as first series. Event colors
-          are semantic-exception assignments from the anyplot palette: blue (#4467A3)
+          are semantic-exception assignments from the Imprint palette: blue (#4467A3)
           for Earnings, ochre (#BD8233) for Dividend, lavender (#C475FD) for News,
           cyan (#2ABCCD) for Launch. Q2 Miss uses #AE3030 (semantic red for loss).
           Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Both renders theme-correct.'

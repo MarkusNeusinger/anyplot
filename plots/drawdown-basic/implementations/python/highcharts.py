@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Drawdown uses red — semantic exception (loss/down) → anyplot palette position 3
+# Drawdown uses red — semantic exception (loss/down) → Imprint palette position 3
 DRAWDOWN_COLOR = "#AE3030"
 
 # Data — simulated portfolio (geometric Brownian motion)

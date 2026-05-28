@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard
 quality_score: 84
 review:
   strengths:
-  - 'Correct anyplot palette throughout: price=#009E73, volume=#9418DB, rsi=#B71D27,
+  - 'Correct Imprint palette throughout: price=#009E73, volume=#9418DB, rsi=#B71D27,
     crosshair=#D359A7 (palette position 6, distinct from all data series)'
   - 'Full theme adaptation: all chrome tokens correctly wired to both themes; no dark-on-dark
     in dark render'
@@ -75,7 +75,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette with good luminance separation across all
+        comment: CVD-safe Imprint palette with good luminance separation across all
           series
       - id: VQ-05
         name: Layout & Canvas

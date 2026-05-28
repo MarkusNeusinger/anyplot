@@ -21,7 +21,7 @@ review:
     — non-trivial ggplot2 technique
   - Complete theme-adaptive chrome — INK, INK_SOFT, PAGE_BG, ELEVATED_BG correctly
     threaded through all elements
-  - 'Correct anyplot palette in canonical slot order starting with #009E73 for R&D'
+  - 'Correct Imprint palette in canonical slot order starting with #009E73 for R&D'
   - Correct 2400x2400 square canvas for a symmetric chart type
   - Clean linear code with named palette and factor-level ordering for deterministic
     legend
@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; 6 distinct hue families used.
+        comment: Imprint palette is CVD-safe; 6 distinct hue families used.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

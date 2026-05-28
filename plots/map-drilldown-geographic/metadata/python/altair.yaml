@@ -41,14 +41,14 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
       Chrome: Title "map-drilldown-geographic · python · altair · anyplot.ai" in dark INK (#1A1A17), clearly readable. Subtitle in lighter INK_SOFT. Axis labels "Sales ($K)" on all three bar charts readable. Breadcrumb "USA ▸ West ▸ California ▸ Cities" visible. Region legend (right side) legible. Choropleth legend "Sales ($K)" at bottom-left readable with gradient bar.
-      Data: US choropleth using anyplot_seq gradient (#009E73 → #003D94) — green for low sales, dark blue for high. Region bars use anyplot palette in correct order: West=#009E73, South=#9418DB, Midwest=#B71D27, Northeast=#16B8F3. City bars use #009E73 (single series, correct). Bar opacity highlights selected items (West region, California state highlighted at full opacity).
+      Data: US choropleth using anyplot_seq gradient (#009E73 → #003D94) — green for low sales, dark blue for high. Region bars use Imprint palette in correct order: West=#009E73, South=#9418DB, Midwest=#B71D27, Northeast=#16B8F3. City bars use #009E73 (single series, correct). Bar opacity highlights selected items (West region, California state highlighted at full opacity).
       Issue: "② Region → States" chart uses height=75 for up to 13 West-region states — labels are severely crowded and partially overlapping at saved resolution.
       Legibility verdict: PASS for overall title/axes/legends. FAIL for state bar labels in chart ② (crowding/overlap for 13 states in 75px chart height).
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
       Chrome: Title and subtitle render in light INK (#F0EFE8) against dark background — clearly readable. Axis labels, tick labels, legend text all appear in light INK_SOFT (#B8B7B0) — no dark-on-dark failures observed. Legend frames use ELEVATED_BG (#242420) with INK_SOFT stroke — correct.
-      Data: Data colors are identical to the light render — anyplot_seq choropleth and categorical region bars use the same hex values (positions 1–4 of anyplot palette unchanged between themes). Only chrome flips.
+      Data: Data colors are identical to the light render — anyplot_seq choropleth and categorical region bars use the same hex values (positions 1–4 of Imprint palette unchanged between themes). Only chrome flips.
       Issue: Same state bar crowding as light render — the layout constraint is structural, not theme-specific.
       Legibility verdict: PASS for chrome elements. FAIL for state bar labels in chart ② (same crowding issue, theme-independent).
   criteria_checklist:
@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe. anyplot_seq for continuous choropleth.
+        comment: Imprint palette is CVD-safe. anyplot_seq for continuous choropleth.
           No red-green-only signaling.
       - id: VQ-05
         name: Layout & Canvas

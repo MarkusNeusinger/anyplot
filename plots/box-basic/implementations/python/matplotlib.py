@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — annual salary distributions (USD thousands) across five job sectors
 np.random.seed(42)
@@ -68,8 +68,8 @@ bp = ax.boxplot(
     capprops={"linewidth": 2.0, "color": INK_SOFT},
 )
 
-# Apply anyplot palette colors to boxes with theme-adaptive path effect depth
-for patch, color in zip(bp["boxes"], ANYPLOT_PALETTE[:5], strict=False):
+# Apply Imprint palette colors to boxes with theme-adaptive path effect depth
+for patch, color in zip(bp["boxes"], IMPRINT_PALETTE[:5], strict=False):
     patch.set_facecolor(color)
     patch.set_alpha(0.75)
     patch.set_edgecolor(color)
@@ -92,11 +92,11 @@ ax.annotate(
     xytext=(best_idx + 1, q3s[best_idx] + 52),
     fontsize=8,
     fontweight="bold",
-    color=ANYPLOT_PALETTE[best_idx],
+    color=IMPRINT_PALETTE[best_idx],
     ha="center",
     va="bottom",
-    arrowprops={"arrowstyle": "->", "color": ANYPLOT_PALETTE[best_idx], "lw": 1.5},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": ANYPLOT_PALETTE[best_idx], "alpha": 0.9},
+    arrowprops={"arrowstyle": "->", "color": IMPRINT_PALETTE[best_idx], "lw": 1.5},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": IMPRINT_PALETTE[best_idx], "alpha": 0.9},
 )
 
 # Annotation — widest IQR (Finance, placed higher to clear Healthcare box region)
@@ -106,18 +106,18 @@ ax.annotate(
     xytext=(widest_idx + 1.7, medians[widest_idx] + 65),
     fontsize=8,
     fontweight="bold",
-    color=ANYPLOT_PALETTE[widest_idx],
+    color=IMPRINT_PALETTE[widest_idx],
     ha="left",
     arrowprops={
         "arrowstyle": "->",
         "connectionstyle": "arc3,rad=-0.3",
-        "color": ANYPLOT_PALETTE[widest_idx],
+        "color": IMPRINT_PALETTE[widest_idx],
         "lw": 1.5,
     },
     bbox={
         "boxstyle": "round,pad=0.3",
         "facecolor": ELEVATED_BG,
-        "edgecolor": ANYPLOT_PALETTE[widest_idx],
+        "edgecolor": IMPRINT_PALETTE[widest_idx],
         "alpha": 0.9,
     },
 )
@@ -125,7 +125,7 @@ ax.annotate(
 # Annotation — tightest IQR (Retail, placed directly above Retail's box)
 # Placed at x=tightest_idx+1 (same column as Retail) so it cannot overlap Healthcare (x=3).
 # Use INK text color in dark theme: #AE3030 on dark elevated bg has marginal contrast.
-_tight_text_color = INK if THEME == "dark" else ANYPLOT_PALETTE[tightest_idx]
+_tight_text_color = INK if THEME == "dark" else IMPRINT_PALETTE[tightest_idx]
 ax.annotate(
     f"Tightest spread\nIQR=${iqrs[tightest_idx]:.0f}K",
     xy=(tightest_idx + 1, q3s[tightest_idx] + 1),
@@ -135,11 +135,11 @@ ax.annotate(
     color=_tight_text_color,
     ha="center",
     va="bottom",
-    arrowprops={"arrowstyle": "->", "color": ANYPLOT_PALETTE[tightest_idx], "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": IMPRINT_PALETTE[tightest_idx], "lw": 1.5},
     bbox={
         "boxstyle": "round,pad=0.3",
         "facecolor": ELEVATED_BG,
-        "edgecolor": ANYPLOT_PALETTE[tightest_idx],
+        "edgecolor": IMPRINT_PALETTE[tightest_idx],
         "alpha": 0.9,
     },
 )

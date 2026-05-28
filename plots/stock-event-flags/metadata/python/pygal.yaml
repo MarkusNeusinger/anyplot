@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 quality_score: 83
 review:
   strengths:
-  - 'Correct anyplot palette assignment: price line uses brand green (#009E73), event
+  - 'Correct Imprint palette assignment: price line uses brand green (#009E73), event
     types use positions 2-5 in canonical order with semantic red for split — no custom
     hexes.'
   - Variable connector line widths (earnings=3, split=4, news/dividend=2) create visual
@@ -96,7 +96,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Uses anyplot palette which is CVD-optimized. No red-green as sole
+        comment: Uses Imprint palette which is CVD-optimized. No red-green as sole
           distinguishing signal — earnings uses lavender, split uses red, price line
           uses green (distinct roles).
       - id: VQ-05

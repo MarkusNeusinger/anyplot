@@ -101,16 +101,16 @@ geom_tile()      # Heatmap
 Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
-+ geom_point(color=ANYPLOT_PALETTE[0])
++ geom_point(color=IMPRINT_PALETTE[0])
 
 # Multi-series
-+ scale_color_manual(values=ANYPLOT_PALETTE)
-+ scale_fill_manual(values=ANYPLOT_PALETTE)
++ scale_color_manual(values=IMPRINT_PALETTE)
++ scale_fill_manual(values=IMPRINT_PALETTE)
 
 # Continuous — only the two Imprint palette-derived cmaps are allowed:
 from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gradient, scale_fill_gradient2
@@ -152,7 +152,7 @@ anyplot_theme = theme(
     legend_title=element_text(color=INK),
 )
 
-plot = (ggplot(df, aes('x', 'y')) + geom_point(color=ANYPLOT_PALETTE[0]) + anyplot_theme)
+plot = (ggplot(df, aes('x', 'y')) + geom_point(color=IMPRINT_PALETTE[0]) + anyplot_theme)
 ggsave(plot, filename=f'plot-{THEME}.png', dpi=400, width=8, height=4.5)
 ```
 

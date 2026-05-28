@@ -18,10 +18,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]  # #009E73 — first series (bars)
-BLUE = ANYPLOT_PALETTE[2]  # #4467A3 — mean reference line
-OCHRE = ANYPLOT_PALETTE[3]  # #BD8233 — median reference line (colorblind-safe pair)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # #009E73 — first series (bars)
+BLUE = IMPRINT_PALETTE[2]  # #4467A3 — mean reference line
+OCHRE = IMPRINT_PALETTE[3]  # #BD8233 — median reference line (colorblind-safe pair)
 
 # Data — exam score distribution with three realistic student groups
 np.random.seed(42)

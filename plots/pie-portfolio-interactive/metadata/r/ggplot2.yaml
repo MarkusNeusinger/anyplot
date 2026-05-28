@@ -17,7 +17,7 @@ review:
   strengths:
   - Double-donut design using coord_polar with nested x-positions is idiomatic and
     visually clean
-  - Anyplot palette applied correctly — Equities=brand green, Fixed Income=lavender,
+  - Imprint palette applied correctly — Equities=brand green, Fixed Income=lavender,
     Alternatives=blue, Cash=ochre in canonical order
   - Theme-adaptive chrome works perfectly in both renders — warm backgrounds, light/dark
     INK tokens, no dark-on-dark failures

@@ -114,7 +114,7 @@ review:
         max: 2
         passed: true
         comment: 'anyplot_seq colorscale. Background #FAF8F1 light / #1A1A17 dark.
-          INK/INK_SOFT tokens applied throughout. Spotlight markers use anyplot palette
+          INK/INK_SOFT tokens applied throughout. Spotlight markers use Imprint palette
           colors (#99B314, #B71D27).'
     design_excellence:
       score: 13

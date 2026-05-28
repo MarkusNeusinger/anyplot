@@ -187,9 +187,9 @@ INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE        = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint categorical palette — 8 hues, theme-independent, hybrid-v3 sort
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
                    "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]  # "#009E73" — ALWAYS first series
+BRAND = IMPRINT_PALETTE[0]  # "#009E73" — ALWAYS first series
 
 # semantic anchors — outside the categorical pool
 ANYPLOT_AMBER   = "#DDCC77"     # warning / caution

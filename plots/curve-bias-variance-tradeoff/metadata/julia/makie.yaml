@@ -26,7 +26,7 @@ review:
     labeling aids comprehension
   - Formula annotation 'Total Error = Bias² + Variance + Irreducible Error' connects
     the visual to the math
-  - 'Correct anyplot palette in canonical order: #009E73 Bias², #C475FD Variance,
+  - 'Correct Imprint palette in canonical order: #009E73 Bias², #C475FD Variance,
     #4467A3 Total Error, #BD8233 Irreducible Error, plus distinct linestyles for redundant
     encoding'
   - Both light (#FAF8F1) and dark (#1A1A17) renders are fully readable with proper
@@ -93,7 +93,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; redundant linestyle encoding means no
+        comment: Imprint palette is CVD-safe; redundant linestyle encoding means no
           reliance on color alone
       - id: VQ-05
         name: Layout & Canvas

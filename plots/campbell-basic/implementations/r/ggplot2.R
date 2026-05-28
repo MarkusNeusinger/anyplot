@@ -15,7 +15,7 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 GRID        <- adjustcolor(INK, alpha.f = 0.12)
 
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
 CRITICAL_COLOR  <- "#AE3030"
 
 # Rotational speed range: 0 to 6000 RPM (turbomachinery operating range)
@@ -106,7 +106,7 @@ p <- ggplot() +
   ) +
   scale_color_manual(
     name   = "Natural Frequency Mode",
-    values = setNames(ANYPLOT_PALETTE, mode_levels)
+    values = setNames(IMPRINT_PALETTE, mode_levels)
   ) +
   scale_shape_manual(
     name   = "",

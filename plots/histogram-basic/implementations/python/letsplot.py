@@ -42,7 +42,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 LEGEND_BORDER = PAGE_BG if THEME == "light" else INK_SOFT
 
-# anyplot palette positions 1 and 2
+# Imprint palette positions 1 and 2
 BRAND = "#009E73"
 COLOR_B = "#C475FD"
 

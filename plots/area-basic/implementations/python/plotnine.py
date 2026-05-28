@@ -33,8 +33,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 # Data
 np.random.seed(42)
@@ -69,7 +69,7 @@ plot = (
     ggplot(df, aes(x="date", y="visitors"))
     + geom_ribbon(aes(ymin="y_floor", ymax="visitors"), fill=BRAND, alpha=0.35)
     + geom_line(color=BRAND, size=1.5)
-    + geom_smooth(method="lowess", color=ANYPLOT_PALETTE[2], size=1.5, se=False, span=0.5)
+    + geom_smooth(method="lowess", color=IMPRINT_PALETTE[2], size=1.5, se=False, span=0.5)
     + annotate(
         "text",
         x=dates[peak_idx],
@@ -96,7 +96,7 @@ plot = (
         y=df.loc[25, "visitors"] + 500,
         label="Trend (LOWESS)",
         size=3.5,
-        color=ANYPLOT_PALETTE[2],
+        color=IMPRINT_PALETTE[2],
         fontweight="bold",
     )
     + labs(

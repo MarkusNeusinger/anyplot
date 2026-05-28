@@ -19,14 +19,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Event type colors — anyplot palette positions 0→3 in canonical order
+# Event type colors — Imprint palette positions 0→3 in canonical order
 event_colors = {
-    "Earnings": ANYPLOT_PALETTE[0],  # #009E73 brand green
-    "Dividend": ANYPLOT_PALETTE[1],  # #C475FD lavender
-    "News": ANYPLOT_PALETTE[2],  # #4467A3 blue
-    "Split": ANYPLOT_PALETTE[3],  # #BD8233 ochre
+    "Earnings": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Dividend": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "News": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "Split": IMPRINT_PALETTE[3],  # #BD8233 ochre
 }
 event_symbols = {"Earnings": "star", "Dividend": "diamond", "News": "triangle-up", "Split": "square"}
 
@@ -104,7 +104,7 @@ for i, (_, event) in enumerate(events.iterrows()):
     height_offset = flag_height_offsets[i % len(flag_height_offsets)]
     flag_y = price_at_event + price_range * height_offset
 
-    color = event_colors.get(event["event_type"], ANYPLOT_PALETTE[0])
+    color = event_colors.get(event["event_type"], IMPRINT_PALETTE[0])
     symbol = event_symbols.get(event["event_type"], "circle")
 
     # Vertical dashed connector line

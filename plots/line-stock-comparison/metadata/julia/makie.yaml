@@ -16,8 +16,8 @@ quality_score: 89
 review:
   strengths:
   - 'Perfect spec compliance: normalization to 100, reference line at 100, distinct
-    anyplot palette colors, clear external legend — all required features present'
-  - Correct anyplot palette in canonical order with brand green (#009E73) for first
+    Imprint palette colors, clear external legend — all required features present'
+  - Correct Imprint palette in canonical order with brand green (#009E73) for first
     series (NVDA); full theme adaptation with identical data colors across both light
     and dark renders
   - End-of-series performance labels add practical interpretability without visual
@@ -79,7 +79,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is colorblind-safe; adequate contrast across all
+        comment: Imprint palette is colorblind-safe; adequate contrast across all
           series
       - id: VQ-05
         name: Layout & Canvas

@@ -25,8 +25,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]  # price line uses position 1
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # price line uses position 1
 
 # Data — 180 trading days of synthetic stock prices via geometric Brownian motion
 np.random.seed(42)
@@ -52,10 +52,10 @@ events_df = pd.DataFrame(events)
 
 # Event styling — positions 2–5 (position 1 is the price line)
 event_colors = {
-    "earnings": ANYPLOT_PALETTE[1],  # lavender
-    "dividend": ANYPLOT_PALETTE[2],  # blue
-    "split": ANYPLOT_PALETTE[3],  # ochre
-    "news": ANYPLOT_PALETTE[4],  # matte red
+    "earnings": IMPRINT_PALETTE[1],  # lavender
+    "dividend": IMPRINT_PALETTE[2],  # blue
+    "split": IMPRINT_PALETTE[3],  # ochre
+    "news": IMPRINT_PALETTE[4],  # matte red
 }
 event_markers = {"earnings": "triangle", "dividend": "circle", "split": "square", "news": "diamond"}
 

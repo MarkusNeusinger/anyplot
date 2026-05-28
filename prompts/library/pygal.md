@@ -75,7 +75,7 @@ PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314')
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
@@ -85,7 +85,7 @@ custom_style = Style(
     foreground=INK,                 # primary text
     foreground_strong=INK,          # title
     foreground_subtle=INK_MUTED,    # tick labels, grid tone
-    colors=ANYPLOT_PALETTE,         # first series = brand green
+    colors=IMPRINT_PALETTE,         # first series = brand green
     # pygal font sizes are unitless integers, rendered into the SVG at the
     # source-pixel grid (no DPI/scale multiplier). To match matplotlib 12pt
     # @ dpi=400 (= 67 source-px), set unitless values directly to the target
@@ -118,12 +118,12 @@ chart = pygal.Bar(
 Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`. For pygal, the palette is always passed via the `Style` object — see the Sizing + Theme section above.
 
 ```python
-ANYPLOT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ('#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314')
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
-# Single-series: ANYPLOT_PALETTE[0] is still the first color pygal cycles through
-custom_style = Style(..., colors=ANYPLOT_PALETTE)
+# Single-series: IMPRINT_PALETTE[0] is still the first color pygal cycles through
+custom_style = Style(..., colors=IMPRINT_PALETTE)
 
 # Continuous data: pygal doesn't have built-in cmaps. Interpolate manually
 # between the Imprint palette-derived endpoints — never substitute viridis

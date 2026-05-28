@@ -19,7 +19,7 @@ review:
     speed markers, operating zone shading)
   - Perfect spec compliance — engine order slopes physically correct (order*speed/60),
     5 mode curves with realistic gyroscopic variation
-  - 'Semantic color hierarchy: anyplot palette for mode lines, muted grey for EO lines,
+  - 'Semantic color hierarchy: Imprint palette for mode lines, muted grey for EO lines,
     amber (#DDCC77) for warning/caution critical speeds'
   - 'Bokeh-distinctive features well used: HoverTool on critical speeds with contextual
     tooltip fields, BoxAnnotation for operating zone, Span for boundary lines, HTML
@@ -42,7 +42,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 surface — correct anyplot light theme background
       Chrome: Title "campbell-basic · python · bokeh · anyplot.ai" bold centered at ~65-70% width, clearly readable dark text. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in italic, clearly readable. Tick labels (0-6000 RPM, 0-200 Hz) in dark secondary color. Legend positioned top-left with elevated #FFFDF6 background, 9 entries clearly readable.
-      Data: 5 natural frequency mode lines using anyplot palette in order — 1st Bending in #009E73 (brand green), 2nd Bending in #C475FD (lavender), 1st Torsional in #4467A3 (blue), Axial in #BD8233 (ochre), 3rd Bending in #AE3030 (red). Three dashed engine order lines (1x, 2x, 3x) in muted grey. Amber diamond markers at critical speed intersections. Subtle grey shading for operating zone (3000-5000 RPM). Amber warning annotation for worst critical speed in operating range.
+      Data: 5 natural frequency mode lines using Imprint palette in order — 1st Bending in #009E73 (brand green), 2nd Bending in #C475FD (lavender), 1st Torsional in #4467A3 (blue), Axial in #BD8233 (ochre), 3rd Bending in #AE3030 (red). Three dashed engine order lines (1x, 2x, 3x) in muted grey. Amber diamond markers at critical speed intersections. Subtle grey shading for operating zone (3000-5000 RPM). Amber warning annotation for worst critical speed in operating range.
       Legibility verdict: PASS — all primary text readable; operating range text (18pt) and warning annotation (15pt) are small but legible at full resolution; not mobile-readable at 400px scale
 
     Dark render (plot-dark.png):
@@ -84,7 +84,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used — CVD-safe. EO lines distinguished by dashed
+        comment: Imprint palette used — CVD-safe. EO lines distinguished by dashed
           line style from mode lines (redundant encoding). Amber for critical speeds
           semantically distinct.
       - id: VQ-05
@@ -106,7 +106,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Multi-series uses anyplot palette
+        comment: 'First series #009E73 (brand green). Multi-series uses Imprint palette
           positions 1-5 in canonical order. Engine order lines use theme-adaptive
           INK_MUTED. Critical speeds use ANYPLOT_AMBER (semantic warning role). Backgrounds
           #FAF8F1 / #1A1A17 correct. Data colors identical between themes.'

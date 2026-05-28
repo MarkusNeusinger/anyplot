@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used (colorblind-safe). RSI reference lines distinguished
+        comment: Imprint palette used (colorblind-safe). RSI reference lines distinguished
           by dash pattern (dashed vs dotted) in addition to color.
       - id: VQ-05
         name: Layout & Canvas
@@ -101,7 +101,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73. Multi-series uses anyplot palette. Plot
+        comment: 'First series = #009E73. Multi-series uses Imprint palette. Plot
           backgrounds #FAF8F1/#1A1A17. Both themes correct. RSI position 4 skip justified
           to avoid confusion with red reference line.'
     design_excellence:

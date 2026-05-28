@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — turbine rotor rotordynamic analysis
 np.random.seed(42)
@@ -193,11 +193,11 @@ chart.options.tooltip = {
 
 # Mode colors: anyplot positions 1-4 then position 6 (skipping pos 5 red, reserved for critical speeds)
 mode_colors = [
-    ANYPLOT_PALETTE[0],  # #009E73 brand green — 1st Bending
-    ANYPLOT_PALETTE[1],  # #C475FD lavender    — 2nd Bending
-    ANYPLOT_PALETTE[2],  # #4467A3 blue        — 1st Torsional
-    ANYPLOT_PALETTE[3],  # #BD8233 ochre       — Axial
-    ANYPLOT_PALETTE[5],  # #2ABCCD cyan        — 2nd Torsional
+    IMPRINT_PALETTE[0],  # #009E73 brand green — 1st Bending
+    IMPRINT_PALETTE[1],  # #C475FD lavender    — 2nd Bending
+    IMPRINT_PALETTE[2],  # #4467A3 blue        — 1st Torsional
+    IMPRINT_PALETTE[3],  # #BD8233 ochre       — Axial
+    IMPRINT_PALETTE[5],  # #2ABCCD cyan        — 2nd Torsional
 ]
 
 for i, (mode_name, mode_freq) in enumerate(modes.items()):
@@ -243,13 +243,13 @@ if critical_speeds:
     crit_series = ScatterSeries()
     crit_series.data = [[rpm, freq] for rpm, freq in critical_speeds]
     crit_series.name = "Critical Speeds"
-    crit_series.color = ANYPLOT_PALETTE[4]  # #AE3030 matte red
+    crit_series.color = IMPRINT_PALETTE[4]  # #AE3030 matte red
     crit_series.marker = {
         "radius": 14,
         "symbol": "diamond",
         "lineWidth": 2,
-        "lineColor": ANYPLOT_PALETTE[4],
-        "fillColor": ANYPLOT_PALETTE[4],
+        "lineColor": IMPRINT_PALETTE[4],
+        "fillColor": IMPRINT_PALETTE[4],
         "states": {"hover": {"radiusPlus": 4}},
     }
     crit_series.z_index = 5

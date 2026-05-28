@@ -19,12 +19,12 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 LEGEND_BORDER = "rgba(74,74,68,0.3)" if THEME == "light" else "rgba(184,183,176,0.3)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data
 np.random.seed(42)
 categories = ["Engineering", "Marketing", "Sales", "HR", "Finance"]
-colors = ANYPLOT_PALETTE[:5]
+colors = IMPRINT_PALETTE[:5]
 
 data = {
     "Engineering": np.random.normal(95000, 15000, 100),
@@ -46,7 +46,7 @@ fig = go.Figure()
 fig.add_hrect(
     y0=75000,
     y1=90000,
-    fillcolor=ANYPLOT_PALETTE[0],
+    fillcolor=IMPRINT_PALETTE[0],
     opacity=0.06,
     line_width=0,
     layer="below",

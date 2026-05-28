@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Use INK_SOFT in dark mode so ring gaps remain visible against dark arc segments
 RING_STROKE = PAGE_BG if THEME == "light" else INK_SOFT
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]
 
 # Portfolio data
 holdings = pd.DataFrame(
@@ -59,9 +59,9 @@ category_totals = (
 )
 category_totals["is_dominant"] = (category_totals["category"] == "Equities").astype(int)
 
-# Color scale using anyplot palette (green=equities growth, purple=fixed income, blue=alternatives)
+# Color scale using Imprint palette (green=equities growth, purple=fixed income, blue=alternatives)
 category_domain = ["Equities", "Fixed Income", "Alternatives"]
-color_scale = alt.Scale(domain=category_domain, range=ANYPLOT_PALETTE)
+color_scale = alt.Scale(domain=category_domain, range=IMPRINT_PALETTE)
 
 # Category selection drives drill-down of the inner ring
 category_sel = alt.selection_point(fields=["category"], empty=True)

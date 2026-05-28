@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — canonical order, 4 categories
+# Imprint palette — canonical order, 4 categories
 IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 category_names = ["Coffee Shop", "Restaurant", "Bookstore", "Gym"]
 category_palette = dict(zip(category_names, IMPRINT, strict=True))

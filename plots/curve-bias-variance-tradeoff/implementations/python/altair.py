@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — theoretical bias-variance tradeoff curves
 np.random.seed(42)
@@ -53,7 +53,7 @@ for name, vals in zip(curve_names, curve_vals, strict=True):
 df = pd.DataFrame(rows)
 
 color_domain = curve_names
-color_range = ANYPLOT_PALETTE[:4]
+color_range = IMPRINT_PALETTE[:4]
 dash_domain = curve_names
 dash_range = [[1, 0], [1, 0], [6, 3], [4, 4]]
 
@@ -100,7 +100,7 @@ y_scale = alt.Scale(domain=[0.0, y_max])
 # Layer 1: Shaded zones — fixed fill colors to avoid merging with lines scale
 shade_under_layer = (
     alt.Chart(shade_under_df)
-    .mark_rect(fill=ANYPLOT_PALETTE[0], opacity=0.07, stroke=None)
+    .mark_rect(fill=IMPRINT_PALETTE[0], opacity=0.07, stroke=None)
     .encode(
         x=alt.X("complexity:Q", scale=x_scale),
         x2="complexity_end:Q",
@@ -110,7 +110,7 @@ shade_under_layer = (
 )
 shade_over_layer = (
     alt.Chart(shade_over_df)
-    .mark_rect(fill=ANYPLOT_PALETTE[4], opacity=0.07, stroke=None)
+    .mark_rect(fill=IMPRINT_PALETTE[4], opacity=0.07, stroke=None)
     .encode(
         x=alt.X("complexity:Q", scale=x_scale),
         x2="complexity_end:Q",

@@ -110,7 +110,7 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: intentional anyplot palette, event annotation, y-only
+        comment: 'Above defaults: intentional Imprint palette, event annotation, y-only
           grid design choice; but visible outline border and italic axis labels prevent
           reaching ''strong design'' tier'
       - id: DE-02

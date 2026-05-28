@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BOX_FILL = "#FFFDF6" if THEME == "light" else "#242420"
 GRID_ALPHA = 0.15 if THEME == "light" else 0.20
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — reaction times (ms) across four experimental conditions
 np.random.seed(42)
@@ -86,7 +86,7 @@ p.yaxis.ticker = list(range(len(categories)))
 p.yaxis.major_label_overrides = dict(enumerate(categories))
 
 for idx, (cat, values) in enumerate(data.items()):
-    color = ANYPLOT_PALETTE[idx]
+    color = IMPRINT_PALETTE[idx]
     y_base = idx
 
     # KDE — Silverman's rule

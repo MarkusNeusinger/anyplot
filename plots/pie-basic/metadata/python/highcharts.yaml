@@ -17,7 +17,7 @@ review:
   strengths:
   - Perfect spec compliance — all four required features (percentages, distinct colors,
     legend, exploded slice) implemented correctly
-  - Correct anyplot palette with semantic muted anchor for Others category — shows
+  - Correct Imprint palette with semantic muted anchor for Others category — shows
     palette rule understanding
   - 'Full theme adaptation: both light and dark renders pass legibility check with
     no dark-on-dark failures'
@@ -71,7 +71,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette used; CVD-safe. Muted anchor for Others is appropriately
+        comment: Imprint palette used; CVD-safe. Muted anchor for Others is appropriately
           subdued.
       - id: VQ-05
         name: Layout & Canvas

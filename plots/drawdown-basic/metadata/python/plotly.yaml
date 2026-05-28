@@ -16,7 +16,7 @@ quality_score: 90
 review:
   strengths:
   - 'Semantic color exception correctly applied: LOSS_RED (#B71D27) for drawdown,
-    RECOVERY_GREEN (#009E73) for recovery markers — both from the anyplot palette'
+    RECOVERY_GREEN (#009E73) for recovery markers — both from the Imprint palette'
   - 'All five required spec features present: drawdown calculation, semi-transparent
     fill, max drawdown marker+annotation, recovery point markers, and statistics callout
     box'
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used (colorblind-safe). Red/green distinction reinforced
+        comment: Imprint palette used (colorblind-safe). Red/green distinction reinforced
           by shape (line/fill vs triangles vs diamond marker), not hue alone.
       - id: VQ-05
         name: Layout & Canvas

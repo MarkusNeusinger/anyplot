@@ -111,16 +111,16 @@ Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palet
 
 ```python
 # Imprint palette — 8 hues, use positions 1→N in canonical order
-ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 # Semantic anchors — outside the categorical pool, reached intentionally
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution
 
 # Single-series: always position 1 (brand green)
-color = ANYPLOT_PALETTE[0]  # '#009E73'
+color = IMPRINT_PALETTE[0]  # '#009E73'
 
 # Multi-series: take the first N colors in order, don't cherry-pick
-ax.set_prop_cycle(color=ANYPLOT_PALETTE[:N])
+ax.set_prop_cycle(color=IMPRINT_PALETTE[:N])
 
 # Continuous data — only the two Imprint palette-derived cmaps are allowed
 # (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):

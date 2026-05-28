@@ -22,7 +22,7 @@ review:
   - Raincloud metaphor unambiguous in both renders — cloud rises above each category
     baseline, outlined box sits exactly on the baseline, jittered rain falls below
     the baseline, exactly as the spec mandates
-  - 'Anyplot palette applied correctly (Control = #009E73 first, then C475FD / 4467A3);
+  - 'Imprint palette applied correctly (Control = #009E73 first, then C475FD / 4467A3);
     data colors identical light↔dark, only chrome flips between themes'
   - Theme tokens threaded through to annotation bbox, marker edgecolor, box-plot stroke,
     grid, tick labels — no dark-on-dark or light-on-light anywhere; both renders pass
@@ -86,7 +86,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; sufficient contrast in both themes
+        comment: Imprint palette is CVD-safe; sufficient contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4

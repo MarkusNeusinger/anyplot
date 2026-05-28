@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette
+# Imprint palette
 LAND_COLOR = "#009E73"  # position 1 — brand green (land masses)
 GRATICULE_COLOR = "#C475FD"  # position 2 — purple (lat/lon grid)
 

@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — salary distributions across five departments
 np.random.seed(42)
@@ -65,7 +65,7 @@ boxplot = (
             scale=alt.Scale(domain=[22000, 142000]),
             axis=alt.Axis(format="$,.0f", tickCount=7, titlePadding=10),
         ),
-        color=alt.Color("Department:N", scale=alt.Scale(domain=departments, range=ANYPLOT_PALETTE), legend=None),
+        color=alt.Color("Department:N", scale=alt.Scale(domain=departments, range=IMPRINT_PALETTE), legend=None),
         tooltip=[
             alt.Tooltip("Department:N"),
             alt.Tooltip("median(Salary):Q", title="Median", format="$,.0f"),

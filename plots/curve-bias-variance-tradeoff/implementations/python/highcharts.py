@@ -28,8 +28,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# anyplot palette — first series always #009E73
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint palette — first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — theoretical bias-variance tradeoff curves
 complexity = np.linspace(0.5, 10, 100)
@@ -85,7 +85,7 @@ chart.options.x_axis = {
             "color": "rgba(0,158,115,0.10)",
             "label": {
                 "text": "Underfitting Zone",
-                "style": {"fontSize": "48px", "color": ANYPLOT_PALETTE[0], "fontWeight": "bold"},
+                "style": {"fontSize": "48px", "color": IMPRINT_PALETTE[0], "fontWeight": "bold"},
                 "verticalAlign": "bottom",
                 "align": "center",
                 "y": -55,
@@ -97,7 +97,7 @@ chart.options.x_axis = {
             "color": "rgba(196,117,253,0.10)",
             "label": {
                 "text": "Overfitting Zone",
-                "style": {"fontSize": "48px", "color": ANYPLOT_PALETTE[1], "fontWeight": "bold"},
+                "style": {"fontSize": "48px", "color": IMPRINT_PALETTE[1], "fontWeight": "bold"},
                 "verticalAlign": "bottom",
                 "align": "center",
                 "y": -55,
@@ -168,7 +168,7 @@ def _label_style(color):
     return {"fontSize": "40px", "color": color, "fontWeight": "bold", "textOutline": "none"}
 
 
-# Series — anyplot palette positions 1-4 in order
+# Series — Imprint palette positions 1-4 in order
 # Bias² — last point carries the direct curve annotation
 bias_data = [[float(x), float(y)] for x, y in zip(complexity, bias_squared, strict=True)]
 bias_data[-1] = {
@@ -182,13 +182,13 @@ bias_data[-1] = {
         "y": -5,
         "crop": False,
         "overflow": "none",
-        "style": _label_style(ANYPLOT_PALETTE[0]),
+        "style": _label_style(IMPRINT_PALETTE[0]),
     },
 }
 bias_series = SplineSeries()
 bias_series.name = "Bias²"
 bias_series.data = bias_data
-bias_series.color = ANYPLOT_PALETTE[0]
+bias_series.color = IMPRINT_PALETTE[0]
 chart.add_series(bias_series)
 
 # Variance
@@ -203,13 +203,13 @@ variance_data[-1] = {
         "x": 12,
         "crop": False,
         "overflow": "none",
-        "style": _label_style(ANYPLOT_PALETTE[1]),
+        "style": _label_style(IMPRINT_PALETTE[1]),
     },
 }
 variance_series = SplineSeries()
 variance_series.name = "Variance"
 variance_series.data = variance_data
-variance_series.color = ANYPLOT_PALETTE[1]
+variance_series.color = IMPRINT_PALETTE[1]
 chart.add_series(variance_series)
 
 # Irreducible Error — shift label down to avoid overlap with Bias²
@@ -225,13 +225,13 @@ irr_data[-1] = {
         "y": 30,
         "crop": False,
         "overflow": "none",
-        "style": _label_style(ANYPLOT_PALETTE[2]),
+        "style": _label_style(IMPRINT_PALETTE[2]),
     },
 }
 irreducible_series = SplineSeries()
 irreducible_series.name = "Irreducible Error"
 irreducible_series.data = irr_data
-irreducible_series.color = ANYPLOT_PALETTE[2]
+irreducible_series.color = IMPRINT_PALETTE[2]
 irreducible_series.dash_style = "Dot"
 chart.add_series(irreducible_series)
 
@@ -249,20 +249,20 @@ total_data[_total_label_idx] = {
         "y": -10,
         "crop": False,
         "overflow": "none",
-        "style": _label_style(ANYPLOT_PALETTE[3]),
+        "style": _label_style(IMPRINT_PALETTE[3]),
     },
 }
 total_series = SplineSeries()
 total_series.name = "Total Error"
 total_series.data = total_data
-total_series.color = ANYPLOT_PALETTE[3]
+total_series.color = IMPRINT_PALETTE[3]
 total_series.line_width = 8
 chart.add_series(total_series)
 
 optimal_series = ScatterSeries()
 optimal_series.name = "Optimal Point"
 optimal_series.data = [[optimal_complexity, optimal_error]]
-optimal_series.color = ANYPLOT_PALETTE[3]
+optimal_series.color = IMPRINT_PALETTE[3]
 optimal_series.marker = {"radius": 18, "symbol": "diamond", "lineWidth": 3, "lineColor": PAGE_BG}
 chart.add_series(optimal_series)
 

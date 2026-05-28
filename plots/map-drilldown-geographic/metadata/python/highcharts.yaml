@@ -19,7 +19,7 @@ review:
     native Highcharts drilldown API
   - Cross-type drilldown (map choropleth → bar chart) is a sophisticated, library-distinctive
     technique
-  - Anyplot palette applied correctly in canonical order with brand green (#009E73)
+  - Imprint palette applied correctly in canonical order with brand green (#009E73)
     as first series (West)
   - 'Both light and dark themes correctly implemented: backgrounds, text, legend box,
     and data colors all theme-adaptive'
@@ -39,7 +39,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct theme surface
       Chrome: Title "map-drilldown-geographic · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17), fills ~65–70% canvas width. Subtitle "US Regional Sales ($M) — Click a region to drill into states, then cities" in secondary ink (#4A4A44). Categorical legend at bottom with region labels in secondary ink — all readable.
-      Data: Four US regions colored with anyplot palette positions 1–4: West=#009E73 (green), South=#9418DB (purple), Midwest=#B71D27 (red), Northeast=#16B8F3 (sky blue). State borders render in page background color for clean separation. Alaska and Hawaii shown in insets.
+      Data: Four US regions colored with Imprint palette positions 1–4: West=#009E73 (green), South=#9418DB (purple), Midwest=#B71D27 (red), Northeast=#16B8F3 (sky blue). State borders render in page background color for clean separation. Alaska and Hawaii shown in insets.
       Legibility verdict: PASS — all text elements readable against the light background, no light-on-light failures
 
     Dark render (plot-dark.png):
@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette positions 1-4 used. All four colors distinguishable
+        comment: Imprint palette positions 1-4 used. All four colors distinguishable
           under major CVD simulations. No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
@@ -111,7 +111,7 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured implementation with correct anyplot palette, warm
+        comment: Well-configured implementation with correct Imprint palette, warm
           backgrounds, subtle state borders matching page background, styled legend.
           Polished library default look; no distinctive design innovation.
       - id: DE-02

@@ -17,7 +17,7 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 # Raise alpha in dark theme — alpha=0.35 over #1A1A17 composites to near-opaque forest green
 FILL_ALPHA  <- if (THEME == "light") 0.40 else 0.50
 
-ANYPLOT_PALETTE <- c(
+IMPRINT_PALETTE <- c(
   "#009E73", "#C475FD", "#4467A3", "#BD8233",
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
 )
@@ -49,8 +49,8 @@ p <- ggplot(df, aes(x = date, y = visitors)) +
     linetype   = "dashed",
     alpha      = 0.7
   ) +
-  geom_area(fill = ANYPLOT_PALETTE[1], alpha = FILL_ALPHA) +
-  geom_line(color = ANYPLOT_PALETTE[1], linewidth = 0.9) +
+  geom_area(fill = IMPRINT_PALETTE[1], alpha = FILL_ALPHA) +
+  geom_line(color = IMPRINT_PALETTE[1], linewidth = 0.9) +
   # Loess trend line — makes the underlying upward growth arc explicit
   geom_smooth(
     method    = "loess",

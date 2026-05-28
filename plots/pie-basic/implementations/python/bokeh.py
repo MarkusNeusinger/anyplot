@@ -26,13 +26,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Cloud infrastructure market share (2024)
 categories = ["AWS", "Azure", "Google Cloud", "Alibaba", "Others"]
 values = [33, 23, 11, 4, 29]
-# First 4 use canonical anyplot palette order; "Others" uses semantic muted anchor
-colors = [ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2], ANYPLOT_PALETTE[3], INK_MUTED]
+# First 4 use canonical Imprint palette order; "Others" uses semantic muted anchor
+colors = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], IMPRINT_PALETTE[2], IMPRINT_PALETTE[3], INK_MUTED]
 
 # Compute angles and percentages
 total = sum(values)

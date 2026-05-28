@@ -18,7 +18,7 @@ review:
   - 'Perfectly compliant Campbell diagram with all required spec elements: 4 natural
     frequency curves, 3 engine order lines, 6 critical speed intersection markers,
     and inline EO labels.'
-  - 'Excellent semantic color use: mode curves use anyplot palette in canonical order
+  - 'Excellent semantic color use: mode curves use Imprint palette in canonical order
     (#009E73 first), engine order lines correctly muted with INK_MUTED as reference
     lines, critical speeds in semantic red (#AE3030/danger anchor).'
   - Both themes render correctly with full theme-adaptive chrome — warm off-white
@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; critical speeds use distinct diamond shape
+        comment: CVD-safe Imprint palette; critical speeds use distinct diamond shape
           in addition to red color
       - id: VQ-05
         name: Layout & Canvas

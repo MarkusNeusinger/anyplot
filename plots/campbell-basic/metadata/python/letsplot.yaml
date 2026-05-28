@@ -43,7 +43,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface.
       Chrome: Bold centered title "campbell-basic · python · letsplot · anyplot.ai" in dark #1A1A17 ink, clearly readable. Subtitle in muted gray below. Y-axis label "Frequency (Hz)" and X-axis label "Rotational Speed (RPM)" both dark and readable. Tick labels (0–6,000 RPM / 0–120 Hz) in INK_SOFT, readable. Caption at bottom in italic muted gray. Legend on right with two sections ("Engine Order", "Natural Frequency") clearly legible.
-      Data: Five mode curves in anyplot palette — 1st Bending (#009E73 brand green), 1st Torsional (#C475FD lavender), 2nd Bending (#4467A3 blue), 2nd Torsional (#BD8233 ochre), Axial (#2ABCCD cyan). Three EO lines in muted gray with dashed/longdash/dotdash styles. Red diamonds (#AE3030) mark critical speeds. Very faint reddish resonance risk zones surround each critical point. Small italic red annotation near ~1950 RPM/95 Hz. EO labels "1×", "2×", "3×" near origin.
+      Data: Five mode curves in Imprint palette — 1st Bending (#009E73 brand green), 1st Torsional (#C475FD lavender), 2nd Bending (#4467A3 blue), 2nd Torsional (#BD8233 ochre), Axial (#2ABCCD cyan). Three EO lines in muted gray with dashed/longdash/dotdash styles. Red diamonds (#AE3030) mark critical speeds. Very faint reddish resonance risk zones surround each critical point. Small italic red annotation near ~1950 RPM/95 Hz. EO labels "1×", "2×", "3×" near origin.
       Legibility verdict: PASS — all text readable; annotation and EO origin labels are small but legible.
 
     Dark render (plot-dark.png):
@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; redundant encoding via linestyles for EO
+        comment: CVD-safe Imprint palette; redundant encoding via linestyles for EO
           lines and diamond shape for critical speeds
       - id: VQ-05
         name: Layout & Canvas

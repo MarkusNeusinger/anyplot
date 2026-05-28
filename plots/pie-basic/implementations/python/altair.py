@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — cloud infrastructure market share
 data = pd.DataFrame(
@@ -39,7 +39,7 @@ data["label"] = data["percentage"].apply(lambda x: f"{x:.0f}%")
 data["order"] = range(len(data))
 
 domain = data["category"].tolist()
-color_scale = alt.Scale(domain=domain, range=ANYPLOT_PALETTE)
+color_scale = alt.Scale(domain=domain, range=IMPRINT_PALETTE)
 
 title_str = "pie-basic · python · altair · anyplot.ai"
 
