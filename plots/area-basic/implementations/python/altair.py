@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -39,9 +39,18 @@ visitors[14] *= 1.4
 visitors = np.maximum(visitors, 1000).astype(int)
 df = pd.DataFrame({"date": dates, "visitors": visitors})
 
-# Chart
+# Peak annotation data
+peak_idx = df["visitors"].idxmax()
+peak_row = df.loc[peak_idx]
+peak_df = pd.DataFrame(
+    {"date": [peak_row["date"]], "visitors": [peak_row["visitors"]], "label": [f"Peak: {int(peak_row['visitors']):,}"]}
+)
+
+# Chart title
 title = "area-basic · python · altair · anyplot.ai"
-chart = (
+
+# Area layer
+area = (
     alt.Chart(df)
     .mark_area(
         line={"color": BRAND, "strokeWidth": 2.5},
@@ -49,7 +58,7 @@ chart = (
             gradient="linear",
             stops=[
                 alt.GradientStop(color="rgba(0, 158, 115, 0.05)", offset=0),
-                alt.GradientStop(color="rgba(0, 158, 115, 0.45)", offset=1),
+                alt.GradientStop(color="rgba(0, 158, 115, 0.60)", offset=1),
             ],
             x1=1,
             x2=1,
@@ -67,6 +76,22 @@ chart = (
             alt.Tooltip("visitors:Q", title="Visitors", format=","),
         ],
     )
+)
+
+# Vertical rule at peak
+peak_rule = (
+    alt.Chart(peak_df).mark_rule(color=BRAND, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.5).encode(x=alt.X("date:T"))
+)
+
+# Text label at peak
+peak_text = (
+    alt.Chart(peak_df)
+    .mark_text(align="left", dx=8, dy=-10, color=INK, fontSize=9, fontWeight="bold")
+    .encode(x=alt.X("date:T"), y=alt.Y("visitors:Q"), text="label:N")
+)
+
+chart = (
+    alt.layer(area, peak_rule, peak_text)
     .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title, fontSize=16))
     .configure_view(continuousWidth=620, continuousHeight=320, fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
@@ -79,6 +104,7 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
+    .configure_axisX(grid=False)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
