@@ -1,22 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-21
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-28
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    element_blank,
+    element_rect,
     element_text,
     geom_curve,
     geom_point,
     geom_polygon,
+    geom_text,
+    geom_text_repel,
     ggplot,
     ggsave,
     ggsize,
+    guide_legend,
     labs,
     scale_color_gradient,
     scale_size,
@@ -29,10 +34,18 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+LAND_FILL = "#E8E4DF" if THEME == "light" else "#2D2D29"
+LAND_BORDER = "#C5C0BA" if THEME == "light" else "#404040"
+
 # Data: Major flight routes between world cities
 np.random.seed(42)
 
-# Define major airports (lon, lat, name)
 airports = {
     "JFK": (-73.78, 40.64, "New York"),
     "LAX": (-118.41, 33.94, "Los Angeles"),
@@ -46,7 +59,6 @@ airports = {
     "JNB": (28.24, -26.14, "Johannesburg"),
 }
 
-# Define flight routes with passenger volume (millions)
 routes = [
     ("JFK", "LHR", 4.2),
     ("JFK", "CDG", 2.8),
@@ -66,30 +78,26 @@ routes = [
     ("JNB", "DXB", 1.2),
 ]
 
-# Build dataframe for routes
 route_data = []
 for origin, dest, passengers in routes:
-    o_lon, o_lat, o_name = airports[origin]
-    d_lon, d_lat, d_name = airports[dest]
+    o_lon, o_lat, _ = airports[origin]
+    d_lon, d_lat, _ = airports[dest]
     route_data.append(
-        {
-            "origin_name": o_name,
-            "dest_name": d_name,
-            "origin_lon": o_lon,
-            "origin_lat": o_lat,
-            "dest_lon": d_lon,
-            "dest_lat": d_lat,
-            "passengers": passengers,
-        }
+        {"origin_lon": o_lon, "origin_lat": o_lat, "dest_lon": d_lon, "dest_lat": d_lat, "passengers": passengers}
     )
-
 df_routes = pd.DataFrame(route_data)
 
-# Build dataframe for airport points
-airport_data = [{"name": name, "lon": lon, "lat": lat} for code, (lon, lat, name) in airports.items()]
+airport_data = [{"name": name, "lon": lon, "lat": lat} for _, (lon, lat, name) in airports.items()]
 df_airports = pd.DataFrame(airport_data)
 
-# Simple world boundary polygon (simplified coastline approximation)
+# Annotation: highlight busiest route JFK-LHR (4.2M passengers)
+jfk_lon, jfk_lat, _ = airports["JFK"]
+lhr_lon, lhr_lat, _ = airports["LHR"]
+df_callout = pd.DataFrame(
+    [{"x": (jfk_lon + lhr_lon) / 2, "y": (jfk_lat + lhr_lat) / 2 + 13, "label": "Busiest route\nJFK–LHR · 4.2M pax"}]
+)
+
+# Simplified world coastline polygons
 world_coords = [
     # North America
     (-170, 70),
@@ -161,7 +169,6 @@ world_coords = [
     (115, -20),
 ]
 
-# Split into separate polygons
 polygons = []
 current_poly = []
 for lon, lat in world_coords:
@@ -174,19 +181,22 @@ for lon, lat in world_coords:
 if current_poly:
     polygons.append(current_poly)
 
-# Create world polygon dataframe
 world_data = []
 for i, poly in enumerate(polygons):
     for lon, lat in poly:
         world_data.append({"x": lon, "y": lat, "group": i})
 df_world = pd.DataFrame(world_data)
 
-# Create the plot
+# Title font size scaled to length
+title = "Global Flight Routes · map-connection-lines · python · letsplot · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(11, round(16 * ratio))
+
+# Plot
 plot = (
     ggplot()
-    # World background
-    + geom_polygon(data=df_world, mapping=aes(x="x", y="y", group="group"), fill="#E8E8E8", color="#CCCCCC", size=0.3)
-    # Connection lines (curved arcs) with color and size mapped to passengers
+    + geom_polygon(data=df_world, mapping=aes(x="x", y="y", group="group"), fill=LAND_FILL, color=LAND_BORDER, size=0.3)
     + geom_curve(
         data=df_routes,
         mapping=aes(
@@ -195,30 +205,38 @@ plot = (
         curvature=-0.3,
         alpha=0.5,
     )
-    # Airport origin/destination points
     + geom_point(
-        data=df_airports, mapping=aes(x="lon", y="lat"), size=6, color="#306998", fill="#FFD43B", shape=21, stroke=2
+        data=df_airports, mapping=aes(x="lon", y="lat"), size=6, color=PAGE_BG, fill="#009E73", shape=21, stroke=2
     )
-    # Scales
-    + scale_size(range=[0.8, 4], name="Passengers\n(millions)")
-    + scale_color_gradient(low="#FFD43B", high="#DC2626", name="Passengers\n(millions)")
-    # Labels
-    + labs(title="Global Flight Routes · map-connection-lines · letsplot · pyplots.ai")
-    # Theme
+    + geom_text_repel(
+        data=df_airports,
+        mapping=aes(x="lon", y="lat", label="name"),
+        size=3,
+        color=INK,
+        seed=42,
+        point_padding=5,
+        box_padding=3,
+        max_overlaps=20,
+    )
+    + geom_text(
+        data=df_callout, mapping=aes(x="x", y="y", label="label"), size=3.5, color=INK, hjust=0.5, fontface="bold"
+    )
+    + scale_size(range=[0.5, 6], name="Passengers (millions)", guide=guide_legend())
+    + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers (millions)", guide=guide_legend())
+    + labs(title=title)
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=title_fontsize, hjust=0.5, color=INK),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
-        plot_background=element_blank(),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
-    # Size and limits
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
     + xlim(-180, 180)
     + ylim(-60, 85)
 )
 
-# Save outputs
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
