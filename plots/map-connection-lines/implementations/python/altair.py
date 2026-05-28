@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-28
@@ -6,6 +6,7 @@ Quality: 88/100 | Created: 2026-05-28
 
 import os
 import sys
+from collections import Counter
 
 
 # Prevent self-import: this file is named altair.py, so we must remove its
@@ -75,6 +76,12 @@ routes_raw = [
     ("HKG", "SIN", 2500),
 ]
 
+# Hub connectivity: count routes per airport
+connectivity = Counter()
+for origin, dest, _ in routes_raw:
+    connectivity[origin] += 1
+    connectivity[dest] += 1
+
 # Generate great circle arc points via spherical linear interpolation (SLERP)
 n_arc_points = 40
 arc_records = []
@@ -125,10 +132,16 @@ for origin_code, dest_code, volume in routes_raw:
 
 arcs_df = pd.DataFrame(arc_records)
 
-# Airport markers dataframe
+# Airport markers dataframe with connectivity for size scaling
 airports_df = pd.DataFrame(
     [
-        {"code": code, "city": info["city"], "latitude": info["lat"], "longitude": info["lon"]}
+        {
+            "code": code,
+            "city": info["city"],
+            "latitude": info["lat"],
+            "longitude": info["lon"],
+            "connections": connectivity[code],
+        }
         for code, info in airports.items()
     ]
 )
@@ -145,7 +158,7 @@ base_map = alt.Chart(alt.topo_feature(world_url, "countries")).mark_geoshape(
     fill=MAP_LAND, stroke=INK_SOFT, strokeWidth=0.3
 )
 
-# Arc connection lines (colored + weighted by passenger volume)
+# Arc connection lines — wider strokeWidth range makes volume differences impactful
 arcs_layer = (
     alt.Chart(arcs_df)
     .mark_line(opacity=0.5)
@@ -157,27 +170,47 @@ arcs_layer = (
         color=alt.Color(
             "volume:Q",
             scale=alt.Scale(range=["#009E73", "#4467A3"]),
-            legend=alt.Legend(title="Passengers (k/yr)", titleColor=INK, labelColor=INK_SOFT),
+            legend=alt.Legend(
+                title="Passengers (k/yr)",
+                titleColor=INK,
+                labelColor=INK_SOFT,
+                symbolType="stroke",
+                symbolSize=400,
+                symbolStrokeWidth=2,
+            ),
         ),
-        strokeWidth=alt.StrokeWidth("volume:Q", scale=alt.Scale(range=[0.4, 1.2]), legend=None),
+        strokeWidth=alt.StrokeWidth("volume:Q", scale=alt.Scale(range=[0.3, 2.5]), legend=None),
         tooltip=[alt.Tooltip("route:N", title="Route"), alt.Tooltip("volume:Q", title="Passengers (k/yr)")],
     )
 )
 
-# Airport endpoint markers
+# Airport endpoint markers scaled by hub connectivity degree
 markers_layer = (
     alt.Chart(airports_df)
-    .mark_circle(color=BRAND, size=80, opacity=0.95, stroke=INK, strokeWidth=0.8)
+    .mark_circle(color=BRAND, opacity=0.95, stroke=INK, strokeWidth=0.8)
     .encode(
         longitude="longitude:Q",
         latitude="latitude:Q",
-        tooltip=[alt.Tooltip("city:N", title="City"), alt.Tooltip("code:N", title="Code")],
+        size=alt.Size("connections:Q", scale=alt.Scale(range=[50, 280]), legend=None),
+        tooltip=[
+            alt.Tooltip("city:N", title="City"),
+            alt.Tooltip("code:N", title="Code"),
+            alt.Tooltip("connections:Q", title="Routes"),
+        ],
     )
+)
+
+# Direct labels for top 3 hubs (LHR=8, NRT=7, DXB=6 connections)
+hub_df = airports_df[airports_df["connections"] >= 6]
+labels_layer = (
+    alt.Chart(hub_df)
+    .mark_text(dy=-15, fontSize=9, color=INK, fontWeight="bold", align="center")
+    .encode(longitude="longitude:Q", latitude="latitude:Q", text="code:N")
 )
 
 # Combine all layers with Natural Earth projection
 chart = (
-    alt.layer(base_map, arcs_layer, markers_layer)
+    alt.layer(base_map, arcs_layer, markers_layer, labels_layer)
     .project(type="naturalEarth1")
     .properties(
         width=620,
