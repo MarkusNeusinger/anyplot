@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:35:59Z'
-updated: '2026-05-28T13:34:51Z'
+updated: '2026-05-28T13:45:40Z'
 generated_by: claude-sonnet
 workflow_run: 26577205115
 issue: 689
@@ -15,88 +15,91 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic
 quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: all four required box-plot elements (IQR box, median
-    line, 1.5xIQR whiskers, outlier points) implemented via Altair native mark_boxplot()'
-  - 'Both themes fully theme-adaptive: PAGE_BG, INK, INK_SOFT tokens threaded into
-    every configure_* call; data colors correctly theme-invariant'
-  - Tooltip with Vega aggregation functions (median(), q1(), q3()) is idiomatic Altair
-    and adds genuine interactive value
-  - Clean flat code structure with correct canvas padding logic (pad-only, never crop)
+  - Full spec compliance — median line, outliers, whiskers, per-category colors all
+    present and correct
+  - 'Exemplary palette compliance — Engineering first as #009E73, canonical order
+    for all 5 categories, correct theme backgrounds #FAF8F1/#1A1A17'
+  - Both themes fully legible with complete dark-mode adaptation — no dark-on-dark
+    failures
+  - Clean reproducible code with np.random.seed(42), KISS flat script, proper Altair
+    layer composition
+  - Professional salary dataset with realistic distributions creates immediate real-world
+    relatability
   weaknesses:
-  - Full 4-sided view border from configure_view(stroke=INK_SOFT) instead of L-shaped
-    frame — set configure_view(stroke=None) and rely on axis domain lines for left/bottom
-    frame
-  - 'No data storytelling or visual hierarchy: Engineering highest median and HR narrowest/lowest
-    distribution are key insights but nothing draws viewer attention (DE-03 = 2/6)'
-  - ANYPLOT_PALETTE defined with only 5 entries instead of canonical 8 — expand to
-    full palette
-  - 'DE-01 could reach 6/8 with one more deliberate design touch: annotation on highest-salary
-    department median or subtle opacity variation between boxes'
+  - Annotation text at fontSize=10 (40 source-px at 4x scale) is barely readable at
+    full canvas resolution — increase to 12px and add dy offset to position it clearly
+    above the Engineering whisker top
+  - Top and right axis domain lines visible (domainColor=INK_SOFT applying to all
+    axes) — scope to bottom/left only for a clean L-frame
+  - 'Annotation color #009E73 hardcoded rather than using a theme-adaptive ink token
+    — while readable on both surfaces, INK token would align the annotation with the
+    structural chrome layer'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "box-basic · python · altair · anyplot.ai" bold top-left in dark ink, clearly readable. Y-axis "Salary (USD)" and X-axis "Department" labels dark and readable. Dollar-formatted Y-axis ticks ($40,000-$140,000) all visible and readable.
-      Data: Five boxes in anyplot palette order — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), HR (#BD8233 ochre), Finance (#AE3030 red). White median lines (strokeWidth=3) clearly visible. Hollow outlier circles at opacity=0.75 visible. Whiskers in dark ink.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "box-basic · python · altair · anyplot.ai" is bold, dark ink, left-aligned, ~40-45% canvas width — readable. X-axis label "Department" and Y-axis label "Salary (USD)" both dark ink, clearly readable. Tick labels in dollar format ($40,000–$140,000) are readable. Subtle grid lines at 15% opacity.
+      Data: Engineering=#009E73 (green), Marketing=#C475FD (lavender), Sales=#4467A3 (blue), HR=#BD8233 (ochre), Finance=#AE3030 (matte red) — canonical anyplot palette order. White median lines clearly visible in all 5 boxes. Outliers as open circles: Marketing (3), Sales (1 high ~$138k), Engineering (1 low ~$57k), HR (1 low ~$35k). A small green annotation "highest median $..." appears near the top of the Engineering column at y≈138,000 — present but very small at fontSize=10.
+      Legibility verdict: PASS — all primary text (title, axis labels, tick labels) clearly readable; annotation small but not a primary element.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels all render in near-white/light text — clearly readable against dark background. No dark-on-dark failures observed. Axis domain lines and whiskers use dark ink adapted for dark surface.
-      Data: All five box colors identical to light render — anyplot palette correctly theme-invariant. White median lines pop well on dark background. Outlier circles clearly visible.
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark text failures. Grid lines are subtle off-white strokes.
+      Data: Colors are identical to the light render — Engineering green, Marketing lavender, Sales blue, HR ochre, Finance red. White median lines remain visible. The brand green annotation at y=138,000 is readable on dark background as #009E73 reads well on near-black surface.
+      Legibility verdict: PASS — complete theme adaptation, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis=12, tick=10); proportions
-          balanced; readable in both themes
+        comment: Title, axis labels, tick labels all well-sized and readable in both
+          themes. Annotation at fontSize=10 barely discernible — minor deduction.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; Marketing outlier cluster tight but not overlapping
+        comment: Boxes well-spaced, no text overlaps with data or other text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: box size=90 well-proportioned; outlier circles at opacity=0.75 clearly
-          visible; whiskers distinct
+        comment: Boxes at size=90 prominent; outliers at size=100 clearly visible;
+          white median lines stand out inside each box.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; no red-green as sole signal
+        comment: anyplot CVD-safe palette used correctly; no red-green sole-signal
+          issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); chart fills ~65% of canvas; balanced
-          margins
+        comment: Canvas is 3200x1800; no clipping; proportions well-balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Department and Salary (USD) with units; dollar-formatted Y-axis ticks
+        comment: Department and Salary (USD) with proper dollar formatting; title
+          in required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Engineering = #009E73; positions 1-5 canonical order;
-          backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive'
+        comment: 'First series Engineering #009E73; 5 series in canonical palette
+          order; backgrounds #FAF8F1/#1A1A17; chrome flips correctly.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -104,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: white median lines, explicit outlier opacity,
-          dollar-formatted ticks show domain awareness'
+        comment: Professional polish with custom anyplot palette, white median stroke
+          for contrast, data annotation adding focal interest. Above baseline.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Grid subtlety good (gridOpacity=0.15) but full 4-sided border instead
-          of L-shaped frame
+        passed: true
+        comment: Subtle grid at 15% opacity, view stroke removed, soft axis domain/tick
+          colors. Could further scope domain lines to L-frame only.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed correctly but no visual hierarchy or emphasis; no
-          focal point guiding viewer
+        passed: true
+        comment: Salary comparison across departments creates clear narrative. Annotation
+          adds context but too small to be effective focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: mark_boxplot() is correct Altair primitive; all sub-elements rendered
+        comment: Correct box-and-whisker chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, IQR box, 1.5xIQR whiskers, outliers as individual points
-          — all present
+        comment: Median line (white stroke), outliers as individual points, whiskers
+          at 1.5xIQR, different colors per category.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Department on X (N), Salary on Y (Q), sort=departments preserves
-          intended order
+        comment: 'X: Department (categorical), Y: Salary (quantitative), Color: Department.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly correct; legend=None appropriate since X-axis labels
-          serve as legend
+        comment: Title matches required format. Legend omitted appropriately — category
+          labels on x-axis serve as legend.
     data_quality:
       score: 15
       max: 15
@@ -160,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five departments with different means, spreads, and outlier patterns;
-          varied distributions
+        comment: 'Full box plot anatomy: boxes, whiskers, outliers, median lines,
+          multi-category comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distribution by department is canonical neutral business use
-          case
+        comment: Salary distributions across Engineering, Marketing, Sales, HR, Finance
+          — realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary ranges ($25k floor, Engineering ~$95k mean) factually plausible;
-          clipping prevents unrealistic values
+        comment: US salary range $25k-$120k realistic; y-domain [22k, 142k] provides
+          breathing room.
     code_quality:
       score: 10
       max: 10
@@ -185,33 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> chart -> save; no functions or classes
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, altair, numpy, pandas, PIL.Image) are used
+        comment: os, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Altair method chain clean and readable; canvas padding logic correct
-          and appropriately inlined
+        comment: Dict-parameterized data generation is clean; layer composition is
+          clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct vl-convert
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pads to exact 3200x1800
+          target.
     library_mastery:
       score: 7
       max: 10
@@ -221,24 +223,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Strong declarative encoding with proper shorthand types; configure_*
-          chain correctly applied; alt.Scale, alt.Axis, alt.Title all used appropriately
+        comment: mark_boxplot() with proper encoding types; configure_* chain; alt.Title
+          with offset; alt.Axis with format and padding. Clean declarative grammar.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Tooltip using Vega aggregation transforms (median(Salary):Q, q1(Salary):Q,
-          q3(Salary):Q) is genuinely Altair-distinctive; HTML export leverages interactive
-          runtime
-  verdict: REJECTED
+        comment: Layer composition (alt.layer), mark_boxplot outlier/median customization,
+          tooltips with aggregation functions (median(Salary):Q) showcase Vega-Lite
+          transform-in-encoding.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
+  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
