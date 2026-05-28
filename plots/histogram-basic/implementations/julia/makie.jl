@@ -32,7 +32,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = "histogram-basic · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 22,
     titlecolor        = INK,
     xlabel            = "Customer Age",
     ylabel            = "Count",
@@ -64,7 +64,16 @@ hist!(ax, ages;
     strokewidth = 1.5,
 )
 
-ylims!(ax, 0, nothing)
+# Bimodal valley reference line separating the two customer segments
+vlines!(ax, [42.0]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
+
+# Segment annotations above each distribution peak
+text!(ax, 27.0, 37.0; text = "Young Adult\nSegment", color = INK,
+    fontsize = 12, align = (:center, :bottom))
+text!(ax, 55.0, 19.0; text = "Mid-Career\nSegment", color = INK,
+    fontsize = 12, align = (:center, :bottom))
+
+ylims!(ax, 0, 52)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
