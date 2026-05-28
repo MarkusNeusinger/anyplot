@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-28
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-28
 """
 
 import os
