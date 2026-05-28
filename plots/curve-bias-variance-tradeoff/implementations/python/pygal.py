@@ -1,115 +1,104 @@
-""" pyplots.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: pygal 3.1.0 | Python 3.13.11
-Quality: 88/100 | Created: 2026-01-26
+Quality: 88/100 | Updated: 2026-05-28
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Data: Generate theoretical bias-variance tradeoff curves
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data
 np.random.seed(42)
 complexity = np.linspace(0.5, 10, 100)
-
-# Bias squared: decreases with complexity (high bias at low complexity)
 bias_squared = 4.0 / (1 + 0.8 * complexity)
-
-# Variance: increases with complexity (high variance at high complexity)
 variance = 0.1 * complexity**1.5
-
-# Irreducible error: constant noise floor
 irreducible_error = np.full_like(complexity, 0.5)
-
-# Total error: sum of all components
 total_error = bias_squared + variance + irreducible_error
 
-# Find optimal complexity point (minimum total error)
-optimal_idx = np.argmin(total_error)
-optimal_complexity = complexity[optimal_idx]
-optimal_error = total_error[optimal_idx]
+optimal_idx = int(np.argmin(total_error))
+optimal_complexity = float(complexity[optimal_idx])
+optimal_error = float(total_error[optimal_idx])
 
-# Custom style for pyplots with distinct colors for each series
-# Colors: Underfitting zone, Overfitting zone, Bias², Variance, Total Error, Irreducible, Optimal Point
+title = "curve-bias-variance-tradeoff · python · pygal · anyplot.ai"
+title_fontsize = 66  # 58 chars < 67 threshold, no scaling needed
+
+# Palette: zones first (behind curves), then data series in canonical anyplot order
+# Zones get positions 1–2; Bias² gets position 3 = #009E73 (first data/categorical series)
+ZONE_LEFT = "#2ABCCD"  # cyan – underfitting zone fill
+ZONE_RIGHT = "#954477"  # rose  – overfitting zone fill
+
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=("#3498DB", "#E67E22", "#E74C3C", "#27AE60", "#9B59B6", "#1ABC9C", "#8B0000"),
-    title_font_size=56,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=30,
-    value_font_size=28,
-    stroke_width=5,
-    value_label_font_size=32,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(ZONE_LEFT, ZONE_RIGHT, "#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"),
+    title_font_size=title_fontsize,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=3,
 )
 
-# Create XY chart for smooth curves
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="curve-bias-variance-tradeoff · pygal · pyplots.ai",
-    x_title="Model Complexity (Low → High)",
-    y_title="Prediction Error  |  Total = Bias² + Variance + Irreducible",
+    title=title,
+    x_title="Model Complexity",
+    y_title="Prediction Error  |  Total = Bias² + Variance + ε",
     show_dots=False,
-    stroke_style={"width": 6},
     show_x_guides=True,
     show_y_guides=True,
     legend_at_bottom=True,
-    legend_box_size=24,
+    legend_box_size=30,
     truncate_legend=-1,
-    range=(0, 4.5),
+    range=(0, 5.0),
     xrange=(0, 11),
-    tooltip_border_radius=10,
     print_values=False,
 )
 
-# Prepare data for XY chart (list of tuples)
+# Zone fills — shaded background regions drawn first so curves appear on top.
+# A flat line at y=5.0 with fill=True creates a filled rectangle from y=0 to y=5.
+underfitting_fill = [(0.0, 5.0)] + [(float(x), 5.0) for x in complexity[: optimal_idx + 1]]
+overfitting_fill = [(float(x), 5.0) for x in complexity[optimal_idx:]] + [(11.0, 5.0)]
+chart.add("← Underfitting Zone", underfitting_fill, fill=True, stroke=False, show_dots=False)
+chart.add("Overfitting Zone →", overfitting_fill, fill=True, stroke=False, show_dots=False)
+
+# Main curves (palette positions 3–6: green, lavender, blue, ochre)
 bias_data = [(float(x), float(y)) for x, y in zip(complexity, bias_squared, strict=True)]
 variance_data = [(float(x), float(y)) for x, y in zip(complexity, variance, strict=True)]
-irreducible_data = [(float(x), float(y)) for x, y in zip(complexity, irreducible_error, strict=True)]
 total_data = [(float(x), float(y)) for x, y in zip(complexity, total_error, strict=True)]
+irreducible_data = [(float(x), float(y)) for x, y in zip(complexity, irreducible_error, strict=True)]
 
-# Add shaded region indicators using thicker, semi-transparent lines at the bottom
-# Underfitting zone indicator (left side - high bias region)
-underfitting_indicator = [(float(x), 0.2) for x in complexity if x <= optimal_complexity]
-chart.add(
-    "Underfitting Zone ← (High Bias)",
-    underfitting_indicator,
-    stroke_style={"width": 50, "opacity": 0.35},
-    show_dots=False,
-)
-
-# Overfitting zone indicator (right side - high variance region)
-overfitting_indicator = [(float(x), 0.2) for x in complexity if x >= optimal_complexity]
-chart.add(
-    "Overfitting Zone → (High Variance)",
-    overfitting_indicator,
-    stroke_style={"width": 50, "opacity": 0.35},
-    show_dots=False,
-)
-
-# Add curves with distinct styles - using descriptive legend labels with arrows
-chart.add("Bias² (decreasing →)", bias_data, stroke_style={"width": 8, "dasharray": "20, 10"}, show_dots=False)
-chart.add("Variance (← increasing)", variance_data, stroke_style={"width": 8, "dasharray": "10, 5"}, show_dots=False)
+chart.add("Bias² (decreasing ↘)", bias_data, stroke_style={"width": 7, "dasharray": "14, 8"}, show_dots=False)
+chart.add("Variance (increasing ↗)", variance_data, stroke_style={"width": 7, "dasharray": "8, 5"}, show_dots=False)
 chart.add("Total Error (U-shaped)", total_data, stroke_style={"width": 9}, show_dots=False)
 chart.add(
-    "Irreducible Error (constant)", irreducible_data, stroke_style={"width": 7, "dasharray": "4, 4"}, show_dots=False
+    "Irreducible Error (constant)", irreducible_data, stroke_style={"width": 6, "dasharray": "4, 6"}, show_dots=False
 )
 
-# Add optimal point marker with detailed tooltip
+# Optimal point marker (palette position 7: #AE3030 semantic red)
 optimal_point = [
     {
-        "value": (float(optimal_complexity), float(optimal_error)),
-        "label": f"Optimal: x={optimal_complexity:.1f}, error={optimal_error:.2f}",
+        "value": (optimal_complexity, optimal_error),
+        "label": f"Optimal: complexity={optimal_complexity:.1f}, error={optimal_error:.2f}",
     }
 ]
-chart.add(f"★ Optimal Point (x={optimal_complexity:.1f})", optimal_point, show_dots=True, dots_size=22, stroke=False)
+chart.add(f"★ Optimal Point (x={optimal_complexity:.1f})", optimal_point, show_dots=True, dots_size=20, stroke=False)
 
-# Save as PNG only
-chart.render_to_png("plot.png")
+# Save PNG and HTML (pygal is interactive)
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
