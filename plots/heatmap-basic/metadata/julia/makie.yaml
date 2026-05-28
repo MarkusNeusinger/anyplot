@@ -1,0 +1,256 @@
+library: makie
+language: julia
+specification_id: heatmap-basic
+created: '2026-05-28T23:10:52Z'
+updated: '2026-05-28T23:33:27Z'
+generated_by: claude-sonnet
+workflow_run: 26607138457
+issue: 691
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct imprint_div diverging colormap with theme-adaptive midpoint — ideal for
+    correlation data
+  - Brand-green cluster highlight on warm-moisture group is genuine data storytelling
+  - All spines removed, subtle cell edge lines, and colgap fine-tuning show real visual
+    refinement
+  - 'Perfect spec compliance: diverging colormap, cell annotations, colorbar, logical
+    variable ordering all present'
+  - 'Thorough theme adaptation: INK/INK_SOFT applied to all chrome elements in both
+    renders'
+  - Realistic, neutral meteorological dataset with plausible inter-variable correlations
+  weaknesses:
+  - Cell annotation text uses fixed color = INK for all cells — on deep-blue/deep-red
+    saturated cells in the light render, dark text on medium-blue background has reduced
+    contrast; consider adapting annotation color based on cell value magnitude (white
+    for |r| > 0.5, dark for near-zero)
+  - Near-zero cells in dark render are visually indistinct from background (midpoint
+    = background by design); slightly increasing cell edge line opacity (0.20 to 0.30)
+    would better delineate the zero-region cells
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "heatmap-basic · julia · makie · anyplot.ai" in dark ink, clearly readable. Subtitle "Climate Variables · 200 Daily Observations" in INK_SOFT. Axis tick labels (variable names: Temp, Dewpoint, Humidity, Precip, Wind, Pressure, Clouds, UV Index) in dark INK_SOFT. Colorbar label "Pearson r" in dark ink. All chrome text is dark on light background — readable.
+      Data: Diverging colormap (matte-red #AE3030 → near-white #FAF8F1 midpoint → blue #4467A3). Strong positive clusters (deep blue) in top-left warm-moisture block. Brand-green (#009E73) border highlights the 4×4 cluster. Cell annotations show Pearson r values in dark INK — contrast is reduced on deep-blue diagonal cells (dark text on medium-blue) but values remain readable.
+      Legibility verdict: PASS — all text readable; minor contrast suboptimality on saturated cells is cosmetic
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and subtitle in near-white (#F0EFE8), clearly readable. Axis tick labels in light INK_SOFT (#B8B7B0), readable. Colorbar label "Pearson r" in light text. No dark-on-dark failures detected.
+      Data: Colors identical to light render — same blue/red diverging colormap endpoints. Brand-green cluster border still visible. Near-zero cells use midpoint = #1A1A17 (matches background by design), making those cells visually merge with background; thin cell edge lines (20% opacity) and white text annotations maintain cell readability.
+      Legibility verdict: PASS — all text readable; near-zero cells have reduced visual presence (intentional diverging midpoint behavior) but annotations and grid lines compensate
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (titlesize=20, subtitlesize=13, tick/annotation=13,
+          colorbar=12/13). Legible in both themes. Minor deduction: annotation color
+          fixed to INK gives suboptimal contrast on saturated blue/red cells in light
+          mode.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Rotated x-axis labels and cell annotations
+          well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Light render: all cells clearly visible. Dark render: near-zero
+          cells blend with background (midpoint = #1A1A17 by design); thin cell edges
+          mitigate but cell boundaries less clear.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-to-blue diverging colormap; CVD-safe pair with sufficient perceptual
+          distance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 appropriate for symmetric heatmap. Colorbar adjacent.
+          Balanced whitespace with colgap fine-tuning.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive variable tick labels, colorbar labeled Pearson r, subtitle
+          provides context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses ANYPLOT_DIV = cgrad([#AE3030, midpoint, #4467A3]) — correct
+          imprint_div. Midpoint is theme-adaptive. Backgrounds #FAF8F1/#1A1A17 correct.
+          All chrome tokens theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: cluster highlight with brand green, subtitle, all
+          spines removed. Not quite at strongly above defaults level but shows design
+          intent.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All four spines removed, no grid replaced by subtle cell edges at
+          0.20 opacity, colgap fine-tuning. Genuinely refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green border around warm-moisture cluster creates focal point. Variables
+          reordered to show natural cluster structure.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap using heatmap!
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap, cell annotations, colorbar, logical ordering
+          — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Climate variable names on both axes, correlation values mapped to
+          color. Full 8x8 matrix.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: heatmap-basic · julia · makie · anyplot.ai. Colorbar labeled
+          Pearson r.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full matrix including diagonal (1.00), strong positive clusters,
+          moderate correlations, and negative correlations. Both extremes represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Climate variables (Temp, Dewpoint, Humidity, Precip, Wind, Pressure,
+          Clouds, UV Index) with 200 daily observations. Realistic, neutral meteorological
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation values in [-1, 1]. Meteorologically plausible inter-variable
+          relationships.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat linear script: imports -> theme tokens -> data -> plot -> save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics (cor), Printf (@sprintf) —
+          all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses heatmap!, vlines!, hlines!, lines!, text!, Colorbar, cgrad,
+          Figure/Axis layout — all idiomatic CairoMakie.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Makie-specific: colgap! for layout fine-tuning, yreversed=true for
+          matrix orientation, Point2f[] for batch text, fig[1,2] colorbar in layout
+          grid.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
