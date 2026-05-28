@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' area-basic: Basic Area Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-05-28
 
 library(ggplot2)
 library(scales)
@@ -14,6 +13,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+# Raise alpha in dark theme — alpha=0.35 over #1A1A17 composites to near-opaque forest green
+FILL_ALPHA  <- if (THEME == "light") 0.40 else 0.50
 
 ANYPLOT_PALETTE <- c(
   "#009E73", "#C475FD", "#4467A3", "#BD8233",
@@ -33,13 +34,32 @@ noise          <- rnorm(91, 0, 0.5)
 visitors_k     <- round(pmax(1, base_visitors + weekly_effect + noise), 1)
 
 df <- data.frame(date = days, visitors = visitors_k)
+avg_visitors   <- mean(df$visitors)
 
 # --- Plot -------------------------------------------------------------------
 plot_title <- "area-basic · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = date, y = visitors)) +
-  geom_area(fill = ANYPLOT_PALETTE[1], alpha = 0.35) +
+  # Period average reference — drawn first so area fill sits above it
+  geom_hline(
+    yintercept = avg_visitors,
+    color      = INK_SOFT,
+    linewidth  = 0.45,
+    linetype   = "dashed",
+    alpha      = 0.7
+  ) +
+  geom_area(fill = ANYPLOT_PALETTE[1], alpha = FILL_ALPHA) +
   geom_line(color = ANYPLOT_PALETTE[1], linewidth = 0.9) +
+  # Loess trend line — makes the underlying upward growth arc explicit
+  geom_smooth(
+    method    = "loess",
+    formula   = y ~ x,
+    se        = FALSE,
+    color     = INK_SOFT,
+    linewidth = 0.8,
+    linetype  = "solid",
+    span      = 0.65
+  ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "2 weeks") +
   scale_y_continuous(
     labels = label_comma(suffix = "K", accuracy = 1),
