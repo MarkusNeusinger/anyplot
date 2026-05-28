@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-15
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-28
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,78 +12,112 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data — World cities: GDP per capita vs life expectancy, bubble = population
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# anyplot palette — canonical order, first series always #009E73
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — Countries: healthcare spending vs child mortality, bubble = population
 np.random.seed(42)
-n_cities = 40
 
-gdp_per_capita = np.linspace(5, 85, n_cities) + np.random.normal(0, 5, n_cities)
-gdp_per_capita = np.clip(gdp_per_capita, 5, 90)
+tier_params = [
+    ("Low Income", 50, 300, 85, 22, 12),
+    ("Lower-Middle Income", 300, 950, 38, 11, 12),
+    ("Upper-Middle Income", 950, 3200, 14, 5, 12),
+    ("High Income", 3200, 8500, 5, 2, 12),
+]
+tier_colors = {t[0]: ANYPLOT_PALETTE[i] for i, t in enumerate(tier_params)}
 
-life_expectancy = 60 + 0.22 * gdp_per_capita + np.random.normal(0, 2.5, n_cities)
-life_expectancy = np.clip(life_expectancy, 58, 84)
+rows = []
+for tier, s_min, s_max, m_ctr, m_std, n in tier_params:
+    spending = np.random.uniform(s_min, s_max, n)
+    mortality = np.clip(np.random.normal(m_ctr, m_std, n), 0.5, 150)
+    population = np.clip(np.random.lognormal(1.8, 1.1, n), 1.0, 200.0)
+    for s, m, pop in zip(spending, mortality, population, strict=False):
+        rows.append(
+            {
+                "Healthcare Spending ($/year)": round(s, 0),
+                "Child Mortality (per 1,000 births)": round(m, 1),
+                "Population (M)": round(pop, 1),
+                "Income Tier": tier,
+            }
+        )
+df = pd.DataFrame(rows)
 
-population_millions = np.random.lognormal(mean=1.0, sigma=1.0, size=n_cities)
-population_millions = np.clip(population_millions, 0.8, 30)
-
-# Assign regions based on GDP tiers for color grouping (4th dimension)
-region = np.where(
-    gdp_per_capita < 25,
-    "Emerging",
-    np.where(gdp_per_capita < 50, "Developing", np.where(gdp_per_capita < 70, "Advanced", "Elite")),
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
-
-df = pd.DataFrame(
-    {
-        "GDP per Capita ($ thousands)": np.round(gdp_per_capita, 1),
-        "Life Expectancy (years)": np.round(life_expectancy, 1),
-        "Population (M)": np.round(population_millions, 1),
-        "Economic Tier": region,
-    }
-)
-
-# Palette — Python Blue anchored, colorblind-safe progression
-palette = {"Emerging": "#c44e52", "Developing": "#dd8452", "Advanced": "#55a868", "Elite": "#306998"}
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
+hue_order = [t[0] for t in tier_params]
 sns.scatterplot(
     data=df,
-    x="GDP per Capita ($ thousands)",
-    y="Life Expectancy (years)",
+    x="Healthcare Spending ($/year)",
+    y="Child Mortality (per 1,000 births)",
     size="Population (M)",
-    hue="Economic Tier",
-    hue_order=["Emerging", "Developing", "Advanced", "Elite"],
-    sizes=(150, 2200),
-    alpha=0.65,
-    palette=palette,
-    edgecolor="white",
-    linewidth=1.0,
+    hue="Income Tier",
+    hue_order=hue_order,
+    sizes=(50, 1200),
+    alpha=0.72,
+    palette=tier_colors,
+    edgecolor=PAGE_BG,
+    linewidth=0.7,
     legend="brief",
     ax=ax,
 )
 
 # Style
-ax.set_xlabel("GDP per Capita ($ thousands)", fontsize=20)
-ax.set_ylabel("Life Expectancy (years)", fontsize=20)
-ax.set_title("bubble-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+title = "bubble-basic · python · seaborn · anyplot.ai"
+n_chars = len(title)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+
+ax.set_xlabel("Healthcare Spending ($ / year)", fontsize=10, color=INK)
+ax.set_ylabel("Child Mortality (per 1,000 births)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.xaxis.grid(True, alpha=0.08, linewidth=0.5)
 
-# Refine legend — place in lower-right to avoid data overlap
+# Refine legend — theme-adaptive frame and text
 legend = ax.get_legend()
-legend.set_title("Economic Tier / Population (M)", prop={"size": 14})
+legend.set_title("Income Tier / Population (M)", prop={"size": 7})
 legend.get_title().set_fontweight("semibold")
+legend.get_title().set_color(INK)
 for text in legend.get_texts():
-    text.set_fontsize(13)
+    text.set_fontsize(7)
+    text.set_color(INK)
 legend.set_frame_on(True)
 legend.get_frame().set_alpha(0.92)
-legend.get_frame().set_edgecolor("#cccccc")
-legend.get_frame().set_facecolor("white")
-sns.move_legend(ax, "lower right", frameon=True)
+legend.get_frame().set_edgecolor(INK_SOFT)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+sns.move_legend(ax, "upper right", frameon=True)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches='tight' to preserve exact 3200×1800 canvas
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
