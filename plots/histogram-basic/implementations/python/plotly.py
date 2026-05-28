@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: plotly | Python 3.13
+Library: plotly 6.7.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-28
 """
 
