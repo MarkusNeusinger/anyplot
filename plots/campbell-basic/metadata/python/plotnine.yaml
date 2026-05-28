@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: campbell-basic
 created: '2026-02-15T21:08:00Z'
-updated: '2026-05-28T15:34:38Z'
+updated: '2026-05-28T15:45:39Z'
 generated_by: claude-sonnet
 workflow_run: 26583898472
 issue: 4241
@@ -12,47 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Complete Campbell diagram with all required elements: 5 mode curves, 3 engine
-    order lines (1×/2×/3×), red diamond critical speed markers, and operating range
-    band'
-  - Excellent anyplot palette usage — canonical order for mode curves, semantic red
-    (#AE3030) correctly applied to critical speeds, theme-adaptive chrome tokens throughout
-  - 'Good data storytelling: annotated 1×/1st Bending critical speed at ~1180 RPM
-    with dotted vertical drop line, operating range band with label, consolidated
-    EO legend entry'
-  - 'Both renders pass theme-readability check: warm off-white (#FAF8F1) light background,
-    near-black (#1A1A17) dark background, all text readable in both themes with no
-    dark-on-dark failures'
-  - Clean, reproducible code with np.random.seed(42), flat script structure, all imports
-    used, correct save API
+  - 'Correct Campbell diagram with all required components: 5 natural frequency modes,
+    3 engine order excitation lines, critical speed intersection diamonds, and operating
+    range shading'
+  - 'Custom anyplot palette applied in canonical order with first series (1st Bending)
+    correctly using #009E73 brand green'
+  - 'Thoughtful multi-encoding: color differentiates modes, linetype differentiates
+    modes from EO lines, and line weight (1.5 vs 0.8) reinforces the distinction'
+  - scale_size_identity() pattern for variable line widths, consolidated EO legend
+    entry via breaks/labels, and guide_legend(override_aes) are idiomatic plotnine
+    features used well
+  - 'Critical speed annotation with dotted guide line and ''Critical: 1180 RPM'' label
+    highlights the most operationally significant intersection'
+  - 'Theme adaptation is correct in both renders: warm backgrounds (#FAF8F1 / #1A1A17),
+    adaptive text colors, and consistent data colors across themes'
+  - Realistic turbomachinery data with gyroscopic frequency variation (some modes
+    increasing, some decreasing with speed)
   weaknesses:
-  - Full panel border (panel_border=element_rect) kept as a closed box instead of
-    removing top and right spines — style guide default is L-shaped frame (remove
-    top+right) or no spines; reduces visual refinement
-  - 'Annotation text (''Critical: 1180 RPM'', ''Operating Range'') rendered at size=2.8mm
-    (~8pt) — very small at thumbnail/mobile-width (~400 px) rendering; increase to
-    3.5–4mm or reposition to avoid crowding'
-  - 'Operating range band alpha=0.08 with #4467A3 blue is barely perceptible in both
-    renders, especially on the dark (#1A1A17) background — alpha=0.12–0.15 would provide
-    better visibility without dominating'
-  - EO labels ('1×', '2×', '3×') at size=3.0mm sit close to natural frequency curves
-    at their placement coordinates, risking visual proximity confusion; minor positional
-    adjustment could clarify association
+  - EO labels (1×, 2×, 3×) positioned with +3 Hz offset places them close to or on
+    top of natural frequency curves — the '2×' label at (2200, 76.3 Hz) sits essentially
+    on the 2nd Torsional line (~77.2 Hz at 2200 RPM), creating overlap; reposition
+    labels further from curve crossing zones or use a label offset away from the dense
+    curve area
+  - 'Critical speed diamond markers use the same #AE3030 color as the Axial mode line;
+    red diamonds on the red Axial curve lose visual distinctiveness at those intersections
+    — consider using a white fill or contrasting outline for critical markers (e.g.,
+    fill=''white'', color=CRITICAL_COLOR, stroke=1.5) to separate them from the Axial
+    line'
+  - 'Annotation text ''Critical: 1180 RPM'' and EO inline labels use geom_text size=3.5
+    (mm) which renders quite small (~10pt equivalent) — slightly harder to read at
+    smaller display sizes; increasing to size=4.0–4.5 would improve legibility without
+    crowding'
+  - 'DE-02 could be further refined: the legend border (INK_SOFT with size=0.3) adds
+    a frame that slightly clutters the bottom area; removing or softening it (alpha
+    0.3–0.5) would improve visual cleanliness'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct theme surface
-      Chrome: Bold title "campbell-basic · python · plotnine · anyplot.ai" is clearly readable in dark ink (#1A1A17), spanning ~70% of plot width (expected for the mandated title length). X-axis label "Rotational Speed (RPM)" and Y-axis label "Natural Frequency (Hz)" are readable at 10pt in dark ink. Tick labels readable at 8pt in INK_SOFT (#4A4A44). Bottom legend text readable. Subtle gray grid lines at alpha=0.12.
-      Data: Five natural frequency curves in anyplot canonical order — green (#009E73 / 1st Bending), purple (#C475FD / 2nd Bending), blue (#4467A3 / 1st Torsional), ochre (#BD8233 / 2nd Torsional), red (#AE3030 / Axial). Three dashed gray engine order lines (1×, 2×, 3×). Red diamond critical speed markers at all intersections. Light blue operating range band (barely visible at alpha=0.08). Red annotation "Critical: 1180 RPM" with dotted vertical line. EO italic labels (1×, 2×, 3×) visible but small.
-      Legibility verdict: PASS — all chrome text readable; minor concern is annotation/EO label size (~2.8–3mm) which is borderline at mobile thumbnail widths
+      Background: Warm off-white #FAF8F1 fills the outer plot area; panel area matches. Operating range band (2000–4500 RPM) is a very light blue-grey overlay.
+      Chrome: Title "campbell-basic · python · plotnine · anyplot.ai" is bold, centered, clearly readable in dark ink. Axis labels "Rotational Speed (RPM)" and "Natural Frequency (Hz)" are clearly readable. Tick labels (0–6000 RPM / 0–110 Hz) are readable in INK_SOFT grey. Subtle horizontal grid lines do not compete with data. No spines.
+      Data: Five natural frequency curves in canonical anyplot palette order — 1st Bending (#009E73 green, lowest curve ~18–27 Hz), 2nd Bending (#C475FD lavender, ~45→33 Hz decreasing), 1st Torsional (#4467A3 blue, ~52→67 Hz increasing), 2nd Torsional (#BD8233 ochre, ~75→82 Hz), Axial (#AE3030 red, ~90 Hz nearly flat). Three dashed grey EO lines from origin (1×, 2×, 3×). Red diamond critical-speed markers at intersections. Italic small "1×", "2×", "3×" labels along EO lines. Dotted red vertical guide to "Critical: 1180 RPM" annotation near x=1180 RPM. "Operating Range" text label in blue inside the band.
+      Legibility verdict: PASS — all primary text clearly readable. Minor: annotation and EO inline labels are small (size=3.5 mm) but still legible at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct dark theme surface
-      Chrome: Title bold in light ink (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in light INK/INK_SOFT colors — all readable with no dark-on-dark failures. Legend text light-colored, readable. Grid lines subtle on dark background.
-      Data: Identical data colors to light render — green, purple, blue, ochre, red mode curves; gray dashed EO lines; red diamond critical markers. Operating range band barely perceptible at alpha=0.08 on dark surface (even less visible than in light render). "Critical: 1180 RPM" annotation visible in red italic. EO labels visible but small.
-      Legibility verdict: PASS — no dark-on-dark failures; all elements technically readable; operating range band is very faint on dark background
+      Background: Warm near-black #1A1A17 fills the outer plot area. Operating range band visible as a subtle dark-blue overlay.
+      Chrome: Title, axis labels, and tick labels are rendered in light-colored text (INK = #F0EFE8 / INK_SOFT = #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures observed. Grid lines are subtle light lines. Legend box uses elevated dark background #242420 with light text.
+      Data: All five mode curves and three EO dashed lines use identical colors to the light render (green, lavender, blue, ochre, red) — only chrome flipped. Red diamond markers at critical intersections remain clearly visible. "Critical: 1180 RPM" annotation in red is readable.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures. Data colors identical between themes.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -63,78 +71,82 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title/axis labels/ticks readable in both themes. Annotation text
-          (2.8mm) and EO labels (3.0mm) are small — borderline at thumbnail/mobile
-          width.
+        comment: All font sizes explicitly set (title 12pt, axis_title 10pt, axis_text
+          8pt, legend 8pt). All text readable in both themes. EO inline labels and
+          critical annotation at geom_text size=3.5mm are small but legible.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor proximity between EO labels and nearby frequency curves; clustered
-          critical speed diamonds in 1000-1500 RPM zone overlap each other (expected
-          for a Campbell diagram with multiple intersections).
+        comment: 'Minor overlap: ''2x'' EO label at (2200, 76.3 Hz) is essentially
+          on the 2nd Torsional line (~77.2 Hz). ''1x'' label at (4500, ~78 Hz) is
+          close to the 2nd Torsional (~79.5 Hz). Inherent to Campbell diagram complexity
+          but still deducted.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All frequency curves and critical markers clearly visible. Operating
-          range band (alpha=0.08) barely perceptible in both renders.
+        comment: 'Lines and critical markers well-sized. Minor concern: red (#AE3030)
+          critical speed diamonds overlap red Axial mode line at their intersections,
+          slightly reducing visibility of those specific markers.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette with redundant linetype encoding (solid vs dashed).
-          No red-green sole distinction.
+        comment: 'CVD-safe anyplot palette. Dual encoding: color + linetype (solid
+          vs dashed) for modes vs EO lines. No red-green sole signal.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct. Good proportions. Full panel border instead
-          of L-shaped spines is a minor style deviation.
+        comment: 3200x1800 canvas confirmed. Legend at bottom does not crowd data.
+          Good margins. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units (RPM, Hz).
+        comment: 'X: ''Rotational Speed (RPM)'', Y: ''Natural Frequency (Hz)'' — both
+          descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (#009E73 green) correct. Canonical palette order for
-          modes. Critical speeds use semantic #AE3030. Light #FAF8F1 / dark #1A1A17
-          backgrounds correct.'
+        comment: 'First series #009E73, canonical palette order for 5 modes, backgrounds
+          #FAF8F1/#1A1A17, theme-adaptive chrome correct in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional semantic color for critical speeds, consolidated EO legend
-          entry, operating range band add sophistication above generic defaults.
+        comment: 'Strong design: custom anyplot palette, operating range band, EO
+          italic labels, dotted guide line to critical annotation, variable line weights.
+          Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid is subtle and appropriate. Full panel border (closed box) instead
-          of recommended L-shaped frame detracts from refinement.
+        passed: true
+        comment: Spines removed, subtle grid (alpha=0.12), minor grid suppressed,
+          horizontal legend at bottom. Legend border slightly clutters the bottom.
+          Some refinement visible above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point with annotated critical speed at 1180 RPM. Operating
-          range band provides operational context. Visual hierarchy between primary
-          mode curves and secondary EO lines via linetype.
+        comment: Operating range band contextualizes safe operating zone. Critical
+          annotation with guide line draws focus to the most important intersection.
+          EO lines in muted grey correctly subordinate to mode curves.
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +156,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Campbell diagram: natural frequency curves vs RPM with diagonal
-          EO excitation lines.'
+        comment: 'Correct Campbell diagram: frequency curves vs RPM, diagonal EO excitation
+          lines, critical speed markers at intersections.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 mode curves, 3 EO lines with labels, diamond markers at critical
-          speeds, operating range shading, critical speed annotation.
+        comment: 5 modes (1st Bending, 2nd Bending, 1st Torsional, 2nd Torsional,
+          Axial), 3 EO lines (1x, 2x, 3x), labeled EO lines, labeled modes, critical
+          speed diamond markers, clean legend distinguishing types.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Rotational Speed (RPM), Y=Natural Frequency (Hz). All data in range.
+        comment: 'X: RPM (0-6000), Y: Hz (0-110). Gyroscopic effects modeled correctly
+          (some modes increase, some decrease with speed).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'campbell-basic · python · plotnine · anyplot.ai'. Legend labels
-          match mode names.
+        comment: Title 'campbell-basic · python · plotnine · anyplot.ai' matches required
+          format. Legend labels match data series.
     data_quality:
       score: 15
       max: 15
@@ -175,21 +189,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Campbell diagram elements: gyroscopic-effect curves (some increasing,
-          some decreasing), 3 EO orders, all intersections marked.'
+        comment: 'All Campbell diagram aspects shown: frequency variation with speed,
+          EO lines, intersections, operating range, specific critical speed annotation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbomachinery NVH data with realistic frequency ranges (18-90 Hz)
-          and speed ranges (0-6000 RPM). Neutral engineering context.
+        comment: Turbomachinery rotordynamic analysis — realistic domain, standard
+          engineering mode names, realistic frequency ranges (18-90 Hz) and speed
+          range (0-6000 RPM).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-6000 RPM and 0-110 Hz appropriate for industrial rotating machinery.
+        comment: RPM 0-6000 and Hz 0-110 are realistic for turbomachinery. Small noise
+          term (std=0.12 Hz) adds realistic measurement variation.
     code_quality:
       score: 10
       max: 10
@@ -199,31 +215,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports verified as used in the implementation.
+        comment: All plotnine imports are used. os, numpy, pandas all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a Campbell diagram. No fake UI.
+        comment: Appropriate complexity for a Campbell diagram. No fake UI. Critical
+          speed intersection detection via linear interpolation is appropriately implemented
+          inline.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi/dimensions.
+        comment: plot.save(f'plot-{THEME}.png', ...) correct. Current plotnine 0.15.4
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -233,28 +253,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot2-style grammar with aes, multiple geoms, scales, guides,
-          theme layers.
+        comment: 'Strong idiomatic plotnine: proper grammar-of-graphics layering,
+          scale_color_manual + scale_linetype_manual dual encoding, coord_cartesian
+          for axis limits, guides() control. Above default level.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses guide_legend with override_aes for consolidated legend, scale_size_identity
-          for variable line widths, scale_linetype_manual for mode vs EO distinction.
+        comment: Uses scale_size_identity() for variable line widths, guide_legend(override_aes)
+          to customize legend appearance, and consolidated legend breaks/labels to
+          merge 3 EO lines into 1 entry — plotnine-specific patterns above generic
+          usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   - custom-legend
   - manual-ticks
   patterns:
   - data-generation
+  - wide-to-long
   - iteration-over-groups
   dataprep:
   - interpolation
   styling:
   - alpha-blending
-  - grid-styling
