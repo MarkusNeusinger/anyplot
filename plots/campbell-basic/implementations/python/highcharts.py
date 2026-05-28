@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 campbell-basic: Campbell Diagram
-Library: highcharts | Python 3.14
-Quality: pending | Created: 2026-05-28
+Library: highcharts unknown | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-28
 """
 
 import os
