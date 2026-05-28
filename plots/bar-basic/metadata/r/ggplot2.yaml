@@ -1,0 +1,232 @@
+library: ggplot2
+language: r
+specification_id: bar-basic
+created: '2026-05-28T09:38:44Z'
+updated: '2026-05-28T09:55:00Z'
+generated_by: claude-sonnet
+workflow_run: 26566737269
+issue: 612
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Highlight-the-leader technique using alpha variation of a single palette hue is
+    elegant and immediately communicates insight without a legend
+  - 'Perfect theme adaptation: both renders pass readability checks with correct backgrounds
+    and all chrome tokens threaded through'
+  - Average reference line adds context without cluttering the chart
+  - Descending sort order + explicit value labels maximise readability for a comparison
+    bar chart
+  weaknesses:
+  - DE-01 could reach 8/8 with slightly more typographic polish (e.g., subtitle or
+    source note, minor spacing refinements)
+  - LM-02 limited to 3/5 — the highlight pattern is idiomatic ggplot2 but replicable
+    in other libraries with minor changes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "bar-basic · r · ggplot2 · anyplot.ai" bold dark text ~45-50% canvas width; Y-axis "Annual Budget (USD Millions)" and X-axis "Department" labels clearly readable; tick labels ($0M–$50M, department names) in dark secondary ink — all readable
+      Data: Engineering bar in full brand green #009E73; all other 7 bars in 45%-alpha variant of #009E73 (mint-teal); dashed average line at $28.1M in dark gray; value labels above each bar; subtle horizontal y-axis grid lines only
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all axis/tick labels flip to light-colored text (#F0EFE8 primary, #B8B7B0 secondary); all text clearly readable; no dark-on-dark failures detected
+      Data: Engineering bar remains full brand green #009E73 — identical to light render; other bars appear as darker teal (same alpha on dark surface); dashed average line and annotation visible in lighter gray
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title=12pt, axis=10pt, ticks=8pt); well-proportioned
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar labels, average annotation, tick labels — no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized; highlighted Engineering bar immediately distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single palette hue with alpha variation; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas well-utilized, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: ''Annual Budget (USD Millions)'' with units; X: ''Department'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/highlight series #009E73; backgrounds #FAF8F1/#1A1A17; chrome
+          theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional highlight-the-leader pattern with alpha variation; clean
+          minimal chrome; clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid, no tick marks, no legend box, x-axis line only, custom
+          backgrounds
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending order + full-green highlight on Engineering + average
+          reference line creates focal point and visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart via geom_col()
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent bar widths, value labels, single-color with highlight,
+          adequate spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category → x, budget value → y; all 8 bars visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'bar-basic · r · ggplot2 · anyplot.ai'; no legend (appropriate
+          for single-series highlight)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 categories with varied values, descending order, highlight, reference
+          line, value labels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Annual departmental budgets: neutral, real-world business scenario'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $11.3M-$48.5M range plausible for a mid-sized company; proportions
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: tokens → data → plot → save; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data fully deterministic (hardcoded values)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R; adjustcolor() for alpha; named factor values in
+          scale_fill_manual()
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-${THEME}.png; uses current API (linewidth= not deprecated
+          size=)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses grammar of graphics: geom_col(), scale_fill_manual(),
+          expansion(mult=), theme_minimal() + theme overrides'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ggplot2-native highlight pattern via named factor levels in scale_fill_manual(),
+          R's adjustcolor(), factor-level ordering for sorted bars
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
