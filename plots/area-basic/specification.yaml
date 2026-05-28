@@ -6,7 +6,7 @@ title: Basic Area Chart
 
 # Specification tracking
 created: 2025-12-14T09:19:27Z
-updated: 2025-12-14T09:19:27Z
+updated: 2026-05-28T05:24:35Z
 issue: 711
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - area
-    - line
   data_type:
     - numeric
     - timeseries
