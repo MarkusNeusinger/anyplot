@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -70,10 +70,11 @@ chart = pygal.Pie(
 legend_names = {"Netflix": "Netflix (#1 globally)", "Others": "Others (combined)"}
 
 for service, value in categories:
-    slice_data = {"value": value, "style": "stroke: white; stroke-width: 3"}
-    # Explode the largest slice (Netflix) for visual emphasis
+    # Theme-adaptive stroke creates a clean gap between slices in both themes
+    slice_data = {"value": value, "style": f"stroke: {PAGE_BG}; stroke-width: 4"}
+    # Explode the largest slice (Netflix) prominently to signal market leadership
     if service == "Netflix":
-        slice_data["node"] = {"transform": "translate(0, -22)"}
+        slice_data["node"] = {"transform": "translate(0, -80)"}
 
     name = legend_names.get(service, service)
     chart.add(name, [slice_data])
