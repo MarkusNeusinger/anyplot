@@ -1,0 +1,273 @@
+library: plotnine
+language: python
+specification_id: pie-basic
+created: '2026-05-28T11:32:23Z'
+updated: '2026-05-28T11:51:50Z'
+generated_by: claude-sonnet
+workflow_run: 26571730864
+issue: 678
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
+review:
+  strengths:
+  - 'Correct anyplot palette in canonical order (green → lavender → blue → ochre →
+    red → cyan) with #009E73 as first series'
+  - Perfect spec compliance — percentage labels, legend, exploded largest slice (R&D),
+    and distinct colors all implemented
+  - Fully deterministic data with theme-adaptive chrome — both light and dark renders
+    pass the theme-readability check
+  - Clever use of geom_polygon + coord_equal to construct a pie chart in plotnine
+    (no native pie geom), correctly computing wedge vertices and label positions
+  - Realistic budget allocation dataset with plausible proportions that sum to 100%
+  weaknesses:
+  - Design storytelling is minimal (DE-03=2/6) — the exploded R&D slice is spec-required,
+    not an additional design choice; the dominant 32% slice could be further emphasized
+    (e.g. direct annotation with insight text, or stronger visual treatment beyond
+    explode offset)
+  - Library mastery is limited (LM-02=2/5) — the implementation demonstrates a workaround
+    for plotnine's missing pie geom rather than leveraging distinctive plotnine strengths;
+    idiomatic plotnine usage is correct but not sophisticated
+  - Percentage label contrast is borderline on lighter slices — white (#FFFFFF) text
+    on lavender (#C475FD, 22% slice) has ~2.5:1 contrast ratio which is below WCAG
+    AA; consider black or very dark ink-colored text for the lavender and ochre slices,
+    or use the INK token adaptively
+  - Small Administration slice (4%) has no percentage label, slightly deviating from
+    the spec requirement to include percentage labels on all slices — even a very
+    small label placed outside the slice with a leader line would satisfy the spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "pie-basic · python · plotnine · anyplot.ai" in dark ink, positioned top-left; all text clearly readable against the light background. Legend "Department" title and category labels in dark INK/INK_SOFT tones, readable. Legend box has a slightly elevated warm background with a subtle border.
+      Data: Six pie slices in anyplot palette order — R&D (#009E73 brand green, 32%, slightly exploded), Marketing (#C475FD lavender, 22%), Operations (#4467A3 blue, 18%), Human Resources (#BD8233 ochre, 13%), IT Infrastructure (#AE3030 red, 11%), Administration (#2ABCCD cyan, 4% — very thin sliver). Percentage labels in white text inside the five larger slices; Administration (4%) has no label by design.
+      Legibility verdict: PASS — all text readable. Minor note: white text on lavender (22%) and ochre (13%) slices has borderline contrast (~2.5:1) but is visually readable at canvas size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title visible in light cream (#F0EFE8) ink against dark background — no dark-on-dark failure. Legend text rendered in lighter INK_SOFT tones; legend box has dark elevated background (#242420). All chrome elements flip correctly to dark-theme tokens.
+      Data: Pie slice colors are identical to light render — #009E73 green, #C475FD lavender, #4467A3 blue, #BD8233 ochre, #AE3030 red, #2ABCCD cyan. Percentage labels remain white inside slices. Data color identity between light and dark is confirmed.
+      Legibility verdict: PASS — title, legend, and percentage labels all readable on dark surface. No dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12pt, legend=8/10pt, geom_text=4mm).
+          Title and legend clearly readable in both themes. White percentage labels
+          on lavender/ochre slices have borderline contrast (~2.5:1) but are visually
+          readable at canvas size.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Percentage labels positioned at 62%
+          of radius with sufficient spacing between slices.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All five labeled slices clearly visible. Administration slice (4%)
+          is a very thin sliver — visible as a distinct cyan segment but unlabeled
+          by design.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette used. Six distinct hue families clearly
+          distinguishable. No red-green as sole distinguishing signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas appropriate for pie chart. Layout is balanced
+          with legend on the right. Some wasted space in the upper-left corner, but
+          overall acceptable.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for pie chart. Title 'pie-basic · python · plotnine
+          · anyplot.ai' present. 'Department' legend title provides context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (R&D) is #009E73 brand green. All 6 colors follow anyplot
+          palette canonical order. Background #FAF8F1 (light) and #1A1A17 (dark).
+          Theme-adaptive chrome correct in both renders.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured with correct palette and theme_void. Not exceptional
+          — looks like a well-configured library default. No additional typography
+          refinement or visual hierarchy beyond spec requirements.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes all axes/grid (correct for pie). Styled legend
+          with elevated background and border. subplots_adjust provides breathing
+          room. Clearly above minimum defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Default — data is displayed correctly but limited storytelling. The
+          exploded R&D slice is spec-required, not an added design insight. No direct
+          labeling of key insight or additional visual hierarchy beyond what the spec
+          mandated.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pie chart implemented via geom_polygon + coord_equal in plotnine
+          (no native pie geom, so polygon construction is the appropriate approach).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: percentage labels (for slices ≥5%),
+          distinct colors, legend for category identification, and largest slice (R&D)
+          slightly exploded for emphasis.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Values correctly mapped to slice angles. All 6 categories rendered.
+          Clockwise layout starting at 12 o'clock is standard for pie charts.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'pie-basic · python · plotnine · anyplot.ai' — correct format.
+          Legend titled 'Department' with all 6 categories labeled correctly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all pie chart aspects: wide range of proportions (4% to 32%),
+          6 categories demonstrating readability limits, exploded slice for emphasis,
+          percentage labels.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Annual R&D budget allocation by department — realistic, neutral business
+          scenario. No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum to 100% (32+22+18+13+11+4=100). R&D at 32% as largest
+          share is plausible for a tech company. All proportions are realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: Imports → Data → Polygon computation → Plot → Save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — hardcoded values with no random numbers.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. sys.path manipulation justified (file is named
+          plotnine.py). matplotlib.pyplot used for fig.draw() and plt.close().
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for manual pie construction. No fake UI elements
+          or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. Uses fig.savefig() via plotnine's plot.draw()
+          — valid approach that preserves canvas dimensions.
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar — geom_polygon + scale_fill_manual + coord_equal
+          + labs + theme. Idiomatic but the manual polygon approach is forced by plotnine's
+          limitation rather than leveraging its strengths.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses coord_equal (plotnine/ggplot2 specific) to preserve aspect ratio
+          for circular appearance. theme_void is a clean ggplot2-family feature. But
+          overall the implementation demonstrates a workaround for a library limitation
+          rather than a showcase of distinctive plotnine capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
