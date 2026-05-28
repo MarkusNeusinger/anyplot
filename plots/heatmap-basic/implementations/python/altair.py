@@ -1,15 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-02-16
+Library: altair | Python 3.13
+Quality: pending | Updated: 2026-05-28
 """
+
+import os
+import sys
+
+
+# Remove current script directory to prevent self-import (file is named altair.py)
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p not in ("", ".") and os.path.abspath(p) != _here]
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - correlation matrix with realistic weather variables
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint diverging colormap midpoint — theme-adaptive
+DIV_MID = "#FAF8F1" if THEME == "light" else "#1A1A17"
+
+# Data — correlation matrix for 8 weather variables
 np.random.seed(42)
 variables = [
     "Temperature",
@@ -25,11 +45,11 @@ variables = [
 n_samples = 200
 raw = np.random.randn(n_samples, len(variables))
 
-# Inject realistic correlations with stronger relationships
+# Inject realistic correlations; multiplier 1.2 on Visibility pushes it below -0.8
 raw[:, 1] += raw[:, 0] * 0.6  # Humidity ~ Temperature
 raw[:, 5] += raw[:, 1] * 0.7  # Cloud Cover ~ Humidity
 raw[:, 6] += raw[:, 5] * 0.65  # Precipitation ~ Cloud Cover
-raw[:, 4] -= raw[:, 5] * 0.9  # Visibility inversely ~ Cloud Cover
+raw[:, 4] -= raw[:, 5] * 1.2  # Visibility strongly inversely ~ Cloud Cover (< -0.8)
 raw[:, 7] -= raw[:, 5] * 0.7  # UV Index inversely ~ Cloud Cover
 raw[:, 7] += raw[:, 0] * 0.5  # UV Index ~ Temperature
 raw[:, 3] -= raw[:, 0] * 0.4  # Pressure inversely ~ Temperature
@@ -37,7 +57,8 @@ raw[:, 2] += raw[:, 3] * 0.3  # Wind Speed ~ Pressure
 
 corr = np.corrcoef(raw.T)
 
-# Build long-form dataframe using list comprehension
+axis_order = list(variables)
+
 df = pd.DataFrame(
     [
         {"Row": row_var, "Column": col_var, "value": round(corr[i, j], 2)}
@@ -46,38 +67,46 @@ df = pd.DataFrame(
     ]
 )
 
-# Axis ordering
-axis_order = list(variables)
+# Title — 44 chars < 67 baseline → ratio = 1.0 → default fontSize 16
+title_str = "heatmap-basic · python · altair · anyplot.ai"
 
-# Plot - heatmap with colorblind-safe diverging color centered at 0
+# Text annotation color: all light on dark theme; adaptive on light theme
+if THEME == "dark":
+    text_color_enc = alt.value("#F0EFE8")
+else:
+    text_color_enc = (
+        alt.when((alt.datum.value > 0.55) | (alt.datum.value < -0.55))
+        .then(alt.value("#ffffff"))
+        .otherwise(alt.value(INK))
+    )
+
+# Heatmap layer — Imprint diverging colormap (#AE3030 → midpoint → #4467A3)
 heatmap = (
     alt.Chart(df)
     .mark_rect(stroke="#ffffff", strokeWidth=1.5, cornerRadius=2)
     .encode(
         x=alt.X(
             "Column:N",
-            title="Weather Variable",
+            title=None,
             sort=axis_order,
-            axis=alt.Axis(
-                labelFontSize=15, titleFontSize=18, labelAngle=-45, orient="top", labelPadding=8, titlePadding=10
-            ),
+            axis=alt.Axis(labelFontSize=10, labelAngle=-45, orient="top", labelPadding=4),
         ),
         y=alt.Y(
             "Row:N",
             title="Weather Variable",
             sort=axis_order,
-            axis=alt.Axis(labelFontSize=15, titleFontSize=18, labelPadding=8, titlePadding=10),
+            axis=alt.Axis(labelFontSize=10, titleFontSize=11, labelPadding=4, titlePadding=6),
         ),
         color=alt.Color(
             "value:Q",
-            scale=alt.Scale(scheme="blueorange", domain=[-1, 1], domainMid=0),
+            scale=alt.Scale(range=["#AE3030", DIV_MID, "#4467A3"], domain=[-1, 1], domainMid=0),
             legend=alt.Legend(
                 title="Correlation",
-                titleFontSize=16,
-                labelFontSize=14,
-                gradientLength=300,
-                gradientThickness=16,
-                titlePadding=6,
+                titleFontSize=11,
+                labelFontSize=10,
+                gradientLength=220,
+                gradientThickness=12,
+                titlePadding=5,
                 offset=8,
                 direction="vertical",
             ),
@@ -90,52 +119,67 @@ heatmap = (
     )
 )
 
-# Highlight cells with strong correlations using thicker borders
+# Bold borders for strong correlations (|r| ≥ 0.7) — theme-adaptive stroke
 highlight = (
     alt.Chart(df)
     .transform_filter((alt.datum.value >= 0.7) | (alt.datum.value <= -0.7))
-    .mark_rect(stroke="#2a2a2a", strokeWidth=2.5, filled=False, cornerRadius=2)
+    .mark_rect(stroke=INK, strokeWidth=2.5, filled=False, cornerRadius=2)
     .encode(x=alt.X("Column:N", sort=axis_order), y=alt.Y("Row:N", sort=axis_order))
 )
 
-# Text annotations with adaptive color
+# Cell value annotations
 text = (
     alt.Chart(df)
-    .mark_text(fontSize=15, fontWeight="bold")
+    .mark_text(fontSize=10, fontWeight="bold")
     .encode(
         x=alt.X("Column:N", sort=axis_order),
         y=alt.Y("Row:N", sort=axis_order),
         text=alt.Text("value:Q", format=".2f"),
-        color=alt.when((alt.datum.value > 0.55) | (alt.datum.value < -0.55))
-        .then(alt.value("#ffffff"))
-        .otherwise(alt.value("#333333")),
+        color=text_color_enc,
     )
 )
 
-# Combine layers and configure
 chart = (
     (heatmap + highlight + text)
     .properties(
-        width=740,
-        height=766,
+        width=350,
+        height=380,
+        background=PAGE_BG,
         title=alt.Title(
-            "heatmap-basic · altair · pyplots.ai",
+            title_str,
             subtitle=[
-                "Pairwise Pearson correlation coefficients for 8 weather metrics.",
-                "Bold borders highlight strong relationships (|r| ≥ 0.7).",
+                "Pairwise Pearson correlations for 8 weather metrics.",
+                "Bold borders mark strong relationships (|r| ≥ 0.7).",
             ],
-            fontSize=26,
-            subtitleFontSize=16,
-            subtitleColor="#666666",
+            fontSize=14,
+            subtitleFontSize=11,
+            subtitleColor=INK_MUTED,
+            color=INK,
             anchor="start",
-            offset=16,
+            offset=10,
         ),
-        padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
+        padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
     )
-    .configure_axis(grid=False)
-    .configure_view(strokeWidth=0)
+    .configure_axis(grid=False, domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save — target: 3600×3600 square format
-chart.save("plot.png", scale_factor=3.6)
-chart.save("plot.html")
+# Save PNG — target: 2400 × 2400 (square, 1:1 for symmetric heatmap)
+TW, TH = 2400, 2400
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save HTML
+chart.save(f"plot-{THEME}.html")
