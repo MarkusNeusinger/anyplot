@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-basic: Basic Histogram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -57,7 +57,7 @@ peaks_df = pd.DataFrame(
             f"Primary group (μ ≈ {primary_peak:.0f} cm, n=350)",
             f"Taller subgroup (μ ≈ {taller_peak:.0f} cm, n=150)",
         ],
-        "y_offset": [50, 32],
+        "y_offset": [50, 30],
     }
 )
 
@@ -77,7 +77,7 @@ primary_label = (
 
 taller_label = (
     alt.Chart(peaks_df.iloc[[1]])
-    .mark_text(align="right", dx=-10, fontSize=10, fontWeight="normal")
+    .mark_text(align="left", dx=10, fontSize=10, fontWeight="normal")
     .encode(x="x:Q", y="y_offset:Q", text="label:N", color=alt.value(INK_SOFT))
 )
 
@@ -92,8 +92,8 @@ mean_rule = (
 
 mean_label = (
     alt.Chart(mean_df)
-    .mark_text(align="left", dx=8, fontSize=9, fontStyle="italic")
-    .encode(x="x:Q", y=alt.datum(42), text="label:N", color=alt.value(INK_MUTED))
+    .mark_text(align="left", dx=8, fontSize=10, fontStyle="italic")
+    .encode(x="x:Q", y=alt.datum(52), text="label:N", color=alt.value(INK_MUTED))
 )
 
 # Layer all elements
