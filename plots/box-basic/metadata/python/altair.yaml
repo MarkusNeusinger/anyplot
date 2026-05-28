@@ -1,134 +1,128 @@
 library: altair
+language: python
 specification_id: box-basic
 created: '2025-12-23T00:35:59Z'
-updated: '2026-02-14T22:22:26Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447781641
-issue: 0
-python_version: '3.14'
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - groupby-aggregation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-28T13:45:40Z'
+generated_by: claude-sonnet
+workflow_run: 26577205115
+issue: 689
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent data storytelling with three targeted annotations (highest/lowest median,
-    widest spread) using Unicode arrows
-  - 'Strong Altair idioms: layered composition, declarative encoding, aggregate tooltips'
-  - Custom colorblind-safe palette starting with Python Blue (#306998)
-  - 'Clean visual refinement: subtle dashed grid, removed view borders, white median
-    lines, muted axis colors'
-  - Realistic salary data with meaningful variation across departments
+  - Full spec compliance — median line, outliers, whiskers, per-category colors all
+    present and correct
+  - 'Exemplary palette compliance — Engineering first as #009E73, canonical order
+    for all 5 categories, correct theme backgrounds #FAF8F1/#1A1A17'
+  - Both themes fully legible with complete dark-mode adaptation — no dark-on-dark
+    failures
+  - Clean reproducible code with np.random.seed(42), KISS flat script, proper Altair
+    layer composition
+  - Professional salary dataset with realistic distributions creates immediate real-world
+    relatability
   weaknesses:
-  - Y-axis scale domain [25000, 148000] is slightly wider than needed, creating wasted
-    space at top and bottom margins
-  - Boxes appear somewhat narrow relative to the inter-category spacing — increasing
-    box size or reducing chart width could improve proportions
-  - Annotation font size (14pt) could be slightly larger to better match the axis
-    label sizes (18pt)
-  image_description: 'The plot displays five box-and-whisker plots arranged horizontally,
-    one for each department: Engineering, Marketing, Sales, HR, and Finance. Each
-    box uses a distinct color — dark blue (Engineering), gold/orange (Marketing),
-    teal-blue (Sales), muted purple (HR), and teal-green (Finance). White median lines
-    are clearly visible inside each box. Whiskers extend from the boxes, and outliers
-    are shown as colored dots (e.g., a blue dot below Engineering around $56K, orange
-    dots above Marketing around $94-103K, a teal dot above Sales around $137K, a gray
-    dot below HR around $33K). Three text annotations highlight key insights: an upward
-    arrow with "Highest median: $93,100" near Engineering, a horizontal arrow with
-    "Widest spread (SD $17,991)" near Sales, and a downward arrow with "Lowest median:
-    $62,500" near HR. The title reads "box-basic · altair · pyplots.ai" with a subtitle
-    "Salary distributions across five departments". The Y-axis is labeled "Salary
-    ($)" with dollar formatting from $20,000 to $140,000, and the X-axis is labeled
-    "Department". Light dashed grid lines appear in the background with very low opacity.
-    The overall layout is clean with removed view borders and muted axis domain colors.'
+  - Annotation text at fontSize=10 (40 source-px at 4x scale) is barely readable at
+    full canvas resolution — increase to 12px and add dy offset to position it clearly
+    above the Engineering whisker top
+  - Top and right axis domain lines visible (domainColor=INK_SOFT applying to all
+    axes) — scope to bottom/left only for a clean L-frame
+  - 'Annotation color #009E73 hardcoded rather than using a theme-adaptive ink token
+    — while readable on both surfaces, INK token would align the annotation with the
+    structural chrome layer'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "box-basic · python · altair · anyplot.ai" is bold, dark ink, left-aligned, ~40-45% canvas width — readable. X-axis label "Department" and Y-axis label "Salary (USD)" both dark ink, clearly readable. Tick labels in dollar format ($40,000–$140,000) are readable. Subtle grid lines at 15% opacity.
+      Data: Engineering=#009E73 (green), Marketing=#C475FD (lavender), Sales=#4467A3 (blue), HR=#BD8233 (ochre), Finance=#AE3030 (matte red) — canonical anyplot palette order. White median lines clearly visible in all 5 boxes. Outliers as open circles: Marketing (3), Sales (1 high ~$138k), Engineering (1 low ~$57k), HR (1 low ~$35k). A small green annotation "highest median $..." appears near the top of the Engineering column at y≈138,000 — present but very small at fontSize=10.
+      Legibility verdict: PASS — all primary text (title, axis labels, tick labels) clearly readable; annotation small but not a primary element.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark text failures. Grid lines are subtle off-white strokes.
+      Data: Colors are identical to the light render — Engineering green, Marketing lavender, Sales blue, HR ochre, Finance red. White median lines remain visible. The brand green annotation at y=138,000 is readable on dark background as #009E73 reads well on near-black surface.
+      Legibility verdict: PASS — complete theme adaptation, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, axis
-          labels 18pt, annotations 14pt. All perfectly readable.'
+        comment: Title, axis labels, tick labels all well-sized and readable in both
+          themes. Annotation at fontSize=10 barely discernible — minor deduction.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations well-positioned away from
-          boxes and each other.
+        comment: Boxes well-spaced, no text overlaps with data or other text.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Boxes sized at 80 with outlier markers at 120. Good visibility, though
-          boxes appear slightly narrow relative to inter-category spacing.
+        comment: Boxes at size=90 prominent; outliers at size=100 clearly visible;
+          white median lines stand out inside each box.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: anyplot CVD-safe palette used correctly; no red-green sole-signal
+          issue.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette with five distinct hues (blue, gold, teal,
-          purple, green). No red-green distinction issues.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization. Y-axis domain extends to $148K but highest
-          data is ~$137K, and bottom extends to ~$20K while lowest data is ~$25K,
-          creating some wasted vertical space.
+        comment: Canvas is 3200x1800; no clipping; proportions well-balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Salary ($)' is descriptive with units. X-axis 'Department'
-          is appropriately labeled.
+        comment: Department and Salary (USD) with proper dollar formatting; title
+          in required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Engineering #009E73; 5 series in canonical palette
+          order; backgrounds #FAF8F1/#1A1A17; chrome flips correctly.'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Python Blue-first palette, white median strokes, thoughtful
-          font hierarchy with subtitle, muted domain/tick colors. Clearly above defaults.
+        comment: Professional polish with custom anyplot palette, white median stroke
+          for contrast, data annotation adding focal interest. Above baseline.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle dashed grid (opacity 0.15, dash [3,3]), view stroke removed,
-          muted axis colors. Good refinement with minor whitespace balance issues.
+        comment: Subtle grid at 15% opacity, view stroke removed, soft axis domain/tick
+          colors. Could further scope domain lines to L-frame only.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Three annotations with Unicode arrows guide the reader: highest
-          median, lowest median, widest spread. Effectively tells a story about departmental
-          salary differences.'
+        comment: Salary comparison across departments creates clear narrative. Annotation
+          adds context but too small to be effective focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -138,54 +132,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box plot using mark_boxplot().
+        comment: Correct box-and-whisker chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: median line, outliers, whiskers at 1.5xIQR, different
-          colors per category.'
+        comment: Median line (white stroke), outliers as individual points, whiskers
+          at 1.5xIQR, different colors per category.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, numerical values on Y, all data visible.
+        comment: 'X: Department (categorical), Y: Salary (quantitative), Color: Department.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'box-basic · altair · pyplots.ai' correct. Legend hidden
-          appropriately.
+        comment: Title matches required format. Legend omitted appropriately — category
+          labels on x-axis serve as legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows different distribution widths (narrow HR vs wide Sales), different
-          medians, and outliers in multiple groups.
+        comment: 'Full box plot anatomy: boxes, whiskers, outliers, median lines,
+          multi-category comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distributions across corporate departments is a realistic,
-          neutral business scenario.
+        comment: Salary distributions across Engineering, Marketing, Sales, HR, Finance
+          — realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary values ($25K-$140K) are realistic for department-level compensation
-          data.
+        comment: US salary range $25k-$120k realistic; y-domain [22k, 142k] provides
+          breathing room.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,50 +187,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, summary stats, chart
-          layers, combine, save.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: os, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Generally clean but annotation DataFrame construction with summary
-          stats is somewhat verbose for a basic box plot.
+        comment: Dict-parameterized data generation is clean; layer composition is
+          clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0, plus HTML export.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pads to exact 3200x1800
+          target.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expertly uses Altair declarative grammar: mark_boxplot with median/outlier
-          config, encoding types, tooltips with aggregate functions, configure_axis/view.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Altair-distinctive features: declarative layer composition
-          with alt.layer(), resolve_scale(), tooltip with aggregate expressions (median,
-          q1, q3).'
+        comment: mark_boxplot() with proper encoding types; configure_* chain; alt.Title
+          with offset; alt.Axis with format and padding. Clean declarative grammar.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition (alt.layer), mark_boxplot outlier/median customization,
+          tooltips with aggregation functions (median(Salary):Q) showcase Vega-Lite
+          transform-in-encoding.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

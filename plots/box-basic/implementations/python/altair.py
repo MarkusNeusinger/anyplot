@@ -1,15 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
-Library: altair 6.0.0 | Python 3.14
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-28
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - salary distributions across departments
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — salary distributions across five departments
 np.random.seed(42)
 departments = ["Engineering", "Marketing", "Sales", "HR", "Finance"]
 params = {
@@ -29,110 +41,93 @@ for dept, (mean, std, n) in params.items():
 
 df = pd.DataFrame(records)
 
-# Compute summary statistics for annotations
-summary = df.groupby("Department")["Salary"].agg(["median", "std", "min", "max"])
-highest_dept = summary["median"].idxmax()
-lowest_dept = summary["median"].idxmin()
-widest_dept = summary["std"].idxmax()
-
-# Color palette - Python Blue first, then cohesive colorblind-safe tones
-colors = ["#306998", "#E5A835", "#4B8BBE", "#7B6D8D", "#2A9D8F"]
-
-# Annotation data for key insights
-annotations = pd.DataFrame(
-    [
-        {
-            "Department": highest_dept,
-            "y": summary.loc[highest_dept, "max"] + 5000,
-            "text": f"\u2191 Highest median: ${summary.loc[highest_dept, 'median']:,.0f}",
-        },
-        {
-            "Department": lowest_dept,
-            "y": summary.loc[lowest_dept, "min"] - 5000,
-            "text": f"\u2193 Lowest median: ${summary.loc[lowest_dept, 'median']:,.0f}",
-        },
-        {
-            "Department": widest_dept,
-            "y": summary.loc[widest_dept, "max"] + 7000,
-            "text": f"\u2194 Widest spread (SD ${summary.loc[widest_dept, 'std']:,.0f})",
-        },
-    ]
+# Annotation — Engineering has the highest median salary
+eng_median = df[df["Department"] == "Engineering"]["Salary"].median()
+annotation_df = pd.DataFrame(
+    [{"Department": "Engineering", "Salary": 138000, "Label": f"highest median  ${eng_median:,.0f}"}]
 )
 
-# Shared x-axis encoding
-x_enc = alt.X(
-    "Department:N",
-    title="Department",
-    sort=departments,
-    axis=alt.Axis(
-        labelFontSize=18, titleFontSize=22, labelAngle=0, domainColor="#999999", tickColor="#999999", titlePadding=12
-    ),
-)
+# Plot
+title = "box-basic · python · altair · anyplot.ai"
 
-# Box plot layer
-boxes = (
+boxplot = (
     alt.Chart(df)
     .mark_boxplot(
-        size=80,
+        size=90,
         median={"stroke": "white", "strokeWidth": 3},
-        outliers={"size": 120, "strokeWidth": 1.5, "filled": True, "opacity": 0.7},
+        outliers={"size": 100, "strokeWidth": 1.5, "opacity": 0.75},
     )
     .encode(
-        x=x_enc,
+        x=alt.X("Department:N", title="Department", sort=departments, axis=alt.Axis(labelAngle=0, titlePadding=10)),
         y=alt.Y(
             "Salary:Q",
-            title="Salary ($)",
-            scale=alt.Scale(domain=[25000, 148000]),
-            axis=alt.Axis(
-                labelFontSize=18,
-                titleFontSize=22,
-                format="$,.0f",
-                gridOpacity=0.15,
-                gridDash=[3, 3],
-                domainColor="#999999",
-                tickColor="#999999",
-                tickCount=8,
-                titlePadding=12,
-            ),
+            title="Salary (USD)",
+            scale=alt.Scale(domain=[22000, 142000]),
+            axis=alt.Axis(format="$,.0f", tickCount=7, titlePadding=10),
         ),
-        color=alt.Color("Department:N", scale=alt.Scale(domain=departments, range=colors), legend=None),
+        color=alt.Color("Department:N", scale=alt.Scale(domain=departments, range=ANYPLOT_PALETTE), legend=None),
         tooltip=[
             alt.Tooltip("Department:N"),
-            alt.Tooltip("median(Salary):Q", title="Median Salary", format="$,.0f"),
+            alt.Tooltip("median(Salary):Q", title="Median", format="$,.0f"),
             alt.Tooltip("q1(Salary):Q", title="Q1", format="$,.0f"),
             alt.Tooltip("q3(Salary):Q", title="Q3", format="$,.0f"),
         ],
     )
 )
 
-# Annotation text layer (no interactive selection to avoid signal conflict)
-annotation_text = (
-    alt.Chart(annotations)
-    .mark_text(fontSize=14, fontWeight="bold", color="#444444", align="center")
-    .encode(x=alt.X("Department:N", sort=departments), y=alt.Y("y:Q"), text=alt.Text("text:N"))
+annotation = (
+    alt.Chart(annotation_df)
+    .mark_text(align="center", baseline="middle", color="#009E73", fontSize=10, fontWeight="bold")
+    .encode(x=alt.X("Department:N", sort=departments), y=alt.Y("Salary:Q"), text="Label:N")
 )
 
-# Combine layers with resolve_scale to avoid signal conflicts
 chart = (
-    alt.layer(boxes, annotation_text)
-    .resolve_scale(x="shared", y="shared")
+    alt.layer(boxplot, annotation)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(
-            "box-basic \u00b7 altair \u00b7 pyplots.ai",
-            fontSize=28,
-            subtitle="Salary distributions across five departments",
-            subtitleFontSize=18,
-            subtitleColor="#666666",
-            anchor="start",
-            offset=12,
-        ),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title(title, fontSize=16, anchor="start", offset=10),
     )
-    .configure_axis(grid=True, gridOpacity=0.15, gridColor="#CCCCCC")
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.15,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad to exact canvas target (3200 × 1800)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save HTML
+chart.save(f"plot-{THEME}.html")
