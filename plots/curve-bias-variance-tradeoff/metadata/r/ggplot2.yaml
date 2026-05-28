@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: curve-bias-variance-tradeoff
+created: '2026-05-28T03:36:57Z'
+updated: '2026-05-28T03:45:43Z'
+generated_by: claude-sonnet
+workflow_run: 26552804117
+issue: 4134
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Perfect anyplot palette usage: first series green (#009E73), canonical order
+    for 4 series, correct theme-adaptive chrome in both renders'
+  - Direct color-matched curve labeling replaces legend — cleaner and more informative
+    for a 4-curve plot
+  - Underfitting/Overfitting zone shading at alpha=0.05 adds instructional context
+    without visual noise
+  - Line-weight hierarchy (Total Error thicker at 1.7 vs 1.0) creates clear focal
+    point on the key metric
+  - Subtitle carries the component formula as required by spec
+  - 'Fully idiomatic ggplot2: long-format data with multi-aesthetic factor mapping
+    via named vectors'
+  weaknesses:
+  - Grid lines use solid INK color at linewidth=0.15 rather than RGBA opacity approach
+    recommended by style guide — use scales::alpha(INK, 0.15) with linewidth=0.3 for
+    subtler, more controllable grid lines
+  - 'LM-02: Implementation uses solid but generic multi-line approach; no uniquely
+    ggplot2-distinctive features (stat_function, coord transforms, facet alternatives)
+    that could not be replicated in another library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "curve-bias-variance-tradeoff · r · ggplot2 · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle formula in muted (#6B6A63). Axis labels "Model Complexity" / "Prediction Error" in dark ink, 10pt. Tick labels ("Low", "Optimal", "High" on x; 0.0–0.8 on y) in INK_SOFT (#4A4A44), 8pt. All text readable.
+      Data: Bias² in green (#009E73) solid line; Variance in lavender (#C475FD) long-dashed; Total Error in blue (#4467A3) solid thick; Irreducible Error in ochre (#BD8233) dotted. Subtle green tint (underfitting zone left), reddish tint (overfitting zone right). Vertical dashed line at optimal. Direct colored text annotations for each curve.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white (#F0EFE8), clearly readable. Subtitle in muted (#A8A79F). Axis labels and tick labels in #B8B7B0 (INK_SOFT dark). "Optimal" annotation in #B8B7B0 — readable. All text is light-colored on dark background. No dark-on-dark failures observed. Horizontal grid lines faint but visible in near-white.
+      Data: All four curve colors identical to light render — green, lavender, blue, ochre unchanged. Confirms only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
+          annotations=2.8-3.2). Readable in both themes. Title ~75% canvas width (expected
+          for long mandated format).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All curve annotations thoughtfully positioned above/beside their
+          respective curves. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 curves clearly visible. Redundant line-style encoding (solid/longdash/dotted).
+          Total Error thicker for emphasis.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette. Redundant linestyle encoding ensures distinguishability
+          without color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas correct. Plot fills ~75-80% of canvas. Balanced
+          margins. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Model Complexity (x), Prediction Error (y).
+          Semantic x-axis: Low/Optimal/High.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order positions 1-4. Zone fills
+          use palette colors semantically. Correct backgrounds #FAF8F1/#1A1A17. Chrome
+          adapts in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design with intentional hierarchy: line-weight differentiation,
+          direct curve labeling, shaded zones, subtitle formula. Clearly above defaults
+          but not FiveThirtyEight-level polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visible refinement: legend removed for direct annotations, y-axis
+          grid only at linewidth=0.15, L-shaped frame (panel.border removed, axis.line
+          kept). Grid color uses solid INK rather than RGBA opacity.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: optimal point marked, zone shading, thicker Total
+          Error curve as focal point, formula in subtitle. Reader grasps the bias-variance
+          tradeoff immediately.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line curve plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 4 curves, distinct styles, optimal marker, curve annotations,
+          formula in subtitle, zone shading.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x/y mapping. Bias decreasing, variance increasing, irreducible
+          constant, total U-shaped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend replaced by superior direct annotations.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 4 components, U-shape, crossing point, constant noise floor.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Standard ML education visualization. Non-controversial, clear semantic
+          labels. Per spec: theoretical curves.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Bias starts ~0.70, variance mirrors symmetrically, irreducible error
+          at 0.15, total minimum ~0.30. Proportionally correct for pedagogical diagram.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → tokens → data → long format → scale
+          vectors → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data otherwise deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Named vectors for scale mappings, long-format construction, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-%s.png with THEME interpolation. Uses ragg::agg_png, modern
+          linewidth= API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot2 grammar: long-format data, factor-driven multi-aesthetic
+          mapping, coordinated scale_*_manual, annotate layers, theme_minimal + overrides.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Named-vector aesthetic coordination via factor (distinctively ggplot2
+          grammar), annotate rect layers for zone shading. Solid but does not reach
+          uniquely-ggplot2-impossible territory.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
