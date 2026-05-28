@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -89,26 +89,28 @@ heatmap = (
             "Column:N",
             title=None,
             sort=axis_order,
-            axis=alt.Axis(labelFontSize=10, labelAngle=-45, orient="top", labelPadding=4),
+            axis=alt.Axis(labelFontSize=12, labelAngle=-45, orient="top", labelPadding=6),
         ),
         y=alt.Y(
             "Row:N",
             title="Weather Variable",
             sort=axis_order,
-            axis=alt.Axis(labelFontSize=10, titleFontSize=11, labelPadding=4, titlePadding=6),
+            axis=alt.Axis(labelFontSize=12, titleFontSize=12, labelPadding=6, titlePadding=8),
         ),
         color=alt.Color(
             "value:Q",
             scale=alt.Scale(range=["#AE3030", DIV_MID, "#4467A3"], domain=[-1, 1], domainMid=0),
             legend=alt.Legend(
                 title="Correlation",
-                titleFontSize=11,
-                labelFontSize=10,
-                gradientLength=220,
-                gradientThickness=12,
-                titlePadding=5,
-                offset=8,
+                titleFontSize=12,
+                labelFontSize=11,
+                gradientLength=240,
+                gradientThickness=14,
+                titlePadding=6,
+                offset=10,
                 direction="vertical",
+                values=[-1, -0.5, 0, 0.5, 1],
+                format="+.1f",
             ),
         ),
         tooltip=[
@@ -130,7 +132,7 @@ highlight = (
 # Cell value annotations
 text = (
     alt.Chart(df)
-    .mark_text(fontSize=10, fontWeight="bold")
+    .mark_text(fontSize=11, fontWeight="bold")
     .encode(
         x=alt.X("Column:N", sort=axis_order),
         y=alt.Y("Row:N", sort=axis_order),
@@ -148,8 +150,8 @@ chart = (
         title=alt.Title(
             title_str,
             subtitle=[
-                "Pairwise Pearson correlations for 8 weather metrics.",
-                "Bold borders mark strong relationships (|r| ≥ 0.7).",
+                "Visibility tracks inversely with Cloud Cover (r ≈ −0.85) — the dominant structural link.",
+                "Warm colors = negative, cool = positive. Bold borders mark |r| ≥ 0.7.",
             ],
             fontSize=14,
             subtitleFontSize=11,
