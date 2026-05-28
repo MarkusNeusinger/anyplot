@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -84,10 +84,11 @@ chart.options.chart = {
     "backgroundColor": PAGE_BG,
     "style": {"fontFamily": "Helvetica, Arial, sans-serif", "color": INK},
     "marginRight": 160,
-    "marginBottom": 130,
+    "marginBottom": 160,
     "spacingTop": 30,
     "spacingLeft": 40,
     "spacingBottom": 40,
+    "plotBorderWidth": 0,
 }
 
 chart.options.title = {"text": title, "style": {"fontSize": "66px", "fontWeight": "600", "color": INK}, "margin": 20}
@@ -215,7 +216,7 @@ for order in orders:
     mask = eo_freq <= 120
     eo_data = [[float(r), float(f)] for r, f in zip(speed_rpm[mask], eo_freq[mask], strict=False)]
     label_align = "right" if order == 1 else "left"
-    label_x = -8 if order == 1 else 8
+    label_x = -60 if order == 1 else 8
     series = LineSeries()
     series.data = eo_data
     series.name = f"{order}x EO"
@@ -225,13 +226,14 @@ for order in orders:
     series.marker = {"enabled": False}
     series.enable_mouse_tracking = False
     series.z_index = 1
+    label_y = 25 if order == 1 else -5
     series.data_labels = {
         "enabled": True,
         "format": f"{order}x",
         "style": {"fontSize": "36px", "fontWeight": "600", "color": INK_SOFT, "textOutline": f"3px {PAGE_BG}"},
         "align": label_align,
         "x": label_x,
-        "y": -5,
+        "y": label_y,
         "filter": {"property": "x", "operator": ">", "value": float(speed_rpm[mask][-2])},
     }
     chart.add_series(series)
