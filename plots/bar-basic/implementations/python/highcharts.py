@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-basic: Basic Bar Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -50,7 +50,8 @@ chart.options.chart = {
     "marginBottom": 220,
     "marginTop": 100,
     "marginLeft": 220,
-    "marginRight": 80,
+    "marginRight": 140,
+    "plotBorderWidth": 0,
     "style": {"fontFamily": "Arial, Helvetica, sans-serif"},
 }
 
@@ -111,10 +112,11 @@ chart.options.plot_options = {
     "column": {"pointPadding": 0.12, "borderWidth": 0, "groupPadding": 0.08, "borderRadius": 4}
 }
 
-# Top performer in brand green; remaining bars in muted neutral
+# Top performer in brand green; remaining bars in muted neutral with rank-fade opacity
 data_points = [{"y": values[0], "color": BRAND}]
-for v in values[1:]:
-    data_points.append({"y": v, "color": ANYPLOT_MUTED})
+muted_opacities = [0.90, 0.78, 0.66, 0.54, 0.42]
+for i, v in enumerate(values[1:]):
+    data_points.append({"y": v, "color": ANYPLOT_MUTED, "opacity": muted_opacities[i]})
 
 series = ColumnSeries.from_dict(
     {
