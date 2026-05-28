@@ -1,56 +1,52 @@
 library: highcharts
+language: python
 specification_id: area-basic
 created: '2025-12-23T00:49:25Z'
-updated: '2026-02-12T22:26:06Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447991263
-issue: 0
-python_version: 3.14.2
-library_version: 1.10.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-basic/highcharts/plot.html
-quality_score: 93
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - gradient-fill
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-28T06:03:45Z'
+generated_by: claude-sonnet
+workflow_run: 26557019915
+issue: 711
+language_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data storytelling: peak annotation, subtitle narrative, weekend bands
-    all reinforce the story'
-  - Gradient fill from semi-opaque to transparent is visually appealing and matches
-    spec recommendation
-  - All font sizes explicitly set and well-calibrated for 4800x2700 resolution
-  - Idiomatic Highcharts usage with distinctive features (plotBands, plotLines, crosshair)
-  - Realistic data scenario with plausible traffic patterns (weekly cycle, growth
-    trend, noise)
+  - 'Complete theme adaptation: all chrome elements (title, axis labels, tick labels,
+    grid, weekend bands, tooltip) correctly use INK/INK_SOFT/GRID tokens; both light
+    and dark renders are visually correct with no dark-on-dark or light-on-light failures.'
+  - 'Strong use of Highcharts-specific APIs: plotBands for weekend context, plotLines
+    with styled label for peak annotation, linearGradient fill — well beyond a basic
+    AreaSeries.'
+  - 'Canonical export pipeline: CDP setDeviceMetricsOverride + PIL safety net ensures
+    exact 3200x1800 output reliably; both PNG and HTML artifacts saved.'
+  - Realistic and neutral data context (daily website visitors) with meaningful narrative
+    backed by weekly seasonality, growth trend, and a descriptive subtitle.
   weaknesses:
-  - Bottom margin (300px) is slightly generous, creating some wasted space below the
-    x-axis
-  - Y-axis range extends above the peak line, leaving some unused whitespace at top
-  - Could benefit from one additional storytelling element (e.g., marking the lowest
-    point or adding a trend line)
-  image_description: 'The plot displays a basic area chart titled "area-basic · highcharts
-    · pyplots.ai" with a subtitle "Daily Website Visitors Over One Month — Weekend
-    Dips with Steady Growth". The chart uses a single series in Python Blue (#306998)
-    with a gradient fill that transitions from semi-opaque blue at the line to nearly
-    transparent at the bottom. Small circular markers with white borders appear at
-    each of the 30 data points. The x-axis shows "Day of Month" (1–30) and the y-axis
-    shows "Daily Visitors" (1,500–3,900). Light blue vertical bands highlight weekend
-    days. A red dotted horizontal line near the top marks the peak at "▲ Peak: 3,734
-    visitors (Day 30)". The legend in the top-right reads "Website Visitors". Subtle
-    gridlines at 8% opacity guide value estimation. The data exhibits a clear upward
-    growth trend with periodic weekly dips, starting around 2,400 visitors and climbing
-    to ~3,700 by day 30.'
+  - Peak annotation label (32px) is smaller than tick labels (44px) — the label hierarchy
+    places annotation text below ticks; bumping to ~38-40px would unify the lower-tier
+    text layer.
+  - Y-axis minimum is 1500 but data never falls below ~1,884 — the ~400-unit gap below
+    data creates empty visual weight in the area fill, subtly exaggerating percentage
+    changes; consider min=0 for honest baseline or min=1800 to reduce dead space.
+  - 'Typographic hierarchy limited by uniform font family and minimal weight variation
+    — adding fontWeight: ''300'' to the subtitle style would add professional typographic
+    depth.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "area-basic · python · highcharts · anyplot.ai" in bold dark ink, spanning ~75-80% of plot width — readable. Subtitle in softer INK_SOFT. X-axis label "Day of Month" and Y-axis label "Daily Visitors" in dark INK at 56px — readable. Tick labels in INK_SOFT at 44px — readable. Peak annotation "▲ Peak: 3,734 visitors (Day 30)" in #AE3030 red at 32px bold — readable. Weekend plotBands as subtle green-tinted vertical bands.
+      Data: Brand green #009E73 area fill with gradient from rgba(0,158,115,0.45) at line to near-transparent at baseline. 30 circular markers at radius=9 visible on each data point. Red dotted reference line at peak value.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and all axis labels flip to light ink (#F0EFE8 / #B8B7B0) — clearly visible against dark background. No dark-on-dark failures detected. Tick labels in #B8B7B0 clearly visible. Peak annotation in #AE3030 red — legible on dark background (bold, above WCAG large-text threshold). Weekend plotBands at higher opacity (rgba(0,158,115,0.22)) — appropriate for dark surface.
+      Data: Brand green #009E73 area fill and markers are identical to light render — data colors unchanged as required. Grid lines use rgba(240,239,232,0.15) — subtle but present.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,68 +54,82 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 72px, subtitle 42px, axis titles
-          48px, tick labels 36px, peak label 32px'
+        comment: 'Font sizes explicitly set (title 66px, axis labels 56px, tick labels
+          44px). All text readable in both themes. Minor deduction: peak annotation
+          at 32px is smaller than tick labels (44px), slight label hierarchy inconsistency.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements in either render. Peak label in upper-left
+          clear of data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers radius 6 with white border, line width 4, well-adapted for
-          30 data points
+        comment: 30 data points with radius-9 markers are appropriately prominent.
+          Gradient area fill clearly visible. Correct density adaptation.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses brand green #009E73. Peak annotation uses #AE3030
+          semantic red anchor for peak/maximum — appropriate use. CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single series in Python Blue, red only for peak annotation, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization but bottom margin slightly generous and excess
-          whitespace above peak
+        comment: Canvas gate passed. PIL safety net pins exact 3200x1800. Generous
+          margins. No overflow or clipping detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Day of Month and Daily Visitors'
+        comment: Day of Month and Daily Visitors are descriptive. Subtitle adds meaningful
+          context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73. Backgrounds are #FAF8F1 / #1A1A17. Chrome
+          correctly flips between themes. No forbidden colormaps.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with gradient fill, weekend bands, crosshair, custom
-          tooltips. Above defaults.
+        comment: 'Above baseline: gradient area fill, weekend plotBands, peak reference
+          line with styled label, descriptive subtitle. Missing font family customisation
+          and more intentional weight hierarchy.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle gridlines at 0.08 opacity, credits disabled, clean background,
-          weekend bands add structure
+        comment: 'Y-axis-only grid at low opacity. Markers use lineColor: PAGE_BG
+          for clean embedded look. Gradient fill well-calibrated. Weekend bands at
+          appropriate low opacity.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Peak annotation with value/day, subtitle frames narrative, weekend
-          bands reinforce cyclical pattern
+        comment: Peak annotation directs viewer to maximum. Weekend bands surface
+          cyclical pattern. Subtitle summarises both trends. Growing trend visually
+          unambiguous. Above default but stops short of fully guided narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -129,48 +139,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart using AreaSeries
+        comment: Correct area chart with filled region below the line.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent gradient fill, gridlines, clear axis labels, gradient
-          fill from line to bottom
+        comment: Semi-transparent gradient fill (top 0.45, within 0.3-0.5 spec range),
+          Y-axis grid lines, clear axis labels, gradient fill from line to baseline
+          — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=days (continuous), Y=visitors (numeric), correctly mapped
+        comment: 'X-axis: days 1-30 (continuous numeric time axis). Y-axis: visitor
+          counts. All 30 data points rendered and visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend label
+        comment: Title is area-basic · python · highcharts · anyplot.ai. Legend correctly
+          disabled for single-series chart.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows growth trend, weekly cycle, noise. Single-series only.
+        comment: 'Demonstrates: trend (linear growth), seasonality (weekly sine wave),
+          noise, area fill with gradient, peak annotation, weekend band overlay. All
+          major area-chart aspects covered.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitors is a real, neutral scenario from spec examples
+        comment: Daily website visitor counts are highly realistic, neutral, and universally
+          relatable. Values in 1,900-3,734 range with weekly dips are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1900-3700 daily visitors is realistic for a moderate website
+        comment: 30 data points for a monthly view is appropriate. Visitor counts
+          are realistic. Y-axis range appropriate for data spread.
     code_quality:
       score: 10
       max: 10
@@ -180,33 +197,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, config, series, export'
+        comment: Flat procedural code, no functions or classes defined.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are actively used; no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Weekend band generation loop is clean and readable. No fake UI or
+          overengineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, no deprecated functions
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current highcharts_core
+          API used throughout.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,12 +233,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of HighchartsOptions, AreaSeries, plotOptions pattern
+        comment: Chart(container='container'), HighchartsOptions(), AreaSeries from
+          correct module, chart.add_series(), dictionary-style options — all follow
+          library recommended patterns. CDP override + PIL safety net follow canonical
+          export recipe.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: plotBands, plotLines with labels, crosshair, tooltip customization,
-          to_js_literal()
+        comment: Uses plotBands for weekend shading, plotLines with styled label for
+          peak annotation, linearGradient stops for SVG gradient fill, tooltip with
+          headerFormat/pointFormat, HTML artifact alongside PNG. Good feature breadth;
+          could additionally leverage responsive.rules or chart.animation.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
