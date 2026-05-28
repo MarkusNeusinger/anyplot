@@ -57,6 +57,7 @@ ax = Axis(
     bottomspinecolor   = INK_SOFT,
     xgridvisible       = false,
     ygridcolor         = RGBAf(Float32(INK.r), Float32(INK.g), Float32(INK.b), 0.15f0),
+    yticks             = [0, 25, 50, 75, 100],
     yminorgridvisible  = false,
     xminorgridvisible  = false,
 )
@@ -69,6 +70,13 @@ band!(ax, hours, zeros(n), cpu_usage;
 lines!(ax, hours, cpu_usage;
     color     = ANYPLOT_PALETTE[1],
     linewidth = 2.5)
+
+# Day boundary — vertical dashed separator at hour 24
+vlines!(ax, [24]; color = (INK_SOFT, 0.5), linewidth = 1.5, linestyle = :dash)
+
+# Day labels near the top of the plot area
+text!(ax, 12, 93; text = "Day 1", color = INK_SOFT, fontsize = 12, align = (:center, :top))
+text!(ax, 36, 93; text = "Day 2", color = INK_SOFT, fontsize = 12, align = (:center, :top))
 
 ylims!(ax, 0, 100)
 xlims!(ax, 0, n - 1)
