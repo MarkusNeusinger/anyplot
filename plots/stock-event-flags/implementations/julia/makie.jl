@@ -1,7 +1,7 @@
 # anyplot.ai
 # stock-event-flags: Stock Chart with Event Flags
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-05-27
+# Quality: 89/100 | Updated: 2026-05-28
 
 using CairoMakie
 using Colors
