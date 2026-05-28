@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-basic
 created: '2025-12-23T00:47:36Z'
-updated: '2026-05-28T23:08:49Z'
+updated: '2026-05-28T23:16:56Z'
 generated_by: claude-sonnet
 workflow_run: 26606733713
 issue: 691
@@ -12,44 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Correct imprint_div diverging colormap with properly theme-adaptive midpoint
-    (#FAF8F1 light / #1A1A17 dark)'
-  - Per-cell theme-adaptive text contrast logic (white on dark extremes, INK on mid-range
-    in light, uniform cream in dark)
-  - Interesting synthetic data with clear department narratives (HR crisis, Sales/Research
-    recovery surge)
-  - 'Idiomatic plotnine grammar: scale_color_identity + aes(color=...) for per-cell
-    text is an elegant pattern'
-  - 'Perfect spec compliance: all required features (heatmap type, diverging cmap,
-    cell annotations, colorbar, logical ordering)'
+  - Correct imprint_div diverging colormap (matte-red → theme-adaptive midpoint →
+    blue) for signed growth-rate data
+  - Sophisticated scale_color_identity + computed text_color column for per-cell adaptive
+    annotation contrast — idiomatic plotnine pattern
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens applied
+    consistently across all non-data elements in both renders'
+  - Realistic, narrative-rich dataset with deliberate extreme anchor points (HR -32.5,
+    Sales +38.2, Research +33.7) that make the heatmap visually interesting
+  - Square 2400×2400 canvas appropriate for symmetric matrix; canvas gate passed
+  - Subtitle adds contextual information without cluttering the title
+  - pd.Categorical with ordered=True for correct row/column ordering in plotnine's
+    discrete scales
   weaknesses:
-  - 'Dark mode: near-zero cells fill with #1A1A17 (same as background) AND cell borders
-    are also color=PAGE_BG=#1A1A17 — heatmap grid loses definition in the ±~10% band
-    (Engineering Q4 23 at -0.8, Marketing Q2 23 at -0.1, Finance Q1 24 at -0.5). Fix:
-    change geom_tile color=PAGE_BG to color=INK_SOFT so cell borders are visible in
-    dark mode, or use a slightly offset dark midpoint (~#27251F) so near-zero tiles
-    remain distinguishable from the #1A1A17 background'
-  - 'Colorbar legend cramped: 8 breaks (-30,-20,-10,0,10,20,30,40) at legend_key_height=12
-    pack tick labels too tightly in both renders. Fix: reduce to 5 breaks (breaks=[-30,-15,0,15,30])
-    or increase legend_key_height to 22+'
+  - scale_x_discrete(expand=(0, 0.5)) and scale_y_discrete(expand=(0, 0.5)) create
+    a half-tile gap between the outer cells and the panel border — use expand=(0,
+    0) so tiles flush against the border for a cleaner enclosed heatmap look
+  - Cell annotation text size=3 (plotnine mm ≈ 8.5pt) is readable but on the small
+    side for a 2400px canvas; bumping to size=3.5 would improve legibility at thumbnail
+    scale
+  - 'Dark render: mid-range near-zero cells fill with #1A1A17 (the page background),
+    making cell boundaries in the 0%-band hard to distinguish without close inspection
+    — the cell borders (INK_SOFT #B8B7B0) help but a slightly thicker border (size=0.8)
+    would reinforce cell definition in dark mode'
+  - No explicit callout or annotation highlighting the narrative extremes (HR Q1'23
+    = -32.5%, Sales Q4'24 = +38.2%) — a simple annotate() note on the two extremes
+    would strengthen the data story
+  - 'Design Excellence is functional but unremarkable: no focal point emphasis, no
+    spine customisation beyond panel_border, plot_margin=0.02 is quite tight and compresses
+    the whitespace'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "heatmap-basic · python · plotnine · anyplot.ai" bold 12pt dark ink, clearly readable. Subtitle "Year-over-year growth rate (%) · Q1 2023 – Q4 2024" in 8pt secondary tone. Axis labels "Quarter" and "Department" at 10pt dark ink, readable. Tick labels (quarter names, department names) at 8pt in #4A4A44, readable. Colorbar legend on right with "Growth (%)" title — 8 break labels (-30 to 40) are cramped within legend_key_height=12.
-      Data: imprint_div colormap — matte-red (#AE3030) for negative cells, warm cream midpoint, blue (#4467A3) for positive cells. All 64 cells visible with clear color gradients. Cell annotations show signed % values in white (on dark extremes) or INK (on mid-range). HR Q1'23 (-32.5) renders as deep red; Sales Q4'24 (+38.2) and Research Q3'24 (+33.7) as deep blue.
-      Legibility verdict: PASS (minor: colorbar tick labels slightly cramped)
+      Background: Warm off-white #FAF8F1 — correctly matches the light surface token. Panel border present (four-sided, appropriate for enclosed heatmap grid).
+      Chrome: Title "heatmap-basic · python · plotnine · anyplot.ai" in bold dark ink, centered, spanning ~70% of canvas width. Subtitle "Year-over-year growth rate (%) · Q1 2023 – Q4 2024" in INK_SOFT below. Y-axis label "Department" and X-axis label "Quarter" in dark ink at 10pt. Tick labels at 8pt in INK_SOFT; x-axis tick labels rotated 45° for readability.
+      Data: 8×8 heatmap (8 departments × 8 quarters). Diverging colormap from matte-red #AE3030 (negative growth) through near-white midpoint to blue #4467A3 (positive growth). Strongly negative cells (e.g. HR Q1'23 = -32.5) are deep red; strongly positive cells (e.g. Sales Q4'24 = +38.2) are deep blue; near-zero cells are near-white. Cell annotations show +/- numeric values; white text on extreme cells, INK on mid-range cells — adaptive contrast is clearly working. Colorbar legend labelled "Growth (%)" on the right with a properly styled elevated background.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light failures. Minor: small gap between outer tiles and panel border due to expand=0.5.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and all axis labels/ticks use cream/light tokens (#F0EFE8 / #B8B7B0) — readable against dark background. No dark-on-dark text failures for chrome elements. Colorbar legend has dark elevated background (#242420) with light text.
-      Data: Data colors identical to light render (imprint_div stays constant across themes — correct). ISSUE: Near-zero cells (Engineering Q4'23 -0.8, Marketing Q2'23 -0.1, Finance Q1'24 -0.5, etc.) fill with #1A1A17 (theme-adaptive midpoint = background color). Cell borders also use PAGE_BG=#1A1A17 so they are invisible. The heatmap grid structure is lost for the central band of values. Cell annotation text (cream #F0EFE8) over near-black cells remains readable. Extreme cells (red/blue) are clearly visible.
-      Legibility verdict: PASS for chrome text; FAIL for grid structure in near-zero band (cells merge with background in dark mode)
+      Background: Warm near-black #1A1A17 — correctly matches the dark surface token.
+      Chrome: Title and subtitle in light #F0EFE8 (INK in dark mode) — clearly readable against dark background. Axis labels and tick labels rendered in theme-adaptive tokens (INK / INK_SOFT dark variants) — all readable. No dark-on-dark text failures observed.
+      Data: Data colors (matte-red / blue ends of diverging scale) are identical to the light render — only the midpoint and chrome flip. Mid-range near-zero cells fill with #1A1A17 (page background), making them visually merge with the background; cell borders in INK_SOFT (#B8B7B0) provide the main boundary definition in this zone. Cell annotation labels rendered in light cream (#F0EFE8) on all cells — readable even on the dark mid-range cells. Extreme cells (strongly red or blue) also show light cream text with adequate contrast.
+      Legibility verdict: PASS — all titles, labels, and annotations readable. Note: mid-range cells blend with dark background by design (imprint_div midpoint = page bg), but border lines maintain grid structure.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +66,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; cell annotation size=3mm slightly
-          small but legible at full resolution; proportions well-balanced
+        comment: Title, subtitle, axis labels, tick labels all readable in both renders.
+          Cell annotation size=3 (plotnine mm ≈ 8.5pt) is readable but slightly small
+          for 2400px canvas.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Colorbar legend has 8 tick breaks (-30 to 40) at legend_key_height=12;
-          adjacent labels are cramped and risk touching in both renders
+        passed: true
+        comment: No overlapping text. X-axis tick labels rotated 45° successfully
+          prevents overlap. Cell annotations fit within cells.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Dark render: near-zero cells fill with #1A1A17 (theme-adaptive imprint_div
-          midpoint = background); cell borders also PAGE_BG=#1A1A17 — heatmap grid
-          loses structure for central band'
+        passed: true
+        comment: 'All cells visible; diverging gradient clearly communicates magnitude.
+          Minor: mid-range near-zero cells blend with dark background (imprint_div
+          design), cell borders provide definition.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red-to-blue is CVD-safe; white text on extreme cells provides
-          good contrast
+        comment: Diverging red-to-blue cmap is CVD-safe. Numeric annotations provide
+          redundant encoding for values.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas; plot fills canvas well; plot_margin=0.02
-          is tight but workable
+        comment: Square 2400×2400 canvas appropriate. expand=(0, 0.5) creates a half-tile
+          gap between outer cells and panel border. plot_margin=0.02 is tight.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Quarter, Department, subtitle with date range and units
+        comment: Title correct format. Subtitle adds context. Axis labels 'Department'
+          and 'Quarter' descriptive. Colorbar labelled 'Growth (%)'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct imprint_div (low=#AE3030, mid=PAGE_BG theme-adaptive, high=#4467A3);
-          backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive in both renders'
+        comment: 'imprint_div colormap (#AE3030 → theme-midpoint → #4467A3). Backgrounds
+          #FAF8F1 / #1A1A17. All chrome tokens theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -110,23 +121,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: per-cell adaptive text color, informative
-          subtitle, interesting multi-story data; not publication-ready but clearly
-          intentional'
+        comment: 'Above default: adaptive cell text color via scale_color_identity,
+          subtitle, theme tokens. No outstanding focal emphasis or exceptional aesthetic
+          beyond functional correctness.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid disabled for heatmap; panel border kept for matrix framing;
-          cell gaps use theme background color; legend_background uses elevated fill
+        comment: Grid removed, panel border appropriate for enclosed heatmap, legend
+          properly styled. Gap from expand=0.5 detracts slightly. Tight margins.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Diverging color creates focal points; HR Q1-23 (-32.5) deep red,
-          Sales/Research surge (+38.2/+33.7) deep blue; temporal recovery trend left-to-right
+        comment: Subtitle explains the data context. Diverging scale guides eye to
+          extremes. Narrative anchor points visible in color. No explicit callout
+          on HR crisis or Sales recovery extremes.
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +148,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geom_tile heatmap
+        comment: Correct heatmap using geom_tile — matrix format with color intensity.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap, cell annotations, colorbar legend, logical ordering
-          all present
+        comment: Diverging colormap for +/- data, cell value annotations, colorbar
+          legend, logical ordering.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarter (x), Department (y), Growth % (fill) correctly mapped; all
-          64 cells shown
+        comment: X=Quarter, Y=Department, fill=Growth (%). All 64 cells rendered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-basic · python · plotnine · anyplot.ai' correct; legend
-          labeled 'Growth (%)'
+        comment: Title 'heatmap-basic · python · plotnine · anyplot.ai' correct. Colorbar
+          legend labelled 'Growth (%)'.
     data_quality:
       score: 15
       max: 15
@@ -167,21 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: '8x8 matrix with full range: extreme negative (-32.5), near-zero,
-          strong positive (+38.2); temporal trend visible'
+        comment: 'Full heatmap feature set: matrix format, diverging colormap, cell
+          annotations, colorbar, ordered axes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Quarterly department growth rates: real, neutral business scenario'
+        comment: Quarterly department growth rates — realistic business context. Values
+          plausible (-32.5% to +38.2%). Neutral, non-controversial data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -32.5% to +38.2% is a plausible range for department-level quarterly
-          metrics
+        comment: 8×8 grid within spec range (5–50). Growth rate values and colorbar
+          limits (-35 to 40) appropriate.
     code_quality:
       score: 10
       max: 10
@@ -191,32 +203,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> plot -> save'
+        comment: No functions or classes. Linear, readable flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used; os, numpy, pandas all needed
+        comment: All imports used. Only necessary libraries.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean grammar-of-graphics; scale_color_identity + aes(color=text_color)
-          is elegant plotnine idiom
+        comment: Elegant numpy broadcasting for matrix construction. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=6, height=6, units='in')
+        comment: Saves as plot-{THEME}.png. Current plotnine API.
     library_mastery:
       score: 7
       max: 10
@@ -226,21 +237,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic plotnine: geom_tile + scale_fill_gradient2 + scale_color_identity
-          + pd.Categorical for axis ordering'
+        comment: Idiomatic grammar-of-graphics composition. scale_color_identity with
+          computed text color column is sophisticated and correct plotnine pattern.
+          Proper element_ theme functions.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: aes(color=text_color) + scale_color_identity() for per-cell text
-          mapping is distinctive plotnine/ggplot feature; pd.Categorical with custom
-          ordering for display control
-  verdict: REJECTED
+        comment: Multiple interacting scales (fill + color + both discrete axes).
+          pd.Categorical with ordered=True for proper discrete scale ordering. Identity
+          scale for direct color mapping.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
   - layer-composition
   patterns:
