@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-basic: Basic Box Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-28
+Quality: 87/100 | Updated: 2026-05-28
 """
 
 import os
