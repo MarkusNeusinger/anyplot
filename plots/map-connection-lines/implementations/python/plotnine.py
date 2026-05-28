@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-28
@@ -27,6 +27,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_gradient,
+    scale_size_continuous,
     theme,
     theme_minimal,
 )
@@ -223,12 +224,16 @@ plot = (
         alpha=0.95,
     )
     + geom_path(
-        aes(x="lon", y="lat", group="route_id", color="volume"), data=df_flights, size=0.85, alpha=0.55, lineend="round"
+        aes(x="lon", y="lat", group="route_id", color="volume", size="volume"),
+        data=df_flights,
+        alpha=0.55,
+        lineend="round",
     )
     + geom_point(
         aes(x="lon", y="lat"), data=df_airports, color=INK_SOFT, fill=BRAND, size=3.5, shape="o", stroke=0.8, alpha=0.95
     )
     + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers\n(thousands/yr)")
+    + scale_size_continuous(range=(0.5, 2.0), guide=None)
     + coord_cartesian(xlim=(-180, 180), ylim=(-60, 80))
     + labs(title=TITLE, x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
@@ -238,7 +243,7 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.2, alpha=0.12),
         panel_grid_minor=element_blank(),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
+        panel_border=element_blank(),
         plot_title=element_text(size=TITLE_SIZE, color=INK, weight="bold"),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
