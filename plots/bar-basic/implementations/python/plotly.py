@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-basic: Basic Bar Chart
-Library: plotly | Python
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Created: 2026-05-28
 """
 
 import os
