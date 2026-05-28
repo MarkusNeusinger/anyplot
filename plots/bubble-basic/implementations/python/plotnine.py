@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-28
@@ -15,6 +15,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_point,
+    geom_smooth,
     ggplot,
     labs,
     scale_color_manual,
@@ -61,7 +62,10 @@ df["region"] = pd.Categorical(df["region"], categories=regions, ordered=True)
 # Plot
 plot = (
     ggplot(df, aes(x="gdp_per_capita", y="life_expectancy", size="population", color="region"))
-    + geom_point(alpha=0.65)
+    + geom_smooth(
+        aes(x="gdp_per_capita", y="life_expectancy"), method="lm", se=False, color=INK_SOFT, size=0.7, inherit_aes=False
+    )
+    + geom_point(alpha=0.65, stroke=0.4)
     + scale_size_area(max_size=18, breaks=[5, 25, 75], name="Population (M)")
     + scale_color_manual(values=ANYPLOT_PALETTE[:4], name="Region")
     + scale_x_continuous(labels=lambda lst: [f"${v:.0f}k" for v in lst], breaks=[10, 20, 30, 40, 50, 60, 70, 80])
@@ -83,6 +87,7 @@ plot = (
         legend_key=element_rect(fill=PAGE_BG, color="none"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
