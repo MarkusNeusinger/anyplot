@@ -1,18 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
-Library: letsplot 4.8.2 | Python 3.14.2
-Quality: 93/100 | Created: 2025-12-23
+Library: letsplot 4.8.2 | Python 3.14
+Quality: 93/100 | Updated: 2026-05-28
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403, F401
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Data — daily website visitors over a month
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"
+DIP_COLOR = "#AE3030"
+
+# Data — daily website visitors over January
 np.random.seed(42)
 days = pd.date_range(start="2024-01-01", periods=30, freq="D")
 base_visitors = 5000
@@ -24,97 +35,93 @@ visitors = np.clip(visitors, 2000, None).astype(int)
 
 df = pd.DataFrame({"date": days, "visitors": visitors})
 
-# Key data points for storytelling
 peak_idx = int(df["visitors"].idxmax())
 dip_idx = int(df["visitors"].idxmin())
 dip_val = df.loc[dip_idx, "visitors"]
 peak_val = df.loc[peak_idx, "visitors"]
 growth_pct = (df["visitors"].iloc[-5:].mean() / df["visitors"].iloc[:5].mean() - 1) * 100
 
-subtitle = f"+{growth_pct:.0f}% average growth over January \u2014 weekly cycles with steady upward trend"
+subtitle = f"+{growth_pct:.0f}% average growth over January — weekly cycles with steady upward trend"
 
-# Annotation data for peak and dip markers
 ann_peak = df.iloc[[peak_idx]].copy()
 ann_dip = df.iloc[[dip_idx]].copy()
 
-# Y-axis range: generous padding for area fill weight below, headroom above for annotations
 y_min = max(int(dip_val * 0.82), 0)
-y_max = int(peak_val * 1.12)
+y_max = int(peak_val * 1.06)
 
-# Gradient fill: layer multiple area geoms with decreasing alpha to simulate a vertical gradient
+anyplot_chrome = theme(  # noqa: F405
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+    panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+    panel_grid_major_y=element_line(color=INK_SOFT, size=0.15),  # noqa: F405
+    panel_grid_major_x=element_blank(),  # noqa: F405
+    panel_grid_minor=element_blank(),  # noqa: F405
+    axis_title=element_text(color=INK, size=12),  # noqa: F405
+    axis_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
+    axis_line=element_line(color=INK_SOFT),  # noqa: F405
+    plot_title=element_text(color=INK, size=16),  # noqa: F405
+    plot_subtitle=element_text(color=INK_SOFT, size=10),  # noqa: F405
+    plot_margin=[40, 60, 20, 20],
+)
+
 plot = (
     ggplot(df, aes(x="date", y="visitors"))  # noqa: F405
-    + geom_area(fill="#306998", alpha=0.15)  # noqa: F405
+    + geom_area(fill=BRAND, alpha=0.15)  # noqa: F405
     + geom_area(  # noqa: F405
-        fill="#306998",
+        fill=BRAND,
         alpha=0.35,
         tooltips=layer_tooltips()  # noqa: F405
         .line("@visitors visitors")
         .format("date", "%b %d, %Y")
         .line("@date"),
     )
-    + geom_line(color="#306998", size=2.2)  # noqa: F405
+    + geom_line(color=BRAND, size=1.0)  # noqa: F405
     + geom_smooth(  # noqa: F405
-        color="#1a3a5c", size=1.2, se=False, method="loess", linetype="dashed"
+        color=INK_SOFT, size=0.8, se=False, method="loess", linetype="dashed"
     )
-    # Annotations — peak and dip markers
     + geom_point(  # noqa: F405
         data=ann_peak,
         mapping=aes(x="date", y="visitors"),  # noqa: F405
-        size=8,
-        color="#306998",
-        fill="white",
+        size=5,
+        color=BRAND,
+        fill=PAGE_BG,
         shape=21,
-        stroke=2.5,
+        stroke=2.0,
     )
     + geom_point(  # noqa: F405
         data=ann_dip,
         mapping=aes(x="date", y="visitors"),  # noqa: F405
-        size=8,
-        color="#c0392b",
-        fill="white",
+        size=5,
+        color=DIP_COLOR,
+        fill=PAGE_BG,
         shape=21,
-        stroke=2.5,
+        stroke=2.0,
     )
-    # Annotations — peak and dip labels (peak placed below-left, dip placed below)
     + geom_text(  # noqa: F405
         data=ann_peak,
         mapping=aes(x="date", y="visitors", label="visitors"),  # noqa: F405
         nudge_y=-500,
-        size=13,
-        color="#1a3a5c",
+        size=4,
+        color=BRAND,
         hjust=1,
-        label_format="\u25b2 {,d} peak",
+        label_format="▲ {,d} peak",
     )
     + geom_text(  # noqa: F405
         data=ann_dip,
         mapping=aes(x="date", y="visitors", label="visitors"),  # noqa: F405
         nudge_y=-400,
-        size=13,
-        color="#c0392b",
-        label_format="\u25bc {,d} dip",
+        size=4,
+        color=DIP_COLOR,
+        label_format="▼ {,d} dip",
     )
     + scale_x_datetime(format="%b %d")  # noqa: F405
     + scale_y_continuous(limits=[y_min, y_max])  # noqa: F405
     + labs(  # noqa: F405
-        x="Date", y="Daily Visitors", title="area-basic \u00b7 letsplot \u00b7 pyplots.ai", subtitle=subtitle
+        x="Date", y="Daily Visitors", title="area-basic · python · letsplot · anyplot.ai", subtitle=subtitle
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)  # noqa: F405
     + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        plot_title=element_text(size=24),  # noqa: F405
-        plot_subtitle=element_text(size=16, color="#555555"),  # noqa: F405
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.3),  # noqa: F405
-        panel_grid_major_x=element_blank(),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        plot_margin=[40, 60, 20, 20],  # top, right, bottom, left — extra right margin
-    )
+    + anyplot_chrome
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px)
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-export_ggsave(plot, filename="plot.html", path=".")
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, filename=f"plot-{THEME}.html", path=".")
