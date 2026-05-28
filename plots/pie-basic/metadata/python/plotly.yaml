@@ -1,56 +1,61 @@
 library: plotly
+language: python
 specification_id: pie-basic
 created: '2025-12-23T00:34:31Z'
-updated: '2026-02-14T14:56:35Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447770365
-issue: 0
-python_version: 3.14.0
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pie-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pie-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns: []
-  dataprep: []
-  styling:
-  - edge-highlighting
+updated: '2026-05-28T11:51:47Z'
+generated_by: claude-sonnet
+workflow_run: 26571458880
+issue: 678
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Professional donut chart design with center annotation providing context — a signature
-    Plotly technique
-  - Excellent data storytelling with the AWS callout annotation and exploded slice
-    drawing attention to the market leader
-  - Custom colorblind-safe palette starting with Python Blue, with white slice borders
-    for clean separation
-  - 'Perfect spec compliance: all four requirements (percentages, distinct colors,
-    legend, exploded slice) are present'
-  - Clean, well-structured code with explicit font sizing throughout and correct output
-    dimensions
-  - 'Good use of Plotly-specific features: hovertemplate, donut hole, HTML export,
-    domain positioning'
+  - Perfect spec compliance — pure pie chart (no donut), largest slice exploded (Visa
+    0.08 pull), percentage labels on all visible slices, legend with all 6 categories,
+    distinct anyplot palette colors
+  - 'Flawless palette compliance — first series is #009E73 (Visa), canonical palette
+    order maintained across all 6 slices, backgrounds #FAF8F1 (light) / #1A1A17 (dark),
+    all theme tokens applied correctly to both renders'
+  - Effective data storytelling — Market Leader callout annotation in brand green,
+    exploded Visa slice, subtitle providing clear context ('Global digital payment
+    market share, 2024') together guide the viewer to the key insight
+  - Clean, idiomatic Plotly code — customdata with hovertemplate providing rank info,
+    uniformtext with mode='hide' for graceful small-slice handling, insidetextorientation='horizontal'
+    for readability
+  - Both renders pass theme-readability check — dark render shows light-colored title/legend/source
+    text on near-black background with no dark-on-dark failures
   weaknesses:
-  - The callout annotation arrow points upward rather than directly at the AWS slice,
-    weakening the visual connection between the annotation and the data it references
-  - The bright yellow (Azure) slice creates a slight contrast imbalance against the
-    pale off-white background
-  - Legend is positioned somewhat far from the chart, creating excess whitespace in
-    the right portion of the canvas
-  image_description: 'The plot displays a donut chart (pie chart with center hole)
-    showing cloud computing market share for 2024. Six slices represent: AWS (31%,
-    dark navy blue, slightly exploded outward), Azure (24%, golden yellow), Google
-    Cloud (11%, teal), Alibaba (4%, light purple), IBM (3%, coral/orange), and Others
-    (27%, light blue). Percentage labels with category names are positioned outside
-    each slice with connector lines. A vertical legend on the right side lists all
-    six categories with colored markers. Inside the donut hole, bold blue text reads
-    "Cloud Market 2024". A callout annotation box in the bottom-right corner reads
-    "AWS leads with 31% market share" with an upward-pointing arrow. White borders
-    (3px) separate each slice. The title "pie-basic · plotly · pyplots.ai" is centered
-    at the top. The background is a subtle off-white (#FAFAFA).'
+  - Apple Pay (5% slice) has its inside label silently hidden by uniformtext minsize=10
+    — the unlabeled slice looks slightly incomplete compared to all others; consider
+    reducing minsize to 8 or using textposition='outside' with a leader line for the
+    smallest slice so all 6 categories have visible on-chart labels
+  - DE-01 design level is solid but not publication-ready — the callout and pull create
+    good focal points, but the overall aesthetic is still closer to a 'configured
+    default' than a polished editorial chart; adding a subtle radial gradient on the
+    Visa slice or a thin divider line between the pie and legend area could push polish
+    further
+  - 'DQ-03 note: Apple Pay is a mobile wallet layered on top of card networks, not
+    an independent payment processor at the same level as Visa/Mastercard; mixing
+    card-network share (Visa 38%, Mastercard 26%) with wallet share (Apple Pay 5%)
+    in the same chart mixes incompatible metrics — if retaining Apple Pay, a footnote
+    clarifying the metric definition would remove ambiguity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white visible.
+      Chrome: Title "pie-basic · python · plotly · anyplot.ai" in dark INK (#1A1A17) at top-center, fully readable. Subtitle "Global digital payment market share, 2024" in smaller INK_SOFT text below title — readable. Legend on the right side in a boxed panel (ELEVATED_BG #FFFDF6 background, INK_SOFT border) with 6 entries (Visa, Mastercard, PayPal, Amex, Apple Pay, Others) — all readable. Source note "Source: Industry estimates, 2024" at bottom-left in INK_MUTED — small (9px×4=36px) but legible. Market Leader callout annotation (top-right) with green border and brand green text — clearly readable.
+      Data: Visa slice (brand green #009E73, 38%) is pulled outward 0.08 at bottom of pie creating visual emphasis. Mastercard (#C475FD lavender, 26%) on the left. PayPal (#4467A3 blue, 18%) upper area. Amex (#BD8233 ochre, 7%) upper-right. Apple Pay (#AE3030 red, 5%) — slice visible but inside label hidden by uniformtext. Others (#2ABCCD cyan, 6%) right side. White inside labels (13px×4=52px) on all large-enough slices. Slice borders use PAGE_BG color for clean separation.
+      Legibility verdict: PASS — all text readable; only Apple Pay's inside label is hidden (uniformtext), which is graceful degradation, not a failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black visible.
+      Chrome: Title "pie-basic · python · plotly · anyplot.ai" renders in light INK (#F0EFE8) against the dark background — clearly visible, no dark-on-dark failure. Subtitle in lighter INK_SOFT text — readable. Legend panel on the right in ELEVATED_BG (#242420) background — entries (Visa, Mastercard, PayPal, Amex, Apple Pay, Others) all rendered in light text, fully readable against the dark elevated background. Source note in INK_MUTED (#A8A79F) at bottom-left — readable. Market Leader callout box in ELEVATED_BG with green border and green text — clearly visible.
+      Data: All 6 slice colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD) — only chrome flips, data colors are unchanged. White inside labels remain readable on all colored slices.
+      Legibility verdict: PASS — no dark-on-dark text failures detected; all chrome correctly flips to light-on-dark; brand green #009E73 (Visa) remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,70 +63,84 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, slice labels 20pt, legend
-          18pt, center annotation 22pt, callout 16pt'
+        comment: 'All font sizes explicitly set (title 16px, subtitle 11px, labels
+          13px, legend 12px, annotations 9px); all text readable in both themes. Minor
+          deduction: 9px source/callout annotations produce 36 source-px — small but
+          legible.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Outside label positioning with adequate spacing
+        comment: No text overlap; uniformtext with mode='hide' cleanly suppresses
+          the Apple Pay inside label rather than forcing an overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All slices visible including small IBM (3%) and Alibaba (4%). White
-          borders provide separation
+        comment: All 6 slices clearly visible with distinct anyplot palette colors;
+          Visa pull (0.08) adds spatial separation for emphasis.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: White text on colored fills provides adequate contrast; anyplot palette
+          is CVD-safe; no red-green-only signals.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Palette avoids red-green adjacency. Navy, yellow, teal, purple, coral,
-          light blue are distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Pie offset left for legend. ~55% canvas use. Legend somewhat isolated
-          with noticeable empty space
+        comment: 2400x2400 square canvas confirmed; pie fills ~60-65% of width; legend
+          and callout well-positioned; balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format. Center annotation provides additional context.
-          N/A for axis labels on pie
+        comment: No axes needed for pie; subtitle 'Global digital payment market share,
+          2024' provides full context. Title in correct spec format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series Visa=#009E73; palette order 1-6 followed exactly; light
+          bg=#FAF8F1, dark bg=#1A1A17; all theme tokens applied; both renders chrome-correct.
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: donut with center annotation, custom palette, off-white
-          bg, white borders. Bright yellow creates slight contrast imbalance'
+        comment: 'Above configured-default (4): Market Leader callout with brand-green
+          border coordinates with Visa slice color; exploded pull; subtitle + source
+          note show intentional hierarchy. Not yet publication-ready (6) — overall
+          aesthetic remains fairly standard pie-chart.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: plotly_white template, off-white bg, subtle legend
-          border. Legend box functional not elegant'
+        comment: 'Good refinement: slice borders use PAGE_BG for clean separation;
+          legend uses ELEVATED_BG box; INK_MUTED source note; callout box with matching
+          border. No chartjunk. Could push further on whitespace generosity.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: AWS callout annotation and exploded slice highlight market leader.
-          Center label anchors narrative. Arrow direction imprecise
+        comment: 'Good visual hierarchy: exploded Visa slice + Market Leader callout
+          annotation create a clear focal point and explicitly communicate the key
+          insight. Clockwise rotation places Visa at a visually prominent position.'
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +150,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Donut chart is a universally accepted modern variant of pie chart
+        comment: Correct pie chart; no donut hole (as noted in spec comment 'per spec');
+          pure circle with no inner radius.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Percentages, distinct colors, legend, exploded largest slice — all
-          present
+        comment: 'All spec features present: percentage labels on slices (uniformtext
+          hides only Apple Pay 5% gracefully), distinct palette colors for each category,
+          legend with all 6 categories, Visa (largest) slice exploded with 0.08 pull.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 6 categories within spec range, positive values summing to 100
+        comment: 6 categories correctly mapped to pie slices; values sum to 100% (38+26+18+7+5+6=100);
+          all categories visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly. Legend labels match categories
+        comment: Title 'pie-basic · python · plotly · anyplot.ai' matches required
+          format exactly; legend labels match data categories exactly.
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -160,21 +183,26 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Good slice size variation from 3% to 31%. Could include a very small
-          slice (<2%) to test edge case
+        comment: Shows good range of proportions (38% majority to 5% minor player);
+          6 categories within spec's 3-8 range; the Apple Pay slice without an inside
+          label slightly reduces full feature showcase of labeled slices.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cloud computing market share — real-world, neutral, well-known business
-          scenario
+        comment: Real neutral business scenario; real-world companies (Visa, Mastercard,
+          PayPal, Amex, Apple Pay); 2024 context citation included; no controversial
+          elements.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Values sum to 100, proportions plausible for 2024 cloud market data
+        comment: 'Relative proportions are plausible for the payment landscape. Minor
+          deduction: mixing card-network volume share (Visa/Mastercard) with mobile
+          wallet share (Apple Pay) conflates different metric definitions; exact figures
+          are industry estimates, not verified.'
     code_quality:
       score: 10
       max: 10
@@ -184,47 +212,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: import, data, figure, annotations, layout, save'
+        comment: 'Linear: imports → theme tokens → data → figure → annotations → layout
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data
+        comment: All data is hardcoded/deterministic — no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Single import: plotly.graph_objects. No unused imports'
+        comment: Only `os` and `plotly.graph_objects` imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean Pythonic code
+        comment: Clean, Pythonic code; appropriate complexity; hovertemplate is a
+          legitimate Plotly interactive feature (not fake functionality); no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 and plot.html. No deprecated API
+        comment: Saves plot-{THEME}.png with autosize=False + explicit width/height;
+          also writes plot-{THEME}.html (correct for interactive library); current
+          Plotly API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert go.Pie() usage with textinfo, hovertemplate, pull, hole, domain,
-          sort, direction, rotation
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Donut hole, center annotation, hovertemplate, HTML export are distinctively
-          Plotly. Could use texttemplate for more advanced formatting
+        comment: Idiomatic go.Pie with domain positioning, insidetextorientation,
+          uniformtext; proper paper/plot bgcolor separation; update_layout pattern;
+          write_html for interactive output.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Plotly-specific features: customdata for passing rank to hover,
+          hovertemplate with conditional formatting, uniformtext mode=''hide'' for
+          graceful small-slice handling, HTML interactive export. Enough to clearly
+          distinguish from a static library implementation.'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - edge-highlighting
