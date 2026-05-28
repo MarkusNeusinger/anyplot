@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -17,6 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+LEGEND_BORDER = "rgba(74,74,68,0.3)" if THEME == "light" else "rgba(184,183,176,0.3)"
 
 ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
@@ -40,6 +41,20 @@ lowest_dept = min(medians, key=medians.get)
 
 # Plot
 fig = go.Figure()
+
+# Market rate band — PNG-visible plotly shape highlighting target compensation range
+fig.add_hrect(
+    y0=75000,
+    y1=90000,
+    fillcolor=ANYPLOT_PALETTE[0],
+    opacity=0.06,
+    line_width=0,
+    layer="below",
+    annotation_text="Market rate band",
+    annotation_position="top right",
+    annotation_font_size=9,
+    annotation_font_color=INK_SOFT,
+)
 
 for i, category in enumerate(categories):
     values = data[category]
@@ -89,7 +104,7 @@ fig.add_annotation(
     arrowsize=1.2,
     arrowwidth=2,
     arrowcolor=lowest_color,
-    ax=-70,
+    ax=80,
     ay=-60,
     font={"size": 11, "color": lowest_color},
     bordercolor=lowest_color,
@@ -119,10 +134,14 @@ title_text = "box-basic · python · plotly · anyplot.ai"
 
 fig.update_layout(
     autosize=False,
-    title={"text": title_text, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": f"<b>{title_text}</b><br><span style='font-size:11px;color:{INK_SOFT}'>Annual Salary Distribution Across Departments</span>",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Department", "font": {"size": 12, "color": INK}, "standoff": 15},
-        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickfont": {"size": 11, "color": INK_SOFT},
         "showline": True,
         "linewidth": 1.5,
         "linecolor": INK_SOFT,
@@ -146,19 +165,19 @@ fig.update_layout(
     showlegend=True,
     legend={
         "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
+        "bordercolor": LEGEND_BORDER,
         "borderwidth": 1,
         "font": {"size": 10, "color": INK_SOFT},
         "orientation": "h",
         "yanchor": "bottom",
-        "y": -0.22,
+        "y": -0.25,
         "xanchor": "center",
         "x": 0.5,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 80, "r": 40, "t": 80, "b": 100},
+    margin={"l": 80, "r": 40, "t": 100, "b": 110},
 )
 
 # Save
