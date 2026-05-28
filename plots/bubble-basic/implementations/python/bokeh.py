@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-28
@@ -43,10 +43,10 @@ median_income = 30 + population_density / 400 + np.random.normal(0, 4, n_cities)
 green_space = 60 - (population_density / 12000) * 50 + np.random.normal(0, 4, n_cities)
 green_space = np.clip(green_space, 5, 60)  # m² per capita
 
-# Scale bubble sizes by area for accurate visual perception (spec requirement)
-size_min, size_max = 15, 80
+# Area-proportional bubble sizes: size² ∝ data value, so size ∝ sqrt(data)
+size_min, size_max = 22, 80
 green_norm = (green_space - green_space.min()) / (green_space.max() - green_space.min())
-bubble_size = size_min + (size_max - size_min) * green_norm
+bubble_size = np.sqrt(size_min**2 + (size_max**2 - size_min**2) * green_norm)
 
 color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=green_space.min(), high=green_space.max())
 
@@ -112,10 +112,17 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
+# Dashed trend line — guides viewer to the positive density-income correlation
+trend_coeffs = np.polyfit(population_density, median_income, 1)
+x_trend = np.linspace(x_start, x_end, 100)
+y_trend = np.polyval(trend_coeffs, x_trend)
+p.line(x=x_trend, y=y_trend, line_color=INK_SOFT, line_dash="dashed", line_width=5, line_alpha=0.5)
+
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
+p.outline_line_alpha = 0
 
 p.title.text_font_size = "50pt"
 p.title.text_color = INK
@@ -148,7 +155,8 @@ legend_top = y_end - y_range * 0.04
 y_step = y_range * 0.07
 
 ref_green = [green_space.min(), (green_space.min() + green_space.max()) / 2, green_space.max()]
-ref_sizes = [size_min, (size_min + size_max) / 2, size_max]
+ref_norm = [(v - green_space.min()) / (green_space.max() - green_space.min()) for v in ref_green]
+ref_sizes = [np.sqrt(size_min**2 + (size_max**2 - size_min**2) * n) for n in ref_norm]
 ref_labels = [f"{v:.0f} m²/capita" for v in ref_green]
 
 legend_box = BoxAnnotation(
