@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: highcharts 1.10.3 | Python 3.14.3
 Quality: 91/100 | Updated: 2026-02-22
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,16 +13,28 @@ from pathlib import Path
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.spline import SplineSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint categorical palette — positions 1-6
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: Sports team rankings over a season (6 teams, 6 match weeks)
 teams = ["Eagles", "Wolves", "Tigers", "Bears", "Sharks", "Lions"]
 weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
 
-# Rankings for each team across weeks (1 = best, 6 = worst)
-# Shows various patterns: overtakes, stability, rise, fall, swaps
+# Rankings per team (1 = best, 6 = worst) — overtakes, rises, falls, stability
 rankings = {
     "Eagles": [3, 2, 1, 1, 2, 1],
     "Wolves": [1, 1, 2, 3, 3, 2],
@@ -31,20 +44,8 @@ rankings = {
     "Lions": [6, 6, 6, 6, 5, 6],
 }
 
-# Colorblind-safe palette starting with Python Blue
-# Teal replaces red for better perceptual distance from orange under colorblindness
-colors = ["#306998", "#FFD43B", "#9467BD", "#FF7F0E", "#17BECF", "#8C564B"]
-
-# Visual hierarchy: thicker lines for teams with dramatic rank changes
-line_widths = {
-    "Eagles": 9,  # rises to #1 — protagonist
-    "Wolves": 6,
-    "Tigers": 9,  # dramatic arc #4→#1→#3
-    "Bears": 5,
-    "Sharks": 4,  # minor fluctuation
-    "Lions": 4,  # mostly stable at bottom
-}
-
+# Visual hierarchy: thicker lines / larger markers for protagonists (most dramatic arcs)
+line_widths = {"Eagles": 9, "Wolves": 6, "Tigers": 9, "Bears": 5, "Sharks": 4, "Lions": 4}
 marker_radii = {"Eagles": 16, "Wolves": 12, "Tigers": 16, "Bears": 10, "Sharks": 9, "Lions": 9}
 
 # Chart
@@ -53,38 +54,35 @@ chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "spline",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginLeft": 200,
-    "marginRight": 260,
-    "marginBottom": 250,
-    "spacingTop": 100,
-    "marginTop": 300,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginLeft": 180,
+    "marginRight": 210,
+    "marginBottom": 190,
+    "spacingTop": 60,
+    "marginTop": 230,
 }
 
-# Title
 chart.options.title = {
-    "text": "bump-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "bump-basic · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
 }
 
-# Subtitle
-chart.options.subtitle = {"text": "League Standings Over Season", "style": {"fontSize": "48px", "color": "#666666"}}
+chart.options.subtitle = {"text": "League Standings Over Season", "style": {"fontSize": "44px", "color": INK_SOFT}}
 
-# X-axis
 chart.options.x_axis = {
     "categories": weeks,
-    "labels": {"style": {"fontSize": "40px"}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "lineWidth": 0,
     "tickWidth": 0,
     "gridLineWidth": 0,
 }
 
-# Y-axis (inverted so rank 1 is at top)
+# Y-axis inverted so rank 1 is at top; plotBand highlights #1 zone, plotLine marks podium boundary
 chart.options.y_axis = {
-    "title": {"text": "Rank", "style": {"fontSize": "40px", "color": "#444444"}},
-    "labels": {"style": {"fontSize": "40px"}, "format": "#{value}"},
+    "title": {"text": "Rank", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "format": "#{value}"},
     "reversed": True,
     "lineWidth": 0,
     "min": 0.5,
@@ -94,35 +92,43 @@ chart.options.y_axis = {
     "endOnTick": False,
     "gridLineWidth": 1,
     "gridLineDashStyle": "Dot",
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "plotBands": [
         {
             "from": 0.5,
             "to": 1.5,
-            "color": "rgba(255, 215, 0, 0.06)",
+            "color": "rgba(0, 158, 115, 0.07)",
             "label": {
-                "text": "\u2605",
+                "text": "★",
                 "align": "left",
-                "x": -60,
-                "style": {"fontSize": "36px", "color": "rgba(200, 170, 0, 0.35)"},
+                "x": -48,
+                "style": {"fontSize": "36px", "color": "rgba(0, 158, 115, 0.45)"},
+            },
+        }
+    ],
+    # plotLine is a Highcharts-specific feature: dashed separator at the podium boundary
+    "plotLines": [
+        {
+            "value": 3.5,
+            "color": INK_MUTED,
+            "width": 2,
+            "dashStyle": "ShortDash",
+            "label": {
+                "text": "Podium cutoff",
+                "align": "right",
+                "x": -10,
+                "style": {"fontSize": "30px", "color": INK_MUTED},
             },
         }
     ],
 }
 
-# Legend disabled — endpoint data labels already identify each team
 chart.options.legend = {"enabled": False}
-
-# Tooltip disabled for static output
 chart.options.tooltip = {"enabled": False}
-
-# Credits off
 chart.options.credits = {"enabled": False}
-
-# Default plot options for spline
 chart.options.plot_options = {"spline": {"marker": {"enabled": True, "symbol": "circle"}}}
 
-# Series with data labels at endpoints, key-moment annotations, and visual hierarchy
+# Build series with endpoint labels and storytelling annotations at key moments
 series_list = []
 for i, team in enumerate(teams):
     ranks = rankings[team]
@@ -130,51 +136,66 @@ for i, team in enumerate(teams):
     for j, rank in enumerate(ranks):
         point = {"y": rank}
         if j == len(ranks) - 1:
-            # Data label at end point showing team name
+            # Endpoint label identifying the team
             point["dataLabels"] = {
                 "enabled": True,
                 "format": "{series.name}",
                 "align": "left",
                 "verticalAlign": "middle",
                 "x": 20,
-                "style": {"fontSize": "32px", "fontWeight": "bold", "color": colors[i], "textOutline": "3px white"},
+                "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "bold",
+                    "color": IMPRINT_PALETTE[i],
+                    "textOutline": f"3px {PAGE_BG}",
+                },
             }
         elif team == "Eagles" and j == 2:
-            # Storytelling: Eagles take #1 at Week 3
             point["dataLabels"] = {
                 "enabled": True,
-                "format": "\u2191 Takes lead",
+                "format": "↑ Takes lead",
                 "align": "center",
-                "y": -30,
-                "style": {"fontSize": "26px", "fontWeight": "normal", "color": "#555555", "textOutline": "2px white"},
+                "y": -42,
+                "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "normal",
+                    "color": INK_SOFT,
+                    "textOutline": f"2px {PAGE_BG}",
+                },
             }
         elif team == "Tigers" and j == 4:
-            # Storytelling: Tigers peak at #1 at Week 5
             point["dataLabels"] = {
                 "enabled": True,
-                "format": "\u2191 Peak",
+                "format": "↑ Peak",
                 "align": "center",
-                "y": -30,
-                "style": {"fontSize": "26px", "fontWeight": "normal", "color": "#555555", "textOutline": "2px white"},
+                "y": -42,
+                "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "normal",
+                    "color": INK_SOFT,
+                    "textOutline": f"2px {PAGE_BG}",
+                },
             }
         data_points.append(point)
 
     series = SplineSeries()
     series.name = team
     series.data = data_points
-    series.color = colors[i]
+    series.color = IMPRINT_PALETTE[i]
     series.line_width = line_widths[team]
     series.marker = {"radius": marker_radii[team], "symbol": "circle"}
     series_list.append(series)
 
 chart.options.series = series_list
 
-# Download Highcharts JS (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS (required — inline scripts only, CDN blocked in headless Chrome)
+req = urllib.request.Request(
+    "https://code.highcharts.com/highcharts.js",
+    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.highcharts.com/"},
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -182,8 +203,8 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -192,20 +213,31 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Save interactive version
-Path("plot.html").write_text(html_content, encoding="utf-8")
+Path(f"plot-{THEME}.html").write_text(html_content, encoding="utf-8")
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome in headless mode
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact 3200×1800 — guards against ±1-2 px CDP rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
