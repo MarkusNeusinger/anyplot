@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-29
@@ -71,7 +71,7 @@ chart.options.chart = {
     "width": 3200,
     "height": 1800,
     "backgroundColor": PAGE_BG,
-    "marginBottom": 200,
+    "marginBottom": 260,
     "marginTop": 180,
     "marginLeft": 160,
     "marginRight": 80,
@@ -110,6 +110,22 @@ chart.options.x_axis = {
     "tickColor": INK_SOFT,
     "tickLength": 8,
     "plotBands": [{"from": max_x - 15, "to": max_x + 15, "color": BAND_COLOR, "zIndex": 0}],
+    "plotLines": [
+        {
+            "value": max_x,
+            "color": COLOR_DIST,
+            "dashStyle": "ShortDot",
+            "width": 3,
+            "zIndex": 3,
+            "label": {
+                "text": f"KS max: {max_x:.0f}",
+                "style": {"fontSize": "32px", "color": INK_MUTED, "fontWeight": "600"},
+                "rotation": 0,
+                "y": -12,
+                "align": "center",
+            },
+        }
+    ],
 }
 
 chart.options.y_axis = {
@@ -202,7 +218,7 @@ chart.options.annotations = [
                 {
                     "point": {"x": max_x, "y": mid_y, "xAxis": 0, "yAxis": 0},
                     "text": f"D = {ks_stat:.4f}<br/>Strong separation",
-                    "x": 160,
+                    "x": 20,
                     "style": {"fontSize": "36px", "fontWeight": "bold", "color": INK, "textAlign": "center"},
                 }
             ],
