@@ -57,6 +57,7 @@ df <- data.frame(
 plot_title <- "line-impurity-comparison · r · ggplot2 · anyplot.ai"
 
 p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)) +
+  geom_area(aes(fill = metric), alpha = 0.08, position = "identity") +
   geom_line(linewidth = 1.2) +
   geom_vline(
     xintercept = 0.5,
@@ -67,19 +68,28 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
   annotate(
     "text",
     x      = 0.53,
-    y      = 0.10,
+    y      = 0.88,
     label  = "p = 0.5 (max impurity)",
     color  = INK_SOFT,
     size   = 3,
     hjust  = 0
   ) +
   scale_color_manual(
+    name   = "Splitting Criterion",
     values = c(
       "Gini: 2p(1-p)"                                    = IMPRINT_PALETTE[1],
       "Entropy: -p log2(p) - (1-p) log2(1-p)"            = IMPRINT_PALETTE[2]
     )
   ) +
+  scale_fill_manual(
+    values = c(
+      "Gini: 2p(1-p)"                                    = IMPRINT_PALETTE[1],
+      "Entropy: -p log2(p) - (1-p) log2(1-p)"            = IMPRINT_PALETTE[2]
+    ),
+    guide  = "none"
+  ) +
   scale_linetype_manual(
+    name   = "Splitting Criterion",
     values = c(
       "Gini: 2p(1-p)"                                    = "solid",
       "Entropy: -p log2(p) - (1-p) log2(1-p)"            = "dashed"
@@ -94,11 +104,9 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
     limits = c(0, 1.08)
   ) +
   labs(
-    title    = plot_title,
-    x        = "Probability p",
-    y        = "Impurity (normalized to [0, 1])",
-    color    = "Splitting Criterion",
-    linetype = "Splitting Criterion"
+    title = plot_title,
+    x     = "Probability p",
+    y     = "Impurity (normalized to [0, 1])"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -109,6 +117,7 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
       linewidth = 0.3
     ),
     panel.grid.minor  = element_blank(),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK,      size = 12, hjust = 0),
