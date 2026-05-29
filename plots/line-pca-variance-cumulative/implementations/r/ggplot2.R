@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-05-29
+#' Quality: 88/100 | Created: 2026-05-29
 
 library(ggplot2)
 library(ragg)

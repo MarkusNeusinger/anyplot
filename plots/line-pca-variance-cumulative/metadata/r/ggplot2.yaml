@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-pca-variance-cumulative
 created: '2026-05-29T05:51:55Z'
-updated: '2026-05-29T05:57:46Z'
+updated: '2026-05-29T06:07:02Z'
 generated_by: claude-sonnet
 workflow_run: 26620516766
 issue: 4131
@@ -12,40 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Dual-encoding design: faint individual-variance bars + cumulative line elegantly
-    shows both individual and cumulative variance in a single panel'
-  - Correct 3200x1800 landscape canvas with proper ragg device and dpi=400
-  - 'Full theme adaptation: all chrome tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED)
-    correctly applied for both light and dark renders — no dark-on-dark or light-on-light
-    failures'
-  - Realistic synthetic data with 3-factor latent structure producing a natural elbow
-    around PC3-4
-  - Clean code with set.seed(42), no functions/classes, proper R idioms including
-    linewidth= instead of deprecated size=
+  - 'Complete spec compliance: all required features implemented (cumulative line,
+    threshold lines at 90%/95%, elbow detection, individual variance bar overlay,
+    markers, correct axis range)'
+  - 'Thoughtful dual-layer composition: semi-transparent bars for individual component
+    variance behind the primary cumulative line adds information without clutter'
+  - Elbow detection algorithm using perpendicular distance geometry is sophisticated
+    and produces accurate results
+  - 'Strong theme adaptation: both renders pass readability checks, chrome flips correctly,
+    data colors are identical across themes'
+  - 'Perfect code quality: clean KISS structure, reproducible with set.seed(42), idiomatic
+    ggplot2 throughout'
   weaknesses:
-  - Threshold annotation labels ('90%', '95%', 'PC6') at size=2.8 (~8pt equivalent)
-    will be marginally readable at mobile scale (~400px width). Consider bumping to
-    size=3.2-3.5.
-  - The vertical marker line annotates the 90% threshold component (PC6) rather than
-    the actual elbow of the cumulative curve. The elbow (maximum curvature) appears
-    around PC3-4, which better illustrates the 'diminishing returns' narrative. Consider
-    computing the elbow via a knee-detection approach and labeling it separately from
-    the threshold marker.
+  - 90%/95% threshold labels at x=1.2 are stacked close together in the upper-left
+    corner; increase vertical separation (e.g., move 95% label to y=98.5 and 90% label
+    to y=92.5) to reduce crowding
+  - Annotation text size (size=3.3 mm) is on the smaller end for a 3200x1800 canvas;
+    consider size=3.8-4.0 for the 'PC6 90%' and elbow annotations to improve readability
+    when scaled to mobile widths
+  - Data scenario ('sensor dataset with 3 latent factors') is plausible but generic;
+    naming a specific domain (e.g., 'industrial vibration sensors for predictive maintenance')
+    would improve contextual richness for DQ-02
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "line-pca-variance-cumulative · r · ggplot2 · anyplot.ai" bold and clearly readable in dark ink. Y-axis title "Cumulative Explained Variance" and X-axis title "Number of Principal Components" in dark INK, both readable. Tick labels in INK_SOFT (#4A4A44), clearly readable. Threshold annotations "90%", "95%" in INK_MUTED, small but readable at full resolution. "PC6" label in brand green, readable.
-      Data: Brand green (#009E73) cumulative line with circular markers is the primary element. Very faint green bars (alpha=0.13) show individual variance ratios. Dashed horizontal reference lines at 90% and 95% in INK_SOFT. Vertical dotted green line at PC6.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold dark title "line-pca-variance-cumulative · r · ggplot2 · anyplot.ai" readable at ~70% canvas width; Y-axis label "Cumulative Explained Variance" and X-axis label "Number of Principal Components" in dark ink; tick labels (0%–100% and 1–15) in secondary ink; all readable
+      Data: #009E73 (Imprint green) cumulative line with circle markers at all 15 components; semi-transparent green bars (alpha=0.13) showing individual variance ratios; two dashed grey reference lines at 90% and 95%; vertical dotted green line at PC3 (elbow); annotations "90%", "95%", "PC6 / 90%", "PC3 elbow" — all readable
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8), clearly readable. Axis titles and tick labels in INK_SOFT (#B8B7B0), clearly readable against dark background. Threshold annotations "90%", "95%" in INK_MUTED (#A8A79F), readable. "PC6" in brand green, readable. No dark-on-dark text failures.
-      Data: Brand green (#009E73) cumulative line and markers — identical color to light render. Individual variance bars appear darker (low alpha on dark bg) but still visible as contextual elements. Reference lines at 90%/95% in light INK_SOFT. Horizontal grid lines appear as thin light lines.
-      Legibility verdict: PASS — all text readable against warm near-black background; brand green #009E73 remains fully visible
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels in light cream text (#F0EFE8 / #B8B7B0 tokens); all clearly readable against dark background; dashed reference lines visible in light grey; no dark-on-dark failures detected
+      Data: Identical #009E73 data colors to light render — cumulative line, markers, and bars unchanged; only chrome has flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,52 +55,52 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis titles, tick labels well-sized and readable in both themes.
-          Threshold annotations at size=2.8 (~8pt) readable at full res but marginally
-          small at mobile scale (~400px).
+        comment: All font sizes explicitly set; readable in both themes; annotation
+          text (size=3.3) slightly small for full canvas but legible
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: 90%/95% threshold labels stacked close together at x=1.2; no actual
+          overlap but tight spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cumulative line prominent. Individual variance bars at alpha=0.13
-          intentionally subtle and serve well as background reference.
+        comment: Line+markers well-sized for 15 discrete points; bars appropriately
+          faint at alpha=0.13
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single primary series in brand green #009E73, CVD-safe. Reference
-          lines in muted INK_SOFT.'
+        comment: Single-series Imprint green; CVD-safe; high contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 landscape canvas. Good margins. Nothing cut off.
+        comment: 3200x1800 landscape; plot fills canvas well; generous margins; all
+          elements within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Number of Principal Components'' (X) and ''Cumulative Explained
-          Variance'' (Y) descriptive. Title format correct.'
+        comment: Descriptive axis labels; % encoded in tick labels; title correct
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
-          All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome flips
+          correctly'
     design_excellence:
       score: 13
       max: 20
@@ -108,24 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful dual-encoding: faint bars behind cumulative line. Threshold
-          annotations add interpretive value. Consistent type hierarchy.'
+        comment: 'Above average: dual-layer bar+line composition, elbow detection,
+          Imprint palette; professional but not publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed (L-shaped frame). Tick marks removed. Horizontal-only
-          grid with thin linewidth. Generous margins.
+        comment: L-shaped axis lines (no box border), y-only major grid at linewidth=0.18,
+          tick marks removed, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Vertical dotted line at PC6 creates clear focal point. Good visual
-          hierarchy: bold green primary line > faint bars > dashed reference lines.'
+        comment: Directly answers key PCA questions via annotations and visual hierarchy;
+          green line vs faint bars vs dashed references creates clear focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,32 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative explained variance line plot with optional individual-variance
-          bar overlay.
+        comment: 'Correct: cumulative variance line plot with markers'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Cumulative sum on Y, percentage axis, dashed reference lines at 90%
-          and 95%, markers at each component all present. Vertical marker placed at
-          90% threshold component (PC6) rather than true elbow (PC3-4). Minor interpretation
-          gap.
+        comment: 'All features: cumulative Y, % scale, 90%+95% dashed lines, elbow
+          detection, discrete markers, individual variance bar overlay, X starts at
+          1'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: components 1-15. Y-axis: cumulative %. All data shown.'
+        comment: X=n_components (1-15), Y=cumulative variance %; correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-pca-variance-cumulative · r · ggplot2 · anyplot.ai' correct.
-          No legend needed for single-series.
+        comment: 'Title: ''line-pca-variance-cumulative · r · ggplot2 · anyplot.ai'';
+          no legend (appropriate for single-series)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows cumulative variance, individual variance bars, threshold lines
-          with labels, and threshold-crossing marker.
+        comment: Realistic elbow shape, both threshold crossings visible, individual
+          variance bars, 15 components
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Synthetic 300-sample x 15-feature sensor dataset driven by 3 latent
-          factors. Produces realistic scree curve with clear elbow. Neutral domain.
+        comment: Plausible sensor dataset with 3 latent factors; realistic PCA structure
+          but somewhat generic without specific domain name
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-105% provides full range with slight headroom. X-axis 1-15
-          matches feature count.
+        comment: 15 features, 3 latent factors, realistic elbow around PC3-5; factually
+          correct cumulative structure
     code_quality:
       score: 10
       max: 10
@@ -191,50 +191,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with no functions or classes.
+        comment: 'Clear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42) at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: library(ggplot2) and library(ragg) only, both used.
+        comment: Only ggplot2 and ragg, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Well-organized sections. No fake UI.
+        comment: Clean, well-organized; elbow geometry algorithm appropriate; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf().
+        comment: Saves as plot-{THEME}.png using ragg::agg_png (current API)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper ggplot2 grammar with correct aes() mapping and scale functions.
-          Uses linewidth= (not deprecated size=) for lines. ragg device correct.
+        comment: 'Expert ggplot2: geom layering, annotate(), scale_*_continuous with
+          functional labels, theme_minimal + theme() chain'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Strong layer composition: geom_col + geom_hline + geom_vline + geom_line
-          + geom_point + annotate demonstrates ggplot2 layering strength. Custom scale
-          functions with label functions.'
+        comment: Functional label scaling (paste0 lambda), geom layer composition
+          for dual display, INK_SOFT token in geom elements; solid but not exceptional
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -249,3 +248,4 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
