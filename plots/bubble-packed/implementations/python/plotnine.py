@@ -1,8 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-23
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-29
 """
+
+import os
+import sys
+
+
+# Remove the script's own directory from sys.path so the installed plotnine package is found
+_here = os.path.dirname(os.path.abspath(__file__))
+if _here in sys.path:
+    sys.path.remove(_here)
 
 import numpy as np
 import pandas as pd
@@ -14,70 +23,88 @@ from plotnine import (
     geom_polygon,
     geom_text,
     ggplot,
-    guides,
     labs,
-    scale_alpha_manual,
     scale_fill_manual,
     theme,
     theme_void,
 )
 
 
-# Data - department budgets (in millions)
-departments = {
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — positions 1-4 for four tech segments
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Data — global tech industry revenue by segment (billions USD, 2024 est.)
+market_data = {
     "label": [
-        "Engineering",
-        "Marketing",
-        "Sales",
-        "Operations",
-        "HR",
-        "Finance",
-        "R&D",
-        "IT Support",
-        "Legal",
-        "Customer Svc",
-        "Design",
-        "Logistics",
-        "Quality",
+        "Cloud",
+        "SaaS",
+        "Security",
+        "Analytics",
+        "Dev Tools",
+        "Chips",
+        "Storage",
+        "Networks",
+        "Displays",
+        "Peripherals",
+        "Consulting",
+        "Tech Svc",
         "Training",
-        "Admin",
+        "Managed",
+        "APIs",
+        "Mobile",
+        "Gaming",
+        "Streaming",
+        "Smart Home",
+        "Wearables",
     ],
-    "value": [45, 32, 28, 22, 15, 18, 38, 12, 10, 20, 14, 16, 8, 6, 5],
+    "value": [52, 38, 29, 24, 16, 48, 31, 27, 18, 12, 34, 22, 14, 11, 9, 44, 35, 26, 17, 13],
     "group": [
-        "Tech",
-        "Business",
-        "Business",
-        "Operations",
-        "Support",
-        "Business",
-        "Tech",
-        "Tech",
-        "Support",
-        "Operations",
-        "Tech",
-        "Operations",
-        "Operations",
-        "Support",
-        "Support",
+        "Software",
+        "Software",
+        "Software",
+        "Software",
+        "Software",
+        "Hardware",
+        "Hardware",
+        "Hardware",
+        "Hardware",
+        "Hardware",
+        "Services",
+        "Services",
+        "Services",
+        "Services",
+        "Services",
+        "Consumer",
+        "Consumer",
+        "Consumer",
+        "Consumer",
+        "Consumer",
     ],
 }
 
-df = pd.DataFrame(departments)
+df = pd.DataFrame(market_data)
 
-# Scale values to radii (area-based scaling for accurate perception)
+# Scale values to radii (area-based for accurate visual perception)
 max_radius = 1.0
-min_radius = 0.25
+min_radius = 0.22
 df["radius"] = min_radius + (max_radius - min_radius) * np.sqrt(df["value"] / df["value"].max())
 
-# Circle packing - greedy placement with vectorized collision detection
+# Circle packing — greedy placement with vectorized collision detection
 n = len(df)
 radii = df["radius"].values
 idx = np.argsort(-radii)
 sorted_radii = radii[idx]
 gap = 0.03
 
-x = np.zeros(n)
-y = np.zeros(n)
+x_pos = np.zeros(n)
+y_pos = np.zeros(n)
 angles_sweep = np.linspace(0, 2 * np.pi, 72, endpoint=False)
 
 for i in range(1, n):
@@ -87,12 +114,11 @@ for i in range(1, n):
 
     for ref in range(i):
         place_r = sorted_radii[ref] + target_r + gap
-        cx = x[ref] + place_r * np.cos(angles_sweep)
-        cy = y[ref] + place_r * np.sin(angles_sweep)
+        cx = x_pos[ref] + place_r * np.cos(angles_sweep)
+        cy = y_pos[ref] + place_r * np.sin(angles_sweep)
 
-        # Vectorized collision check across all angles simultaneously
-        dx_c = cx[:, np.newaxis] - x[:i][np.newaxis, :]
-        dy_c = cy[:, np.newaxis] - y[:i][np.newaxis, :]
+        dx_c = cx[:, np.newaxis] - x_pos[:i][np.newaxis, :]
+        dy_c = cy[:, np.newaxis] - y_pos[:i][np.newaxis, :]
         dists_c = np.hypot(dx_c, dy_c)
         valid = np.all(dists_c >= target_r + sorted_radii[:i] + gap, axis=1)
 
@@ -103,19 +129,19 @@ for i in range(1, n):
             best_dist = valid_dists[best_k]
             best_x, best_y = cx[best_k], cy[best_k]
 
-    x[i] = best_x
-    y[i] = best_y
+    x_pos[i] = best_x
+    y_pos[i] = best_y
 
 # Force simulation to tighten packing (vectorized with numpy)
 tri = np.triu(np.ones((n, n), dtype=bool), k=1)
 min_dists = sorted_radii[:, np.newaxis] + sorted_radii[np.newaxis, :] + gap
 
 for _ in range(2000):
-    x *= 0.997
-    y *= 0.997
+    x_pos *= 0.997
+    y_pos *= 0.997
 
-    dx = x[:, np.newaxis] - x[np.newaxis, :]
-    dy = y[:, np.newaxis] - y[np.newaxis, :]
+    dx = x_pos[:, np.newaxis] - x_pos[np.newaxis, :]
+    dy = y_pos[:, np.newaxis] - y_pos[np.newaxis, :]
     dists = np.hypot(dx, dy)
 
     overlap = tri & (dists < min_dists) & (dists > 1e-3)
@@ -124,15 +150,15 @@ for _ in range(2000):
         push = ((min_dists - dists) / (2 * safe_dists)) * overlap
         corr_x = push * dx
         corr_y = push * dy
-        x += corr_x.sum(axis=1) - corr_x.sum(axis=0)
-        y += corr_y.sum(axis=1) - corr_y.sum(axis=0)
+        x_pos += corr_x.sum(axis=1) - corr_x.sum(axis=0)
+        y_pos += corr_y.sum(axis=1) - corr_y.sum(axis=0)
 
 # Restore original order
 x_final = np.zeros(n)
 y_final = np.zeros(n)
 for i, orig_idx in enumerate(idx):
-    x_final[orig_idx] = x[i]
-    y_final[orig_idx] = y[i]
+    x_final[orig_idx] = x_pos[i]
+    y_final[orig_idx] = y_pos[i]
 
 df["x"] = x_final
 df["y"] = y_final
@@ -145,96 +171,107 @@ for i, row in df.iterrows():
     cy = row["y"] + row["radius"] * np.sin(angles)
     circle_dfs.append(pd.DataFrame({"x": cx, "y": cy, "label": row["label"], "group": row["group"], "circle_id": i}))
 circles_df = pd.concat(circle_dfs, ignore_index=True)
-circles_df["group"] = pd.Categorical(circles_df["group"], categories=["Tech", "Business", "Operations", "Support"])
+circles_df["group"] = pd.Categorical(circles_df["group"], categories=["Software", "Hardware", "Services", "Consumer"])
 
-# Labels - conditional sizing: full name for large, abbreviated for small
+# Labels — name and revenue value per bubble
 labels_df = df.copy()
-labels_df["display_label"] = labels_df.apply(
-    lambda row: (
-        row["label"] if row["value"] >= 22 else (row["label"].split()[0] if row["value"] >= 10 else row["label"][:4])
-    ),
-    axis=1,
-)
-labels_df["value_label"] = labels_df["value"].apply(lambda v: f"${v}M")
+labels_df["value_label"] = labels_df["value"].apply(lambda v: f"${v}B")
 
-# Alpha by group emphasis — Tech & Business slightly more prominent
-alpha_values = {"Tech": 0.90, "Business": 0.85, "Operations": 0.78, "Support": 0.75}
+# Group colors using Imprint palette (canonical positions 1-4)
+group_colors = {
+    "Software": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Hardware": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "Services": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "Consumer": IMPRINT_PALETTE[3],  # #BD8233 ochre
+}
 
-# Color palette - Okabe-Ito colorblind-safe
-group_colors = {"Tech": "#0072B2", "Business": "#E69F00", "Operations": "#009E73", "Support": "#CC79A7"}
-
-# Compute group totals for subtitle
+# Group totals for subtitle
+group_order = ["Software", "Hardware", "Services", "Consumer"]
 group_totals = df.groupby("group")["value"].sum()
-subtitle_text = " \u00b7 ".join(f"{g}: \\${group_totals[g]}M" for g in ["Tech", "Business", "Operations", "Support"])
+subtitle_text = " · ".join(f"{g}: ${group_totals[g]}B" for g in group_order)
 
 # Tight viewport bounds for optimal canvas utilization
-pad = 0.15
+pad = 0.12
 x_lo = (df["x"] - df["radius"]).min() - pad
 x_hi = (df["x"] + df["radius"]).max() + pad
 y_lo = (df["y"] - df["radius"]).min() - pad
 y_hi = (df["y"] + df["radius"]).max() + pad
 half_span = max(x_hi - x_lo, y_hi - y_lo) / 2
-cx_mid, cy_mid = (x_lo + x_hi) / 2, (y_lo + y_hi) / 2
+cx_mid = (x_lo + x_hi) / 2
+cy_mid = (y_lo + y_hi) / 2
 
-# Plot with layered grammar of graphics composition
+# Title with auto-scaled fontsize (67-char baseline)
+title = "bubble-packed · python · plotnine · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+
+# Plot — layered grammar of graphics composition
 plot = (
     ggplot()
-    # Layer 1: Circle fills with group-specific alpha
-    + geom_polygon(
-        data=circles_df,
-        mapping=aes(x="x", y="y", fill="group", group="circle_id", alpha="group"),
-        color="white",
-        size=0.8,
-    )
-    # Layer 2: Department name labels (bold, white)
+    # Layer 1: Circle fills with theme-adaptive borders for group separation
+    + geom_polygon(data=circles_df, mapping=aes(x="x", y="y", fill="group", group="circle_id"), color=PAGE_BG, size=0.6)
+    # Layer 2: Name labels — large bubbles (value ≥ 26)
     + geom_text(
-        data=labels_df[labels_df["value"] >= 10],
-        mapping=aes(x="x", y="y", label="display_label"),
-        size=12,
+        data=labels_df[labels_df["value"] >= 26],
+        mapping=aes(x="x", y="y", label="label"),
+        size=3.5,
         color="white",
         fontweight="bold",
-        nudge_y=0.10,
+        nudge_y=0.09,
     )
-    # Layer 3: Small bubble labels
+    # Layer 3: Name labels — medium bubbles (12 ≤ value < 26)
     + geom_text(
-        data=labels_df[labels_df["value"] < 10],
-        mapping=aes(x="x", y="y", label="display_label"),
-        size=10,
+        data=labels_df[(labels_df["value"] >= 12) & (labels_df["value"] < 26)],
+        mapping=aes(x="x", y="y", label="label"),
+        size=3.0,
+        color="white",
+        fontweight="bold",
+        nudge_y=0.06,
+    )
+    # Layer 4: Name labels — small bubbles (value < 12)
+    + geom_text(
+        data=labels_df[labels_df["value"] < 12],
+        mapping=aes(x="x", y="y", label="label"),
+        size=2.5,
         color="white",
         fontweight="bold",
     )
-    # Layer 4: Budget value annotations for large/medium bubbles
+    # Layer 5: Revenue value labels — large bubbles
     + geom_text(
-        data=labels_df[labels_df["value"] >= 12],
+        data=labels_df[labels_df["value"] >= 26],
         mapping=aes(x="x", y="y", label="value_label"),
-        size=10,
+        size=3.0,
+        color="white",
+        alpha=0.9,
+        nudge_y=-0.12,
+    )
+    # Layer 6: Revenue value labels — medium bubbles
+    + geom_text(
+        data=labels_df[(labels_df["value"] >= 12) & (labels_df["value"] < 26)],
+        mapping=aes(x="x", y="y", label="value_label"),
+        size=2.5,
         color="white",
         alpha=0.85,
-        nudge_y=-0.17,
+        nudge_y=-0.09,
     )
-    # Scales
-    + scale_fill_manual(values=group_colors, name="Department Group")
-    + scale_alpha_manual(values=alpha_values)
-    + guides(alpha=False)
-    # Tight viewport with coord_fixed for 1:1 aspect ratio
+    + scale_fill_manual(values=group_colors, name="Tech Segment")
     + coord_fixed(xlim=(cx_mid - half_span, cx_mid + half_span), ylim=(cy_mid - half_span, cy_mid + half_span))
-    + labs(title="bubble-packed \u00b7 plotnine \u00b7 pyplots.ai", subtitle=subtitle_text)
-    # Theme — plotnine's distinctive void theme with layered customization
+    + labs(title=title, subtitle=subtitle_text)
     + theme_void()
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", weight="bold", margin={"b": 5}),
-        plot_subtitle=element_text(size=16, ha="center", color="#555555", margin={"t": 5, "b": 10}),
-        legend_title=element_text(size=18, weight="bold"),
-        legend_text=element_text(size=16),
-        legend_position="bottom",
-        legend_direction="horizontal",
-        legend_key=element_rect(fill="white", color="none"),
-        legend_key_size=20,
-        plot_background=element_rect(fill="white", color="none"),
+        figure_size=(6, 6),
+        plot_title=element_text(size=title_fontsize, ha="center", weight="bold", color=INK, margin={"b": 4}),
+        plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT, margin={"t": 3, "b": 8}),
+        legend_title=element_text(size=9, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_position="right",
+        legend_direction="vertical",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key_size=12,
+        plot_background=element_rect(fill=PAGE_BG, color="none"),
         plot_margin=0.02,
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
