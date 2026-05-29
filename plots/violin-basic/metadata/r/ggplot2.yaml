@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: violin-basic
+created: '2026-05-29T11:29:21Z'
+updated: '2026-05-29T11:48:25Z'
+generated_by: claude-sonnet
+workflow_run: 26634558753
+issue: 722
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Correct Imprint palette in canonical order (#009E73, #C475FD, #4467A3, #BD8233)
+    — all four class violins use the right colors'
+  - Differential alpha (0.88 vs 0.62) highlights the bimodal Class B, creating intentional
+    visual hierarchy and storytelling
+  - draw_quantiles = c(0.25, 0.5, 0.75) fulfills all three spec requirements (quartile
+    markers, median line) with a single idiomatic parameter
+  - Italic 'bimodal' annotation at y=104 adds narrative value without clutter
+  - 'Theme-adaptive chrome is correctly wired throughout: INK, INK_SOFT, PAGE_BG all
+    flip between themes and every text element uses the right token'
+  - adjustcolor(INK_SOFT, alpha.f = 0.25) produces properly subtle y-axis grid lines
+    in both themes
+  - Four richly varied distribution shapes (symmetric, bimodal, high-performing, right-skewed)
+    maximise feature coverage of the violin plot type
+  - Scale = 3200x1800 (8in x 4.5in @ 400 dpi) — correct landscape canvas, passes the
+    dimension gate
+  weaknesses:
+  - 'Quantile lines near-invisible in dark mode for the two darkest violins: `color
+    = PAGE_BG` sets quantile line color to #1A1A17 (near-black), which has very low
+    contrast against the dark-green Class A fill and dark-blue Class C fill in dark
+    mode. Fix: replace `color = PAGE_BG` with a theme-adaptive contrasting color —
+    e.g., `color = if (THEME == ''light'') PAGE_BG else ''#FFFFFF''` or `color = INK`
+    so that lines are always visible against the saturated fills.'
+  - 'DQ-02 minor: ''Class A/B/C/D'' labels are generic letter-codes. Giving classes
+    descriptive names (e.g. ''Beginner'', ''Intermediate'', ''Advanced'', ''Struggling'')
+    would raise the realistic context score slightly without changing anything else.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: title "violin-basic · r · ggplot2 · anyplot.ai" in dark ink, clearly readable; x-axis label "Class Group" and y-axis label "Test Score" in dark ink (INK), tick labels (50–100, Class A–D) in slightly softer INK_SOFT; italic "bimodal" annotation above Class B in INK_SOFT — all legible
+      Data: four violin shapes — Class A in #009E73 (brand green), Class B in #C475FD (lavender), Class C in #4467A3 (blue), Class D in #BD8233 (ochre). Quantile lines (PAGE_BG = #FAF8F1 / off-white) visible as clean white stripes at Q1/median/Q3 inside each violin. Distinct distribution shapes clearly visible: symmetric (A), bimodal pinch (B), compact high (C), right-skewed spire (D).
+      Legibility verdict: PASS — all text, all quantile lines clearly readable
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: title in light #F0EFE8 (INK token), axis labels in the same light ink, tick labels in #B8B7B0 (INK_SOFT) — all readable against the dark background. "bimodal" annotation readable in light INK_SOFT. No dark-on-dark text failures.
+      Data: same four Imprint palette colors, identical to light render — data colors unchanged, only chrome flips. However, quantile lines use `color = PAGE_BG = #1A1A17` (near-black), creating very low contrast against the dark-green Class A fill and the dark-blue Class C fill. Lines are clearly visible for Class B (lavender) and Class D (ochre), but faint/barely visible for Class A and Class C in dark mode. This is the primary weakness.
+      Legibility verdict: PASS for text; PARTIAL PASS for quantile line visibility (two of four violins affected in dark mode)
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title, axis labels, ticks and annotation
+          readable in both themes. Minor: title spans ~40% of canvas width (short
+          title at 12pt — expected).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data overlaps; bimodal annotation well-spaced above Class
+          B violin.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Violin shapes clearly visible in both themes. Quantile lines (color=PAGE_BG)
+          are near-invisible for Class A and Class C in dark mode — low contrast between
+          near-black line and dark-green/dark-blue violin fills.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with 4 distinct hue families; CVD-safe by design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800, good canvas utilisation, balanced margins, no
+          cutoff.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Class Group and Test Score are descriptive; scores are dimensionless
+          so no unit needed.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette in canonical 4-slot order; backgrounds #FAF8F1/#1A1A17
+          correct; chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above a configured default: differential alpha for Class B emphasis
+          and italic annotation show design intent. Does not reach strong-design territory.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: y-axis-only grid at 25% opacity, x-axis/bottom
+          spine kept, no unnecessary chrome, clean margins.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy exists: Class B is emphasised via higher alpha
+          and bimodal annotation. Four distinct distribution shapes tell a clear story
+          about class performance spread.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_violin with trim=FALSE — correct violin plot with full distribution.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: draw_quantiles=c(0.25,0.5,0.75) shows quartile markers and median
+          line; mirrored density is inherent to ggplot2 violin.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=class, y=score correctly mapped; all 4 groups visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'violin-basic · r · ggplot2 · anyplot.ai' is correct format;
+          no legend needed (class labels on x-axis).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Four distribution types: symmetric (A), bimodal (B), high-performing
+          compact (C), right-skewed low (D) — maximally varied.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Test scores in an educational setting is real and neutral. Class
+          A/B/C/D labels are slightly generic; named cohorts would score 5.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores 50–100, realistic class sizes (120), plausible means and spreads
+          for educational context.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save structure, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only ggplot2 and ragg imported; tibble accessed via :: without library().'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic, no over-engineering, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) with ragg::agg_png device — correct.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2 grammar: geom_violin, scale_fill_manual, scale_alpha_manual,
+          coord_cartesian, theme() layering — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: draw_quantiles in geom_violin is ggplot2-specific; named-vector scale_alpha_manual
+          for per-category emphasis is a grammar-of-graphics pattern not easily replicated
+          elsewhere. Solid but not exceptional.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
