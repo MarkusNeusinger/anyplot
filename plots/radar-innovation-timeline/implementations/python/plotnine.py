@@ -1,10 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 86/100 | Created: 2026-02-18
+Library: plotnine | Python
 """
 
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -33,6 +33,19 @@ from plotnine import (
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Imprint theme-adaptive chrome
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — hybrid-v3 sort
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"
+
 np.random.seed(42)
 
 # Layout: 270° arc open at bottom
@@ -40,12 +53,28 @@ RINGS = ["Adopt", "Trial", "Assess", "Hold"]
 R_IN = [0.75, 2.25, 3.75, 5.25]
 R_OUT = [2.25, 3.75, 5.25, 6.75]
 R_MID = [1.5, 3.0, 4.5, 6.0]
-RING_FILL = ["#C8E6C9", "#FFF9C4", "#FFE0B2", "#FFCDD2"]
-RING_SIZE = {"Adopt": 7, "Trial": 5.5, "Assess": 4.5, "Hold": 3.5}
-RING_ALPHA = {"Adopt": 1.0, "Trial": 0.85, "Assess": 0.7, "Hold": 0.6}
 
-SECTORS = ["AI & ML", "Cloud & Infra", "Data Engineering", "Security"]
-SEC_COLOR = {"AI & ML": "#1565C0", "Cloud & Infra": "#00897B", "Data Engineering": "#E65100", "Security": "#AD1457"}
+# Semantic ring fills from Imprint palette — green=ready, amber=caution, ochre=assess, red=hold
+RING_FILL_COLOR = {
+    "Adopt": IMPRINT[0],  # green — ready for adoption
+    "Trial": ANYPLOT_AMBER,  # amber — trial/caution
+    "Assess": IMPRINT[3],  # ochre — assess carefully
+    "Hold": IMPRINT[4],  # matte red — hold/avoid
+}
+RING_FILL_ALPHA = 0.18 if THEME == "light" else 0.28
+
+RING_SIZE = {"Adopt": 7, "Trial": 5.5, "Assess": 4.5, "Hold": 3.5}
+RING_ALPHA_PT = {"Adopt": 1.0, "Trial": 0.85, "Assess": 0.7, "Hold": 0.6}
+
+# Sectors: distinct from AI/Cloud/Security/DataEng per cross-library divergence requirement
+SECTORS = ["AI & ML", "Sustainability", "Biotech", "Infrastructure"]
+# Semantic Imprint assignments: green=nature, blue=tech, rose=health, ochre=industrial
+SEC_COLOR = {
+    "Sustainability": IMPRINT[0],  # #009E73 green — nature/environment
+    "AI & ML": IMPRINT[2],  # #4467A3 blue — digital/tech
+    "Biotech": IMPRINT[6],  # #954477 rose — wellness/health/life sciences
+    "Infrastructure": IMPRINT[3],  # #BD8233 ochre — industrial/construction
+}
 
 ARC_TOTAL = 1.5 * math.pi  # 270°
 ARC_START = -math.pi / 4  # -45°
@@ -53,37 +82,40 @@ SEC_SPAN = ARC_TOTAL / len(SECTORS)
 SEC_START = {s: ARC_START + i * SEC_SPAN for i, s in enumerate(SECTORS)}
 
 # Innovation data: (name, sector, ring, angular_fraction)
-# Fractions tuned to spread labels within each sector and avoid crowding
 innovations = [
-    ("LLM Agents", "AI & ML", "Adopt", 0.2),
-    ("RAG Pipelines", "AI & ML", "Adopt", 0.85),
-    ("Vision Transformers", "AI & ML", "Trial", 0.35),
-    ("Federated Learning", "AI & ML", "Trial", 0.8),
-    ("Neural Arch. Search", "AI & ML", "Assess", 0.5),
-    ("Neuromorphic Comp.", "AI & ML", "Hold", 0.15),
-    ("Quantum ML", "AI & ML", "Hold", 0.8),
-    ("Kubernetes", "Cloud & Infra", "Adopt", 0.5),
-    ("WebAssembly", "Cloud & Infra", "Trial", 0.7),
-    ("FinOps Platforms", "Cloud & Infra", "Trial", 0.2),
-    ("Edge Computing", "Cloud & Infra", "Assess", 0.65),
-    ("Serverless Cont.", "Cloud & Infra", "Assess", 0.15),
-    ("Confidential Comp.", "Cloud & Infra", "Hold", 0.5),
-    ("dbt", "Data Engineering", "Adopt", 0.3),
-    ("Apache Iceberg", "Data Engineering", "Adopt", 0.8),
-    ("RT Feature Stores", "Data Engineering", "Trial", 0.15),
-    ("Data Mesh", "Data Engineering", "Trial", 0.8),
-    ("Lakehouse Arch.", "Data Engineering", "Assess", 0.25),
-    ("Data Contracts", "Data Engineering", "Assess", 0.8),
-    ("Semantic Layer", "Data Engineering", "Hold", 0.5),
-    ("Zero Trust", "Security", "Adopt", 0.5),
-    ("SBOM Tooling", "Security", "Trial", 0.2),
-    ("AI Threat Detect.", "Security", "Trial", 0.75),
-    ("Post-Quantum Crypto", "Security", "Assess", 0.45),
-    ("Homomorphic Enc.", "Security", "Hold", 0.15),
-    ("Deception Tech.", "Security", "Hold", 0.75),
+    # AI & ML — digital intelligence technologies
+    ("RAG Pipelines", "AI & ML", "Adopt", 0.20),
+    ("LLM Inference Opt.", "AI & ML", "Adopt", 0.85),
+    ("Multimodal LLMs", "AI & ML", "Trial", 0.35),
+    ("AI Agent Frameworks", "AI & ML", "Trial", 0.80),
+    ("Causal AI Systems", "AI & ML", "Assess", 0.35),
+    ("Neural Arch. Search", "AI & ML", "Assess", 0.75),
+    ("Quantum ML", "AI & ML", "Hold", 0.50),
+    # Sustainability — environmental & climate technologies
+    ("Carbon Accounting SW", "Sustainability", "Adopt", 0.30),
+    ("Energy Analytics", "Sustainability", "Adopt", 0.80),
+    ("ESG Data Platforms", "Sustainability", "Trial", 0.25),
+    ("Green Code Standards", "Sustainability", "Trial", 0.75),
+    ("Carbon-Aware Compute", "Sustainability", "Assess", 0.50),
+    ("Atmospheric CO2 Tech", "Sustainability", "Hold", 0.50),
+    # Biotech — life sciences & biology
+    ("mRNA Therapeutics", "Biotech", "Adopt", 0.30),
+    ("CRISPR Diagnostics", "Biotech", "Adopt", 0.80),
+    ("Synthetic Biology", "Biotech", "Trial", 0.20),
+    ("Lab-Grown Proteins", "Biotech", "Trial", 0.75),
+    ("Organoid Platforms", "Biotech", "Assess", 0.30),
+    ("Xenotransplantation", "Biotech", "Assess", 0.80),
+    ("Age-Reversal Therapy", "Biotech", "Hold", 0.50),
+    # Infrastructure — foundational computing platforms
+    ("Platform Engineering", "Infrastructure", "Adopt", 0.50),
+    ("eBPF Observability", "Infrastructure", "Trial", 0.25),
+    ("GitOps at Scale", "Infrastructure", "Trial", 0.75),
+    ("Confidential Comput.", "Infrastructure", "Assess", 0.30),
+    ("Edge AI Chips", "Infrastructure", "Assess", 0.75),
+    ("Photonic Computing", "Infrastructure", "Hold", 0.50),
 ]
 
-# Compute point positions
+# Compute polar point positions
 ri_map = {r: i for i, r in enumerate(RINGS)}
 rows = []
 for name, sector, ring, frac in innovations:
@@ -106,16 +138,14 @@ for name, sector, ring, frac in innovations:
 df = pd.DataFrame(rows)
 df["ring"] = pd.Categorical(df["ring"], categories=RINGS, ordered=True)
 
-# Ring fill polygons (annular wedges)
+# Ring fill polygons (annular wedges — outer arc then reversed inner arc)
 arc_angles = np.linspace(ARC_START, ARC_START + ARC_TOTAL, 150)
 fill_rows = []
 for i, rname in enumerate(RINGS):
-    outer = [
-        {"x": R_OUT[i] * math.cos(a), "y": R_OUT[i] * math.sin(a), "ring_g": rname, "fc": RING_FILL[i]}
-        for a in arc_angles
-    ]
+    fc = RING_FILL_COLOR[rname]
+    outer = [{"x": R_OUT[i] * math.cos(a), "y": R_OUT[i] * math.sin(a), "ring_g": rname, "fc": fc} for a in arc_angles]
     inner = [
-        {"x": R_IN[i] * math.cos(a), "y": R_IN[i] * math.sin(a), "ring_g": rname, "fc": RING_FILL[i]}
+        {"x": R_IN[i] * math.cos(a), "y": R_IN[i] * math.sin(a), "ring_g": rname, "fc": fc}
         for a in reversed(arc_angles)
     ]
     fill_rows.extend(outer + inner)
@@ -127,7 +157,7 @@ circ_rows = [
 ]
 circ_df = pd.DataFrame(circ_rows)
 
-# Sector spokes
+# Sector dividing spokes
 spoke_angles = [ARC_START + i * SEC_SPAN for i in range(len(SECTORS) + 1)]
 spoke_df = pd.DataFrame(
     [
@@ -136,7 +166,7 @@ spoke_df = pd.DataFrame(
     ]
 )
 
-# Sector header labels
+# Sector header labels along outer edge
 slbl_df = pd.DataFrame(
     [
         {"label": s, "x": 7.8 * math.cos(SEC_START[s] + SEC_SPAN / 2), "y": 7.8 * math.sin(SEC_START[s] + SEC_SPAN / 2)}
@@ -144,7 +174,7 @@ slbl_df = pd.DataFrame(
     ]
 )
 
-# Ring labels in the bottom gap (270°)
+# Ring labels in the bottom gap (270° open arc → 3π/2 angle)
 gap_angle = 3 * math.pi / 2
 rlbl_df = pd.DataFrame(
     [
@@ -154,8 +184,8 @@ rlbl_df = pd.DataFrame(
 )
 
 # Innovation labels with text-width-aware collision avoidance
-lbl_offset = 0.65
-char_w = 0.37  # estimated data units per character at size=11
+lbl_offset = 0.55
+char_w = 0.27  # estimated data units per character at geom_text size=3.2mm
 labels = []
 for _, row in df.iterrows():
     lx = (row["radius"] + lbl_offset) * math.cos(row["angle"])
@@ -165,8 +195,8 @@ for _, row in df.iterrows():
     x_max = (lx + w) if lx >= 0 else lx
     labels.append({"name": row["name"], "x": lx, "y": ly, "sector": row["sector"], "x_min": x_min, "x_max": x_max})
 
-# Iterative nudge: push labels with overlapping bounding boxes apart
-min_sep = 0.80
+# Iterative nudge: push overlapping label bounding boxes apart vertically
+min_sep = 0.72
 for _ in range(40):
     moved = False
     for i in range(len(labels)):
@@ -188,17 +218,17 @@ lbl_r_df = pd.DataFrame([lb for lb in labels if lb["x"] < 0])
 # Build plot
 plot = (
     ggplot()
-    + geom_polygon(aes(x="x", y="y", group="ring_g", fill="fc"), data=fill_df, size=0, alpha=0.6)
+    + geom_polygon(aes(x="x", y="y", group="ring_g", fill="fc"), data=fill_df, size=0, alpha=RING_FILL_ALPHA)
     + scale_fill_identity()
-    + geom_path(aes(x="x", y="y", group="r"), data=circ_df, color="#B0B0B0", size=0.5)
-    + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=spoke_df, color="#B0B0B0", size=0.5)
+    + geom_path(aes(x="x", y="y", group="r"), data=circ_df, color=INK_MUTED, size=0.3)
+    + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=spoke_df, color=INK_MUTED, size=0.3)
     + geom_point(aes(x="x", y="y", color="sector", size="ring", alpha="ring"), data=df)
     + scale_size_manual(values=RING_SIZE)
-    + scale_alpha_manual(values=RING_ALPHA)
+    + scale_alpha_manual(values=RING_ALPHA_PT)
     + geom_text(
         aes(x="x", y="y", label="name", color="sector"),
         data=lbl_l_df,
-        size=11,
+        size=3.2,
         ha="left",
         va="center",
         show_legend=False,
@@ -206,43 +236,43 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="name", color="sector"),
         data=lbl_r_df,
-        size=11,
+        size=3.2,
         ha="right",
         va="center",
         show_legend=False,
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=slbl_df, size=13, fontweight="bold", color="#222222")
+    + geom_text(aes(x="x", y="y", label="label"), data=slbl_df, size=4.0, fontweight="bold", color=INK)
     + geom_text(
-        aes(x="x", y="y", label="label"), data=rlbl_df, size=10, fontweight="bold", color="#555555", ha="center"
+        aes(x="x", y="y", label="label"), data=rlbl_df, size=3.5, fontweight="bold", color=INK_SOFT, ha="center"
     )
     + scale_color_manual(values=SEC_COLOR, name="Category")
     + guides(color=guide_legend(override_aes={"size": 5}), size=False, alpha=False)
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-9.5, 9.5))
-    + scale_y_continuous(limits=(-7.5, 8))
+    + scale_y_continuous(limits=(-7.5, 8.5))
     + labs(
-        title="radar-innovation-timeline \u00b7 plotnine \u00b7 pyplots.ai",
-        subtitle="Inner rings \u2192 near-term adoption  \u00b7  Outer rings \u2192 future exploration",
+        title="radar-innovation-timeline · plotnine · pyplots.ai",
+        subtitle="Inner rings → near-term adoption  ·  Outer rings → future exploration",
     )
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
-        plot_subtitle=element_text(size=14, ha="center", color="#666666", style="italic"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        figure_size=(6, 6),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
+        plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT, style="italic"),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position=(0.13, 0.10),
-        legend_background=element_rect(fill="white", color="#CCCCCC"),
-        legend_key=element_rect(fill="white"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key=element_rect(fill=ELEVATED_BG),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="white", color="white"),
-        plot_background=element_rect(fill="white", color="white"),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_margin=0.02,
     )
 )
 
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
