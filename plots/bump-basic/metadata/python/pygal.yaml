@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:17:51Z'
-updated: '2026-05-29T13:31:12Z'
+updated: '2026-05-29T13:41:50Z'
 generated_by: claude-sonnet
 workflow_run: 26639486384
 issue: 982
@@ -12,40 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Semantic color exception for F1 teams is well-justified and clearly documented
-    in code comments (Ferrari=red iconic, Red Bull=blue livery)
-  - 'McLaren as visual protagonist: thickest stroke, largest dots, brand green — guides
-    the reader immediately to the key story'
-  - 'Fully correct bump chart mechanics: Y-axis inversion via value transformation,
-    P1-P5 custom tick labels via dict format'
-  - Perfect spec and data quality scores — all required features present with realistic,
-    neutral F1 data
-  - Clean flat-script code with clear semantic organization; complete output (PNG
-    + HTML for interactive library)
+  - 'Semantic color assignment is excellent: McLaren=green (protagonist/rising) and
+    Ferrari=matte-red (iconic livery) are well-motivated and match real-world expectations'
+  - Variable stroke widths create meaningful visual hierarchy, making McLarens P4-to-P1
+    narrative immediately clear
+  - Dual-output (interactive HTML + static PNG) correctly leverages pygals core strength
+  - Dict-format y_labels with inverted rank mapping is a sophisticated pygal API usage
+    that cleanly solves the bump chart Y-axis inversion requirement
+  - 'Perfect spec compliance: Y-axis inversion, dot markers, multi-entity coloring,
+    and rank crossings all present'
   weaknesses:
-  - Aston Martin (lavender, P5) has the thinnest line (stroke_width=8) and smallest
-    dots, making it barely visible especially at the bottom of the chart — increase
-    stroke_width from 8 to 11 and dots_size from 12 to 15 minimum
-  - Design excellence is moderate — pygal's default chrome is visible (border/frame
-    styling, default dotted gridlines); removing the frame border or tightening chrome
-    could clean up the chart further
-  - Legend bottom placement leaves significant whitespace between P5 area and legend
-    row — margin_bottom could be tightened or chart area expanded upward
+  - Aston Martin (lavender) line at P5 is thin and dots are noticeably smaller than
+    for other constructors despite equal competitive importance — increase stroke_width
+    from 12 to at least 14-16 and dots_size from 16 to at least 18-20 for more even
+    visual presence
+  - P4-P5 vertical spacing gap is larger than the P1-P4 spacing, creating uneven rank
+    distribution on Y-axis — adjust y_labels or scale parameters to equalize row spacing
+  - DE-02 ceiling is pygal-inherent (no spine removal) but grid/guide line opacity
+    could be reduced further to keep them more receded behind the data
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface
-      Chrome: Title "bump-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis label "Constructor Standing" and X-axis label "Grand Prix" both readable. Tick labels P1–P5 (Y) and circuit names Bahrain/Jeddah/Melbourne/Imola/Monaco/Barcelona (X) all legible. Legend at bottom shows all 5 team names in dark text.
-      Data: McLaren (brand green #009E73, thickest line) rises P4→P1 by Melbourne and holds. Ferrari (matte red #AE3030) holds P2–P3. Red Bull Racing (blue #4467A3) drops P1→P3. Mercedes (ochre #BD8233) holds P4. Aston Martin (lavender #C475FD, thinnest line) flat at P5 — visible but minimal. Per-series dot markers present at each Grand Prix.
-      Legibility verdict: PASS — all text readable; Aston Martin line thin but trackable
+      Background: warm off-white (#FAF8F1) — correct theme surface
+      Chrome: title "bump-basic · python · pygal · anyplot.ai" clearly readable centered at top (~75% width); Y-axis label "Constructor Standing" rotated, readable; X-axis label "Grand Prix" readable; Y-axis tick labels P1-P5 readable; X-axis tick labels (Bahrain, Jeddah, Melbourne, Imola, Monaco, Barcelona) readable; legend at bottom with all 5 entries readable
+      Data: McLaren (#009E73 green, boldest line stroke=18, large dots); Ferrari (matte red, stroke=12); Red Bull Racing (blue, stroke=14); Mercedes (ochre, stroke=10); Aston Martin (lavender, stroke=12, thinner appearance at P5). Horizontal dotted guide lines at each rank level.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark surface
-      Chrome: Title, axis labels, tick labels, and legend all rendered in light/cream text — fully readable against dark background. No dark-on-dark failures detected. Grid lines visible as subtle dotted dark lines.
-      Data: Colors identical to light render — McLaren green, Ferrari red, Red Bull blue, Mercedes ochre, Aston Martin lavender. Data trajectories and dot markers match exactly.
-      Legibility verdict: PASS — all text readable; no dark-on-dark issues
+      Background: warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: all text flipped to light color; title clearly readable; axis labels readable; tick labels readable in light color against dark background; legend entries readable; no dark-on-dark failures anywhere
+      Data: all five series colors identical to light render (McLaren green, Ferrari red, Red Bull blue, Mercedes ochre, Aston Martin lavender — theme-invariant); #009E73 brand green remains clearly visible on dark surface
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,52 +52,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; Aston Martin slightly underemphasized
-          in legend at small scales
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44); well-proportioned in both renders; no overflow; readable at
+          full resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data elements, or labels
+        comment: No text or data element overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Aston Martin (lavender, stroke_width=8) at P5 is the thinnest and
-          faintest, noticeably harder to track
+        comment: McLaren/Ferrari/Red Bull/Mercedes well-sized; Aston Martin (lavender,
+          P5) visible but thinner and smaller dots than others
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, no red-green-only encoding
+        comment: Imprint palette, CVD-safe, 5 distinct hues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 correct, canvas gate passed, balanced proportions
+        comment: Chart fills canvas well; P4-P5 rank gap noticeably larger than P1-P4
+          spacing, mild vertical imbalance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Grand Prix and Constructor Standing are descriptive; title format
-          correct
+        comment: Grand Prix and Constructor Standing are descriptive and domain-appropriate
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (McLaren) = #009E73; semantic exception for Ferrari=red
-          and Red Bull=blue justified; backgrounds correct for both themes'
+        comment: First series McLaren=#009E73; Ferrari=matte-red is valid semantic
+          exception; all colors from Imprint palette; backgrounds correct; chrome
+          adapts in both themes
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,21 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping, stroke-width visual hierarchy,
-          per-series dot sizing — above-default
+        comment: Semantic color assignment with documented reasoning; differentiated
+          stroke widths for visual hierarchy; above default but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle dotted grid lines; pygal default frame/chrome still visible
+        comment: Subtle dotted guide lines add structure; clean bottom-legend; pygal
+          SVG architecture limits spine removal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: McLaren rise P4 to P1 is clear narrative, reinforced by thickest/greenest
-          line
+        comment: McLaren P4-to-P1 rise is clear visual story; boldest green line draws
+          the eye; stroke width variation reinforces narrative hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -136,20 +138,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, dot markers, distinct colors, lines connect same
-          entity
+        comment: Y-axis inverted, dot markers at each period, distinct colors, lines
+          connect same entity
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Grand Prix, Y=rank (inverted P1-P5), all 5 entities across 6 periods
+        comment: X=Grand Prix, Y=inverted rank P1-P5, 5 entities as series
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all 5 teams
+        comment: Title exactly bump-basic · python · pygal · anyplot.ai; legend labels
+          match entity names
     data_quality:
       score: 15
       max: 15
@@ -159,19 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rank changes, crossovers, overtakes, and stable positions
+        comment: Rank crossings (McLaren/Red Bull at Melbourne), sustained positions
+          (Aston Martin P5), rank recovery, all bump chart features present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'F1 constructor standings: realistic, neutral sports data'
+        comment: F1 constructor standings — real, well-known, neutral domain; accurate
+          team names and venue names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 entities x 6 periods ideal for bump chart; ranks 1-5 sensible
+        comment: Ranks 1-5 with plausible mid-season fluctuations; McLaren surge factually
+          plausible for 2024 season
     code_quality:
       score: 10
       max: 10
@@ -181,13 +187,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Linear flow: imports -> tokens -> data -> chart config -> add series
+          -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic static data
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -199,7 +206,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear semantic comments
+        comment: Clean code with semantic comments; for loop appropriate; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
@@ -215,15 +222,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.Line with Style, dict-format y_labels, per-series stroke_style
-          and dots_size in chart.add()
+        comment: Comprehensive Style object; dict-format y_labels for custom tick
+          mapping; per-series stroke_style and dots_size; tooltip customization; legend_at_bottom_columns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-series stroke width/dot size is pygal-specific; dict-format y_labels
-          is library-distinctive; could push further
+        comment: Dual output (interactive HTML + PNG) is pygals signature capability;
+          dict-format y_labels is pygal-specific; value_formatter lambda for rank
+          display
   verdict: APPROVED
 impl_tags:
   dependencies: []
