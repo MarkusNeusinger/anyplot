@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:18:22Z'
-updated: '2026-05-29T15:32:46Z'
+updated: '2026-05-29T15:44:13Z'
 generated_by: claude-sonnet
 workflow_run: 26645355756
 issue: 999
@@ -12,99 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'Excellent semantic color coding: green/red status with redundant triangle symbols
-    and numeric value labels ensures CVD accessibility and clear storytelling.'
-  - 'Data selection is exemplary: spans all three qualitative zones and demonstrates
-    both above-target and below-target outcomes across realistic KPI metrics.'
-  - Idiomatic use of Plotly go.Indicator bullet shape with clean domain-based stacking;
-    full HTML + PNG output.
-  - 'Perfect theme adaptation: background, tick colors, target marker color (black
-    to white), and range band opacity all flip correctly between light and dark.'
-  - 'Perfect data quality (15/15): realistic business scenario, correct scales, full
-    feature coverage.'
+  - Correct use of go.Indicator with gauge shape=bullet — the proper Plotly-native
+    API for bullet charts
+  - 'Semantic color logic: #009E73 (above target) and #AE3030 (below target) with
+    triangle/text redundancy in footer is clear and principled'
+  - Data covers all three qualitative zones with four diverse KPI metrics, demonstrating
+    the chart type fully
+  - Theme-adaptive design works correctly in both renders — backgrounds, text, and
+    target marker colors all adapt properly
+  - 'Full spec compliance: actual bar, target marker, qualitative bands, and metric
+    labels all implemented correctly'
   weaknesses:
-  - 'Title is wrong: "bullet-basic · plotly · pyplots.ai" must be "bullet-basic ·
-    python · plotly · anyplot.ai" — adds the missing python language token and corrects
-    the domain from pyplots.ai to anyplot.ai.'
-  - 'Minor tick label crowding at panel boundaries: each stacked Indicator trace emits
-    its own x-axis tick labels; at the ~1.6% inter-panel gap the labels from adjacent
-    panels are very close. Increasing spacing slightly (e.g., 0.025–0.03) or suppressing
-    intermediate axes would reduce noise.'
-  - Gauge tick-font at 9px is slightly below the 10px style-guide default; increase
-    to 10px for better mobile legibility.
+  - 'Rightmost tick labels clipped at gauge domain boundary on Revenue/Profit/Customers
+    rows: 300 shows as 00, 120 as 20, 500 as 00 — shrink gauge domain x-end from 0.94
+    to ~0.88 or suppress rightmost tick explicitly'
+  - 'Range band colors (#8B9DAF, #B4C0CA, #D5DDE2) are custom hex values outside the
+    Imprint palette — replace with INK_MUTED/INK_SOFT at graded opacity levels (0.30/0.18/0.08)
+    to stay within the Imprint system'
+  - Metric label title fontsize=11 is slightly small for 3200x1800 canvas — increase
+    to 13px for better mobile readability
+  - Green-red color pair on bar fills alone is a CVD risk — add a thin ink-colored
+    border or thickness difference as a non-color redundant cue beyond the footer
+    symbols
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "bullet-basic · plotly · pyplots.ai" in dark ink, clearly readable. Metric labels (Revenue ($K), Profit ($K), Customers, Satisfaction) in dark ink on left — all readable. Gauge tick labels (9px) readable at full res, marginal at mobile scale. Footer annotations "▲ Above target" / "▼ Below target" clearly visible.
-      Data: Revenue bar in #009E73 (brand green) extending past the black target marker. Profit, Customers, Satisfaction bars in #AE3030 (matte red) falling short of their respective target markers. Three blue-gray qualitative bands per metric (dark→mid→light). Numeric value labels (275 green, 41/320/4.2 red) at far right.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "bullet-basic · python · plotly · anyplot.ai" in dark ink, readable; metric labels (Revenue $K, Profit $K, Customers, Satisfaction) in dark ink on left, readable; tick labels visible but rightmost ticks on top 3 rows clipped at gauge domain boundary
+      Data: Revenue bar is #009E73 (Imprint brand green, above target); Profit/Customers/Satisfaction bars are #AE3030 (Imprint matte red, below target); three blue-gray range bands visible per row; black target marker lines clearly visible; actual values (275/41/320/4.2) in colored text on right
+      Legibility verdict: PASS — all text readable; minor clipping of rightmost tick labels on Revenue/Profit/Customers rows (within gauge domain, not canvas edge)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title in near-white (#F0EFE8), readable against dark background. Metric labels in light text — no dark-on-dark failures. Gauge tick labels visible. Footer annotations readable. Target markers flip to white (theme-adaptive INK token correctly applied).
-      Data: Bar colors identical to light render — #009E73 Revenue, #AE3030 for the three failing KPIs. Background bands render as semi-transparent blue-gray overlays appropriate for dark surface. Data colors unchanged across themes.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title and metric labels in light cream text, clearly readable; no dark-on-dark failures; tick labels in lighter tone readable; target markers switch to white lines, clearly visible
+      Data: Bar colors identical to light render (#009E73 green for Revenue, #AE3030 red for others) — data colors theme-stable; range bands use semi-transparent rgba overlays that are subtler but distinguishable; actual value numbers in green/red legible; footer legend text readable
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16px, metric labels 11px, value
-          numbers 13px, tick labels 9px, annotations 10px). 9px gauge tick-font is
-          marginally below 10px style-guide default.
+        comment: Title and value numbers readable at full resolution; metric label
+          fontsize 11 slightly small for 3200x1800; tick labels adequate
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Minor crowding at panel boundaries from adjacent go.Indicator x-axes
-          in the ~1.6% inter-panel gap; no full overlap.
+        passed: false
+        comment: Rightmost tick labels clipped at gauge domain boundary on Revenue/Profit/Customers
+          rows — 300 shows as 00, 120 as 20
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, qualitative bands, target markers, and value labels clearly
-          distinct and well-sized.
+        comment: Bars, target markers, and range bands all visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Semantic green/red with redundant triangle symbols and numeric value
-          labels; CVD-safe with redundant encoding.
+        passed: false
+        comment: Green-red pair used for above/below target; footer triangle symbols
+          provide partial CVD mitigation but bar fills rely on color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct. Domain 0.17-0.94 leaves clean space for
-          metric labels and value numbers. Footer annotations fit within margins.
+        comment: 3200x1800 canvas correct; compact row heights; slightly tight vertical
+          spacing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Metric labels include units (Revenue ($K), Profit ($K)); numeric
-          x-axes show correct scales per metric.
+        comment: Metric labels include units; title matches required format exactly
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Brand green #009E73 for above-target; #AE3030 matte-red for below-target
-          (semantic exception). Backgrounds #FAF8F1/#1A1A17 correct. All chrome adapts
-          correctly across themes.'
+        passed: false
+        comment: 'Green #009E73 and red #AE3030 are correct Imprint semantic uses;
+          backgrounds correct; range band colors #8B9DAF/#B4C0CA/#D5DDE2 are custom
+          hex values outside Imprint palette'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,25 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: semantic status-color coding, color-matched
-          value labels, deliberate dashboard layout. Not yet publication-polish.'
+        comment: Semantic color logic with above/below target coding; clean sans-serif
+          typography; thoughtful footer legend
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean inter-panel spacing and theme-adaptive target markers/band
-          colors show some refinement. Multiple x-axes per panel create visual noise.
+        comment: Bullet gauge format removes traditional chrome; dark-mode rgba band
+          overlays show theme awareness
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: One green bar vs three red bars creates immediate pass/fail read.
-          Status-colored value labels reinforce the KPI story without reading labels
-          first.
+        comment: Revenue above target (green) stands out clearly; Profit dramatically
+          below target is visually apparent; clear performance narrative
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,31 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: horizontal bullet chart via go.Indicator(gauge={''shape'':
-          ''bullet''}) for each metric.'
+        comment: Correct horizontal bullet chart using go.Indicator with gauge shape=bullet
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: actual-value bar, target marker, three qualitative
-          range bands, metric labels, value display.'
+        comment: Actual bar, target marker, qualitative range bands, and metric labels
+          all implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis represents metric scale; bars extend to actual value; target
-          markers at target value; four independent metric scales.
+        comment: All four metrics displayed with correct bar/target/range mappings
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title is ''bullet-basic · plotly · pyplots.ai'' — missing ''python''
-          language token and wrong domain (''pyplots.ai'' vs required ''anyplot.ai'').
-          Required: ''bullet-basic · python · plotly · anyplot.ai''. Legend as footer
-          annotations is functional.'
+        passed: true
+        comment: Title exactly matches required format; footer legend explains color
+          coding
     data_quality:
       score: 15
       max: 15
@@ -172,22 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three qualitative zones demonstrated; both above-target and below-target
-          outcomes shown across four metrics.
+        comment: All three qualitative zones represented; both above-target and below-target
+          states demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Business KPI dashboard (revenue, profit, customers, satisfaction)
-          is a canonical bullet-chart use case; fully realistic and neutral.
+        comment: Realistic KPI dashboard with Revenue/Profit/Customers/Satisfaction;
+          neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values factually plausible: $275K revenue vs $250K target; 4.2/5.0
-          satisfaction; 320 vs 400 customers; realistic profit margins.'
+        comment: All metric values and ranges are internally consistent and plausible
     code_quality:
       score: 10
       max: 10
@@ -197,55 +190,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → constants → data → loop over metrics
-          → save. No functions or classes.'
+        comment: No wrapper functions or classes; clean linear flow with a single
+          loop
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully hardcoded; no randomness, no seed required.
+        comment: Fully deterministic with hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, and plotly.graph_objects imported and used.
+        comment: Only os, sys, plotly.graph_objects imported; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable, Pythonic; sys.path guard is a legitimate self-import prevention
-          pattern. Loop over metrics is clean.
+        comment: Appropriate complexity; loop over metrics dict is clean; theme logic
+          well-organized
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current go.Indicator
-          API with write_image(width=800, height=450, scale=4).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Plotly
+          API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of go.Indicator(mode=''number+gauge'', gauge={''shape'':
-          ''bullet''}) with domain-based vertical stacking — the canonical Plotly
-          approach for bullet charts.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Plotly's built-in bullet gauge shape is a distinctly Plotly feature;
-          HTML interactivity also exported. Stops short of 5 as hover tooltips are
-          not configured for the interactive output.
-  verdict: REJECTED
+        comment: Correct use of go.Indicator with mode=number+gauge, domain-based
+          multi-indicator layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Plotly's specialized go.Indicator bullet gauge, domain-based
+          panel layout, interactive HTML output
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -254,4 +245,5 @@ impl_tags:
   patterns:
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
