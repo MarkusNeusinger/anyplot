@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -215,14 +215,18 @@ ax.spines["polar"].set_visible(False)
 
 fig.canvas.draw()
 
-# Innovation labels with collision detection
+# Innovation labels with improved collision detection and canvas boundary awareness
 placed_boxes = []
 DPI = fig.dpi
 PT = DPI / 72.0
-FONT_SIZE = 11
+FONT_SIZE = 10
 CHAR_W = FONT_SIZE * 0.62 * PT
 CHAR_H = FONT_SIZE * 1.3 * PT
-BOX_PAD = 4 * PT
+BOX_PAD = 6 * PT
+
+fig_width_px = fig.get_figwidth() * DPI
+fig_height_px = fig.get_figheight() * DPI
+MARGIN_PX = 8 * PT
 
 df_sorted = df.sort_values("radius", ascending=False).reset_index(drop=True)
 
@@ -239,8 +243,8 @@ for _, row in df_sorted.iterrows():
         ha, base_x = "center", 0
 
     best_pos, best_score = (12, base_x), float("inf")
-    for y in [12, -12, 18, -18, 25, -25, 33, -33]:
-        for dx_adj in [0, 8, -8, 15, -15]:
+    for y in [12, -12, 20, -20, 30, -30, 40, -40, 50, -50]:
+        for dx_adj in [0, 10, -10, 20, -20, 30, -30]:
             x_off = base_x + dx_adj
             va_c = "bottom" if y > 0 else "top"
             cx = px + x_off * PT
@@ -249,12 +253,19 @@ for _, row in df_sorted.iterrows():
             h = CHAR_H + BOX_PAD * 2
             x0 = cx if ha == "left" else (cx - w if ha == "right" else cx - w / 2)
             y0 = cy if va_c == "bottom" else cy - h
-            m = 2 * PT
-            score = sum(
+            # Canvas boundary penalty — strongly prefer in-bounds placements
+            boundary_penalty = 0
+            if x0 < MARGIN_PX or x0 + w > fig_width_px - MARGIN_PX:
+                boundary_penalty += 50
+            if y0 < MARGIN_PX or y0 + h > fig_height_px - MARGIN_PX:
+                boundary_penalty += 50
+            m = 3 * PT
+            overlap_count = sum(
                 1
                 for bx in placed_boxes
                 if not (x0 + w + m < bx[0] or bx[0] + bx[2] + m < x0 or y0 + h + m < bx[1] or bx[1] + bx[3] + m < y0)
             )
+            score = boundary_penalty + overlap_count
             if score < best_score:
                 best_score = score
                 best_pos = (y, x_off)
