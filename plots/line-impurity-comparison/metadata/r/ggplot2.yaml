@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: line-impurity-comparison
+created: '2026-05-29T00:59:57Z'
+updated: '2026-05-29T01:20:39Z'
+generated_by: claude-sonnet
+workflow_run: 26611370835
+issue: 4133
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'Correct Imprint palette: brand green (#009E73) for Gini (first series), lavender
+    for Entropy'
+  - Excellent dual encoding via color + linestyle (solid vs dashed) — redundant encoding
+    aids CVD accessibility
+  - 'Formula labels in legend ("Gini: 2p(1-p)", "Entropy: -p log2(p) - (1-p) log2(1-p)")
+    satisfy the spec requirement and enhance educational value'
+  - Proper theme-adaptive chrome in both renders; no dark-on-dark failures in dark
+    theme
+  - Unified ggplot2 legend (color + linetype merged by matching name =) is idiomatic
+    and clean
+  - Correct edge case handling at p=0 and p=1 for entropy
+  weaknesses:
+  - library(dplyr) and library(scales) are imported but no functions from either package
+    are called; remove both unused imports
+  - Both X and Y major grid lines are drawn; style guide recommends Y-axis grid only
+    for line charts — add panel.grid.major.x = element_blank() to the theme() call
+  - Annotation text (size=3 ggplot mm units) is slightly compact — consider raising
+    to size=3.5 for better mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-impurity-comparison · r · ggplot2 · anyplot.ai" in dark ink, clearly readable; axis labels "Probability p" (x) and "Impurity (normalized to [0, 1])" (y) in dark ink; tick labels at 0, 0.25, 0.5, 0.75, 1 on both axes in muted dark ink; legend title "Splitting Criterion" and formula labels readable
+      Data: Solid green (#009E73) Gini curve peaking at 0.5; dashed lavender (#C475FD) Entropy curve peaking at 1.0; both with subtle alpha=0.08 area fills; dotted vertical reference line at p=0.5 with annotation "p = 0.5 (max impurity)"
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, legend text all rendered in light INK/INK_SOFT tokens (#F0EFE8 / #B8B7B0); all clearly readable; no dark-on-dark issues; annotation text uses INK_SOFT dark (#B8B7B0) — visible; legend background uses elevated dark surface (#242420)
+      Data: Data colors identical to light render — solid green (#009E73) Gini, dashed lavender (#C475FD) Entropy; both clearly visible against dark background
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=12pt, axis=10pt, ticks=8pt, legend=8pt);
+          all text readable in both themes; annotation size=3 ggplot mm units is slightly
+          compact but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both curves clearly visible; dual encoding (color + linestyle) aids
+          distinguishability; area fills add context without obscuring lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color + linestyle redundant encoding; Imprint palette CVD-safe; no
+          red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); legend at bottom doesn't crowd data;
+          margins adequate
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Probability p; Y: Impurity (normalized to [0, 1]); both descriptive
+          with appropriate context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Gini) = #009E73 (brand green); second (Entropy) =
+          #C475FD (lavender, position 2); backgrounds #FAF8F1 / #1A1A17; chrome properly
+          themed'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: formula labels in legend add educational
+          value; area fills with alpha=0.08; proper dual encoding with solid/dashed
+          lines; intentional palette hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid via adjustcolor; minor grid removed; L-frame axis lines;
+          however, both X and Y grid lines shown (style guide prefers Y-only for line
+          charts)
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Dotted reference line at p=0.5 with annotation guides viewer to key
+          insight; area fills reinforce area under curve concept; formula labels create
+          effective educational storytelling
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-line comparison chart with smooth curves across [0,
+          1]
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both curves; different colors + linestyles; legend with formulas;
+          p=0.5 annotation; edge case handling; grid
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: probability p [0, 1]; Y: normalized impurity; 100 points for
+          smooth rendering'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: line-impurity-comparison · r · ggplot2 · anyplot.ai; legend
+          labels include mathematical formulas as specified'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both Gini and entropy shown across full range; maximum annotated;
+          edge cases handled; comparison clearly visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard ML educational visualization; neutral mathematical content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis [0, 1.08] leaves headroom; X-axis [0, 1] for probability;
+          sensible tick positions
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is deterministic mathematical functions
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(dplyr) and library(scales) are imported but neither package's
+          functions are called anywhere in the script; only ggplot2 and ragg are actively
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code; proper factor ordering for legend; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current linewidth = API (not deprecated
+          size =)
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics; data in long format with factor levels;
+          same name = in scale_color_manual and scale_linetype_manual to produce unified
+          single legend — a classic ggplot2 idiom
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: geom_area + geom_line layering; scale_linetype_manual for redundant
+          encoding; adjustcolor() for alpha-equivalent grid styling (ggplot2 does
+          not expose alpha on element_line)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
