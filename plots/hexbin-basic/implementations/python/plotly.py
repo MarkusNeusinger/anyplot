@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-29
@@ -72,6 +72,16 @@ counts = np.array([v[2] for v in hex_bins.values()])
 order = np.argsort(counts)
 hex_x, hex_y, counts = hex_x[order], hex_y[order], counts[order]
 
+# Log-scale color mapping for wide density range — spec recommendation
+log_counts = np.log1p(counts)
+log_max = float(log_counts.max())
+
+# Colorbar ticks at meaningful count thresholds, displayed in raw count space
+tick_vals_counts = [v for v in [1, 5, 10, 25, 50, 100, 200] if v <= int(counts.max())]
+tick_vals_counts.append(int(counts.max()))
+tick_vals_log = [float(np.log1p(v)) for v in tick_vals_counts]
+tick_text = [str(v) for v in tick_vals_counts]
+
 # Marker size calibrated to logical canvas (800×450) for seamless tessellation
 margins = {"l": 80, "r": 125, "t": 80, "b": 60}
 plot_w = 800 - margins["l"] - margins["r"]
@@ -91,21 +101,23 @@ fig = go.Figure(
         marker={
             "symbol": "hexagon2",
             "size": marker_size,
-            "color": counts,
+            "color": log_counts,
             "colorscale": imprint_seq,
             "cmin": 0,
-            "cmax": int(counts.max()),
+            "cmax": log_max,
             "colorbar": {
                 "title": {"text": "Pickups", "font": {"size": 12, "color": INK_SOFT}},
                 "tickfont": {"size": 10, "color": INK_SOFT},
                 "tickcolor": INK_SOFT,
+                "tickvals": tick_vals_log,
+                "ticktext": tick_text,
                 "outlinewidth": 0,
                 "thickness": 16,
                 "len": 0.7,
                 "x": 1.01,
                 "bgcolor": ELEVATED_BG,
             },
-            "line": {"width": 1, "color": counts, "colorscale": imprint_seq, "cmin": 0, "cmax": int(counts.max())},
+            "line": {"width": 1, "color": log_counts, "colorscale": imprint_seq, "cmin": 0, "cmax": log_max},
         },
         customdata=counts,
         hovertemplate="East: %{x:.1f} km<br>North: %{y:.1f} km<br>Pickups: %{customdata}<extra></extra>",
@@ -161,9 +173,9 @@ for label, cx, cy, ax_offset, ay_offset in [
         arrowcolor=INK_MUTED,
         ax=ax_offset,
         ay=ay_offset,
-        font={"size": 10, "color": INK},
+        font={"size": 11, "color": INK},
         bgcolor=ELEVATED_BG,
-        borderpad=4,
+        borderpad=8,
         bordercolor=INK_SOFT,
         borderwidth=0.5,
     )
