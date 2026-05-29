@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -17,6 +17,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ANYPLOT_AMBER = "#DDCC77"
 
 # Imprint palette — 8 hues, canonical order, first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -57,14 +58,11 @@ sns.set_theme(
     },
 )
 
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
-
 palette = IMPRINT_PALETTE[: len(companies)]
 markers = {"Apple": "o", "Microsoft": "s", "Amazon": "D", "Alphabet": "^", "Nvidia": "P"}
 
-# Plot
-sns.lineplot(
+# Figure-level relplot — leverages seaborn's FacetGrid API for layout control
+g = sns.relplot(
     data=df,
     x="Quarter",
     y="Rank",
@@ -77,8 +75,16 @@ sns.lineplot(
     palette=palette,
     hue_order=companies,
     sort=False,
-    ax=ax,
+    kind="line",
+    height=4.5,
+    aspect=16 / 9,
+    legend=False,
 )
+g.figure.set_dpi(400)
+g.figure.set_facecolor(PAGE_BG)
+
+ax = g.axes[0, 0]
+ax.set_facecolor(PAGE_BG)
 
 # Rank 1 at top
 ax.invert_yaxis()
@@ -87,13 +93,31 @@ ax.xaxis.grid(False)
 ax.yaxis.grid(True)
 sns.despine(ax=ax)
 
-# Alpha hierarchy — de-emphasize lower final-ranked companies for visual hierarchy
+# Alpha hierarchy — de-emphasize lower final-ranked companies
 final_ranks = {c: ranks_data[c][-1] for c in companies}
 for line in ax.get_lines():
     label = line.get_label()
     if label in final_ranks:
         fr = final_ranks[label]
         line.set_alpha(1.0 if fr <= 2 else (0.75 if fr == 3 else 0.55))
+
+# Crossing highlight — Apple/Microsoft overtake between Q2'23 (idx 5) and Q3'23 (idx 6)
+# Categorical x-axis maps quarters to integer positions 0–7
+CROSSING_X = 5.5
+ax.axvline(x=CROSSING_X, color=ANYPLOT_AMBER, alpha=0.45, linewidth=1.5, linestyle="--", zorder=0)
+# Label near rank 1 (top of inverted y-axis) where Apple/Microsoft cross
+# ax.get_xaxis_transform(): x=data coords, y=axes fraction (1=top of display)
+ax.text(
+    CROSSING_X,
+    0.90,
+    "overtake",
+    fontsize=7,
+    color=ANYPLOT_AMBER,
+    ha="center",
+    va="bottom",
+    style="italic",
+    transform=ax.get_xaxis_transform(),
+)
 
 # Style
 title = "bump-basic · python · seaborn · anyplot.ai"
@@ -120,7 +144,5 @@ for i, company in enumerate(companies):
         alpha=alpha_val,
     )
 
-ax.get_legend().remove()
-
-fig.subplots_adjust(left=0.09, right=0.87, top=0.90, bottom=0.13)
+g.figure.subplots_adjust(left=0.09, right=0.87, top=0.90, bottom=0.13)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
