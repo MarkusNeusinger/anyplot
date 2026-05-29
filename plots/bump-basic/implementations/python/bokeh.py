@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bump-basic: Basic Bump Chart
-Library: bokeh | Python 3.14.3
-Quality: 90/100 | Updated: 2026-05-29
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-29
 """
 
 import sys
