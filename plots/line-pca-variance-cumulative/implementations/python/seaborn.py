@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -121,8 +121,8 @@ ax.axhline(y=95, color=ANYPLOT_AMBER, linestyle="--", linewidth=1.5, alpha=0.85,
 ax.axhline(y=90, color=INK_SOFT, linestyle="--", linewidth=1.2, alpha=0.55, dashes=(3, 2, 6, 2))
 
 # Threshold labels (left margin, outside plot data)
-ax.text(-0.6, 95.8, "95%", fontsize=7.5, color=ANYPLOT_AMBER, fontweight="bold", va="bottom", ha="center")
-ax.text(-0.6, 89.2, "90%", fontsize=7.5, color=INK_SOFT, fontweight="bold", va="top", ha="center")
+ax.text(-0.6, 95.8, "95%", fontsize=8, color=ANYPLOT_AMBER, fontweight="bold", va="bottom", ha="center")
+ax.text(-0.6, 89.2, "90%", fontsize=8, color=INK_SOFT, fontweight="bold", va="top", ha="center")
 
 # Highlight 95% crossing — amber ring marker
 ax.plot(
@@ -142,7 +142,7 @@ ax.annotate(
     f"{comp_95} components\nexplain {val_95:.1f}%",
     xy=(idx_95, val_95),
     xytext=(annotation_x, 52),
-    fontsize=7.5,
+    fontsize=8,
     fontweight="bold",
     color=ANYPLOT_AMBER,
     arrowprops={"arrowstyle": "-|>", "color": ANYPLOT_AMBER, "lw": 1.5, "connectionstyle": "arc3,rad=-0.25"},
@@ -167,7 +167,8 @@ legend_elements = [
     ),
     Patch(facecolor=IMPRINT_PALETTE[1], alpha=0.35, label="Per-component variance"),
 ]
-ax.legend(handles=legend_elements, fontsize=7, loc="lower right", framealpha=0.92, edgecolor=INK_SOFT, fancybox=False)
+ax.legend(handles=legend_elements, fontsize=8, loc="lower right", framealpha=0.92, edgecolor=INK_SOFT, fancybox=False)
+sns.despine(ax=ax, top=True, right=True)
 
 # Axis styling
 ax.set_xlabel("Number of Principal Components", fontsize=10, color=INK)
