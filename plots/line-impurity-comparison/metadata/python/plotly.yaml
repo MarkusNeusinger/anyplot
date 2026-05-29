@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:53:39Z'
-updated: '2026-05-29T00:52:40Z'
+updated: '2026-05-29T01:03:04Z'
 generated_by: claude-sonnet
 workflow_run: 26610903097
 issue: 4133
@@ -12,115 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented correctly, including
-    edge-case entropy handling and mathematical formulas in legend labels
-  - 'Strong data storytelling: shaded divergence fill + dual annotations + reference
-    dotted line create a clear educational narrative'
-  - Full theme-adaptive implementation with all chrome tokens (INK, INK_SOFT, GRID,
-    PAGE_BG, ELEVATED_BG) correctly wired to both axes, annotations, and legend
-  - Code is clean, deterministic, and well-structured with no unnecessary complexity
-  - Correct canvas dimensions (3200x1800) with explicit margins and autosize=False
+  - 'Imprint palette used correctly throughout — Gini as #009E73 (first series), Entropy
+    as #C475FD (second series), fill-between derived from lavender at low opacity'
+  - 'Full theme-adaptive chrome: all tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    GRID) correctly branched for light and dark renders, both visually clean'
+  - Shaded region between curves using fill='toself' with concatenated arrays is an
+    elegant Plotly-native technique that visually highlights the divergence area
+  - Two targeted annotations (Peak at p=0.5, Divergence region) with themed background
+    boxes and arrows create clear focal points and guide the reader directly to the
+    key insights
+  - All font sizes explicitly set (title=16px, axis labels=12px, ticks=10px, legend=10px,
+    annotations=13–14px) and proportions look well-balanced at 3200×1800 px
+  - 'Spec fully satisfied: correct curve math, edge cases handled (entropy=0 at p=0
+    and p=1), legend includes formulas, vertical reference line at p=0.5, subtitle-style
+    title format correct'
+  - 'Redundant encoding: Gini solid line vs Entropy dashed — makes series distinguishable
+    without relying on hue alone, improving CVD robustness'
+  - Interactive hovertemplate per series plus write_html() export leverage Plotly's
+    interactive strengths beyond a pure static PNG
   weaknesses:
-  - 'The ''Divergence region'' annotation box (ax=110, ay=60) overlaps with the legend
-    in the lower-left corner, obscuring the first legend entry ''Gini: 2p(1−p) [scaled]''
-    — reposition the annotation offset (e.g., ax=-80 or ay=100) or move the legend
-    to a non-conflicting position (e.g., x=0.55, y=0.02 center-bottom)'
-  - Second series uses Imprint position 3 (#4467A3 blue) instead of canonical position
-    2 (#C475FD lavender) — change ENTROPY_COLOR to '#C475FD' to follow canonical 1→N
-    palette order
+  - 'Design Excellence has room to grow: no spines are explicitly removed (mirror=False
+    suppresses mirroring but does not hide the axis lines — consider showline=False
+    on top/right or use showspikes=False to tighten the look toward a true L-frame)'
+  - 'DE-02: Both X and Y grids are active; for this smooth curve plot a Y-only grid
+    would be cleaner and reduce visual noise without losing readability'
+  - 'LM-02: fill=''toself'' and hover tooltips are good, but leveraging Plotly''s
+    add_shape() for the reference line or using rangeslider/selection events would
+    add a stronger Plotly-distinctive touch'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required
-      Chrome: Title "line-impurity-comparison · python · plotly · anyplot.ai" centered in dark ink — fully readable. X-axis label "Probability (p)" and Y-axis label "Impurity Measure (normalized)" in dark ink at 12pt — readable. Tick labels in INK_SOFT at 10pt — readable. Two annotation boxes with dark text on elevated background (#FFFDF6) — readable.
-      Data: Solid green (#009E73) Gini curve and dashed blue (#4467A3) Entropy curve, both with width=3.5. Light-blue fill (rgba 0.12 opacity) between curves. Dotted vertical reference line at p=0.5 in INK_SOFT at 30% opacity. Legend in lower-left with elevated background.
-      Overlap issue: "Divergence region" annotation box overlaps with legend, obscuring right portion of "Gini: 2p(1-p) [scaled]" legend entry.
-      Legibility verdict: PASS (overlap defect noted but text remains identifiable)
+      Background: Warm off-white (#FAF8F1) — correct, matches the style guide surface.
+      Chrome: Title "line-impurity-comparison · python · plotly · anyplot.ai" centered, dark near-black text, ~65–70% of plot width — well-proportioned. X-axis label "Probability (p)" and Y-axis label "Impurity Measure (normalized)" in dark ink, both readable. Tick labels in slightly softer dark tone, clearly legible. Grid lines are very subtle (15% opacity) across both axes.
+      Data: Gini curve rendered in solid #009E73 (brand green); Entropy curve in dashed #C475FD (Imprint lavender). Shaded region between curves in lavender at ~12% opacity highlights the divergence. Vertical dotted reference line at p=0.5 in soft dark tone. Two annotation boxes (warm off-white #FFFDF6 fill, soft border, dark text): "Peak: both measures = 1.0 at p = 0.5" near the top, "Divergence region / Entropy is wider than Gini" mid-left. Legend at bottom center with formula-inclusive labels in soft dark text.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, good contrast throughout.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light INK — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Annotation text in light ink on dark elevated background (#242420) — readable. No dark-on-dark failures detected.
-      Data: Colors are identical to light render — green solid Gini and blue dashed Entropy curves unchanged. Fill region and reference line visible.
-      Legibility verdict: PASS (same overlap defect present; no dark-on-dark failures)
+      Background: Warm near-black (#1A1A17) — correct.
+      Chrome: Title in light near-white (#F0EFE8), clearly readable against the dark surface. Axis labels in the same light ink, tick labels in slightly softer #B8B7B0. Grid lines subtle (15% opacity, light-tinted rule). Annotation boxes use #242420 elevated fill with light (#F0EFE8) text — visually distinct from the near-black background and readable. Legend text in #B8B7B0 on #242420 elevated background.
+      Data: Gini #009E73 and Entropy #C475FD dashed — IDENTICAL colors to the light render, only chrome flipped. Brand green and lavender both remain vivid and distinguishable against the dark surface. Shaded fill between curves still visible.
+      Legibility verdict: PASS — no dark-on-dark failures detected. Title, axis labels, tick labels, annotation text, and legend text all clearly readable on the dark background.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; minor deduction for reduced legend
-          legibility due to annotation overlap
+        comment: All font sizes explicitly set (title=16px, axes=12px, ticks=10px,
+          legend=10px, annotations=13-14px). Well-proportioned at 3200x1800. Readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Divergence region annotation box overlaps legend in lower-left, obscuring
-          first legend entry in both renders
+        passed: true
+        comment: No overlapping elements. Annotations, legend, and curves all well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both curves clearly visible at width=3.5, shaded fill subtle but
-          present, reference line visible
+        comment: Lines at width=3.5, 200 data points produce smooth curves. Shaded
+          fill clearly visible between curves.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue not a red-green pair; dashed line adds redundant channel
-          for CVD safety
+        comment: 'Imprint palette CVD-safe. Redundant encoding: solid vs dashed line
+          styles.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), good proportions, explicit margins,
-          no clipping
+        comment: Balanced margins (l=80, r=40, t=80, b=60). Plot fills canvas well.
+          Legend inside plot area at bottom center.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context; title matches required format
+        comment: 'X: ''Probability (p)'', Y: ''Impurity Measure (normalized)'' — both
+          descriptive.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correct (#009E73); second series uses position 3 (#4467A3)
-          skipping canonical position 2 (#C475FD)
+        passed: true
+        comment: 'First series #009E73 (Gini), second series #C475FD (Entropy). Backgrounds
+          #FAF8F1 / #1A1A17. All chrome tokens theme-adaptive. Fully compliant.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: shaded fill, dual styled annotations, reference line,
-          custom palette'
+        comment: 'Strong design: Imprint palette, shaded divergence region, themed
+          annotation boxes, redundant encoding. Clearly above defaults. Not quite
+          FiveThirtyEight-level — no spine removal, dual-axis grid adds slight noise.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle rgba grid, mirror:false, explicit font sizes; moderate refinement
+        comment: 'Good: mirror=False reduces frame noise, grid subtle at 15% opacity,
+          generous whitespace. Both axes have gridlines — Y-only would be cleaner
+          for this curve plot.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Shaded divergence fill + peak annotation + reference line create
-          clear educational narrative
+        comment: 'Good: Peak annotation + divergence annotation + shaded region create
+          clear focal points. Viewer is guided to both key insights (peak at p=0.5
+          and the wider entropy tail).'
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-line comparison chart
+        comment: Correct line comparison chart with two smooth curves on same axes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both curves, color+linestyle differentiation, legend with formulas,
-          peak annotation, edge cases handled, grid present
+        comment: Both curves, legend with formulas, annotation at p=0.5 maximum, edge
+          cases handled, grid for readability — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability [0,1], Y=normalized impurity [0,1], correct formulas
-          with safe edge-case handling
+        comment: 'X: probability p [0,1], Y: impurity normalized [0,1]. Both curves
+          correctly calculated.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels include mathematical
-          formulas
+        comment: 'Title: ''line-impurity-comparison · python · plotly · anyplot.ai''.
+          Legend includes formulas for both metrics.'
     data_quality:
       score: 15
       max: 15
@@ -161,20 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full comparison with shaded region, annotations, and reference line
+        comment: Shows full [0,1] range, both curves, divergence region, peak, and
+          boundary behavior at p=0 and p=1.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Theoretical mathematical data, neutral educational visualization
+        comment: Gini impurity and entropy are genuine ML concepts used in decision
+          trees — real, educational, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Both measures normalized to [0,1] as specified; 200 points for smooth
-          curves
+        comment: 'Mathematically correct: Gini=2p(1-p) normalized, Entropy=-p*log2(p)-(1-p)*log2(1-p)
+          normalized, both peaking at 1.0 for p=0.5.'
     code_quality:
       score: 10
       max: 10
@@ -184,49 +201,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear script, no functions or classes
+        comment: 'Clean linear flow: imports → tokens → data → traces → annotations
+          → layout → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: np.linspace + closed-form formulas'
+        comment: 'Fully deterministic: linspace + mathematical formulas, no random
+          state needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used
+        comment: os, numpy, plotly.graph_objects — all three used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, fill=toself idiomatic
+        comment: Clean, Pythonic. fill='toself' with concatenated arrays is an appropriate
+          Plotly idiom for shading between curves.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct go.Figure + add_trace, fill=toself, add_vline, add_annotation
-          with arrow config; minor: plotly_white template base with bg override'
+        comment: Expert use of go.Figure, add_trace, add_annotation, add_vline, write_image,
+          write_html — the canonical Plotly high-level API.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hovertemplate on both traces, fill=toself area shading, add_vline,
-          HTML annotation text, write_html export
+        comment: fill='toself' shading (Plotly-specific idiom for between-curve fills),
+          custom hovertemplate per series, add_vline() convenience method, HTML export.
+          Good Plotly-specific usage, though add_shape() for the vline or a rangeslider
+          would push to 5.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -240,4 +262,3 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
