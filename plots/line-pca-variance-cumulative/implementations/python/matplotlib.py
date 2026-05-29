@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-Library: matplotlib | Python
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-29
 """
 
 import os
