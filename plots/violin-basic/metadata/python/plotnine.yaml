@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:35:38Z'
-updated: '2026-05-29T11:28:10Z'
+updated: '2026-05-29T11:41:06Z'
 generated_by: claude-sonnet
 workflow_run: 26634217780
 issue: 722
@@ -15,47 +15,37 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: geom_violin with draw_quantiles=[0.25, 0.5, 0.75] covers
-    quartile markers + median line; trim=False shows full distribution tails'
-  - 'Excellent synthetic data with meaningfully distinct distribution shapes: bimodal
-    Design (junior/senior split), tight Marketing, right-skewed Engineering, wide
-    Sales commission spread'
-  - Correct Imprint palette positions 1–4 in canonical order (green, lavender, blue,
-    ochre) with theme-adaptive chrome throughout both renders
-  - 'Both themes render correctly: #FAF8F1 light background and #1A1A17 dark background
-    with all text and grid lines adapting via INK/INK_SOFT tokens'
-  - 'Clean code: seed set, no functions/classes, all imports used, outputs to plot-{THEME}.png
-    per convention'
-  - Y-only horizontal grid (panel_grid_major_x removed) with alpha=0.15 opacity is
-    a tasteful, non-distracting choice for this plot type
+  - 'Perfect spec compliance: all three required features (quartile markers, mirrored
+    density, median line) via draw_quantiles=[0.25, 0.5, 0.75]'
+  - Data purposefully designed with four distinct distribution shapes showcasing violin
+    plot advantages over boxplots
+  - Full Imprint palette compliance in both renders; adaptive chrome correctly threads
+    INK/INK_SOFT tokens to all text elements
+  - 'Perfect code quality: KISS structure, explicit font sizes, seed, clean imports,
+    correct output API'
+  - Annotation adds genuine insight by calling out the bimodal nature of Design salaries
   weaknesses:
-  - 'VQ-01 minor: base text=7pt is slightly small as the global fallback — bump to
-    9pt so any unlabeled elements have a better floor'
-  - 'DE-01/DE-02: No explicit axis_line or panel_border suppression — theme_minimal
-    handles it but the library guide recommends explicitly setting axis_line=element_line(color=INK_SOFT)
-    for theme consistency; also no ELEVATED_BG token assigned (unused here but good
-    defensive practice)'
-  - 'DE-03: No visual emphasis or annotation to highlight a key insight (e.g., a subtle
-    annotation calling out the bimodal Design distribution or the Engineering senior-pay
-    cluster) — would elevate storytelling'
-  - 'LM-02: The implementation uses geom_violin idiomatically but does not leverage
-    any additional plotnine-specific ggplot2 features such as coord_flip, facet_wrap,
-    or stat_summary to augment the violin'
+  - Annotation text size=2.8mm is quite small; at 400px mobile render it becomes barely
+    readable — increase to ~3.5-4.0 and use INK color (not INK_SOFT) for better contrast
+  - Mean diamond markers at size=2.5 are small relative to violin bodies; increasing
+    to ~3.5 would make mean position more prominent
+  - DE-01 could improve with bolder title weight (fontweight=bold on plot_title element_text)
+    and/or thin outline stroke on violins
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white. Smooth fill throughout the canvas.
-      Chrome: Title "violin-basic · python · plotnine · anyplot.ai" in dark ink at 12pt — readable and spanning ~70% width. Y-axis label "Annual Salary (USD)" and X-axis label "Department" both clearly visible in dark ink at 10pt. Y-axis tick labels (50000, 100000, 150000) and x-axis category labels (Engineering, Design, Marketing, Sales) visible in INK_SOFT at 8pt.
-      Data: Four violins in Imprint positions 1–4: Engineering=#009E73 (brand green), Design=#C475FD (lavender), Marketing=#4467A3 (blue), Sales=#BD8233 (ochre). Each violin shows quantile lines at 0.25/0.5/0.75 percentiles as thin dark strokes. Shapes are distinctive: Engineering right-skewed, Design bimodal (two lobes), Marketing very narrow/lenticular, Sales wide diamond. Subtle horizontal grid lines (Y-axis only).
-      Legibility verdict: PASS — all text elements readable, no light-on-light issues, data clearly distinguishable from background.
+      Background: Warm off-white #FAF8F1 - PASS
+      Chrome: Title "violin-basic · python · plotnine · anyplot.ai" in dark ink (#1A1A17) clearly readable; Y-axis label "Annual Salary (USD)" and X-axis "Department" readable in dark ink; tick labels in INK_SOFT (#4A4A44) readable; annotation "Bimodal:\njunior/senior split" small but present
+      Data: Engineering violin in #009E73 (brand green); Design in #C475FD (lavender); Marketing in #4467A3 (blue); Sales in #BD8233 (ochre); quartile lines and mean diamonds visible inside violins
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black. Uniform dark fill.
-      Chrome: Title in light (#F0EFE8) ink — fully readable. Y-axis and X-axis labels in light text — readable. Tick labels in INK_SOFT (#B8B7B0) — readable at 8pt against dark background. No dark-on-dark failures observed.
-      Data: Colors identical to light render — Engineering green, Design lavender, Marketing blue, Sales ochre (Imprint palette is theme-independent). Quantile lines appear as lighter strokes (#B8B7B0) against the colored violins — visible and correct. Grid lines are subtle near-white lines against the dark background.
-      Legibility verdict: PASS — all text elements legible, no dark-on-dark failure, data colors match light render exactly, brand green #009E73 visible and distinct.
+      Background: Warm near-black #1A1A17 - PASS
+      Chrome: Title in light text (#F0EFE8) clearly readable; axis labels in light text readable; tick labels in #B8B7B0 readable; no dark-on-dark failures observed
+      Data: Violin colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233); quantile lines and diamonds visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,52 +53,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12pt, axis_title=10pt, axis_text=8pt,
-          text=7pt base). Readable in both themes. Minor: base text=7pt is slightly
-          small as a fallback floor.'
+        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8);
+          annotation text at size=2.8mm small but not critical
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Well-spaced violins with no text or element overlaps in either render.
+        comment: No text collisions; violins well-separated
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Violin shapes clearly visible with distinct distribution profiles.
-          Quantile lines visible inside each violin in both themes.
+        comment: Violins well-sized; mean diamonds and quartile lines visible but
+          small
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-4 are CVD-optimised. Four hues span distinct
-          perceptual families (green/purple/blue/ochre).
+        comment: CVD-safe Imprint palette; 4 distinct hue families
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800, figure_size=(8,4.5) dpi=400). Good
-          proportions. Title fits at ~70% width. Generous margins.
+        comment: Canvas gate passed 3200x1800; balanced margins and whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly. Y-axis has units (USD). X-axis
-          descriptive.
+        comment: Annual Salary (USD) has units; Department descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Engineering) = #009E73. Positions 1-4 in canonical
-          order. Backgrounds #FAF8F1/#1A1A17. Both themes chrome-correct.'
+        comment: 'Engineering uses #009E73 first; full Imprint canonical order; correct
+          bg colors; adaptive chrome'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -116,25 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Correct Imprint palette, alpha=0.82 adds slight
-          depth, INK_SOFT violin borders create definition, intentional no-legend
-          choice. No custom typography hierarchy or bold emphasis.
+        comment: Above configured defaults with intentional alpha, mean diamonds,
+          annotation; not at publication-ready level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). theme_minimal removes top/right spines, X-grid
-          suppressed via panel_grid_major_x=element_blank, Y-grid at alpha=0.15 is
-          subtle. Legend removed. Clean composition.
+        comment: Spines removed; subtle horizontal-only grid at 0.15 alpha; no legend;
+          clean appearance
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). Meaningfully distinct distribution shapes illustrate
-          real-world pay dynamics. Quartile lines help reader see IQR. No annotation
-          or emphasis to direct reader to a specific insight.
+        comment: Deliberate distribution variety tells salary analysis story; annotation
+          highlights bimodal feature
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot using geom_violin.
+        comment: Correct violin plot with mirrored density
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quartile markers (0.25, 0.5, 0.75) inside violin via draw_quantiles.
-          Median (0.5) included. Mirrored density is native to geom_violin.
+        comment: draw_quantiles=[0.25,0.5,0.75] provides quartile markers and median
+          line; mirrored density present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=department, y=salary. All 4 categories shown. Axes display full
-          data range.
+        comment: Department on X, salary on Y; all groups visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'violin-basic · python · plotnine · anyplot.ai'.
-          No legend appropriate since categories identified by x-axis labels.
+        comment: Correct title format; no legend needed (x-axis labels suffice)
     data_quality:
       score: 15
       max: 15
@@ -175,24 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All violin features shown: KDE shape, quartile markers, median line,
-          full tails (trim=False). Distribution diversity showcases the chart type
-          well.'
+        comment: 'Four distinct shapes: right-skewed, bimodal, tight normal, wide
+          spread'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual salary by department is a canonical real-world use case. USD
-          values ($50k-$200k) are plausible. Distribution shapes (bimodal Design junior/senior
-          split) reflect realistic pay structures.
+        comment: Annual salary by department is neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 160-220 samples per category (well within 30-1000 spec range). Salary
-          range appropriate. Clip at [35000, 200000] is sensible.
+        comment: Salary ranges plausible for US business roles
     code_quality:
       score: 10
       max: 10
@@ -202,32 +179,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear, flat structure.
+        comment: Linear imports->tokens->data->plot->save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used in the plot construction.
+        comment: All imported names used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Clean ggplot grammar-of-graphics composition.
+        comment: Idiomatic Python with strict=True in zip; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png. Uses plot.save() with correct dpi/width/height.
-          No bare plot.png.
+        comment: Saves as plot-{THEME}.png with current API
     library_mastery:
       score: 7
       max: 10
@@ -237,26 +213,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ggplot()+aes()+layer chain idiom. theme_minimal() base with
-          theme() overrides. scale_fill_manual() for palette. draw_quantiles and trim=False
-          show good geom_violin knowledge.
+        comment: Grammar-of-graphics layering; scale_fill_manual with named dict;
+          stat_summary as declarative layer
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: draw_quantiles is a ggplot2/plotnine-specific parameter not available
-          in matplotlib/seaborn. trim=False and pd.Categorical ordering are plotnine-aware
-          patterns. No coord_flip, faceting, or stat_summary to further showcase the
-          library.
+        comment: draw_quantiles in geom_violin; stat_summary(fun_y=) pattern; element_*
+          theme system all plotnine-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
