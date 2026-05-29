@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -18,9 +18,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint categorical palette — positions 1 and 3
+# Imprint categorical palette — positions 1 and 2
 GINI_COLOR = "#009E73"  # Imprint position 1 — brand green, always first series
-ENTROPY_COLOR = "#4467A3"  # Imprint position 3 — blue
+ENTROPY_COLOR = "#C475FD"  # Imprint position 2 — lavender
 
 # Data
 p = np.linspace(0, 1, 200)
@@ -43,7 +43,7 @@ fig.add_trace(
         x=np.concatenate([p, p[::-1]]),
         y=np.concatenate([entropy, gini[::-1]]),
         fill="toself",
-        fillcolor="rgba(68,103,163,0.12)",  # Imprint blue at low opacity
+        fillcolor="rgba(196,117,253,0.12)",  # Imprint lavender at low opacity
         line={"width": 0},
         showlegend=False,
         hoverinfo="skip",
@@ -62,7 +62,7 @@ fig.add_trace(
     )
 )
 
-# Entropy curve — Imprint position 3, dashed for distinction
+# Entropy curve — Imprint position 2, dashed for distinction
 fig.add_trace(
     go.Scatter(
         x=p,
@@ -154,9 +154,9 @@ fig.update_layout(
     template="plotly_white",
     legend={
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.02,
+        "x": 0.5,
         "y": 0.02,
-        "xanchor": "left",
+        "xanchor": "center",
         "yanchor": "bottom",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
