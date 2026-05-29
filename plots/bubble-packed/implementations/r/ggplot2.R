@@ -16,6 +16,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+LABEL_COLOR <- if (THEME == "light") INK else "#FFFFFF"
 
 # Imprint categorical palette — first series always #009E73
 IMPRINT_PALETTE <- c(
@@ -59,8 +60,8 @@ segments <- tibble(
 
 n_segs <- nrow(segments)
 
-# Force-directed circle packing
-pack_circles <- function(r, n_iter = 600) {
+# Force-directed circle packing with sector clustering
+pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
   n  <- length(r)
   ga <- pi * (3 - sqrt(5))  # golden angle
 
@@ -74,7 +75,7 @@ pack_circles <- function(r, n_iter = 600) {
     py[i] <- rs * sin(ang)
   }
 
-  # Iterative overlap resolution with centroid gravity
+  # Iterative overlap resolution with centroid + sector gravity
   for (it in seq_len(n_iter)) {
     any_mv <- FALSE
     for (i in seq_len(n - 1)) {
@@ -101,20 +102,66 @@ pack_circles <- function(r, n_iter = 600) {
       }
     }
 
-    # Gentle gravity toward centroid
-    g  <- 0.01
+    # Global centroid gravity (tightens pack)
+    g  <- 0.04
     cx <- mean(px)
     cy <- mean(py)
     px <- px + g * (cx - px)
     py <- py + g * (cy - py)
 
+    # Sector centroid gravity (clusters same-sector circles)
+    if (!is.null(sectors)) {
+      gs <- 0.012
+      for (s in unique(sectors)) {
+        idx  <- which(sectors == s)
+        scx  <- mean(px[idx])
+        scy  <- mean(py[idx])
+        px[idx] <- px[idx] + gs * (scx - px[idx])
+        py[idx] <- py[idx] + gs * (scy - py[idx])
+      }
+    }
+
     if (!any_mv) break
+  }
+
+  # Final tightening: nudge each circle toward nearest non-overlapping neighbor
+  for (pass in seq_len(8)) {
+    for (i in seq_len(n)) {
+      best_gap <- Inf
+      best_j   <- NA_integer_
+      for (j in seq_len(n)) {
+        if (j == i) next
+        d   <- sqrt((px[i] - px[j])^2 + (py[i] - py[j])^2)
+        gap <- d - r[i] - r[j]
+        if (gap > 0 && gap < best_gap) { best_gap <- gap; best_j <- j }
+      }
+      if (!is.na(best_j) && best_gap > 1e-3) {
+        dx   <- px[best_j] - px[i]
+        dy   <- py[best_j] - py[i]
+        d    <- sqrt(dx^2 + dy^2)
+        step <- min(best_gap * 0.45, 0.04)
+        px[i] <- px[i] + step * dx / d
+        py[i] <- py[i] + step * dy / d
+      }
+    }
+    # Re-resolve any overlaps introduced by tightening
+    for (i in seq_len(n - 1)) {
+      for (j in (i + 1):n) {
+        dx   <- px[i] - px[j]; dy <- py[i] - py[j]
+        d    <- sqrt(dx^2 + dy^2); dmin <- r[i] + r[j] + 2e-3
+        if (d < dmin && d > 1e-9) {
+          push  <- (dmin - d) * 0.51; ux <- dx / d; uy <- dy / d
+          px[i] <- px[i] + push * ux; py[i] <- py[i] + push * uy
+          px[j] <- px[j] - push * ux; py[j] <- py[j] - push * uy
+        }
+      }
+    }
   }
 
   list(x = px - mean(px), y = py - mean(py))
 }
 
-pos      <- pack_circles(segments$radius)
+pos      <- pack_circles(segments$radius, sectors = as.character(segments$sector))
 segments <- segments |> mutate(x = pos$x, y = pos$y)
 
 # Circle polygons for geom_polygon
@@ -150,7 +197,7 @@ p <- ggplot() +
   geom_text(
     data     = label_df,
     aes(x = x, y = y, label = label),
-    color    = "#FFFFFF",
+    color    = LABEL_COLOR,
     size     = 2.2,
     fontface = "bold"
   ) +
