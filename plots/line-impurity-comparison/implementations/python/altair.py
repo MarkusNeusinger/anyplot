@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-29
+Quality: 87/100 | Updated: 2026-05-29
 """
 
 import os
