@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 93/100 | Updated: 2026-02-22
+Library: letsplot | Python 3.13
+Quality: pending | Updated: 2026-05-29
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
@@ -32,9 +34,20 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Data - Tech company rankings over 6 quarters
-# Designed with dramatic crossovers: a rise-and-fall arc, a comeback story,
-# volatile swaps in the middle, and a steady performer at the bottom
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# Approximate 15% opacity grid: blend INK into PAGE_BG at 15%
+GRID_COLOR = "#D7D6D3" if THEME == "light" else "#3A3935"
+
+# Imprint categorical palette — canonical order, 5 series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data - Tech company market share rankings over 6 quarters
+# Story: Alpha Corp reclaims top; Beta Inc meteoric rise then collapse;
+# Gamma Tech volatile; Delta Systems steady climber; Epsilon Labs at the bottom
 data = {
     "entity": (
         ["Alpha Corp"] * 6 + ["Beta Inc"] * 6 + ["Gamma Tech"] * 6 + ["Delta Systems"] * 6 + ["Epsilon Labs"] * 6
@@ -47,83 +60,79 @@ data = {
         3,
         2,
         1,
-        1,  # Alpha Corp - starts #1, drops mid-year, reclaims top
+        1,  # Alpha Corp — drops mid-year, reclaims #1
         3,
         1,
         1,
         3,
         4,
-        5,  # Beta Inc - meteoric rise to #1, then collapses
+        5,  # Beta Inc — meteoric rise to #1, then collapses
         2,
         3,
         2,
         1,
         2,
-        3,  # Gamma Tech - volatile, briefly reaches #1 in Q4
+        3,  # Gamma Tech — volatile, briefly reaches #1 in Q4
         4,
         4,
         5,
         4,
         3,
-        2,  # Delta Systems - steady climber from bottom half
+        2,  # Delta Systems — steady climber from bottom half
         5,
         5,
         4,
         5,
         5,
-        4,  # Epsilon Labs - mostly bottom, slight improvement
+        4,  # Epsilon Labs — mostly bottom, slight improvement
     ],
 }
 df = pd.DataFrame(data)
 
-# Hero entity (Beta Inc) has the most dramatic arc — emphasize via mapped aesthetics
+# Hero entity: Beta Inc has the most dramatic arc — emphasize via mapped aesthetics
 hero = "Beta Inc"
 df["role"] = df["entity"].apply(lambda x: "hero" if x == hero else "rest")
-
-# Subset for labels at end of lines
 df_labels = df[df["period_num"] == 6].copy()
 
-# Cohesive muted palette — Python Blue anchors, warm/cool balance
-colors = ["#306998", "#C47D2A", "#3A9E78", "#8B6AAE", "#D4707A"]
-
-# Plot — hero emphasis via scale_size_manual / scale_alpha_manual (idiomatic ggplot approach)
+# Tooltip config for the interactive HTML output
 tooltip_cfg = layer_tooltips().title("@entity").line("@|@period").line("Rank|@rank")
+
+# Title length: 44 chars < 67 baseline → keep default size 16
+title = "bump-basic · python · letsplot · anyplot.ai"
 
 plot = (
     ggplot(df, aes(x="period_num", y="rank", color="entity", group="entity"))
-    # Lines: size mapped to role for hero/rest thickness differentiation
+    # Lines: size/alpha mapped to role for hero emphasis (idiomatic grammar approach)
     + geom_line(aes(size="role", alpha="role"), tooltips=tooltip_cfg)
-    # Points: fixed size for all, alpha mapped for hero emphasis
-    + geom_point(aes(alpha="role"), size=6, tooltips=tooltip_cfg)
-    # End-of-line entity labels — sized to match tick text for consistency
-    + geom_text(aes(label="entity"), data=df_labels, nudge_x=0.3, hjust=0, size=15)
+    # Dots at each rank position; alpha mapped for hero prominence
+    + geom_point(aes(alpha="role"), size=4, tooltips=tooltip_cfg)
+    # End-of-line entity labels — entity color inherited from global aes
+    + geom_text(aes(label="entity"), data=df_labels, nudge_x=0.3, hjust=0, size=4)
     + scale_y_reverse(breaks=[1, 2, 3, 4, 5])
-    + scale_x_continuous(breaks=[1, 2, 3, 4, 5, 6], labels=["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], limits=[0.5, 7.8])
-    + scale_color_manual(values=colors)
-    # Hero/rest differentiation through mapped scales — cleaner than duplicated geom layers
-    + scale_size_manual(name="", values={"hero": 3.5, "rest": 2.0}, guide="none")
-    + scale_alpha_manual(name="", values={"hero": 1.0, "rest": 0.70}, guide="none")
-    + labs(x="Quarterly Period", y="Market Rank Position", title="bump-basic · letsplot · pyplots.ai")
+    + scale_x_continuous(breaks=[1, 2, 3, 4, 5, 6], labels=["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], limits=[0.5, 8.5])
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + scale_size_manual(name="", values={"hero": 2.0, "rest": 1.2}, guide="none")
+    + scale_alpha_manual(name="", values={"hero": 1.0, "rest": 0.65}, guide="none")
+    + labs(x="Quarterly Period", y="Market Rank", title=title)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_position="none",
+        plot_title=element_text(size=16, color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
         axis_ticks=element_blank(),
-        # Subtle y-axis grid only — remove x-axis grid for cleaner look
+        legend_position="none",
+        # Y-axis grid only — cleaner look for bump charts
         panel_grid_major_x=element_blank(),
         panel_grid_minor_x=element_blank(),
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),
+        panel_grid_major_y=element_line(color=GRID_COLOR, size=0.5),
         panel_grid_minor_y=element_blank(),
-        plot_background=element_rect(fill="white", color="white"),
-        plot_margin=[40, 60, 30, 20],
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save as HTML (interactive — tooltips show entity, period, and rank on hover)
-ggsave(plot, "plot.html", path=".")
+# Save PNG (scale=4 → 3200×1800 px) and HTML (interactive tooltips)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
