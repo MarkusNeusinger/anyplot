@@ -1,19 +1,30 @@
-""" pyplots.ai
+"""pyplots.ai
 bump-basic: Basic Bump Chart
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-22
+Library: matplotlib | Python
 """
+
+import os
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Formula 1 driver standings over an 8-race season
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — 8 hues, hybrid-v3 sort, theme-independent
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — Formula 1 driver standings over an 8-race season
 drivers = ["Verstappen", "Hamilton", "Norris", "Leclerc", "Sainz", "Piastri", "Russell"]
 races = ["Bahrain", "Jeddah", "Melbourne", "Suzuka", "Shanghai", "Miami", "Imola", "Monaco"]
 
-# Rankings per driver across races (1 = championship leader)
 rankings = {
     "Verstappen": [1, 1, 1, 2, 3, 3, 2, 1],
     "Hamilton": [4, 3, 2, 1, 1, 2, 1, 2],
@@ -24,101 +35,67 @@ rankings = {
     "Russell": [7, 7, 6, 6, 7, 7, 7, 6],
 }
 
-# Colorblind-safe palette — distinct hues, no similar oranges
-colors = {
-    "Verstappen": "#306998",
-    "Hamilton": "#9467bd",
-    "Norris": "#17becf",
-    "Leclerc": "#d62728",
-    "Sainz": "#e8963e",
-    "Piastri": "#8c564b",
-    "Russell": "#7f7f7f",
-}
+# Assign Imprint palette in canonical order
+colors = {driver: IMPRINT_PALETTE[i] for i, driver in enumerate(drivers)}
 
-# Top-3 finishers get visual emphasis for storytelling hierarchy
-top_drivers = {"Verstappen", "Hamilton", "Norris"}
+# Canvas — landscape 3200 × 1800 px
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
 x = np.arange(len(races))
 
+# Subtle background band for the P1 zone — visual emphasis replacing narrative annotations
+ax.axhspan(0.5, 1.5, color=INK_MUTED, alpha=0.10, zorder=0, linewidth=0)
+
 for driver, ranks in rankings.items():
-    is_top = driver in top_drivers
-    lw = 4.0 if is_top else 2.5
-    ms = 16 if is_top else 10
-    zo = 4 if is_top else 3
-    alpha = 1.0 if is_top else 0.55
+    ranks_arr = np.array(ranks)
+    col = colors[driver]
 
-    ax.plot(
-        x,
-        ranks,
-        marker="o",
-        markersize=ms,
-        linewidth=lw,
-        color=colors[driver],
-        zorder=zo,
-        alpha=alpha,
-        path_effects=[pe.Stroke(linewidth=lw + 2, foreground="white"), pe.Normal()],
-    )
-    # End-of-line labels (replaces legend, more direct)
+    # Line
+    ax.plot(x, ranks_arr, linewidth=2.0, color=col, zorder=3, solid_capstyle="round")
+
+    # Markers — size encodes rank prominence: rank 1 → largest, rank 7 → smallest
+    marker_s = [max(50, 180 - (r - 1) * 22) for r in ranks_arr]
+    ax.scatter(x, ranks_arr, s=marker_s, color=col, edgecolors=PAGE_BG, linewidths=0.8, zorder=4)
+
+    # End-of-line label with PAGE_BG stroke for legibility in both themes
     ax.text(
-        x[-1] + 0.15,
-        ranks[-1],
+        x[-1] + 0.2,
+        ranks_arr[-1],
         driver,
-        fontsize=16,
+        fontsize=8,
         fontweight="bold",
-        color=colors[driver],
+        color=col,
         va="center",
-        alpha=1.0 if is_top else 0.8,
-        path_effects=[pe.withStroke(linewidth=3, foreground="white")],
+        path_effects=[pe.withStroke(linewidth=2, foreground=PAGE_BG)],
     )
 
-# Annotate key lead changes for data storytelling
-ax.annotate(
-    "Hamilton\ntakes the lead",
-    xy=(3, 1),
-    xytext=(1.5, -0.6),
-    fontsize=12,
-    fontweight="bold",
-    color=colors["Hamilton"],
-    ha="center",
-    va="bottom",
-    path_effects=[pe.withStroke(linewidth=2, foreground="white")],
-    arrowprops={"arrowstyle": "->", "color": colors["Hamilton"], "lw": 1.5, "connectionstyle": "arc3,rad=-0.15"},
-)
-
-ax.annotate(
-    "Norris\npeaks at P1",
-    xy=(5, 1),
-    xytext=(5.8, -0.6),
-    fontsize=12,
-    fontweight="bold",
-    color=colors["Norris"],
-    ha="center",
-    va="bottom",
-    path_effects=[pe.withStroke(linewidth=2, foreground="white")],
-    arrowprops={"arrowstyle": "->", "color": colors["Norris"], "lw": 1.5, "connectionstyle": "arc3,rad=0.15"},
-)
-
-# Invert Y-axis so rank 1 is at top
-ax.set_ylim(-1.2, len(drivers) + 0.5)
+# Invert Y-axis so rank 1 is at the top
+ax.set_ylim(0.3, len(drivers) + 0.7)
 ax.invert_yaxis()
 
-# Style
-ax.set_xlabel("Grand Prix", fontsize=20)
-ax.set_ylabel("Championship Position", fontsize=20)
-ax.set_title("bump-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
+# Labels
+title = "bump-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.set_xlabel("Grand Prix", fontsize=10, color=INK)
+ax.set_ylabel("Championship Position", fontsize=10, color=INK)
 
 ax.set_xticks(x)
-ax.set_xticklabels(races, rotation=25, ha="right")
+ax.set_xticklabels(races, rotation=30, ha="right")
 ax.set_yticks(range(1, len(drivers) + 1))
-ax.tick_params(axis="both", labelsize=16)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+# Subtle horizontal grid at each rank row
+ax.yaxis.grid(True, alpha=0.15, color=INK, linewidth=0.6, zorder=1)
+
+# Spines — L-frame
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-ax.set_xlim(-0.3, len(races) - 1 + 1.5)
+# Extra horizontal space for end-of-line labels
+ax.set_xlim(-0.5, len(races) - 1 + 2.2)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.09, right=0.83, top=0.90, bottom=0.18)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
