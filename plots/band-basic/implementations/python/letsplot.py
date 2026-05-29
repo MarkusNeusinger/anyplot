@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -70,7 +70,8 @@ anyplot_theme = theme(
     panel_grid_minor=element_blank(),
     axis_title=element_text(size=12, color=INK),
     axis_text=element_text(size=10, color=INK_SOFT),
-    axis_line=element_line(color=INK_SOFT),
+    axis_line_x=element_line(color=INK_SOFT),
+    axis_line_y=element_blank(),
     plot_title=element_text(size=16, color=INK),
     legend_background=element_rect(fill=ELEVATED_BG),
     legend_text=element_text(size=10, color=INK_SOFT),
@@ -79,6 +80,7 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="cycles"))
     + geom_hline(yintercept=80, color=INK_MUTED, size=0.8, linetype="dashed", tooltips="none")
+    + geom_text(x=512, y=83, label="80% capacity threshold", size=4.5, color=INK_MUTED, hjust=1, tooltips="none")
     + geom_ribbon(aes(ymin="lower", ymax="upper"), fill=BAND_FILL, alpha=0.25, size=0)
     + geom_line(aes(y="mean"), color=LINE_COLOR, size=1.5)
     + geom_segment(
@@ -89,7 +91,7 @@ plot = (
         arrow=arrow(length=8, type="open"),
         tooltips="none",
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=annot_df, size=5, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=annot_df, size=6, color=INK_SOFT)
     + labs(x="Charge Cycles", y="Capacity (%)", title=title)
     + scale_x_continuous(limits=[-15, 520])
     + scale_y_continuous(limits=[10, 110])
