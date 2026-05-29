@@ -1,7 +1,8 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
+Repair: 2026-05-29 — LM-02: add sns.kdeplot inset; VQ-01/DE-01: annotation/band tuning
 """
 
 import os
@@ -77,7 +78,7 @@ sns.ecdfplot(x=bad_scores, color=BAD_COLOR, linewidth=2.5, linestyle="--", ax=ax
 # Shaded band between ECDFs around the max-divergence region
 band_half = 25
 band_mask = (all_values >= max_x - band_half) & (all_values <= max_x + band_half)
-ax.fill_between(all_values[band_mask], good_ecdf[band_mask], bad_ecdf[band_mask], alpha=0.18, color=BAD_COLOR, zorder=2)
+ax.fill_between(all_values[band_mask], good_ecdf[band_mask], bad_ecdf[band_mask], alpha=0.25, color=BAD_COLOR, zorder=2)
 
 # K-S statistic: dotted vertical line at max divergence
 ax.plot([max_x, max_x], [y_lo, y_hi], color=INK, linewidth=1.8, linestyle=":", zorder=5)
@@ -94,7 +95,7 @@ ax.annotate(
     f"K-S = {ks_stat:.3f}\np = {p_value:.2e}",
     xy=(max_x, (y_lo + y_hi) / 2),
     xytext=(x_min + 30, 0.17),
-    fontsize=8,
+    fontsize=9,
     fontweight="bold",
     color=INK,
     ha="left",
@@ -136,5 +137,21 @@ legend_handles = [
     Line2D([0], [0], color=BAD_COLOR, linewidth=2.5, linestyle="--", label="Bad Customers"),
 ]
 ax.legend(handles=legend_handles, fontsize=8, loc="upper left")
+
+# Inset: seaborn kdeplot with fill — shows underlying score density to complement the ECDF
+ax_inset = ax.inset_axes([0.66, 0.04, 0.30, 0.27])
+ax_inset.set_facecolor(ELEVATED_BG)
+sns.kdeplot(x=good_scores, color=GOOD_COLOR, linewidth=1.2, fill=True, alpha=0.25, ax=ax_inset)
+sns.kdeplot(x=bad_scores, color=BAD_COLOR, linewidth=1.2, fill=True, alpha=0.25, linestyle="--", ax=ax_inset)
+ax_inset.set_xlabel("Score", fontsize=6, labelpad=2, color=INK_SOFT)
+ax_inset.set_ylabel("", fontsize=6)
+ax_inset.set_title("Score Density", fontsize=6.5, color=INK_SOFT, pad=3, fontweight="medium")
+ax_inset.tick_params(axis="x", labelsize=5, colors=INK_SOFT)
+ax_inset.tick_params(axis="y", labelleft=False, left=False)
+ax_inset.spines["top"].set_visible(False)
+ax_inset.spines["right"].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax_inset.spines[spine].set_color(INK_SOFT)
+    ax_inset.spines[spine].set_linewidth(0.6)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
