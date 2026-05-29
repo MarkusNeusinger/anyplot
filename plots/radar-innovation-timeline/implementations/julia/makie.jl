@@ -24,7 +24,6 @@ const IMPRINT_PALETTE = [
     colorant"#BD8233",  # 4 — DevEx
 ]
 
-# Data: Technology Radar — 24 items across 4 sectors and 4 time-horizon rings
 const SECTORS = ["AI & ML", "Cloud & Infra", "Security", "DevEx"]
 const RINGS   = ["Adopt", "Trial", "Assess", "Hold"]
 
@@ -32,37 +31,36 @@ const RINGS   = ["Adopt", "Trial", "Assess", "Hold"]
 const RING_BOUNDS  = [0.0, 0.26, 0.50, 0.74, 0.95]
 const RING_CENTERS = [(RING_BOUNDS[i] + RING_BOUNDS[i+1]) / 2 for i in 1:4]
 
-# Sector start angles in radians (counter-clockwise from positive x-axis)
-# Sector 1 (AI & ML):    0°– 90°   (right quadrant)
-# Sector 2 (Cloud):     90°–180°   (top quadrant)
-# Sector 3 (Security): 180°–270°   (left quadrant)
-# Sector 4 (DevEx):    270°–360°   (bottom quadrant)
-const SECTOR_STARTS = [0.0, π/2, π, 3π/2]
-const SECTOR_SPAN   = π / 2
+# Three-quarter (270°) layout — gap at bottom (225°–315°)
+# Chart spans counterclockwise from 315° (= −π/4) to 225° (= 5π/4)
+const TOTAL_SPAN    = 3π / 2
+const SECTOR_SPAN   = TOTAL_SPAN / 4   # 67.5° per sector
+const CHART_START   = -π / 4           # 315° from positive x-axis
+const SECTOR_STARTS = [CHART_START + i * SECTOR_SPAN for i in 0:3]
 
-# Each item: (label, sector_idx, ring_idx, fraction_within_sector 0→1)
+# Items: (label, sector_idx, ring_idx, fraction_within_sector 0→1)
 const ITEMS = [
-    ("LLM APIs",          1, 1, 0.28),
-    ("Vector DBs",        1, 1, 0.68),
-    ("RAG",               1, 2, 0.35),
+    ("LLM APIs",          1, 1, 0.25),
+    ("Vector DBs",        1, 1, 0.75),
+    ("RAG",               1, 2, 0.30),
     ("Fine-tuning",       1, 2, 0.72),
-    ("Multimodal AI",     1, 3, 0.30),
-    ("AI Agents",         1, 3, 0.65),
+    ("Multimodal AI",     1, 3, 0.28),
+    ("AI Agents",         1, 3, 0.68),
     ("AGI Infra",         1, 4, 0.50),
-    ("Kubernetes",        2, 1, 0.28),
-    ("Terraform",         2, 1, 0.65),
-    ("eBPF",              2, 2, 0.38),
+    ("Kubernetes",        2, 1, 0.25),
+    ("Terraform",         2, 1, 0.75),
+    ("eBPF",              2, 2, 0.35),
     ("WASM",              2, 2, 0.72),
     ("Edge Native",       2, 3, 0.45),
     ("Unikernels",        2, 4, 0.50),
-    ("Zero Trust",        3, 1, 0.45),
+    ("Zero Trust",        3, 1, 0.50),
     ("SBOM",              3, 2, 0.28),
     ("Sigstore",          3, 2, 0.72),
     ("Confidential Comp", 3, 3, 0.50),
     ("Post-Quantum",      3, 4, 0.42),
-    ("GitHub Actions",    4, 1, 0.32),
-    ("Dev Containers",    4, 1, 0.68),
-    ("OpenTelemetry",     4, 2, 0.38),
+    ("GitHub Actions",    4, 1, 0.25),
+    ("Dev Containers",    4, 1, 0.75),
+    ("OpenTelemetry",     4, 2, 0.35),
     ("AI Code Assist",    4, 2, 0.72),
     ("Backstage",         4, 3, 0.35),
     ("DORA Metrics",      4, 3, 0.65),
@@ -85,61 +83,80 @@ ax = Axis(
 hidedecorations!(ax)
 hidespines!(ax)
 
-# Sector fills — subtle tinted wedges, one Imprint color per sector
 n_arc = 120
+
+# 1. Per-ring background fills — alternating neutral shading separates time horizons
+ring_fill_alphas = [0.08, 0.02, 0.07, 0.02]
+for (i, alpha) in enumerate(ring_fill_alphas)
+    r_inner = RING_BOUNDS[i]
+    r_outer = RING_BOUNDS[i + 1]
+    θs  = LinRange(CHART_START, CHART_START + TOTAL_SPAN, n_arc)
+    pts = Point2f[]
+    for t in θs
+        push!(pts, Point2f(pol2cart(r_outer, t)...))
+    end
+    if r_inner == 0.0
+        push!(pts, Point2f(0.0f0, 0.0f0))
+    else
+        for t in reverse(θs)
+            push!(pts, Point2f(pol2cart(r_inner, t)...))
+        end
+    end
+    poly!(ax, pts; color = (INK, alpha), strokewidth = 0)
+end
+
+# 2. Sector fills — subtle tinted wedges overlay ring fills for sector identity
 for i in 1:4
     θ_start = SECTOR_STARTS[i]
     θ_end   = θ_start + SECTOR_SPAN
-    pts = Point2f[(0.0, 0.0)]
+    pts = Point2f[(0.0f0, 0.0f0)]
     for t in LinRange(θ_start, θ_end, n_arc)
         push!(pts, Point2f(pol2cart(RING_BOUNDS[5], t)...))
     end
-    poly!(ax, pts; color = (IMPRINT_PALETTE[i], 0.08f0), strokewidth = 0)
+    poly!(ax, pts; color = (IMPRINT_PALETTE[i], 0.07f0), strokewidth = 0)
 end
 
-# Ring outlines — concentric circles
-n_circ = 360
+# 3. Ring outlines — partial arcs spanning the 270° chart
 for (k, r) in enumerate(RING_BOUNDS)
     r == 0.0 && continue
-    θs = LinRange(0, 2π, n_circ + 1)
+    θs = LinRange(CHART_START, CHART_START + TOTAL_SPAN, n_arc + 1)
     xs = r .* cos.(θs)
     ys = r .* sin.(θs)
     lw = (k == length(RING_BOUNDS)) ? 1.5f0 : 0.8f0
-    lines!(ax, xs, ys; color = (INK, 0.28f0), linewidth = lw)
+    lines!(ax, xs, ys; color = (INK, 0.30f0), linewidth = lw)
 end
 
-# Sector dividers — radial lines at each sector boundary
-for θ in SECTOR_STARTS
+# 4. Sector dividers — radial lines at each sector boundary and chart endpoints
+for θ in [SECTOR_STARTS; CHART_START + TOTAL_SPAN]
     x2, y2 = pol2cart(RING_BOUNDS[5], θ)
     lines!(ax, [0.0f0, Float32(x2)], [0.0f0, Float32(y2)];
            color = (INK, 0.28f0), linewidth = 1.0f0)
 end
 
-# Ring labels — placed along the 0°/360° boundary, inside each band
-ring_label_θ = -0.15  # slightly into the DevEx sector for readability
+# 5. Ring labels — placed in the 90° gap (−90° = straight down) for clear separation
 for (i, ring_name) in enumerate(RINGS)
     r = RING_CENTERS[i]
-    xl, yl = pol2cart(r, ring_label_θ)
+    xl, yl = pol2cart(r, -π / 2)
     text!(ax, xl, yl; text = ring_name,
-          fontsize = 9,
+          fontsize = 12,
           color    = INK_MUTED,
           align    = (:center, :center))
 end
 
-# Sector headers — bold labels just outside the outermost ring
-header_r = RING_BOUNDS[5] + 0.09
+# 6. Sector headers — labels just outside the outermost ring
+header_r = RING_BOUNDS[5] + 0.10
 for (i, sector_name) in enumerate(SECTORS)
     θ_mid = SECTOR_STARTS[i] + SECTOR_SPAN / 2
     xl, yl = pol2cart(header_r, θ_mid)
-    ha = cos(θ_mid) > 0.25 ? :left : (cos(θ_mid) < -0.25 ? :right : :center)
-    va = sin(θ_mid) > 0.25 ? :bottom : (sin(θ_mid) < -0.25 ? :top : :center)
+    ha = cos(θ_mid) > 0.15 ? :left : (cos(θ_mid) < -0.15 ? :right : :center)
+    va = sin(θ_mid) > 0.15 ? :bottom : (sin(θ_mid) < -0.15 ? :top : :center)
     text!(ax, xl, yl; text = sector_name,
           fontsize = 14,
           color    = IMPRINT_PALETTE[i],
           align    = (ha, va))
 end
 
-# Data points — scatter, colored by sector
+# 7. Data points — scatter, colored by sector
 for (label, sec, ring, frac) in ITEMS
     θ = SECTOR_STARTS[sec] + frac * SECTOR_SPAN
     r = RING_CENTERS[ring]
@@ -151,25 +168,25 @@ for (label, sec, ring, frac) in ITEMS
              strokecolor = PAGE_BG)
 end
 
-# Item labels — offset radially outward from each point
+# 8. Item labels — offset radially outward from each point
 for (label, sec, ring, frac) in ITEMS
     θ = SECTOR_STARTS[sec] + frac * SECTOR_SPAN
     r = RING_CENTERS[ring]
     x, y = pol2cart(r, θ)
-    offset = 0.05
+    offset = 0.055
     xl = x + offset * cos(θ)
     yl = y + offset * sin(θ)
-    ha = cos(θ) > 0.25 ? :left : (cos(θ) < -0.25 ? :right : :center)
-    va = sin(θ) > 0.25 ? :bottom : (sin(θ) < -0.25 ? :top : :center)
+    ha = cos(θ) > 0.15 ? :left : (cos(θ) < -0.15 ? :right : :center)
+    va = sin(θ) > 0.15 ? :bottom : (sin(θ) < -0.15 ? :top : :center)
     text!(ax, xl, yl; text = label,
-          fontsize = 9,
+          fontsize = 10,
           color    = INK_SOFT,
           align    = (ha, va))
 end
 
-# Axis limits — leave margin for sector headers and item labels
-xlims!(ax, -1.28, 1.28)
-ylims!(ax, -1.28, 1.28)
+# Axis limits — accommodate sector headers, ring labels in gap, and item labels
+xlims!(ax, -1.40, 1.40)
+ylims!(ax, -1.10, 1.25)
 
 # Title
 title_str      = "radar-innovation-timeline · julia · makie · anyplot.ai"
