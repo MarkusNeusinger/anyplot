@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -18,6 +19,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
+    stat_summary,
     theme,
     theme_minimal,
 )
@@ -26,6 +28,7 @@ from plotnine import (
 # Theme tokens (Imprint palette — theme-adaptive chrome)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
@@ -68,12 +71,14 @@ title = "violin-basic · python · plotnine · anyplot.ai"
 plot = (
     ggplot(df, aes(x="department", y="salary", fill="department"))
     + geom_violin(draw_quantiles=[0.25, 0.5, 0.75], alpha=0.82, color=INK_SOFT, size=0.6, trim=False)
+    + stat_summary(geom="point", fun_y=np.mean, shape="D", size=2.5, color=INK, fill=INK)
     + scale_fill_manual(values=palette)
     + labs(x="Department", y="Annual Salary (USD)", title=title)
+    + annotate("text", x=2, y=148000, label="Bimodal:\njunior/senior split", size=2.8, color=INK_SOFT)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
-        text=element_text(size=7, color=INK),
+        text=element_text(size=9, color=INK),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         plot_title=element_text(size=12, color=INK),
@@ -81,6 +86,8 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        axis_line=element_line(color=INK_SOFT),
+        panel_border=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
     )
