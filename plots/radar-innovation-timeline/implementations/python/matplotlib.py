@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -31,16 +31,16 @@ n_sectors = len(sectors)
 innovations = [
     ("LLM Agents", "Adopt", "AI & ML"),
     ("RAG Pipelines", "Trial", "AI & ML"),
-    ("Vision Transformers", "Trial", "AI & ML"),
+    ("AI Code Assistants", "Trial", "AI & ML"),
+    ("Vision Transformers", "Assess", "AI & ML"),
     ("Federated Learning", "Assess", "AI & ML"),
     ("Neuromorphic Chips", "Hold", "AI & ML"),
-    ("AI Code Assistants", "Adopt", "AI & ML"),
     ("Kubernetes", "Adopt", "Cloud & Infra"),
     ("FinOps Tooling", "Trial", "Cloud & Infra"),
     ("Edge Computing", "Assess", "Cloud & Infra"),
-    ("Serverless Containers", "Assess", "Cloud & Infra"),
+    ("Platform Engineering", "Assess", "Cloud & Infra"),
     ("Quantum Cloud APIs", "Hold", "Cloud & Infra"),
-    ("Platform Engineering", "Trial", "Cloud & Infra"),
+    ("Serverless Containers", "Hold", "Cloud & Infra"),
     ("Apache Iceberg", "Adopt", "Data Engineering"),
     ("Real-time Lakehouse", "Trial", "Data Engineering"),
     ("Data Contracts", "Trial", "Data Engineering"),
@@ -69,13 +69,14 @@ sector_markers = {"AI & ML": "o", "Cloud & Infra": "s", "Data Engineering": "D",
 # Marker sizes by ring — visual hierarchy: near-term prominent, far-future subtle
 ring_marker_sizes = {"Adopt": 110, "Trial": 85, "Assess": 65, "Hold": 50}
 
-# Layout: 270-degree arc, gap at upper-right for ring labels
-arc_span = 3 / 4 * 2 * np.pi
+# Layout: 300-degree arc (wider spread reduces inner-ring label crowding), 60-degree gap for ring labels
+arc_span = 5 / 6 * 2 * np.pi
 arc_start = np.deg2rad(115)
 sector_width = arc_span / n_sectors
 
-# Ring band boundaries
-ring_boundaries = [0.5, 2.8, 5.1, 7.4, 9.7]
+# Ring band boundaries — inner ring starts at 1.5 (not 0.5) to push Adopt items
+# further from the center, providing ~52% more arc-space between adjacent items
+ring_boundaries = [1.5, 3.5, 5.5, 7.5, 9.5]
 
 # Count items per ring-sector cell for spread calculation
 sector_ring_counts = {}
@@ -159,8 +160,8 @@ for i in range(n_sectors + 1):
     angle = arc_start + i * sector_width
     ax.plot([angle, angle], [ring_boundaries[0], ring_boundaries[-1]], color=INK_MUTED, linewidth=0.7, alpha=0.6)
 
-# Ring labels in the arc gap
-label_angle = arc_start + arc_span + 0.18
+# Ring labels in the arc gap — push labels 0.35 rad past arc end to clear the boundary divider
+label_angle = arc_start + arc_span + 0.35
 for i, ring_name in enumerate(rings):
     r_mid = (ring_boundaries[i] + ring_boundaries[i + 1]) / 2
     ax.text(
@@ -173,6 +174,8 @@ for i, ring_name in enumerate(rings):
         fontweight="bold",
         color=INK_SOFT,
         fontstyle="italic",
+        clip_on=False,
+        zorder=10,
     )
 
 # Sector labels along outer edge
@@ -180,13 +183,15 @@ for i, sector_name in enumerate(sectors):
     angle = arc_start + (i + 0.5) * sector_width
     ax.text(
         angle,
-        ring_boundaries[-1] + 0.75,
+        ring_boundaries[-1] + 0.50,
         sector_name,
         ha="center",
         va="center",
         fontsize=10,
         fontweight="bold",
         color=INK,
+        clip_on=False,
+        zorder=10,
     )
 
 # Label background for readability — theme-adaptive elevated surface
@@ -205,24 +210,28 @@ for name, theta, r, sector_name, ring_name, placed, _total, r_idx in positions:
     outward = placed % 2 == 0
     if r_idx >= 2:  # Assess / Hold: flip to avoid outer boundary crowding
         outward = not outward
-    label_offset = 0.42 if outward else -0.42
+    # Inner rings: larger offset to push labels away from crowded center; smaller font
+    base_offset = 0.55 if r_idx <= 1 else 0.42
+    label_fontsize = 7 if r_idx <= 1 else 8
+    label_offset = base_offset if outward else -base_offset
     va = "bottom" if outward else "top"
 
     ax.text(
         theta,
         r + label_offset,
         name,
-        fontsize=8,
+        fontsize=label_fontsize,
         ha="center",
         va=va,
         color=INK,
         fontweight="medium",
         bbox=label_bbox,
         zorder=6,
+        clip_on=False,
     )
 
 # Style — hide default polar decorations
-ax.set_ylim(0, ring_boundaries[-1] + 2.0)
+ax.set_ylim(0, ring_boundaries[-1] + 2.5)
 ax.set_yticklabels([])
 ax.set_xticklabels([])
 ax.set_xticks([])
@@ -260,5 +269,5 @@ if leg:
     plt.setp(leg.get_texts(), color=INK_SOFT)
     leg.get_title().set_color(INK_SOFT)
 
-fig.subplots_adjust(left=0.05, right=0.93, top=0.92, bottom=0.05)
+fig.subplots_adjust(left=0.05, right=0.90, top=0.92, bottom=0.08)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
