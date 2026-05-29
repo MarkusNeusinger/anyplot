@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -27,6 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+BAND_FILL = "rgba(0,158,115,0.25)" if THEME == "light" else "rgba(0,158,115,0.4)"
 
 # Data
 hours = np.linspace(0, 48, 100)
@@ -46,7 +47,7 @@ fig.add_trace(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([temp_upper, temp_lower[::-1]]),
         fill="toself",
-        fillcolor="rgba(0,158,115,0.25)",
+        fillcolor=BAND_FILL,
         line={"width": 0},
         hoverinfo="skip",
         showlegend=True,
@@ -88,7 +89,9 @@ fig.update_layout(
         "gridwidth": 1,
         "zeroline": False,
         "linecolor": INK_SOFT,
-        "showgrid": True,
+        "showline": True,
+        "mirror": False,
+        "showgrid": False,
     },
     yaxis={
         "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
@@ -97,6 +100,8 @@ fig.update_layout(
         "gridwidth": 1,
         "zeroline": False,
         "linecolor": INK_SOFT,
+        "showline": True,
+        "mirror": False,
         "showgrid": True,
     },
     legend={
