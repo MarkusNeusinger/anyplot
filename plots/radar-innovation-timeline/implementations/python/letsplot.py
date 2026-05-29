@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-29
@@ -31,6 +31,7 @@ from lets_plot import (
     scale_x_continuous,
     scale_y_continuous,
     theme,
+    theme_void,
 )
 
 
@@ -136,7 +137,7 @@ df["ly"] = df["label_r"] * np.sin(df["angle"])
 df["side"] = np.where(df["lx"] < 0, "left", "right")
 
 # Label repulsion: push overlapping labels apart vertically on each side
-MIN_Y_SEP = 0.60
+MIN_Y_SEP = 0.75
 for _ in range(35):
     for side in ["left", "right"]:
         side_idx = df.loc[df["side"] == side].sort_values("ly").index.tolist()
@@ -240,15 +241,16 @@ plot += geom_point(
 # Innovation labels split by side for outward text alignment
 for side, hj in [("left", 1), ("right", 0)]:
     side_df = df[df["side"] == side]
-    plot += geom_text(aes("lx", "ly", label="name", color="sector"), data=side_df, size=3.5, hjust=hj)
+    plot += geom_text(aes("lx", "ly", label="name", color="sector"), data=side_df, size=4.5, hjust=hj)
 
 title = "radar-innovation-timeline · python · letsplot · anyplot.ai"
 
-# Styling
+# Styling — theme_void() removes all axis/grid defaults; custom theme restores chrome
 plot += (
-    scale_color_manual(values=sector_colors)
+    theme_void()
+    + scale_color_manual(values=sector_colors)
     + scale_x_continuous(limits=(-7.0, 7.0))
-    + scale_y_continuous(limits=(-6.8, 5.5))
+    + scale_y_continuous(limits=(-6.2, 5.5))
     + coord_fixed()
     + labs(title=title, color="Sector")
     + ggsize(600, 600)
