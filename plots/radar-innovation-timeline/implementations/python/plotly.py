@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 75/100 | Updated: 2026-05-29
@@ -30,35 +30,45 @@ np.random.seed(42)
 # Data — technology innovations across sectors and time horizons
 sectors = ["AI & ML", "Cloud & Infra", "Sustainability", "Biotech"]
 rings = ["Adopt", "Trial", "Assess", "Hold"]
-ring_radii = {"Adopt": 1.3, "Trial": 2.3, "Assess": 3.3, "Hold": 4.3}
+# Wider spread separates rings to reduce inner-zone label collision
+ring_radii = {"Adopt": 1.5, "Trial": 2.7, "Assess": 3.9, "Hold": 5.1}
 ring_marker_sizes = {"Adopt": 18, "Trial": 14, "Assess": 11, "Hold": 9}
-ring_boundaries = [1.8, 2.8, 3.8, 4.8]
+ring_boundaries = [2.1, 3.3, 4.5, 5.7]
+R_MAX = 6.3
+
+# Polar domain (landscape): x=[0.02, 0.70], y=[0.04, 0.96]
+# radius limited by y: min(0.34*800, 0.46*450)=min(272,207)=207 px
+POLAR_CX = 0.36
+POLAR_CY = 0.50
+POLAR_RX = 0.259  # paper-x per radial unit (207/800)
+POLAR_RY = 0.460  # paper-y per radial unit (207/450)
+HEADER_R = 5.9
 
 innovations = [
-    # AI & ML
+    # AI & ML — "AI Code Review" flipped to left textpos to prevent right-boundary clipping
     {"name": "LLM Agents", "sector": "AI & ML", "ring": "Adopt", "textpos": "top center"},
     {"name": "RAG Pipelines", "sector": "AI & ML", "ring": "Adopt", "textpos": "bottom left"},
-    {"name": "Multimodal Models", "sector": "AI & ML", "ring": "Trial", "textpos": "top left"},
-    {"name": "AI Code Review", "sector": "AI & ML", "ring": "Trial", "textpos": "bottom right"},
+    {"name": "Multimodal Models", "sector": "AI & ML", "ring": "Trial", "textpos": "bottom center"},
+    {"name": "AI Code Review", "sector": "AI & ML", "ring": "Trial", "textpos": "top center"},
     {"name": "Neuromorphic Chips", "sector": "AI & ML", "ring": "Assess", "textpos": "top center"},
     {"name": "Autonomous Research", "sector": "AI & ML", "ring": "Hold", "textpos": "bottom center"},
     {"name": "Quantum ML", "sector": "AI & ML", "ring": "Hold", "textpos": "top center"},
-    # Cloud & Infra
+    # Cloud & Infra — right-edge items flipped to left textpos to prevent boundary clipping
     {"name": "Platform Engineering", "sector": "Cloud & Infra", "ring": "Adopt", "textpos": "bottom right"},
     {"name": "FinOps", "sector": "Cloud & Infra", "ring": "Adopt", "textpos": "top right"},
     {"name": "WebAssembly", "sector": "Cloud & Infra", "ring": "Trial", "textpos": "top center"},
     {"name": "Edge Computing", "sector": "Cloud & Infra", "ring": "Trial", "textpos": "bottom center"},
-    {"name": "Confidential Computing", "sector": "Cloud & Infra", "ring": "Assess", "textpos": "top right"},
-    {"name": "Serverless GPUs", "sector": "Cloud & Infra", "ring": "Assess", "textpos": "bottom right"},
+    {"name": "Confidential Computing", "sector": "Cloud & Infra", "ring": "Assess", "textpos": "top left"},
+    {"name": "Serverless GPUs", "sector": "Cloud & Infra", "ring": "Assess", "textpos": "bottom left"},
     {"name": "Decentralized Cloud", "sector": "Cloud & Infra", "ring": "Hold", "textpos": "top center"},
-    # Sustainability
+    # Sustainability — "Circular Economy Platforms" flipped to left to avoid right clipping
     {"name": "Carbon Tracking APIs", "sector": "Sustainability", "ring": "Adopt", "textpos": "top left"},
-    {"name": "Green Software", "sector": "Sustainability", "ring": "Trial", "textpos": "bottom right"},
-    {"name": "Digital Product Passports", "sector": "Sustainability", "ring": "Trial", "textpos": "top left"},
-    {"name": "Circular Economy Platforms", "sector": "Sustainability", "ring": "Assess", "textpos": "bottom right"},
+    {"name": "Green Software", "sector": "Sustainability", "ring": "Trial", "textpos": "top right"},
+    {"name": "Digital Product Passports", "sector": "Sustainability", "ring": "Trial", "textpos": "bottom left"},
+    {"name": "Circular Economy Platforms", "sector": "Sustainability", "ring": "Assess", "textpos": "bottom left"},
     {"name": "Climate AI", "sector": "Sustainability", "ring": "Assess", "textpos": "top left"},
     {"name": "Fusion Energy Tech", "sector": "Sustainability", "ring": "Hold", "textpos": "top center"},
-    # Biotech — text positions flipped inward (rightward) to prevent left-edge clipping
+    # Biotech — text positions flipped inward to prevent left-edge clipping
     {"name": "mRNA Therapeutics", "sector": "Biotech", "ring": "Adopt", "textpos": "top center"},
     {"name": "CRISPR Diagnostics", "sector": "Biotech", "ring": "Trial", "textpos": "bottom right"},
     {"name": "Digital Twins (Health)", "sector": "Biotech", "ring": "Assess", "textpos": "bottom right"},
@@ -93,7 +103,6 @@ for sector in sectors:
         if not ring_items:
             continue
         n = len(ring_items)
-        # Wider padding reduces crowding in dense inner rings
         padding = sector_span * 0.22
         usable_span = sector_span - 2 * padding
         for idx, item in enumerate(ring_items):
@@ -102,7 +111,6 @@ for sector in sectors:
             else:
                 angle = start_angle + padding + usable_span * idx / (n - 1)
             base_r = ring_radii[ring]
-            # Tighter jitter for Adopt ring to reduce crowding near center
             jitter_range = 0.10 if ring == "Adopt" else 0.15
             jitter = np.random.uniform(-jitter_range, jitter_range)
             items_by_sector[sector].append(
@@ -155,7 +163,7 @@ for radius in ring_boundaries:
 for angle in [sector_starts[s] for s in sectors] + [270]:
     fig.add_trace(
         go.Scatterpolar(
-            r=[0, 5.2],
+            r=[0, R_MAX],
             theta=[angle, angle],
             mode="lines",
             line={"color": sector_line_color, "width": 1, "dash": "dot"},
@@ -164,7 +172,8 @@ for angle in [sector_starts[s] for s in sectors] + [270]:
         )
     )
 
-# Innovation items per sector — marker size encodes time horizon priority
+# Innovation items per sector — marker size encodes time horizon priority;
+# inner rings (Adopt/Trial) use smaller textfont (10px) to reduce label crowding
 for sector in sectors:
     items = items_by_sector[sector]
     color = sector_colors[sector]
@@ -182,7 +191,7 @@ for sector in sectors:
             },
             text=[f"<b>{it['name']}</b>" if it["ring"] == "Adopt" else it["name"] for it in items],
             textposition=[it["textpos"] for it in items],
-            textfont={"size": 13, "color": color},
+            textfont={"size": [10 if it["ring"] in ("Adopt", "Trial") else 12 for it in items], "color": color},
             name=sector,
             legendgroup=sector,
             hovertemplate="%{text}<br>Ring: %{customdata}<extra>" + sector + "</extra>",
@@ -190,42 +199,46 @@ for sector in sectors:
         )
     )
 
-# Ring labels — staggered just outside the 270° arc
-ring_label_data = [
-    ("Adopt (Now)", ring_radii["Adopt"], 280),
-    ("Trial (0–1 yr)", ring_radii["Trial"], 283),
-    ("Assess (1–3 yr)", ring_radii["Assess"], 286),
-    ("Hold (3+ yr)", ring_radii["Hold"], 289),
-]
-for label, radius, angle in ring_label_data:
-    fig.add_trace(
-        go.Scatterpolar(
-            r=[radius],
-            theta=[angle],
-            mode="text",
-            text=[f"<b>{label}</b>"],
-            textfont={"size": 12, "color": INK_SOFT},
-            textposition="middle right",
-            showlegend=False,
-            hoverinfo="skip",
-        )
+# Ring labels as paper-coordinate annotations in the empty arc gap (270°–360°).
+# Placed at angle=282° (well inside the gap, upper-left of the circle) with
+# xanchor="right" so text extends leftward into the unoccupied region.
+# sin(282°) ≈ -0.978, cos(282°) ≈ 0.208
+_gap_sin = np.sin(np.radians(282))
+_gap_cos = np.cos(np.radians(282))
+ring_label_annotations = []
+for ring_name, label in [
+    ("Adopt", "Adopt (Now)"),
+    ("Trial", "Trial (0–1 yr)"),
+    ("Assess", "Assess (1–3 yr)"),
+    ("Hold", "Hold (3+ yr)"),
+]:
+    r = ring_radii[ring_name]
+    frac = r / R_MAX
+    lx = float(POLAR_CX + frac * POLAR_RX * _gap_sin)
+    ly = float(POLAR_CY + frac * POLAR_RY * _gap_cos)
+    ring_label_annotations.append(
+        {
+            "text": f"<b>{label}</b>",
+            "x": lx,
+            "y": ly,
+            "xref": "paper",
+            "yref": "paper",
+            "xanchor": "right",
+            "yanchor": "middle",
+            "showarrow": False,
+            "font": {"size": 10, "color": INK_SOFT},
+        }
     )
 
-# Sector header labels — computed in paper coordinates to avoid polar-domain clipping
-# Polar domain: x=[0.04, 0.64], y=[0.03, 0.93]; circle radius = min(x_half, y_half) = 0.30
-POLAR_CX = 0.34  # (0.04 + 0.64) / 2
-POLAR_CY = 0.48  # (0.03 + 0.93) / 2
-POLAR_R = 0.30  # min((0.64-0.04)/2, (0.93-0.03)/2) = min(0.30, 0.45)
-R_MAX = 6.2
-HEADER_R = 5.5  # just beyond outermost boundary (4.8), within radial range
+# Sector header labels in paper coordinates to avoid polar-domain clipping.
 
 sector_header_annotations = []
 for sector in sectors:
     mid_deg = sector_starts[sector] + sector_span / 2
     mid_rad = np.radians(mid_deg)
     frac = HEADER_R / R_MAX
-    px = float(POLAR_CX + frac * POLAR_R * np.sin(mid_rad))
-    py = float(POLAR_CY + frac * POLAR_R * np.cos(mid_rad))
+    px = float(POLAR_CX + frac * POLAR_RX * np.sin(mid_rad))
+    py = float(POLAR_CY + frac * POLAR_RY * np.cos(mid_rad))
     sector_header_annotations.append(
         {
             "text": f"<b>{sector}</b>",
@@ -240,7 +253,7 @@ for sector in sectors:
         }
     )
 
-# Title — n=56 chars < 67 baseline so default fontsize applies
+# Title
 title_text = "radar-innovation-timeline · python · plotly · anyplot.ai"
 n_chars = len(title_text)
 title_fontsize = max(11, round(16 * 67 / n_chars)) if n_chars > 67 else 16
@@ -259,15 +272,15 @@ fig.update_layout(
         "y": 0.98,
     },
     polar={
-        "radialaxis": {"visible": False, "range": [0, 6.2]},
+        "radialaxis": {"visible": False, "range": [0, R_MAX]},
         "angularaxis": {"visible": False, "direction": "clockwise", "rotation": 90},
         "bgcolor": PAGE_BG,
-        "domain": {"x": [0.04, 0.64], "y": [0.03, 0.93]},
+        "domain": {"x": [0.02, 0.70], "y": [0.04, 0.96]},
     },
     legend={
         "font": {"size": 12, "color": INK_SOFT},
-        "x": 0.66,
-        "y": 0.60,
+        "x": 0.72,
+        "y": 0.68,
         "xanchor": "left",
         "yanchor": "middle",
         "bgcolor": ELEVATED_BG,
@@ -276,8 +289,9 @@ fig.update_layout(
         "title": {"text": "<b>Sectors</b>", "font": {"size": 14, "color": INK}},
     },
     paper_bgcolor=PAGE_BG,
-    margin={"l": 30, "r": 30, "t": 80, "b": 40},
+    margin={"l": 30, "r": 30, "t": 70, "b": 30},
     annotations=sector_header_annotations
+    + ring_label_annotations
     + [
         {
             "text": (
@@ -287,8 +301,8 @@ fig.update_layout(
                 "● <b>Assess</b> — exploring 1–3 yr<br>"
                 "● <b>Hold</b> — future watch 3+ yr"
             ),
-            "x": 0.66,
-            "y": 0.38,
+            "x": 0.72,
+            "y": 0.42,
             "xref": "paper",
             "yref": "paper",
             "xanchor": "left",
@@ -303,6 +317,6 @@ fig.update_layout(
     ],
 )
 
-# Save — square canvas (2400×2400) suits this symmetric radar chart
-fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+# Save — landscape canvas (3200×1800) reduces empty top space and gives more room for labels
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
