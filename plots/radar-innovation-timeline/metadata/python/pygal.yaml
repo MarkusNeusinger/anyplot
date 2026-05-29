@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:47:34Z'
-updated: '2026-05-29T07:57:07Z'
+updated: '2026-05-29T08:07:52Z'
 generated_by: claude-sonnet
 workflow_run: 26624440951
 issue: 4301
@@ -12,181 +12,196 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 73
 review:
   strengths:
-  - 'Theme-adaptive zone fill colors are a thoughtful design choice: pastel tints
-    on light, dark tints on dark, ensuring ring bands are subtly visible without overpowering
-    data'
-  - 'Imprint palette applied correctly in canonical order; first sector = brand green
-    #009E73, data colors stable across light/dark renders'
-  - Code is well-organized with clear comments explaining the layering order and slot-based
-    sector positioning system
-  - Both PNG and HTML output generated; HTML provides full item-label interactivity
-    compensating partially for missing static labels
-  - Realistic and professionally neutral technology radar dataset (24 items across
-    Security, DevOps, Cloud, Data Engineering domains)
+  - 'Correct Imprint palette assignment: Data Engineering=#009E73 (brand green first),
+    Cloud Platforms=#C475FD, Security=#4467A3, DevOps=#BD8233 in canonical order'
+  - Creative layered zone-fill technique (reversed ring order + fill=True) creates
+    effective background depth for time-horizon separation — a pygal-idiomatic approach
+  - 'Full theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) backgrounds
+    applied correctly with no dark-on-dark failures in either render'
+  - 'Realistic, authoritative data: real enterprise tech names (Apache Iceberg, Zero
+    Trust Network, Post-Quantum Crypto) in plausible maturity ring positions'
+  - 'Good pygal idiomatic usage: Style object for all theming, y_labels dicts for
+    labeled ring guides, x_labels_major for sector headers, render_to_png + render_to_file
+    (HTML interactive output)'
   weaknesses:
-  - 'Missing per-item labels in PNG: show_minor_x_labels=False suppresses all innovation
-    labels — users cannot identify which dot is which technology. The spec explicitly
-    requires each item to be a labeled point. Enable minor x labels with truncate_label=12
-    and value_font_size=32-36 so abbreviated names appear near each spoke position.'
-  - '8-item legend is visually noisy: zone fill series (Hold/Assess/Trial/Adopt) add
-    4 legend entries alongside 4 sector entries; zone fill swatches use pale/dark
-    tints that may render as near-invisible boxes. Remove zone fills from legend or
-    increase their swatch opacity.'
-  - Ring labels (Adopt/Trial/Assess/Hold) are readable at full resolution but may
-    be small at mobile/thumbnail scale — increase label_font_size from 56 to 64+ for
-    the ring annotation text.
+  - Peripheral item labels overlap severely — 32 angular slots (8 per sector x 4 sectors)
+    on a full 360 radar produce dense label clusters throughout, especially in the
+    top quadrant and bottom half; reduce items per sector or expand available label
+    area
+  - truncate_label=12 cuts most tech names to unrecognizable fragments at this density
+    — increase to at least 16-18 to allow 2-word names to remain legible (e.g. 'Homomorphic
+    E...' vs 'Homomorphic Encrypt.')
+  - Legend mixes zone-fill series (Hold/Assess/Trial/Adopt) and sector series in a
+    flat 4-column layout without visual grouping — a separator or two-row structure
+    would clarify that zones and sectors are different encoding dimensions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "radar-innovation-timeline · python · pygal · anyplot.ai" in dark ink — readable. Sector labels (Data Engineering, Cloud Platforms, Security, DevOps) at cardinal points in dark text — readable. Ring labels (Adopt, Trial, Assess, Hold) along top radial spoke in dark muted text — readable but on the smaller side. Legend 8 entries at bottom — readable.
-      Data: Brand green #009E73 for Data Engineering dots, lavender #C475FD for Cloud Platforms, blue #4467A3 for Security, ochre #BD8233 for DevOps — correct Imprint canonical order. Zone fills (pastel tints at opacity=0.35) create subtle concentric bands. First series = #009E73 ✓.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "radar-innovation-timeline · python · pygal · anyplot.ai" in dark ink at top — fully readable. Ring labels (Adopt/Trial/Assess/Hold) in dark text inside the chart — readable. Legend at bottom in dark text — readable. All core chrome is legible against the light background.
+      Data: Four sector data series shown as colored dots: Data Engineering=#009E73 (brand green), Cloud Platforms=#C475FD (lavender), Security=#4467A3 (blue), DevOps=#BD8233 (ochre). Zone fill backgrounds use low-opacity (#009E73/#C475FD/#4467A3/#BD8233-derived) tints at 0.35 opacity for Adopt/Trial/Assess/Hold rings respectively. Outer item labels are small and densely packed — significant overlap around multiple quadrants; truncate_label=12 shortens many names.
+      Legibility verdict: PASS (core elements readable, but peripheral item labels are problematic due to density/truncation)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, not pure black
-      Chrome: Title, sector labels, ring labels, and legend text flip to light cream (#F0EFE8-derived) — all readable against the dark surface. No dark-on-dark failures detected anywhere in the render.
-      Data: Sector dot colors are identical to light render (brand green, lavender, blue, ochre) — only zone fill tints and chrome flip between themes. Zone fills use dark tints (dark green, dark purple, dark blue-gray, near-background charcoal) distinguishable from background.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title text appears in light off-white — clearly readable against dark background. Ring labels inside chart visible in light text. Legend at bottom in light text — readable. No dark-on-dark failures observed. Grid/guide lines are subtle against the dark surface.
+      Data: Data dot colors are IDENTICAL to light render: Data Engineering=#009E73, Cloud Platforms=#C475FD, Security=#4467A3, DevOps=#BD8233 — correct, palette colors are theme-invariant. Zone fills shift to dark tints (dark green/dark violet/dark steel-blue/near-background). Same outer-ring label density and truncation issues as light render.
+      Legibility verdict: PASS (all chrome correctly flipped, no dark-on-dark failures, data colors unchanged)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Title, sector labels, legend readable in both themes. Ring labels
-          legible but slightly small for mobile-scale thumbnails.
+        passed: false
+        comment: Font sizes explicitly set; ring labels, title, and legend are readable.
+          Outer item labels severely truncated (truncate_label=12) and small — many
+          tech names unrecognizable at perimeter density.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'No collisions. Absence of per-item labels avoids overlap at cost
-          of spec requirement. Minor: Data Engineering label close to title vertically.'
+        passed: false
+        comment: Significant label overlap throughout the outer perimeter ring. 32
+          angular slots on full 360 radar produce dense clusters at sector transitions,
+          especially top quadrant and bottom half.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Dots well-sized (dots_size=22), sector colors vivid and distinct.
-          Zone fills subtly visible at opacity=0.35.
+        comment: Sector data dots (dots_size=22) are prominent and clearly visible.
+          Zone fills at opacity=0.35 are intentionally subtle — appropriate for background-layer
+          separation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette in canonical order, CVD-safe by design.
+        comment: Imprint palette is CVD-safe across all four sectors. No red-green-only
+          signal. Zone fills at low opacity do not compete with sector data.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for symmetric radar. 8-item legend (zone
-          fills + sectors) creates slight visual noise; pale zone fill swatches may
-          appear empty at small sizes.
+        comment: Square 2400x2400 canvas correct for symmetric radar. Canvas gate
+          passed. Layout reasonable; circular whitespace in corners is inherent to
+          the chart type. Legend placement at bottom appropriate.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Ring time-horizon labels and sector labels present and descriptive.
+        comment: Ring labels (Adopt/Trial/Assess/Hold) are descriptive time-horizon
+          labels. Sector headers appear as major x-labels. No additional units needed
+          for this domain.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First sector = #009E73, canonical Imprint order, backgrounds #FAF8F1/#1A1A17,
-          data colors stable across themes.'
+        comment: 'First sector Data Engineering=#009E73 (brand green) correct. Cloud
+          Platforms=#C475FD, Security=#4467A3, DevOps=#BD8233 follow canonical Imprint
+          order. Light bg #FAF8F1, dark bg #1A1A17. Chrome theme-adaptive in both
+          renders.'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful zone fill design with theme-adaptive tints. Above default
-          but chart feels functional rather than polished.
+        comment: 'Thoughtful design: layered zone fills communicate time-horizon depth,
+          Imprint palette correctly applied, inner_radius and stroke=False give cleaner
+          look. Label clutter reduces professional finish.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean fill approach; 8-item mixed legend reduces refinement.
+        comment: Y guides only (no X guides), fill enabled for zone separation, margins
+          set, legend at bottom with 4 columns. Some refinement visible but crowded
+          outer labels and unconcealed guide spokes reduce polish.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Concentric ring structure maps time horizons well but absent item
-          labels prevent viewer from identifying individual technologies in PNG.
+        passed: true
+        comment: Concentric ring structure clearly communicates technology maturity
+          progression. Color-coded sectors create clear visual groupings. Label readability
+          problems prevent viewers from easily identifying specific innovations.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct radial chart with concentric rings and sector divisions.
-          Slight deduction: ring structure approximated via filled series rather than
-          native innovation-radar layout.'
+        comment: Correct radar/spider chart with concentric time-horizon rings and
+          angular sectors. Accurately implements the Innovation Radar pattern.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Ring labels, sector headers, sector colors, and ring fills all present.
-          Missing: per-item labels on dots (show_minor_x_labels=False). Spec requires
-          each item to be a labeled point.'
+        passed: true
+        comment: 'Concentric rings with labels, angular sectors, distinct colors per
+          sector, legend, 24 labeled items all present. Minor gap: full 360 layout
+          rather than spec-suggested 180/270; sector headers not as prominent outer-edge
+          annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 24 innovations across 4 sectors x 4 rings; ring value to radial distance
-          mapping correct.
+        comment: Ring value correctly maps to radial distance (1=Adopt innermost,
+          4=Hold outermost). Sector correctly maps to angular slot grouping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend present with sector labels.
+        comment: Title is exactly 'radar-innovation-timeline · python · pygal · anyplot.ai'.
+          Legend correctly labels all 8 series (4 ring zones + 4 sectors).
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows radar, concentric rings, multi-sector layout, zone fills, theme
-          adaptation. Missing item labels reduces labeled-point feature coverage.
+        comment: 'All 4 rings populated, all 4 sectors represented, varied distribution
+          across rings. Good spread: 8 items in Adopt+Trial (active), 8 in Assess+Hold
+          (future).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology radar data (dbt Core, Kafka, Zero Trust, Platform Engineering)
-          is realistic and professionally neutral.
+        comment: 'Real enterprise technology names: dbt Core, Apache Iceberg, Zero
+          Trust Network, Post-Quantum Crypto, GitOps at Scale, AI Code Assistants.
+          Neutral, professional technology planning context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24 items in spec's 15-40 range; ring distribution across 4 rings
-          is plausible.
+        comment: 'Ring assignments align with real-world technology maturity: mature
+          OSS tools in Adopt, research-stage technologies in Hold. Proportions are
+          realistic and credible.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -194,13 +209,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat procedural script.
+        comment: 'Linear flow: constants -> data -> series layout -> chart config
+          -> render. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no random elements.
+        comment: Fully deterministic — hardcoded data list, no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,17 +225,18 @@ review:
         comment: Only os, sys, pygal, pygal.style.Style imported — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Slot-based positioning well-organized; zone fill layering logic clearly
-          documented.
+        comment: Slot-based angular layout logic (header_slot + item_slots + gap_slot
+          per sector) and series_data dict building with positional None-padding adds
+          complexity. Functional but verbose for the task.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
       score: 7
       max: 10
@@ -229,23 +246,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.Radar with x_labels_major, fill=True, y_labels for ring annotations,
-          Style for theming — idiomatic.
+        comment: Uses pygal.Radar, Style object for all theming, y_labels as list-of-dicts,
+          x_labels_major for sector headers, legend_at_bottom_columns, render_to_png
+          and render_to_file. Solid idiomatic usage throughout.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Radar chart type, fill=True for layered zone bands, dual render_to_png
-          + render_to_file output, multi-series zone-fill layering.
+        comment: Leverages fill=True with reversed ring ordering for layered zone-fill
+          backgrounds (pygal-specific), show_dots=True with stroke=False for scatter-on-fill
+          effect, inner_radius for center clearing, truncate_label, x_labels_major
+          for two-tier labeling.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - html-export
+  - manual-ticks
   patterns:
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending

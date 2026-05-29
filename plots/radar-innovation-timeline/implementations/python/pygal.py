@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-29
+Quality: 73/100 | Updated: 2026-05-29
 """
 
 import os
