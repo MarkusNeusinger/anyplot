@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -34,6 +34,7 @@ ANNOTATION_BG = "rgba(255,253,246,0.92)" if THEME == "light" else "rgba(36,36,32
 # Imprint palette — first series is always #009E73
 BRAND = "#009E73"  # Cumulative variance line (primary, Imprint position 1)
 IMPRINT_BLUE = "#4467A3"  # Individual variance columns (Imprint position 3)
+COL_ALPHA = "rgba(68, 103, 163, 0.25)" if THEME == "light" else "rgba(68, 103, 163, 0.55)"
 AMBER = "#DDCC77"  # 90% threshold — warning/caution semantic anchor
 LAVENDER = "#C475FD"  # 95% threshold — Imprint position 2
 
@@ -136,7 +137,7 @@ chart.options.y_axis = {
             "label": {
                 "text": "90%",
                 "align": "left",
-                "style": {"fontSize": "34px", "color": AMBER, "fontWeight": "600"},
+                "style": {"fontSize": "44px", "color": AMBER, "fontWeight": "600"},
                 "x": 10,
                 "y": -10,
             },
@@ -150,7 +151,7 @@ chart.options.y_axis = {
             "label": {
                 "text": "95%",
                 "align": "left",
-                "style": {"fontSize": "34px", "color": LAVENDER, "fontWeight": "600"},
+                "style": {"fontSize": "44px", "color": LAVENDER, "fontWeight": "600"},
                 "x": 10,
                 "y": -10,
             },
@@ -190,7 +191,7 @@ chart.options.plot_options = {
 
 chart.options.tooltip = {
     "shared": True,
-    "style": {"fontSize": "34px"},
+    "style": {"fontSize": "44px"},
     "headerFormat": "<b>Component {point.key}</b><br/>",
     "pointFormat": "{series.name}: <b>{point.y:.1f}%</b><br/>",
 }
@@ -199,7 +200,7 @@ chart.options.tooltip = {
 col_series = ColumnSeries()
 col_series.name = "Individual Variance"
 col_series.data = [round(float(v), 2) for v in individual_variance]
-col_series.color = "rgba(68, 103, 163, 0.25)"
+col_series.color = COL_ALPHA
 chart.add_series(col_series)
 
 # Cumulative variance as line series (primary story, Imprint position 1)
@@ -236,7 +237,7 @@ chart.options.annotations = [
             "borderWidth": 2,
             "borderRadius": 8,
             "padding": 18,
-            "style": {"fontSize": "26px", "color": INK, "fontWeight": "500"},
+            "style": {"fontSize": "44px", "color": INK, "fontWeight": "500"},
             "shape": "callout",
             "verticalAlign": "top",
         },
@@ -257,7 +258,7 @@ chart.options.annotations = [
             "borderWidth": 2,
             "borderRadius": 8,
             "padding": 18,
-            "style": {"fontSize": "26px", "color": INK, "fontWeight": "500"},
+            "style": {"fontSize": "44px", "color": INK, "fontWeight": "500"},
             "shape": "callout",
             "verticalAlign": "top",
         },
