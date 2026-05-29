@@ -106,15 +106,17 @@ hlines!(ax1, [90.0, 95.0];
 vlines!(ax1, Float64.([idx_90, idx_95]);
     color = ANYPLOT_AMBER, linewidth = 1.0, linestyle = :dot)
 
+hspan!(ax1, 90.0, 95.0; color = RGBAf(ANYPLOT_AMBER.r, ANYPLOT_AMBER.g, ANYPLOT_AMBER.b, 0.10))
+
 text!(ax1, Float64(n_comp) - 0.3, 91.5;
-    text = "90%", color = INK_SOFT, fontsize = 11, align = (:right, :bottom))
+    text = "90%", color = INK_SOFT, fontsize = 13, align = (:right, :bottom))
 text!(ax1, Float64(n_comp) - 0.3, 96.5;
-    text = "95%", color = INK_SOFT, fontsize = 11, align = (:right, :bottom))
+    text = "95%", color = INK_SOFT, fontsize = 13, align = (:right, :bottom))
 
 scatter!(ax1, [Float64(elbow_idx)], [cumulative_pct[elbow_idx]];
     color = IMPRINT_PALETTE[3], markersize = 14, strokewidth = 0)
 text!(ax1, Float64(elbow_idx) + 0.4, cumulative_pct[elbow_idx];
-    text = "PC$(elbow_idx) (elbow)", color = INK, fontsize = 11,
+    text = "PC$(elbow_idx) (elbow)", color = INK, fontsize = 13,
     align = (:left, :center))
 
 # Bottom panel — individual explained variance bars
@@ -123,7 +125,7 @@ ax2 = Axis(
     xlabel             = "Number of Components",
     ylabel             = "Individual (%)",
     xlabelsize         = 13,
-    ylabelsize         = 11,
+    ylabelsize         = 13,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
     xticklabelcolor    = INK_SOFT,
@@ -147,6 +149,9 @@ ax2 = Axis(
 
 barplot!(ax2, components, individual_pct;
     color = IMPRINT_PALETTE[1], strokewidth = 0)
+
+vlines!(ax2, [Float64(elbow_idx)];
+    color = IMPRINT_PALETTE[3], linewidth = 1.5, linestyle = :dash)
 
 linkxaxes!(ax1, ax2)
 rowsize!(fig.layout, 1, Relative(0.70))
