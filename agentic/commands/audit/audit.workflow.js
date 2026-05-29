@@ -107,6 +107,10 @@ async function crossValidate(report, auditor) {
       schema: VERDICT_SCHEMA,
       agentType: 'general-purpose',
     }).then((v) => ({ ...f, verdict: v }))
+      // KEEP-biased: a verifier that errors must not drop the finding. parallel()
+      // already maps a rejected thunk to null, but catch explicitly so the intent
+      // is unmistakable — an unverified finding falls through to merge and is kept.
+      .catch(() => null)
   ))).filter(Boolean)
 
   const vmap = new Map(verified.map((v) => [fkey(v), v]))
