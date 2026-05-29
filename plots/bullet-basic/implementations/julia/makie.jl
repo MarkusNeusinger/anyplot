@@ -25,8 +25,8 @@ const GRID_CLR  = THEME == "light" ?
 
 # --- Data -------------------------------------------------------------------
 labels  = ["Q1 Revenue", "Customer Satisfaction", "Project Completion", "Code Quality", "Cost Efficiency"]
-actuals = [82, 78, 68, 91, 63]
-targets = [90, 85, 75, 88, 70]
+actuals = [82, 78, 68, 91, 38]  # Cost Efficiency at 38 exercises the poor zone (<50)
+targets = [90, 85, 75, 88, 55]
 n = length(labels)
 
 # --- Plot -------------------------------------------------------------------
@@ -77,8 +77,12 @@ for i in 1:n
     lines!(ax, [target, target], [y - band_h / 2 - 0.05, y + band_h / 2 + 0.05];
            color = INK, linewidth = 4.0)
 
-    text!(ax, actual + 1.5, y; text = "$(actuals[i])%",
-          color = INK_SOFT, fontsize = 11, align = (:left, :center))
+    exceeds = actuals[i] > targets[i]
+    text!(ax, actual + 1.5, y;
+          text    = "$(actuals[i])%",
+          color   = exceeds ? BRAND : INK_SOFT,
+          fontsize = exceeds ? 13 : 11,
+          align   = (:left, :center))
 end
 
 ax.yticks    = (Float64.(1:n), labels)
@@ -96,7 +100,7 @@ Legend(
      LineElement(color = INK, linewidth = 4.0)],
     ["Good (≥75%)", "Satisfactory (50–75%)", "Poor (<50%)", "Actual", "Target"];
     backgroundcolor = ELEVATED_BG,
-    framecolor      = INK_SOFT,
+    framevisible    = false,
     labelcolor      = INK_SOFT,
     labelsize       = 11,
     padding         = (8, 8, 8, 8),
