@@ -15,6 +15,7 @@ const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
 const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green
@@ -36,6 +37,7 @@ groups = vcat(fill(1, n), fill(2, n), fill(3, n), fill(4, n))
 values = vcat(scores_a, scores_b, scores_c, scores_d)
 
 group_labels = ["Group A", "Group B", "Group C", "Group D"]
+dist_labels  = ["normal", "bimodal ★", "right-skewed", "narrow"]
 
 # Plot
 fig = Figure(
@@ -47,7 +49,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "violin-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 22,
     titlecolor         = INK,
     xlabel             = "Class Group",
     ylabel             = "Test Score",
@@ -92,6 +94,30 @@ boxplot!(ax, groups, values;
     width        = 0.12,
     whiskerwidth = 0.5,
     show_outliers = false,
+)
+
+# Callout annotation — draw viewer's eye to the bimodal shape in Group B
+text!(ax, 2.0, 96.5;
+    text     = "bimodal",
+    color    = IMPRINT_PALETTE[2],
+    fontsize = 12,
+    font     = :bold,
+    align    = (:center, :bottom),
+)
+
+# Custom Legend with per-group color swatches and distribution type labels
+legend_elements = [PolyElement(color = (IMPRINT_PALETTE[i], 0.75),
+                               strokecolor = INK_SOFT, strokewidth = 1.0)
+                   for i in eachindex(group_labels)]
+legend_labels   = ["$(group_labels[i]): $(dist_labels[i])" for i in eachindex(group_labels)]
+Legend(fig[1, 2], legend_elements, legend_labels, "Distribution Shape";
+    framevisible    = false,
+    backgroundcolor = PAGE_BG,
+    labelcolor      = INK_SOFT,
+    titlecolor   = INK,
+    titlesize    = 13,
+    labelsize    = 12,
+    padding      = (6, 6, 6, 6),
 )
 
 # Save
