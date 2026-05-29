@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:09:31Z'
-updated: '2026-05-29T03:31:45Z'
+updated: '2026-05-29T03:40:03Z'
 generated_by: claude-sonnet
 workflow_run: 26615845383
 issue: 4130
@@ -15,47 +15,42 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: ECDFs as step functions, max divergence highlighted with
-    dashed line, D statistic and p-value prominently displayed, both distributions
-    labeled in legend'
-  - Correct semantic color exception — Good Customers→green (#009E73), Bad Customers→red
-    (#AE3030) — explicit and well-justified by category labels
-  - 'Well-structured data storytelling: interpretive subtitle (''Distributions are
-    highly distinct…'') plus D value annotation at divergence point plus stats summary
-    box'
-  - Complete theme adaptation — all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
-    ELEVATED_BG) correctly applied in both light and dark renders
-  - 'Idiomatic plotnine grammar: geom_step for ECDFs, geom_segment for divergence
-    line, annotate(''label'') with boxstyle and fill for styled callout boxes'
-  - Robust ECDF computation using np.searchsorted across merged value set to find
-    exact maximum divergence point
+  - 'Semantic color exception correctly applied: green for Good Customers, red for
+    Bad Customers — immediately intuitive to readers'
+  - 'Comprehensive storytelling annotations: interpretive subtitle, D-value label,
+    K-S statistics box together form a complete statistical narrative'
+  - Perfect spec compliance — all required features (dual ECDFs, K-S statistic, max
+    divergence highlight, p-value, legend) present and correct
+  - All theme-adaptive chrome tokens properly applied; dark render passes fully with
+    no dark-on-dark failures
+  - 'Realistic, domain-appropriate data: credit scoring with well-parameterized beta
+    distributions'
   weaknesses:
-  - Stats annotation box (size=3.0 mm ≈ 8pt) and subtitle annotation (size=2.8 mm
-    ≈ 8pt) are close to the minimum readable size — at mobile thumbnail (~400 px)
-    these risk becoming illegible; nudge both up by ~0.3–0.5 mm
-  - K-S statistic box positioned at y=0.07 overlaps marginally with the rising green
-    ECDF step function near x=500–600 — slight visual clutter where data and annotation
-    share the same vertical band; moving the box lower (y=0.03) or adjusting x would
-    eliminate the conflict
-  - 'Design Excellence ceiling: DE-01 left room with only moderate visual hierarchy
-    beyond palette — could add a subtle horizontal reference line at y=0.5 or employ
-    size variation between the divergence line and ECDF lines to create stronger focal
-    emphasis'
+  - Interpretive subtitle annotation text (size=3.2 geom units ≈9pt at canvas resolution)
+    is very small and would be effectively invisible when the image is scaled to mobile
+    widths (~400px); increase to size=3.8–4.0
+  - K-S statistics box text (size=3.4) is similarly small; increase to match the subtitle
+    adjustment
+  - Manual ECDF computation with numpy bypasses plotnine's native stat_ecdf() — using
+    geom_step(stat='ecdf') would be more idiomatic while the divergence segment and
+    K-S point can still be computed separately
+  - ECDF step lines at size=1.2 are slightly thin for the 3200×1800 canvas; size=1.4–1.5
+    would give more visual weight at desktop resolution
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
-      Chrome: Title "ks-test-comparison · python · plotnine · anyplot.ai" in dark INK text at ~12pt, clearly readable at top center (~55–60% canvas width). Y-axis label "Cumulative Proportion (0–1)" and X-axis label "Credit Score (points)" at 10pt in dark INK, well-balanced. Tick labels (0.0–1.0 on Y; 250–1000 on X) at 8pt in INK_SOFT — readable. Legend in upper-left with ELEVATED_BG fill and semi-transparent border, showing "Distribution" header and entries for Bad Customers (red) and Good Customers (green). Subtle italic subtitle "Distributions are highly distinct (D > 0.5) — strong evidence the groups differ" positioned at y=1.06 — small but legible. Stats box "K-S Statistic = 0.730 | p-value = 9.54e-78" near bottom center at y=0.07.
-      Data: Two ECDF step functions — Bad Customers in matte red (#AE3030) rising steeply from ~200 to ~700, Good Customers in brand green (#009E73) rising from ~450 to ~1000. Dashed vertical red line marks max divergence at ~score 600. "D = 0.730" annotated in red beside the divergence line at mid-height. Line sizes appropriate for 300-point samples.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ks-test-comparison · python · plotnine · anyplot.ai" clearly readable in dark ink; axis labels "Credit Score (points)" and "Cumulative Proportion (0–1)" readable; tick labels at 250/500/750/1000 and 0.0/0.2/0.4/0.6/0.8/1.0 all readable in INK_SOFT; legend with titled "Distribution" shows both series
+      Data: Good Customers rendered in brand green #009E73; Bad Customers in matte red #AE3030 (semantic exception — good/bad credit customers); dashed red vertical segment at max divergence; "D = 0.730" annotation in red; K-S stats box at bottom center; dotted horizontal reference line at y=0.5; interpretive italic subtitle above ECDF area
+      Legibility verdict: PASS (all main text readable; subtitle annotation very small at size=3.2 geom units but still discernible at full resolution)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in light F0EFE8 text, clearly readable against dark background. Axis labels and tick labels in adaptive INK_SOFT (B8B7B0), all clearly visible. Legend background is darker ELEVATED_BG (#242420) with border. Subtitle and stats annotations use theme-appropriate fill colors.
-      Data: Same data colors as light render — Bad Customers red (#AE3030) and Good Customers green (#009E73) are identical to light render; only chrome (background, text, legend frame) flips. Both ECDFs, the dashed divergence line, and the "D = 0.730" label are clearly distinguishable against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures, all text readable against dark background. Brand green #009E73 clearly visible.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light color against dark surface — all readable; legend text is light-colored; legend background uses elevated dark token #242420; annotation boxes adapt to dark elevated fill; no dark-on-dark failures detected
+      Data: Good Customers still #009E73 (identical to light render); Bad Customers still #AE3030 (identical to light render) — data colors are theme-independent as required; dashed segment and D annotation visible; K-S stats box text readable; brand green clearly visible on dark surface
+      Legibility verdict: PASS (all text elements readable; chrome correctly adapts; data color identity preserved)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,53 +58,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all clearly readable in both
-          themes. Annotation texts (size=2.8–3.5 mm) are functional but near minimum
-          size for mobile thumbnails.
+        comment: All main text explicitly sized and readable in both themes; interpretive
+          subtitle (size=3.2 geom units) is very small and would be near-invisible
+          at mobile viewport widths
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor marginal overlap between K-S stat box (y=0.07) and the rising
-          green ECDF step function near x=500–600.
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both ECDF step functions at size=1.2 are clearly visible. Dashed
-          divergence line at size=1.5 prominent. Appropriate line weight for 300-point
-          samples.
+        comment: ECDF step lines and divergence segment clearly visible; dotted reference
+          line subtle but intentional
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic exception correctly applied (good→green, bad→red). Curve
-          position provides redundant encoding beyond color alone.
+        comment: Semantic exception correctly applied; luminance difference adequate;
+          legend provides text redundancy
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Title proportion appropriate (~55–60% width).
-          Axis labels balanced. No overflow or clipping.
+        comment: Correct 3200x1800 canvas; plot fills canvas well; extended y-axis
+          to 1.10 accommodates subtitle annotation
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Credit Score (points)'', Y: ''Cumulative Proportion (0–1)''
-          — descriptive with units/range. Title follows required format.'
+        comment: Credit Score (points) and Cumulative Proportion (0-1) are descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Good Customers=#009E73 (brand green), Bad Customers=#AE3030 (semantic
-          red). Both Imprint palette colors. Backgrounds #FAF8F1 light / #1A1A17 dark.
-          Theme-adaptive chrome correct.'
+        comment: 'Semantic exception correctly used; backgrounds #FAF8F1/#1A1A17;
+          all chrome theme-adaptive'
     design_excellence:
       score: 13
       max: 20
@@ -119,25 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic color assignment shows design intent. Styled annotation
-          boxes with rounded corners and fill. Interpretive subtitle adds editorial
-          layer. Professional polish above default.
+        comment: 'Clearly above defaults: semantic Imprint color exception, theme-adaptive
+          annotation boxes with elevated fill, intentional hierarchy via color weight'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() base removes top/right spines. X-axis grid removed,
-          Y-axis grid at alpha=0.15. Axis lines retained for L-frame. Legend inside
-          plot area with alpha. Good whitespace.
+        comment: Panel border removed, vertical and minor grids removed, horizontal-only
+          subtle grid (alpha=0.15), custom axis lines, legend with themed border and
+          fill
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: D value annotated at divergence point, stats box with K-S statistic
-          + p-value, interpretive subtitle. Clear focal point at divergence area.
-          Credit scoring context makes result tangible.
+        comment: Interpretive subtitle, D annotation at divergence, K-S stats box
+          with p-value, and semantic color coding collectively guide the viewer through
+          the statistical narrative
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct K-S plot with two ECDFs as step functions and maximum divergence
-          highlighted.
+        comment: Correct KS-test visualization with two ECDF step functions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both ECDFs as step functions, K-S statistic shown prominently, divergence
-          point with vertical dashed line, p-value included, distributions labeled
-          in legend, Y-axis 0–1.
+        comment: Both ECDFs as step functions, K-S statistic highlighted, max divergence
+          vertical segment, p-value reported, distributions labeled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: credit score, Y: cumulative proportion. Both distributions cover
-          full data range.'
+        comment: Credit Score on X, Cumulative Proportion 0-1 on Y, both distributions
+          fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ks-test-comparison · python · plotnine · anyplot.ai' correct.
-          Legend labels 'Good Customers' and 'Bad Customers' match data.
+        comment: Title is exactly ks-test-comparison · python · plotnine · anyplot.ai;
+          legend labels match data groups
     data_quality:
       score: 15
       max: 15
@@ -180,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: ECDFs, K-S stat, divergence visualization, p-value, statistical interpretation
-          annotation — all aspects covered.
+        comment: Shows two clearly distinct distributions with high KS statistic (D=0.730);
+          maximum divergence visually prominent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring Good/Bad customer context is standard, neutral, and
-          universally understood. Beta distributions produce realistic score shapes.
+        comment: Credit scoring Good vs. Bad customers is a standard real-world KS-test
+          application; beta distributions reflect realistic score shapes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score range 200–1000 reflects real credit scoring. 300 points per
-          sample well within spec recommendation.
+        comment: Score range ~200-1000 is realistic for credit scoring; distributions
+          have appropriate separation
     code_quality:
       score: 10
       max: 10
@@ -205,52 +194,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Clean linear flow: imports → data → K-S test → ECDF computation
+          → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, numpy, pandas, plotnine components, scipy.stats)
-          are used.
+        comment: All imported names are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. No fake UI. Title fontsize scaling is correct.
+        comment: Clean, Pythonic; no fake UI elements; title fontsize scaling formula
+          is practical
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Uses ANYPLOT_THEME env var. Correct dpi=400,
-          width=8, height=4.5.
+        comment: Saves as plot-{THEME}.png with correct dpi/size parameters
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Grammar of graphics used correctly. geom_step, geom_segment, annotate(),
-          scale_color_manual with named dict — all idiomatic plotnine patterns.
+        comment: Correct grammar-of-graphics layering but manually computes ECDF arrays
+          with numpy instead of using plotnine's native stat_ecdf() transformation
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: annotate('label') with boxstyle='round', fill, and alpha is a plotnine-specific
-          feature. geom_step correctly used for ECDF. Layer composition demonstrates
-          grammar of graphics strengths.
+        comment: Uses plotnine's annotate('label') with fill, alpha, label_size, and
+          boxstyle parameters — plotnine-specific styled annotation boxes
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -263,3 +251,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
