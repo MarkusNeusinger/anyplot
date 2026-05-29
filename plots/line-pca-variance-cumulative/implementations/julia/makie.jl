@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-05-29
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 84/100 | Created: 2026-05-29
 
 using CairoMakie
 using Colors
