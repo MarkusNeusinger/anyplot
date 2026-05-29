@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-29
+Quality: 90/100 | Updated: 2026-05-29
 """
 
 import os
