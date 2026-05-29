@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 band-basic: Basic Band Plot
-Library: altair | Python 3.13
-Quality: 94/100 | Updated: 2026-05-29
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-29
 """
 
 import importlib
