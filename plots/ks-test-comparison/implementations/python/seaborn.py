@@ -1,18 +1,32 @@
-""" pyplots.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Created: 2026-02-17
+Library: seaborn | Python 3.13
+Quality: pending | Updated: 2026-05-29
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
-import pandas as pd
 import seaborn as sns
+from matplotlib.lines import Line2D
 from scipy import stats
 
 
-# Data - credit scoring: Good vs Bad customer score distributions
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — position 1 (green) for Good Customers, position 2 (lavender) for Bad
+GOOD_COLOR = "#009E73"
+BAD_COLOR = "#C475FD"
+
+# Data — credit scoring: Good vs Bad customer score distributions
 np.random.seed(42)
 good_scores = np.random.beta(5, 3, size=300) * 500 + 350
 bad_scores = np.random.beta(3, 4, size=200) * 500 + 350
@@ -20,7 +34,7 @@ bad_scores = np.random.beta(3, 4, size=200) * 500 + 350
 # Compute K-S statistic
 ks_stat, p_value = stats.ks_2samp(good_scores, bad_scores)
 
-# Compute ECDFs manually for finding max distance point
+# Compute ECDFs for identifying max-distance point
 good_sorted = np.sort(good_scores)
 bad_sorted = np.sort(bad_scores)
 all_values = np.sort(np.concatenate([good_sorted, bad_sorted]))
@@ -31,114 +45,96 @@ max_idx = np.argmax(distances)
 max_x = all_values[max_idx]
 max_y_good = good_ecdf[max_idx]
 max_y_bad = bad_ecdf[max_idx]
+y_lo, y_hi = min(max_y_good, max_y_bad), max(max_y_good, max_y_bad)
 
-# Build DataFrame for seaborn-idiomatic plotting
-df = pd.DataFrame(
-    {
-        "Credit Score (points)": np.concatenate([good_scores, bad_scores]),
-        "Group": ["Good Customers"] * len(good_scores) + ["Bad Customers"] * len(bad_scores),
-    }
-)
-
-# Style setup - use seaborn theme for distinctive look
+# Seaborn theme — theme-adaptive chrome
 sns.set_theme(
-    style="whitegrid",
+    style="ticks",
     rc={
-        "axes.spines.top": False,
-        "axes.spines.right": False,
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
         "grid.alpha": 0.15,
-        "grid.linewidth": 0.6,
-        "font.family": "sans-serif",
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Higher-contrast, colorblind-safe palette
-palette = {"Good Customers": "#1B6B93", "Bad Customers": "#D35400"}
+# Figure — landscape 3200×1800 px; no bbox_inches="tight" (trims canvas)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+fig.patch.set_facecolor(PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-fig, ax = plt.subplots(figsize=(16, 9))
-fig.patch.set_facecolor("#FAFBFC")
-ax.set_facecolor("#FAFBFC")
+# ECDFs — separate calls give direct linestyle control (avoids fragile hue-color matching)
+sns.ecdfplot(x=good_scores, color=GOOD_COLOR, linewidth=2.5, linestyle="-", ax=ax)
+sns.ecdfplot(x=bad_scores, color=BAD_COLOR, linewidth=2.5, linestyle="--", ax=ax)
 
-# Use seaborn ecdfplot with hue AND style for idiomatic linestyle differentiation
-sns.ecdfplot(
-    data=df,
-    x="Credit Score (points)",
-    hue="Group",
-    hue_order=["Good Customers", "Bad Customers"],
-    palette=palette,
-    linewidth=3.5,
-    ax=ax,
-)
-
-# Apply linestyles via legend handle mapping (robust: match by label text)
-legend = ax.get_legend()
-style_map = {"Good Customers": "-", "Bad Customers": "--"}
-for text, handle in zip(legend.get_texts(), legend.legend_handles, strict=False):
-    label = text.get_text()
-    if label in style_map:
-        handle.set_linestyle(style_map[label])
-        # Also update the corresponding line on the axes
-        for line in ax.get_lines():
-            if line.get_color() == handle.get_color():
-                line.set_linestyle(style_map[label])
-
-# Subtle shaded fill between the two ECDFs near the max divergence point
+# Shaded band between ECDFs around the max-divergence region
 band_half = 25
 band_mask = (all_values >= max_x - band_half) & (all_values <= max_x + band_half)
-ax.fill_between(
-    all_values[band_mask],
-    good_ecdf[band_mask],
-    bad_ecdf[band_mask],
-    alpha=0.12,
-    color="#D35400",
-    zorder=2,
-    label="_nolegend_",
-)
+ax.fill_between(all_values[band_mask], good_ecdf[band_mask], bad_ecdf[band_mask], alpha=0.18, color=BAD_COLOR, zorder=2)
 
-# Highlight K-S statistic: vertical line at max divergence
-y_lo, y_hi = min(max_y_good, max_y_bad), max(max_y_good, max_y_bad)
-ax.plot([max_x, max_x], [y_lo, y_hi], color="#2D2D2D", linewidth=2.5, linestyle="--", zorder=5)
+# K-S statistic: dotted vertical line at max divergence
+ax.plot([max_x, max_x], [y_lo, y_hi], color=INK, linewidth=1.8, linestyle=":", zorder=5)
 
-# Prominent dots at max divergence intersections
-ax.scatter([max_x, max_x], [max_y_good, max_y_bad], color="#2D2D2D", s=160, zorder=6, edgecolors="white", linewidth=2)
+# Dots at max-divergence intersection points
+ax.scatter([max_x, max_x], [max_y_good, max_y_bad], color=INK, s=60, zorder=6, edgecolors=PAGE_BG, linewidth=1.2)
 
-# Annotate K-S statistic and p-value — position in upper-right for balanced layout
-ax.annotate(
-    f"K-S Statistic = {ks_stat:.3f}\np-value = {p_value:.2e}",
-    xy=(max_x, y_hi),
-    xytext=(max_x + 80, 0.92),
-    fontsize=16,
-    fontweight="bold",
-    color="#2D2D2D",
-    ha="left",
-    va="top",
-    bbox={"boxstyle": "round,pad=0.6", "facecolor": "#F8F9FA", "edgecolor": "#95A5A6", "linewidth": 1.2, "alpha": 0.95},
-    arrowprops={"arrowstyle": "-|>", "color": "#7F8C8D", "linewidth": 1.5, "connectionstyle": "arc3,rad=-0.15"},
-)
-
-# Small label next to divergence line for storytelling
-ax.text(max_x + 5, y_hi + 0.02, "max distance", fontsize=12, fontstyle="italic", color="#555555", va="bottom")
-
-# Axis styling — tighten x-limits to reduce dead space
+# x limits for tight framing
 x_min = min(good_scores.min(), bad_scores.min()) - 10
 x_max = max(good_scores.max(), bad_scores.max()) + 10
-ax.set_xlim(x_min, x_max)
-ax.set_xlabel("Credit Score (points)", fontsize=20, labelpad=10)
-ax.set_ylabel("Cumulative Proportion", fontsize=20, labelpad=10)
-ax.set_title(
-    "Credit Score Distributions · ks-test-comparison · seaborn · pyplots.ai", fontsize=24, fontweight="semibold", pad=18
+
+# Annotation in lower-left dead space (where both CDFs are near zero) — arrow to KS line
+ax.annotate(
+    f"K-S = {ks_stat:.3f}\np = {p_value:.2e}",
+    xy=(max_x, (y_lo + y_hi) / 2),
+    xytext=(x_min + 30, 0.17),
+    fontsize=8,
+    fontweight="bold",
+    color=INK,
+    ha="left",
+    va="center",
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "linewidth": 1.0,
+        "alpha": 0.95,
+    },
+    arrowprops={"arrowstyle": "-|>", "color": INK_MUTED, "linewidth": 1.0, "connectionstyle": "arc3,rad=0.25"},
 )
-ax.tick_params(axis="both", labelsize=16)
+
+# Axis limits and labels
+ax.set_xlim(x_min, x_max)
 ax.set_ylim(0, 1.04)
+
+title = "Credit Scoring · ks-test-comparison · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+
+ax.set_xlabel("Credit Score (points)", fontsize=10, labelpad=8)
+ax.set_ylabel("Cumulative Proportion", fontsize=10, labelpad=8)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=12)
+ax.tick_params(axis="both", labelsize=8)
 ax.xaxis.set_major_formatter(mticker.FormatStrFormatter("%.0f"))
-ax.yaxis.grid(True)
+
+# Grid — y-axis only, subtle
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.xaxis.grid(False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
-# Refine legend
-legend.set_title(None)
-for text in legend.get_texts():
-    text.set_fontsize(16)
-legend.set_loc("upper left")
+# Legend with explicit handles — robust, no fragile color-matching
+legend_handles = [
+    Line2D([0], [0], color=GOOD_COLOR, linewidth=2.5, linestyle="-", label="Good Customers"),
+    Line2D([0], [0], color=BAD_COLOR, linewidth=2.5, linestyle="--", label="Bad Customers"),
+]
+ax.legend(handles=legend_handles, fontsize=8, loc="upper left")
 
-plt.tight_layout(pad=1.2)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
