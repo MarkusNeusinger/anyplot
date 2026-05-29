@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -70,8 +70,11 @@ ax.step(
     zorder=3,
 )
 
-# Shaded region at maximum distance (single fill_betweenx, no loop)
-ax.fill_betweenx([max_y_bad, max_y_good], max_x - 1.5, max_x + 1.5, color=GOOD_COLOR, alpha=0.12, zorder=1)
+# Vertical reference line at maximum distance point — stronger visual anchor
+ax.axvline(max_x, color=INK_SOFT, linestyle="--", linewidth=0.9, alpha=0.45, zorder=2)
+
+# Shaded region at maximum distance — wider band and higher alpha for visibility
+ax.fill_betweenx([max_y_bad, max_y_good], max_x - 2.5, max_x + 2.5, color=GOOD_COLOR, alpha=0.20, zorder=1)
 
 # K-S distance line with double-ended annotation arrows
 ax.annotate(
@@ -105,7 +108,7 @@ ax.text(
     0.10,
     f"Strong separation: distributions are\nsignificantly different\n{p_label}",
     transform=ax.transAxes,
-    fontsize=7.5,
+    fontsize=8,
     ha="right",
     va="bottom",
     color=INK_SOFT,
