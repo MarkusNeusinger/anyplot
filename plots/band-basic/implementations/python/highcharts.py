@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 band-basic: Basic Band Plot
-Library: highcharts 1.10.3 | Python 3.14
-Quality: 91/100 | Updated: 2026-02-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-29
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -18,7 +19,19 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Daily temperature forecast with 95% prediction interval
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — first series always #009E73
+BAND_COLOR = "#009E73"  # Imprint position 1
+LINE_COLOR = "#BD8233"  # Imprint position 4 (ochre) — contrasts with green band
+
+# Data — 30-day temperature forecast with 95% prediction interval
 np.random.seed(42)
 days = np.arange(1, 31)
 temp_center = 12 + 0.3 * days + 4 * np.sin(days * 0.4)
@@ -31,108 +44,140 @@ band_data = [
 ]
 line_data = [[int(d), round(float(t), 1)] for d, t in zip(days, temp_center, strict=True)]
 
-# Build chart using highcharts-core Python wrapper
 font_family = "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
 
+# Title: "band-basic · python · highcharts · anyplot.ai" (46 chars < 67 — use default 66px)
+title_text = "band-basic · python · highcharts · anyplot.ai"
+
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 180,
-    "marginLeft": 220,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 160,
+    "marginLeft": 200,
     "marginRight": 100,
-    "spacing": [40, 40, 40, 40],
+    "marginTop": 130,
     "style": {"fontFamily": font_family},
 }
 
 chart.options.title = {
-    "text": "30-Day Temperature Forecast \u00b7 band-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold", "fontFamily": font_family},
+    "text": title_text,
+    "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK, "fontFamily": font_family},
 }
 
 chart.options.subtitle = {
-    "text": "Daily forecast with 95% prediction interval",
-    "style": {"fontSize": "30px", "color": "#666666", "fontFamily": font_family},
+    "text": "30-day forecast with 95% prediction interval",
+    "style": {"fontSize": "44px", "color": INK_SOFT, "fontFamily": font_family},
 }
 
 chart.options.x_axis = {
     "title": {
         "text": "Forecast Day",
-        "style": {"fontSize": "36px", "color": "#444444", "fontFamily": font_family},
+        "style": {"fontSize": "56px", "color": INK, "fontFamily": font_family},
         "margin": 20,
     },
-    "labels": {"style": {"fontSize": "28px", "color": "#555555", "fontFamily": font_family}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT, "fontFamily": font_family}},
     "gridLineWidth": 0,
     "tickInterval": 5,
-    "lineColor": "rgba(0, 0, 0, 0.12)",
-    "lineWidth": 1,
-    "tickColor": "rgba(0, 0, 0, 0.12)",
+    "lineWidth": 0,
+    "tickColor": INK_SOFT,
     "tickLength": 8,
 }
 
 chart.options.y_axis = {
     "title": {
-        "text": "Temperature (\u00b0C)",
-        "style": {"fontSize": "36px", "color": "#444444", "fontFamily": font_family},
+        "text": "Temperature (°C)",
+        "style": {"fontSize": "56px", "color": INK, "fontFamily": font_family},
         "margin": 20,
     },
-    "labels": {"format": "{value}\u00b0", "style": {"fontSize": "28px", "color": "#555555", "fontFamily": font_family}},
+    "labels": {"format": "{value}°", "style": {"fontSize": "44px", "color": INK_SOFT, "fontFamily": font_family}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dot",
-    "lineColor": "rgba(0, 0, 0, 0.12)",
+    "lineColor": INK_SOFT,
     "lineWidth": 1,
 }
 
 chart.options.legend = {
     "enabled": True,
     "align": "right",
-    "verticalAlign": "top",
+    "verticalAlign": "bottom",
     "layout": "vertical",
     "x": -60,
-    "y": 60,
+    "y": -80,
     "floating": True,
-    "backgroundColor": "rgba(255, 255, 255, 0.85)",
-    "borderWidth": 0,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "shadow": False,
-    "itemStyle": {"fontSize": "28px", "fontWeight": "normal", "fontFamily": font_family},
+    "itemStyle": {"fontSize": "44px", "fontWeight": "normal", "color": INK_SOFT, "fontFamily": font_family},
     "itemMarginBottom": 8,
     "symbolRadius": 4,
 }
 
 chart.options.plot_options = {
     "arearange": {"fillOpacity": 0.25, "lineWidth": 0, "marker": {"enabled": False}},
-    "line": {"lineWidth": 5, "marker": {"enabled": False}},
+    "line": {"lineWidth": 6, "marker": {"enabled": False}},
 }
 
 chart.options.credits = {"enabled": False}
 
-# Band series using AreaRangeSeries
+# Band series (AreaRange) — Imprint position 1
 band = AreaRangeSeries()
 band.data = band_data
 band.name = "95% Prediction Interval"
-band.color = "#306998"
+band.color = BAND_COLOR
 band.fill_opacity = 0.25
 band.z_index = 0
 
-# Forecast line using LineSeries with refined deep amber color
+# Forecast center line — Imprint position 4
 forecast = LineSeries()
 forecast.data = line_data
 forecast.name = "Forecast"
-forecast.color = "#C49000"
-forecast.line_width = 5
+forecast.color = LINE_COLOR
+forecast.line_width = 6
 forecast.z_index = 1
 
 chart.add_series(band)
 chart.add_series(forecast)
 
-# Generate JS via highcharts-core wrapper
 chart_js = chart.to_js_literal()
 
-# Download Highcharts JS files for inline embedding (headless Chrome cannot load CDN)
+# Annotation: show final uncertainty spread to guide the viewer
+final_half_width = round(1.96 * float(uncertainty[-1]), 1)  # ±width at day 30
+annotation_js = f"""
+var _xA = _hc.plotLeft + _hc.plotWidth - 680;
+var _yA = _hc.plotTop + 60;
+_hc.renderer.label('±{final_half_width}°C spread by day 30', _xA, _yA)
+  .attr({{
+    fill: '{ELEVATED_BG}',
+    stroke: '{INK_SOFT}',
+    'stroke-width': 1,
+    padding: 14,
+    r: 4,
+    zIndex: 6
+  }})
+  .css({{
+    fontSize: '40px',
+    color: '{INK}',
+    fontFamily: 'Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif'
+  }})
+  .add();
+"""
+chart_js = chart_js.replace("Highcharts.chart(", "var _hc = Highcharts.chart(", 1)
+# Inject annotation INSIDE the DOMContentLoaded callback (before its closing });)
+close_token = "\n});"
+insert_pos = chart_js.rfind(close_token)
+if insert_pos != -1:
+    chart_js = chart_js[:insert_pos] + "\n" + annotation_js.strip() + close_token
+else:
+    chart_js += annotation_js
+
+# Download Highcharts JS inline — headless Chrome cannot load CDN from file://
 cdn_base = "https://cdn.jsdelivr.net/npm/highcharts@11.4"
 js_urls = {"highcharts": f"{cdn_base}/highcharts.js", "highcharts_more": f"{cdn_base}/highcharts-more.js"}
 js_modules = {}
@@ -141,7 +186,6 @@ for name, url in js_urls.items():
     with urllib.request.urlopen(req, timeout=30) as response:
         js_modules[name] = response.read().decode("utf-8")
 
-# Build HTML with inline Highcharts JS and chart literal from wrapper
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -149,36 +193,42 @@ html_content = f"""<!DOCTYPE html>
     <script>{js_modules["highcharts"]}</script>
     <script>{js_modules["highcharts_more"]}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{chart_js}</script>
 </body>
 </html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Take screenshot with headless Chrome
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone is eaten by Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot_raw.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
-Path("plot_raw.png").unlink()
-
 Path(temp_path).unlink()
+
+# Normalize to exact 3200×1800 — guards against ±1-2 px rounding from headless Chrome
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
