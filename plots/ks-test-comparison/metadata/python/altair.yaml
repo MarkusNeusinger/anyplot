@@ -1,43 +1,52 @@
 library: altair
+language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:11:31Z'
-updated: '2026-02-17T20:26:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22113798995
+updated: '2026-05-29T03:47:36Z'
+generated_by: claude-sonnet
+workflow_run: 26615785331
 issue: 4130
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance — all required K-S test features implemented correctly
-    (ECDFs, max divergence line, D statistic, p-value)
-  - Strong visual storytelling with the purple distance annotation creating a clear
-    focal point at the maximum divergence
-  - Idiomatic Altair layer composition with well-structured encoding channels
-  - Polished design with custom colors, styled legend, subtle grid, and informative
-    subtitle
+  - 'Semantic color assignment is exemplary: #009E73 (brand green) for Good Customers
+    and #AE3030 (Imprint matte red, semantic anchor for bad/loss/error) for Bad Customers
+    — maximally intuitive and palette-compliant.'
+  - Redundant strokeDash encoding alongside color provides robust CVD safety — a deliberate
+    and correct accessibility choice.
+  - 'Full spec compliance: all K-S test visualization requirements met (ECDFs, KS
+    distance line with endpoint dots, D annotation, p-value in subtitle, legend, Y-axis
+    0-1).'
+  - Both themes render correctly with no dark-on-dark failures and identical data
+    colors across themes.
+  - PAD-only canvas strategy correctly implemented; canvas gate passed.
   weaknesses:
-  - The shaded band at the K-S distance is nearly invisible (opacity 0.18, tiny point
-    size 18) — either make it more visible or remove it since it does not contribute
-    meaningfully
-  - The shade band implementation using 40 individual mark_points is a workaround;
-    consider using a rect mark or rule for cleaner code
-  image_description: 'The plot displays two empirical cumulative distribution functions
-    (ECDFs) rendered as step functions on a light gray (#FAFAFA) background. The blue
-    solid line (#306998) represents "Good Customers" and the orange dashed line (#E8833A)
-    represents "Bad Customers", with credit scores on the X-axis (range ~100–1000)
-    and cumulative proportion on the Y-axis (0.0–1.0). A dashed purple (#7B2D8E) vertical
-    line marks the point of maximum divergence at approximately score 540, with two
-    filled purple dots at the endpoints of the distance line. The label "D = 0.623"
-    appears in purple monospace bold text to the right of the distance line. A faint
-    purple shaded region (tiny dots at low opacity) runs along the K-S distance line.
-    The title reads "ks-test-comparison · altair · pyplots.ai" in the top-left, with
-    a gray subtitle "K-S Statistic: 0.623 · p < 0.001 · Distributions are significantly
-    different". A bordered legend in the top-right identifies both groups with their
-    line styles.'
+  - 'The D = 0.623 annotation uses #4467A3 (Imprint blue) which reads clearly on light
+    but has slightly lower contrast on the dark background #1A1A17 — a theme-adaptive
+    annotation color (lighter blue or INK_SOFT) for dark mode would improve legibility.'
+  - DE-01 is limited by lack of a distinctive visual treatment beyond clean defaults
+    — e.g., subtle shading of the K-S gap region between the two ECDFs would make
+    the maximum divergence more immediately visually prominent.
+  - LM-02 could be pushed further with Altair-specific features like selection-based
+    conditional encoding or vconcat for an inset panel showing the distribution histograms.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "ks-test-comparison · python · altair · anyplot.ai" in bold dark ink, clearly readable. Subtitle in muted INK_SOFT tone, readable. Y-axis label "Cumulative Proportion" and X-axis label "Credit Score" clearly visible. Tick labels (250–950 on X, 0.0–1.0 on Y) readable. Legend box top-right with styled rounded-corner border, both series labeled clearly. "D = 0.623" annotation in bold monospace blue (#4467A3), clearly readable.
+      Data: Good Customers in solid green (#009E73), Bad Customers in dashed dark-red (#AE3030). Blue dashed vertical KS line with filled endpoint dots at divergence point ~Score=547. Two ECDFs clearly separated.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle flip to light text (#F0EFE8 / #B8B7B0), fully readable. Axis labels and tick labels in light colors, no dark-on-dark failure. Legend box uses elevated-dark fill #242420 with muted border; legend text light-colored and readable. "D = 0.623" annotation in #4467A3 (Imprint blue) — readable but slightly lower contrast against dark background than in light render.
+      Data: Colors identical to light render — Good Customers #009E73, Bad Customers #AE3030, KS line #4467A3. Data colors unchanged, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -45,67 +54,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, subtitle 18pt, axis titles
-          22pt, tick labels 18pt, annotation 22pt'
+        comment: 'All font sizes explicitly set (title 16px, subtitle 12px, axis labels
+          12px, ticks 10px, annotation 13px). All readable in both themes. Minor:
+          D=0.623 annotation in #4467A3 has slightly lower contrast on dark background.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements. Annotation in open whitespace; legend clear
+          of data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: ECDF lines clearly visible at strokeWidth 3.5; shaded band nearly
-          invisible at opacity 0.18
+        comment: Step lines strokeWidth=3.5, clearly visible. Dashed pattern [8,4]
+          distinguishable. KS line and filled endpoint dots prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue vs orange is colorblind-safe with distinct hue and luminance
+        comment: Redundant strokeDash encoding (solid vs dashed) alongside color for
+          CVD safety.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Canvas gate passed. Good proportions, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Credit Score and Cumulative Proportion'
+        comment: Credit Score and Cumulative Proportion are descriptive. Title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Bad Customers #AE3030 (semantic red
+          via exception). KS #4467A3 (Imprint pos 3). Backgrounds #FAF8F1/#1A1A17
+          correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, purple annotations, monospace stat label, styled
-          legend with border, above defaults
+        comment: 'Above defaults: semantic color assignment, dual encoding, styled
+          legend, monospace annotation, informative subtitle. Not FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, view stroke removed, light background, styled domains,
-          legend with cornerRadius
+        comment: X-grid removed, Y-grid subtle (0.15 opacity), view border removed,
+          legend styled with rounded corners and elevated fill.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Purple K-S distance line creates strong focal point, subtitle communicates
-          significance, compelling business context
+        comment: Clear visual hierarchy. D=0.623 annotation as focal point. Subtitle
+          provides statistical context. Endpoint dots create visual anchor.
     spec_compliance:
       score: 15
       max: 15
@@ -115,52 +136,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step functions using step-after interpolation
+        comment: Correct K-S ECDF comparison with step functions, KS distance line,
+          annotation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: ECDFs, K-S statistic, max distance line,
-          p-value, legend, Y-axis 0-1'
+        comment: Both ECDFs as step functions, KS statistic highlighted, p-value reported,
+          distributions labeled, Y-axis 0-1.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Credit scores on X-axis, cumulative proportion on Y-axis
+        comment: Credit Score on X-axis, Cumulative Proportion on Y-axis, full data
+          range displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data groups
+        comment: 'Title: ks-test-comparison · python · altair · anyplot.ai. Legend:
+          Good Customers / Bad Customers.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Two clearly different distributions with partial overlap demonstrating
-          K-S test effectively
+        comment: 'All K-S aspects shown: ECDFs, max divergence point, both D and p-value,
+          endpoint markers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring Good vs Bad customers — real neutral business scenario
+        comment: Credit scoring (Good vs Bad customers) is a textbook K-S application,
+          real-world, neutral, professionally relevant.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores centered at 480 and 620 with realistic spreads, 300
-          points per sample
+        comment: Good (mean=620, sd=80) and Bad (mean=480, sd=90) are realistic credit
+          score distributions. 300 samples within spec range.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,61 +193,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, K-S test, ECDF, DataFrames, layers,
-          chart, save'
+        comment: 'Linear script: imports → tokens → data → ECDF computation → charts
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, scipy'
+        comment: 'All imports used: numpy, pandas, PIL.Image, scipy.stats, importlib,
+          os, sys.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Shade band using 40 mark_points is a creative but hacky workaround
+        comment: importlib dynamic import is a necessary workaround for altair.py
+          naming conflict. ECDF computation via searchsorted on union grid is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0 and plot.html
+        comment: Saves plot-{THEME}.png (PAD-only) and plot-{THEME}.html correctly.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent declarative API usage: alt.layer, encoding types, scale/legend/axis
-          customization, configure chain'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Declarative layer composition, strokeDash encoding, alt.Tooltip with
-          formats, configure_legend/view styling
+        comment: Excellent use of configure_* chain, alt.Title with subtitle, alt.Scale/alt.Axis,
+          proper encoding type annotations. Above default 3/5.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: step-after interpolation (Altair-native ECDF), alt.layer() with 4
+          marks, alt.StrokeDash redundant encoding, tooltip encoding, HTML export.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
-  - ecdf
+  - cumulative-sum
   styling:
-  - grid-styling
+  - edge-highlighting
