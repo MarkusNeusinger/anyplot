@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-02-23
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-05-29
 """
+
+import os
 
 import matplotlib.collections as mcoll
 import matplotlib.patches as mpatches
@@ -11,7 +13,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Department budget allocation (in thousands)
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — 8 hues, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — department budget allocation (in thousands USD)
 labels = [
     "Engineering",
     "Marketing",
@@ -31,7 +44,7 @@ labels = [
 ]
 values = [950, 420, 680, 310, 160, 280, 820, 200, 130, 370, 230, 580, 470, 145, 175]
 
-# Group assignments - realistic organizational structure
+# Group assignments — organizational structure
 group_map = {
     "Engineering": "Engineering",
     "IT": "Engineering",
@@ -50,8 +63,9 @@ group_map = {
     "QA": "Compliance",
 }
 
-# Colorblind-safe palette with high hue separation
-group_colors = {"Engineering": "#306998", "Business": "#E8C33A", "Operations": "#D4654A", "Compliance": "#8B6DB0"}
+# Groups mapped to first 4 Imprint palette positions (canonical order)
+group_order = ["Engineering", "Business", "Operations", "Compliance"]
+group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(group_order)}
 colors = [group_colors[group_map[label]] for label in labels]
 
 # Scale values to radius (sqrt for area-proportional sizing)
@@ -71,8 +85,7 @@ values_sorted = [values[i] for i in order]
 colors_sorted = [colors[i] for i in order]
 groups_sorted = [group_map[labels[i]] for i in order]
 
-# Assign group IDs for clustering
-unique_groups = list(group_colors.keys())
+unique_groups = group_order
 group_ids = np.array([unique_groups.index(g) for g in groups_sorted])
 
 # Initial positions in spiral pattern for tighter convergence
@@ -86,90 +99,74 @@ for iteration in range(500):
     pull_strength = 0.06 * (1 - progress * 0.8)
     group_pull = 0.04 * (1 - progress * 0.5)
 
-    # Compute group centers of mass
     group_centers = {}
     for gid in range(len(unique_groups)):
         mask = group_ids == gid
         if np.any(mask):
             group_centers[gid] = positions[mask].mean(axis=0)
 
-    # Pull toward center + pull toward own group center
     for i in range(n):
         dist = np.linalg.norm(positions[i])
         if dist > 0.01:
             positions[i] -= pull_strength * positions[i] / dist
-
         gc = group_centers[group_ids[i]]
         to_group = gc - positions[i]
         gd = np.linalg.norm(to_group)
         if gd > 0.01:
             positions[i] += group_pull * to_group / gd
 
-    # Push apart overlapping circles
     for i in range(n):
         for j in range(i + 1, n):
             delta = positions[j] - positions[i]
             dist = np.linalg.norm(delta)
             same_group = group_ids[i] == group_ids[j]
-            gap = 0.04 if same_group else 0.15
+            gap = 0.06 if same_group else 0.20
             min_dist = radii_sorted[i] + radii_sorted[j] + gap
-
             if dist < min_dist and dist > 0.001:
                 overlap = (min_dist - dist) / 2
                 direction = delta / dist
                 positions[i] -= overlap * direction
                 positions[j] += overlap * direction
 
-# Center the layout: shift all positions so the bounding box is centered at origin
+# Center the layout
 bbox_min = positions.min(axis=0) - radii_sorted.max()
 bbox_max = positions.max(axis=0) + radii_sorted.max()
 positions -= (bbox_min + bbox_max) / 2
 
-# Plot (4800x2700 px at 300 dpi)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — square canvas for symmetric bubble chart (2400×2400 px at 400 dpi)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw circles using PatchCollection for efficient rendering
-circles = []
-face_colors = []
-for i in range(n):
-    circle = mpatches.Circle((positions[i, 0], positions[i, 1]), radii_sorted[i])
-    circles.append(circle)
-    face_colors.append(colors_sorted[i])
-
+# Draw circles with PatchCollection for efficient batch rendering
+circles = [mpatches.Circle((positions[i, 0], positions[i, 1]), radii_sorted[i]) for i in range(n)]
 collection = mcoll.PatchCollection(
-    circles, facecolors=face_colors, edgecolors="white", linewidths=2.5, alpha=0.90, zorder=2
+    circles, facecolors=colors_sorted, edgecolors=PAGE_BG, linewidths=2.0, alpha=0.90, zorder=2
 )
 ax.add_collection(collection)
 
-# Add labels inside circles that are large enough, external labels for small ones
+# Labels inside circles (if large enough)
 small_circles = []
 for i in range(n):
     label_chars = len(labels_sorted[i])
     min_r_for_label = 0.48 + label_chars * 0.018
     if radii_sorted[i] > min_r_for_label:
         font_scale = min(1.0, radii_sorted[i] / 1.4)
-        label_fontsize = max(12, int(15 * font_scale))
-        value_fontsize = max(12, int(13 * font_scale))
+        label_fontsize = max(10, int(12 * font_scale))
+        value_fontsize = max(9, int(10 * font_scale))
 
-        # Determine text color based on background luminance (WCAG relative luminance)
-        bg_color = colors_sorted[i]
-        rgb = [int(bg_color[j : j + 2], 16) / 255 for j in (1, 3, 5)]
+        # Contrast-appropriate text color (WCAG relative luminance)
+        bg_hex = colors_sorted[i]
+        rgb = [int(bg_hex[j : j + 2], 16) / 255 for j in (1, 3, 5)]
         luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
-        text_color = "#1a1a2e" if luminance > 0.45 else "white"
-        text_outline = (
-            pe.withStroke(linewidth=3, foreground="#00000033")
-            if luminance <= 0.45
-            else pe.withStroke(linewidth=3, foreground="#ffffff33")
-        )
+        text_color = "#1A1A17" if luminance > 0.35 else "#F0EFE8"
+        stroke_fg = "#00000033" if luminance > 0.35 else "#ffffff33"
+        stroke = pe.withStroke(linewidth=3, foreground=stroke_fg)
 
-        # Wrap long labels for smaller circles
         display_label = labels_sorted[i]
-        is_wrapped = False
-        if " " in display_label and radii_sorted[i] < 1.0:
+        is_wrapped = " " in display_label and radii_sorted[i] < 1.0
+        if is_wrapped:
             display_label = display_label.replace(" ", "\n")
-            is_wrapped = True
 
-        # Adjust vertical offsets for wrapped vs single-line labels
         label_y_offset = 0.05 if is_wrapped else 0.12
         value_y_offset = -0.35 if is_wrapped else -0.22
 
@@ -182,7 +179,7 @@ for i in range(n):
             fontsize=label_fontsize,
             fontweight="bold",
             color=text_color,
-            path_effects=[text_outline],
+            path_effects=[stroke],
             zorder=3,
         )
         ax.text(
@@ -194,7 +191,7 @@ for i in range(n):
             fontsize=value_fontsize,
             color=text_color,
             alpha=0.85,
-            path_effects=[text_outline],
+            path_effects=[stroke],
             zorder=3,
         )
     else:
@@ -204,61 +201,54 @@ for i in range(n):
 for i in small_circles:
     cx, cy = positions[i, 0], positions[i, 1]
     r = radii_sorted[i]
-
-    # Find direction away from center for label placement
     angle = np.arctan2(cy, cx)
-    offset_dist = r + 0.6
+    offset_dist = r + 0.58
     lx = cx + offset_dist * np.cos(angle)
     ly = cy + offset_dist * np.sin(angle)
-
     ax.annotate(
         f"{labels_sorted[i]}\n${values_sorted[i]}K",
-        xy=(cx, cy),
+        xy=(cx + r * np.cos(angle), cy + r * np.sin(angle)),
         xytext=(lx, ly),
-        fontsize=12,
+        fontsize=9,
         fontweight="bold",
-        color="#333333",
+        color=INK_SOFT,
         ha="center",
         va="center",
-        arrowprops={"arrowstyle": "-", "color": "#666666", "lw": 1.2, "shrinkA": 0, "shrinkB": 2},
+        arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 1.2, "shrinkA": 4, "shrinkB": 0},
         zorder=4,
     )
 
-# Axis limits with padding
-all_x = positions[:, 0]
-all_y = positions[:, 1]
+# Symmetric axis limits centered at origin
+all_x, all_y = positions[:, 0], positions[:, 1]
 max_r = radii_sorted.max()
-padding = 0.9
-ax.set_xlim(all_x.min() - max_r - padding, all_x.max() + max_r + padding)
-ax.set_ylim(all_y.min() - max_r - padding, all_y.max() + max_r + padding)
+half_extent = max(all_x.max() - all_x.min(), all_y.max() - all_y.min()) / 2 + max_r + 0.75
+ax.set_xlim(-half_extent, half_extent)
+ax.set_ylim(-half_extent, half_extent)
 ax.set_aspect("equal")
 ax.axis("off")
 
-# Title with total budget subtitle for context
-total_budget = sum(values)
-ax.set_title(
-    f"Department Budget Allocation (${total_budget / 1000:.1f}M Total)\nbubble-packed · matplotlib · pyplots.ai",
-    fontsize=24,
-    fontweight="bold",
-    pad=20,
-)
+# Title
+title = "bubble-packed · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
 
-# Legend for group colors
+# Legend for group colors with theme-adaptive frame
 legend_handles = [
-    mpatches.Patch(facecolor=color, edgecolor="white", linewidth=1.5, label=group)
+    mpatches.Patch(facecolor=color, edgecolor=PAGE_BG, linewidth=1.5, label=group)
     for group, color in group_colors.items()
 ]
-ax.legend(
+leg = ax.legend(
     handles=legend_handles,
     loc="lower right",
-    fontsize=16,
-    framealpha=0.9,
-    edgecolor="#cccccc",
-    fancybox=True,
+    fontsize=9,
+    fancybox=False,
     borderpad=0.8,
     handlelength=1.5,
     handleheight=1.2,
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+fig.subplots_adjust(left=0.02, right=0.98, top=0.91, bottom=0.02)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
