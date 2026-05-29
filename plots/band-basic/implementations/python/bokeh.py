@@ -1,99 +1,118 @@
-""" pyplots.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
-Library: bokeh 3.8.2 | Python 3.14
-Quality: 93/100 | Updated: 2026-02-23
+Library: bokeh | Python 3.13
+Quality: pending | Updated: 2026-05-29
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Solar irradiance forecast with 95% confidence interval
 np.random.seed(42)
 hours = np.linspace(6, 20, 120)  # 6 AM to 8 PM
 
-# Solar irradiance follows a bell curve peaking around solar noon (1 PM)
 peak_hour = 13.0
 irradiance = 850 * np.exp(-0.5 * ((hours - peak_hour) / 2.8) ** 2) + 50
 
-# Uncertainty is tight at midday (clear sky, predictable) but grows
-# in the afternoon when convective clouds develop — a dramatic shift
+# Uncertainty tight at midday (clear sky), widens in afternoon (convective clouds)
 base_uncertainty = 15 + 8 * np.abs(hours - peak_hour)
-# Sudden uncertainty spike after 3 PM (cloud development)
 afternoon_spike = 45 * np.clip((hours - 15) / 2, 0, 1) ** 1.5
 uncertainty = base_uncertainty + afternoon_spike
 
 y_upper = irradiance + 1.96 * uncertainty
-y_lower = np.maximum(irradiance - 1.96 * uncertainty, 0)  # Irradiance can't be negative
+y_lower = np.maximum(irradiance - 1.96 * uncertainty, 0)
 
 source = ColumnDataSource(data={"hours": hours, "irradiance": irradiance, "y_upper": y_upper, "y_lower": y_lower})
 
-# Create figure (4800 x 2700 px)
+# Plot
+title = "band-basic · python · bokeh · anyplot.ai"
+
 p = figure(
-    width=4800,
-    height=2700,
-    title="band-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_axis_label="Hour of Day",
     y_axis_label="Solar Irradiance (W/m²)",
     toolbar_location=None,
-    background_fill_color="#FAFBFD",
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Plot band using varea (idiomatic Bokeh band glyph)
+# Confidence interval band — first series → Imprint position 1
 p.varea(
     x="hours",
     y1="y_lower",
     y2="y_upper",
     source=source,
-    fill_color="#306998",
+    fill_color=IMPRINT_PALETTE[0],
     fill_alpha=0.25,
     legend_label="95% Confidence Interval",
 )
 
-# Plot center line — warm amber contrasts the cool blue band
-p.line(x="hours", y="irradiance", source=source, line_color="#E8910C", line_width=7, legend_label="Forecast Mean")
+# Forecast mean line — second series → Imprint position 2
+p.line(
+    x="hours", y="irradiance", source=source, line_color=IMPRINT_PALETTE[1], line_width=4, legend_label="Forecast Mean"
+)
 
-# Styling for 4800x2700 px
-p.title.text_font_size = "96pt"
-p.title.text_font_style = "normal"
-p.title.text_color = "#2B2B2B"
-p.xaxis.axis_label_text_font_size = "72pt"
-p.yaxis.axis_label_text_font_size = "72pt"
-p.xaxis.axis_label_text_color = "#444444"
-p.yaxis.axis_label_text_color = "#444444"
-p.xaxis.major_label_text_font_size = "56pt"
-p.yaxis.major_label_text_font_size = "56pt"
-p.xaxis.major_label_text_color = "#555555"
-p.yaxis.major_label_text_color = "#555555"
-
-# Remove outline, refined axis lines
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 p.outline_line_color = None
-p.xaxis.axis_line_color = "#AAAAAA"
-p.yaxis.axis_line_color = "#AAAAAA"
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
 
-# Grid styling - subtle dashed lines for depth
-p.xgrid.grid_line_alpha = 0.12
-p.ygrid.grid_line_alpha = 0.12
-p.xgrid.grid_line_dash = [6, 4]
-p.ygrid.grid_line_dash = [6, 4]
-p.xgrid.grid_line_color = "#999999"
-p.ygrid.grid_line_color = "#999999"
+p.title.text_font_size = "50pt"
+p.title.text_font_style = "normal"
+p.title.text_color = INK
 
-# Remove tick marks, keep labels
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.axis_line_width = 1
+p.yaxis.axis_line_width = 1
+
 p.xaxis.major_tick_line_color = None
 p.yaxis.major_tick_line_color = None
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-# Legend styling
-p.legend.label_text_font_size = "56pt"
-p.legend.label_text_color = "#444444"
+# Y-grid only (style guide: y-axis grid for line charts)
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
+
+# Legend
+p.legend.label_text_font_size = "34pt"
+p.legend.label_text_color = INK_SOFT
 p.legend.location = "top_right"
-p.legend.background_fill_color = "#FAFBFD"
+p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.85
 p.legend.border_line_color = None
 p.legend.glyph_width = 60
@@ -101,6 +120,29 @@ p.legend.glyph_height = 40
 p.legend.padding = 20
 p.legend.spacing = 12
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="band-basic · bokeh · pyplots.ai")
+# Save HTML artifact
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Selenium — export_png not used (snap driver incompatible)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# CDP override pins the viewport to exactly W×H at DPR=1, avoiding
+# headless-Chrome viewport-vs-window-size discrepancies
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
