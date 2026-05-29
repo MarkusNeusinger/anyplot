@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: band-basic
 created: '2026-05-29T17:45:34Z'
-updated: '2026-05-29T17:51:17Z'
+updated: '2026-05-29T18:02:30Z'
 generated_by: claude-sonnet
 workflow_run: 26652281793
 issue: 979
@@ -12,88 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: correctly uses Makie''s native band!() primitive with
-    semi-transparent fill and central trend line'
-  - 'Complete theme adaptation: all chrome tokens (title, labels, ticks, spines, grid,
-    legend frame/background) correctly flip between light and dark'
-  - Realistic, self-contained data scenario (60-day temperature forecast with widening
-    CI) that clearly demonstrates the band plot concept
-  - Clean, KISS code structure with no unnecessary abstractions
-  - Correct canvas size (3200x1800) via size=(1600,900) + px_per_unit=2
+  - Excellent spec compliance with all required band plot features correctly implemented
+  - 'Perfect code quality: idiomatic, reproducible, clean imports, correct output
+    API'
+  - Theme-adaptive chrome tokens applied correctly throughout — no dark-on-dark or
+    light-on-light failures
+  - bracket!() annotation is an impressively Makie-native technique adding specific
+    quantitative context
+  - Band alpha tuned separately per theme (0.25 light / 0.35 dark) — thoughtful adaptation
   weaknesses:
-  - 'Dark render band is somewhat subtle: alpha=0.25 of #009E73 over #1A1A17 produces
-    a low-contrast dark-teal fill (~RGB(20,59,46)), making the band boundary harder
-    to perceive — consider theme-conditional alpha (0.25 light / 0.35 dark)'
-  - Design excellence is close to the template skeleton; no standout aesthetic choices
-    or data callout that elevates it above a solid baseline
-  - 'LM-02 is low: implementation uses band!() correctly but doesn''t showcase additional
-    Makie-distinctive capabilities beyond the basic recipe pattern'
+  - 'Dark render band visibility reduced: (IMPRINT_PALETTE[1], 0.35) over #1A1A17
+    produces dark teal that lacks presence against near-black background — increase
+    BAND_ALPHA in dark mode to 0.45–0.55, or add thin boundary line strokes to reinforce
+    band edges'
+  - Bracket annotation is visually marginal in both renders — default bracket! styling
+    is too thin at 3200px canvas; increase fontsize to 13–14 and add linewidth=2 to
+    make it a genuine focal point
+  - Tick marks visible (xtickcolor/ytickcolor set to INK_SOFT) — suppressing them
+    (xticksize=0, yticksize=0) would increase visual cleanliness
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, not pure white
-      Chrome: Title "band-basic · julia · makie · anyplot.ai" in bold dark ink, clearly readable. X-axis label "Forecast Day" and Y-axis label "Temperature (°C)" in dark ink (INK token). Tick labels in INK_SOFT (#4A4A44), all clearly readable. Legend in bottom-right with elevated background (#FFFDF6) and frame.
-      Data: CI band in #009E73 at ~25% alpha (mint green fill); central forecast line in solid #009E73. Band widens progressively from day 1 to day 60. Seasonal oscillation visible in both band and line.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
+      Chrome: Title "band-basic · julia · makie · anyplot.ai" bold dark text, clearly readable. Axis labels "Forecast Day" (x) and "Temperature (°C)" (y) in dark INK color, readable. Tick labels in INK_SOFT (slightly softer dark), readable. Y-only grid lines very subtle.
+      Data: Semi-transparent green (#009E73, alpha~0.25) CI band filling the confidence interval region. Solid green (#009E73) center line clearly visible. Subtle dashed blue (#4467A3) horizontal line marks historical mean at 15°C. Legend shows 95% CI and Forecast mean entries.
+      Legibility verdict: PASS — all text elements are clearly readable against the off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, not pure black
-      Chrome: Title switches to light off-white (#F0EFE8), axis labels and tick labels use INK_SOFT dark token (#B8B7B0 — light gray). All text is clearly readable against dark background. No dark-on-dark failures detected. Legend background shifts to #242420 (elevated dark surface).
-      Data: CI band appears as dark teal region (~RGB(20,59,46)) due to alpha blending of #009E73 at 0.25 alpha over #1A1A17 — distinguishable but subtle. Central forecast line renders in full-brightness #009E73, clearly visible. Data colors are identical to light render (only chrome flips).
-      Legibility verdict: PASS (minor: band boundary slightly subtle in dark mode)
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and axis labels switch to near-white (INK=#F0EFE8 in dark mode), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0), readable. No dark-on-dark failures observed.
+      Data: CI band renders as dark teal (green #009E73 at 35% alpha over near-black) — distinguishable from background but with reduced contrast compared to light render. Center forecast line is fully opaque #009E73 bright green, clearly visible. Data colors are identical to light render — only chrome flips. Historical mean dashed line visible.
+      Legibility verdict: PASS for all chrome. Minor concern: band fill has reduced visual presence in dark mode due to semi-transparent green blending toward near-black.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=20, labels=14, ticks=12); fully
-          readable in both themes
+        comment: All font sizes explicitly set; readable in both themes. Bracket fontsize=11
+          on the small side for 3200px canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions; legend placed cleanly in bottom-right
+        comment: No text or data element collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Band and line clearly visible in light; band slightly subtle in dark
-          mode due to alpha blending over dark background
+        comment: Band clearly visible in light render; in dark mode semi-transparent
+          green blends toward near-black, reducing band distinctiveness. Center line
+          remains clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green; CVD-safe; no red-green sole signal
+        comment: Imprint palette; green + blue CVD-safe pair; no red-green sole-encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title ~65% width; balanced axis labels;
-          no overflow
+        comment: Canvas gate passed (3200x1800); title proportions good; generous
+          margins; no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Forecast Day and Temperature (°C) with unit; title matches spec format
+        comment: Forecast Day and Temperature (°C) with units; required title format
+          correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome correctly
-          flips'
+        comment: 'First series #009E73; historical mean uses Imprint blue #4467A3;
+          backgrounds #FAF8F1/#1A1A17; all chrome tokens theme-adaptive.'
     design_excellence:
       score: 12
       max: 20
@@ -103,22 +107,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, intentional alpha for band, spines removed,
-          custom legend elements; above default but closely follows template skeleton
+        comment: Imprint palette correctly applied; theme-adaptive band alpha is thoughtful;
+          bracket! annotation adds specificity. Lacks additional emphasis layers or
+          focal-point treatment.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, x-grid disabled (y-only), legend with elevated background
-          and frame; above minimal defaults
+        comment: Spines removed (top/right); Y-only subtle grid; elevated-bg legend
+          frame; alpha-blended band. Tick marks could be suppressed for cleaner look.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Widening CI communicates forecast uncertainty; seasonal oscillation
-          adds realism; no annotation highlighting key insight
+        comment: Widening CI band + central line + historical mean reference is solid
+          narrative. Bracket annotation quantifies final CI but is visually marginal
+          — fails as a strong focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled-band chart using Makie's native band!() primitive
+        comment: Correct band plot with filled region between y_lower and y_upper.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha ~0.25), central trend line, smooth continuous
-          data
+        comment: Semi-transparent fill; central trend line; smooth continuous data;
+          reference line providing context.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=days, y_lower/y_upper=CI boundaries, y_center=forecast mean; axes
-          show full range
+        comment: x=forecast days 1-60; y_lower/y_upper=95% CI bounds; y_center=mean
+          forecast.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is band-basic · julia · makie · anyplot.ai; legend labels 95%
-          CI and Forecast mean
+        comment: Title matches band-basic · julia · makie · anyplot.ai; legend entries
+          semantically correct.
     data_quality:
       score: 15
       max: 15
@@ -159,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Band fill, central line, widening uncertainty, seasonal oscillation
-          — full feature set
+        comment: CI band, central forecast trend, widening uncertainty, and reference
+          baseline all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 60-day temperature forecast with 95% CI is real-world plausible and
-          neutral
+        comment: 60-day temperature forecast with sinusoidal pattern and growing uncertainty
+          is realistic and domain-neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 10-25°C appropriate; widening sigma (0.5+0.05*day) creates
-          realistic spread
+        comment: Temperature 8-25°C over 60 days with sigma growing 0.5-3.5°C; plausible
+          forecast uncertainty.
     code_quality:
       score: 10
       max: 10
@@ -184,55 +190,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random all used; no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic, no fake UI
+        comment: Idiomatic Makie API; no fake UI or workarounds.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png; uses size= (current Makie API)
+        comment: Saves as plot-$(THEME).png with px_per_unit=2.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!() for filled region, hlines!() for reference, bracket!() for
+          annotation, axislegend() with PolyElement/LineElement — all idiomatic Makie
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses band!() (native Makie primitive), axislegend with PolyElement/LineElement
-          for custom legend — idiomatic
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: band!() is Makie-specific; RGBAf() color construction idiomatic;
-          but implementation stays close to template without showcasing more Makie
-          capabilities
+        comment: 'bracket!() is Makie-exclusive annotation primitive. RGBAf() color
+          construction and PolyElement/LineElement custom legend elements are distinctively
+          Makie. Minor gap: could leverage additional Makie-specific layout primitives.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - custom-legend
   patterns:
   - data-generation

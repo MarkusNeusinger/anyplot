@@ -1,7 +1,7 @@
 # anyplot.ai
 # band-basic: Basic Band Plot
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-05-29
+# Quality: 89/100 | Created: 2026-05-29
 
 using CairoMakie
 using Colors
