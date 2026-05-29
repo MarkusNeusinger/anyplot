@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 violin-basic: Basic Violin Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-29
+Quality: 89/100 | Updated: 2026-05-29
 """
 
 import os

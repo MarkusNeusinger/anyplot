@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:36:59Z'
-updated: '2026-05-29T11:36:47Z'
+updated: '2026-05-29T11:47:29Z'
 generated_by: claude-sonnet
 workflow_run: 26634387896
 issue: 722
@@ -12,135 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Creative use of Highcharts PolygonSeries with KDE-derived violin shapes — non-trivial
-    implementation that leverages a distinctive library feature
-  - Gradient fills (rgba 0.12→0.65→0.12) give the violin bodies a polished dimensional
-    look
-  - Four distinct distribution shapes (normal, bimodal, symmetric, exponential) tell
-    a clear statistical story
-  - Overall mean reference dashed line with label adds useful comparative context
-    across all groups
-  - 'Perfect Imprint palette compliance in correct canonical order (#009E73, #C475FD,
-    #4467A3, #BD8233)'
-  - Theme-adaptive chrome fully wired — background, text, grid, legend all adapt correctly
-    between light and dark
-  - 'Correct canvas handling: CDP viewport override + PIL safety net ensures exact
-    3200×1800 output'
-  - Clean KISS code structure with np.random.seed(42) for reproducibility
-  - Interactive HTML artifact saved alongside PNG — correct pattern for Highcharts
+  - Gradient fills (translucent edges to opaque center) create genuine visual depth
+    and sophistication on the violin shapes
+  - Bimodal Tutorial and right-skewed exponential Intensive distributions make the
+    comparison analytically rich and immediately readable
+  - 'Full theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG,
+    GRID) correctly applied in both renders; median lines use PAGE_BG for visibility
+    inside the fill'
+  - Interactive Highcharts tooltips display complete statistical summaries per group
+    (n, mean, median, Q1/Q3, std dev)
+  - PIL safety-net + CDP setDeviceMetricsOverride ensure exact 3200x1800 canvas without
+    drift
+  - Overall mean reference line with italic label adds cross-group comparison context
   weaknesses:
-  - 'Median line color uses PAGE_BG (#1A1A17 in dark mode = near-black), making it
-    nearly invisible against the dark background showing through the semi-transparent
-    violin bodies in the dark render. Fix: use theme-adaptive contrasting color —
-    e.g. `med_line.color = PAGE_BG if THEME == ''light'' else INK` (INK = #F0EFE8
-    in dark, which is off-white and visible against colored violins over dark background)'
-  - 'IQR boxes (rgba(color, 0.85)) are barely distinguishable within the violin body
-    since the violin center fill is already at 0.65 opacity of the same color family.
-    Fix: use PAGE_BG fill with a colored border (e.g. `box_series.fill_color = f''rgba({v["rgb"]},0.3)''`
-    and keep the colored border stroke at lineWidth=4) so the box reads as a distinct
-    region rather than blending into the violin'
+  - IQR boxes (box_width=0.10) are quite narrow relative to the violin body; increasing
+    to ~0.14-0.16 would make quartile markers more visually prominent without crowding
+  - No whiskers shown beyond the IQR box — adding thin lines from Q1/Q3 to min/max
+    data range (or 1.5*IQR) would complete the box-and-whisker element of the violin
+  - 'DE-01 stops short of publication-ready: the floating legend could be better integrated
+    and the Intensive violin''s long tail above 80 creates wasted vertical space;
+    consider tightening y-max to 100'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white
-      Chrome: Bold dark title "violin-basic · python · highcharts · anyplot.ai" fully visible at ~70% width; subtitle "Distribution of scores across 200 students per study group" in secondary dark color; Y-axis label "Test Score (points)" and X-axis label "Study Group" both dark and clear; tick labels in dark secondary color; dashed overall mean line at ~51 with italic label "Overall Mean (51)" at right edge; legend in top-right with colored swatches and readable text
-      Data: Four violin shapes — Control (#009E73 green), Tutorial (#C475FD lavender), Self-Study (#4467A3 blue), Intensive (#BD8233 ochre) — Imprint palette in canonical order; gradient fills (0.12→0.65→0.12 opacity) give dimensional look; white/off-white median lines clearly contrast against colored violin bodies; IQR boxes visible as slightly more opaque rectangles inside each violin (subtle but present); bimodal distribution of Tutorial clearly shows two humps; Intensive shows right-skewed exponential shape
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "violin-basic · python · highcharts · anyplot.ai" in dark #1A1A17, bold 66px — readable. Subtitle in #4A4A44 44px — readable. X-axis label "Study Group" and Y-axis label "Test Score (points)" in INK 56px — readable. Tick labels 44px INK_SOFT — readable. Legend text 44px — readable. Overall Mean label 36px italic — readable.
+      Data: Four violins — Control (#009E73 green), Tutorial (#C475FD lavender), Self-Study (#4467A3 blue), Intensive (#BD8233 ochre). Gradient fills from translucent edges to opaque center. White median line stripes visible. Small IQR boxes inside each violin. Dashed mean reference line visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title in light off-white text readable against dark background; subtitle in lighter secondary color visible; axis labels and tick labels in light-colored tokens — all readable; dashed overall mean line visible; legend readable with light text
-      Data: Data colors are identical to light render — same #009E73, #C475FD, #4467A3, #BD8233 (correct: Imprint palette is theme-invariant); violin shapes rendered correctly; ISSUE: median lines use PAGE_BG (#1A1A17 = near-black) which is nearly invisible against the dark background showing through the semi-transparent violin fills — lines are detectable but very faint compared to the white lines in light mode; IQR boxes similarly subtle; no dark-on-dark text failures for chrome elements
-      Legibility verdict: PASS for chrome text (all axis labels, title, ticks are readable in light-on-dark); PARTIAL FAIL for data elements — median lines barely visible in dark render due to near-black line color on dark background through semi-transparent violin fills
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: All text switches to light tones (#F0EFE8 title/axis labels, #B8B7B0 tick labels/legend/subtitle). No dark-on-dark failures detected. Grid lines subtle. Mean reference line and label visible.
+      Data: Colors identical to light render — green #009E73, lavender #C475FD, blue #4467A3, ochre #BD8233. Median lines appear as light-cream stripes (INK color in dark mode). IQR boxes visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66px, axis=56px, ticks/legend=44px);
-          proportions good; subtitle at 44px (same as tick labels) creates minor hierarchy
-          ambiguity but overall readable in both themes
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, legend 44px, mean label 36px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend in top-right away from data; all
-          text clear
+        comment: No text or data element collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Violin shapes highly visible; median lines white/clear in light mode
-          but near-black (PAGE_BG=#1A1A17) and barely visible in dark mode; IQR boxes
-          present but barely distinguishable from violin fill
+        comment: Violins and median lines prominent; IQR boxes (box_width=0.10) slightly
+          narrow relative to violin body
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; 4 hues span distinct perceptual families;
-          adequate contrast
+        comment: Imprint palette CVD-safe; four distinct hue families; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions; generous margins;
-          no overflow
+        comment: 3200x1800 canvas; generous margins; plot fills canvas well; legend
+          not obscuring data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Test Score (points)'' with units; X-axis: ''Study Group'';
-          title: correct format'
+        comment: 'X: Study Group, Y: Test Score (points) with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Control green); colors 2-4 in canonical Imprint
-          order; light bg #FAF8F1; dark bg #1A1A17; data colors identical across themes;
-          chrome adapts correctly'
+        comment: 'First series #009E73; positions 1-4 canonical Imprint order; correct
+          backgrounds; chrome theme-adaptive'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: gradient fills (0.12→0.65→0.12) give dimensional
-          depth; reference line annotation adds context; subtitle; clearly above well-configured
-          default'
+        comment: 'Above defaults: gradient fills, PAGE_BG median lines, overall mean
+          reference line, subtitle. Not publication-ready level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines (lineWidth=0 on axes, plotBorderWidth=0); subtle grid (15%
-          opacity); no tick marks (tickLength=0); clean whitespace; legend box border
-          slightly decorative but acceptable
+        comment: No spines (lineWidth 0), Y-axis grid only with 15% opacity GRID token,
+          generous margins, elevated legend background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Four distinct distribution shapes guide the eye: bimodal Tutorial
-          clearly shows two humps, Intensive''s exponential skew is striking; overall
-          mean reference provides cross-group comparison anchor'
+        comment: Bimodal Tutorial and skewed Intensive tell distinct stories; overall
+          mean reference line aids comparison; visual hierarchy present
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,29 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot using KDE-derived PolygonSeries — mirrored density
-          on both sides
+        comment: Correct violin plot with KDE-computed shapes, mirrored density, PolygonSeries
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Mirrored density present; median line present but barely visible
-          in dark mode (PAGE_BG=near-black issue); IQR box present but barely distinguishable
-          within violin body
+        comment: Quartile markers (IQR box), mirrored density, median line — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: study groups; Y: test scores; all 4 groups fully displayed'
+        comment: 'X: study groups, Y: test scores 0-100, all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''violin-basic · python · highcharts · anyplot.ai'' correct
-          format; legend shows all 4 categories with colors + Median entry'
+        comment: violin-basic · python · highcharts · anyplot.ai; legend shows all
+          four categories plus Median
     data_quality:
       score: 15
       max: 15
@@ -180,23 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all violin features: KDE density shape, mirrored, median,
-          quartiles; 4 distinct distribution types (normal, bimodal, symmetric, exponential)
-          demonstrate full range of violin capabilities'
+        comment: 'All violin aspects shown: KDE density, mirrored shape, median, IQR
+          box, four distinct distribution shapes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Educational study groups (Control/Tutorial/Self-Study/Intensive)
-          with test scores — realistic, neutral, comprehensible
+        comment: Test scores across study groups — plausible educational experiment,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Test scores 0-100 range; 200 students per group (realistic sample
-          size); np.random.seed(42) for reproducibility
+        comment: 200 students/group, scores 0-100, seed(42), exponential clipped correctly
     code_quality:
       score: 10
       max: 10
@@ -206,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat code: imports → data → chart config → series loops → export'
+        comment: Flat script; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -218,23 +198,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, highcharts_core (Chart/Options/PolygonSeries),
-          PIL, scipy.stats.gaussian_kde, selenium'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean structure; zip(..., strict=True) is idiomatic; no fake UI elements;
-          appropriate complexity for custom violin rendering
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-THEME.png and plot-THEME.html; current API; PIL safety-net
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -242,18 +220,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct container='container' pattern; CDN JS download + inline embedding
-          for headless Chrome; CDP setDeviceMetricsOverride for authoritative viewport;
-          PIL size safety net — all correct Highcharts/Selenium idioms
+        comment: 'All Highcharts-specific patterns: container, inline JS, CDP override,
+          chart.add_series(), highcharts-more.js'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: PolygonSeries for custom violin shapes is distinctively Highcharts
-          — most libraries don't have this primitive; linearGradient fills on polygon
-          fills showcase Highcharts-specific SVG gradient API; rich HTML tooltip format
-  verdict: REJECTED
+        comment: Interactive tooltips with stats on hover, linearGradient fill stops,
+          plotLines with formatted labels
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -262,7 +238,7 @@ impl_tags:
   techniques:
   - html-export
   - hover-tooltips
-  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
