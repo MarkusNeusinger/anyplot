@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: band-basic
 created: '2025-12-23T09:09:02Z'
-updated: '2026-05-29T17:33:10Z'
+updated: '2026-05-29T17:44:57Z'
 generated_by: claude-sonnet
 workflow_run: 26651601919
 issue: 979
@@ -12,47 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Band plot correctly implemented with varea() glyph and Imprint palette in canonical
-    order; both spec-required visual elements (fill + center line) present
-  - Solar irradiance with asymmetric CI is a realistic, scientifically meaningful
-    data context — the band shape itself tells the physical story (convective afternoon
-    clouds)
-  - 'Perfect code quality: flat KISS structure, seeded RNG, clean imports, CDP-accurate
-    Selenium screenshot'
-  - 'Full theme-adaptive chrome: all INK/INK_SOFT tokens wired to title, axis labels,
-    ticks, grid, legend — no dark-on-dark failures in either render'
-  - Canvas gate passed; min_border_* reservations prevent edge clipping
+  - Perfect spec compliance and data quality — solar irradiance confidence interval
+    is scientifically accurate and tells a real meteorological story
+  - Theme-adaptive alpha for the band fill (0.25 light / 0.38 dark) correctly solves
+    the compositing-on-dark-bg visibility problem
+  - CDP viewport override is an elegant solution for exact canvas dimensions in headless
+    Chrome
+  - 'Idiomatic Bokeh usage: varea + ColumnDataSource + output_file/save pattern'
   weaknesses:
-  - 'Dark mode band visibility: fill_alpha=0.25 on #1A1A17 background composites to
-    dark forest-green (~#143B2E) that is visible but less prominent than light render;
-    use fill_alpha=0.35-0.40 in dark theme'
-  - 'Axis label italic style not overridden: axis_label_text_font_style not set to
-    ''normal'' — both labels appear in bokeh default italic, reducing typographic
-    polish'
-  - Center line line_width=4 is not visually dominant against the band fill — increase
-    to 5-6 to create clearer focal point and visual hierarchy
-  - 'Descriptive title prefix unused: spec recommends communicating uncertainty source;
-    prefix like ''Solar Irradiance Forecast · '' would strengthen storytelling'
-  - p.legend.border_line_color = None deviates from library guide (INK_SOFT); in dark
-    mode the legend box has no edge definition against the dark background
+  - 'DE-02: Axis spine lines still visible at INK_SOFT color — removing them entirely
+    would add visual refinement'
+  - 'LM-02: No Bokeh-distinctive HoverTool in HTML artifact despite bokeh being an
+    interactive library — adding it would showcase Bokeh key strength over static
+    libraries'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct.
-      Chrome: Title 'band-basic · python · bokeh · anyplot.ai' in dark ink, top-left. Y-axis label 'Solar Irradiance (W/m²)' and X-axis label 'Hour of Day' in dark ink (bokeh default italic). Tick labels in muted gray (INK_SOFT). Legend top-right with ELEVATED_BG fill. Subtle horizontal gridlines at alpha=0.15. All chrome readable.
-      Data: Mint-green band (fill_color=#009E73 at alpha=0.25 composites to pale teal on cream) from y_lower to y_upper. Band narrows near hour 13 (peak irradiance), widens noticeably in afternoon (hours 16-20). Purple center line (#C475FD, line_width=4) traces forecast mean peaking at ~900 W/m² around 13:00.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Solar Irradiance Forecast · band-basic · python · bokeh · anyplot.ai" in dark #1A1A17 ink, ~85% width (expected for descriptive-prefix format). Axis labels "Hour of Day" / "Solar Irradiance (W/m²)" and tick labels in dark ink — all clearly readable against the light background
+      Data: Band fill in #009E73 (Imprint position 1) at alpha=0.25 forms smooth bell-shaped confidence region. Forecast mean line in #C475FD (Imprint position 2) clearly distinguishable. Subtle y-grid at 15% opacity.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct.
-      Chrome: Title, axis labels, tick labels all in warm cream/light text (INK token flipped to #F0EFE8, INK_SOFT to #B8B7B0). No dark-on-dark text failures. Legend box flipped to ELEVATED_BG #242420 with cream legend text. All chrome readable.
-      Data: Band fill uses same #009E73 but at alpha=0.25 on #1A1A17 background composites to ~#143B2E (dark forest-green) — visible and distinct from background but noticeably darker/less prominent than light mode. Purple center line (#C475FD) clearly visible against dark background. Data colors (fill_color and line_color hex values) are identical between themes; only rendered composite appearance changes due to alpha blending with different surface.
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title and axis labels rendered in light #F0EFE8 ink; tick labels in muted #B8B7B0 — all clearly readable against the dark background. No dark-on-dark failures observed. Legend uses #242420 elevated-surface background.
+      Data: Band fill is same #009E73 hex as light render but at alpha=0.38 (intentional increase to compensate for dark-bg compositing). Forecast line #C475FD identical to light render. Data colors are identical across themes; only chrome flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,73 +50,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; axis labels
-          in bokeh default italic (text_font_style not overridden to normal)
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks/legend). Readable in both themes. Extended descriptive prefix makes
+          title ~85% width — within expected range.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlapping text or data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Band and center line clearly visible in light mode; dark mode band
-          at alpha=0.25 composites to dark forest-green (~#143B2E) - visible but less
-          prominent
+        comment: Band and line clearly distinguishable in both themes. Alpha adaptation
+          (0.25 light / 0.38 dark) correctly maintains band visibility on dark surface.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; green/purple combination is CVD-safe
+        comment: Imprint green and lavender are CVD-safe. Good luminance contrast
+          between band fill and line.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions; min_border reservations prevent
-          edge clipping
+        comment: Canvas gate passed. Plot fills canvas well with balanced margins.
+          Legend in data area, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Solar Irradiance (W/m2) and Hour of Day are descriptive with units
+        comment: 'X: ''Hour of Day'', Y: ''Solar Irradiance (W/m²)'' with units. Title
+          correctly formatted.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD - canonical Imprint order;
-          backgrounds #FAF8F1/#1A1A17 correct; all chrome theme-adaptive'
+        comment: 'First series #009E73 correct. Second series #C475FD (position 2)
+          correct. Backgrounds #FAF8F1/#1A1A17. Chrome fully theme-adaptive in both
+          renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette, clean composition, interesting
-          data context; not yet at publication-quality polish'
+        passed: true
+        comment: Clean professional look with correct Imprint palette. Theme-adaptive
+          alpha is thoughtful. Above generic default but not publication-editorial
+          level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Box frame removed, tick marks hidden, y-grid only at alpha=0.15,
-          legend border removed; axis label italic not overridden
+        comment: Y-grid only at 15% opacity, tick marks removed, plot outline removed,
+          legend with elevated-surface background. Good refinement; axis spine lines
+          still present.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Asymmetric CI band tells physical story (convective afternoon clouds)
-          but no explicit focal-point emphasis; center line not visually dominant
+        passed: true
+        comment: Asymmetric band (narrow at midday, wide in afternoon due to convective
+          clouds) tells a scientifically accurate meteorological story. Natural visual
+          hierarchy without explicit annotation.
     spec_compliance:
       score: 15
       max: 15
@@ -136,53 +132,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct band plot: varea fill between bounds with central trend
-          line'
+        comment: Correct band plot with filled region between lower/upper bounds plus
+          central trend line.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill alpha=0.25, contrasting center line, smooth
-          120-point interpolation, 95% CI bounds
+        comment: Semi-transparent fill (alpha 0.25/0.38 within 0.2-0.4 range), central
+          contrasting line, smooth interpolation.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Hour of Day, Y=Solar Irradiance; full 6-20h range shown
+        comment: X = hour of day (6-20), Y = solar irradiance, all data visible within
+          axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'band-basic · python · bokeh · anyplot.ai' correct; legend
-          labels match data
+        comment: 'Title with descriptive prefix correct. Legend labels: ''95% Confidence
+          Interval'' and ''Forecast Mean''.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows fill, center line, and asymmetric bandwidth; descriptive title
-          prefix for uncertainty source unused
+        comment: Shows asymmetric band (narrow midday, wide afternoon), smooth Gaussian
+          irradiance curve, non-zero lower bound via np.maximum clip.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Solar irradiance forecast with 95% CI - real, neutral, scientifically
-          grounded; asymmetric afternoon uncertainty physically plausible
+        comment: Solar irradiance forecast with 95% confidence interval. Real-world
+          scientific scenario, neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-950 W/m2 solar irradiance range, peak at ~1 PM local solar noon
-          - factually correct
+        comment: Peak ~900 W/m2 at 13:00, tapering to ~50 W/m2 at dawn/dusk. Afternoon
+          uncertainty spike (convective clouds) is physically realistic.
     code_quality:
       score: 10
       max: 10
@@ -192,52 +189,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> constants -> data -> plot -> save; no functions
-          or classes'
+        comment: 'Flat structure: imports -> theme tokens -> data -> figure -> styling
+          -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: 'All imports used: os, time, pathlib, numpy, bokeh modules, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; CDP override for exact viewport sizing is sophisticated
+        comment: Clean, Pythonic. CDP override for exact viewport pinning is a smart
+          solution to the bokeh/headless-Chrome sizing discrepancy.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: varea() glyph correctly used; ColumnDataSource properly wired; Selenium
-          screenshot follows library guide including CDP Emulation.setDeviceMetricsOverride
+        comment: Uses ColumnDataSource, varea (bokeh's dedicated area/band method),
+          correct output_file+save pattern, Selenium for PNG rendering (correct pattern
+          for this environment).
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: varea() is Bokeh-specific area glyph; HTML output via output_file/save;
-          no HoverTool added to HTML output which would have been a distinctly Bokeh
-          showcase
-  verdict: REJECTED
+        comment: varea is Bokeh-specific. CDP device-metrics override for pixel-perfect
+          viewport sizing is a Selenium/bokeh-specific integration technique. Could
+          push further with HoverTool.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -249,4 +248,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
