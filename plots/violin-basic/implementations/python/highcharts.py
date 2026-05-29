@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-basic: Basic Violin Plot
-Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-02-21
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-29
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,15 +14,27 @@ import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.polygon import PolygonSeries
+from PIL import Image
 from scipy.stats import gaussian_kde
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - test scores across 4 study groups with distinct distributions
+# Theme tokens (Imprint palette + adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette positions 1–4 for the four categories
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+IMPRINT_RGB = ["0,158,115", "196,117,253", "68,103,163", "189,130,51"]
+
+# Data — test scores across 4 study groups with distinct distribution shapes
 np.random.seed(42)
 categories = ["Control", "Tutorial", "Self-Study", "Intensive"]
-colors = ["#306998", "#E5AB00", "#9467BD", "#17BECF"]
 
 raw_data = {
     "Control": np.random.normal(50, 12, 200),
@@ -30,14 +43,10 @@ raw_data = {
     "Intensive": np.clip(np.random.exponential(15, 200) + 30, 0, 100),
 }
 
-# RGB values for gradient fills
-colors_rgb = ["48,105,152", "229,171,0", "148,103,189", "23,190,207"]
-
-# Overall mean for reference line
 all_scores = np.concatenate(list(raw_data.values()))
 overall_mean = float(np.mean(all_scores))
 
-# Calculate KDE and statistics for each category
+# KDE + statistics per category
 violin_width = 0.35
 violin_data = []
 
@@ -48,7 +57,6 @@ for i, cat in enumerate(categories):
     kde_func = gaussian_kde(data)
     density = kde_func(y_grid)
     density_norm = density / density.max() * violin_width
-
     violin_data.append(
         {
             "category": cat,
@@ -61,70 +69,66 @@ for i, cat in enumerate(categories):
             "mean": float(np.mean(data)),
             "std": float(np.std(data)),
             "n": len(data),
-            "color": colors[i],
-            "rgb": colors_rgb[i],
+            "color": IMPRINT_PALETTE[i],
+            "rgb": IMPRINT_RGB[i],
         }
     )
 
-# Chart
+# Chart — 3200×1800 landscape canvas
+title = "violin-basic · python · highcharts · anyplot.ai"
+
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "scatter",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
     "plotBorderWidth": 0,
     "marginBottom": 180,
     "marginLeft": 240,
     "marginRight": 80,
     "marginTop": 200,
-    "animation": {"duration": 1000},
 }
 
-chart.options.title = {
-    "text": "violin-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold", "color": "#333333"},
-}
+chart.options.title = {"text": title, "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK}}
 
 chart.options.subtitle = {
-    "text": "Distribution of scores across 200 students per group",
-    "style": {"fontSize": "44px", "fontWeight": "normal", "color": "#777777"},
+    "text": "Distribution of scores across 200 students per study group",
+    "style": {"fontSize": "44px", "fontWeight": "normal", "color": INK_SOFT},
 }
 
 chart.options.x_axis = {
-    "title": {"text": "Study Group", "style": {"fontSize": "52px", "color": "#555555"}},
-    "labels": {"style": {"fontSize": "44px", "color": "#555555"}},
+    "title": {"text": "Study Group", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "min": -0.5,
     "max": 3.5,
     "tickPositions": [0, 1, 2, 3],
     "categories": categories,
     "lineWidth": 0,
     "tickLength": 0,
-    "crosshair": {"width": 2, "color": "rgba(0, 0, 0, 0.15)", "dashStyle": "Dash"},
 }
 
 chart.options.y_axis = {
-    "title": {"text": "Test Score (points)", "style": {"fontSize": "52px", "color": "#555555"}},
-    "labels": {"style": {"fontSize": "44px", "color": "#555555"}},
+    "title": {"text": "Test Score (points)", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.08)",
+    "gridLineColor": GRID,
     "lineWidth": 0,
     "min": 0,
     "max": 105,
     "tickInterval": 10,
-    "crosshair": {"width": 1, "color": "rgba(0, 0, 0, 0.12)", "dashStyle": "Dot"},
     "plotLines": [
         {
             "value": overall_mean,
-            "color": "rgba(0, 0, 0, 0.22)",
+            "color": INK_SOFT,
             "dashStyle": "LongDash",
             "width": 3,
             "zIndex": 3,
             "label": {
                 "text": f"Overall Mean ({overall_mean:.0f})",
-                "style": {"fontSize": "32px", "color": "rgba(0, 0, 0, 0.40)", "fontStyle": "italic"},
+                "style": {"fontSize": "36px", "color": INK_SOFT, "fontStyle": "italic"},
                 "align": "right",
                 "x": -15,
                 "y": -10,
@@ -135,7 +139,10 @@ chart.options.y_axis = {
 
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "40px", "color": "#555555"},
+    "itemStyle": {"fontSize": "44px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "verticalAlign": "top",
     "align": "right",
     "layout": "vertical",
@@ -150,27 +157,19 @@ chart.options.tooltip = {
     "enabled": True,
     "shared": False,
     "useHTML": True,
-    "style": {"fontSize": "28px"},
+    "style": {"fontSize": "32px"},
     "headerFormat": "",
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderColor": "#cccccc",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
-    "shadow": {"color": "rgba(0,0,0,0.15)", "offsetX": 2, "offsetY": 2, "width": 4},
 }
 
 chart.options.plot_options = {
-    "polygon": {
-        "lineWidth": 2,
-        "fillOpacity": 1.0,
-        "enableMouseTracking": True,
-        "animation": True,
-        "states": {"hover": {"lineWidth": 3, "brightness": 0.1}, "inactive": {"opacity": 0.4}},
-    },
+    "polygon": {"lineWidth": 2, "fillOpacity": 1.0, "enableMouseTracking": True},
     "scatter": {"marker": {"radius": 18, "symbol": "circle"}, "zIndex": 10, "enableMouseTracking": True},
-    "series": {"animation": {"duration": 1200, "easing": "easeOutBounce"}},
 }
 
-# Violin shapes as polygon series with tooltip showing statistics
+# Violin shapes as PolygonSeries with gradient fills
 for v in violin_data:
     polygon_points = []
     for y_val, dens in zip(v["y_grid"], v["density"], strict=True):
@@ -178,24 +177,16 @@ for v in violin_data:
     for j in range(len(v["y_grid"]) - 1, -1, -1):
         polygon_points.append([float(v["index"] - v["density"][j]), float(v["y_grid"][j])])
 
-    is_featured = v["category"] == "Tutorial"
-    center_alpha = "0.70" if is_featured else "0.55"
-    edge_alpha = "0.20" if is_featured else "0.12"
-
     series = PolygonSeries()
     series.data = polygon_points
     series.name = v["category"]
     series.color = v["color"]
     series.fill_color = {
         "linearGradient": {"x1": 0, "y1": 0, "x2": 1, "y2": 0},
-        "stops": [
-            [0, f"rgba({v['rgb']},{edge_alpha})"],
-            [0.5, f"rgba({v['rgb']},{center_alpha})"],
-            [1, f"rgba({v['rgb']},{edge_alpha})"],
-        ],
+        "stops": [[0, f"rgba({v['rgb']},0.12)"], [0.5, f"rgba({v['rgb']},0.65)"], [1, f"rgba({v['rgb']},0.12)"]],
     }
     series.fill_opacity = 1.0
-    series.line_width = 3 if is_featured else 2
+    series.line_width = 2
     series.tooltip = {
         "pointFormat": (
             f'<span style="font-size:32px;font-weight:bold;color:{v["color"]}">'
@@ -209,12 +200,11 @@ for v in violin_data:
     }
     chart.add_series(series)
 
-# Median lines (horizontal lines across each violin at the median position)
+# Median lines — PAGE_BG color so they contrast against the filled violin body
 for v in violin_data:
-    # Find density at median to determine line width
     kde_func = gaussian_kde(raw_data[v["category"]])
     med_density = kde_func(v["median"])[0]
-    max_density = max(kde_func(v["y_grid"]))
+    max_density = float(max(kde_func(v["y_grid"])))
     line_half_width = (med_density / max_density) * violin_width * 0.85
 
     med_line = PolygonSeries()
@@ -224,7 +214,7 @@ for v in violin_data:
     ]
     med_line.name = "Median" if v["index"] == 0 else f"Median {v['category']}"
     med_line.show_in_legend = v["index"] == 0
-    med_line.color = "#ffffff"
+    med_line.color = PAGE_BG if THEME == "light" else INK
     med_line.line_width = 8
     med_line.fill_opacity = 0
     med_line.z_index = 15
@@ -232,7 +222,7 @@ for v in violin_data:
     med_line.marker = {"enabled": False}
     chart.add_series(med_line)
 
-# IQR boxes (thin rectangles for interquartile range)
+# IQR boxes — category-coloured border over semi-transparent category fill
 for v in violin_data:
     box_width = 0.10
     box_points = [
@@ -246,13 +236,15 @@ for v in violin_data:
     box_series.data = box_points
     box_series.name = f"{v['category']} IQR"
     box_series.show_in_legend = False
-    box_series.color = "#333333"
-    box_series.fill_color = "#333333"
-    box_series.fill_opacity = 0.85
+    box_series.color = v["color"]
+    box_series.fill_color = f"rgba({v['rgb']},0.3)"
+    box_series.fill_opacity = 1.0
+    box_series.line_width = 4
+    box_series.z_index = 12
     box_series.enable_mouse_tracking = False
     chart.add_series(box_series)
 
-# Export
+# Export — download Highcharts JS for inline embedding (headless Chrome blocks CDN)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
@@ -263,23 +255,6 @@ with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
 
 html_str = chart.to_js_literal()
 
-# plot.html for interactive viewing (CDN links for browser)
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/highcharts-more.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(standalone_html)
-
-# Temp HTML for screenshot (inline JS for headless Chrome)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -287,30 +262,42 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Screenshot
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4900,2800")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override makes the viewport authoritative (--window-size alone is eaten by Chrome chrome)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact canvas dims — safety net for ±1–2 px Chrome rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
