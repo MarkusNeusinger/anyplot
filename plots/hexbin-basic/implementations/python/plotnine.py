@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-29
@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     coord_fixed,
     element_blank,
     element_rect,
@@ -33,7 +34,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 np.random.seed(42)
 
-# Data — Seismic sensor readings with clustered epicenters
+# Data — seismic epicenters with multi-cluster distribution (Eastern Mediterranean)
 lon = np.concatenate(
     [
         np.random.normal(35.5, 0.8, 2500),  # Primary fault zone
@@ -63,9 +64,8 @@ col_idx = np.round((lon - offset) / hex_w).astype(int)
 bin_df = pd.DataFrame({"cx": np.round(col_idx * hex_w + offset, 6), "cy": np.round(row_idx * hex_h, 6)})
 counts = bin_df.groupby(["cx", "cy"]).size().reset_index(name="count")
 
-# Build hex polygon vertices (fully vectorized)
-# Slight oversize (1.05x) closes cosmetic gaps in sparse regions
-r = hex_w / np.sqrt(3) * 1.05
+# Build hex polygon vertices — oversize 1.08 minimises gaps in sparse regions
+r = hex_w / np.sqrt(3) * 1.08
 angles = np.linspace(0, 2 * np.pi, 7)[:-1] + np.pi / 6
 n = len(counts)
 
@@ -85,6 +85,9 @@ plot = (
     ggplot(hex_df, aes(x="x", y="y", group="hex_id", fill="count"))
     + geom_polygon(color=PAGE_BG, size=0.15)
     + scale_fill_gradient(low="#009E73", high="#4467A3", name="Event Count", guide=guide_colorbar(nbin=200))
+    # Focal annotations identifying the two main seismic clusters
+    + annotate("text", x=32.2, y=37.1, label="Primary\nFault Zone →", size=3, color=INK, ha="left")
+    + annotate("text", x=38.8, y=38.6, label="← Aftershock\n   Region", size=3, color=INK, ha="right")
     + coord_fixed(ratio=1)
     + labs(x="Longitude (°E)", y="Latitude (°N)", title=title)
     + theme_minimal()
