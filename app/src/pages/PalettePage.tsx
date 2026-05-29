@@ -843,7 +843,7 @@ export function PalettePage() {
                 <Box sx={{
                   height: 28,
                   borderRadius: 1,
-                  background: 'linear-gradient(to right, #AE3030, #FAF8F1, #4467A3)',
+                  background: 'linear-gradient(to right, #AE3030, var(--bg-surface), #4467A3)',
                   boxShadow: '0 0 0 1px var(--rule)',
                 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
