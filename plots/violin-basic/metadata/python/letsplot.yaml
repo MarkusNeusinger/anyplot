@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:36:17Z'
-updated: '2026-05-29T11:40:38Z'
+updated: '2026-05-29T11:53:13Z'
 generated_by: claude-sonnet
 workflow_run: 26634472954
 issue: 722
@@ -12,46 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Spec-perfect implementation: all required violin features (mirrored KDE, quartile
-    markers, median line) present and correct'
-  - 'Deliberate data design: bimodal Engineering distribution is the ideal showcase
-    for why violin plots beat box plots — shows the junior/senior salary split that
-    a box plot would hide'
-  - Imprint palette correctly applied in canonical order; both theme renders are accurate
-    with proper chrome token usage
-  - Dollar-formatted Y-axis (scale_y_continuous format parameter) adds immediate data
-    context without extra code
-  - Clean, reproducible code with random seed; all imports used; no dead code
+  - Correct Imprint palette in canonical order — Engineering (#009E73) first, all
+    four positions verified in both renders
+  - 'Perfect theme-adaptive chrome: INK/INK_SOFT/PAGE_BG tokens threaded through title,
+    axis, grid, and background in both light and dark renders'
+  - 'Excellent data design: bimodal Engineering, right-skewed Sales, and distinct
+    distribution shapes per category — intentionally showcases violin-over-boxplot
+    advantage'
+  - Departments ordered by descending median salary for intuitive visual storytelling
+  - Distinctive lets_plot layer_tooltips API with computed statistic references (@{..middle..},
+    @{..lower..}, @{..upper..}) and dollar format specifiers — not replicable in static
+    libraries
+  - Narrow geom_boxplot overlay (width=0.10) elegantly shows quartile markers without
+    overpowering the violin shape
+  - Subtle Y-axis-only grid (size=0.2) and axis_ticks=element_blank() demonstrate
+    deliberate visual refinement
+  - 'Full spec compliance: violin density, mirrored shape, embedded boxplot quartile
+    markers, and median line all present'
   weaknesses:
-  - Boxplot overlay (width=0.07) is very narrow — the IQR box appears as a thin sliver,
-    making Q1/Q3 boundaries hard to read precisely; widening to 0.10–0.12 would improve
-    quartile readability without dominating the violin shape
-  - Design violin KDE extends significantly below $20k (to ~$10k) due to trim=False
-    with a normal distribution clipped at $30k; either set explicit Y limits (e.g.,
-    scale_y_continuous(limits=[20000, 180000])) or use trim=True to stop at data boundaries
-    — the long tail adds visual noise
-  - HTML output is generated but has no interactive tooltip configuration; adding
-    geom_tooltip or similar would leverage letsplot's primary advantage over ggplot2
-  - Light-colored median marker visible in dark render Sales violin (letsplot internal
-    boxplot rendering) — minor visual quirk, not a blocking issue
+  - 'DE-01 (5/8): Design is polished and above defaults but does not yet reach publication-ready
+    level — consider removing the remaining panel border, adding a subtle outer padding,
+    or using font weight variation on the title to create stronger visual hierarchy'
+  - 'DE-02 (4/6): Visual refinement is good but the panel border/frame is still visible
+    in both renders; removing it would push refinement to the next level'
+  - 'VQ-01 (7/8): title size=16 is within spec for the long mandated string, but at
+    full 3200px resolution the title reads compact against the generous canvas — a
+    size=14 with a descriptive prefix, or staying at 16 with slightly adjusted plot
+    padding, would improve the title presence'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "violin-basic · python · letsplot · anyplot.ai" left-aligned, dark text, size=16 — readable. Y-axis label "Salary" and X-axis label "Department" in dark secondary text — readable. Dollar-formatted tick labels ($20,000–$160,000) in dark muted text — readable.
-      Data: Four violins in Imprint palette canonical order — Engineering (#009E73 green), Design (#C475FD lavender), Marketing (#4467A3 blue), Sales (#BD8233 ochre). Thin white boxplot overlays (width=0.07) show IQR and whiskers. Horizontal Y-axis grid lines only, very subtle.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — confirmed correct anyplot surface.
+      Chrome: Title "violin-basic · python · letsplot · anyplot.ai" rendered in dark #1A1A17 ink, top-left, readable. Axis label "Salary" (y) and "Department" (x) in dark ink at size=12. Tick labels (dollar-formatted $30,000–$150,000 on y; category names on x) in INK_SOFT #4A4A44 at size=10. Subtle horizontal grid lines (y-axis only, size=0.2). No tick marks.
+      Data: Four violins — Engineering (#009E73 green, bimodal wide shape), Design (#C475FD lavender, normally distributed), Marketing (#4467A3 blue, moderate spread), Sales (#BD8233 ochre, right-skewed narrow cone). Each violin has a narrow embedded white boxplot (width=0.10) with dark outline, visible median line, and whiskers. Alpha=0.82 gives semi-transparency without muddiness.
+      Legibility verdict: PASS — all title, axis label, tick label text clearly readable on warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and axis labels rendered in light cream (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No "dark-on-dark" failures detected. Tick labels visible in secondary light text.
-      Data: Violin colors identical to light render — Engineering green, Design lavender, Marketing blue, Sales ochre. Boxplot box fills adapt to dark background (fill=#1A1A17), borders light (INK=#F0EFE8). Small light-colored circular median marker visible in Sales violin at ~$97k — letsplot internal rendering, minor quirk.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — confirmed correct dark surface.
+      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels in light ink. Tick labels in INK_SOFT #B8B7B0 (light gray) — all readable. Grid lines subtle light rules visible on dark background. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — Engineering #009E73, Design #C475FD, Marketing #4467A3, Sales #BD8233. The embedded boxplot boxes now show as dark (#1A1A17) windows cut into the violin shapes with light (#F0EFE8) outlines, creating a clean visual separation. Median lines and whiskers visible in light ink.
+      Legibility verdict: PASS — all text elements readable in light ink against near-black background; no dark-on-dark issues; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,48 +64,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both renders; style-guide default sizes used;
-          minor: left-aligned title leaves large right gap'
+        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10).
+          Both renders readable. Title compact at size=16 for a long string — minor,
+          within expected range.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; well-spaced violin bodies
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Violin bodies vivid; boxplot overlay width=0.07 is narrow making
-          Q1/Q3 box hard to read precisely
+        comment: Violin shapes fully visible with alpha=0.82. Boxplot quartile markers,
+          median line, and whiskers clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; no red-green sole signal
+        comment: Imprint palette is CVD-optimised. Four distinct hue families provide
+          excellent discrimination.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions; violin KDE tails
-          within canvas bounds
+        comment: Canvas gate passed (3200x1800px). Violins well-spaced and proportioned.
+          Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Salary and Department descriptive; dollar formatting provides implicit
-          units
+        comment: 'Y-axis: ''Salary'' with $-formatted tick labels. X-axis: ''Department''.
+          Title correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; positions 1-4 canonical order; bg #FAF8F1
-          light / #1A1A17 dark; colors identical across renders'
+        comment: 'First series Engineering = #009E73 (brand green). Canonical Imprint
+          order positions 1-4. PAGE_BG #FAF8F1/#1A1A17 correct. All chrome tokens
+          adaptive. Both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -110,22 +118,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default: deliberate bimodal/skewed data design, thin boxplot
-          overlay, dollar formatting, no legend'
+        comment: 'Above well-configured default: Imprint palette, adaptive chrome,
+          legend removed, ordered categories. Not yet publication-ready — panel border
+          still visible, no typographic weight variation.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines; Y-only grid; tick marks removed; alpha=0.82
-          on violins; legend omitted
+        comment: 'Good refinement: Y-axis only grid at size=0.2, tick marks removed
+          (axis_ticks=element_blank), legend removed, theme_minimal base. Panel border
+          still visible — would benefit from removal.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal Engineering vs skewed Sales vs normal Design/Marketing tells
-          clear comparative story
+        comment: 'Clear storytelling: departments ordered by descending median salary;
+          each category has distinct distribution shape (bimodal Engineering, right-skewed
+          Sales, normal Design) designed to showcase violin strengths.'
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot using geom_violin
+        comment: Correct violin plot with mirrored density (default lets_plot behavior).
+          All 4 categories shown.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quartile markers (boxplot overlay), mirrored density (default violin),
-          median line (inside box) all present
+        comment: Quartile markers via geom_boxplot overlay, mirrored density (default),
+          median line visible in boxplot. All spec features present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department, Y=Salary; all categories shown; full data range visible
+        comment: X=Department (categorical), Y=Salary (numeric). All data points visible
+          across full salary range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'violin-basic · python · letsplot · anyplot.ai'; no
-          legend appropriate
+        comment: 'Title: ''violin-basic · python · letsplot · anyplot.ai'' — exact
+          format. Legend suppressed (legend_position=''none'') — appropriate since
+          x-axis serves as category identifier.'
     data_quality:
       score: 15
       max: 15
@@ -165,20 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All violin aspects: KDE shape, IQR box, median, whiskers, diverse
-          distribution shapes'
+        comment: 'Excellent: bimodal (Engineering), right-skewed exponential (Sales),
+          normal (Design), multi-modal with high-earner cluster (Marketing). Shows
+          full range of violin plot capability.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary by department realistic and neutral
+        comment: Real salary distribution scenario for US tech company departments.
+          Neutral, comprehensible business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $30k-$170k range plausible; 120-200 points per category appropriate
+        comment: Salary ranges $30k-$150k realistic. Engineering bimodal ~$70k/$115k,
+          Design ~$80k, Marketing ~$72k, Sales right-skewed from ~$45k — all factually
+          plausible for US tech industry.
     code_quality:
       score: 10
       max: 10
@@ -188,58 +206,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear script flow
+        comment: 'Clean linear flow: imports → tokens → data → plot → save. No classes
+          or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) before all data generation
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 17 lets_plot symbols used; os/numpy/pandas all used
+        comment: 'All imports are used: os, numpy, pandas, and all lets_plot named
+          imports verified against usage.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise layer composition; no fake UI; clean parameter names
+        comment: Elegant dict(zip(dept_order, IMPRINT_PALETTE, strict=True)). layer_tooltips
+          used for HTML interactivity (not fake static tooltips). Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. ggsave with scale=4
+          for correct 3200x1800px output.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2-grammar usage: aes(), geom_violin, geom_boxplot,
+          scale_fill_manual, scale_y_continuous with format, labs, theme_minimal +
+          theme, ggsize, ggsave — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layers; scale_fill_manual with dict mapping;
-          scale_x_discrete for ordering; format parameter; ggsize+ggsave canonical
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export generated; dollar format parameter shows library knowledge;
-          but no tooltip configuration in HTML — misses letsplot's key interactive
-          differentiator
+        comment: layer_tooltips() with computed statistic references (@{..middle..},
+          @{..lower..}, @{..upper..}) and currency format specifiers is distinctly
+          lets_plot — not available in static libraries. HTML export also distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling

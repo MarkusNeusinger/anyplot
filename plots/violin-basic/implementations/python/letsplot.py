@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 violin-basic: Basic Violin Plot
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-29
+Quality: 91/100 | Updated: 2026-05-29
 """
 
 import os
