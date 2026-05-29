@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:42:27Z'
-updated: '2026-05-29T05:57:23Z'
+updated: '2026-05-29T06:08:25Z'
 generated_by: claude-sonnet
 workflow_run: 26620376064
 issue: 4131
@@ -12,45 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Correct chart type with cumulative variance line as primary series in brand green
-    (#009E73)
-  - 'Full spec compliance: 90%/95% threshold lines, diamond markers at crossings,
-    individual variance bar overlay'
-  - 'Semantic color anchors: amber (#DDCC77) for 90% warning threshold, lavender (#C475FD)
-    for 95% information threshold'
-  - Callout annotations clearly communicate key insights (3 components → 90%, 4 components
-    → 95.3%)
-  - Perfect theme adaptation with all chrome tokens correctly applied to both light
-    and dark renders
-  - 'Complete code quality: seed for reproducibility, clean imports, HTML artifact
-    alongside PNG'
-  - Realistic synthetic data using correlated latent factors with eigendecomposition
-    — plausible PCA result
+  - 'Excellent spec compliance: cumulative line, threshold reference lines, discrete
+    markers, and optional individual-variance bar overlay all implemented correctly'
+  - Highcharts annotations module with callout shapes used idiomatically — a library-distinctive
+    feature not replicable in matplotlib
+  - Theme adaptation is thorough and correct in both renders; dark mode has zero dark-on-dark
+    failures
+  - Industrial sensor data with 3 latent factors produces a realistic, well-shaped
+    PCA elbow curve
+  - Semi-transparent individual variance bars as layered background context is a thoughtful
+    design choice showing visual hierarchy
   weaknesses:
-  - Annotation text (26px) and threshold line labels (34px) are small relative to
-    the 3200px canvas — at 400px mobile render they will be ~3–4px, likely unreadable
-  - 'Individual variance columns in dark theme are barely distinguishable from the
-    #1A1A17 background (rgba(68,103,163,0.25) composites to ~#252D39 on dark) — consider
-    a slightly higher alpha or a lighter base color for dark mode'
-  - LineSeries is imported from highcharts_core.options.series.area rather than the
-    canonical highcharts_core.options.series.line module
+  - '95% annotation callout is invisible in both renders — overlaps the 90% annotation
+    because both threshold crossings (components 3 and 4) are adjacent on x-axis with
+    identical y-offset (y:60). Fix: offset the 95% callout to y:-80, x:40 or verticalAlign:bottom
+    so the two callouts separate visually'
+  - 'First series added to chart (Individual Variance columns) uses Imprint position
+    3 (#4467A3) rather than #009E73, violating the hard first-series rule. Fix: insert
+    the cumulative LineSeries first and push the ColumnSeries behind it using explicit
+    zIndex values'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
-      Chrome: Title "PCA Component Selection · line-pca-variance-cumulative · python · highcharts · anyplot.ai" in dark #1A1A17 text, readable. Subtitle in muted gray below. X-axis label "Number of Components" and Y-axis label "Explained Variance (%)" in dark ink, clearly readable. Tick labels 1–12 (x) and 0%–100% (y) in secondary ink (#4A4A44), readable.
-      Data: Green (#009E73) cumulative variance line with circular markers rises steeply from component 1 (~48%) to component 3 (~90%), then flattens. Semi-transparent blue-alpha column bars show individual variance in background. Amber (#DDCC77) dashed horizontal reference line at 90%. Lavender (#C475FD) dashed reference line at 95%. Diamond markers at threshold crossings (amber at component 3, lavender at component 4). Two callout annotation boxes: "Only 3 components explain 90.0% of variance" and "4 components reach 95.3% — diminishing returns beyond".
-      Legend: Floating vertical legend (lower-right) on elevated background (#FFFDF6) with border, showing all 4 series.
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title at ~50 px (dynamically scaled for 89-char string), axis labels 56 px, ticks 44 px — all dark (INK=#1A1A17), subtitle in INK_MUTED. All readable against light background.
+      Data: Green cumulative line (#009E73) with radius-10 circle markers is the primary visual. Semi-transparent blue columns (#4467A3, alpha=0.25) as background. Amber (#DDCC77) and lavender (#C475FD) dashed threshold lines with inline labels. Diamond markers at components 3 and 4. One annotation callout visible ("Only 3 components explain 90.0% of variance"); 95% callout not visible due to overlap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
-      Chrome: Title and subtitle render in light (#F0EFE8) text — clearly readable against dark background. Axis labels and tick labels in secondary light ink (#B8B7B0), clearly readable. No dark-on-dark failures observed.
-      Data: Cumulative variance line remains identical brand green (#009E73) — data colors unchanged from light render ✓. The amber (#DDCC77) and lavender (#C475FD) threshold lines and diamond markers are identical colors ✓. Individual variance column bars composite to a very dark blue-gray (~#252D39) on the dark background — barely visible but intentionally secondary.
-      Legend: Elevated dark background (#242420) with light text — readable.
-      Legibility verdict: PASS — all primary text readable. Minor note: individual variance columns are very faint in dark mode (intentional semi-transparency composites very dark against #1A1A17).
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, ticks all switch to INK=#F0EFE8 and INK_SOFT=#B8B7B0 — light text clearly readable against dark surface. No dark-on-dark failures. Legend box uses ELEVATED_BG=#242420. Annotation callout uses ANNOTATION_BG=rgba(36,36,32,0.92) with INK-colored text.
+      Data: Green cumulative line (#009E73) identical to light render. Blue columns now alpha=0.55 for dark-surface visibility. Amber and lavender threshold lines/markers unchanged. Colors are identical across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 27
@@ -58,51 +53,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All primary text readable in both themes; annotation text (26px)
-          and threshold line labels (34px) will be ~3–4px at 400px mobile scale —
-          borderline
+        comment: 'All sizes explicitly set: title 50px (dynamically scaled), axis
+          labels 56px, ticks 44px. Both renders readable.'
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: 95% annotation callout invisible in both renders — overlaps with
+          90% callout at adjacent chart positions (components 3 and 4, same y-offset).
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; callout boxes positioned cleanly
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Cumulative line and markers very clear; individual variance columns
-          nearly invisible in dark mode (alpha composites to ~#252D39 on #1A1A17)'
+        comment: Green line with large markers prominent; semi-transparent bars fade
+          to background; diamond threshold markers clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; semantic amber/lavender are Tol palette
-          anchors
+        comment: Green/blue/amber/lavender are CVD-distinct; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, generous 80px margins, good proportions
+        comment: Canvas exactly 3200x1800; gate passed; balanced margins; plot fills
+          canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title in correct anyplot.ai format
+        comment: Y-axis Explained Variance (%), X-axis Number of Components — both
+          descriptive with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Primary line uses #009E73; columns use Imprint blue; reference lines
-          use semantic anchors; backgrounds correct'
+        passed: false
+        comment: 'Partial: cumulative line correctly uses #009E73 but first series
+          added (columns) uses Imprint position 3 (#4467A3). Theme backgrounds correct
+          in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -112,22 +109,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color hierarchy (amber=warning, lavender=info),
-          callout annotations, subtitle, shadow on line — above default but not exceptional
+        comment: Shadow on cumulative line, semi-transparent bars as layered context,
+          diamond threshold markers, Imprint palette throughout. Above defaults but
+          not publication-perfect.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Alpha-blended columns create depth, elevated legend with border,
-          dotted grid, generous spacing, line shadow — clearly refined above defaults
+        comment: Dotted Y-axis grid at 15% opacity; generous explicit spacing; legend
+          with elevated BG and rounded border.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point (green line), visual hierarchy (columns recede),
-          callout annotations with key messages — above default
+        comment: 'Clear hierarchy: green line hero, blue bars context, threshold lines
+          guide decisions. Impact reduced by invisible 95% annotation.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for cumulative variance
+        comment: Primary line chart for cumulative variance with optional bar overlay
+          — correct combo type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative sum, percentage axis, 90%/95% dashed reference lines,
-          threshold markers, optional individual variance bars — all present
+        comment: Cumulative sum, percentage scale, 90% and 95% dashed reference lines,
+          discrete markers, individual variance bars all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=components 1-12, Y=cumulative variance %, x-axis starts at 1
+        comment: X=components 1-12, Y=0-100% variance. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive Title} · {spec-id} · python · highcharts
-          · anyplot.ai format; legend labels correct
+        comment: Title uses optional descriptive-prefix format correctly. Legend entries
+          match series names.
     data_quality:
       score: 15
       max: 15
@@ -167,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows cumulative variance, individual variance, threshold lines,
-          annotated crossings, elbow pattern
+        comment: Shows elbow curve, rapid initial gain, plateau, threshold crossings,
+          full 12-component range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Industrial sensor data with correlated latent factors — realistic
-          PCA setup, first component ~48% is plausible
+        comment: Industrial sensor data with 3 latent factors; realistic covariance;
+          neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–100% scale, 12 components, sensible eigenvalue distribution
+        comment: 3 components reaching 90% realistic for 3-latent-factor data; proportions
+          align with real PCA behaviour.
     code_quality:
       score: 10
       max: 10
@@ -191,51 +191,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear script
+        comment: Linear imports→data→chart→series→export, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All 14 imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: No fake UI; appropriate complexity; CDN fallback URLs are good resilience
+          practice.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct Chart(container=''container''), CDP override, PIL safety
-          net — idiomatic per guide. Minor: LineSeries imported from .area rather
-          than .line module'
+        comment: Annotations module wired correctly; plotLines for threshold lines;
+          chart.to_js_literal(); CDP viewport override — all idiomatic Highcharts.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Annotations module (separate JS), multiple series types, plot lines
-          with labels, callout shapes, floating legend, shared tooltips — good Highcharts
-          showcase
+        comment: Highcharts annotations module with callout shapes; plotLines with
+          inline labels; HTML artifact. -1 because second annotation is invisible.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -244,6 +243,7 @@ impl_tags:
   techniques:
   - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
