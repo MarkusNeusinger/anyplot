@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
@@ -147,14 +147,6 @@ pad = (x_hi - x_lo) * 0.04
 # Abbreviations for long names
 _abbrev = {"Customer Support": "Support", "Operations": "Ops", "Security": "Sec"}
 
-
-def tier_label(cat: str, val: int) -> str:
-    name = _abbrev.get(cat, cat)
-    if val >= 55:
-        return f"{name}\n${val}M"
-    return name
-
-
 df = pd.DataFrame(
     {
         "x": x,
@@ -164,7 +156,10 @@ df = pd.DataFrame(
         "budget_val": values,
         "budget": [f"${v}M" for v in values],
         "diameter": radii * 2,
-        "display_label": [tier_label(c, v) for c, v in zip(categories, values, strict=True)],
+        "display_label": [
+            (_abbrev.get(c, c) + f"\n${v}M") if v >= 55 else _abbrev.get(c, c)
+            for c, v in zip(categories, values, strict=True)
+        ],
     }
 )
 
@@ -194,7 +189,7 @@ plot = (
     + xlim(x_lo - pad, x_hi + pad)
     + ylim(y_lo - pad, y_hi + pad)
     + labs(
-        title="Department Budget Allocation · bubble-packed · letsplot · anyplot.ai",
+        title="Department Budget Allocation · bubble-packed · python · letsplot · anyplot.ai",
         subtitle="Tech dominates — 8 of 15 teams control 58% of total budget",
         fill="Division",
     )
