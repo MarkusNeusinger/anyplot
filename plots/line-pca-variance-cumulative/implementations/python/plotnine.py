@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-05-29
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-29
 """
 
 import os
