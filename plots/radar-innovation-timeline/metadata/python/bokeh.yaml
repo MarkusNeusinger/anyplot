@@ -1,92 +1,122 @@
 library: bokeh
+language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:43:11Z'
-updated: '2026-02-18T22:11:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22158662530
+updated: '2026-05-29T07:57:55Z'
+generated_by: claude-sonnet
+workflow_run: 26624177885
 issue: 4301
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent data storytelling through marker size hierarchy (near-term items are
-    visually bolder)
-  - Smart label placement strategy with alternating inward/outward offsets in crowded
-    inner rings
-  - Subtle layered visual design with ring fills, sector-colored overlays, and dashed
-    boundaries
-  - Strong use of Bokeh-specific features (HoverTool, ColumnDataSource, dual PNG+HTML
-    export)
-  - Comprehensive, realistic technology dataset with plausible time-horizon assignments
+  - 'Strong visual hierarchy: marker sizes decrease from Adopt (28px) to Hold (14px),
+    effectively encoding time-horizon priority in the data elements themselves'
+  - Imprint palette correctly applied in canonical order — AI & ML (#009E73), Cloud
+    & Infra (#C475FD), Sustainability (#4467A3), Biotech (#BD8233) — with identical
+    data colors across both themes
+  - 'Both light and dark renders theme-adapt correctly: background, INK/INK_SOFT labels,
+    legend box, and ring-label fills all use the correct theme tokens; no chrome failures'
+  - HoverTool and HTML export leverage Bokeh's distinctively interactive strengths;
+    per-sector ColumnDataSource with individual LegendItems is idiomatic and correct
+  - Alternating ring fills (alpha 0.04–0.10) and sector-colored cell overlays (alpha
+    0.06) add depth and category context without visual noise
+  - 270-degree layout with the right-side gap used for ring labels and legend is a
+    clever and well-executed canvas design
+  - CDP viewport override ensures exact 2400×2400 screenshot dimensions; toolbar_location=None
+    correctly prevents height drift
   weaknesses:
-  - Minor label crowding in the Adopt ring where multiple items cluster (RAG Pipelines
-    / LLM Agents / K8s GitOps area)
-  - Legend positioned somewhat isolated in the upper-right corner rather than integrated
-    with the chart
-  image_description: 'The plot displays a three-quarter circle (270°) innovation radar
-    chart on a 3600×3600 square canvas with a light gray (#FAFAFA) background. Four
-    concentric rings represent time horizons: Adopt (innermost, light blue fill),
-    Trial (light gray fill), Assess (peach fill), and Hold (outermost, pink fill).
-    Each ring has subtle dashed gray boundary arcs. Four sectors divide the angular
-    space: AI & ML (top-right, blue #306998), Cloud & Infra (left, orange #E07B39),
-    Sustainability (bottom-left, teal #2A9D8F), and Biotech (bottom, purple #7B2D8E).
-    Sector headers appear in their respective colors along the outer edge. 26 technology
-    items are plotted as colored circular markers with white edges, sized by ring
-    (larger = near-term). Each item has a text label. Ring labels (Adopt, Trial, Assess,
-    Hold) appear in the upper-right gap area with white background pills. A legend
-    in the top-right maps colors to sectors. The title "radar-innovation-timeline
-    · bokeh · pyplots.ai" is centered at the top. Sector-colored overlays at very
-    low alpha subtly tint each ring-sector cell.'
+  - 'Adopt (innermost) ring labels are crowded: 6 items in a small ring band leads
+    to tight label placement even with the alternating inward/outward offset logic
+    — ''K8s GitOps'', ''RAG Pipelines'', and ''Edge Computing'' labels nearly touch
+    near the sector boundary; consider reducing innermost ring label size to 14pt
+    or increasing label_r_offset for ring_idx==0'
+  - Item labels at 16pt are smaller than the 34pt tick-label guideline; at 400px mobile
+    viewport these scale to ~3.5px and become unreadable — increase to 18–20pt if
+    crowding in the Adopt ring can be managed
+  - Rendered title appears as 'radar-innovation-timeline · bokeh · anyplot.ai' (missing
+    '· python ·' component) despite source code correctly setting the full title;
+    verify that the title string in figure() matches 'radar-innovation-timeline ·
+    python · bokeh · anyplot.ai' and that no truncation occurs at render time
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: title in dark ink (INK #1A1A17); sector labels in their Imprint palette colors (green/purple/blue/ochre); ring labels (Adopt, Trial, Assess, Hold) in INK_SOFT with elevated background fill (#FFFDF6); legend box with elevated background and border — all readable against light surface
+      Data: 26 scatter markers sized 28→14px across Adopt→Hold rings; first sector (AI & ML) = #009E73 (brand green); Cloud & Infra = #C475FD (lavender); Sustainability = #4467A3 (blue); Biotech = #BD8233 (ochre). Imprint palette in canonical order. Alternating ring fills (0.04–0.10 alpha) and sector-colored cell overlays (0.06 alpha) visible but subtle. 270-degree arc with right-side gap for legend and ring labels. Item labels at 16pt in dark ink, tight in Adopt ring.
+      Legibility verdict: PASS — all text readable against light background; minor crowding in innermost Adopt ring labels but no complete occlusion
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title in light ink (#F0EFE8); sector labels retain Imprint palette colors (all highly readable on dark surface); ring labels in INK_SOFT (#B8B7B0) with elevated dark background (#242420); legend box with dark elevated background and INK_SOFT border; item labels in light #F0EFE8 — all readable against dark surface; no dark-on-dark failures observed
+      Data: data colors identical to light render — #009E73, #C475FD, #4467A3, #BD8233 all unchanged; ring fills and sector overlays adapt naturally at the same alpha values against the darker surface; brand green #009E73 clearly visible on dark background
+      Legibility verdict: PASS — all text readable against dark background; same inner-ring crowding as light render but no legibility failures
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 34pt, sector headers 28pt,
-          ring labels 22pt, item labels 16pt'
+        comment: Font sizes explicitly set throughout (title 50pt, sector labels 26pt,
+          ring labels 22pt, item labels 16pt, legend 22pt); item labels at 16pt are
+          smaller than recommended 34pt tick-label guideline and may not be mobile-readable
+          at 400px viewport
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Minor crowding in Adopt ring (RAG Pipelines/LLM Agents/K8s GitOps
-          area) but main content readable
+        comment: Adopt (innermost) ring has 6 items in a tight band; 'K8s GitOps',
+          'RAG Pipelines', and 'Edge Computing' labels are very close near sector
+          boundaries — minimal overlap but main content readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Excellent marker size hierarchy by ring (28/22/18/14), visual weight
-          emphasizes near-term items
+        comment: Marker sizes (28/22/18/14px across rings) are well-adapted and clearly
+          visible; visual hierarchy of decreasing size from inner to outer ring is
+          effective
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; marker edge in PAGE_BG provides contrast
+          separation; alpha 0.9 maintains visibility
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette (blue, orange, teal, purple) with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 270-degree arc fills canvas well, legend somewhat isolated in
-          top-right
+        comment: 2400x2400 square canvas appropriate for radar; 270-degree layout
+          with right-side gap for legend/ring labels utilizes canvas well; margins
+          sufficient for outer items
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive ring and sector labels but no explicit time-horizon units
+        comment: Sector headers and ring labels serve as axes for this chart type;
+          all are labeled descriptively
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (AI & ML) = #009E73 (brand green); subsequent sectors
+          use canonical Imprint positions 2-4; backgrounds #FAF8F1 light / #1A1A17
+          dark; chrome correctly theme-adaptive in both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -94,24 +124,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with custom palette, subtle ring fills, sector overlays,
-          white marker edges
+        comment: 'Strong design above defaults: Imprint palette with sector-color-coded
+          labels, alternating ring fills, decreasing marker sizes for visual hierarchy,
+          270-degree gap layout — thoughtful and professional'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes hidden, custom background, subtle layered fills, generous whitespace,
-          well-polished
+        comment: Axes hidden (correct for radar), no grid, subtle dashed ring arcs
+          at alpha 0.4, very low-alpha ring fills and sector overlays, ring label
+          elevated backgrounds — good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy through marker size variation by ring and color
-          coding by sector
+        comment: Decreasing marker sizes from Adopt to Hold creates clear visual hierarchy
+          emphasizing near-term readiness; sector color coding enables instant category
+          parsing; the chart guides the viewer toward inner-ring items
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -119,27 +152,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial innovation radar chart with concentric rings and angular
-          sectors
+        comment: Correct radial chart with concentric time-horizon rings and angular
+          sector divisions; all required subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: 270-degree layout, rings with labels, sector
-          dividers, colors, legend, background fills'
+        comment: 270-degree layout, ring boundary arcs, ring labels, sector headers
+          along outer edge, distinct sector colors, legend, subtle background fill
+          per ring, labeled data points, smart label placement — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Items correctly mapped to rings (time horizons) and sectors (categories)
+        comment: All 26 items correctly placed in their ring (time horizon) and sector
+          (category); 4 rings and 4 sectors correctly defined
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct title format and legend labels match sectors
+        passed: false
+        comment: Source code sets title to 'radar-innovation-timeline · python · bokeh
+          · anyplot.ai' (correct format) but rendered image appears to show 'radar-innovation-timeline
+          · bokeh · anyplot.ai' — '· python ·' component seems absent in both renders;
+          legend labels match sectors correctly
     data_quality:
       score: 15
       max: 15
@@ -149,19 +187,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 26 items across all 4 rings and 4 sectors with varying distribution
+        comment: All 4 rings populated with varying items; all 4 sectors represented;
+          items span realistic diversity of technology domains
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real technology names with plausible ring assignments
+        comment: Technology innovation radar (ThoughtWorks-style) is a real-world
+          use case; items like LLM Agents, CRISPR Diagnostics, Fusion Energy are genuine
+          and neutrally positioned; placement is plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ring assignments (LLM Agents in Adopt, Quantum ML in Hold)
+        comment: 26 items across 4 rings and 4 sectors is an appropriate count; ring
+          assignments are factually plausible for current technology maturity
     code_quality:
       score: 10
       max: 10
@@ -171,33 +213,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, figure, rings, sectors, items, legend,
-          save'
+        comment: 'Linear structure: imports → data → plot setup → geometry → items
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random operations
+        comment: np.random.seed(42) set before position randomization
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (collections.defaultdict, numpy, bokeh components)
+        comment: 'All imports used: os (env), time (sleep), defaultdict (grouping),
+          Path (file resolution), numpy, bokeh models/plotting/io, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with appropriate complexity, smart grouping logic
+        comment: Clean Pythonic code; no fake UI elements; appropriate complexity
+          for 26-item radar with group-aware label placement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, no deprecated functions
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3.9.0
+          API
+    library_mastery:
       score: 9
       max: 10
       items:
@@ -206,30 +251,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, scatter, line, Label, Legend, LegendItem
-          - all core Bokeh patterns
+        comment: Uses ColumnDataSource, figure(), p.scatter/line/patch, add_layout()
+          for Labels and Legend — correct idiomatic Bokeh patterns throughout
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips is distinctive Bokeh feature, HTML
-          export leverages web-native design
+        comment: HoverTool for interactive tooltips, HTML export via output_file/save,
+          per-sector ColumnDataSource with manual LegendItems, CDP viewport override
+          for exact PNG dimensions — multiple Bokeh-distinctive features leveraged
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
-  - polar-projection
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome
