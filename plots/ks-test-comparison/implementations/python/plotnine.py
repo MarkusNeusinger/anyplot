@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-Library: plotnine | Python 3.13
-Quality: 90/100 | Updated: 2026-05-29
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-29
 """
 
 import os
