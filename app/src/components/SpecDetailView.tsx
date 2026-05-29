@@ -192,6 +192,18 @@ export function SpecDetailView({
   const previewUrl = selectPreviewUrl(currentImpl, isDark);
   const previewHtml = selectPreviewHtml(currentImpl, isDark);
   const interactiveAvailable = !!previewHtml;
+
+  // Overlay action buttons (report/copy/download/open/preview/raw) sit on top of
+  // the preview image. In dark mode the preview is dark, so a bright white button
+  // clashes — adapt the surface and icon ink to the active theme.
+  const overlayButtonSx = {
+    bgcolor: isDark ? 'rgba(36,36,32,0.9)' : 'rgba(255,255,255,0.9)',
+    color: 'var(--ink)',
+    '&:hover': {
+      bgcolor: isDark ? '#242420' : '#fff',
+      color: colors.primary,
+    },
+  } as const;
   const proxyUrl = (url: string) =>
     `${API_URL}/proxy/html?url=${encodeURIComponent(url)}&origin=${encodeURIComponent(window.location.origin)}`;
 
@@ -247,7 +259,7 @@ export function SpecDetailView({
                 rel="noopener noreferrer"
                 onClick={onReport}
                 aria-label="Report issue"
-                sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                sx={overlayButtonSx}
                 size="medium"
               >
                 <FlagOutlinedIcon fontSize="small" />
@@ -263,7 +275,7 @@ export function SpecDetailView({
                   onTrackEvent('view_mode_change', { mode: 'preview', library: selectedLibrary });
                 }}
                 aria-label="Show static preview"
-                sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                sx={overlayButtonSx}
                 size="medium"
               >
                 <ImageOutlinedIcon fontSize="small" />
@@ -273,7 +285,7 @@ export function SpecDetailView({
               <IconButton
                 onClick={() => previewHtml && window.open(previewHtml, '_blank', 'noopener,noreferrer')}
                 aria-label="Open raw HTML"
-                sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                sx={overlayButtonSx}
                 size="medium"
               >
                 <OpenInNewIcon fontSize="small" />
@@ -374,7 +386,7 @@ export function SpecDetailView({
                 rel="noopener noreferrer"
                 onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onReport(); }}
                 aria-label="Report issue"
-                sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                sx={overlayButtonSx}
                 size="medium"
               >
                 <FlagOutlinedIcon fontSize="small" />
@@ -391,7 +403,7 @@ export function SpecDetailView({
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(currentImpl); }}
                   aria-label="Copy code"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                  sx={overlayButtonSx}
                   size="medium"
                 >
                   <ContentCopyIcon fontSize="small" />
@@ -403,7 +415,7 @@ export function SpecDetailView({
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(currentImpl); }}
                   aria-label="Download PNG"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                  sx={overlayButtonSx}
                   size="medium"
                 >
                   <DownloadIcon fontSize="small" />
@@ -418,7 +430,7 @@ export function SpecDetailView({
                     onTrackEvent('view_mode_change', { mode: 'interactive', library: selectedLibrary });
                   }}
                   aria-label="Show interactive"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                  sx={overlayButtonSx}
                   size="medium"
                 >
                   <PlayArrowIcon fontSize="small" />
