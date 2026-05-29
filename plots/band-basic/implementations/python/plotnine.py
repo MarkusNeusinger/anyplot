@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -64,13 +64,13 @@ df = pd.DataFrame({"days": days, "temperature": temperature, "temp_lower": temp_
 # Title length ~73 chars → scale down: round(12 × 67 / 73) = 11
 plot = (
     ggplot(df, aes(x="days"))
-    + geom_ribbon(aes(ymin="temp_lower", ymax="temp_upper"), fill=BRAND, alpha=0.25)
+    + geom_ribbon(aes(ymin="temp_lower", ymax="temp_upper"), fill=BRAND, alpha=0.35)
     + geom_line(aes(y="temperature"), color=INK, size=1.0)
     + annotate(
-        "text", x=7, y=temp_lower.min() - 0.8, label="Calibration Phase", size=3.0, color=INK_MUTED, fontstyle="italic"
+        "text", x=7, y=temp_lower.min() - 0.8, label="Calibration Phase", size=3.5, color=INK_SOFT, fontstyle="italic"
     )
     + annotate(
-        "text", x=25, y=temp_lower.min() - 0.8, label="Extrapolation", size=3.0, color=INK_MUTED, fontstyle="italic"
+        "text", x=25, y=temp_lower.min() - 0.8, label="Extrapolation", size=3.5, color=INK_SOFT, fontstyle="italic"
     )
     + annotate(
         "segment",
@@ -98,7 +98,7 @@ plot = (
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         plot_title=element_text(size=11, color=INK),
-        plot_subtitle=element_text(size=7, color=INK_SOFT),
+        plot_subtitle=element_text(size=8, color=INK_SOFT),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
