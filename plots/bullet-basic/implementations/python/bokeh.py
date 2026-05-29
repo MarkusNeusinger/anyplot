@@ -1,12 +1,18 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
 """
 
 import os
+import sys
 import time
 from pathlib import Path
+
+
+# Prevent this script (named bokeh.py) from shadowing the installed bokeh package
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != "" and os.path.abspath(p) != _this_dir]
 
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, Range1d
@@ -69,6 +75,7 @@ p = figure(
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
+p.outline_line_alpha = 0
 
 p.title.text_font_size = "50pt"
 p.title.text_color = INK
@@ -133,7 +140,7 @@ for i, metric in enumerate(metrics):
     # Target marker — thin vertical bar, theme-adaptive INK color
     p.rect(x=norm_target, y=y_pos, width=0.7, height=bar_height * 0.6, color=INK, line_color=None)
 
-    # Metric label (left of chart)
+    # Metric label (left of chart) — bold for on-track, normal for off-track
     label_unit = f" ({metric['unit']})" if metric["unit"] else ""
     p.add_layout(
         Label(
@@ -144,22 +151,27 @@ for i, metric in enumerate(metrics):
             text_color=INK,
             text_align="right",
             text_baseline="middle",
-            text_font_style="bold",
+            text_font_style="bold" if actual >= target else "normal",
         )
     )
 
     # Actual value label (right of bar, color-coded)
+    # background_fill improves contrast when label lands on a gray band in dark mode
     value_text = str(int(actual)) if actual == int(actual) else str(actual)
     p.add_layout(
         Label(
             x=norm_actual + 2,
             y=y_pos,
             text=value_text,
-            text_font_size="22pt",
+            text_font_size="26pt",
             text_color=bar_color,
             text_align="left",
             text_baseline="middle",
             text_font_style="bold",
+            background_fill_color=PAGE_BG,
+            background_fill_alpha=0.88,
+            border_line_color=None,
+            padding=4,
         )
     )
 
@@ -186,6 +198,9 @@ p.add_tools(
         tooltips=[("Metric", "@label"), ("Actual", "@actual"), ("Target", "@target"), ("% of Range", "@pct")],
     )
 )
+
+# Thin separator between chart area and legend
+p.segment(x0=[0], x1=[100], y0=[-0.45], y1=[-0.45], line_color=INK_SOFT, line_alpha=0.3, line_width=3)
 
 # Custom legend — below chart area
 legend_y = -0.65
