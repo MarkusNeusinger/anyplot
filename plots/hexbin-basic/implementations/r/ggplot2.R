@@ -45,11 +45,17 @@ p <- ggplot(df, aes(x = easting, y = northing)) +
         high  = "#4467A3",
         name  = "Count",
         guide = guide_colorbar(
-            barwidth  = unit(0.4, "cm"),
-            barheight = unit(3.0, "cm"),
+            barwidth  = unit(0.6, "cm"),
+            barheight = unit(4.5, "cm"),
             ticks     = FALSE
         )
     ) +
+    annotate("text", x =  0.4, y =  0.9, label = "Downtown Core",
+             color = INK_SOFT, size = 2.8, fontface = "italic", hjust = 0.5) +
+    annotate("text", x = -2.6, y =  2.9, label = "Transit Hub",
+             color = INK_SOFT, size = 2.8, fontface = "italic", hjust = 0.5) +
+    annotate("text", x =  3.0, y = -2.3, label = "University Campus",
+             color = INK_SOFT, size = 2.8, fontface = "italic", hjust = 0.5) +
     labs(
         title = plot_title,
         x     = "Easting (km from city center)",
