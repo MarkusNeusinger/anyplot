@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -14,6 +14,7 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
+    geom_label,
     geom_line,
     geom_point,
     geom_text,
@@ -91,8 +92,12 @@ df = pd.DataFrame(data)
 
 # Hero entity: Beta Inc has the most dramatic arc — emphasize via mapped aesthetics
 hero = "Beta Inc"
+HERO_COLOR = IMPRINT_PALETTE[1]  # lavender — Beta Inc's Imprint color
 df["role"] = df["entity"].apply(lambda x: "hero" if x == hero else "rest")
 df_labels = df[df["period_num"] == 6].copy()
+
+# Annotation dataframe — highlight Beta Inc's peak reign (Q2–Q3) using geom_label
+df_annot = pd.DataFrame({"period_num": [2.5], "rank": [0.8], "label": ["Beta Inc: Rank #1\n(Q2–Q3 peak)"]})
 
 # Tooltip config for the interactive HTML output
 tooltip_cfg = layer_tooltips().title("@entity").line("@|@period").line("Rank|@rank")
@@ -102,17 +107,28 @@ title = "bump-basic · python · letsplot · anyplot.ai"
 
 plot = (
     ggplot(df, aes(x="period_num", y="rank", color="entity", group="entity"))
-    # Lines: size/alpha mapped to role for hero emphasis (idiomatic grammar approach)
+    # Lines: dramatic size/alpha split — hero 3.0 vs rest 0.8 for unmistakable focal point
     + geom_line(aes(size="role", alpha="role"), tooltips=tooltip_cfg)
     # Dots at each rank position; alpha mapped for hero prominence
     + geom_point(aes(alpha="role"), size=4, tooltips=tooltip_cfg)
     # End-of-line entity labels — entity color inherited from global aes
-    + geom_text(aes(label="entity"), data=df_labels, nudge_x=0.3, hjust=0, size=4)
+    + geom_text(aes(label="entity"), data=df_labels, nudge_x=0.3, hjust=0, size=5)
+    # Peak annotation via geom_label — letsplot's labeled text box with background fill
+    + geom_label(
+        aes(x="period_num", y="rank", label="label"),
+        data=df_annot,
+        color=HERO_COLOR,
+        fill=PAGE_BG,
+        size=3.5,
+        hjust=0.5,
+        inherit_aes=False,
+        label_size=0.5,
+    )
     + scale_y_reverse(breaks=[1, 2, 3, 4, 5])
     + scale_x_continuous(breaks=[1, 2, 3, 4, 5, 6], labels=["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], limits=[0.5, 8.5])
     + scale_color_manual(values=IMPRINT_PALETTE)
-    + scale_size_manual(name="", values={"hero": 2.0, "rest": 1.2}, guide="none")
-    + scale_alpha_manual(name="", values={"hero": 1.0, "rest": 0.65}, guide="none")
+    + scale_size_manual(name="", values={"hero": 3.0, "rest": 0.8}, guide="none")
+    + scale_alpha_manual(name="", values={"hero": 1.0, "rest": 0.55}, guide="none")
     + labs(x="Quarterly Period", y="Market Rank", title=title)
     + theme_minimal()
     + theme(
