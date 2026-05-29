@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -83,8 +83,7 @@ chart.options.x_axis = {
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT, "fontFamily": font_family}},
     "gridLineWidth": 0,
     "tickInterval": 5,
-    "lineColor": INK_SOFT,
-    "lineWidth": 1,
+    "lineWidth": 0,
     "tickColor": INK_SOFT,
     "tickLength": 8,
 }
@@ -106,10 +105,10 @@ chart.options.y_axis = {
 chart.options.legend = {
     "enabled": True,
     "align": "right",
-    "verticalAlign": "top",
+    "verticalAlign": "bottom",
     "layout": "vertical",
     "x": -60,
-    "y": 80,
+    "y": -80,
     "floating": True,
     "backgroundColor": ELEVATED_BG,
     "borderColor": INK_SOFT,
@@ -122,7 +121,7 @@ chart.options.legend = {
 
 chart.options.plot_options = {
     "arearange": {"fillOpacity": 0.25, "lineWidth": 0, "marker": {"enabled": False}},
-    "line": {"lineWidth": 4, "marker": {"enabled": False}},
+    "line": {"lineWidth": 6, "marker": {"enabled": False}},
 }
 
 chart.options.credits = {"enabled": False}
@@ -140,13 +139,43 @@ forecast = LineSeries()
 forecast.data = line_data
 forecast.name = "Forecast"
 forecast.color = LINE_COLOR
-forecast.line_width = 4
+forecast.line_width = 6
 forecast.z_index = 1
 
 chart.add_series(band)
 chart.add_series(forecast)
 
 chart_js = chart.to_js_literal()
+
+# Annotation: show final uncertainty spread to guide the viewer
+final_half_width = round(1.96 * float(uncertainty[-1]), 1)  # ±width at day 30
+annotation_js = f"""
+var _xA = _hc.plotLeft + _hc.plotWidth - 680;
+var _yA = _hc.plotTop + 60;
+_hc.renderer.label('±{final_half_width}°C spread by day 30', _xA, _yA)
+  .attr({{
+    fill: '{ELEVATED_BG}',
+    stroke: '{INK_SOFT}',
+    'stroke-width': 1,
+    padding: 14,
+    r: 4,
+    zIndex: 6
+  }})
+  .css({{
+    fontSize: '40px',
+    color: '{INK}',
+    fontFamily: 'Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif'
+  }})
+  .add();
+"""
+chart_js = chart_js.replace("Highcharts.chart(", "var _hc = Highcharts.chart(", 1)
+# Inject annotation INSIDE the DOMContentLoaded callback (before its closing });)
+close_token = "\n});"
+insert_pos = chart_js.rfind(close_token)
+if insert_pos != -1:
+    chart_js = chart_js[:insert_pos] + "\n" + annotation_js.strip() + close_token
+else:
+    chart_js += annotation_js
 
 # Download Highcharts JS inline — headless Chrome cannot load CDN from file://
 cdn_base = "https://cdn.jsdelivr.net/npm/highcharts@11.4"
