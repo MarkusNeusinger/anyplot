@@ -1,109 +1,120 @@
 library: letsplot
+language: python
 specification_id: bump-basic
 created: '2025-12-23T09:19:04Z'
-updated: '2026-02-22T21:26:22Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456613134
-issue: 0
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bump-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bump-basic/letsplot/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-29T13:47:18Z'
+generated_by: claude-sonnet
+workflow_run: 26639685305
+issue: 982
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Hero emphasis via mapped size/alpha aesthetics creates clear visual hierarchy
-    and data storytelling without annotations
-  - Custom cohesive muted palette with Python Blue anchor and warm/cool balance
-  - Excellent data design with dramatic narrative arcs (rise-and-fall, comeback, steady
-    climb, volatility)
-  - Direct entity labels in matching colors replace legend cleanly
-  - layer_tooltips() with HTML export leverages lets-plot interactive capabilities
-  - 'Substantial visual refinement: y-only subtle grid, removed ticks, clean whitespace'
+  - Deliberate hero/rest visual hierarchy via mapped size (3.0 vs 0.8) and alpha (1.0
+    vs 0.55) creates an immediate focal point — Beta Inc's dramatic arc is unmistakable
+  - End-of-line direct labeling eliminates legend clutter and keeps the viewer's eye
+    on the data
+  - Peak annotation callout (geom_label at rank=0.8) enhances storytelling by explicitly
+    naming the key event
+  - Correct use of letsplot-specific layer_tooltips() and HTML export alongside PNG
+    output
+  - Full Imprint palette compliance with correct canonical order (Alpha Corp=#009E73
+    first) and theme-adaptive chrome for both renders
+  - Y-axis grid only (x-axis major grid blanked) — appropriate minimalism for a bump
+    chart where vertical rank positions are the key reference
   weaknesses:
-  - At dense crossover regions (Q2-Q3), non-hero points could be slightly larger to
-    aid line traceability
-  - Entity labels at geom_text size=15 could be slightly larger for stronger visual
-    hierarchy
-  - Company names follow obvious fictional pattern (Alpha, Beta, Gamma) rather than
-    realistic naming
-  image_description: 'The plot displays a bump chart tracking 5 tech companies (Alpha
-    Corp, Beta Inc, Gamma Tech, Delta Systems, Epsilon Labs) across 6 quarterly periods
-    (Q1-Q6). The Y-axis is inverted with rank 1 at the top and rank 5 at the bottom,
-    labeled "Market Rank Position." The X-axis shows "Quarterly Period" with Q1-Q6
-    labels. The title reads "bump-basic · letsplot · pyplots.ai" in bold at the top
-    left. Each entity is drawn with a distinct color: blue (Alpha Corp), orange/brown
-    (Beta Inc), green (Gamma Tech), purple (Delta Systems), and pink/rose (Epsilon
-    Labs). Beta Inc''s line is noticeably thicker and fully opaque as the "hero" entity,
-    while the other lines are slightly thinner and at 70% opacity. Dot markers appear
-    at each data point. Entity names are directly labeled at the right end of each
-    line in matching colors. The background is white with subtle light gray horizontal
-    grid lines only on the Y-axis. X-axis grid lines are removed. The chart clearly
-    shows dramatic crossovers: Beta Inc rises from rank 3 to 1, then collapses to
-    rank 5; Alpha Corp reclaims rank 1 by Q5; Delta Systems steadily climbs from 4
-    to 2; Gamma Tech is volatile; Epsilon Labs lingers near the bottom with slight
-    improvement.'
+  - Non-hero lines at size=0.8 + alpha=0.55 are quite thin at 3200x1800 px — consider
+    size=1.1-1.2 for the rest group to keep them comfortably readable when scaled
+    to mobile width
+  - Annotation text at geom_label size=3.5mm is at the lower edge of legibility at
+    400px mobile width — increase to size=4.0-4.5mm
+  - Annotation placed at rank=0.8 (slightly above rank 1 on the reversed y-axis) creates
+    a very tight top margin — nudging to rank=1.0 and using nudge_y=-0.2 would give
+    the label box more breathing room within the plot boundary
+  - 'LM-02: The layer_tooltips() integration is good but the tooltip content could
+    be more polished — using .format(''@entity'', ''@period'', ''@rank'') with explicit
+    field labels rather than the pipe-separator shorthand would show stronger letsplot
+    mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, no pure white
+      Chrome: Title "bump-basic · python · letsplot · anyplot.ai" clearly visible in dark ink at top (~50% of plot width). Axis labels "Quarterly Period" and "Market Rank" visible in dark INK at size 12pt. Tick labels Q1–Q6 (x) and 1–5 (y) visible in INK_SOFT at size 10pt. End-of-line entity labels (size 5mm) clearly readable on the right side at different vertical positions (no overlap).
+      Data: 5 lines — Alpha Corp (brand green #009E73, thin), Beta Inc (lavender #C475FD, thick hero line at size=3.0), Gamma Tech (blue #4467A3, thin), Delta Systems (ochre #BD8233, thin), Epsilon Labs (matte red #AE3030, thin). Dots mark each rank position. Annotation box "Beta Inc: Rank #1 / (Q2–Q3 peak)" visible at upper-left of plot in lavender on #FAF8F1 fill. Y-axis is correctly inverted (rank 1 at top). Horizontal grid lines subtle.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, no pure black
+      Chrome: Title visible in light #F0EFE8 text. Axis labels and tick labels rendered in light INK/INK_SOFT tokens — all clearly readable against the dark background. Entity labels on right side visible in light text. No dark-on-dark failures detected.
+      Data: All 5 series colors are identical to the light render — same green, lavender, blue, ochre, red — confirming Imprint palette data colors are theme-independent. Beta Inc hero line remains the dominant visual element. Annotation box renders with same lavender border on #1A1A17 fill. Grid lines subtle but visible.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24 bold, axis_title=20, axis_text=16,
-          geom_text labels=15. All text clearly readable.'
+        comment: 'All font sizes explicitly set (title=16, axis=12, tick=10, labels=5mm);
+          both themes fully readable. Minor deduction: annotation text at size=3.5mm
+          is at the lower edge of mobile legibility.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlap. Entity labels well-spaced on right side, axis labels
-          well-separated.
+        comment: Entity labels at Q6 are at distinct rank positions with no overlap.
+          Annotation box is tight at top but clear. Line crossings create expected
+          visual complexity inherent to bump charts, not overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines clearly visible with hero/rest thickness differentiation. At
-          dense crossover regions, tracing individual lines requires effort.
+        comment: Hero line clearly visible at size=3.0. Non-hero lines at size=0.8
+          + alpha=0.55 are intentionally dimmed for hierarchy — visible but on the
+          thin side at 3200x1800. Dots at size=4 anchor each data point well.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Five distinct hues (blue, orange, green, purple, pink) with good
-          perceptual separation. No red-green reliance.
+        comment: Imprint palette is CVD-safe. Red/green pair (Epsilon/Alpha) also
+          differs in position and line weight. No red-green sole distinction.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas, balanced margins. Right margin accommodates
-          direct labels. 16:9 aspect ratio appropriate.
+        comment: 'Canvas gate passed (ggsize 800x450 + scale=4 = 3200x1800). Limits=[0.5,8.5]
+          creates adequate right-side space for entity labels. Plot fills canvas well.
+          Slight deduction: the extended x-range to 8.5 with data only to Q6=6 creates
+          a somewhat right-heavy appearance.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Market Rank Position and Quarterly Period. Units
-          not applicable for ordinal rank.'
+        comment: 'Title correct format. X: ''Quarterly Period'' — descriptive. Y:
+          ''Market Rank'' — descriptive, ordinal units implicit from integer labels
+          1–5.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Alpha Corp first series = #009E73 (brand green). Canonical Imprint
+          order for positions 2–5. Background #FAF8F1 light / #1A1A17 dark. Theme-adaptive
+          chrome correct in both renders.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -111,22 +122,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom muted palette with Python Blue anchor. Hero emphasis via mapped
-          size/alpha. Thoughtful typography hierarchy. Clearly above defaults.
+        comment: 'Strong design: mapped size+alpha aesthetics for hero/rest hierarchy,
+          end-of-line direct labeling, peak annotation callout, Imprint palette. Clearly
+          above configured defaults — stops short of FiveThirtyEight-level polish
+          (no subtitle, no tight typography system).'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal base with x-grid removed, subtle y-grid, ticks removed,
-          white background, explicit margins, direct labels replacing legend.
+        comment: 'Good refinement: theme_minimal base, x-axis grid blanked (y-only),
+          axis ticks removed, theme-adaptive INK tokens. Missing: explicit spine removal
+          for a cleaner L-frame, no panel_border=element_blank().'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Hero emphasis on Beta Inc rise-and-fall creates focal point. Intentional
-          data arcs guide viewer. Strong visual hierarchy via thickness and opacity.
+        comment: 'Good storytelling: hero/rest visual hierarchy immediately draws
+          the eye to Beta Inc''s arc, annotation callouts the peak reign. The ''story''
+          (meteoric rise then collapse) is communicated through size+alpha+annotation.
+          Stops short of excellent (no subtitle or framing text to set context).'
     spec_compliance:
       score: 15
       max: 15
@@ -136,30 +152,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart showing rankings over time with connected lines.
+        comment: 'Correct bump chart: ranked positions over time with connecting lines,
+          y-axis inverted (rank 1 at top).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers, connecting lines,
-          entity labels all present.
+        comment: 'All spec features: y-axis inverted, distinct colors per entity,
+          dot markers at each period, lines connecting same entity across all periods,
+          5 entities, 6 periods.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=period (quarters), Y=rank. 5 entities across 6 periods within spec
-          range.
+        comment: X=period (Q1–Q6), Y=rank (1–5 inverted). All 5 entities visible across
+          all 6 periods.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Direct colored labels replace legend
-          appropriately.
+        comment: Title 'bump-basic · python · letsplot · anyplot.ai' — correct format.
+          No legend (correctly replaced by end-of-line entity labels). Entity labels
+          clearly match data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -167,22 +186,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all bump chart aspects: crossovers, rise-and-fall, comeback,
-          steady climb, volatility, bottom stability.'
+        comment: 'Covers all bump chart patterns: dramatic rise/fall (Beta Inc), recovery
+          arc (Alpha Corp), volatile entity (Gamma Tech), steady climber (Delta Systems),
+          mostly-stable bottom entity (Epsilon Labs). All rank positions 1–5 are occupied
+          simultaneously.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Tech company market rankings over quarters is plausible. Company
-          names fictional but realistic-sounding.
+        comment: Tech company market share rankings over 6 quarters — real business
+          scenario, neutral topic, plausible company names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranks 1-5 for 5 entities, each rank used once per period. 6 quarters
-          reasonable business timeline.
+        comment: 5 entities, 6 periods, ranks 1–5 with no ties. Rank patterns are
+          internally consistent (each period has exactly ranks 1–5 occupied by exactly
+          one entity each).
     code_quality:
       score: 10
       max: 10
@@ -192,49 +214,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure. No functions or classes.
+        comment: 'Linear structure: imports → tokens → data → plot layers → scales
+          → theme → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no random generation.
+        comment: Fully deterministic hardcoded data — no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported items are used. No unused imports.
+        comment: 'All imported symbols are used: all lets_plot imports verified in
+          use, pandas used for DataFrame.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Hero emphasis via mapped scales is elegant and idiomatic. Avoids
-          duplicated geom layers.
+        comment: Clean, appropriate complexity. Hero/rest pattern via lambda is concise.
+          No over-engineering. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 for 4800x2700px. Also saves HTML.
-          Current API usage.
+        comment: Saves plot-{THEME}.png (scale=4 → 3200x1800) and plot-{THEME}.html.
+          Current letsplot API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot grammar: aes mappings, geom layering, scale_y_reverse,
-          scale_size_manual/scale_alpha_manual mapped to role column.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: layer_tooltips() with custom configuration is distinctive to lets-plot.
-          HTML export with interactive tooltips showcases built-in interactivity.
+        comment: 'Idiomatic letsplot: ggplot grammar, aes() mappings, scale_*_manual
+          for multi-aesthetic control, theme_minimal + theme() customization, ggsize
+          + ggsave(scale=4). Well above minimal usage.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() (letsplot-specific interactive tooltip API)
+          and HTML export alongside PNG. geom_label with fill and border parameters
+          used correctly. Tooltip content formatting via pipe-separator shorthand
+          is functional but could be more polished with explicit .format() field labels.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

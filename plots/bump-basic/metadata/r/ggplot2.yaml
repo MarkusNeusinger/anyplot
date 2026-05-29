@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: bump-basic
+created: '2026-05-29T13:28:54Z'
+updated: '2026-05-29T13:45:40Z'
+generated_by: claude-sonnet
+workflow_run: 26639784678
+issue: 982
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Alpha storytelling (1.0 vs 0.5 opacity) creates an immediate focal point on the
+    Hamilton/Verstappen championship battle without suppressing other drivers
+  - Direct end-labels instead of a legend improve chart readability and eliminate
+    back-and-forth visual lookups
+  - Correct Imprint palette application in canonical order with Hamilton correctly
+    assigned brand green (#009E73)
+  - Theme-adaptive chrome is fully correct in both light and dark renders with no
+    dark-on-dark failures
+  - adjustcolor() workaround for subtle grid alpha demonstrates ggplot2-idiomatic
+    problem solving
+  - Clean minimal structure with only necessary imports; code reads as a clear narrative
+  weaknesses:
+  - Driver end-label geom_text size=3.5mm may be slightly small when the 3200px image
+    is scaled to ~400px mobile width; consider size=4.0-4.5 for better mobile legibility
+  - 'DE-01 could reach 6+ with minor polish: explicit plot.title.position = ''plot''
+    to align title to the full plot width, and optionally a subtitle in INK_SOFT to
+    surface the storytelling intent'
+  - 'DE-02: The y-axis has no explicit axis line while x-axis does; adding panel.border
+    = element_blank() explicitly would confirm the intentional asymmetry'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bump-basic · r · ggplot2 · anyplot.ai" in bold dark INK (#1A1A17); axis labels "Championship Position" and "Race Round" in INK (10pt); tick labels "1st"-"6th" and "R1"-"R8" in INK_SOFT (8pt); all clearly readable
+      Data: Six lines in Imprint palette canonical order — Hamilton (#009E73 green, alpha=1.0), Verstappen (#C475FD lavender, alpha=1.0), Leclerc (#4467A3 blue, alpha=0.5), Norris (#BD8233 ochre, alpha=0.5), Russell (#AE3030 red, alpha=0.5), Perez (#2ABCCD cyan, alpha=0.5); circular dot markers at each race round; direct driver name labels at right edge in matching colors
+      Legibility verdict: PASS — all text clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream #F0EFE8; axis labels in #F0EFE8; tick labels in #B8B7B0; driver end-labels in respective Imprint palette colors — all readable; no dark-on-dark failures
+      Data: Colors are identical to light render — Hamilton green, Verstappen lavender, Leclerc blue, Norris ochre, Russell red, Perez cyan — only chrome flipped
+      Legibility verdict: PASS — all text clearly readable against the dark background
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; minor concern about direct-label driver
+          names at 3.5mm being small at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All 6 end-labels at distinct y positions; no collision with lines
+          or other text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth=1.4 and size=3.5 appropriate for 48 data points; intentional
+          alpha differential maintains visibility
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; redundant encoding via direct labels
+          compensates for 6-series borderline delta-E
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 correct; right margin r=48pt accommodates end-labels; balanced
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: Championship Position, X: Race Round — descriptive and contextually
+          clear'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Hamilton = #009E73; all 6 Imprint positions canonical
+          order; backgrounds #FAF8F1 / #1A1A17; fully theme-adaptive chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above defaults with Imprint palette, alpha hierarchy, direct end-labels;
+          not yet FiveThirtyEight publication level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only grid, theme_minimal base, adjustcolor alpha workaround,
+          thin x-axis line; good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha differential creates focal point on Hamilton/Verstappen battle;
+          clear visual hierarchy guiding viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bump chart with inverted Y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis inverted, distinct colors, dot markers at each period, lines
+          connecting entities
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: race rounds R1-R8; Y: championship position 1st-6th inverted;
+          all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title bump-basic · r · ggplot2 · anyplot.ai correct; direct end-labels
+          replace legend appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows rank stability, rank changes, dramatic swings, and spread across
+          all 6 positions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: F1 championship standings with real driver names; neutral sports
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ranks 1-6 with no duplicates per round; plausible F1 standings narrative
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports -> tokens -> palette -> data -> plot -> save;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is explicitly defined (deterministic)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R; setNames pattern for alpha assignment; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf produces plot-light.png / plot-dark.png; ragg::agg_png device;
+          no deprecated functions
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics layering; scale_y_reverse with ordinal
+          labels; scale_alpha_manual with guide=none; expansion() for padding
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses scale_y_reverse, adjustcolor workaround for grid alpha, lineend/linejoin=round
+          for smooth lines, expansion(add=)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
