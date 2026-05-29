@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -92,7 +92,7 @@ W, H = 2400, 2400
 p = figure(
     width=W,
     height=H,
-    title="radar-innovation-timeline · bokeh · anyplot.ai",
+    title="radar-innovation-timeline · python · bokeh · anyplot.ai",
     x_range=(-470, 470),
     y_range=(-460, 480),
     tools="",
@@ -329,7 +329,7 @@ legend = Legend(
 p.add_layout(legend)  # inside figure, not side panel — fits within 2400×2400 canvas
 
 # Save interactive HTML
-output_file(f"plot-{THEME}.html", title="radar-innovation-timeline · bokeh · anyplot.ai")
+output_file(f"plot-{THEME}.html", title="radar-innovation-timeline · python · bokeh · anyplot.ai")
 save(p)
 
 # Screenshot with headless Chrome (avoids export_png / chromedriver snap issues)
