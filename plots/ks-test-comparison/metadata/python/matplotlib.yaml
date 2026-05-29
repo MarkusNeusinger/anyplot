@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:10:50Z'
-updated: '2026-05-29T03:18:24Z'
+updated: '2026-05-29T03:25:51Z'
 generated_by: claude-sonnet
 workflow_run: 26615539955
 issue: 4130
@@ -12,42 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance — both ECDFs as step functions, KS statistic prominently
-    annotated with D=0.722, p-value in interpretation box, maximum divergence highlighted
-    with shaded region and double-ended dotted arrow
-  - 'Textbook semantic color exception: green (#009E73) for Good Customers, matte
-    red (#AE3030) for Bad Customers — plus redundant encoding (solid vs. dashed linestyle)
-    for CVD safety'
-  - Flawless theme adaptation — both light (#FAF8F1) and dark (#1A1A17) renders fully
-    readable with correctly flipped chrome; data colors identical between themes
-  - 'Clever matplotlib double-layer step plot idiom: draws a thick PAGE_BG line first
-    to visually separate the Bad Customers dashed line from grid lines'
-  - 'Excellent code quality: np.random.seed(42) reproducibility, no functions/classes,
-    correct savefig without bbox_inches=''tight'', clean idiomatic Axes-method usage'
+  - 'Full spec compliance: both ECDFs as step functions, KS statistic annotated with
+    double-headed arrow, shaded max-distance region, p-value in interpretation box,
+    and clear legend — every required feature is present.'
+  - 'Semantic color assignment: Good Customers = brand green (#009E73), Bad Customers
+    = matte red (#AE3030) with dashed linestyle providing redundant encoding for CVD
+    safety — palette usage is correct and justified.'
+  - 'Theme adaptation is complete and correct: all chrome tokens (INK, INK_SOFT, ELEVATED_BG,
+    PAGE_BG) propagate to title, axis labels, tick params, legend frame, and annotation
+    boxes — no dark-on-dark or light-on-light failures.'
+  - 'Rich data storytelling: the shaded fill_betweenx region, double-headed dotted
+    arrow, endpoint scatter markers, and interpretation box work together to communicate
+    the KS test conclusion visually.'
+  - Canvas dimensions correct (3200x1800), no bbox_inches='tight', clean KISS code
+    structure with seed for reproducibility.
   weaknesses:
-  - Interpretation text box at fontsize=7.5pt is below the 8pt minimum recommendation
-    — raise to 8pt for consistency with tick labels and better small-size legibility
-  - 'DE-01: While the semantic color and outline technique show care, the KS focal
-    point could be more striking — a vertical dashed reference line at max_x alongside
-    or instead of the narrow shaded band would create a stronger visual anchor'
-  - 'DE-02: Grid is y-axis only (correct) but the shaded fill region at the KS point
-    uses a narrow fixed x-range (±1.5 score units) that may be hard to spot; the shaded
-    band alpha=0.12 is quite subtle'
+  - Annotation text in the interpretation box (lower right) is set at fontsize=8,
+    which renders to ~44 source pixels on the 3200px canvas — readable at desktop
+    but tight at mobile widths (~400px). Consider bumping to 9pt to match the D-value
+    annotation box.
+  - Library Mastery is moderate — ax.fill_betweenx and the double-headed arrowstyle
+    annotation are good idiomatic choices, but there is no use of more advanced matplotlib
+    features (e.g. ax.margins(), custom tick locator, or rcParams-based styling) that
+    would elevate the score further.
+  - The white-outline trick for the Bad Customers line (drawing a PAGE_BG-colored
+    line first, then the actual line) is functional but adds a redundant step that
+    could be replaced with a matplotlib linewidth/zorder approach — minor elegance
+    concern.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "ks-test-comparison · python · matplotlib · anyplot.ai" in dark ink (#1A1A17) at ~12pt — fully readable and spans ~65% of canvas width. Y-axis label "Cumulative Proportion" and X-axis label "Credit Score (0–100)" in dark ink at 10pt — both clearly readable. Tick labels at 8pt in #4A4A44 (INK_SOFT) — readable. Legend in upper left: "Bad Customers" (red dashed) and "Good Customers" (green solid) with ELEVATED_BG frame — clear. Y-axis grid lines are subtle (alpha≈0.15).
-      Data: Two step-function ECDF lines: Good Customers in brand green #009E73 (solid) rising steeply in the upper range; Bad Customers in matte red #AE3030 (dashed) rising sharply in the lower-to-mid range. Both lines clearly differentiated by color AND linestyle. At ~x=49 (Credit Score), a double-ended dotted arrow spans from y≈0.08 (Good) to y≈0.80 (Bad), with black dot markers at both endpoints and a pale green shaded band. "D = 0.722" annotation box with curved arrow points to the midpoint. Interpretation box in lower right: "Strong separation: distributions are significantly different / p-value < 0.001".
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct Imprint surface, not pure white.
+      Chrome: Title "ks-test-comparison · python · matplotlib · anyplot.ai" in dark ink, clearly readable, occupies ~72% of canvas width (expected for 67-char title). Axis labels "Credit Score (0–100)" (x) and "Cumulative Proportion" (y) at 10pt in dark ink. Tick labels at 8pt in INK_SOFT (#4A4A44), clearly readable against the warm-cream background. Top and right spines removed; left/bottom spines in INK_SOFT.
+      Data: Two ECDF step curves — "Good Customers" solid brand green (#009E73), "Bad Customers" dashed matte red (#AE3030). Vertical dotted reference line at the KS max-distance point. Shaded green fill_betweenx region highlighting the max-distance zone. Double-headed dotted annotation arrow spanning the max gap with "D = 0.722" callout box. Endpoint scatter markers in black (#1A1A17) with PAGE_BG edge color. Interpretation box lower-right with p-value < 0.001 in INK_SOFT. Legend upper-left with correct line styles and colors.
+      Legibility verdict: PASS — all chrome is readable; no light-on-light issues; annotation text at 8pt is tight but readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in cream (#F0EFE8) — fully readable against dark background. Axis labels and tick labels in light INK_SOFT (#B8B7B0) — clearly visible against dark background. Legend has ELEVATED_BG (#242420) frame with light text — readable. Grid lines are subtle, visible. No dark-on-dark failures observed.
-      Data: Good Customers green (#009E73) and Bad Customers red (#AE3030) are identical to light render — only chrome has flipped. The double-ended arrow is now white/cream dotted line, endpoint markers are white-filled circles, "D = 0.722" annotation box uses dark ELEVATED_BG with light text — all clearly visible. The light green shaded band is subtler on dark but still visible.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), fully readable against the dark background. Axis labels and tick labels in INK_SOFT dark token (#B8B7B0) — clearly visible against near-black. Legend frame uses ELEVATED_BG (#242420) with #B8B7B0 edge and text — no dark-on-dark failure. Grid lines subtle. Annotation boxes use ELEVATED_BG facecolor.
+      Data: ECDF colors are identical to light render — Good Customers = #009E73, Bad Customers = #AE3030 (Imprint palette, theme-invariant). Endpoint scatter markers appear as light dots (INK=#F0EFE8 in dark mode) — clearly visible. Double-headed arrow also in light ink, visible. "D = 0.722" callout and interpretation box are readable.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all chrome adapts correctly; data colors unchanged.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,55 +64,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title 12pt, axis labels 10pt, ticks 8pt all clearly readable in
-          both themes. Minor: interpretation box at 7.5pt is slightly below 8pt minimum
-          and may be marginal at very small display sizes.'
+        comment: Title, axis labels, ticks all readable in both themes. Interpretation
+          box annotation at 8pt is slightly small at mobile scale but acceptable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Legend, D annotation, interpretation box,
-          and ECDF lines are all spatially separated.
+        comment: No overlapping elements — KS arrow, annotation box, interpretation
+          box, and legend are all well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both ECDF step functions clearly visible; distinct solid vs. dashed
-          linestyle provides redundant encoding. KS distance markers and arrow clearly
-          visible in both themes.
+        comment: Both ECDF step lines clearly visible with appropriate linewidth.
+          Shaded region, endpoint markers, and annotation all clearly rendered.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic green/red assignment plus redundant solid/dashed linestyle
-          encoding ensures CVD safety.
+        comment: Red/green pair mitigated by redundant linestyle encoding (solid vs
+          dashed) — CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Good proportions,
-          no clipping, no overflow. Title width appropriate.
+        comment: Canvas gate passed (3200x1800). Clean proportions, no overflow or
+          clipping. Good margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Credit Score (0–100)'' with units, Y: ''Cumulative Proportion''
-          descriptive. Title follows required format.'
+        comment: Credit Score (0-100) and Cumulative Proportion are descriptive with
+          units. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: good/pass=green (#009E73),
-          bad/fail=red (#AE3030). Backgrounds #FAF8F1 light / #1A1A17 dark. Both themes
-          correct.'
+        comment: 'Good Customers = #009E73 (Imprint pos 1), Bad Customers = #AE3030
+          (semantic red anchor). Both backgrounds correct. Chrome flips correctly.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -114,24 +117,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): semantic color exception shows design thinking;
-          double-layer line technique for outline separation is a clever matplotlib
-          idiom; elevated annotation boxes add polish.'
+        comment: 'Above-default: semantic color assignment, multi-element annotation
+          (shaded region + double-headed arrow + D-value box + interpretation box),
+          white-outline technique for visual separation.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; grid subtle (alpha=0.15); legend and annotation
-          boxes use ELEVATED_BG. Shaded fill region at KS point is quite subtle (alpha=0.12).
+        comment: 'Above-default: spines removed, subtle 0.15-alpha grid, styled legend
+          frame, endpoint markers with edge color for separation.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Interpretation box explicitly narrates the statistical finding. Double-ended
-          arrow and shaded region guide viewer to the KS statistic. Semantic color
-          coding aids intuition.
+        comment: 'Above-default: shaded max-distance zone + double-headed arrow +
+          D annotation + p-value interpretation box create a clear statistical narrative
+          guiding the viewer.'
     spec_compliance:
       score: 15
       max: 15
@@ -141,30 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KS test comparison plot with two ECDFs rendered as step functions.
+        comment: Correct KS test visualization with ECDF step functions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: both ECDFs as step functions, KS statistic
-          value (D=0.722), maximum distance highlighted (dotted arrow + shaded band),
-          p-value shown, distributions labeled in legend, Y-axis 0–1.'
+        comment: Both ECDFs as step functions, KS statistic prominently shown, max-distance
+          point highlighted with vertical line and annotation, p-value included, distributions
+          labeled, Y-axis 0-1.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Credit Score (0–100), Y: Cumulative Proportion. Data correctly
-          mapped via np.sort and ECDF construction.'
+        comment: X=Credit Score (0-100), Y=Cumulative Proportion. All data shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ks-test-comparison · python · matplotlib · anyplot.ai''
-          — correct format. Legend: ''Bad Customers'' and ''Good Customers'' — matches
-          data.'
+        comment: Title matches required format. Legend labels Good/Bad Customers match
+          data.
     data_quality:
       score: 15
       max: 15
@@ -174,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete: both ECDFs, KS stat, p-value, maximum distance annotation,
-          interpretation text, endpoint markers.'
+        comment: 'Full KS test visualization: both ECDFs, max-distance annotation,
+          shaded region, p-value.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring Good vs. Bad customers is a highly realistic, neutral,
-          widely-recognized domain application of the KS test.
+        comment: Credit scoring application with Good/Bad customers using beta distributions
+          — realistic and domain-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–100 credit score is sensible; 500 samples per group is within spec
-          recommendation (100–1000); Y-axis 0–1 for cumulative proportion is correct.
+        comment: 500 samples per group, scores 0-100, beta distributions producing
+          realistic bimodal separation.
     code_quality:
       score: 10
       max: 10
@@ -199,32 +200,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes — clean top-level script structure.
+        comment: No functions or classes, clean linear procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, scipy.stats — all imported and used.
+        comment: os, matplotlib.pyplot, numpy, scipy.stats — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI. Efficient ECDF computation with np.searchsorted.
-          Single fill_betweenx call (no loop).
+        comment: No fake UI, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400) — correct. No bbox_inches='tight'.
+        comment: Saves as plot-{THEME}.png at dpi=400 without bbox_inches='tight'.
     library_mastery:
       score: 7
       max: 10
@@ -234,17 +234,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Axes-method usage throughout (ax.step, ax.fill_betweenx,
-          ax.annotate, ax.scatter). Proper arrowprops dict with connectionstyle. Legend
-          frame styling via get_frame() API.
+        comment: Uses Axes methods throughout, correct ax.step with where='post' for
+          ECDF, proper annotate/arrowprops usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Double-layer step plot (PAGE_BG thick line + actual line) for outline
-          separation is a distinctive matplotlib idiom. fill_betweenx for shaded region.
-          Double-ended annotate with connectionstyle arc3.
+        comment: ax.step, ax.fill_betweenx, ax.annotate with double-headed arrowstyle,
+          scatter with edgecolors — good idiomatic feature set but no advanced matplotlib
+          (tick locators, rcParams, axes transforms).
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -253,8 +252,8 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  dataprep:
-  - ecdf
+  - explicit-figure
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
