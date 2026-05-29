@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:55:53Z'
-updated: '2026-05-29T01:00:58Z'
+updated: '2026-05-29T01:21:01Z'
 generated_by: claude-sonnet
 workflow_run: 26611172144
 issue: 4133
@@ -12,98 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance and data quality — all required features present, mathematically
-    correct curves, edge cases handled
-  - 'Imprint palette correctly applied: brand green first, lavender second, themes
-    adapt cleanly with correct backgrounds #FAF8F1 / #1A1A17'
-  - Cubic interpolation gives smooth, publication-quality curves across 200 data points
-  - Dashed vertical guide line + annotation dots provide visual structure and highlight
-    the p=0.5 insight
-  - Both theme renders pass readability check — no dark-on-dark or light-on-light
-    failures
-  - Perfect code quality — KISS structure, deterministic, clean imports, correct PNG/SVG/HTML
-    output files
+  - Perfect spec compliance — Gini and entropy curves with correct mathematical formulas,
+    vertical dashed guide at p=0.5, peak annotation dots at both maxima
+  - 'Imprint palette applied correctly: brand green (#009E73) for Gini as first series,
+    lavender (#C475FD) for Entropy as second'
+  - Creative CSS injection into pygal SVG to soften axis border lines — a distinctive
+    pygal-specific technique leveraging the SVG rendering pipeline
+  - Cubic interpolation produces visually smooth curves well-suited to the mathematical
+    nature of the data
+  - 'Correct theme-adaptive chrome: background, foreground, and all text tokens flip
+    correctly between light (#FAF8F1) and dark (#1A1A17) renders'
+  - Edge-case handling at p=0 and p=1 via np.nan_to_num with np.errstate(divide='ignore')
+    — no artefacts at curve endpoints
   weaknesses:
-  - X-axis tick labels (0, 0.2, 0.4, 0.6, 0.8, 1.0) do not render in either PNG —
-    pygal.XY x_labels list is silently ignored for continuous xrange axes; fix by
-    investigating x_labels_major or other pygal mechanism
-  - Peak annotation dot labels (Gini peak = 0.50, Entropy peak = 1.00) only appear
-    as HTML hover tooltips, not as visible text in the PNG — dots alone are sufficient
-    as visual markers but text labels would improve clarity
-  - Pygal default rectangular plot border/frame retained — softening or removing would
-    improve visual refinement (DE-02)
+  - In the dark render the 'Entropy peak = 1.00' value label at (0.5, 1.0) sits right
+    on the y=1.0 horizontal guide line, causing minor crowding — consider offsetting
+    the annotation slightly above the guide or using a contrasting label background
+  - Helper function _render_png defined inside the script breaks the KISS Imports→Data→Plot→Save
+    pattern (CQ-01); the CSS manipulation could be inlined after chart construction
+    rather than wrapped in a function
+  - Design Excellence is functional but not exceptional — additional visual polish
+    (e.g. a subtle filled area between the two curves, or a shaded region under Gini
+    to contrast with the open Entropy arch) would elevate storytelling from 'data
+    displayed' toward 'insight communicated'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
-      Chrome: Title "line-impurity-comparison · python · pygal · anyplot.ai" fully readable in dark ink. Y-axis label "Impurity measure" and x-axis label "Probability p" clearly visible. Y-axis tick labels (0, 0.2, 0.4, 0.6, 0.8, 1.0) readable. X-axis tick labels ABSENT — no 0.0, 0.2, 0.4, 0.6, 0.8, 1.0 visible on x-axis despite x_labels being set.
-      Data: Gini curve in brand green (#009E73), entropy curve in Imprint lavender (#C475FD). Both smooth bell-shaped curves over [0,1]. Dashed vertical guide at p=0.5. Annotation dots at (0.5, 0.5) green and (0.5, 1.0) lavender. Legend at bottom with formula labels.
-      Legibility verdict: PASS (minor: x-axis ticks missing, otherwise all elements readable)
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "line-impurity-comparison · python · pygal · anyplot.ai" is clearly readable in dark ink (~55% of canvas width). Y-axis label "Impurity measure" and x-axis label "Probability p" are visible and appropriately sized. Tick labels (0.0–1.0 on both axes) are legible in dark muted ink. Y-axis horizontal guide lines at 0.2, 0.4, 0.6, 0.8, 1.0 are subtle.
+      Data: Gini curve in brand green (#009E73) arches to peak 0.50 at p=0.5. Entropy curve in Imprint lavender (#C475FD) arches higher, peaking at 1.0 at p=0.5. Vertical dashed guide line at x=0.5 in muted gray. Green dot at (0.5, 0.50) labeled "Gini peak = 0.50"; lavender dot at (0.5, 1.00) labeled "Entropy peak = 1.00". Legend at bottom: "Gini: 2p(1−p)" and "Entropy: −p log₂p − (1−p) log₂(1−p)".
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title and axis labels flip to light/white text — all readable against dark background. Y-axis tick labels white. No dark-on-dark failures observed. Same x-axis tick label absence as light render.
-      Data: Data colors are identical to light render — Gini green (#009E73) and Entropy lavender (#C475FD) unchanged between themes. Dashed guide line and annotation dots visible. Legend labels readable.
-      Legibility verdict: PASS (same x-axis ticks issue; no dark-on-dark failures)
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title, axis labels, and tick labels all render in light-colored text against the dark background. No dark-on-dark failures. Grid lines subtle.
+      Data: Gini green and Entropy lavender curves are identical in color to the light render — only chrome flips. Vertical dashed guide and peak annotation dots visible. The "Entropy peak = 1.00" label at (0.5, 1.0) sits immediately adjacent to the y=1.0 horizontal guide line; the text is readable but slightly crowded against the line — minor readability concern but not a failure.
+      Legibility verdict: PASS — all text readable. Minor crowding at entropy peak label but no dark-on-dark failure.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, labels=56, major_labels=44,
-          legend=44). Y-axis tick labels readable. X-axis tick labels absent in both
-          PNGs — pygal.XY x_labels list silently ignored for continuous xrange.
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44). Proportions good. Annotation labels slightly small relative
+          to axis text but readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: 'Minor crowding: ''Entropy peak = 1.00'' label at y=1.0 sits on the
+          horizontal guide line in the dark render. No actual text-on-text collision.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at stroke_width=5 prominent. 200-point cubic-interpolated curves
-          smooth. Annotation dots at size=10 clearly visible at peaks.
+        comment: Thick lines (stroke width=5) clearly visible. Peak dots prominent.
+          Dashed guide line well-rendered.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender CVD-safe pair with strong luminance contrast. Series
-          also differ in peak height — redundant encoding.
+        comment: Green and lavender are clearly distinguishable and CVD-safe under
+          all simulations.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape. Canvas gate passed. Generous margins. Plot fills
-          ~60-65% of canvas, well-balanced.
+        comment: 3200x1800 landscape. Generous balanced margins. Legend at bottom
+          well-placed. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Probability p (x) and Impurity measure (y) are descriptive. Title
-          matches spec format.
+        comment: 'X: ''Probability p'', Y: ''Impurity measure'' — descriptive, units
+          not needed (dimensionless normalized range).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green), second #C475FD (Imprint lavender
-          pos 2). Backgrounds #FAF8F1/#1A1A17. Chrome correctly theme-adaptive in
-          both renders.'
+        comment: 'First series #009E73 (Gini), second #C475FD (Entropy) — canonical
+          Imprint order. Backgrounds #FAF8F1/#1A1A17. All chrome theme-adaptive.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,23 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Imprint palette, explicit font hierarchy, cubic interpolation, dashed
-          guide, peak annotation dots — polished and above library defaults.
+        comment: 'Above default: custom Imprint palette, CSS axis-border softening,
+          cubic interpolation. Not yet publication-ready but clearly above a generic
+          configured default.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Y-grid subtle dashed, x-grid suppressed. Generous margins. But pygal
-          default rectangular plot border retained — softening would improve refinement.
+        passed: true
+        comment: Y-only guides, softened axis borders via CSS, no dots on main curves,
+          generous margins. Good refinement but spines not fully removed.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Dashed vertical guide + peak dots create focal point at p=0.5. Functional
-          visual hierarchy. Annotation labels only in HTML tooltips, not visible in
-          PNG.
+        passed: true
+        comment: Vertical guide at p=0.5 and peak annotation dots create a clear focal
+          point and guide the viewer to the shared maximum. Visual hierarchy present
+          but could go further (e.g., shaded fill between curves).
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY line chart for continuous mathematical functions — correct type.
+        comment: 'Correct: XY line comparison chart for two mathematical curves.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both curves present, distinct colors, legend with formulas, annotation
-          at p=0.5, y-grid, edge cases handled.
+        comment: Both curves, formula legend, p=0.5 annotation, edge case handling,
+          y-axis grid — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: probability p [0,1]; Y: impurity [0,1]. Both curves mathematically
-          correct.'
+        comment: 'X: probability p [0,1], Y: normalized impurity [0,1]. Correct mapping.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: line-impurity-comparison · python · pygal · anyplot.ai. Legend
-          includes formulas.'
+        comment: Title 'line-impurity-comparison · python · pygal · anyplot.ai' correct.
+          Legend labels match spec formulas.
     data_quality:
       score: 15
       max: 15
@@ -168,60 +171,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both criteria shown across full [0,1] range. Different peak heights
-          demonstrate scale difference. 200 data points cover edge cases.
+        comment: 200-point smooth curves across full [0,1] range, both maxima annotated,
+          vertical guide at shared peak.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard ML education context — theoretical curves for Gini impurity
-          and Shannon entropy.
+        comment: Machine learning education — mathematical formulas as category labels,
+          neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gini=2p(1-p) peaks at 0.5, entropy normalized peaks at 1.0 — mathematically
-          correct.
+        comment: 'Factually correct: Gini(0.5)=0.5, H(0.5)=1.0 (normalized). Mathematical
+          relationships verified.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data → style → chart
-          → series → save.'
+        comment: 'Minor deviation: _render_png helper function defined. The CSS SVG
+          manipulation could be inlined.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: np.linspace + analytic formulas, no stochastic
-          elements.'
+        comment: Fully deterministic — np.linspace + mathematical functions, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, pygal.style.Style — all used.
+        comment: 'All imports used: os, re, sys (all needed), cairosvg, numpy, pygal,
+          Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Creative use of 5-entry colors tuple for
-          5 logical series. No fake functionality.
+        comment: Clean, Pythonic. sys.path manipulation is a necessary workaround.
+          CSS injection is creative, not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, plot-{THEME}.svg, plot-{THEME}.html. Current
-          pygal API.
+        comment: Saves plot-{THEME}.png, plot-{THEME}.svg, plot-{THEME}.html. All
+          three outputs correct for pygal.
     library_mastery:
       score: 7
       max: 10
@@ -231,26 +234,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'pygal.XY with coordinate pairs, Style object, per-series stroke_style,
-          per-series show_dots/dots_size, legend_at_bottom. Deduction: x_labels silently
-          ignored for continuous XY axes.'
+        comment: Proper XY chart, Style object, cubic interpolation, x_value_formatter,
+          js=[] for static rendering, legend_at_bottom_columns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal cubic interpolation, per-series stroke_style override,
-          JS=[] for clean PNG, HTML interactive export.
-  verdict: REJECTED
+        comment: CSS injection into rendered SVG for spine softening is a genuinely
+          distinctive pygal technique. Cubic interpolation and js=[] are also pygal-specific.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
-  - annotations
-  - manual-ticks
   - html-export
+  - annotations
   patterns:
   - data-generation
-  dataprep:
-  - normalization
-  styling:
-  - grid-styling
+  dataprep: []
+  styling: []
