@@ -1,48 +1,53 @@
 library: letsplot
+language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:54:37Z'
-updated: '2026-02-17T19:24:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22111342571
+updated: '2026-05-29T01:07:24Z'
+generated_by: claude-sonnet
+workflow_run: 26611304786
 issue: 4133
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/letsplot/plot.html
-quality_score: 88
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent spec compliance with all required features including annotations, legend
-    with formulas, and edge case handling
-  - 'Strong visual storytelling: the shaded ribbon, open circle markers at maxima,
-    and Maximum uncertainty annotation create a clear educational narrative'
-  - 'Good use of lets-plot distinctive features: layer_tooltips with custom formatting
-    and HTML export'
-  - Clean, readable code structure following KISS principles with deterministic data
-  - Thoughtful color choice (blue/orange) that is colorblind-safe and visually harmonious
+  - 'Perfect Visual Quality across both themes: explicit font sizing, correct Imprint
+    palette with theme-adaptive chrome, no overlap or clipping, correct 3200x1800
+    canvas'
+  - 'Complete spec compliance: both curves with formulas in legend, p=0.5 annotation,
+    edge-case handling, grid, and 200-point smooth curves'
+  - 'Expert letsplot API usage: layer_tooltips() with format chains, geom_ribbon,
+    arrow() parameter, shape=21 with stroke for open circles, interactive HTML output'
+  - 'Excellent educational storytelling: subtitle states the key insight, arrow+annotation
+    highlights the focal point, shaded ribbon visualizes metric difference, boundary
+    annotations explain edge behavior'
   weaknesses:
-  - 'Left boundary annotation p->0: both->0 is partially clipped at the plot edge
-    - increase left margin or shift the annotation slightly right'
-  - Some empty space in the lower portion of the plot could be better utilized
-  - Slightly verbose code with separate geom_point calls for each marker instead of
-    a unified approach
-  - The markers_df has a color column that is never mapped to an aesthetic
-  image_description: 'The plot displays two smooth curves on a clean minimal white/light-gray
-    background comparing Gini impurity and entropy as decision tree splitting criteria.
-    The blue curve (Gini: 2p(1-p)) peaks at 0.5 at p=0.5, while the orange curve (Entropy
-    (normalized)) peaks at 1.0 at p=0.5. A light blue shaded ribbon fills the area
-    between the two curves, visually highlighting their difference. Open circle markers
-    with white fill sit at both maxima at p=0.5. A bold italic annotation reads "Maximum
-    uncertainty at p = 0.5" with a small downward arrow. An italic annotation on the
-    right side explains the "Shaded region: difference between metrics." Boundary
-    annotations at the left and right edges note "p -> 0: both -> 0" and "p -> 1:
-    both -> 0." A dashed vertical guideline marks p=0.5. The title reads "line-impurity-comparison
-    · letsplot · pyplots.ai" with an informative subtitle. The legend at the bottom
-    shows both series. X-axis is labeled "Probability of class 1 (p)" (0-1 in 0.1
-    increments), Y-axis is "Impurity measure (normalized)" (0-1 in 0.2 increments).'
+  - 'DE-01 (5/8): Both lines at size=1.5 have equal visual weight — consider differentiated
+    line widths (e.g. entropy size=2.0, Gini size=1.5) to create clearer focal priority'
+  - 'DE-02 (4/6): Full bidirectional major grid adds visual noise — consider panel_grid_major_x=element_blank()
+    to keep only horizontal reference lines'
+  - 'DE-03 (4/6): Shaded ribbon fill (Imprint[2] blue at alpha=0.12) reads as near-gray
+    on light background — slightly higher alpha (0.15-0.18) would make the difference
+    region more legible'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "line-impurity-comparison · python · letsplot · anyplot.ai" in bold dark ink, clearly readable. Subtitle in muted italic. Axis labels "Probability of class 1 (p)" and "Impurity measure (normalized)" in dark ink. Tick labels in dark-soft ink at 0.0–1.0 scale. All text clearly readable.
+      Data: Gini curve in #009E73 (Imprint[0]) and Entropy curve in #C475FD (Imprint[1]). Shaded ribbon (Imprint[2] at alpha=0.12) fills between curves. Open circles mark maxima at p=0.5. Arrow annotation with "Maximum uncertainty at p = 0.5" label. Boundary annotations at left and right edges.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, subtitle, axis labels, tick labels all rendered in light ink (#F0EFE8/#B8B7B0) — clearly readable against dark background. Legend text in light ink. No dark-on-dark failure detected.
+      Data: Gini #009E73 and Entropy #C475FD colors pixel-identical to light render — only chrome flipped. Shaded ribbon still visible. Annotations readable in light ink.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -50,63 +55,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, legend 16pt'
+        comment: All font sizes explicitly set via theme(); geom_text sizes calibrated
+          (3-4mm); proportioned correctly in both renders
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Left boundary annotation slightly clipped at plot edge
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at size 2.5 clearly visible, open circle markers prominent
+        comment: Lines size=1.5, open circles size=6 stroke=2, ribbon visible; all
+          elements clear in both themes
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple have good luminance contrast and are deuteranopia-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 2
-        max: 4
-        passed: true
-        comment: Good canvas utilization but some empty space in lower portion
+        comment: ggsize(800,450) x scale=4 = correct 3200x1800 px; balanced margins;
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: 'X: Probability of class 1 (p); Y: Impurity measure (normalized)
+          — descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1/#1A1A17;
+          chrome adapts correctly'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with custom palette, open circle markers, bold italic
-          annotation, subtle ribbon fill
+        comment: Intentional design above defaults (annotations, open circles, ribbon)
+          but lacks typographic hierarchy between series
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, minor grid removed, spines/ticks removed, tasteful dashed
-          vertical guide
+        comment: Spines removed, ticks removed, minor grid suppressed, very subtle
+          major grid (size=0.2), legend with custom background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation highlights key insight, shaded region emphasizes metric
-          difference, boundary annotations explain edges
+        comment: Subtitle states insight; arrow+annotation highlights focal point;
+          shaded ribbon shows metric difference; boundary annotations
     spec_compliance:
       score: 15
       max: 15
@@ -116,50 +131,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line comparison plot with two curves
+        comment: Correct line comparison chart with two overlaid curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: distinguishable curves, legend with formulas,
-          annotated maxima, edge cases, grid'
+        comment: Both curves, distinct colors+markers, legend with formulas, p=0.5
+          annotated, edge cases handled, grid, 200 points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability p [0,1], Y=impurity normalized [0,1]
+        comment: 'X: p in [0,1]; Y: normalized impurity in [0,1]; all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels with formulas
+        comment: Title matches required format; legend labels include formulas as
+          spec requests
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both curves, maxima, boundary behavior, and area difference
+        comment: Both criteria, region between them, maxima at p=0.5, boundary behavior
+          — complete coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real ML education scenario, neutral scientific topic
+        comment: Educational ML visualization of well-established mathematical concept;
+          neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct mathematical functions with proper value ranges
+        comment: Gini peaks at 0.5, binary entropy peaks at 1 bit (naturally [0,1]);
+          formulas mathematically correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,33 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports -> data -> plot -> save structure
+        comment: 'Linear flow: theme tokens -> data -> DataFrames -> plot layers ->
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical formulas, no random data
+        comment: Deterministic data via np.linspace; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All five imports used; no unused imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Slightly verbose: separate geom_point calls, unused color column
-          in markers_df'
+        comment: Appropriate complexity; tooltips correctly suppressed on non-curve
+          layers with tooltips='none'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct ggsave with scale=3
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot 4.8.2
+          API
+    library_mastery:
       score: 8
       max: 10
       items:
@@ -202,26 +223,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper ggplot grammar, aes mappings, theme_minimal, ggsize, geom_ribbon,
-          geom_segment with arrow
+        comment: Expert grammar-of-graphics composition with multi-layer ggplot(),
+          proper aes(), scale_color_manual(), ggsize(), ggsave(scale=4), shape=21
+          with fill+stroke, arrow() in geom_segment
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips with format/line builders and HTML export
+        comment: Uses layer_tooltips() with chained .format()/.line() (letsplot-specific
+          interactive tooltip API); HTML export alongside PNG
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
