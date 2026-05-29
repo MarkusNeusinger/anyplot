@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -103,8 +103,8 @@ custom_style = Style(
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=36,
-    value_label_font_size=36,
+    value_font_size=42,
+    value_label_font_size=42,
     tooltip_font_size=32,
     font_family=_font,
     label_font_family=_font,
@@ -119,7 +119,7 @@ chart = pygal.XY(
     style=custom_style,
     width=3200,
     height=1800,
-    title="ks-test-comparison · pygal · pyplots.ai",
+    title="ks-test-comparison · python · pygal · anyplot.ai",
     x_title="Credit Score (points)",
     y_title="Cumulative Proportion",
     show_dots=False,
