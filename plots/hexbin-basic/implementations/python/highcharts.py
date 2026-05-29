@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-29
@@ -59,6 +59,23 @@ for px, py in points:
 tilemap_data = [{"x": col, "y": row, "value": count} for (col, row), count in hex_bins.items()]
 max_count = max(item["value"] for item in tilemap_data)
 
+
+# Zone center col/row positions for annotations
+def _to_col_row(px, py):
+    r = int((py - y_min) / vert_spacing)
+    c_off = (r % 2) * hex_width * 0.5
+    c = int((px - x_min - c_off) / hex_width)
+    return c, r
+
+
+za_col, za_row = _to_col_row(2.0, 3.0)  # Zone A — upper-center
+zb_col, zb_row = _to_col_row(-1.0, -1.0)  # Zone B — lower-left
+zc_col, zc_row = _to_col_row(4.0, -2.0)  # Zone C — lower-right (peak density)
+
+# Annotation style (readable on hexbin colors, both themes)
+ann_fill = "rgba(26,26,23,0.72)" if THEME == "light" else "rgba(240,239,232,0.18)"
+ann_text = "#F0EFE8"
+
 # Title with length-scaled fontsize
 title_text = "Seismic Activity Density · hexbin-basic · python · highcharts · anyplot.ai"
 title_fs = max(44, round(66 * 67 / len(title_text)))
@@ -101,7 +118,8 @@ chart.options.y_axis = {
     "lineWidth": 1,
 }
 chart.options.color_axis = {
-    "min": 0,
+    "type": "logarithmic",
+    "min": 1,
     "max": int(max_count),
     "stops": [[0, CMAP_LOW], [1, CMAP_HIGH]],
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
@@ -115,8 +133,7 @@ chart.options.legend = {
     "title": {"text": "Event Count", "style": {"fontSize": "44px", "fontWeight": "bold", "color": INK}},
     "itemStyle": {"fontSize": "44px", "color": INK_SOFT},
     "backgroundColor": ELEVATED_BG,
-    "borderColor": INK_SOFT,
-    "borderWidth": 1,
+    "borderWidth": 0,
 }
 chart.options.tooltip = {"enabled": False}
 chart.options.credits = {"enabled": False}
@@ -172,6 +189,19 @@ html_content = f"""<!DOCTYPE html>
             var chart = Highcharts.charts[0];
             if (chart) {{
                 chart.series[0].update({border_patch}, true);
+                var zones = [
+                    {{x: {za_col}, y: {za_row}, label: 'Zone A'}},
+                    {{x: {zb_col}, y: {zb_row}, label: 'Zone B'}},
+                    {{x: {zc_col}, y: {zc_row}, label: 'Zone C ★'}}
+                ];
+                zones.forEach(function(z) {{
+                    var px = chart.xAxis[0].toPixels(z.x, false);
+                    var py = chart.yAxis[0].toPixels(z.y, false);
+                    chart.renderer.label(z.label, px - 55, py - 110)
+                        .attr({{padding: 12, r: 4, fill: '{ann_fill}', zIndex: 5}})
+                        .css({{color: '{ann_text}', fontSize: '40px', fontWeight: '600'}})
+                        .add();
+                }});
             }}
         }});
     </script>
