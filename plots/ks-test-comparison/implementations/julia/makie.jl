@@ -33,75 +33,49 @@ n_bad  = 400
 good_scores = randn(n_good) .* 60.0 .+ 620.0
 bad_scores  = randn(n_bad)  .* 70.0 .+ 490.0
 
-# Build step function coordinates for ECDF
-function ecdf_step(sample)
-    sorted_vals = sort(sample)
-    n = length(sorted_vals)
-    xs_out = Vector{Float64}(undef, 2 * n + 2)
-    ys_out = Vector{Float64}(undef, 2 * n + 2)
+sorted_good = sort(good_scores)
+sorted_bad  = sort(bad_scores)
 
-    xs_out[1] = sorted_vals[1] - 5.0
-    ys_out[1] = 0.0
-    for i in 1:n
-        xs_out[2i]     = sorted_vals[i]
-        ys_out[2i]     = (i - 1) / n
-        xs_out[2i + 1] = sorted_vals[i]
-        ys_out[2i + 1] = i / n
-    end
-    xs_out[end] = sorted_vals[end] + 5.0
-    ys_out[end] = 1.0
+# KS statistic (inline — two-sample D and its x-location)
+all_pts = sort(unique(vcat(sorted_good, sorted_bad)))
+diffs   = abs.(searchsortedlast.(Ref(sorted_good), all_pts) ./ n_good .-
+               searchsortedlast.(Ref(sorted_bad),  all_pts) ./ n_bad)
+ks_idx  = argmax(diffs)
+ks_d    = diffs[ks_idx]
+ks_x    = all_pts[ks_idx]
 
-    return xs_out, ys_out
-end
-
-# Two-sample KS statistic
-function ks_stat(x1, x2)
-    n1, n2 = length(x1), length(x2)
-    sx1 = sort(x1)
-    sx2 = sort(x2)
-    all_pts = sort(unique(vcat(sx1, sx2)))
-
-    max_d  = 0.0
-    max_pt = all_pts[1]
-    for pt in all_pts
-        c1 = searchsortedlast(sx1, pt)
-        c2 = searchsortedlast(sx2, pt)
-        d  = abs(c1 / n1 - c2 / n2)
-        if d > max_d
-            max_d  = d
-            max_pt = pt
-        end
-    end
-    return max_d, max_pt
-end
-
-# KS p-value (asymptotic Kolmogorov distribution)
-function ks_pvalue(d, n1, n2)
-    n = (n1 * n2) / (n1 + n2)
-    z = d * (sqrt(n) + 0.12 + 0.11 / sqrt(n))
-    s = 0.0
-    for k in 1:100
-        s += (-1)^(k - 1) * exp(-2.0 * k^2 * z^2)
-    end
-    return max(0.0, min(1.0, 2.0 * s))
-end
-
-ks_d, ks_x = ks_stat(good_scores, bad_scores)
-ks_p = ks_pvalue(ks_d, n_good, n_bad)
+# KS p-value (asymptotic Kolmogorov distribution, inline)
+n_eff = sqrt((n_good * n_bad) / (n_good + n_bad))
+z     = ks_d * (n_eff + 0.12 + 0.11 / n_eff)
+ks_p  = max(0.0, min(1.0, 2.0 * sum((-1)^(k - 1) * exp(-2.0 * k^2 * z^2) for k in 1:100)))
 
 # CDF values at the KS point for the gap segment
-sx_good = sort(good_scores)
-sx_bad  = sort(bad_scores)
-cdf_good_at_ks = searchsortedlast(sx_good, ks_x) / n_good
-cdf_bad_at_ks  = searchsortedlast(sx_bad,  ks_x) / n_bad
+cdf_good_at_ks = searchsortedlast(sorted_good, ks_x) / n_good
+cdf_bad_at_ks  = searchsortedlast(sorted_bad,  ks_x) / n_bad
 y_lo = min(cdf_good_at_ks, cdf_bad_at_ks)
 y_hi = max(cdf_good_at_ks, cdf_bad_at_ks)
 
-# ECDF step function data
-sx_good_plot, sy_good_plot = ecdf_step(good_scores)
-sx_bad_plot,  sy_bad_plot  = ecdf_step(bad_scores)
+# ECDF step function coordinates
+function ecdf_step(sv)
+    n  = length(sv)
+    xs = vcat(sv[1] - 5.0,
+              vec(permutedims(hcat(sv, sv))),
+              sv[end] + 5.0)
+    ys = vcat(0.0,
+              vec(permutedims(hcat((0:n-1) ./ n, (1:n) ./ n))),
+              1.0)
+    return xs, ys
+end
 
-# Title (47 chars < 67 baseline, no scaling needed)
+xs_good, ys_good = ecdf_step(sorted_good)
+xs_bad,  ys_bad  = ecdf_step(sorted_bad)
+
+# Dense x grid for band fill (evaluates both ECDFs at every data point)
+x_fill      = sort(unique(vcat(sorted_good, sorted_bad)))
+y_good_fill = [searchsortedlast(sorted_good, x) / n_good for x in x_fill]
+y_bad_fill  = [searchsortedlast(sorted_bad,  x) / n_bad  for x in x_fill]
+
+# Title
 title_str  = "ks-test-comparison · julia · makie · anyplot.ai"
 title_size = max(14, round(Int, 20 * min(1.0, 67.0 / length(title_str))))
 
@@ -141,10 +115,15 @@ ax = Axis(
     limits            = (nothing, nothing, -0.02, 1.05),
 )
 
+# Shaded fill between ECDF curves (narrates the divergence region)
+ks_red = IMPRINT_PALETTE[5]
+band!(ax, x_fill, min.(y_good_fill, y_bad_fill), max.(y_good_fill, y_bad_fill);
+    color = RGBAf(ks_red.r, ks_red.g, ks_red.b, 0.12))
+
 # ECDFs
-lines!(ax, sx_good_plot, sy_good_plot;
+lines!(ax, xs_good, ys_good;
     color = IMPRINT_PALETTE[1], linewidth = 2.5, label = "Good Customers")
-lines!(ax, sx_bad_plot, sy_bad_plot;
+lines!(ax, xs_bad, ys_bad;
     color = IMPRINT_PALETTE[2], linewidth = 2.5, label = "Bad Customers")
 
 # KS statistic: dashed vertical marker + filled gap segment
@@ -156,10 +135,10 @@ lines!(ax, [ks_x, ks_x], [y_lo, y_hi];
 ks_p_str = ks_p < 0.001 ? "p < 0.001" : "p = $(round(ks_p; digits = 3))"
 text!(ax,
     "D = $(round(ks_d; digits = 3))\n$(ks_p_str)";
-    position  = Point2f(ks_x + 8.0, (y_lo + y_hi) / 2.0),
-    align     = (:left, :center),
-    color     = INK,
-    fontsize  = 13,
+    position = Point2f(ks_x + 8.0, (y_lo + y_hi) / 2.0),
+    align    = (:left, :center),
+    color    = INK,
+    fontsize = 16,
 )
 
 axislegend(ax;
