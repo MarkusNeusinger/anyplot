@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-Library: highcharts | Python 3.14.3
-Quality: 85/100 | Updated: 2026-05-29
+Library: highcharts unknown | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-29
 """
 
 import os
