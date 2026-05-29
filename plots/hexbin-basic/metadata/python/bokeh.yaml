@@ -1,60 +1,45 @@
 library: bokeh
+language: python
 specification_id: hexbin-basic
 created: 2025-12-14 19:46:16+00:00
-updated: '2026-02-21T21:19:35Z'
-generated_by: claude-opus-4-6
-workflow_run: 20213177102
+updated: '2026-05-29T09:30:26Z'
+generated_by: claude-sonnet
+workflow_run: 26628974601
 issue: 859
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
-  styling:
-  - dark-theme
-  - custom-colormap
-  - minimal-chrome
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Cohesive dark Viridis design where background color (#440154) matches the colormap
-    low end, creating seamless density visualization
-  - Expert use of Bokeh native hex API chain (hexbin, hex_tile, linear_cmap, construct_color_bar)
-  - All chrome removed (spines, grid, ticks, outline) for a polished minimal aesthetic
-  - Descriptive axis labels with units in a realistic environmental monitoring context
-  - Dual output (PNG + HTML) leveraging Bokeh interactive capabilities
+  - Both renders fully theme-correct with no dark-on-dark or light-on-light failures
+  - Idiomatic use of Bokeh native hexbin() utility and transform() color-mapping pipeline
+  - IoT sensor monitoring scenario is neutral realistic and well-suited to hexbin
+    density visualization
+  - 'Complete Imprint imprint_seq palette compliance with correct #009E73→#4467A3
+    gradient'
+  - Clean reproducible code with explicit font sizing throughout
   weaknesses:
-  - Color bar slightly thin and cramped at right canvas edge
-  - Data storytelling could be stronger with more cluster variation or overlapping
-    density regions
-  - Environmental sensor context is plausible but generic
-  improvements: []
-  verdict: APPROVED
-  image_description: 'The plot displays a hexagonal binning density visualization
-    on a deep purple (#440154) background that matches the lowest end of the Viridis
-    colormap. Three distinct clusters of hexagonal bins are visible: a bottom-left
-    cluster centered around (-3, -1) with a bright yellow core fading through green
-    and teal to purple edges; a smaller, tighter top-center cluster around (-1, 4)
-    with concentrated green-yellow hexagons; and a larger, more diffuse right cluster
-    around (3, 1) with green centers spreading broadly. The Viridis colormap transitions
-    from dark purple (0 count) through blue/teal/green to bright yellow (~140 count).
-    A vertical color bar on the right is labeled "Count" with values 0-140. The title
-    "hexbin-basic · bokeh · pyplots.ai" appears in white at the top-left. Axis labels
-    read "Distance East (km)" and "Distance North (km)" in white, with light gray
-    tick labels. No grid lines, axis lines, or tick marks are present — the design
-    is minimal and polished.'
+  - HTML export does not include a HoverTool showing bin count on hover — adding HoverTool(tooltips=[(Count,
+    @counts)]) would push both design sophistication and Bokeh distinctiveness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Bold title "hexbin-basic · python · bokeh · anyplot.ai" in dark ink (~62% width), axis labels "Distance East (km)" / "Distance North (km)" with units in italic at 42pt, tick labels in dark secondary text — all readable
+      Data: Imprint sequential colormap green #009E73 (low density) → blue #4467A3 (high density); five overlapping clusters with max count ~140; color bar on right labelled "Count" 0–140
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, fills entire canvas including borders
+      Chrome: Title and all labels switch to light cream (#F0EFE8 / #B8B7B0); color bar labels also light — no dark-on-dark issues anywhere; gaps between isolated hexbins show #1A1A17 background (expected)
+      Data: Identical green→blue Imprint sequential gradient and same cluster positions as light render — data colors unchanged
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,45 +47,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, color bar title 20pt, color bar labels 16pt. All readable on dark
-          background.'
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks/colorbar); well-proportioned in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap anywhere. All labels cleanly separated.
+        comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hex bins at size 0.3 provide clear density gradients. All three clusters
-          distinctly visible.
+        comment: Hexbins ideal for 11000-point density; all clusters distinguishable
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint imprint_seq (green→blue) is CVD-safe with sufficient luminance
+          ramp
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Viridis256 is perceptually uniform and colorblind-safe with excellent
-          contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills ~65% of canvas with balanced margins. Color bar slightly
-          cramped at right edge.
+        comment: Hexbin field fills ~65-70% of canvas; color bar efficient; balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Distance East (km) and Distance North
-          (km).'
+        comment: Distance East (km) / Distance North (km) with units; correct title
+          format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ANYPLOT_SEQ256 = Imprint imprint_seq #009E73→#4467A3; backgrounds
+          #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -108,22 +98,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Dark #440154 background matching lowest Viridis value creates seamless
-          integration. Cohesive, intentional color scheme clearly above defaults.'
+        comment: Custom Imprint palette, spines/grid/ticks removed, color bar individually
+          styled — clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axis lines, tick marks, grid, and outline all removed. Color bar
-          styled to match. Nearly every chrome element polished away.
+        comment: 'Near-perfect: grid absent, spines removed, tick marks removed, generous
+          whitespace, color bar padding set'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three clusters with different sizes and spreads create visual variety.
-          Above default but no strong focal point.
+        comment: Dark-blue cores vs green-teal perimeter guides eye to hotspot clusters;
+          multi-cluster IoT scenario coherent
     spec_compliance:
       score: 15
       max: 15
@@ -133,51 +123,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning plot aggregating 2D point density.
+        comment: Correct hexbin using Bokeh native hexbin() + hex_tile()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color bar present, Viridis colormap used, bin size parameter controls
-          resolution.
+        comment: Color bar, Imprint sequential cmap, gridsize=0.3, large 11000-point
+          dataset
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, axes show full data range.
+        comment: X=Distance East, Y=Distance North; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Color bar serves as density legend.
+        comment: Exact title format; color bar replaces categorical legend appropriately
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple clusters with different densities and spreads. Could benefit
-          from overlapping clusters.
+        comment: Five clusters of varying size/spread; full density range from sparse
+          edge bins to dense cores
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Environmental sensor network monitoring zones — realistic and neutral
-          but somewhat generic.
+        comment: IoT sensor monitoring zones with overlapping plumes; neutral, plausible,
+          km-scale geographic context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Distance range and count values sensible for monitoring area with
-          10,000 readings.
+        comment: ±6 km range, 1200-3500 point clusters, 0-140 bin counts — all physically
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -187,32 +177,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Import → Data → Plot → Save linear flow. No functions or classes.
+        comment: 'Linear: imports → tokens → data → plot → colorbar → chrome → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, none unused.
+        comment: All 14 imports used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with elegant loop-based cluster generation.
+        comment: Compact ANYPLOT_SEQ256 comprehension; zip strict=True; PIL safety
+          resize well-placed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also exports HTML. Current Bokeh
-          3.x API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
     library_mastery:
       score: 9
       max: 10
@@ -222,12 +212,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Bokeh hex-specific API: hexbin(), hex_tile(), linear_cmap,
-          construct_color_bar().'
+        comment: hexbin() pre-aggregation, ColumnDataSource binding, transform() with
+          LinearColorMapper, add_layout() — all idiomatic Bokeh patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: hex_tile() glyph, native hexbin() utility, construct_color_bar(),
-          and HTML export are Bokeh-distinctive.
+        comment: Native hexbin() + hex_tile() + transform() pipeline is distinctively
+          Bokeh; HTML export adds value; HoverTool omitted from HTML artifact
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
