@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:27Z'
-updated: '2026-05-29T13:30:07Z'
+updated: '2026-05-29T13:41:15Z'
 generated_by: claude-sonnet
 workflow_run: 26639288057
 issue: 982
@@ -12,98 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: inverted Y-axis, dot markers, line connections, all
-    6 entities x 6 periods present'
-  - 'Excellent Imprint palette application: Arsenal first series = #009E73, all six
-    Imprint positions used in canonical order'
-  - Clear data storytelling through Arsenal visual emphasis (thicker stroke + larger
-    markers)
-  - 'Real Altair interactivity: hover highlighting via selection_point survives in
-    HTML output'
-  - Direct end-of-line labeling eliminates legend box, following professional bump
-    chart convention
-  - 'Canvas handling: pad-only to exact 3200x1800 with correct error-on-overflow guard'
+  - 'Full spec compliance: Y-axis inverted, markers at each period, distinct colors,
+    connecting lines; all spec requirements satisfied'
+  - Arsenal narrative creates clear visual hierarchy via differential stroke width
+    (4 vs 2) and marker size (200 vs 80), plus annotation at key event
+  - 'Fully idiomatic Altair: declarative grammar, selection-based interactivity, alt.datum
+    predicates, proper encoding types'
+  - 'Clean design: end-of-line labels replace legend box, no chart border, very subtle
+    grid'
+  - Correct Imprint palette in canonical order with full theme-adaptive chrome in
+    both renders
+  - Deterministic hardcoded data; clean flat structure; current API throughout
   weaknesses:
-  - End-of-line label fontSize=13 is slightly large relative to tick labels at fontSize=10
-    — creates a minor visual hierarchy inconsistency (team name labels nearly as prominent
-    as axis titles)
-  - No explicit annotation or callout text guiding the reader to the Arsenal narrative;
-    the data story relies entirely on visual encoding which may not be immediately
-    obvious to casual viewers
-  - Man United matte red (#AE3030) has marginal contrast on dark background (~3.5:1)
-    — inherent Imprint palette trade-off, but worth noting for any accessibility-strict
-    context
+  - End-of-line label text (fontSize=11, ~44px source) and annotation text (fontSize=10,
+    ~40px source) are slightly small — borderline at thumbnail / mobile-scaled sizes
+  - 'DE-01 has room to grow: no font-weight variation in the typography hierarchy
+    beyond what defaults provide; annotation styling is minimal (only color applied)'
+  - configure_legend() is called but produces no visible legend (suppressed via legend=None
+    on the lines layer) — minor dead configuration
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "bump-basic · python · altair · anyplot.ai" in bold dark ink, centered, ~65% canvas width. Axis labels "Match Week" (x) and "League Position" (y) in dark ink. Tick labels (Week 1–6, ranks 1–6) in dark gray INK_SOFT. End-of-line team name labels at Week 6 in respective Imprint palette colors. Grid lines at each rank position, very subtle (gridOpacity=0.15).
-      Data: Arsenal = #009E73 (brand green, thicker line + larger dots), Liverpool = #4467A3 (blue), Chelsea = #C475FD (lavender), Man City = #BD8233 (ochre), Man United = #AE3030 (red), Tottenham = #2ABCCD (cyan). All first series = #009E73 confirmed.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, no pure white
+      Chrome: Title "bump-basic · python · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Match Week" (x) and "League Position" (y) in dark ink at 12px. Tick labels "Week 1"–"Week 6" and "1"–"6" in INK_SOFT (#4A4A44) at 10px, readable. End-of-line team labels (fontSize=11) colored per series, all readable. No chart border (strokeWidth=0).
+      Data: Six colored series — Arsenal #009E73 (first series, brand green), Chelsea #C475FD (lavender), Liverpool #4467A3 (blue), Man City #BD8233 (ochre), Man United #AE3030 (matte red), Tottenham #2ABCCD (cyan). Arsenal has thicker stroke (4px) and larger markers (size=200 vs 80). Annotation "↑ Arsenal: 1st" in green at Week 3. Grid lines extremely subtle (opacity=0.15).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title and axis labels flip to light cream/gray (INK = #F0EFE8, INK_SOFT = #B8B7B0). All text readable against dark surface. No dark-on-dark text detected. Grid lines visible as subtle light-on-dark rules.
-      Data: Colors identical to light render — Arsenal green, Liverpool blue, Chelsea lavender, Man City ochre, Man United red, Tottenham cyan. Only chrome elements flip between themes. Man United matte red (#AE3030) has ~3.5:1 contrast on dark bg — marginal but acceptable at this scale.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct, no pure black
+      Chrome: Title and axis labels rendered in light text (#F0EFE8 INK token), clearly visible against dark background. Tick labels in #B8B7B0 (INK_SOFT dark), readable. End-of-line team labels rendered in their respective series colors, all visible. No dark-on-dark failures detected.
+      Data: Colors identical to light render — Arsenal #009E73, Chelsea #C475FD, Liverpool #4467A3, Man City #BD8233, Man United #AE3030, Tottenham #2ABCCD. Data colors unchanged between themes as required.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes. End-of-line labels at fontSize=13
-          slightly large vs tick labels at fontSize=10, creating minor hierarchy imbalance.
+        comment: Title, axis labels, tick labels all readable in both themes; end-of-line
+          labels (fontSize=11) and annotation (fontSize=10) slightly small at thumbnail
+          scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Line crossings are expected bump chart geometry.
-          End-of-line labels cleanly separated at distinct Week 6 rank positions.
+        comment: End-of-line labels spaced at distinct rank positions; annotation
+          sits cleanly between ranks 1 and 2 at Week 3
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 36 data points (sparse). Arsenal emphasized with strokeWidth=4 and
-          size=200. Other teams at strokeWidth=2 and size=80. All series clearly distinguishable.
+        comment: Sparse data (36 points); Arsenal size=200 and others size=80 appropriately
+          prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. No red/green as sole distinguishing
-          signal.
+        comment: Imprint palette is colorblind-safe; end-of-line labels provide redundant
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 exact). Good margins. No overflow in
-          either render.
+        comment: Canvas gate passed (3200x1800); PIL padding correctly centers chart;
+          proportions appropriate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Match Week (x) and League Position (y) are descriptive. Title follows
-          mandated format exactly.
+        comment: Match Week and League Position are descriptive; title follows required
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Arsenal (first series) = #009E73. All six teams use Imprint palette
-          positions 1-6 in canonical order. Backgrounds #FAF8F1 / #1A1A17 correct.'
+        comment: 'Arsenal first series = #009E73; canonical Imprint order; backgrounds
+          #FAF8F1/#1A1A17; chrome correctly flips in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,23 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Arsenal emphasis via stroke width and size, interactive hover highlight,
-          direct labeling. Solid above-generic-defaults design intent.
+        comment: Visual hierarchy through Arsenal emphasis (stroke 4 vs 2, size 200
+          vs 80), end-of-line labels, narrative annotation; above default 4
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: strokeWidth=0 removes chart frame. Grid opacity 0.15 is subtle. Retains
-          utilitarian Altair feel without further whitespace refinement.
+        passed: true
+        comment: configure_view(strokeWidth=0) removes border, gridOpacity=0.15 very
+          subtle, clean axis domain styling; above default 2
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arsenal rise is clear focal point via visual emphasis. Interactive
-          hover allows trajectory isolation. No explicit annotation callout for casual
-          viewers.
+        comment: Clear focal point (Arsenal's rise), annotation at key moment, visual
+          hierarchy guides viewer; above default 2
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart with inverted Y-axis (rank 1 at top), dot markers,
-          and lines connecting same entity across periods.
+        comment: 'Correct bump chart: rank positions connected by lines across time'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers at every period, lines
-          connecting same entity — all present.
+        comment: Y-axis inverted, distinct colors, dot markers at each period, lines
+          connect same entity
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: ordinal Match Weeks, Y: integer Rank (inverted), Color: Team.
-          All 6 teams x 6 weeks represented.'
+        comment: X=Match Week, Y=League Position (reversed), Color=Team; all 6 entities
+          and 6 periods shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Direct end-of-line labels at Week 6 serve as
-          legend with correct team names.
+        comment: Title is 'bump-basic · python · altair · anyplot.ai'; end-of-line
+          colored labels identify each entity
     data_quality:
       score: 15
       max: 15
@@ -169,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rises (Arsenal 3->1), falls (Man United 2->5), volatility (Liverpool
-          1->3->1), and stable positions (Tottenham at 6).
+        comment: Demonstrates rank changes, overtakes, stable positions, decline,
+          and rise narratives
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Premier League standings with 6 real clubs over 6 match weeks. Plausible
-          progressions, no controversial content.
+        comment: Premier League standings is highly plausible, neutral; real team
+          names, realistic ranking behavior
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 6 entities x 6 periods within spec guidance (5-10 entities, 4-8 periods).
-          Integer ranks 1-6.
+        comment: 6 entities and 6 periods within spec's 5-10 entities and 4-8 periods;
+          ranks 1-6 correct
     code_quality:
       score: 10
       max: 10
@@ -194,34 +190,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions or classes. sys.path patch is
-          a necessary one-liner with comment.
+        comment: No functions or classes; flat procedural script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, pandas, PIL.Image — all used.
+        comment: 'All imports used: altair, pandas, PIL, os, sys'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Layer composition with + operator, alt.datum predicate pattern —
-          idiomatic. No fake UI.
+        comment: Clean layered composition; no fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (padded to 3200x1800) and plot-{THEME}.html.
-          No bare plot.png.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Altair
+          6.x API
     library_mastery:
       score: 8
       max: 10
@@ -231,26 +225,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Layer composition (+), encoding shorthands (:O :Q :N), alt.condition,
-          alt.datum, .add_params() — all idiomatic Altair.
+        comment: 'Fully idiomatic: declarative encoding with proper type annotations,
+          alt.condition, alt.selection_point, alt.datum, layer composition'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: selection_point hover highlight, alt.condition for conditional encoding,
-          HTML export with live interactivity. Strong but standard Altair patterns
-          rather than advanced Vega-Lite capabilities.
+        comment: Interactive hover highlight, HTML export, conditional encoding via
+          alt.datum predicate; above default 1
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   - annotations
   patterns: []
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
