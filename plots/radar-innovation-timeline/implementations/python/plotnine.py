@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-29
@@ -186,7 +186,7 @@ rlbl_df = pd.DataFrame(
 
 # Innovation labels with text-width-aware collision avoidance
 lbl_offset = 0.55
-char_w = 0.27  # estimated data units per character at geom_text size=3.2mm
+char_w = 0.32  # estimated data units per character at geom_text size=3.8mm
 labels = []
 for _, row in df.iterrows():
     lx = (row["radius"] + lbl_offset) * math.cos(row["angle"])
@@ -197,7 +197,7 @@ for _, row in df.iterrows():
     labels.append({"name": row["name"], "x": lx, "y": ly, "sector": row["sector"], "x_min": x_min, "x_max": x_max})
 
 # Iterative nudge: push overlapping label bounding boxes apart vertically
-min_sep = 0.72
+min_sep = 0.90
 for _ in range(40):
     moved = False
     for i in range(len(labels)):
@@ -229,7 +229,7 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="name", color="sector"),
         data=lbl_l_df,
-        size=3.2,
+        size=3.8,
         ha="left",
         va="center",
         show_legend=False,
@@ -237,7 +237,7 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="name", color="sector"),
         data=lbl_r_df,
-        size=3.2,
+        size=3.8,
         ha="right",
         va="center",
         show_legend=False,
@@ -252,7 +252,7 @@ plot = (
     + scale_x_continuous(limits=(-9.5, 9.5))
     + scale_y_continuous(limits=(-7.5, 8.5))
     + labs(
-        title="radar-innovation-timeline · plotnine · pyplots.ai",
+        title="radar-innovation-timeline · python · plotnine · anyplot.ai",
         subtitle="Inner rings → near-term adoption  ·  Outer rings → future exploration",
     )
     + theme(
