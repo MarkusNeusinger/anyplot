@@ -1,12 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: plotly 6.5.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-23
+Library: plotly | Python
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order; first series always #009E73
+GROUP_NAMES = ["Technology", "Revenue", "Operations", "Corporate"]
+IMPRINT_4 = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+GROUP_COLORS = dict(zip(GROUP_NAMES, IMPRINT_4, strict=True))
 
 # Data — department budgets with functional groupings
 departments = [
@@ -31,9 +46,6 @@ labels = [d[0] for d in departments]
 values = np.array([d[1] for d in departments])
 groups = [d[2] for d in departments]
 n = len(labels)
-
-# Group colors — colorblind-safe palette starting with Python Blue
-group_colors = {"Technology": "#306998", "Revenue": "#E69F00", "Operations": "#009E73", "Corporate": "#CC79A7"}
 
 # Scale radii by area (sqrt) for accurate visual perception
 radii = np.sqrt(values / values.max()) * 110
@@ -70,32 +82,36 @@ formatted = [f"${v / 1e6:.1f}M" if v >= 1e6 else f"${v / 1e3:.0f}K" for v in val
 shares = [f"{v / values.sum() * 100:.1f}" for v in values]
 total = f"${values.sum() / 1e6:.1f}M"
 
-# Tight axis ranges for better canvas utilization
+# Tight axis ranges with padding
 pad = 15
 x_lo = (x_pos - radii).min() - pad
 x_hi = (x_pos + radii).max() + pad
 y_lo = (y_pos - radii).min() - pad
 y_hi = (y_pos + radii).max() + pad
 
-# Convert data-coordinate radii to pixel marker diameters
-fig_w, fig_h = 1600, 900
-m_l, m_r, m_t, m_b = 35, 35, 85, 85
+# Canvas: width=800, height=450, scale=4 → 3200×1800 output (landscape hard target)
+fig_w, fig_h = 800, 450
+m_l, m_r, m_t, m_b = 80, 40, 80, 80
 plot_w, plot_h = fig_w - m_l - m_r, fig_h - m_t - m_b
+
+# Convert data-coordinate radii to plotly pixel diameters (scaleanchor constrains min axis)
 px_per_unit = min(plot_w / (x_hi - x_lo), plot_h / (y_hi - y_lo))
 marker_diameters = 2 * radii * px_per_unit
 
-# Text colors for contrast against group backgrounds
+# Luminance-based text contrast for annotations inside bubbles
 text_colors = []
 for g in groups:
-    c = group_colors[g]
+    c = GROUP_COLORS[g]
     lum = 0.299 * int(c[1:3], 16) + 0.587 * int(c[3:5], 16) + 0.114 * int(c[5:7], 16)
-    text_colors.append("white" if lum < 160 else "#333")
+    # Near-white / near-black constants contrast against bubble fills in both themes
+    text_colors.append("#F0EFE8" if lum < 160 else "#1A1A17")
 
 # Build figure — one trace per group for idiomatic Plotly legend
 fig = go.Figure()
 
-for group_name, group_color in group_colors.items():
-    idx = [i for i in range(n) if groups[i] == group_name]
+for group_name in GROUP_NAMES:
+    color = GROUP_COLORS[group_name]
+    idx = np.array([i for i in range(n) if groups[i] == group_name])
     fig.add_trace(
         go.Scatter(
             x=x_pos[idx],
@@ -103,24 +119,23 @@ for group_name, group_color in group_colors.items():
             mode="markers",
             name=group_name,
             marker={
-                "size": marker_diameters[idx],
+                "size": list(marker_diameters[idx]),
                 "sizemode": "diameter",
-                "color": group_color,
+                "color": color,
                 "opacity": 0.9,
-                "line": {"color": "white", "width": 2.5},
+                "line": {"color": PAGE_BG, "width": 2},
             },
             text=[labels[i] for i in idx],
-            customdata=np.column_stack(
-                [[formatted[i] for i in idx], [shares[i] for i in idx], [groups[i] for i in idx]]
-            ),
-            hovertemplate="<b>%{text}</b> (%{customdata[2]})<br>Budget: %{customdata[0]}<br>Share: %{customdata[1]}%<extra></extra>",
+            customdata=[[formatted[i], shares[i]] for i in idx],
+            hovertemplate="<b>%{text}</b> (%{fullData.name})<br>Budget: %{customdata[0]}<br>Share: %{customdata[1]}%<extra></extra>",
         )
     )
 
-# Text labels inside bubbles — minimum 14pt for readability
+# Text labels inside bubbles — proportional to marker diameter
 for i in range(n):
-    font_size = max(14, min(20, int(radii[i] * 0.22)))
-    label_text = f"<b>{labels[i]}</b><br>{formatted[i]}" if radii[i] > 35 else f"<b>{labels[i]}</b>"
+    d = marker_diameters[i]
+    font_size = max(7, min(13, int(d * 0.18)))
+    label_text = f"<b>{labels[i]}</b><br>{formatted[i]}" if d > 45 else f"<b>{labels[i]}</b>"
     fig.add_annotation(
         x=x_pos[i],
         y=y_pos[i],
@@ -129,14 +144,13 @@ for i in range(n):
         font={"size": font_size, "color": text_colors[i], "family": "Arial"},
     )
 
-# Layout
+# Title font size scaled for length: round(16 × 67 / len(title))
+title_text = "Department Budget Allocation · bubble-packed · python · plotly · anyplot.ai"
+title_fontsize = round(16 * 67 / len(title_text))
+
 fig.update_layout(
-    title={
-        "text": "Department Budget Allocation · bubble-packed · plotly · pyplots.ai",
-        "font": {"size": 32, "color": "#333"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    title={"text": title_text, "font": {"size": title_fontsize, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": "", "range": [x_lo, x_hi]},
     yaxis={
         "showgrid": False,
@@ -149,30 +163,34 @@ fig.update_layout(
     },
     template="plotly_white",
     legend={
-        "font": {"size": 16, "family": "Arial"},
+        "font": {"size": 10, "family": "Arial", "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
         "orientation": "h",
         "yanchor": "top",
-        "y": -0.04,
+        "y": -0.05,
         "xanchor": "center",
         "x": 0.5,
         "itemsizing": "constant",
     },
     margin={"l": m_l, "r": m_r, "t": m_t, "b": m_b},
-    paper_bgcolor="white",
-    plot_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
 )
 
-# Total budget annotation below the cluster
+# Total budget note (bottom-right, within bottom margin)
 fig.add_annotation(
     text=f"Total: {total}",
     xref="paper",
     yref="paper",
-    x=0.5,
-    y=-0.01,
+    x=0.98,
+    y=-0.04,
+    xanchor="right",
     showarrow=False,
-    font={"size": 18, "color": "#666", "family": "Arial"},
+    font={"size": 10, "color": INK_MUTED, "family": "Arial"},
 )
 
-# Save
-fig.write_image("plot.png", width=fig_w, height=fig_h, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save — landscape 3200×1800 (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=fig_w, height=fig_h, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn", full_html=True)
