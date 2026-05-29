@@ -62,7 +62,7 @@ df = pd.concat([df, outlier], ignore_index=True)
 top3_idx = df["Revenue ($M)"].nlargest(3).index.tolist()
 df["label"] = ""
 for i in top3_idx:
-    df.loc[i, "label"] = f"{df.loc[i, 'Stage']} · ${df.loc[i, 'Funding ($M)']}M"
+    df.loc[i, "label"] = f"{df.loc[i, 'Stage']} · ${df.loc[i, 'Revenue ($M)']}M"
 
 title = "bubble-basic · python · altair · anyplot.ai"
 
