@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 bump-basic: Basic Bump Chart
-Library: plotly | Python 3.14
+Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-29
 """
 
