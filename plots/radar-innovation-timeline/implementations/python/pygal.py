@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-05-29
@@ -116,7 +116,7 @@ custom_style = Style(
     label_font_size=56,
     major_label_font_size=56,
     legend_font_size=44,
-    value_font_size=40,
+    value_font_size=36,
     opacity=0.35,  # Low opacity so zone fills are subtle background tints
     opacity_hover=0.7,
     stroke_width=2.5,
@@ -145,14 +145,14 @@ chart = pygal.Radar(
         {"value": 3, "label": "Assess"},
         {"value": 4, "label": "Hold"},
     ],
-    show_minor_x_labels=False,  # Hide per-item spoke labels; item names appear as tooltips in HTML
+    show_minor_x_labels=True,
     x_labels_major=sectors,
     x_label_rotation=0,
     margin_bottom=80,
     margin_left=80,
     margin_right=80,
     margin_top=60,
-    truncate_label=100,
+    truncate_label=12,
 )
 
 chart.x_labels = x_labels
