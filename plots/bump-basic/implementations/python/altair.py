@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -121,7 +121,7 @@ points = (
 last_week = df[df["Week"] == "Week 6"]
 labels = (
     alt.Chart(last_week)
-    .mark_text(align="left", dx=12, fontSize=13)
+    .mark_text(align="left", dx=12, fontSize=11)
     .encode(
         x=alt.X("Week:O"),
         y=alt.Y("Rank:Q", scale=alt.Scale(domain=[1, 6], reverse=True)),
@@ -130,9 +130,17 @@ labels = (
     )
 )
 
+# Callout annotation — Arsenal reaches 1st at Week 3 (data storytelling)
+annotation_df = pd.DataFrame({"Week": ["Week 3"], "Rank": [1], "label": ["↑ Arsenal: 1st"]})
+annotation = (
+    alt.Chart(annotation_df)
+    .mark_text(align="left", dx=12, dy=18, fontSize=10, fontWeight="bold", color="#009E73")
+    .encode(x=alt.X("Week:O"), y=alt.Y("Rank:Q", scale=alt.Scale(domain=[1, 6], reverse=True)), text="label:N")
+)
+
 title = "bump-basic · python · altair · anyplot.ai"
 chart = (
-    (lines + points + labels)
+    (lines + points + labels + annotation)
     .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title, fontSize=16))
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
