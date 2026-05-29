@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: hexbin-basic
 created: 2025-12-14 19:44:52+00:00
-updated: '2026-05-29T09:21:12Z'
+updated: '2026-05-29T09:29:56Z'
 generated_by: claude-sonnet
 workflow_run: 26628704535
 issue: 859
@@ -12,113 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Correct hexbin with imprint_seq colormap and LogNorm for log-scale density
-  - Perfect theme-adaptive chrome in both light and dark renders
-  - All font sizes explicitly set; full spec compliance including colorbar, gridsize,
-    and log-scale
-  - Clean KISS code with seed, proper title format, and explicit font sizes
-  - Three-cluster data scenario effectively shows hexbin density variation
+  - Perfect spec compliance — hexbin plot with colorbar, gridsize=30, LogNorm, and
+    10 k-point clustered dataset all implemented correctly
+  - 'Correct continuous colormap choice: imprint_seq (green→blue) is the only allowed
+    single-polarity cmap; viridis/cividis explicitly forbidden'
+  - Thorough theme adaptation — PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens applied
+    to figure, axes, spines, tick labels, colorbar, and annotation boxes in both renders
+  - LogFormatterSciNotation on colorbar gives clean scientific-notation tick labels
+    appropriate for the log-scale density range
+  - 'Urban-sensor data storytelling: three named clusters (Downtown, Industrial District,
+    Suburban Area) anchor the density pattern with real-world meaning'
+  - Clean linear code structure, np.random.seed(42) for reproducibility, all imports
+    used, no functions or classes
   weaknesses:
-  - 'DE-01/DE-03: Three spatial clusters (downtown, industrial, suburb) are present
-    in data but not labeled on the plot — add minimal text annotations at approximate
-    cluster centers ("Downtown", "Industrial District", "Suburban Area") to transform
-    the density map into a readable urban chart'
-  - 'LM-02: Colorbar could use more sophisticated matplotlib-specific features — e.g.,
-    overlaying ax.contour() lines to visually highlight density ridges, or using a
-    LogFormatterSciNotation for cleaner tick labels on the colorbar'
+  - Annotation text fontsize=7 is below the 8pt tick-label floor; at 400 px mobile
+    width these labels become nearly unreadable — raise to fontsize=8
+  - 'VQ-02 minor: annotations placed directly over dense hexbin regions without enough
+    vertical offset; ''Downtown'' at (2,2) and ''Suburban Area'' at (1,-2) sit in
+    high-count bins and the rounded boxes obscure some hexagons — shift annotations
+    ~0.5 km outward or add arrowhead connectors'
+  - 'DE-02 refinement: no explicit subplots_adjust or pad; the colorbar is tight against
+    the right edge — add fig.subplots_adjust(right=0.88) or increase pad to 0.03 for
+    breathing room'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color
-      Chrome: Title "hexbin-basic · python · matplotlib · anyplot.ai" in dark ink, readable; axis labels "Longitude (km)" and "Latitude (km)" in dark ink, explicitly sized at 10pt; tick labels at 8pt, all readable; colorbar label "Sensor Reading Count" at 10pt; top/right spines removed, left/bottom at 0.5 linewidth
-      Data: imprint_seq colormap (brand green #009E73 → blue #4467A3) for continuous density; hexagonal bins with PAGE_BG edges (off-white separator lines); LogNorm scale correctly reflects 10^0 to 10^1+ range; three visible density clusters
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "hexbin-basic · python · matplotlib · anyplot.ai" at fontsize=12 in dark ink — clearly readable. X-axis label "Longitude (km)" and Y-axis label "Latitude (km)" at fontsize=10 in dark ink — both clearly readable. Tick labels at fontsize=8 in INK_SOFT (#4A4A44) — readable. Colorbar label "Sensor Reading Count" at fontsize=10 — readable. Colorbar tick labels in INK_SOFT — readable.
+      Data: Hexbin plot using imprint_seq colormap (brand green #009E73 → blue #4467A3) on log scale. Three density clusters visible: central/right-center dense blue region (Downtown), left-center mid-density teal region (Industrial District), lower-center low-density green region (Suburban Area). Three rounded annotation boxes label each cluster. Top and right spines removed; left and bottom spines in INK_SOFT at linewidth=0.5.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color
-      Chrome: Title in light ink (#F0EFE8), clearly readable; axis labels and tick labels in INK_SOFT (#B8B7B0) secondary text color; colorbar label also light-toned; hex edges use #1A1A17 (making them nearly invisible, which is intentional and works on dark bg)
-      Data: Identical imprint_seq colormap (green → blue) as light render — data colors unchanged; density clusters identical in position and color
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome flips correctly to light tones; brand green #009E73 remains clearly visible on dark bg
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in INK (#F0EFE8) — clearly readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Colorbar label and tick labels in appropriate light tones — readable. No dark-on-dark failures detected.
+      Data: Data colors identical to light render — imprint_seq green→blue colormap unchanged (only chrome elements flipped). Annotation boxes use ELEVATED_BG (#242420) facecolor with INK_SOFT edgecolor — appropriate for dark theme. Hexbin edge colors match dark PAGE_BG, making subtle separators.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background. Data palette identity preserved across both themes.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, colorbar=10/8);
-          well-proportioned in both themes
+        comment: 'Title/axis/tick labels all explicitly set and readable in both themes.
+          Minor deduction: annotation fontsize=7 is below the 8pt tick-label floor
+          and borderline at 400px mobile.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements; title, labels, ticks, and colorbar well-separated
+        comment: 'No text-text overlaps. Minor: annotation boxes placed over dense
+          hexbin regions obscure some bins. No collision between labels.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexbins perfectly visible; LogNorm reveals both low and high density
-          regions; 10k points well-handled
+        comment: Hexbins clearly visible with full green→blue range; log scale differentiates
+          density levels; mincnt=1 hides empty bins.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe; LogNorm ensures density contrast
-          across the full scale
+        comment: imprint_seq is CVD-safe; no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good margins, colorbar well-positioned,
-          balanced layout
+        comment: Canvas gate passed (3200x1800). Title takes ~60% width. Nothing clipped.
+          Colorbar positioned at pad=0.02 is functional.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (km) and Latitude (km) with units; colorbar labeled Sensor
-          Reading Count; title format correct
+        comment: Title matches required format. Longitude/Latitude with (km) units.
+          Colorbar labelled 'Sensor Reading Count'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used correctly for single-polarity continuous density
-          data; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive'
+        comment: 'imprint_seq used for single-polarity continuous density data. PAGE_BG
+          correct for both themes (#FAF8F1 light, #1A1A17 dark).'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom imprint_seq and LogNorm above defaults, theme-adaptive hex
-          edges, warm backgrounds; not yet publication-ready
+        comment: Custom imprint_seq colormap, log scale, cluster annotations, LogFormatterSciNotation,
+          subtle hex edges — well above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, spine width 0.5, no grid (appropriate for
-          hexbin), colorbar shrink=0.85
+        comment: Top/right spines removed, thin remaining spines (0.5), edgecolors
+          matching PAGE_BG for subtle hex separators. Colorbar shrink=0.85 is thoughtful.
+          No explicit subplots_adjust — colorbar slightly tight.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three density clusters visible and LogNorm reveals structure; unlabeled
-          clusters limit storytelling depth
+        comment: Urban sensor context with three named density clusters guides the
+          viewer clearly. Log scale reveals wide density range. Focal point on the
+          downtown density peak.
     spec_compliance:
       score: 15
       max: 15
@@ -128,29 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning plot using ax.hexbin()
+        comment: Correct hexbin plot via ax.hexbin().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, perceptually uniform imprint_seq cmap, gridsize=30,
-          LogNorm for log-scale density
+        comment: Colorbar, perceptually-uniform colormap (imprint_seq), gridsize=30,
+          LogNorm all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y; all 10k data points rendered
+        comment: X=longitude, Y=latitude correctly mapped. All 10k points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is hexbin-basic · python · matplotlib · anyplot.ai (correct
-          format); continuous colorbar replaces legend
+        comment: Title matches required format exactly. No legend (correct — colorbar
+          serves as scale).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -158,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all hexbin features: density variation, multiple clusters,
-          log scale, colorbar, sparse edges and dense core'
+        comment: Demonstrates hexbin density encoding, log-scale colorbar, gridsize
+          tuning, and multi-cluster structure.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Urban sensor readings with spatial clusters is plausible; labeled
-          axes ground the scenario; slightly generic vs. deeply contextual
+        comment: Urban sensor readings with three realistic clusters (Downtown, Industrial,
+          Suburban) — neutral, plausible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinate range -6 to 8 km plausible for urban area; 10k points
-          appropriate for hexbin demonstration
+        comment: 10k points appropriate for hexbin; coordinate range (-6 to 8 longitude,
+          -5 to 7 latitude) in km is realistic for urban area; cluster sizes and spreads
+          are sensible.
     code_quality:
       score: 10
       max: 10
@@ -183,58 +195,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure; no functions or classes
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mcolors (LogNorm), plt, np, LinearSegmentedColormap,
-          os, sys'
+        comment: 'All imports used: os, sys, mcolors, plt, np, LinearSegmentedColormap,
+          LogFormatterSciNotation.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; sys.path fix is a necessary environment concern,
-          not over-engineering
+        comment: _ann_style dict reuse is clean. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated APIs
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
+          3.10 API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ax.hexbin() with mincnt, edgecolors, linewidths. fig.colorbar() with
+          shrink and pad. All via axes/figure methods, not plt.*
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ax.hexbin() with mincnt=1, linewidths, edgecolors, norm=LogNorm;
-          fig.colorbar() with customization — expert usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: hexbin + LogNorm + LinearSegmentedColormap are matplotlib-specific;
-          could add contour overlay or LogFormatter for more distinctive usage
-  verdict: REJECTED
+        comment: 'mcolors.LogNorm, LogFormatterSciNotation, cbar.outline styling,
+          LinearSegmentedColormap. Minor gap: main axes tick formatter/locator left
+          at defaults.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
