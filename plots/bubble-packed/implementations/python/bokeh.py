@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: bokeh | Python
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-29
 """
 
 import os
