@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:44:00Z'
-updated: '2026-05-29T07:56:10Z'
+updated: '2026-05-29T08:06:34Z'
 generated_by: claude-sonnet
 workflow_run: 26624527770
 issue: 4301
@@ -12,52 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Fully spec-compliant 270° innovation radar with concentric rings, sector dividers,
-    and labeled points across all 4 stages and 4 domains
-  - 'Imprint palette applied correctly in canonical order — first sector is brand
-    green #009E73, 4 sectors use positions 1–4'
-  - Marker size variation by ring (Adopt=18, Trial=15, Assess=12, Hold=10) adds a
-    second encoding of adoption stage beyond color
-  - Semantic ring label colors (green=Adopt, blue=Trial, ochre=Assess, red=Hold) reinforce
-    the adoption-stage story intuitively
-  - Highcharts SVG renderer API used skillfully for ring fills, dashed sector dividers,
-    ring labels, and sector headers — idiomatic and distinctive
-  - Text-outline technique (3px PAGE_BG halo) ensures data labels remain readable
-    on both light and dark backgrounds
-  - 'Theme-adaptive chrome correct throughout: backgrounds #FAF8F1 / #1A1A17, data
-    colors identical across themes, legend/tooltip use ELEVATED_BG'
+  - 'Imprint palette used correctly in canonical order: AI & ML (#009E73 brand green
+    first), Cloud & DevOps (#C475FD), Security (#4467A3), Data Engineering (#BD8233)
+    — all four match palette positions 1–4 in order'
+  - Semantic ring label coloring (green=Adopt/go, blue=Trial/explore, ochre=Assess/caution,
+    red=Hold/stop) creates an immediately readable adoption-stage narrative without
+    a legend
+  - Custom SVG renderer (chart.renderer.circle/path/text) draws concentric rings,
+    sector dividers, and ring/sector labels entirely in Highcharts' own rendering
+    layer — idiomatic and performant
+  - Variable marker sizes by ring (Adopt=18, Trial=15, Assess=12, Hold=10) encode
+    depth without a second legend entry
+  - Text outline trick (3px PAGE_BG around INK-colored labels) ensures data-point
+    labels pop on both the warm-cream and near-black surfaces without extra contrast
+    tokens
+  - 'Theme-adaptive chrome fully wired: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all switch
+    with ANYPLOT_THEME; ring fills use theme-aware opacity values; both renders are
+    visually correct'
+  - 270° layout with a bottom-right opening provides space for the legend without
+    wasting canvas area
+  - 29 realistic ThoughtWorks-style technology items with plausible adopt/trial/assess/hold
+    staging; data is factually credible
+  - CDP setDeviceMetricsOverride + PIL pad-to-exact guard together reliably pin output
+    to 2400×2400
   weaknesses:
-  - Data labels at fontSize '22px' are below the style-guide minimum for 2400×2400
-    native-pixel canvas (recommended ~44px for tick/annotation text). Labels are legible
-    at full resolution but will be near-unreadable when scaled to mobile (~400px).
-    Increase data label fontSize to at least 28–30px and compensate for crowding by
-    reducing items if necessary.
-  - 'Label overlap in the inner Adopt and Trial rings: items like ML Feature Stores,
-    LLM Code Review, Platform Engineering, and GitOps Workflows cluster in the same
-    angular band and their labels collide. Consider tightening the jitter spread or
-    adding a larger radial offset between items in the same sector/ring cell.'
-  - Sector labels (e.g., 'Cloud & DevOps') can overlap data-point labels on the outer
-    edge of the plot — the 4.65× radius placement puts them in the same area as outer-ring
-    data labels. Increase the sector-label radius multiplier to ~5.0 or add explicit
-    padding.
+  - Data label font size (30px) is below the 44px guideline for highcharts native-pixel
+    labels at 2400×2400 — labels are readable at full resolution but small when the
+    PNG is scaled to mobile (~400 px); consider bumping to 34–38px
+  - Label crowding in dense ring/sector cells (e.g. AI & ML Trial ring with 3 items,
+    Data Engineering Trial ring with 3 items) — alternating above/below offsets help
+    but some labels still appear close or nearly touching; a larger vertical-offset
+    pool or a slightly wider sector spread would reduce collision risk
+  - Sector labels (AI & ML, Cloud & DevOps, Security, Data Engineering) rendered at
+    32px by the SVG renderer sit very close to the edge of the 270° arc at radius
+    5.1; on some viewport crops the Data Engineering label at the bottom may appear
+    tight — a small inward offset or larger chart.spacing[2] (bottom) would give more
+    breathing room
+  - Ring labels ('Adopt', 'Trial', 'Assess', 'Hold') are rendered at a fixed 48° angle
+    which concentrates all four labels in the upper-left quadrant of the chart; readers
+    must scan left to find the ring names — spreading labels radially (one per ring
+    at its midpoint angle) or at consistent angles within each ring boundary would
+    improve discoverability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "radar-innovation-timeline · python · highcharts · anyplot.ai" bold and fully readable. Subtitle in lighter INK_SOFT text, readable. Ring labels on the upper-right spoke (Adopt/Trial/Assess/Hold) in semantic colors (green/blue/ochre/red), clearly legible. Sector labels (AI & ML, Cloud & DevOps, Security, Data Engineering) at the outer edge in their respective sector colors, readable. Legend "Sectors" box in lower-right with 4 colored bullets, readable.
-      Data: 4-sector 270° scatter radar. AI & ML points in #009E73 (brand green), Cloud & DevOps in #C475FD (lavender), Security in #4467A3 (blue), Data Engineering in #BD8233 (ochre). Concentric ring fills use graduated green-tinted opacity (more opaque near center). Dashed ring borders. Marker sizes decrease outward encoding adoption readiness. Data labels at 22px CSS with white-outline — readable at full resolution but somewhat small.
-      Legibility verdict: PASS — all chrome readable, minor label crowding in inner rings but no complete illegibility.
+      Background: Warm off-white (#FAF8F1) — correct light surface, no pure white. PASS
+      Chrome: Title "radar-innovation-timeline · python · highcharts · anyplot.ai" in bold near-black (#1A1A17) at 66px — fully readable. Subtitle in INK_SOFT gray, readable. Ring labels (Adopt/Trial/Assess/Hold) at 28px bold italic in semantic colors (green/blue/ochre/red) positioned at 48° inside their rings — readable. Sector labels at 32px bold in sector colors (AI & ML in #009E73, Cloud & DevOps in #C475FD, Security in #4467A3, Data Engineering in #BD8233) along the outer arc — all visible.
+      Data: 29 labeled innovation items plotted as circles. AI & ML sector: #009E73 (brand green) markers. Cloud & DevOps: #C475FD (lavender). Security: #4467A3 (blue). Data Engineering: #BD8233 (ochre). Correct Imprint canonical order. Concentric ring fills use green-tinted rgba with graduated opacity (darkest at Adopt, faintest at Hold). Sector dividers as dashed lines from center. Data-point labels in near-black with light outline — readable. Variable marker sizes (larger at inner rings). Legend top-right with elevated #FFFDF6 background.
+      Legibility verdict: PASS — all text readable against light background. Some label crowding in dense ring/sector cells (AI & ML Trial, Data Engineering Trial) but no text is fully unreadable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title visible in near-white (#F0EFE8) ink, readable. Subtitle in INK_SOFT (#B8B7B0), readable. Ring labels in the same semantic colors as light render — all readable against dark background. Sector labels in sector colors (green, lavender, blue, ochre) visible against dark. Legend box using ELEVATED_BG (#242420) with lighter text, readable.
-      Data: Data point colors are identical to the light render — brand green, lavender, blue, ochre. Ring fills slightly more opaque in dark mode (rgba increased per code). Data labels use INK (#F0EFE8) with 3px #1A1A17 outline, ensuring contrast — labels appear lighter on dark background as expected.
-      Legibility verdict: PASS — no dark-on-dark failures detected. Text outline technique successfully maintains label readability in dark theme. Colors correct and consistent with light render.
+      Background: Warm near-black (#1A1A17) — correct dark surface, no pure black. PASS
+      Chrome: Title in light cream (#F0EFE8) on dark background — clearly readable. Subtitle in INK_SOFT (#B8B7B0) — readable. Ring and sector labels use same Imprint palette colors (green/blue/ochre/red/purple) which remain visible against the near-black surface. Data-point labels rendered in INK (#F0EFE8, near-white) with dark PAGE_BG (#1A1A17) outline — readable on dark bg.
+      Data: Imprint palette colors (#009E73, #C475FD, #4467A3, #BD8233) are identical to light render — only chrome flips. Ring fills use higher opacity rgba values for visibility on dark surface. Legend with elevated #242420 background and INK_SOFT border.
+      Legibility verdict: PASS — no dark-on-dark failures. All text, ring labels, sector labels, and data-point labels are legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -65,53 +78,59 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title, ring labels, sector labels all readable in both themes. Data
-          labels at 22px CSS are below the 44px style-guide target — legible at full
-          2400px but small on mobile scale.
+        comment: All font sizes explicitly set (title 66px, subtitle 28px, sector
+          labels 32px, ring labels 28px, data labels 30px, legend 28px). Readable
+          in both themes. Data labels at 30px are below the 44px highcharts guideline
+          — slightly small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Moderate label overlap in the inner Adopt/Trial rings where several
-          items from the same sector cluster at similar radii. Labels for ML Feature
-          Stores, LLM Code Review, Platform Engineering, and GitOps Workflows collide.
+        passed: true
+        comment: 'Alternating above/below label offsets reduce collisions. Some crowding
+          in dense ring/sector cells (AI & ML Trial: 3 items, Data Engineering Trial:
+          3 items) — labels are close but main content remains readable.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers clearly visible, size variation by ring (18→10) is effective.
-          All 29 items distinguishable by color and position.
+        comment: 'Variable marker sizes by ring (Adopt=18, Trial=15, Assess=12, Hold=10)
+          appropriate for 29 points. Ring fills and sector dividers visible but subtle.
+          Marker borders (lineColor: PAGE_BG) add definition.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used, CVD-safe. Position+color dual encoding provides
-          redundancy.
+        comment: Imprint palette is CVD-safe. Marker borders add luminance contrast.
+          No red-green-only signals.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2400×2400 square format correct for symmetric radar. Canvas gate
-          passed. Some sector labels near outer edge encroach on outer-ring data labels.
+        comment: 2400x2400 square canvas correct for symmetric radar. 270° layout
+          uses canvas well with legend in bottom-right gap. Sector labels at radius
+          5.1 sit close to bottom edge for Data Engineering — minor tightness.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec-id · python · highcharts · anyplot.ai format.
-          Subtitle is descriptive. Ring and sector labels serve as axis annotations.
+        comment: Ring labels (Adopt/Trial/Assess/Hold) serve as radial axis labels.
+          Sector labels (AI & ML, Cloud & DevOps, Security, Data Engineering) serve
+          as angular axis labels. Subtitle provides chart context. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First sector (AI & ML) = #009E73. Sectors use Imprint positions
-          1–4 in canonical order. Backgrounds #FAF8F1 / #1A1A17. Data colors identical
-          across themes.'
+        comment: 'First series (AI & ML) is #009E73 (brand green). Multi-series uses
+          Imprint palette positions 1–4 in canonical order. Ring label colors use
+          Imprint members as semantic anchors (green/blue/ochre/red = adopt-to-hold
+          progression — valid semantic exception). Backgrounds #FAF8F1 light / #1A1A17
+          dark. Both renders theme-correct.'
     design_excellence:
       score: 14
       max: 20
@@ -121,24 +140,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Graduated ring fills, semantic ring-label colors, marker size variation
-          by stage, text-outline technique — multiple intentional design choices above
-          the default.
+        comment: 'Strong design: semantic ring color progression (green/blue/ochre/red
+          = go/explore/caution/stop), sector identity through consistent color use,
+          variable marker sizes for depth encoding, graduated ring fill opacity. Clearly
+          above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All axes hidden (no visible X/Y ticks or labels), dashed ring borders
-          are subtle, elevated legend with rounded corners.
+        comment: Axes and grid fully hidden (appropriate for radar). Subtle ring fills
+          with graduated opacity. Dashed sector dividers at low opacity. Marker borders
+          using PAGE_BG for definition. Legend with elevated background and border
+          radius. Good refinement but not fully polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy from center (large green dots = adopt now) to edge
-          (small dots = future/hold) clearly communicates the adoption message. Semantic
-          ring colors reinforce urgency gradient.
+        comment: 'Visual hierarchy guides the reader: ring progression (inner=current,
+          outer=future) structurally evident and reinforced by semantic ring colors.
+          Sector colors create identity. Subtitle contextualizes the data. Viewer
+          gets the adopt-to-hold story without needing text annotation.'
     spec_compliance:
       score: 15
       max: 15
@@ -148,54 +171,61 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Full innovation radar with concentric time-horizon rings and angular
-          sector divisions.
+        comment: Innovation radar with concentric rings and angular sectors. 270°
+          layout. ThoughtWorks-inspired Adopt/Trial/Assess/Hold ring scheme.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 270° layout, labeled concentric rings, sector dividers with headers,
-          color-coded by sector, legend present.
+        comment: Concentric rings with labels, angular sectors with labeled headers,
+          distinct colors per sector, labeled data points, background fills per ring,
+          legend, sector dividers — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 29 items mapped to correct ring and sector. 4 rings, 4 sectors,
-          15–30 item range fulfilled.
+        comment: 29 items correctly placed in appropriate sectors and rings. Angular
+          spread within sectors avoids overlap. Ring radius mapping correct (Adopt
+          innermost, Hold outermost).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''radar-innovation-timeline · python · highcharts · anyplot.ai''.
-          Legend labels match sector names.'
+        comment: 'Title: ''radar-innovation-timeline · python · highcharts · anyplot.ai''
+          — correct format. Legend titled ''Sectors'' with 4 sector entries matching
+          data series.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All rings and sectors populated, marker size adds a second feature
-          dimension. Angular spread within cells implemented.
+        comment: All 4 rings (Adopt/Trial/Assess/Hold) populated. All 4 sectors (AI
+          & ML, Cloud & DevOps, Security, Data Engineering) populated. Varied item
+          counts per ring/sector. 29 items total within 15–40 spec range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ThoughtWorks Technology Radar-inspired dataset with credible real-world
-          technology names and appropriate ring placements.
+        comment: ThoughtWorks Technology Radar-inspired content with real, current
+          technologies (LLM Code Review, Zero Trust Architecture, Data Mesh, SBOM
+          Automation, etc.). Corporate technology planning is a well-recognized neutral
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 29 items across 4×4 ring/sector grid. Ring radii (1.3, 2.4, 3.4,
-          4.2) proportionally spaced. 270° arc well-suited to 4 sectors.
+        comment: 'Ring assignments are credible: established technologies in Adopt,
+          emerging in Trial, exploratory in Assess, deprecated or premature in Hold.
+          Item names are accurate and current.'
     code_quality:
       score: 10
       max: 10
@@ -205,33 +235,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Procedural top-level script.
+        comment: 'Flat script: token setup → data → polar coordinate computation →
+          Highcharts config → HTML → Selenium → PIL pin. No classes or helper functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic jitter.
+        comment: np.random.seed(42) set before all jitter calculations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used.
+        comment: 'All imports used: json, math, os, tempfile, time, urllib.request,
+          pathlib.Path, numpy, PIL.Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Renderer JS is complex but appropriate for custom overlay
-          graphics.
+        comment: List comprehensions for series building. Appropriate complexity for
+          a polar layout on a Cartesian chart. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Selenium API
-          with CDP override.
+          used.
     library_mastery:
       score: 8
       max: 10
@@ -241,25 +273,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Highcharts JSON config, per-point dataLabels, chart events,
-          inline JS download for headless Chrome.
+        comment: Correct chart.events.load pattern for post-render SVG drawing. Per-point
+          dataLabels offsets (x, y, align) used idiomatically. Inline JS download
+          for headless Chrome. CDP setDeviceMetricsOverride correctly applied.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Highcharts SVG renderer (c.renderer.circle, c.renderer.path, c.renderer.text)
-          used for custom ring fills, dashed dividers, and ring/sector text overlays
-          — a distinctively Highcharts capability.
+        comment: Highcharts SVG renderer (renderer.circle, renderer.path, renderer.text)
+          used to build the entire radial scaffolding post-render — this is a Highcharts-distinctive
+          capability. Per-point marker radius and dataLabel positioning leverages
+          Highcharts' point-level customization API.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
   - html-export
   - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -267,4 +301,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome
