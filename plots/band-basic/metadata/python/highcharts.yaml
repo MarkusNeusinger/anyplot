@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: band-basic
 created: '2025-12-23T09:09:27Z'
-updated: '2026-05-29T17:39:02Z'
+updated: '2026-05-29T17:54:52Z'
 generated_by: claude-sonnet
 workflow_run: 26651986140
 issue: 979
@@ -12,42 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Flawless palette and theme compliance: #009E73 band, #BD8233 line, both light
-    and dark themes fully correct with proper chrome tokens'
-  - 'Perfect spec adherence: all required band-basic features implemented — semi-transparent
-    fill (0.25), central trend line, smooth interpolation, 95% interval context'
-  - 'Excellent code quality: clean flat structure, np.random.seed(42), correct output
-    files (plot-{THEME}.png and plot-{THEME}.html)'
-  - All font sizes explicitly set following style-guide values (66px title, 56px axis
-    labels, 44px ticks/legend); readable at desktop and mobile scale
-  - Realistic and neutral weather forecast context with plausible synthetic data;
-    widening uncertainty is factually grounded
+  - 'Perfect Imprint palette compliance: #009E73 band + #BD8233 ochre center line
+    in correct ordinal positions'
+  - Complete theme-adaptive chrome — all text, backgrounds, grids, legend box flip
+    correctly between light and dark
+  - 'Excellent data storytelling: annotation showing growing uncertainty at day 30
+    guides the viewer to the key insight'
+  - Fill opacity 0.25 within spec range, band clearly visible in both themes
+  - Explicit native-pixel font sizing matches style-guide defaults exactly (66px /
+    56px / 44px hierarchy)
+  - Descriptive subtitle adds meaningful context without cluttering the chart
   weaknesses:
-  - 'DE-03 at default (2/6): the widening uncertainty band tells an inherent story
-    but no design element actively guides the viewer — add a subtle annotation at
-    day 25-30 showing the final uncertainty width (e.g., ''±6.5°C''), or thicken the
-    forecast line to 6-7 px to create stronger focal hierarchy against the soft band'
-  - 'DE-02 at 3/6: the dotted y-only grid is a genuine refinement, but the x-axis
-    line/tickmarks still resemble library defaults — remove the bottom x-axis spine
-    line (lineWidth: 0 on x_axis) or add outer horizontal padding to lift polish'
-  - The floating legend in the top-right partially overlaps with the upper edge of
-    the confidence band at days 15-20 — repositioning to bottom-right or inside the
-    lower-uncertainty region (days 1-10) would eliminate visual crowding
+  - JavaScript string injection for annotation instead of using highcharts-core's
+    native Annotations API (affects LM-01 idiomatic score)
+  - LineSeries imported from highcharts_core.options.series.area instead of the conventional
+    highcharts_core.options.series.line module (works but unconventional)
+  - 'In dark theme, band at 25% opacity on #1A1A17 produces a very dark forest green;
+    slightly higher opacity (0.30-0.35) would improve dark-theme band visibility without
+    compromising the light theme'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Bold title "band-basic · python · highcharts · anyplot.ai" in dark ink, ~65% width (expected). Subtitle "30-day forecast with 95% prediction interval" in secondary dark ink. Y-axis label "Temperature (°C)" and X-axis label "Forecast Day" both in dark primary ink. Tick labels in secondary dark ink with degree-symbol format on Y. All text clearly readable.
-      Data: Semi-transparent mint-green (#009E73 at 0.25 fillOpacity) confidence band fills most of the plot area, widening from left to right. Warm ochre (#BD8233) center forecast line visible inside the band. Floating legend top-right with elevated background box and border, clearly readable.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "band-basic · python · highcharts · anyplot.ai" in dark bold text (~55% width), subtitle in secondary dark text, y-axis label "Temperature (°C)" and x-axis label "Forecast Day" in dark ink, tick labels in soft dark gray — all readable
+      Data: Band fill is #009E73 (Imprint position 1) at 25% opacity — semi-transparent green region widening from day 1 to day 30. Ochre center line (#BD8233, Imprint position 4) clearly visible over the band. Annotation callout "±7.6°C spread by day 30" in upper right. Legend box lower right with "95% Prediction Interval" and "Forecast" labels.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels render in light ink (#F0EFE8), tick labels in secondary light ink (#B8B7B0). All chrome correctly inverted. Legend uses elevated dark background (#242420) with light text. No dark-on-dark failures detected. Grid lines are subtle and visible. All text is clearly readable against the dark background.
-      Data: Band fill appears as deep forest green (inherent opacity-over-dark-bg interaction — data color property is still #009E73, visually darkened by 0.25 opacity over #1A1A17, which is expected behavior for semi-transparent fills). Ochre center line remains warm and clearly distinguishable. Data colors are the same in the source code as the light render — only visual appearance differs due to opacity compositing over different backgrounds.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels all in cream/off-white light text — confirmed readable against dark background. Legend box uses elevated dark (#242420) with light text. Grid lines subtle. No dark-on-dark failures observed.
+      Data: Band is same #009E73 at 25% opacity blending to deep forest green on dark background — band area visually distinguishable from outside-band region. Ochre center line appears golden against dark green band. Colors identical to light render — only chrome flips.
+      Legibility verdict: PASS — all text readable; data elements distinguishable in dark theme
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,71 +55,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (66px title, 56px axis labels, 44px
-          tick/legend); proportions balanced; readable in both themes
+        comment: All font sizes explicitly set at style-guide native-pixel values
+          (66px title, 56px axis labels, 44px ticks/legend). Balanced proportions,
+          readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; floating legend has background box
+        comment: No overlapping text or data elements. Annotation, legend, and chart
+          elements all spatially clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Band at 0.25 opacity clearly visible; center line at lineWidth=4
-          distinct inside band
+        comment: Band clearly visible in both themes. Ochre line contrasts well against
+          green fill. Fill opacity 0.25 within spec range (0.2-0.4).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/ochre CVD-safe pairing with adequate luminance contrast
+        comment: Green (#009E73) and ochre (#BD8233) are CVD-safe and distinguishable
+          without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed 3200x1800; generous margins; nothing cut off
+        comment: Generous explicit margins (top 130, bottom 160, left 200, right 100).
+          Plot fills canvas well. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units; Forecast Day descriptive
+        comment: Y-axis 'Temperature (°C)' includes units. X-axis 'Forecast Day' descriptive.
+          Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #BD8233 (Imprint pos 4); bg #FAF8F1/#1A1A17;
-          chrome fully theme-adaptive'
+        comment: 'Band #009E73 (Imprint pos 1), line #BD8233 (Imprint pos 4). Backgrounds
+          #FAF8F1/#1A1A17. All chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean professional look; intentional green/ochre color harmony; subtitle
-          adds context; above well-configured default but not exceptional
+        comment: 'Strong design above library defaults: correct Imprint palette, custom
+          font family (Segoe UI/Roboto), meaningful subtitle, contrasting color pairing.
+          Not FiveThirtyEight-level but genuinely polished.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only dotted grid is genuine refinement; no markers on series; explicit
-          margins; but limited beyond theme tokens
+        comment: Dotted subtle y-axis grid, x-axis grid removed, x-axis lineWidth
+          0, markers disabled on lines, explicit generous margins. Standard Highcharts
+          legend box.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly; widening band is inherent to data structure,
-          not a deliberate design choice; no annotation or emphasis to guide viewer
+        passed: true
+        comment: Annotation shows ±7.6°C spread at day 30, guiding viewer to key insight.
+          Widening band tells growing-uncertainty story. Ochre line emphasis over
+          green band.
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: AreaRangeSeries band + LineSeries center line'
+        comment: AreaRangeSeries for filled band + LineSeries for central trend line.
+          Correct band plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill 0.25; central trend line; smooth interpolation;
-          95% interval context in subtitle
+        comment: Semi-transparent fill (0.25) within spec, central trend line in contrasting
+          color, boundary lines, smooth Highcharts interpolation.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: days 1-30; Y: temperature C; band: [day, lower, upper]; line:
-          [day, center]'
+        comment: 'X: forecast days 1-30, Y: temperature °C with correct lower/center/upper
+          assignment.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: band-basic · python · highcharts · anyplot.ai; legend: 95%
-          Prediction Interval + Forecast'
+        comment: Title 'band-basic · python · highcharts · anyplot.ai' correct. Legend
+          labels descriptive and accurate.
     data_quality:
       score: 15
       max: 15
@@ -163,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows widening confidence band, central trend, wave variability —
-          all band-basic aspects
+        comment: 'Shows all band-plot aspects: filled region, widening uncertainty,
+          central trend with variation, continuous smooth data.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 30-day weather forecast with 95% prediction interval — real and neutral
-          use case
+        comment: 30-day temperature forecast with 95% prediction interval — genuine
+          neutral meteorology scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 5-30C plausible for temperate spring; uncertainty growth
-          1.5 to ~3.9C realistic for NWP
+        comment: Temperatures 5-30°C plausible for seasonal forecast. Uncertainty
+          growing to ±7.6°C by day 30 physically realistic.
     code_quality:
       score: 10
       max: 10
@@ -188,56 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens -> data -> chart config -> series -> render;
-          no functions or classes'
+        comment: Linear Imports → Constants → Data → Chart config → Series → Export.
+          No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused imports
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately concise; CDN download follows library guide; no over-engineering
+        comment: Appropriate complexity. JS annotation injection is a necessary workaround
+          for API limitations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct for interactive
+          library.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct AreaRangeSeries with [x, low, high] format; highcharts-more.js
-          for AreaRange; LineSeries for center; chart.to_js_literal() correct
+        comment: Correct highcharts-core patterns (Chart, HighchartsOptions, AreaRangeSeries,
+          add_series). Annotation uses JS string injection rather than native Annotations
+          API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: AreaRangeSeries is Highcharts-specific; HTML export with inline JS;
-          CDP viewport override for exact canvas sizing
-  verdict: REJECTED
+        comment: AreaRangeSeries is Highcharts-distinctive for range/band visualization.
+          highcharts-more module. SVG renderer.label() via JS injection.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
+  - annotations
   - html-export
   patterns:
   - data-generation
