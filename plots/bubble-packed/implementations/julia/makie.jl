@@ -92,6 +92,12 @@ for _ in 1:6000
     end
 end
 
+# Center the cluster on the canvas after simulation
+cx_mean = sum(positions_x) / n
+cy_mean = sum(positions_y) / n
+positions_x .-= cx_mean
+positions_y .-= cy_mean
+
 # Compute square axis limits that contain all circles with margin
 margin   = 28.0
 x_min    = minimum(positions_x .- radii) - margin
@@ -149,11 +155,22 @@ for i in 1:n
     r = radii[i]
     if r >= 55
         fs = clamp(round(Int, r / 6.0), 11, 20)
-        text!(ax, positions_x[i], positions_y[i];
+        # Country name shifted up to make room for population annotation
+        text!(ax, positions_x[i], positions_y[i] + r * 0.18;
             text     = labels[i],
             align    = (:center, :center),
             fontsize = Float32(fs),
             color    = colorant"#FFFFFF",
+        )
+        # Population value annotation below the country name
+        pop_str = values[i] >= 1000 ?
+            string(round(values[i] / 1000; digits=2)) * "B" :
+            string(round(Int, values[i])) * "M"
+        text!(ax, positions_x[i], positions_y[i] - r * 0.18;
+            text     = pop_str,
+            align    = (:center, :center),
+            fontsize = Float32(clamp(round(Int, fs * 0.72), 9, 11)),
+            color    = RGBAf(1f0, 1f0, 1f0, 0.85f0),
         )
     elseif r >= 38
         text!(ax, positions_x[i], positions_y[i];
@@ -176,7 +193,7 @@ Legend(
     tellwidth    = false,
     tellheight   = true,
     framecolor   = INK_SOFT,
-    framevisible    = true,
+    framevisible    = false,
     labelcolor      = INK,
     backgroundcolor = ELEVATED_BG,
     labelsize       = 14.0f0,
