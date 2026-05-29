@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -6,7 +6,6 @@ Quality: 85/100 | Updated: 2026-05-29
 
 import os
 
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -133,9 +132,14 @@ sns.scatterplot(
     alpha=0.90,
     edgecolor=INK,
     linewidth=0.5,
-    legend=False,
+    legend=True,
     ax=ax,
 )
+
+# Accent the largest bubble per sector with a thicker edge ring to highlight the dominant story
+sector_top_idx = df.groupby("sector")["value"].idxmax()
+accent = df.loc[sector_top_idx]
+ax.scatter(accent["x"], accent["y"], s=accent["marker_size"], facecolor="none", edgecolor=INK, linewidth=2.5, zorder=3)
 
 # Labels inside bubbles — font sizes scaled for 2400×2400 canvas (dpi=400)
 for _, row in df.iterrows():
@@ -192,7 +196,7 @@ ax.axis("off")
 
 # Title
 ax.set_title(
-    "Market Capitalization by Sector\nbubble-packed · seaborn · anyplot.ai",
+    "Market Capitalization by Sector\nbubble-packed · python · seaborn · anyplot.ai",
     fontsize=12,
     fontweight="medium",
     pad=14,
@@ -200,22 +204,27 @@ ax.set_title(
     linespacing=1.4,
 )
 
-# Legend using Patch handles for clean sector display
-legend_handles = [
-    mpatches.Patch(facecolor=sector_colors[s], label=s, edgecolor=INK, linewidth=0.5) for s in sector_order
-]
-leg = ax.legend(
-    handles=legend_handles,
-    loc="lower center",
+# Filter seaborn-managed legend to hue (sector) entries, then reposition with sns.move_legend
+leg_auto = ax.get_legend()
+all_handles = leg_auto.legend_handles
+all_labels = [t.get_text() for t in leg_auto.get_texts()]
+sector_handles = [h for h, lbl in zip(all_handles, all_labels, strict=False) if lbl in sector_order]
+sector_labels = [lbl for lbl in all_labels if lbl in sector_order]
+leg_auto.remove()
+ax.legend(sector_handles, sector_labels)
+sns.move_legend(
+    ax,
+    "lower center",
     bbox_to_anchor=(0.5, -0.06),
     ncol=4,
-    fontsize=8,
-    framealpha=0.95,
     title="Sector",
     title_fontsize=9,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
+    fontsize=8,
+    framealpha=0.95,
 )
+leg = ax.get_legend()
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
 leg.get_title().set_color(INK)
 for text in leg.get_texts():
     text.set_color(INK_SOFT)
