@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -66,16 +66,19 @@ for i, metric in enumerate(metrics):
         )
         ax.add_patch(box)
 
-    bar_color = COLOR_ABOVE if metric["actual"] >= metric["target"] else COLOR_BELOW
+    above_target = metric["actual"] >= metric["target"]
+    bar_color = COLOR_ABOVE if above_target else COLOR_BELOW
 
-    # Actual value bar with rounded corners
+    # Actual value bar with rounded corners; hatch on above-target bars = redundant CVD-safe encoding
     actual_bar = FancyBboxPatch(
         (0, y - bar_height / 2),
         metric["actual"],
         bar_height,
         boxstyle="round,pad=0,rounding_size=0.06",
         facecolor=bar_color,
-        edgecolor="none",
+        edgecolor=INK if above_target else "none",
+        linewidth=0.6,
+        hatch="///" if above_target else None,
         zorder=2,
     )
     ax.add_patch(actual_bar)
@@ -105,7 +108,7 @@ ax.tick_params(axis="y", length=0, colors=INK_SOFT, labelcolor=INK_SOFT)
 
 # X-axis
 ax.set_xlabel("Performance (%)", fontsize=10, color=INK)
-ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT, length=0)
 
 # Title — language token required
 title = "bullet-basic · python · matplotlib · anyplot.ai"
@@ -129,7 +132,7 @@ ax.invert_yaxis()
 
 # Legend
 legend_elements = [
-    Patch(facecolor=COLOR_ABOVE, edgecolor="none", label="Above Target"),
+    Patch(facecolor=COLOR_ABOVE, edgecolor=INK, linewidth=0.6, hatch="///", label="Above Target"),
     Patch(facecolor=COLOR_BELOW, edgecolor="none", label="Below Target"),
     Line2D([0], [0], color=INK, linewidth=2.0, label="Target"),
     Patch(facecolor=band_colors[2], edgecolor=INK_SOFT, linewidth=0.5, label="Good"),
