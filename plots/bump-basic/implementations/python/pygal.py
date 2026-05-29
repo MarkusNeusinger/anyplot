@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -69,8 +69,8 @@ custom_style = Style(
 )
 
 # Per-series stroke and dot sizes — visual hierarchy: protagonist boldest
-stroke_widths = {"McLaren": 18, "Ferrari": 12, "Red Bull Racing": 14, "Mercedes": 10, "Aston Martin": 8}
-dot_sizes_map = {"McLaren": 22, "Ferrari": 16, "Red Bull Racing": 18, "Mercedes": 14, "Aston Martin": 12}
+stroke_widths = {"McLaren": 18, "Ferrari": 12, "Red Bull Racing": 14, "Mercedes": 10, "Aston Martin": 12}
+dot_sizes_map = {"McLaren": 22, "Ferrari": 16, "Red Bull Racing": 18, "Mercedes": 14, "Aston Martin": 16}
 
 chart = pygal.Line(
     width=3200,
@@ -82,7 +82,7 @@ chart = pygal.Line(
     show_dots=True,
     dots_size=14,
     show_x_guides=False,
-    show_y_guides=True,
+    show_y_guides=False,
     x_label_rotation=0,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -93,7 +93,7 @@ chart = pygal.Line(
     max_scale=max_rank,
     margin_top=80,
     margin_right=160,
-    margin_bottom=80,
+    margin_bottom=40,
     margin_left=80,
     value_formatter=lambda v: f"P{max_rank + 1 - int(v)}" if v == int(v) else "",
     tooltip_border_radius=10,
