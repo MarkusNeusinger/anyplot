@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-29
@@ -36,18 +36,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 
-def _lerp_hex(c0: str, c1: str, t: float) -> str:
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r = round(r0 + (r1 - r0) * t)
-    g = round(g0 + (g1 - g0) * t)
-    b = round(b0 + (b1 - b0) * t)
-    return f"#{r:02X}{g:02X}{b:02X}"
-
-
-# Imprint sequential colormap: brand green → blue (sparse → dense)
+# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3), sparse → dense
 N_LEVELS = 6
-density_colors = tuple(_lerp_hex("#009E73", "#4467A3", i / (N_LEVELS - 1)) for i in range(N_LEVELS))
+density_colors = tuple(
+    f"#{round(0x00 + (0x44 - 0x00) * i / (N_LEVELS - 1)):02X}"
+    f"{round(0x9E + (0x67 - 0x9E) * i / (N_LEVELS - 1)):02X}"
+    f"{round(0x73 + (0xA3 - 0x73) * i / (N_LEVELS - 1)):02X}"
+    for i in range(N_LEVELS)
+)
 
 # Data: urban air quality sensor network with three pollution hotspots
 np.random.seed(42)
@@ -127,8 +123,8 @@ y_hi = float(np.percentile(sensor_y, 98)) + 0.4
 # Uniform circumradius for tessellating hexagons (SVG user units = pixels at 3200px width)
 # Estimate: plot area ≈ 2900px wide, x_range ≈ 10.8 km, gridsize=20 →
 # hex_width_px = 2900/20 = 145, circumradius = 145/sqrt(3) ≈ 84
-# Use 62 for slight gaps between hexes (standard hexbin look) and title headroom
-HEX_R = 62
+# Use 56 for crisp gaps between hexes (standard hexbin look) and title headroom
+HEX_R = 56
 
 chart = pygal.XY(
     width=3200,
@@ -139,7 +135,7 @@ chart = pygal.XY(
     y_title="Sensor Grid Y (km)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=6,
+    legend_at_bottom_columns=3,
     legend_box_size=24,
     stroke=False,
     dots_size=HEX_R,
@@ -208,6 +204,21 @@ if plot_transform_m and plot_bg_m:
     svg_hex = re.sub(
         r'(<g class="series [^"]*">)', lambda m: m.group(0).replace(">", f' clip-path="url(#{clip_id})">', 1), svg_hex
     )
+    # Subtle plot frame — inner background rect from plot group (width/height relative to transform)
+    inner_m = re.search(r'<rect[^>]+class="plot_background"[^>]*/>', svg_hex) or re.search(
+        r'<rect[^>]+class="graph"[^>]*/>', svg_hex
+    )
+    if inner_m:
+        inner_tag = inner_m.group(0)
+        iw_m = re.search(r'width="([\d.]+)"', inner_tag)
+        ih_m = re.search(r'height="([\d.]+)"', inner_tag)
+        if iw_m and ih_m:
+            iw, ih = float(iw_m.group(1)), float(ih_m.group(1))
+            frame_svg = (
+                f'<rect x="{px:.1f}" y="{py:.1f}" width="{iw:.1f}" height="{ih:.1f}" '
+                f'fill="none" stroke="{INK_MUTED}" stroke-width="1.5" opacity="0.3"/>'
+            )
+            svg_hex = svg_hex.replace("</svg>", frame_svg + "\n</svg>")
 
 # Save interactive HTML and static PNG
 with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
