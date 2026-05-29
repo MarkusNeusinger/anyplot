@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29

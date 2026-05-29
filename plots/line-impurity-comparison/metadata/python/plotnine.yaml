@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:52:54Z'
-updated: '2026-05-29T01:01:24Z'
+updated: '2026-05-29T01:09:41Z'
 generated_by: claude-sonnet
 workflow_run: 26611105327
 issue: 4133
@@ -15,34 +15,38 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (dual curves, formula legend,
-    p=0.5 annotation, edge-case handling) implemented correctly'
-  - 'Imprint palette perfectly applied: brand green first, lavender second, correct
-    backgrounds, identical data colors across themes'
-  - Mathematically exact data with Gini max=0.5 and entropy max=1.0
-  - 'Good data storytelling: dashed reference line + point markers + annotation create
-    clear focal point at p=0.5'
-  - Fully deterministic code, clean KISS structure, all font sizes explicitly set
+  - 'Correct Imprint palette: Gini=#009E73 (position 1), Entropy=#C475FD (position
+    2) — canonical order followed precisely'
+  - Dual redundant encoding (color + linetype solid/dashed) adds CVD robustness beyond
+    color alone
+  - 'Maxima annotation is well-executed: dashed vertical guide + marker dots + italic
+    label creates clear focal point at p=0.5'
+  - 'Theme-adaptive chrome works in both renders: correct backgrounds (#FAF8F1 / #1A1A17),
+    light/dark text switching, elevated legend box color'
+  - Edge cases at p=0 and p=1 handled correctly via np.where
+  - 'Perfect spec compliance: all required features present (curves, formulas in legend,
+    maxima annotation, grid, correct axes)'
+  - Deterministic data (pure mathematical functions) — no seed needed, fully reproducible
+  - Clean KISS structure with explicit font sizes throughout
   weaknesses:
-  - Legend at position (0.72, 0.25) overlaps the descending right portion of the Gini
-    (green) curve — reposition to upper-left area e.g. (0.15, 0.78) where both curves
-    are near 0 and space is open
-  - Annotation text size=4 (plotnine mm, approx 11pt) is small for mobile readability
-    — increase to size=5 or 5.5
-  - No linestyle differentiation between the two curves — add scale_linetype_manual
-    with Gini=solid and Entropy=dashed for redundant encoding and CVD robustness
+  - Legend positioned at (0.15, 0.78) renders in the center of the plot area, causing
+    the Gini curve to pass behind the legend box — minor data occlusion
+  - 'DE-01/DE-02 not at peak: spines reduction and overall design polish is good but
+    hasn''t reached publication-level FiveThirtyEight refinement'
+  - 'LM-01: grammar-of-graphics layering is idiomatic but could more explicitly leverage
+    plotnine-specific features like stat transforms or coord_* for extra credit'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "line-impurity-comparison · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Probability (p)" and "Impurity Measure (normalized)" in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt, clearly readable. Y-axis grid lines subtle (opacity 0.15). Legend "Splitting Criterion" with entries styled correctly. Italic annotation "Both maxima at p = 0.5" in small (size=4 mm, ~11pt) italic text above entropy peak.
-      Data: Gini curve in #009E73 (brand green, Imprint position 1), Entropy curve in #C475FD (lavender, Imprint position 2). Both thick lines (size=2.5). Point markers at p=0.5 maxima. Dashed vertical reference line at p=0.5. Legend partially overlaps the descending right portion of the Gini curve.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-impurity-comparison · python · plotnine · anyplot.ai" in dark ink, clearly readable. Y-axis label "Impurity Measure (normalized)" and X-axis label "Probability (p)" in dark INK color, well-proportioned. Tick labels (0.0–1.0 on both axes) in INK_SOFT gray, readable.
+      Data: Gini curve in brand green #009E73 (solid line, size=2.5) peaking at 0.5. Entropy curve in lavender #C475FD (dashed line) peaking at 1.0. Maxima dots at (0.5, 0.5) and (0.5, 1.0) clearly visible. Dashed vertical guide at p=0.5. Italic annotation "Both maxima at p = 0.5" small but readable. Legend box with elevated background (#FFFDF6), labeled "Splitting Criterion" with formula entries for both series.
+      Legibility verdict: PASS — all text readable; annotation is small but not unreadable. Legend overlaps Gini curve in center area (minor occlusion).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in light cream (#F0EFE8 / INK), clearly readable against dark surface. Tick labels in soft gray (#B8B7B0 / INK_SOFT), no dark-on-dark issues. Legend box uses dark elevated background (#242420) with soft border. Annotation text readable in light color.
-      Data: Colors IDENTICAL to light render — Gini #009E73 (green), Entropy #C475FD (lavender). Brand green clearly visible on dark surface. Data colors confirmed theme-independent.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light #F0EFE8 text, clearly readable against dark background. Axis labels and tick labels in light/gray (#B8B7B0), fully legible. No dark-on-dark failures observed. Legend box has elevated dark background (#242420) with light text — readable.
+      Data: Colors are identical to light render — Gini #009E73 green and Entropy #C475FD lavender confirm theme-independence of palette. Subtle y-grid lines visible in both renders.
+      Legibility verdict: PASS — all text elements readable against dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,48 +57,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title scaled to 14pt for 57-char string;
-          annotation text size=4 (approx 11pt) slightly small for mobile
+        comment: All font sizes explicitly set (title=12pt, axis_title=10pt, axis_text=8pt,
+          legend=8pt). Both renders readable. Annotation at size=5.5mm is small but
+          legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend at position (0.72, 0.25) partially occludes descending right
-          portion of Gini curve (x=0.55-0.82, y=0.20-0.47 data range)
+        comment: Legend box overlaps with Gini curve data region in center area —
+          curve is occluded behind opaque legend background. Legend text itself is
+          readable. Minor deduction.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick lines (size=2.5), point markers (size=5) at maxima, all well-visible
+        comment: Lines size=2.5 well-adapted for smooth mathematical curves (200 points).
+          Maxima dots size=5 clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and lavender high CVD ΔE; curves also differ in shape/amplitude
+        comment: Green + lavender are CVD-safe distinct pair. Redundant linestyle
+          encoding (solid vs dashed) adds extra accessibility layer.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), good proportions, y-limit 1.15 gives
-          annotation room
+        comment: Canvas gate passed. 16:9 landscape format suits comparison line chart
+          well. Plot fills canvas appropriately with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Probability (p) and Impurity Measure (normalized) — descriptive with
-          context
+        comment: 'X: ''Probability (p)'', Y: ''Impurity Measure (normalized)'' — descriptive
+          with appropriate context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Gini=#009E73 (Imprint pos 1), Entropy=#C475FD (Imprint pos 2), backgrounds
-          correct, data colors identical across themes
+        comment: 'Gini=#009E73 (position 1), Entropy=#C475FD (position 2). Backgrounds
+          #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive. Legend elevated background
+          correct.'
     design_excellence:
       score: 13
       max: 20
@@ -104,22 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: custom palette, dashed reference line, point markers,
-          italic annotation, styled legend. Professional but not publication-ready.'
+        comment: 'Strong design above defaults: Imprint palette, dual encoding, maxima
+          annotation, custom legend placement. Not quite FiveThirtyEight publication-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis grid removed, minor grid removed, Y-only grid (opacity 0.15),
-          L-frame spines via theme_minimal, styled legend box
+        comment: Y-only grid (no x-grid, no minor grid), theme_minimal base, legend_key=element_blank(),
+          clean axis lines. Good refinement, not fully polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Focal point at p=0.5 via dashed line + point markers + annotation;
-          communicates 'both curves peak at same probability' clearly
+        comment: Vertical dashed guide + maxima dots + annotation text creates clear
+          focal point. Viewer is immediately drawn to the p=0.5 coincidence — the
+          core educational insight.
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-line chart for mathematical function comparison
+        comment: Correct line chart type for mathematical curve comparison.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both curves, formula legend labels, p=0.5 annotation (line+dots+text),
-          edge cases handled, y-axis grid
+        comment: 'All features present: both curves with different colors/linestyles,
+          legend with formulas, maxima annotation at p=0.5, edge cases handled, grid
+          included.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability p [0,1], Y=impurity measure, Gini max=0.5, entropy
-          max=1.0 naturally normalized
+        comment: X=probability p [0,1], Y=impurity measure normalized [0,1]. Y limit
+          extended to 1.15 for annotation space — appropriate.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend entries include mathematical
-          formulas
+        comment: 'Title: ''line-impurity-comparison · python · plotnine · anyplot.ai''
+          — exact required format. Legend includes mathematical formulas as specified.'
     data_quality:
       score: 15
       max: 15
@@ -160,20 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full probability range, both curves, edge cases, maximum highlighted
+        comment: Shows both curves across full [0,1] range, maxima coincidence at
+          p=0.5, different peak heights (Gini=0.5, Entropy=1.0), smooth 200-point
+          resolution.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ML/decision-tree theory — genuine educational scientific context,
-          neutral
+        comment: Decision tree splitting criteria is a standard ML education topic
+          — neutral, real-world, well-understood academic context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gini max=0.5, entropy max=1.0 — both mathematically exact
+        comment: 'Mathematically exact: Gini=2p(1-p) peaks at 0.5, normalized entropy
+          peaks at 1.0, both at p=0.5 — factually correct.'
     code_quality:
       score: 10
       max: 10
@@ -183,32 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → tokens → data → plot → save'
+        comment: 'Clean linear flow: theme tokens → data → labels → plot layers →
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (np.linspace + closed-form math, no random seed
-          needed)
+        comment: Deterministic mathematical functions — no randomness, fully reproducible
+          without seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 15 plotnine imports used in the plot construction.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering
+        comment: Clean, Pythonic, appropriate complexity. Title length-scaling formula
+          is a thoughtful touch.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current plotnine API
+        comment: Saves as plot-{THEME}.png via plot.save() with correct dpi/dimensions.
     library_mastery:
       score: 7
       max: 10
@@ -218,16 +234,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar of graphics well-applied: layered geoms, scale_color_manual
-          dict, annotate(), scale_x/y_continuous with explicit breaks'
+        comment: 'Idiomatic grammar of graphics: ggplot() + geom layers + scale_*_manual
+          + labs + theme composition. Well-structured ggplot2 idioms used throughout.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layer composition (geom_line+geom_point+geom_vline+annotate) and
-          formula-containing legend labels via scale_color_manual dict keys are plotnine-idiomatic
-  verdict: REJECTED
+        comment: scale_linetype_manual alongside scale_color_manual for dual encoding
+          is distinctively grammar-of-graphics. annotate() with plotnine's coordinate
+          system, geom_vline as a separate layer — plotnine-idiomatic layering.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -238,4 +255,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
