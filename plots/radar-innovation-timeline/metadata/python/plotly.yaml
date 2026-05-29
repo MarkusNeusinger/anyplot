@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:44:44Z'
-updated: '2026-05-29T07:45:16Z'
+updated: '2026-05-29T08:13:13Z'
 generated_by: claude-sonnet
 workflow_run: 26624091804
 issue: 4301
@@ -12,132 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/plotly/plot-dark.html
-quality_score: 75
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required radar features (rings, sectors, fills,
-    dividers, multi-encoding) implemented'
-  - 'Excellent redundant sector encoding: distinct marker shapes (circle/diamond/square/triangle)
-    + Imprint palette colors — CVD-safe'
-  - Marker size + opacity + bold-text gradient creates clear Adopt→Hold visual hierarchy
-  - Paper-coordinate sector headers are an elegant plotly pattern that avoids polar
-    perimeter clipping
-  - Realistic 2024–2025 technology dataset with plausible ring placement across all
-    four sectors
-  - Clean, well-structured procedural code with correct theme-adaptive chrome in both
-    light and dark renders
-  - Correct 2400×2400 square canvas, correct plot-{THEME}.png and plot-{THEME}.html
-    outputs
+  - 'Imprint palette canonical order correctly applied across all 4 sectors; both
+    theme backgrounds correct (#FAF8F1 light / #1A1A17 dark); data colors identical
+    between renders.'
+  - Marker size hierarchy (Adopt=18 → Hold=9) provides an elegant secondary visual
+    encoding of time-horizon urgency beyond radial position alone.
+  - Paper-coordinate annotation system elegantly sidesteps polar-domain clipping for
+    sector headers and ring labels — gap-arc placement for ring labels is particularly
+    inventive.
+  - 'Full spec compliance: all required features present (ring fills, boundary lines,
+    sector dividers, sector headers, ring labels with time descriptions, legend, 26
+    labelled items across 4 rings × 4 sectors).'
+  - Code is clean, deterministic (np.random.seed(42)), and well-commented where the
+    coordinate math is non-obvious.
+  - Both themes render correctly with proper light/dark chrome token application throughout
+    (INK, INK_SOFT, INK_MUTED, ELEVATED_BG all theme-adaptive).
   weaknesses:
-  - 'Severe label overlap in inner rings (VQ-02 critical): Adopt and Trial rings have
-    7–8 items across 4 sectors converging near radius 1.3–2.3 — labels collide heavily
-    and 8–10 items are unreadable. Fix: increase ring_radii spread (try Adopt=1.5,
-    Trial=2.7, Assess=3.9, Hold=5.1), reduce inner-ring textfont to 10–11px, or switch
-    to landscape canvas (3200×1800) for more room.'
-  - 'Ring labels (''Hold (3+ yr)'', ''Trial (0–1 yr)'', ''Assess (1–3 yr)'', ''Adopt
-    (Now)'') at angles 280–289° collide with data labels in the Biotech/Cloud sector
-    boundary. Fix: move ring labels to angle 272–275° or reduce fontsize to 10px.'
-  - 'Large empty top area: ~35–40% of the 2400×2400 canvas is unused at the top because
-    the 270° arc leaves the upper portion empty. Fix: use landscape format (3200×1800)
-    or adjust polar domain/rotation to better center the arc.'
-  - 'Right polar-boundary truncation: ''Confidential Computing'', ''Serverless GPUs'',
-    ''Circular Economy Platforms'', ''AI Code Review'' labels extend past the right
-    polar domain boundary (x=0.64) and are clipped. Fix: change these items'' textpos
-    to ''top left''/''bottom left'' so labels angle toward the center of the plot.'
+  - 'Inner Adopt ring label congestion: items from all 4 sectors converge at radius
+    ~1.5 with similar angular positions, causing visible label overlap (e.g., ''LLM
+    Agents'', ''mRNA Therapeutics'', ''Platform Engineering'', ''Carbon Tracking APIs''
+    collide). Fix: increase Adopt ring base radius from 1.5 to ~2.0, adjusting ring_boundaries
+    proportionally, or add a sector-indexed radial nudge (sector_index * 0.2) to stagger
+    overlapping items.'
+  - 'At mobile scale (~400 px), the 10px inner-ring labels and high item density make
+    the Adopt ring essentially unreadable at thumbnail scale. Fix: use fontsize=9
+    for Adopt ring labels only, or apply bold styling only to innermost items to help
+    the eye sort them.'
+  - 'Sector divider lines (dotted, opacity=0.18) are barely visible in both renders,
+    particularly in the dark theme. Fix: increase sector_line_color opacity to ~0.25
+    in both themes for clearer quadrant boundary definition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "radar-innovation-timeline · python · plotly · anyplot.ai" in dark INK (#1A1A17) — readable. Subtitle in INK_MUTED — readable. Ring labels ("Adopt (Now)", "Trial (0–1 yr)", "Assess (1–3 yr)", "Hold (3+ yr)") in INK_SOFT — individually readable but collide with data labels. Sector headers ("AI & ML", "Cloud & Infra", "Sustainability", "Biotech") in sector colors — readable at perimeter. Legend and Time Horizons box text in INK_SOFT — readable.
-      Data: First sector AI & ML = #009E73 circles ✓. Cloud & Infra = #C475FD diamonds. Sustainability = #4467A3 squares. Biotech = #BD8233 triangles. Canonical Imprint palette order ✓. Marker sizes larger in inner rings (Adopt=18, Hold=9) encoding time horizon urgency.
-      Critical issue: Inner rings (Adopt and Trial) have severe text overlap — 7–8 items per ring from all four sectors converge near center. Multiple label collisions make 8–10 items unreadable. Some right-side labels ("Confidential C...", "Circular Economy Pla...", "Serverless GPU...") clipped at polar boundary. Large empty area (~35–40% canvas height) at top.
-      Legibility verdict: FAIL — inner zone labels overlapping and unreadable; outer elements individually correct.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "radar-innovation-timeline · python · plotly · anyplot.ai" readable in dark INK (#1A1A17). Subtitle in INK_MUTED. Sector headers in their respective sector colors. Ring labels (Adopt Now, Trial 0–1 yr, Assess 1–3 yr, Hold 3+ yr) in INK_SOFT, placed in the 90° gap arc. Legend text in INK_SOFT. All chrome clearly readable.
+      Data: AI & ML = #009E73 (circles), Cloud & Infra = #C475FD (diamonds), Sustainability = #4467A3 (squares), Biotech = #BD8233 (triangles). First series is brand green as required. Marker sizes decrease from Adopt (18) to Hold (9). Subtle green-tinted ring fills fade outward. Dotted sector divider lines are barely visible (low opacity).
+      Issue: Notable label overlap in Adopt ring where items from all 4 sectors converge at similar radii (~1.5). Outer rings are cleaner.
+      Legibility verdict: PASS overall — all chrome readable; inner-ring label overlap reduces individual label clarity but does not cause dark-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and subtitle rendered in light INK (#F0EFE8) — readable on dark background ✓. Ring labels in INK_SOFT (#B8B7B0) — readable. Sector headers in sector colors (still visible on dark) — readable. Legend and annotation box backgrounds flip to ELEVATED_BG (#242420) — correct. No dark-on-dark failures detected.
-      Data: All four sector colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — Imprint categorical positions unchanged across themes ✓. Brand green #009E73 clearly visible on dark background ✓.
-      Same structural issues as light render: severe inner-ring label overlap, polar-boundary truncation on right side, empty top area.
-      Legibility verdict: FAIL — same inner-zone overlap as light render; chrome correctly theme-adaptive.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and all text rendered with light tokens (INK = #F0EFE8, INK_SOFT = #B8B7B0). Legend and Time Horizons callout use elevated dark surface (#242420). No dark-on-dark failures observed — all text clearly readable against the near-black background.
+      Data: All four sector colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — theme-invariant as required. Ring fills use higher-opacity rgba variants appropriate for dark surface. Data markers and shapes fully visible and distinguishable.
+      Issue: Same inner-ring label crowding as light render present.
+      Legibility verdict: PASS — both chrome and data elements readable; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 17
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Title, subtitle, outer ring labels, sector headers all correctly
-          sized and readable. Inner ring data labels collide and become unreadable.
+        passed: true
+        comment: Title, sector headers, ring labels readable. Inner Adopt-ring labels
+          (fontsize=10) legible individually but crowded; hard to isolate at mobile
+          scale (~400 px).
       - id: VQ-02
         name: No Overlap
-        score: 1
+        score: 3
         max: 6
         passed: false
-        comment: Severe overlap throughout Adopt and Trial rings. Labels from all
-          four sectors converge near center. Ring labels also collide with data labels.
+        comment: Significant label overlap in Adopt ring where items from all 4 sectors
+          converge at similar radii. Outer rings are cleaner.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Markers visible in outer rings with correct shape encoding. Inner-ring
-          markers buried under text clutter.
+        comment: Marker sizes decrease with ring distance (Adopt=18, Trial=14, Assess=11,
+          Hold=9). Distinct marker shapes per sector. Minor deduction for inner-ring
+          congestion.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct marker shapes + four Imprint palette hues = redundant
-          encoding. CVD-safe.
+        comment: Imprint palette canonical order used; marker shapes provide CVD-safe
+          redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: ~35-40% top canvas area empty. Right polar-boundary truncates several
-          labels. Canvas size 2400x2400 correct.
+        passed: true
+        comment: 270 degree layout with right-side legend panel well-proportioned.
+          Ring labels in gap arc is clever. Slight deduction for inner-ring crowding.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Mandatory title format correct. Ring labels name each horizon. Sector
-          headers label each quadrant.
+        comment: Title correctly formatted; subtitle adds context; sector headers
+          and ring time-horizon labels are descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'AI & ML = #009E73 first. Canonical Imprint order. Backgrounds #FAF8F1/#1A1A17.
-          Data colors identical across themes.'
+        comment: 'First sector (AI & ML) = #009E73; canonical order for all 4 sectors;
+          backgrounds #FAF8F1 / #1A1A17; data colors theme-invariant.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Marker shapes as redundant encoding, ring fill tinting, marker-size
-          gradient for ring priority, bold text for Adopt items. Crowded center undermines
-          polish.
+        comment: 'Strong design intent: marker size encodes adoption urgency, ring
+          fills fade outward, sector headers colored to match data, ring labels in
+          gap arc, well-organized legend panel.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Radial/angular axes hidden, ring dividers subtle (1.2px), sector
-          dividers dotted. Label clutter reduces refinement.
+        comment: Both axes hidden for clean polar look; subtle ring boundary strokes;
+          dotted sector dividers; elevated backgrounds for legend boxes. Inner-ring
+          congestion undermines refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Size+opacity+boldness gradient creates Adopt→Hold urgency hierarchy.
-          Inner ring clutter obscures most important (Adopt) items.
+        comment: Subtitle and ring labels communicate time-horizon narrative. Marker
+          size hierarchy reinforces inner=act-now. Inner-ring crowding obscures the
+          most actionable focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -147,54 +151,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Innovation Radar using Scatterpolar with concentric rings
-          and angular sectors.
+        comment: Correct Innovation Radar with concentric time-horizon rings and thematic
+          sector divisions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: rings, boundary lines, fill backgrounds,
-          sector dividers, sector headers, marker shapes+colors, legend, ring time-horizon
-          labels.'
+        comment: Concentric rings with fills and boundary lines; sector dividers and
+          headers; distinct marker shapes/colors per sector; labeled items; ring labels
+          with time descriptions; legend.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Items in correct sectors and rings, angular spacing with padding,
-          ring radii encode horizons.
+        comment: Items correctly placed in specified rings and sectors; jittered angular
+          positions; radial position encodes ring membership.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandatory title format correct. Sectors legend with symbols. Time
-          Horizons annotation box present.
+        comment: Title 'radar-innovation-timeline · python · plotly · anyplot.ai'
+          correct; sector legend with colors and shapes; Time Horizons callout explains
+          ring semantics.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: '26 items across 4 rings and 4 sectors. Size/opacity/boldness encoding.
-          Minor deduction: label overlap hides Adopt-ring items.'
+        comment: 26 items across all 4 sectors and 4 rings; all rings populated; covers
+          full Adopt to Hold spectrum.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real 2024-2025 technologies in plausible adoption stages. Neutral,
-          non-controversial.
+        comment: Real, current technologies appropriately distributed across rings;
+          neutral framing throughout.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 26 items, 4 rings, 4 sectors — within spec range.
+        comment: 26 items within spec 15-40 range; 4 rings x 4 sectors well-balanced.
     code_quality:
       score: 10
       max: 10
@@ -204,59 +209,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean procedural sections.
+        comment: No unnecessary functions or classes; sequential structure; data as
+          plain dicts.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42) present for jitter determinism.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only sys, os, numpy, plotly.graph_objects — all used.
+        comment: All four imports (sys, os, numpy, plotly.graph_objects) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized dict-based configs, list comprehensions, clear section
-          comments.
+        comment: Logical data->position->render flow; comments explain non-obvious
+          coordinate math; title fontsize scaling formula.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
-          explicit dimensions.
+        comment: Saves plot-THEME.png and plot-THEME.html; autosize=False with explicit
+          width/height.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct Scatterpolar usage, customdata+hovertemplate, paper-coordinate
-          annotations, write_image+write_html.
+        comment: go.Scatterpolar used correctly; paper-coordinate annotations avoid
+          polar-domain clipping; hovertemplate + customdata for rich hover; legendgroup
+          for sector grouping.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Scatterpolar fill-polygon for ring bands, ring boundary circles,
-          paper-coordinate sector headers, per-marker size/opacity arrays.
-  verdict: REJECTED
+        comment: 'HTML-formatted text in title and hover; interactive HTML output
+          via write_html; multi-trace composition; paper-coordinate annotation system.
+          Minor deduction: fig.add_shape would be more idiomatic for ring arcs than
+          Scatterpolar fill traces.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - annotations
-  - html-export
+  - custom-legend
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups

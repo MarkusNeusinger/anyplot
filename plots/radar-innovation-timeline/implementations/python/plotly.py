@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 75/100 | Updated: 2026-05-29
+Quality: 85/100 | Updated: 2026-05-29
 """
 
 import sys
