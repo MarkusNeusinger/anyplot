@@ -1,59 +1,61 @@
 library: matplotlib
+language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:16:10Z'
-updated: '2026-02-23T16:23:51Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456558183
-issue: 0
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/matplotlib/plot.png
-preview_html: null
-quality_score: 87
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - patches
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-05-29T23:29:25Z'
+generated_by: claude-sonnet
+workflow_run: 26665632813
+issue: 992
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent data storytelling with realistic department budget theme and organizational
-    group clustering
-  - WCAG-aware text contrast switching based on background luminance
-  - PatchCollection for efficient batch circle rendering is idiomatic matplotlib
-  - Physics simulation with group-aware clustering produces well-organized layout
-  - Path effects on text ensure readability against varied background colors
+  - Physics-based bubble packing with group-aware clustering correctly implements
+    the spec and produces an organic, visually appealing layout
+  - WCAG luminance-based text color selection ensures readable labels inside all bubbles
+    regardless of the circle's Imprint color
+  - 'Correct Imprint palette usage: four organizational groups mapped to canonical
+    positions 1–4 in order, with brand green (#009E73) first'
+  - Maximum-clearance angle algorithm for external leader lines prevents arrows from
+    pointing into neighboring circles
+  - 'Theme-adaptive chrome correctly implemented throughout: backgrounds, text, legend
+    frame, and annotation colors all flip between light and dark; only data colors
+    stay constant'
+  - PatchCollection + patheffects.withStroke used idiomatically for efficient batch
+    rendering and polished text strokes
   weaknesses:
-  - Center area crowding where smaller circles pack tightly making labels harder to
-    read
-  - Layout is somewhat bottom-heavy due to Engineering circle dominating the lower
-    portion
-  - Smallest circle labels at 12pt are below ideal size for this canvas resolution
-  image_description: 'The plot shows a packed bubble chart titled "Department Budget
-    Allocation ($5.9M Total)" with subtitle "bubble-packed · matplotlib · pyplots.ai".
-    Fifteen circles of varying sizes represent department budgets ranging from $130K
-    (Legal) to $950K (Engineering). Circles are colored by organizational group: steel
-    blue (#306998) for Engineering group (Engineering, R&D, Data Science, IT), golden
-    yellow (#E8C33A) for Business group (Sales, Product, Marketing, Design), coral
-    red (#D4654A) for Operations group (Operations, Finance, Customer Support, HR),
-    and muted purple (#8B6DB0) for Compliance group (Legal, Security, QA). Circles
-    are packed together with visible group clustering — Engineering-related departments
-    cluster at the bottom, Business at the upper-left, Operations in the center, and
-    Compliance scattered among them. White edges separate circles cleanly. Labels
-    with department names and dollar values appear inside larger circles with bold
-    text and subtle path-effect outlines. Smaller circles (Legal, Security) have external
-    labels with leader lines. A legend in the lower right identifies the four groups.
-    The overall layout is clean with axes turned off and a white background.'
+  - Customer Support and Design bubbles are adjacent and both sit right at the internal-label
+    threshold (radii ≈ 0.80 and 0.89 vs. min threshold ≈ 0.77 and 0.84), causing their
+    internal text labels to visually crowd and partially overlap in the dense center
+    cluster — raise the min_r_for_label multiplier slightly (e.g. 0.022 per char instead
+    of 0.018) or lower the per-group same-group gap from 0.06 to 0.04 to pull same-group
+    circles slightly tighter and push different-group circles (Customer Support /
+    Design) farther apart
+  - 'The bubble cluster is noticeably left-heavy: the legend in the lower-right creates
+    15–20% extra whitespace on the right half of the square canvas. Moving the legend
+    to lower-left, or centering the packed cluster over the full canvas width, would
+    improve layout balance'
+  - 'DE-01 headroom: the design is solid but not publication-ready. Adding a thin
+    PAGE_BG ring gap around each bubble (already present via edgecolors=PAGE_BG) is
+    good; adding a very subtle drop-shadow effect or gradient tint on the largest
+    bubbles could lift the aesthetic one notch'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bubble-packed · python · matplotlib · anyplot.ai" at top in dark ink (#1A1A17), clearly readable. No axis labels (intentionally off). Legend in lower-right with theme-correct frame (ELEVATED_BG fill, INK_SOFT border) and dark legend text.
+      Data: 15 circles in 4 group colors from the Imprint palette — Engineering group in brand green (#009E73), Business in lavender (#C475FD), Operations in blue (#4467A3), Compliance in ochre (#BD8233). Size varies from large (Engineering $950K) down to small (Legal $130K). Larger circles carry internal text labels split across lines with WCAG-contrast text color; smaller circles (Legal, Security, QA, HR) receive external labels via leader lines. Circles have a PAGE_BG edge stroke creating bubble separation.
+      Legibility verdict: PASS overall — text is readable in both circle types. NOTE: Customer Support and Design bubbles are adjacent and their internal labels crowd each other noticeably in the dense center region, causing partial visual overlap of the label text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title readable in light cream color. Legend frame uses ELEVATED_BG (#242420) fill with lighter INK_SOFT text — no dark-on-dark failure. All chrome correctly flips to light-on-dark.
+      Data: All four group colors are identical to the light render (green, purple, blue, ochre) — only chrome flips. Internal circle text uses WCAG-contrast colors (light text on darker circles, dark text on lighter circles). External leader lines use INK_MUTED which renders correctly as a lighter grey on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures detected. The same Customer Support / Design label crowding is present as in the light render. Brand green #009E73 remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -64,71 +66,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 24pt, labels 12-15pt,
-          legend 16pt). Smallest labels at 12pt below ideal 16pt guideline but acceptable
-          for packed bubble constraints.
+        comment: All font sizes explicitly set throughout (title via formula, internal
+          labels 9-11pt scaled to radius, external labels 9pt, legend 9pt). Readable
+          in both themes. Minor deduction for slightly dense labeling in the Customer
+          Support/Design area.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Some crowding in center cluster where smaller circles pack tightly.
-          Customer Support label cramped in small wrapped text. No severe unreadable
-          overlap.
+        passed: false
+        comment: Customer Support and Design internal labels crowd each other in the
+          dense center cluster — both bubbles sit right at the internal-label threshold,
+          causing their text to visually overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 15 circles visible with area-proportional sizing. Smallest circles
-          are tiny but distinguishable. White edges and alpha=0.90 provide clean separation.
+        comment: All 15 bubbles clearly visible; size variation spanning ~4x in radius
+          effectively encodes value differences; alpha=0.90 adds depth without hiding
+          data.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Four-color palette with strong hue separation. No red-green reliance.
-          WCAG-aware text contrast switching.
+        comment: Imprint palette is CVD-safe by design. WCAG luminance check inside
+          circles ensures text contrast. No red-green sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization (~60-70%). Layout somewhat bottom-heavy due
-          to largest circle placement. Content not cut off.
+        comment: '2400x2400 square canvas correct for symmetric packed bubble. Cluster
+          fills 60-65% of canvas. Minor asymmetry: right side has noticeably more
+          whitespace due to legend placement.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with aggregate budget value. No axes needed for
-          packed bubble chart.
+        comment: 'Axis intentionally off (position has no meaning in packed bubble
+          charts). Title correct: ''bubble-packed · python · matplotlib · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering=#009E73 (brand green, first series), Business=#C475FD,
+          Operations=#4467A3, Compliance=#BD8233 — canonical positions 1-4 in order.
+          Light bg=#FAF8F1, dark bg=#1A1A17. Chrome fully theme-adaptive.
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom four-color palette, WCAG text contrast, path
-          effect outlines, white circle edges. Clearly above library defaults.'
+        comment: 'Strong design intent: intentional size and color hierarchy, WCAG-accurate
+          text contrast inside circles, PAGE_BG edge stroke for bubble separation,
+          physics-based organic layout. Above defaults but the dense center region
+          limits overall polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes removed, white circle edges, alpha transparency, group spacing
-          differentiation, path effects on text. Minor center crowding.
+        comment: Axis fully hidden, no grid, theme-adaptive legend with custom frame,
+          path effects stroke on all internal text, PAGE_BG edgecolor on PatchCollection.
+          Multiple thoughtful refinements present.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Group clustering creates organizational narrative. Size variation
-          guides the eye. Title adds total budget context. Color grouping reveals
-          structure.
+        comment: 'Clear visual hierarchy: Engineering dominates by size, R&D and Sales
+          follow. Group coloring immediately reveals organizational structure. A reader
+          can see the budget story at a glance without annotations.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +154,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with physics simulation packing.
+        comment: Correct packed bubble chart with physics-based force simulation and
+          group-aware clustering.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: area-proportional sizing, physics simulation,
-          labels inside/outside, color encoding, group clustering.'
+        comment: 'All spec features present: area-proportional sizing (sqrt), force
+          simulation, internal labels for large circles, external labels with leader
+          lines for small circles, group color encoding.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to circle area via sqrt scaling. All 15 items
-          represented.
+        comment: No axes (correct), values encoded via circle area and inline labels,
+          group via color.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes bubble-packed · matplotlib · pyplots.ai. Legend shows
-          all four groups with matching colors.
+        comment: Title exactly 'bubble-packed · python · matplotlib · anyplot.ai'.
+          Legend shows all 4 group colors with correct labels.
     data_quality:
       score: 15
       max: 15
@@ -169,22 +187,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide range of sizes, four distinct groups, internal and external
-          labels, group clustering with spacing.
+        comment: 15 items covering wide value range (130K-950K). Demonstrates both
+          internal and external label strategies. 4 groups show clustering feature.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation is a concrete neutral business scenario
-          with recognizable department names.
+        comment: Department budget allocation for a tech company — realistic, neutral,
+          immediately comprehensible business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $130K-$950K are realistic. Total $5.9M plausible for
-          mid-size tech company.
+        comment: Budget values in thousands USD (130K-950K) are plausible for a mid-size
+          tech company. Engineering largest, Legal/Security smallest — realistic proportions.
     code_quality:
       score: 10
       max: 10
@@ -194,35 +212,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, scaling, physics simulation, plotting,
-          saving. No functions or classes.'
+        comment: 'Linear: imports → theme tokens → data → physics simulation → plot
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded data, deterministic spiral positions,
-          no randomness in simulation.'
+        comment: Data is fully deterministic (hardcoded values). Physics simulation
+          starts from deterministic spiral pattern — no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All five imports used: collections, patches, patheffects, pyplot,
-          numpy.'
+        comment: All 6 imports (os, matplotlib.collections, matplotlib.patches, matplotlib.patheffects,
+          matplotlib.pyplot, numpy) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity appropriate for packed bubble in matplotlib. Well-commented,
-          no over-engineering.
+        comment: Physics simulation complexity is justified by the chart type. Max-clearance
+          angle algorithm for leader lines is thoughtful engineering. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI. No deprecated API usage.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          APIs.
     library_mastery:
       score: 7
       max: 10
@@ -232,13 +251,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of PatchCollection, mpatches.Circle, ax.annotate with arrowprops,
-          path_effects. OO API throughout.
+        comment: PatchCollection for batch circle rendering is the idiomatic matplotlib
+          approach. ax.annotate with arrowprops, patheffects.withStroke, and plt.setp
+          all used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: PatchCollection for batch rendering, patheffects for text outlines,
-          annotate with arrowprops. Distinctive matplotlib features.
-  verdict: REJECTED
+        comment: matplotlib.patheffects.withStroke and matplotlib.collections.PatchCollection
+          are distinctly matplotlib-specific features that provide meaningful advantages
+          (batch rendering, crisp text strokes).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  - custom-legend
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
