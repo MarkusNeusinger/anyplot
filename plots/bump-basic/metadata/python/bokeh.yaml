@@ -1,119 +1,131 @@
 library: bokeh
+language: python
 specification_id: bump-basic
 created: '2025-12-23T09:19:07Z'
-updated: '2026-02-22T21:27:01Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456608591
-issue: 0
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bump-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bump-basic/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  patterns:
-  - iteration-over-groups
-  - columndatasource
-  dataprep: []
-  styling:
-  - grid-styling
-  - alpha-blending
+updated: '2026-05-29T13:47:17Z'
+generated_by: claude-sonnet
+workflow_run: 26639190623
+issue: 982
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Effective visual hierarchy through highlight system differentiating dramatic movers
-    (Ferrari, McLaren, Red Bull) from stable entities
-  - Clean aesthetic with removed spines, subtle dashed grid, and custom light background
-  - CustomJSTickFormatter for ordinal rank labels (1st, 2nd, etc.) is a smart Bokeh-specific
-    touch
-  - End-of-line labels with color-matched text and bold/normal differentiation eliminate
-    need for separate legend
-  - Realistic F1 data context with interesting rank change narratives
+  - Theme-adaptive chrome is fully wired (INK/INK_SOFT tokens on all text and grid
+    elements), and both renders pass legibility checks cleanly.
+  - CustomJSTickFormatter for ordinal labels (1st/2nd/3rd) is an elegant, distinctively
+    bokeh touch.
+  - 'Visual hierarchy through the highlight set is well-executed: thicker lines, larger
+    markers, and bold labels for the three dynamic constructors draw the eye naturally.'
+  - Direct end-of-line entity labeling replaces the legend cleanly — correct choice
+    for bump charts.
+  - Canvas gate passed; PIL normalization safety net and CDP setDeviceMetricsOverride
+    both address the known bokeh/Chrome height-drift bug.
   weaknesses:
-  - Non-highlighted entities (Mercedes, Aston Martin) at alpha 0.55 are slightly hard
-    to follow through crossover sections
-  - Red/green color pair (#D44D5C/#5BA67D) could be improved for deuteranopia safety
+  - Right border for 'Red Bull Racing' label is tight (~10 px mathematical clearance
+    at bold 28pt). Consider increasing min_border_right from 380 to 420, or reducing
+    end-label font size to 26pt to add safety margin.
+  - Straight-line segments between data points; modern bump charts typically use smooth
+    sigmoid/bezier curves which would improve DE-01 and DE-03.
+  - No data storytelling annotations (e.g. 'Ferrari's surge' or a highlight on the
+    race where Red Bull took the lead) that would lift DE-03.
   image_description: |-
-    The plot displays a bump chart tracking Formula 1 constructor standings over 6 races. The y-axis is inverted with rank 1 ("1st") at the top and rank 5 ("5th") at the bottom, using ordinal suffix labels via custom JavaScript formatting. The x-axis shows "Race 1" through "Race 6" with the label "Constructor Standings by Race". The title "bump-basic · bokeh · pyplots.ai" appears in bold dark blue at the top left.
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface.
+      Chrome: Title "F1 Constructor Standings · bump-basic · python · bokeh · anyplot.ai" in bold dark ink (#1A1A17) at 50pt. X-axis label "Constructor Standings by Race" and Y-axis label "Championship Position" in dark ink at 42pt. Y-axis tick labels (1st–5th) and X-axis tick labels (Race 1–6) in INK_SOFT (#4A4A44) at 34pt. All chrome elements are clearly readable against the light background.
+      Data: 5 series — Red Bull Racing (#009E73 brand green), McLaren (#C475FD lavender), Ferrari (#4467A3 blue), Mercedes (#BD8233 ochre), Aston Martin (#AE3030 matte red). Lines connect each constructor across Race 1–6 with appropriate line widths (10 for highlighted, 5 for others). Circular markers at each race period. End-of-line labels in series colors at right margin. First series is correctly brand green #009E73.
+      Legibility verdict: PASS
 
-    Five teams are plotted with distinct colors: Red Bull Racing (blue #306998), McLaren (orange #E6894A), Ferrari (red/rose #D44D5C), Mercedes (green #5BA67D), and Aston Martin (purple #8B6DB0). Three teams (Red Bull, McLaren, Ferrari) are highlighted with thicker lines (10px), larger markers (38px), and higher alpha (0.95), while Mercedes and Aston Martin are subdued (5px lines, 22px markers, alpha 0.55). End-of-line labels to the right of each team's final position serve as the legend, with highlighted teams in bold.
-
-    The background is light gray (#f8f9fa) with subtle dashed horizontal grid lines (alpha 0.25). All axis lines, spines, and tick marks are removed. The layout is clean and balanced with generous right margin accommodating the team name labels.
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title, axis labels, and tick labels flip to light ink (#F0EFE8 / #B8B7B0). All text clearly readable against the dark background. No dark-on-dark failures observed. Grid lines flip to light-alpha as expected.
+      Data: Colors are identical to light render — Red Bull Racing green, McLaren lavender, Ferrari blue, Mercedes ochre, Aston Martin red. Data colors are theme-independent as required. Brand green #009E73 clearly visible on dark background. End-of-line labels in their series colors remain distinguishable against #1A1A17.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set above minimums: 32pt title, 24pt axis
-          labels, 20pt tick/annotation labels'
+        comment: 'All fonts explicitly set at canonical bokeh values. Readable in
+          both themes. Minor deduction: right margin tight (~10 px clearance) for
+          bold 28pt ''Red Bull Racing'' label.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; end-of-line labels at distinct rank positions
-          with clear vertical spacing
+        comment: End-of-line labels vertically separated by one rank unit (~333 px).
+          No text collisions. Line crossings are by design.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good hierarchy with highlighted entities prominent; non-highlighted
-          entities at alpha 0.55 slightly faded but traceable
+        comment: 'Highlighted: line_width=10, marker size=38. Non-highlighted: line_width=5,
+          size=24. Appropriate for sparse 30-point dataset.'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Good 5-color palette; red/green pair has some deuteranopia risk,
-          mitigated by alpha/weight differentiation
+        comment: Imprint positions 1-5 used. Line-width redundant encoding aids CVD
+          safety.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60%+ of canvas; right margin serves functional purpose
-          for end labels; balanced margins
+        comment: 3200x1800 landscape, canvas gate passed. Generous margins (left=180,
+          bottom=160, top=110, right=380). No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels appropriate for domain; units not applicable for
-          ranks/races
+        comment: 'X: ''Constructor Standings by Race''; Y: ''Championship Position''.
+          Descriptive, no units needed for ordinal rank.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73. Canonical Imprint order for all 5 series.
+          Correct backgrounds and theme-adaptive chrome.'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom palette, intentional hierarchy, custom background,
-          removed spines — above defaults'
+        comment: Highlight set with distinct line widths/marker sizes, ordinal Y-axis
+          labels via CustomJSTickFormatter, direct end-of-line labeling, dynamic title
+          font scaling. Missing smooth sigmoid curves.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle dashed grid, custom background, generous whitespace
-          via min_border settings
+        comment: All spines removed, tick marks removed, Y-only dashed grid at alpha=0.15,
+          generous margins. No legend frame.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: Ferrari rise and McLaren fall immediately
-          visible through bold lines and high alpha'
+        comment: Highlight set draws eye to dynamic constructors. No annotated focal
+          points or storytelling moments.
     spec_compliance:
       score: 15
       max: 15
@@ -123,50 +135,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart with lines connecting rank positions over time
+        comment: 'Correct bump chart: rank on inverted Y, periods on X, lines per
+          entity.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted y-axis, distinct colors, dot markers, lines connecting same
-          entity across all periods
+        comment: Dot markers, distinct colors, lines per entity, Y-axis inverted (y_range=(5.8,
+          0.4)).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=periods, Y=ranks, each line=one entity; all data visible
+        comment: X=Race 1-6, Y=Championship Position 1-5, 5 entities tracked consistently.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; end-of-line labels serve as legend with color-matched
-          text
+        comment: Title matches {Descriptive Title} · {spec-id} · {lang} · {lib} ·
+          anyplot.ai format. Direct labels replace legend appropriately.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows rank rises, falls, stability, multiple crossovers, varied magnitudes
-          of change
+        comment: Shows rank changes, overtakes, stable periods, crossing trajectories
+          across 6 periods.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: F1 constructor standings with real team names; neutral sports scenario
+        comment: Real F1 team names, realistic rank distributions, neutral content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 teams over 6 races, ranks 1-5; perfectly sensible for F1 context
+        comment: Ranks 1-5 for 5 teams, 6 race snapshot periods — realistic season
+          segment.
     code_quality:
       score: 10
       max: 10
@@ -176,33 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-figure-plot loop-styling-save; no functions/classes
+        comment: Linear script, no unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded/deterministic, no random elements
+        comment: Hardcoded deterministic data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: export_png, ColumnDataSource, CustomJSTickFormatter,
-          FixedTicker, Label, figure'
+        comment: All imports used. sys.path removal is necessary for filename collision.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; loop with highlight differentiation is appropriate
-          complexity
+        comment: Clean entity loop, highlight set, PIL canvas normalization safety
+          net.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png; uses current Bokeh 3.x API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Bokeh 3.9.0 API, INLINE
+          resources.
     library_mastery:
       score: 7
       max: 10
@@ -212,13 +226,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure(), scatter()/line() with source,
-          Label annotation via add_layout
+        comment: ColumnDataSource per series, FactorRange, FixedTicker + CustomJSTickFormatter,
+          Label via add_layout, Selenium + CDP setDeviceMetricsOverride, INLINE resources.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: CustomJSTickFormatter with embedded JavaScript for ordinal suffixes
-          is distinctively Bokeh
+        comment: CustomJSTickFormatter for ordinal labels is distinctively bokeh.
+          Label add_layout and CDP viewport override are sophisticated.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - html-export
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - minimal-chrome
