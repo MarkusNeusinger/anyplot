@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -61,12 +61,9 @@ ecdf_df = pd.concat([good_df, bad_df], ignore_index=True)
 # K-S distance vertical line endpoints
 ks_line_df = pd.DataFrame({"Score": [ks_x, ks_x], "ECDF": [ks_y_bad, ks_y_good]})
 
-# Endpoint markers for the distance line
-ks_endpoints_df = pd.DataFrame({"Score": [ks_x, ks_x], "ECDF": [ks_y_bad, ks_y_good]})
-
-# Annotation label at midpoint of distance line
-ks_mid_y = (ks_y_good + ks_y_bad) / 2
-ks_label_df = pd.DataFrame({"Score": [ks_x], "ECDF": [ks_mid_y], "label": [f"  D = {ks_stat:.3f}"]})
+# Label just above the lower endpoint (ks_y_good), in the gap — extends left into clear whitespace
+ks_label_y = ks_y_good + 0.05
+ks_label_df = pd.DataFrame({"Score": [ks_x], "ECDF": [ks_label_y], "label": [f"D = {ks_stat:.3f}"]})
 
 # Color and dash scales
 color_scale = alt.Scale(domain=["Good Customers", "Bad Customers"], range=[COLOR_GOOD, COLOR_BAD])
@@ -102,17 +99,17 @@ ks_distance = (
     alt.Chart(ks_line_df).mark_line(color=COLOR_KS, strokeWidth=2.5, strokeDash=[6, 4]).encode(x="Score:Q", y="ECDF:Q")
 )
 
-# Endpoint dots on the distance line
+# Endpoint dots on the distance line (reuse ks_line_df)
 ks_dots = (
-    alt.Chart(ks_endpoints_df)
+    alt.Chart(ks_line_df)
     .mark_point(color=COLOR_KS, size=100, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(x="Score:Q", y="ECDF:Q")
 )
 
-# K-S statistic label
+# K-S statistic label — right-aligned so text extends left of the KS line into clean whitespace
 ks_label = (
     alt.Chart(ks_label_df)
-    .mark_text(align="left", fontSize=13, fontWeight="bold", color=COLOR_KS, font="monospace")
+    .mark_text(align="right", dx=-8, fontSize=13, fontWeight="bold", color=COLOR_KS, font="monospace")
     .encode(x="Score:Q", y="ECDF:Q", text="label:N")
 )
 
@@ -120,8 +117,8 @@ ks_label = (
 chart = (
     alt.layer(ecdf_lines, ks_distance, ks_dots, ks_label)
     .properties(
-        width=620,
-        height=320,
+        width=680,
+        height=360,
         background=PAGE_BG,
         title=alt.Title(
             title,
@@ -145,6 +142,7 @@ chart = (
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
     )
+    .configure_axisX(grid=False)
     .configure_legend(
         labelFontSize=10,
         titleFontSize=10,
