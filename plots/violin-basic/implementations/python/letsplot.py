@@ -1,23 +1,51 @@
-""" pyplots.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-21
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-29
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_boxplot,
+    geom_violin,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_fill_manual,
+    scale_x_discrete,
+    scale_y_continuous,
+    theme,
+    theme_minimal,
+)
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — canonical positions 1-4
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data
 np.random.seed(42)
 
 # Ordered by median salary (high → low) for visual storytelling
 dept_order = ["Engineering", "Design", "Marketing", "Sales"]
-palette = ["#306998", "#2E8B57", "#E8A317", "#E07A5F"]
 
 data = []
 
@@ -29,8 +57,7 @@ for v in eng_values:
     data.append({"Department": "Engineering", "Salary": v})
 
 # Design: moderate spread, roughly normal
-design_values = np.random.normal(80000, 18000, 120)
-design_values = np.clip(design_values, 30000, 200000)
+design_values = np.clip(np.random.normal(80000, 18000, 120), 30000, 200000)
 for v in design_values:
     data.append({"Department": "Design", "Salary": v})
 
@@ -42,39 +69,41 @@ for v in mkt_values:
     data.append({"Department": "Marketing", "Salary": v})
 
 # Sales: right-skewed (many moderate earners, few top performers)
-sales_values = np.random.exponential(20000, 180) + 45000
-sales_values = np.clip(sales_values, 30000, 200000)
+sales_values = np.clip(np.random.exponential(20000, 180) + 45000, 30000, 200000)
 for v in sales_values:
     data.append({"Department": "Sales", "Salary": v})
 
 df = pd.DataFrame(data)
 
-# Plot
+title = "violin-basic · python · letsplot · anyplot.ai"
+
+# Plot — violins colored by Imprint palette, thin boxplot overlay for clear quartile markers
 plot = (
-    ggplot(df, aes(x="Department", y="Salary", fill="Department"))  # noqa: F405
-    + geom_violin(  # noqa: F405
-        quantiles=[0.25, 0.5, 0.75], quantile_lines=True, size=1.2, alpha=0.85, trim=False, color="#2C3E50"
-    )
-    + scale_x_discrete(limits=dept_order)  # noqa: F405
-    + scale_fill_manual(values=dict(zip(dept_order, palette, strict=True)))  # noqa: F405
-    + scale_y_continuous(  # noqa: F405
-        format="${,.0f}"
-    )
-    + labs(  # noqa: F405
-        x="Department", y="Salary", title="violin-basic \u00b7 letsplot \u00b7 pyplots.ai"
-    )
-    + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        plot_title=element_text(size=24),  # noqa: F405
+    ggplot(df, aes(x="Department", y="Salary", fill="Department"))
+    + geom_violin(alpha=0.82, trim=False, color=INK_SOFT, size=0.8)
+    + geom_boxplot(width=0.07, fill=PAGE_BG, color=INK, size=1.2, outlier_color=PAGE_BG, outlier_fill=PAGE_BG)
+    + scale_x_discrete(limits=dept_order)
+    + scale_fill_manual(values=dict(zip(dept_order, IMPRINT_PALETTE, strict=True)))
+    + scale_y_continuous(format="${,.0f}")
+    + labs(x="Department", y="Salary", title=title)
+    + theme_minimal()
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.2),
+        panel_grid_major_x=element_blank(),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(color=INK, size=12),
+        axis_text=element_text(color=INK_SOFT, size=10),
+        plot_title=element_text(color=INK, size=16),
         legend_position="none",
-        panel_grid_major_x=element_blank(),  # noqa: F405
-        axis_ticks=element_blank(),  # noqa: F405
+        axis_ticks=element_blank(),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT),
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)
 )
 
 # Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
