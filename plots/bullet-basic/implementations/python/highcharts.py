@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bullet-basic: Basic Bullet Chart
-Library: highcharts | Python 3.14.3
-Quality: 90/100 | Updated: 2026-05-29
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-29
 """
 
 import json
