@@ -1,0 +1,274 @@
+library: makie
+language: julia
+specification_id: ks-test-comparison
+created: '2026-05-29T03:35:18Z'
+updated: '2026-05-29T03:56:22Z'
+generated_by: claude-sonnet
+workflow_run: 26616151909
+issue: 4130
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Complete KS test visualization with correct ECDF step functions, D statistic,
+    p-value annotation, and maximum-divergence marker — all spec requirements fulfilled
+  - 'Semantic Imprint palette: brand green #009E73 for Good Customers, lavender #C475FD
+    for Bad Customers, matte red #AE3030 for the KS divergence region — intentional
+    and appropriate'
+  - Shaded divergence band plus dashed vertical line and thick KS segment create a
+    clear focal point that guides the viewer directly to the key insight
+  - All theme tokens correctly wired — both light (#FAF8F1) and dark (#1A1A17) renders
+    are readable with full chrome adaptation (title, labels, ticks, grid, legend box)
+  - Inline KS statistic computation (D and asymptotic p-value) in idiomatic Julia
+    using dot-broadcast operators — no external stats package dependency
+  - Clean title-size scaling formula ensures the mandated anyplot title fits without
+    overflow
+  weaknesses:
+  - ecdf_step helper function departs from KISS structure (CQ-01) — the two-call step-function
+    construction could be inlined to remove the function definition
+  - 'Shaded divergence band on dark render creates a large dark brownish-red region
+    (transparent #AE3030 over #1A1A17) that is visually heavy and slightly mutes the
+    elegance of the dark theme'
+  - LM-02 could be strengthened — the implementation uses Makie band!/axislegend but
+    misses opportunities to leverage distinctively Makie-specific features like Layout
+    composition with colorbars or statistical recipe integration
+  - 'DE-01 is above a configured default but not publication-ready: the chart is clean
+    and professional but lacks a distinctive typographic hierarchy or compositional
+    flourish that would push it to FiveThirtyEight quality'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
+      Chrome: Title "ks-test-comparison · julia · makie · anyplot.ai" in dark INK text, ~50-55% of plot width, clearly readable. "Credit Score" x-label and "Cumulative Proportion" y-label in dark INK, proportional size. Tick labels in muted INK_SOFT gray, clearly legible. Top and right spines removed. Subtle grid at 12% alpha.
+      Data: Green (#009E73) step-function ECDF for "Good Customers"; lavender (#C475FD) step-function ECDF for "Bad Customers". Semi-transparent red (#AE3030 at 12% alpha) shaded band fills the divergence region between the two ECDFs. Dashed red vertical line marks the KS maximum at ~score 540. Thick solid red segment shows the D-statistic gap. Annotation "D = 0.658 / p < 0.001" in dark INK text positioned to the right of the KS marker. Legend in bottom-right with elevated background frame, both labels readable.
+      Legibility verdict: PASS — all text elements are clearly readable against the light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
+      Chrome: Title in light INK (#F0EFE8) text, clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable. Grid lines subtle. Top and right spines absent. Legend with elevated dark background (#242420) and subtle frame.
+      Data: Data colors are identical to the light render — green (#009E73) for Good Customers and lavender (#C475FD) for Bad Customers are unchanged (only chrome flipped). The divergence band (semi-transparent #AE3030 at 12% alpha over dark bg) renders as a dark brownish-red region covering the central portion of the plot — visually heavy but the ECDF lines remain distinguishable on top. Annotation "D = 0.658 / p < 0.001" appears in light INK text and is readable.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements are readable. The shaded band is darker on the dark bg than on light, but does not obscure critical text or data lines.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, labels=14, ticks=12,
+          annotation=16). Well-proportioned at canvas size. Both themes fully readable.
+          Title at ~55% width, appropriate.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Annotation positioned to the right of KS marker
+          without colliding with ECDFs. Legend in bottom-right does not overlap data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ECDF lines clearly visible at linewidth=2.5. KS segment at linewidth=4
+          is prominent. Shaded band and dashed line provide supporting context without
+          obscuring data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender — CVD-safe pairing. Red KS annotation is semantic-only,
+          not used as a distinguishing signal between the two main series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with good margins. Legend
+          placement bottom-right is appropriate. No overflow or clipping detected
+          in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Credit Score'' (descriptive, domain-appropriate). Y: ''Cumulative
+          Proportion'' (descriptive with implicit unit 0–1). Title matches exact anyplot
+          format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) for Good Customers. Second series
+          #C475FD (lavender) for Bad Customers. KS annotation uses #AE3030 (semantic
+          red anchor for bad/loss/error — appropriate). Light bg #FAF8F1, dark bg
+          #1A1A17. Chrome fully theme-adaptive. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above a well-configured default: intentional semantic red for KS
+          annotation, shaded divergence band, clean two-color ECDF pairing. Not yet
+          publication-ready — lacks a typographic flourish or compositional distinction.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, grid at 12% alpha (subtle), elevated legend
+          background with frame, well-calibrated INK tokens. Clearly refined beyond
+          defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shaded divergence band + dashed line + thick KS segment + D/p annotation
+          create a clear focal point. The credit scoring narrative (Good vs Bad customers)
+          is immediately understandable. Guides the viewer to the KS statistic.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Two-sample KS plot correctly implemented with ECDF step functions
+          for both distributions.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both ECDFs as step functions, KS statistic value prominently displayed,
+          maximum divergence highlighted with vertical line+segment, p-value from
+          KS test, both distributions labeled in legend.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: credit scores (~300-750, realistic range). Y: cumulative proportion
+          (0-1). Both ECDFs correctly computed and mapped.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''ks-test-comparison · julia · makie · anyplot.ai'' — exact
+          anyplot format. Legend: ''Good Customers'' / ''Bad Customers'' — descriptive
+          and correct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all KS plot aspects: two distinct ECDFs, shaded divergence
+          region, D statistic, p-value, point of maximum divergence. Data (400 samples
+          per group) is sufficient for reliable KS inference.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit scoring model validation — Good vs Bad customers. Real-world
+          business use case, neutral topic, plausible distribution parameters (mean
+          620/490, sd 60/70).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Credit scores in ~300-750 range (realistic FICO-like). D=0.658 represents
+          a large separation appropriate for a credit risk model. p<0.001 expected
+          with n=400 per group and this effect size.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 'One helper function defined: ecdf_step(sv) called twice. Minor KISS
+          violation but justified by the duplication it avoids. Otherwise clean linear
+          structure.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Julia code with idiomatic dot-broadcast for KS computation.
+          No fake UI elements. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie API). No deprecated functions.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: band!, vlines!, lines!, text!, axislegend — all high-level Makie
+          primitives used correctly. RGBAf for transparent colors, colorant strings
+          — idiomatic. Theme token pattern is proper Makie/anyplot usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses band! for divergence region fill (Makie-specific), axislegend
+          for legend placement. Julia dot-broadcast operators for vectorized ECDF
+          computation. Could be strengthened with more uniquely Makie features (Layout
+          composition, colorbars, statistical recipes).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - ecdf
+  styling:
+  - alpha-blending
