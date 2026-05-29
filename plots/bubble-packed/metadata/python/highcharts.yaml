@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:16:17Z'
-updated: '2026-05-29T23:06:54Z'
+updated: '2026-05-29T23:15:46Z'
 generated_by: claude-sonnet
 workflow_run: 26666144010
 issue: 992
@@ -12,55 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct packedbubble chart type with Highcharts physics simulation and sector
-    splitSeries clustering
-  - 'Full Imprint palette compliance — #009E73 first (Technology), canonical order
-    for remaining sectors'
-  - Per-bubble fillOpacity hierarchy (0.65 to 1.0 scaled by value) adds sophisticated
-    within-sector visual ranking
-  - 'Highcharts-specific features well-leveraged: layoutAlgorithm, parentNodeOptions
-    to hide cluster outlines, data-label value filter'
-  - Perfect theme adaptation — INK/INK_SOFT/PAGE_BG/ELEVATED_BG all flip correctly
-    between light and dark; no dark-on-dark failures
-  - Clean KISS code structure with deterministic hardcoded data; correct inline JS
-    embed for headless Chrome; PIL safety net for exact 2400×2400 canvas
-  - Subtitle Market value by sector ($B) contextualises the metric clearly
+  - Per-bubble opacity hierarchy (0.65–1.0 based on value/850) adds meaningful visual
+    depth within each sector group, going beyond a flat-coloured implementation.
+  - 'splitSeries: true with parentNodeOptions creates clear sector clusters while
+    keeping all bubbles on one chart — excellent use of a Highcharts-distinctive feature.'
+  - CDP setDeviceMetricsOverride + PIL safety-net correctly pins the 2400×2400 canvas
+    despite headless Chrome drift.
+  - Title font scaling formula (round(66 × 67/len(title))) prevents overflow on the
+    long descriptive+canonical title combination.
+  - Both themes fully implemented with adaptive chrome; data colours are theme-stable
+    across light and dark renders.
   weaknesses:
-  - 'Sector grouping is loose — despite splitSeries: True and parentNodeLimit: True,
-    same-sector bubbles scatter across the canvas rather than clustering into visually
-    distinct group envelopes; consider raising gravitationalConstant to 0.12+ or adding
-    visible (semi-transparent) parentNode markers so group boundaries are perceptible'
-  - 'Excessive whitespace at the top of the canvas: the bubble cluster drifts downward
-    leaving a large blank area between the subtitle and the first bubble; reduce top
-    margin or increase gravitationalConstant to pull bubbles up into the available
-    space'
-  - Many mid-sized items (Semicon., Cybersec., Asset Mgmt, Fintech, Med Devices, Health
-    Svcs, Renewables, Utilities, Food & Bev, Entertain.) are unlabelled because the
-    filter threshold value > 400 is too aggressive; lower the filter to value > 200
-    and reduce dataLabel fontSize to 28px for the smaller bubbles so their names are
-    visible
-  - 'DE-01: design sophistication would benefit from a descriptive prefix title that
-    names the story (e.g., Global Market Capitalization · bubble-packed · python ·
-    highcharts · anyplot.ai); the opacity hierarchy, while clever, is too subtle to
-    read as intentional design at a glance'
+  - Parent-node boundary ring uses hardcoded rgba(0,0,0,0.25) for both themes — on
+    dark mode this renders as a near-invisible dark ring; change to GRID or rgba(240,239,232,0.25)
+    in dark theme.
+  - Minor label crowding in the central cluster (Fintech, Utilities, Health Svcs,
+    Entertain.) — the filter threshold of 200 could be raised to ~280 to reduce label
+    density in the crowded zone.
+  - 'DQ-03: absolute market cap values are simplified approximations; making the proportions
+    slightly more accurate to real-world sector weights would improve factual correctness.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white
-      Chrome: Bold dark title "bubble-packed · python · highcharts · anyplot.ai" fully readable; subtitle "Market value by sector ($B)" in lighter secondary text; horizontal legend at bottom showing Technology/Finance/Healthcare/Energy/Consumer with colored dots — all clearly readable in dark text on light background
-      Data: 20 bubbles across 5 color groups — Technology (#009E73 green, first series correct), Finance (#C475FD lavender), Healthcare (#4467A3 blue), Energy (#BD8233 ochre), Consumer (#AE3030 matte red). Per-bubble fillOpacity (0.65–1.0 scaled by value) gives the palette a pastel-to-saturated range on the light surface. White text labels with shadow/outline inside larger bubbles (Banking, Software, Retail, Automotive, Oil & Gas, Pharma, Hardware, Biotech, Cloud, Insurance) — all legible. Smaller bubbles carry no labels. Bubbles are packed without overlap.
-      Legibility verdict: PASS — all chrome text is dark on light background; no light-on-light failures. Bubble labels are white-on-color with text outline — readable.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "Global Market Capitalization · bubble-packed · python · highcharts · anyplot.ai" in dark #1A1A17, clearly readable. Subtitle "Market value by sector ($B)" in INK_SOFT #4A4A44, readable. Legend labels in #4A4A44 with bordered elevated-bg box, readable. No axis labels (correct for packed bubble). Title spans ~88% of canvas width — within acceptable range.
+      Data: Twenty bubbles across five sectors. Technology (#009E73 teal-green) — Software (largest), Cloud, Hardware, Semicon., Cybersec. Finance (#C475FD lavender) — Banking (large), Insurance, Asset Mgmt, Fintech. Healthcare (#4467A3 blue) — Pharma (large), Biotech, Med Devices, Health Svcs. Energy (#BD8233 ochre) — Oil & Gas, Renewables, Utilities. Consumer (#AE3030 matte red) — Automotive, Retail, Food & Bev, Entertain. White data labels with 2px dark outline on larger bubbles, clearly readable.
+      Legibility verdict: PASS — all text readable; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black
-      Chrome: Title text renders in light cream/white — readable; subtitle in light gray — readable; legend text in #B8B7B0 (INK_SOFT for dark) — readable. No dark-on-dark failures detected.
-      Data: Same 5 color groups as light render — hex values are identical (Technology green, Finance purple, Healthcare blue, Energy ochre, Consumer red). Colors appear richer/more saturated against the dark background due to simultaneous contrast (expected perceptual effect, not a palette change). Bubble label text remains white with outline — readable. Bubble sizes and positions are the same as the light render.
-      Legibility verdict: PASS — title, subtitle, and legend are light text on near-black background; bubble labels are white. No dark-on-dark issues. The INK→#F0EFE8 and INK_SOFT→#B8B7B0 theme token flip is correctly applied to all chrome elements.
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and subtitle flip to light #F0EFE8 / #B8B7B0, clearly readable. Legend items in #B8B7B0 on #242420 elevated background, readable. No dark-on-dark failures observed. One minor issue: parent-node boundary rings use hardcoded rgba(0,0,0,0.25) which is near-invisible on the dark background (dark ring on dark bg), but this is a minor visual polish issue not a legibility failure.
+      Data: All five data series colours are identical to the light render — Technology #009E73, Finance #C475FD, Healthcare #4467A3, Energy #BD8233, Consumer #AE3030. White bubble data labels remain readable on all series colours.
+      Legibility verdict: PASS — all title/label/legend text readable; no critical dark-on-dark text failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,59 +56,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (66px title, 44px subtitle, 44px legend,
-          36px data labels); readable in both themes. Minor: several mid-sized bubbles
-          (value 240-390) show no labels due to threshold > 400, slightly reducing
-          identification at a glance.'
+        comment: All font sizes explicitly set; title scaling formula applied; white
+          bubble labels with outline readable in both themes. Title spans ~88% of
+          canvas width, approaching but not exceeding the 90% threshold.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text or bubble overlap in either render. Physics simulation packs
-          bubbles correctly without collision.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 20 bubbles clearly visible as distinct colored circles. Largest bubbles
-          (Software 850, Banking 720) are prominently sized; smallest (Health Svcs
-          240, Fintech 260) are small but distinguishable. All bubbles individually
-          identifiable.
+        comment: Generally clean layout; minor label crowding in central cluster (Fintech,
+          Utilities, Health Svcs, Entertain.) but all labels remain readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bubble sizes well-adapted to value range; white text with 2px dark
+          outline ensures readability on all hues.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. White text with text outline on colored
-          bubbles provides adequate contrast. No red-green sole signal.
+        comment: Imprint palette with CVD-safe selection; five distinct hue families;
+          no red-green-only discrimination.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas is the appropriate format for packed bubble.
-          Canvas gate passed. Layout reasonably balanced, though the bubble cluster
-          drifts slightly downward leaving more vertical whitespace at the top than
-          needed.
+        comment: 2400x2400 square canvas correct for symmetric packed bubble; bubbles
+          fill ~75% of canvas; balanced margins; legend anchored at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly. Subtitle 'Market value by
-          sector ($B)' adds meaningful context. Axes are correctly hidden for packedbubble
-          (position has no meaning).
+        comment: No axes needed for packed bubble; subtitle 'Market value by sector
+          ($B)' provides unit context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Technology = #009E73 (first series correct). Finance = #C475FD,
-          Healthcare = #4467A3, Energy = #BD8233, Consumer = #AE3030 — canonical Imprint
-          order for positions 2-5. Light background #FAF8F1, dark background #1A1A17.
-          All chrome tokens (INK, INK_SOFT, ELEVATED_BG) flip correctly between themes.'
+        comment: 'First series (Technology) = #009E73; subsequent sectors follow canonical
+          Imprint order; light bg #FAF8F1, dark bg #1A1A17; chrome fully theme-adaptive
+          in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -130,30 +111,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: per-bubble fillOpacity hierarchy
-          (0.65-1.0 scaled by value) is a deliberate design choice that adds within-sector
-          visual ranking. Realistic market sector data. Correct Imprint palette. Subtitle
-          contextualizes. Not yet publication-ready: sector cluster boundaries are
-          invisible, making the grouping affordance color-only.'
+        comment: 'Above defaults: per-bubble opacity gradient (0.65–1.0 based on value
+          magnitude) adds intentional hierarchy; subtitle layer; professional colour
+          scheme. Not quite FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes completely hidden (appropriate for packedbubble where position
-          has no meaning). Clean legend with bordered box, rounded symbols. White
-          bubble edges add definition. Some excess vertical whitespace at the top
-          of the canvas reduces the refined feel.
+        comment: 'Axes hidden, legend styled with border and elevated background,
+          minimal chrome. Deduction: parent-node boundary ring hardcoded rgba(0,0,0,0.25)
+          is near-invisible in dark mode.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size-encodes market value intuitively — viewer immediately understands
-          larger circle = higher value. Color separates sectors clearly. The opacity
-          hierarchy subtly reinforces value ranking within each sector. Story is clear
-          but the loose grouping means inter-sector comparison requires effort; stronger
-          spatial separation of sector clusters would amplify the visual narrative.
+        comment: splitSeries clusters sectors visually; opacity gradient implies value
+          rank within each group; market cap context immediately recognisable. Good
+          visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -163,57 +139,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packedbubble chart type with Highcharts' physics simulation.
+        comment: Correct packedbubble type with physics-based force layout; circles
+          packed without overlap; size encodes value.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Circle area encodes value (minSize/maxSize/zMin/zMax). Physics packing
-          prevents overlap. Labels inside circles for larger bubbles. Color encodes
-          group membership. splitSeries: True enables sector clustering.'
+        comment: Area-based sizing, force simulation, labels inside larger circles,
+          colour encodes group, splitSeries clusters by group.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 20 items present across 5 sectors. Size correctly mapped to market
-          value. Color correctly mapped to sector group.
+        comment: All 20 items mapped; value correctly drives circle area; sector grouping
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bubble-packed · python · highcharts · anyplot.ai'.
-          Legend shows all 5 sectors with correct Imprint palette colors.
+        comment: 'Title: ''Global Market Capitalization · bubble-packed · python ·
+          highcharts · anyplot.ai'' — correct descriptive prefix + canonical format.
+          Legend labels match 5 sectors.'
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows value comparison, size range (240-850), multi-sector grouping,
-          label filtering for legibility. Good bubble size distribution. Minor: many
-          items lack labels (10 out of 20) due to aggressive value > 400 threshold.'
+        comment: 'Demonstrates all packed-bubble features: wide value range (240–850),
+          grouping, labels on large bubbles only, 20 items across 5 sectors.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market capitalization by sector is a real, neutral business scenario.
-          Sector and sub-sector names are standard industry categories. No controversial
-          content.
+        comment: Market capitalisation by sector is a real, neutral, business-world
+          scenario with recognisable industry names.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Values $240B-$850B are realistic for major global market sectors.
-          Relative proportions (Software > Cloud > Hardware) are plausible. Range
-          of 20 items is within the 10-100 recommended spec range.
+        comment: Relative proportions within sectors are plausible and directionally
+          correct. Absolute values (Software $850B) are simplified approximations
+          rather than market-accurate figures.
     code_quality:
       score: 10
       max: 10
@@ -223,57 +198,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → chart setup → series → export.
-          No unnecessary functions or classes.'
+        comment: 'Linear: imports → tokens → data → chart config → series loop → HTML
+          export → Selenium → PIL safety net.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded deterministic data — no random elements.
+        comment: Data is fully deterministic (hardcoded dict); no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: os, tempfile, time, urllib.request, Path,
-          Chart, HighchartsOptions, Image, webdriver, Options.'
+        comment: All imports used; no unused stdlib or third-party entries.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: List comprehension for series construction. Dynamic title font-size
-          formula. No over-engineering, no fake UI elements.
+        comment: Title font-size scaling formula is clean; per-bubble enrichment via
+          list comprehension is idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses ANYPLOT_THEME
-          env var. PIL safety net for exact 2400×2400 canvas.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current highcharts_core
+          API used correctly.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct Chart(container='container') pattern. HighchartsOptions API
-          throughout. Inline JS embed for headless Chrome. chart.to_js_literal().
-          CDP viewport override for exact dimensions.
+        comment: Full use of HighchartsOptions, layoutAlgorithm, parentNodeOptions,
+          dataLabels filter; correct container='container' pattern; CDP viewport override
+          for exact dimensions.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Highcharts-exclusive packedbubble type with physics layoutAlgorithm.
-          splitSeries for sector grouping. parentNodeOptions to hide cluster envelope
-          markers. data-label value filter using Highcharts filter API. Per-point
-          fillOpacity within series data array.
-  verdict: REJECTED
+        comment: 'packedbubble type + splitSeries + parentNodeOptions for cluster
+          grouping is distinctly Highcharts; per-data-point marker.fillOpacity computed
+          from value is Highcharts-specific. Slight deduction: parentNodeLimit and
+          seriesInteraction could be more deliberately tuned.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
