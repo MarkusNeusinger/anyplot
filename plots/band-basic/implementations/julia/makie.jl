@@ -27,16 +27,19 @@ const IMPRINT_PALETTE = [
     colorant"#99B314",  # 8 — lime
 ]
 
+# Theme-adaptive band alpha: higher in dark mode for contrast
+const BAND_ALPHA = THEME == "light" ? 0.25f0 : 0.35f0
+
 # Data — 60-day temperature forecast with widening 95% confidence interval
 n = 60
 days = Float64.(1:n)
 
-# Gradual warming trend with seasonal oscillation
 y_center = 14.0 .+ 0.06 .* days .+ 3.0 .* sin.(2π .* days ./ 30)
-# Forecast uncertainty grows with lead time
 sigma = 0.5 .+ 0.05 .* days
 y_lower = y_center .- 1.96 .* sigma
 y_upper = y_center .+ 1.96 .* sigma
+
+hist_mean = 15.0
 
 # Plot
 fig = Figure(
@@ -74,25 +77,43 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
+# Historical mean reference — hlines! is idiomatic Makie for horizontal reference
+hlines!(ax, [hist_mean];
+    color     = (IMPRINT_PALETTE[3], 0.65),
+    linewidth = 1.5,
+    linestyle = :dash)
+
 # 95% confidence interval band (semi-transparent Imprint brand green)
 band!(ax, days, y_lower, y_upper;
-    color = (IMPRINT_PALETTE[1], 0.25))
+    color = (IMPRINT_PALETTE[1], BAND_ALPHA))
 
 # Central forecast line
 lines!(ax, days, y_center;
     color     = IMPRINT_PALETTE[1],
     linewidth = 2.5)
 
+# Makie bracket! annotation: shows CI width at forecast horizon (day 60)
+bracket_x = Float64(n + 3)
+ci_label = "±$(round(1.96 * sigma[end], digits=1))°C"
+bracket!(ax, bracket_x, y_lower[end], bracket_x, y_upper[end];
+    text      = ci_label,
+    color     = INK_SOFT,
+    textcolor = INK_SOFT,
+    fontsize  = 11)
+
+xlims!(ax, 0, n + 16)
+
 # Legend
 axislegend(ax,
-    [PolyElement(color = (IMPRINT_PALETTE[1], 0.25), strokewidth = 0),
-     LineElement(color = IMPRINT_PALETTE[1], linewidth = 2.5)],
-    ["95% CI", "Forecast mean"],
-    position         = :rb,
+    [PolyElement(color = (IMPRINT_PALETTE[1], BAND_ALPHA), strokewidth = 0),
+     LineElement(color = IMPRINT_PALETTE[1], linewidth = 2.5),
+     LineElement(color = (IMPRINT_PALETTE[3], 0.65), linewidth = 1.5, linestyle = :dash)],
+    ["95% CI", "Forecast mean", "Historical mean ($(Int(hist_mean))°C)"],
+    position         = :lt,
     backgroundcolor  = ELEVATED_BG,
     framecolor       = INK_SOFT,
-    labelcolor = INK_SOFT,
-    labelsize  = 12,
+    labelcolor       = INK_SOFT,
+    labelsize        = 12,
 )
 
 # Save
