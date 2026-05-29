@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-29
+Quality: 89/100 | Created: 2026-05-29
 """
 
 import json
