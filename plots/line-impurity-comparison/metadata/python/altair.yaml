@@ -1,114 +1,143 @@
 library: altair
+language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:54:50Z'
-updated: '2026-02-17T18:58:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22111342376
+updated: '2026-05-29T01:17:25Z'
+generated_by: claude-sonnet
+workflow_run: 26611037472
 issue: 4133
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - 'Perfect visual quality: all font sizes explicitly set, thick visible lines, excellent
-    color contrast'
-  - 'Complete spec compliance: both curves, annotations at maxima, legend with formulas,
-    grid, edge case handling at boundaries'
-  - 'Clean mathematical correctness: entropy properly normalized, safe log computation
-    with np.errstate'
-  - 'Effective data storytelling: vertical rule at p=0.5 with annotation points draws
-    viewer to key insight'
-  - 'Idiomatic Altair: declarative layer composition, proper encoding types, clean
-    configure chain'
+  - Correct and complete spec implementation — both Gini and Entropy curves rendered
+    with formulas in the legend, full normalized comparison across p in [0,1], and
+    edge cases at p=0 and p=1 handled via np.nan_to_num
+  - Excellent use of Altair layer composition (area_fill + lines + vertical_rule +
+    annotation_point + annotation_text) — idiomatic and clean
+  - 'Educational storytelling: shaded area between curves clearly shows that entropy
+    is uniformly above Gini; vertical rule + annotations at p=0.5 maxima reinforce
+    the key insight'
+  - Correct Imprint palette usage — Gini (#009E73) first, Entropy (#C475FD) second;
+    redundant encoding via solid vs dashed lines adds CVD accessibility
+  - Full theme-adaptive chrome correctly threaded — both light (#FAF8F1 bg, dark text)
+    and dark (#1A1A17 bg, light text) renders pass the readability check with no dark-on-dark
+    issues
+  - 'Canvas handling correct: PAD-only logic after vl-convert export, raises SystemExit
+    if oversized (no silent crop), exact 3200×1800 output'
   weaknesses:
-  - DE-01 could be elevated with more distinctive design choices (e.g., custom font
-    styling, more refined color scheme, or differentiated line styles like dashing
-    one curve)
-  - Legend label Entropy (scaled) could include the formula for symmetry with the
-    Gini label
-  - Grid styling is minimal — could benefit from slightly more visible grid or styled
-    tick marks for educational context
-  image_description: 'The plot shows two smooth curves on a clean white background
-    with a very subtle gray grid. A blue line (labeled "Gini: 2p(1−p)") forms a lower
-    parabola peaking at 0.5, while an orange line (labeled "Entropy (scaled)") forms
-    a taller curve peaking at 1.0. Both curves start and end at 0 at the boundaries
-    p=0 and p=1. A dashed vertical gray rule marks p=0.5, where both measures reach
-    their maximum. Two dark annotation points are placed at the maxima with bold labels:
-    "Entropy max" near the top and "Gini max = 0.5" at the lower peak. The legend
-    is positioned in the top-right corner with thick colored line symbols. The title
-    reads "line-impurity-comparison · altair · pyplots.ai" at the top center. The
-    X-axis is labeled "Probability (p)" ranging from 0.00 to 1.00, and the Y-axis
-    is labeled "Impurity Measure (normalized)" ranging from 0.00 to 1.10. All text
-    is clearly legible. The overall layout is well-balanced with the chart filling
-    most of the canvas.'
+  - 'Legend text ''Entropy: −p·log₂(p) (scaled)'' is tight at the right edge of the
+    legend box in both renders — the trailing '')'' appears to touch or minimally
+    overflow the legend border; consider adding a small padding via alt.Legend(padding=6)
+    or shortening to ''Entropy: −p·log₂p (norm.)'''
+  - 'VQ-05 minor: legend box is pushed into the bottom-right corner of the plot area,
+    leaving the annotation dot for ''Gini max = 0.5'' in visual proximity to the legend
+    — a slightly higher orient offset or moving the legend to ''top-right'' would
+    give more breathing room'
+  - 'DE-01 ceiling: the overall aesthetic is polished but still reads as ''configured
+    Altair default with enhancements'' rather than publication-ready — adding a subtle
+    annotation arrow or slightly varying line widths between series would elevate
+    the visual hierarchy further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "line-impurity-comparison · python · altair · anyplot.ai" is clearly visible in dark ink at top. X-axis label "Probability p" and Y-axis label "Impurity Measure (normalized)" both readable. Tick labels (0.00–1.00 on X, 0.0–1.1 on Y) readable. Legend box in bottom-right with styled border shows "Gini: 2p(1−p)" with green swatch and "Entropy: −p·log₂(p) (scaled)" with dashed lavender swatch — trailing ")" is tight at right legend border.
+      Data: Green solid line (#009E73) for Gini impurity, lavender dashed line (#C475FD) for normalized entropy. Shaded lavender area (opacity ~0.12) fills the gap between curves, clearly showing entropy exceeds Gini across (0,1). Vertical dashed gray rule at p=0.5. Two annotation dots at p=0.5 (y=0.5 for Gini, y=1.0 for Entropy) with labels "Gini max = 0.5" and "Entropy max = 1.0".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title visible in near-white text. Axis labels and tick labels rendered in light-colored tokens (B8B7B0/F0EFE8 range). No dark-on-dark issues — all text is clearly readable against the dark background. Legend box has dark elevated background (#242420) with light text and a subtle border.
+      Data: Colors are identical to the light render — green Gini line and lavender dashed Entropy line unchanged. Shaded area, vertical rule, and annotation dots/labels all visible. Annotation dots appear near-white to contrast with the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 16pt'
+        comment: 'All font sizes explicitly set (labelFontSize=10, titleFontSize=12,
+          title_fontsize scaled). Both renders readable. Minor: legend text ''Entropy:
+          −p·log₂(p) (scaled)'' is tight at right legend border.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; annotations placed clear of curves
+        comment: No overlapping text or data elements in either render. Annotations
+          at maxima are well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at strokeWidth=4, annotation points at size=200
+        comment: Lines at strokeWidth=4 are clearly visible. Shaded area at opacity=0.12
+          is subtle but present. 200-point smooth curves render cleanly.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and orange provide excellent colorblind-safe contrast
+        comment: CVD-safe Imprint palette used. Redundant encoding via solid vs dashed
+          lines ensures distinguishability beyond hue alone.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
+        name: Layout & Canvas
+        score: 3
         max: 4
         passed: true
-        comment: Chart fills canvas well, balanced margins
+        comment: 'Canvas gate passed (3200x1800). Plot fills canvas well with good
+          margins. Minor: legend box slightly crowded in bottom-right corner near
+          Gini annotation.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: X='Probability p', Y='Impurity Measure (normalized)' — descriptive
+          with context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Gini=#009E73 (position 1 first series), Entropy=#C475FD (position
+          2). Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, thick lines, intentional hierarchy; strong but not
-          FiveThirtyEight-level
+        comment: 'Above library defaults: shaded band between curves adds depth, redundant
+          encoding (solid/dashed), styled legend box. Not yet ''strong design'' (6+)
+          — lacks the final publication-ready polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid (opacity 0.2), view stroke removed, clean whitespace
+        comment: domain=False removes spines, gridOpacity=0.13 is subtle, configure_view(strokeWidth=0)
+          removes chart border, legend box styled. Above the minimum default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Vertical rule and annotation points guide viewer to key insight at
-          p=0.5
+        comment: Shaded area between curves clearly shows entropy > Gini. Annotations
+          at both maxima give quantitative anchors. Vertical rule at p=0.5 highlights
+          the educational peak. Clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for theoretical comparison
+        comment: Correct comparison line chart with two curves on same axes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both curves, legend with formulas, annotations at max, grid, edge
-          cases handled
+        comment: Both Gini and Entropy curves; legend with formulas; annotation at
+          p=0.5 maximum; edge cases at p=0 and p=1 handled via nan_to_num.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability, Y=impurity correctly assigned
+        comment: X=probability p [0,1], Y=impurity measure normalized [0,1.1]. Both
+          curves mapped correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend labels with formulas
+        comment: 'Title: ''line-impurity-comparison · python · altair · anyplot.ai''
+          — exact required format. Legend labels include formulas as per spec.'
     data_quality:
       score: 15
       max: 15
@@ -147,19 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full [0,1] range, both curves show distinctive shapes and magnitudes
+        comment: Shows full Gini and normalized Entropy curves from 0 to 1, shaded
+          gap between them, both maxima annotated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical/ML education scenario, formula-based data
+        comment: ML education visualization showing decision tree splitting criteria
+          — real scientific context, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically exact values, entropy properly normalized
+        comment: 'Mathematical formulas are correct: Gini=2p(1-p) peaks at 0.5, entropy
+          normalized to [0,1] peaks at 1.0. Values and shapes factually correct.'
     code_quality:
       score: 10
       max: 10
@@ -169,60 +203,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, data, plot, save - no functions/classes
+        comment: 'Clean top-level script: imports → data → chart layers → compose
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical formulas, no randomness
+        comment: Fully deterministic — purely mathematical data generation, no random
+          elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas)
+        comment: 'All imports used: os, altair, numpy, pandas, PIL.Image.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, good edge case handling with np.errstate
+        comment: Clean, Pythonic. Layer composition is clear. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.1.0
+          API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Declarative grammar: Chart, mark, encode, properties, configure
-          with proper encoding types'
+        comment: Proper Altair encoding types (Q, N), Scale, Axis, Legend configurations.
+          Layer composition is idiomatic. Above the default.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layer composition with + operator, mark_rule, HTML export; somewhat
-          standard for grammar-of-graphics
+        comment: Uses Altair-distinctive layer composition (5 layers), strokeDash
+          scale encoding for redundant line-style differentiation, and full configure_*
+          theming chain. Above generic usage.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
-  - wide-to-long
   dataprep:
   - normalization
   styling:
-  - grid-styling
+  - alpha-blending
