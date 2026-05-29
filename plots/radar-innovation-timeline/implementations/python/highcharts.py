@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-Library: highcharts | Python 3.13
-Quality: pending | Updated: 2026-05-29
+Library: highcharts unknown | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-29
 """
 
 import json
