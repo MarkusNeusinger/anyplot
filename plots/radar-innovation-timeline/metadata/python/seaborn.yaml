@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:43:46Z'
-updated: '2026-05-29T07:56:24Z'
+updated: '2026-05-29T13:22:10Z'
 generated_by: claude-sonnet
 workflow_run: 26624005578
 issue: 4301
@@ -15,103 +15,101 @@ preview_html_dark: null
 quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance (15/15) — all required Innovation Radar features present
-    and correctly implemented
-  - Perfect data quality (15/15) — realistic neutral technology-innovation data with
-    plausible ring placement
-  - Perfect code quality (10/10) — clean, reproducible, idiomatic structure
-  - 'Strong design intent: ring fills, halo effects, direction storytelling cues (Ready/Emerging),
-    and sector-colored headers go well beyond library defaults'
-  - Correct Imprint palette in canonical order across both themes; theme-adaptive
-    chrome works correctly
+  - Full Imprint palette compliance with 4-sector color+shape encoding
+  - Creative use of seaborn blend_palette for gradient ring accent lines and desaturate
+    for storytelling cues
+  - Halo effect via secondary sns.scatterplot adds visual depth
+  - 270° layout with dedicated gap for ring labels and directional cues (◂ Ready /
+    Emerging ▸)
+  - Sophisticated label collision avoidance with canvas boundary awareness
+  - All 27 items placed with radial jitter, size encodes ring importance
+  - 'Full spec compliance: concentric rings, sector headers, ring fills, legend'
   weaknesses:
-  - Label overlap — CRISPR Diagnostics and Precision Nutrition merge into unreadable
-    text 'CRISPrecision Nutrition' in the left quadrant; collision-detection algorithm
-    must use larger y-offset steps (expand to ±50 pts), wider dx_adj range (±30),
-    and higher BOX_PAD/margin values to eliminate merged labels
-  - 'Label canvas-boundary awareness missing — the placement loop does not clamp labels
-    to canvas bounds; outer-ring AI & ML items (ha=left, right side) and outer-ring
-    Biotech items (ha=right, left side) extend to or past canvas edges; add boundary
-    clamping: check x0_f >= 8*PT and x0_f + w_f <= fig_width_px - 8*PT before placing
-    each annotation'
-  - Label crowding in dense Adopt ring center — innermost ring has largest markers
-    (440 pt²) plus several close items; some label boxes overlap markers or each other
-    in the central region
+  - 'Significant label overlap in crowded center area — collision avoidance partially
+    failed: multiple Adopt/Trial-ring labels (LLM Agents, Platform Eng., RAG Pipelines,
+    Federated Learning) cluster together; sector headers (Sustainability, Cloud &
+    Infra) and data labels overlap at top'
+  - Sector header font at 16pt is disproportionately large relative to item labels
+    (10pt), causing visual imbalance — consider reducing sector headers to 13-14pt
+    or raising item labels to 11-12pt
+  - CRISPR Diagnostics and Synthetic Data Gen labels partially obscured by adjacent
+    elements — label overlap cascade in the AI & ML / Biotech sector boundary area
+  - LM-02 limited by heavy reliance on matplotlib for polar projection, annotation,
+    and collision logic — seaborn-specific features (blend_palette, desaturate) used
+    well but play a secondary role
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "radar-innovation-timeline · python · seaborn · anyplot.ai" in dark ink, readable; ring labels (Adopt/Trial/Assess/Hold) in neutral-colored rounded boxes, readable; sector headers ("AI & ML", "Sustainability", "Cloud & Infra", "Biotech") bold in their respective sector palette colors, readable; annotation text using INK token (dark on light), readable; direction cues ("◂ Ready", "Emerging ▸") in desaturated Imprint colors, readable; legend text in dark ink, readable
-      Data: AI & ML green circles (#009E73), Cloud & Infra lavender squares (#C475FD), Sustainability blue diamonds (#4467A3), Biotech ochre triangles (#BD8233) — canonical Imprint order; ring fills using Imprint-derived colors at alpha 0.18; halo effects per sector at alpha 0.07; marker sizes scale 150–440 by ring importance
-      Issue: "CRISPR Diagnostics" and "Precision Nutrition" labels overlap into merged unreadable text "CRISPrecision Nutrition"; additional crowding in central Adopt ring and left-side Biotech outer labels near canvas edge
-      Legibility verdict: PASS with caveats (overlap issue noted)
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "radar-innovation-timeline · python · seaborn · anyplot.ai" at top in dark (#1A1A17) text — fully readable. Sector headers ("Sustainability", "Cloud & Infra", "AI & ML", "Biotech") in their respective Imprint sector colors at 16pt bold. Ring labels ("Adopt", "Trial", "Assess", "Hold") in INK_SOFT at 12pt bold with rounded bbox. Directional cues "◂ Ready" and "Emerging ▸" in desaturated Imprint colors. All text is readable.
+      Data: 27 labeled innovation items as markers with Imprint palette colors: AI & ML = circles (#009E73 green), Cloud & Infra = squares (#C475FD lavender), Sustainability = diamonds (#4467A3 blue), Biotech = triangles (#BD8233 ochre). Marker sizes vary by ring importance (Adopt largest, Hold smallest). Ring fills in Imprint-derived colors at alpha=0.18 create subtle band separation. Halo circles add visual depth. First series is #009E73 ✓.
+      Legibility verdict: PASS — all labels readable; some overlap in crowded Adopt/Trial rings (LLM Agents, Platform Eng., RAG Pipelines cluster). Sector headers and some labels compete at the top area.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title in off-white (INK flipped to #F0EFE8), readable; ring labels in INK_SOFT (#B8B7B0), readable; sector headers in their palette colors (same as light — data colors are theme-independent), readable; annotation text in off-white INK, readable — no dark-on-dark failures; legend box uses elevated dark fill (#242420), readable
-      Data: all four sector colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — data colors unchanged across themes as required; ring fills slightly more saturated on dark background but still within spec
-      Issue: same label overlap ("CRISPrecision Nutrition") as light render
-      Legibility verdict: PASS with caveats (same overlap; no dark-on-dark failures)
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light (#F0EFE8) text — clearly readable. Sector headers in same Imprint sector colors (theme-independent). Ring label boxes use elevated dark bg (#242420). Legend box adapts to dark elevated bg. All annotation boxes adapt to dark ELEVATED_BG. No dark-on-dark failures detected.
+      Data: Data point colors are identical to light render — AI & ML green (#009E73), Cloud & Infra lavender (#C475FD), Sustainability blue (#4467A3), Biotech ochre (#BD8233). Only chrome flips ✓.
+      Legibility verdict: PASS — text readable in dark theme; same overlap issues as light render in center area.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (sector headers 16pt, ring labels 12pt,
-          annotations 11pt, legend 8pt). Well-proportioned. Minor deduction for sector
-          headers being slightly large relative to chart scale.
+        comment: 'All font sizes explicitly set: sector headers 16pt, ring labels
+          12pt, item labels 10pt, title dynamically scaled. Good proportions overall;
+          sector header at 16pt slightly dominates vs item labels at 10pt.'
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: CRISPR Diagnostics and Precision Nutrition labels merge into 'CRISPrecision
-          Nutrition'. Additional crowding in Adopt ring center. Collision detection
-          algorithm fails to fully resolve all pairs.
+        comment: 'Significant overlaps in crowded Adopt/Trial rings: LLM Agents, Platform
+          Eng., RAG Pipelines cluster in center. Sector headers (Sustainability, Cloud
+          & Infra) compete with data labels at top. Collision avoidance partially
+          effective but insufficient for 27 items in 270°.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Markers scale by importance (150-440 pt2) plus halos add depth.
-          Well-adapted to 27-point density. Minor: some Adopt-ring markers partially
-          obscured by label boxes.'
+        comment: 27 items visible with varying marker sizes (150-440 s=values). Halo
+          effect adds depth. Crowded center makes some inner-ring items harder to
+          distinguish but all are present.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with redundant shape encoding (circle/square/diamond/triangle).
-          CVD-safe.
+        comment: Imprint palette with redundant shape+color encoding makes chart CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 270-degree layout with bottom legend in the natural gap is well-chosen.
-          Chart fills ~55-60% of 2400x2400 canvas. Crowding on left side and label
-          proximity to canvas borders prevent perfect score.
+        comment: 270° layout with bottom legend uses canvas well. The 20% bottom gap
+          for legend is well-utilized. Slight gap between chart and legend could be
+          tighter.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Ring labels serve as radial axis labels; sector headers as angular
-          labels. Direction cues add orientation. Title format correct.
+        comment: Sector headers and ring labels are descriptive. Title follows correct
+          format. Legend has descriptive title.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette in canonical order: AI & ML #009E73, Cloud & Infra
-          #C475FD, Sustainability #4467A3, Biotech #BD8233. Backgrounds #FAF8F1/#1A1A17
-          correct. Both themes pass.'
+        comment: 'First sector = #009E73 (green). Imprint positions 1-4 used in canonical
+          order. Ring fills use Imprint colors at low alpha. Both backgrounds correct
+          (#FAF8F1 / #1A1A17). Chrome adapts correctly.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -119,26 +117,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Clearly above defaults: ring fills with Imprint-derived colors,
-          halo effects, blend_palette ring accent gradient, rounded annotation boxes,
-          direction storytelling cues. Strong design intent. Deduction for label-overlap
-          execution failure.'
+        comment: 'Strong design: halo effect via secondary scatter, gradient ring
+          boundary lines via blend_palette, directional narrative cues, sector-colored
+          headers, multi-level encoding (color+shape+size). Clearly above configured
+          default.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid disabled, polar spine removed, ticks removed, ring boundaries
-          replace grid, annotation boxes use elevated-bg with alpha. Good visual restraint.
-          Deduction for label crowding breaking the refined feel.
+        comment: Polar spine removed, no grid, ring fills at very low alpha, annotation
+          boxes with rounded bbox, legend with elevated bg. Good attention to detail
+          throughout.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size encoding (larger = more imminent) creates visual hierarchy.
-          Direction cues actively guide viewer. Sector headers in palette colors ground
-          the angular structure. Solid storytelling for first attempt.
+        comment: Directional cues (◂ Ready / Emerging ▸) create explicit narrative.
+          Marker size encodes readiness. Inner rings are visually prominent, drawing
+          eye to current priorities. Good hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -148,30 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar radar chart with 270-degree layout, 4 concentric time-horizon
-          rings, 4 angular sectors with divider lines.
+        comment: Correct Innovation Radar with concentric rings, sector divisions,
+          270° layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: concentric rings with boundaries, ring horizon
-          labels, sector headers, distinct markers, labeled points, legend, ring background
-          fills.'
+        comment: 'All spec features: concentric rings with boundary lines, ring labels,
+          sector headers, distinct shape+color encoding, labeled data points, ring
+          fills, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radial = ring/time-horizon, angular = sector, size = importance,
-          color+shape = sector category.
+        comment: Ring → radial position, sector → angular position. All 27 items placed
+          with radial jitter.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''radar-innovation-timeline · python · seaborn · anyplot.ai''.
-          Legend: correct sector shape+color and time horizon size entries.'
+        comment: 'Title: ''radar-innovation-timeline · python · seaborn · anyplot.ai''
+          ✓. Legend shows all 4 sectors with correct shapes/colors and ring size scale.'
     data_quality:
       score: 15
       max: 15
@@ -181,22 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 rings populated across all 4 sectors, varied item counts, diverse
-          domains, meaningful size variation by ring.
+        comment: All 4 rings and 4 sectors populated with 27 items showing full range
+          of time horizons.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world technology items (LLM Agents, CRISPR Diagnostics, Carbon
-          Accounting, mRNA Therapeutics) in neutral tech/biotech/sustainability domains.
+        comment: Real technology radar content (LLM Agents, CRISPR, eBPF, mRNA Therapeutics)
+          in 4 relevant sectors. Neutral, professional context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ordinal ring radii (1-4) appropriate. Radial jitter (±0.22) provides
-          separation without distorting ring membership. 27 items within spec range.
+        comment: Technology readiness levels match circa-2024-2026 reality. LLM Agents/mRNA
+          in Adopt, Neuromorphic/Quantum in Hold — factually grounded.
     code_quality:
       score: 10
       max: 10
@@ -206,8 +204,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> polar setup -> plot layers
-          -> labels -> title/legend -> save. No functions or classes.'
+        comment: 'Linear: imports → config → data → figure → rings → scatter → labels
+          → legend → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,21 +217,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used.
+        comment: 'All imports used: os, matplotlib.lines, pyplot, numpy, pandas, seaborn.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Collision detection loop is complex but necessary. No fake UI elements.
+        comment: Complex but appropriately so for 27-item radar with collision avoidance.
           No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
-          API.
+        comment: Saves as plot-{THEME}.png at dpi=400. No bbox_inches='tight'. Current
+          APIs used.
     library_mastery:
       score: 7
       max: 10
@@ -243,18 +241,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot() with simultaneous hue+style+size+markers+sizes
-          — idiomatic multi-attribute encoding. sns.set_theme() for theme setup. Appropriate
-          matplotlib fallback for polar/annotations.
+        comment: sns.scatterplot with hue+style+size multi-encoding, sns.set_theme
+          for chrome, blend_palette, desaturate. Good seaborn patterns but polar/annotation
+          work falls back to matplotlib.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.blend_palette() for ring accent gradient, sns.desaturate()
-          for boundary coloring, multi-attribute scatterplot encoding. Meaningfully
-          above generic matplotlib usage.
-  verdict: REJECTED
+        comment: blend_palette for gradient ring accents, desaturate for directional
+          cue colors, multi-variate encoding on sns.scatterplot. Distinctive but polar
+          complexity mostly in matplotlib.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
