@@ -49,6 +49,15 @@ df <- data.frame(
 thr90 <- min(which(var_cum >= 90))
 thr95 <- min(which(var_cum >= 95))
 
+# Elbow detection: point of maximum perpendicular distance from line
+# connecting first and last cumulative-variance values
+a_coef <- var_cum[n_features] - var_cum[1]
+b_coef <- -(n_features - 1)
+c_coef <- (n_features - 1) * var_cum[1] - (var_cum[n_features] - var_cum[1]) * 1
+knee_dist <- abs(a_coef * seq_len(n_features) + b_coef * var_cum + c_coef) /
+  sqrt(a_coef^2 + b_coef^2)
+elbow_pc <- which.max(knee_dist)
+
 # --- Plot -------------------------------------------------------------------
 title_str <- "line-pca-variance-cumulative · r · ggplot2 · anyplot.ai"
 
@@ -59,19 +68,22 @@ p <- ggplot(df, aes(x = component)) +
              color = INK_SOFT, linewidth = 0.55) +
   geom_hline(yintercept = 95, linetype = "dashed",
              color = INK_SOFT, linewidth = 0.55) +
-  geom_vline(xintercept = thr90, linetype = "dotted",
+  geom_vline(xintercept = elbow_pc, linetype = "dotted",
              color = IMPRINT_PALETTE[1], linewidth = 0.65, alpha = 0.55) +
   geom_line(aes(y = cumulative_pct),
             color = IMPRINT_PALETTE[1], linewidth = 1.2) +
   geom_point(aes(y = cumulative_pct),
              color = IMPRINT_PALETTE[1], size = 2.8) +
   annotate("text", x = 1.2, y = 91.8,
-           label = "90%", color = INK_MUTED, size = 2.8, hjust = 0) +
+           label = "90%", color = INK_MUTED, size = 3.3, hjust = 0) +
   annotate("text", x = 1.2, y = 96.8,
-           label = "95%", color = INK_MUTED, size = 2.8, hjust = 0) +
-  annotate("text", x = thr90 + 0.35, y = 5,
-           label = sprintf("PC%d", thr90),
-           color = IMPRINT_PALETTE[1], size = 2.8, hjust = 0) +
+           label = "95%", color = INK_MUTED, size = 3.3, hjust = 0) +
+  annotate("text", x = thr90 + 0.3, y = 85,
+           label = sprintf("PC%d\n90%%", thr90),
+           color = INK_MUTED, size = 3.0, hjust = 0, lineheight = 0.9) +
+  annotate("text", x = elbow_pc + 0.35, y = 5,
+           label = sprintf("PC%d\nelbow", elbow_pc),
+           color = IMPRINT_PALETTE[1], size = 3.3, hjust = 0, lineheight = 0.9) +
   scale_x_continuous(breaks = seq_len(n_features)) +
   scale_y_continuous(
     limits = c(0, 105),
