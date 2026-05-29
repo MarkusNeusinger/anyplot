@@ -1,109 +1,108 @@
 library: bokeh
+language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:18:59Z'
-updated: '2026-02-22T22:20:16Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456605377
-issue: 0
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/bokeh/plot.html
+updated: '2026-05-29T15:45:55Z'
+generated_by: claude-sonnet
+workflow_run: 26645458838
+issue: 999
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/bokeh/plot-dark.html
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  - annotations
-  - custom-legend
-  - manual-ticks
-  patterns:
-  - columndatasource
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - grid-styling
-  - minimal-chrome
 review:
   strengths:
-  - Excellent Stephen Few-inspired design with grayscale qualitative bands and thin
-    target markers
-  - Above/below target color coding (dark blue vs muted blue) provides immediate performance
-    insight
-  - HoverTool with custom tooltips and dual PNG+HTML export leverages Bokeh interactive
-    strengths
-  - Clean typography with explicit font sizes, bold metric labels, and color-matched
-    value labels
-  - Perfect spec compliance with all required bullet chart features present
-  - Realistic plausible sales performance data with varied metric types
+  - 'Semantically coherent Imprint palette usage: green (#009E73) for on-target, red
+    (#AE3030) for off-target with clear justification from data labels'
+  - Bold/normal font weight provides a second visual channel beyond color for on/off-track
+    status — partially addresses CVD concerns
+  - Custom hand-coded legend below chart avoids Bokeh default legend box and matches
+    Stephen Few bullet chart aesthetic
+  - Background fill alpha on value labels ensures dark-mode contrast without adding
+    extra chrome
+  - 'Proper Bokeh idioms throughout: ColumnDataSource enabling HoverTool, add_layout
+    for annotations, toolbar_location=None for canvas stability'
   weaknesses:
-  - Variable-height qualitative bands are unconventional compared to Stephen Few equal-height
-    standard
-  - Vertical spacing between bullet rows is generous reducing canvas utilization to
-    ~65-70%
-  image_description: 'The plot displays 5 horizontal bullet charts stacked vertically
-    for sales performance metrics: Revenue ($K), Profit ($K), Orders, Customers, and
-    Satisfaction (/5). Each bullet has three grayscale background bands representing
-    Poor (dark gray #737373), Satisfactory (medium gray #a8a8a8), and Good (light
-    gray #d4d4d4) qualitative ranges with varying heights (narrower for Poor, wider
-    for Good). The actual value is shown as a narrow horizontal bar — dark blue (#306998)
-    when above target (Revenue, Customers) or muted blue (#7a9bb5) when below target
-    (Profit, Orders, Satisfaction). A thin black vertical marker indicates the target
-    for each metric. Value labels in matching bar color appear to the right of each
-    bar (275, 85, 320, 1450, 4.2). The title "bullet-basic · bokeh · pyplots.ai" is
-    centered at top in dark gray. The x-axis shows "% of Maximum Range" with ticks
-    at 0, 20, 40, 60, 80, 100. A custom legend at the bottom shows colored rectangles
-    for Poor, Satisfactory, Good, and Target entries. The overall design follows Stephen
-    Few''s bullet chart convention with a clean, professional appearance.'
+  - Metric category labels (28pt) and value labels (26pt) are slightly below the 34pt
+    guideline for secondary text; consider raising to 30-32pt for better mobile thumbnail
+    readability
+  - 'Poor qualitative band (#3A3A3A) has marginal contrast against the near-black
+    background (#1A1A17) in dark mode — lighten to #484848 or #505050 to improve band
+    distinctness'
+  - Red-green semantic dichotomy lacks strong CVD-safe redundant encoding; adding
+    a label suffix or symbol to metric labels would help colorblind users distinguish
+    on-target from off-target metrics
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bullet-basic · python · bokeh · anyplot.ai" bold, centered, ~65% plot width, dark INK. Metric labels left (Revenue ($K), Profit ($K), Orders, Customers, Satisfaction (/5)) in dark ink — bold for on-target (Revenue, Customers), normal for off-target. X-axis label "% of Maximum Range" clearly visible. Tick labels (0,20,40,60,80,100) in INK_SOFT — all readable.
+      Data: Three grayscale qualitative bands per metric (dark gray=Poor, medium gray=Satisfactory, light gray=Good). Actual bars: green #009E73 (Revenue 275, Customers 1450) and red #AE3030 (Profit 85, Orders 320, Satisfaction 4.2). Thin black target markers perpendicular to bars. Color-coded value labels right of each bar.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, warm dark surface
+      Chrome: Title and metric labels use near-white INK (#F0EFE8) — clearly readable. Tick labels use INK_SOFT (#B8B7B0). Target markers switch from black to white/light (INK dark = #F0EFE8), clearly visible. Legend text in light color. No dark-on-dark failures observed.
+      Data: Bar colors identical to light render — green #009E73 for Revenue and Customers, red #AE3030 for Profit, Orders, Satisfaction. Qualitative bands shift to darker grays (#3A3A3A, #5A5A5A, #7A7A7A) — distinguishable but Poor band contrast is marginal against near-black background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, metric labels 28pt bold,
-          value labels 22pt bold, axis label 24pt, ticks 20pt, legend 20pt'
+        comment: All font sizes explicitly set (50pt title, 42pt x-axis, 34pt ticks).
+          Metric labels 28pt and value labels 26pt slightly below 34pt guideline but
+          readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; metric labels, value labels, legend, and axis
-          labels are all clearly separated
+        comment: No overlaps. x_range=(-38, 118) provides adequate room for 1450 label
+          and Profit target marker at x=100.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All elements visible; variable-height qualitative bands are unconventional
-          vs standard equal-height bullet charts but remain distinguishable
+        comment: Bars and target markers clearly visible in both themes. Poor band
+          (#3A3A3A) has marginal contrast against near-black (#1A1A17) in dark mode.
       - id: VQ-04
         name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Red-green dichotomy with only bold/normal as partial redundant encoding.
+          CVD users may struggle distinguishing on/off-target bars by color alone.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grayscale bands inherently colorblind-safe; two-shade blue distinction
-          provides sufficient contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good horizontal utilization; vertical spacing between bullet rows
-          is generous with ~65-70% canvas utilization
+        comment: 3200x1800 landscape correct, canvas gate passed. Generous min_border_*
+          prevents clipping. Good proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis '% of Maximum Range' is descriptive; metric labels include
-          units
+        comment: '% of Maximum Range is descriptive. Y-axis replaced by metric labels
+          (appropriate). Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly used: green (#009E73) for on-target,
+          red (#AE3030) for off-target. Backgrounds #FAF8F1 light / #1A1A17 dark.
+          All chrome theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -113,22 +112,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom grayscale palette following Stephen Few convention, two-tone
-          blue for above/below target, cohesive intentional design
+        comment: Custom semantic palette, bold/normal font differentiation for on/off-track,
+          background fill on value labels for dark-mode contrast. Above baseline.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis hidden, y-grid removed, x-grid subtle (alpha=0.15, dashed),
-          outline and toolbar removed
+        comment: Y-axis removed, grid at 15% alpha, custom legend (not Bokeh default),
+          thin separator line between chart and legend.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above/below target color coding immediately communicates which metrics
-          meet targets
+        comment: 'Clear performance narrative: green+bold=on-track, red+normal=off-track.
+          Normalized scale enables cross-metric comparison.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bullet chart type with horizontal orientation, qualitative
-          ranges, actual bars, and target markers
+        comment: Correct horizontal bullet chart with qualitative bands, actual bar,
+          and target marker per Stephen Few specification.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: actual bar, target marker, qualitative
-          range bands, grayscale shading, text value labels, multiple stacked bullets'
+        comment: Actual bar, target marker, qualitative range bands (Poor/Satisfactory/Good),
+          metric labels, multiple stacked bullets.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly normalized to percentage of max range; x-axis shows
-          0-100%
+        comment: X-axis shows % of max range (sensible normalization for multi-scale
+          metrics). All 5 metrics visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; custom legend with Poor/Satisfactory/Good/Target
-          entries
+        comment: Title 'bullet-basic · python · bokeh · anyplot.ai' correct. Custom
+          legend with Poor/Satisfactory/Good/Target swatches.
     data_quality:
       score: 15
       max: 15
@@ -170,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mix of above-target and below-target metrics; different scales and
-          units demonstrate full bullet chart capability
+        comment: Five metrics with both above-target (Revenue, Customers) and below-target
+          (Profit, Orders, Satisfaction) scenarios. All three band transitions visible.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic sales performance dashboard scenario with neutral business
-          context
+        comment: Sales performance dashboard with Revenue/Profit/Orders/Customers/Satisfaction
+          — realistic and neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values plausible for their respective domains
+        comment: Values realistic for a mid-market company (Revenue $275K, Customers
+          1450, Satisfaction 4.2/5).
     code_quality:
       score: 10
       max: 10
@@ -194,51 +194,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, config, figure, draw loop, legend,
-          style, save'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: export_png, output_file, save, ColumnDataSource,
-          HoverTool, Label, Range1d, figure'
+        comment: All imported names are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; loop for multiple bullets is natural and appropriate
-          complexity
+        comment: ColumnDataSource used for HoverTool data binding; clean loop over
+          metrics; PIL resize guard for canvas stability.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png; also saves HTML; current Bokeh
-          API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh 3.x API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Idiomatic Bokeh: ColumnDataSource enabling HoverTool interactivity,
-          Label model for annotations, Range1d for axis control'
+        comment: Proper ColumnDataSource, HoverTool with renderers=[...], add_layout
+          for Labels, Range1d, output_file + save + Selenium pattern, min_border_*
+          for clipping prevention.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips is distinctly Bokeh; dual PNG+HTML
-          export leverages Bokeh native web capability
+        comment: HoverTool for interactive metric exploration, HTML export as first-class
+          artifact. Could leverage CDSView or CustomJS for more advanced Bokeh interactivity.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
