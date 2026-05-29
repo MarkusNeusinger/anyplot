@@ -1,0 +1,270 @@
+library: makie
+language: julia
+specification_id: line-impurity-comparison
+created: '2026-05-29T01:10:08Z'
+updated: '2026-05-29T01:34:28Z'
+generated_by: claude-sonnet
+workflow_run: 26611435425
+issue: 4133
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Correct Imprint palette throughout — #009E73 for Gini (first series), #C475FD
+    for Entropy; solid vs dashed line style provides redundant accessibility encoding'
+  - 'Full spec compliance: both curves, legend with formulas, annotation at p=0.5
+    via vlines! + text!, edge-case handling at p=0 and p=1'
+  - band! fill between the curves is a thoughtful Makie-native design addition that
+    visually emphasises the comparison region
+  - Complete theme adaptation — all chrome tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED)
+    correctly threaded through Figure, Axis, and Legend; both renders pass legibility
+    check
+  - 'Clean linear code structure with proper Julia/Makie idioms: colorant, RGBAf,
+    grid-based Legend placement'
+  weaknesses:
+  - annotation text at (0.52, 0.97) sits very close to the top of the data region
+    at the peak of both curves — consider lowering to y≈0.85 or shifting further right
+    to (0.55, 0.9) to improve visual separation
+  - 'the band fill (IMPRINT_PALETTE[3] = #4467A3 at alpha 0.12) is visually so faint
+    that its blue tint is barely perceptible — increase to alpha 0.18-0.22 or use
+    a more distinct tint for the fill to deliver more visual value'
+  - title font size is auto-shrunk to ~19pt for the 71-char title string; the proportional
+    result is readable but slightly smaller than ideal — the scaling formula is correct,
+    just note this is close to the readability floor
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "Gini vs Entropy · line-impurity-comparison · julia · makie · anyplot.ai" in dark ink, readable. Axis labels "Probability p" (x) and "Impurity (normalized to [0, 1])" (y) clearly visible in dark text. Tick labels in INK_SOFT (#4A4A44), all readable. L-shaped spine (top/right removed). Subtle horizontal Y-grid at ~15% opacity.
+      Data: Two smooth curves spanning p=[0,1]. Gini in solid #009E73 (brand green), Entropy in dashed #C475FD (lavender). Very faint blue band fill (#4467A3 at 0.12 alpha) between the curves. Dotted vertical guide line at p=0.5 in INK_MUTED with "max at p = 0.5" text label. Both curves clearly distinguishable. Legend in right column with formula labels, semi-transparent frame, elevated background.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title visible in light (#F0EFE8) text. Axis labels and tick labels in appropriate light tones (INK_SOFT = #B8B7B0 for ticks). No dark-on-dark failures detected. Grid lines subtle and visible. Spines in INK_SOFT light tone.
+      Data: Identical data colors — Gini still #009E73 (green), Entropy still #C475FD (lavender). Band fill color unchanged. Vertical guide and annotation visible in INK_MUTED (#A8A79F). Legend readable with elevated dark background (#242420) and semi-transparent light frame.
+      Legibility verdict: PASS — all text readable against the warm near-black background; data colors are identical to light render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize computed via scaling formula,
+          xlabelsize=14, ylabelsize=14, xticklabelsize=12, yticklabelsize=12). Readable
+          in both themes. Title at ~19pt after scaling for 71-char string — slightly
+          conservative but within acceptable range.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Annotation placed at (0.52, 0.97) near curves
+          peak but does not overlap. Legend in separate grid column.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=3.0 are well-proportioned for two-series line
+          chart. Band fill visible though subtle. Dotted vertical guide at 1.5 linewidth
+          is appropriately understated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          across CVD types. Redundant encoding via solid vs dashed linestyle further
+          separates the series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Layout well-proportioned:
+          chart occupies majority of figure, legend placed in right column without
+          crowding. No clipping.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Probability p'', Y: ''Impurity (normalized to [0, 1])'' — descriptive
+          with normalization range. Title includes descriptive prefix plus full anyplot
+          format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Second series #C475FD (Imprint
+          palette position 2). Band fill uses Imprint[3] (#4467A3) with alpha. Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark). All chrome theme-adaptive. Full compliance.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above 'well-configured default' (4). Band fill between curves is
+          a genuine design choice that adds visual depth. Solid/dashed redundant encoding
+          is intentional. L-shaped frame, correct hierarchy. Not publication-ready
+          but noticeably above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed, Y-grid only at 15% opacity, legend with
+          semi-transparent frame (40% opacity) and elevated background — above library
+          defaults (2/6) but not fully polished (6/6).
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Annotation at p=0.5 creates a focal point (spec-required but well-executed).
+          Band fill highlights the comparison region visually. Above default 'data
+          displayed only' but not exceptional storytelling.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line chart with both curves on same axes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both Gini and Entropy curves present. Different colors and line styles.
+          Legend with formulas. Annotation at p=0.5 via vlines! + text!. Edge cases
+          at p=0 and p=1 handled. Y-grid for readability. Normalized to [0,1].
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: probability p from 0 to 1 (100 points). Y: normalized impurity
+          [0,1]. Both curves show complete data range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Gini vs Entropy · line-impurity-comparison · julia · makie
+          · anyplot.ai'' — correct format with descriptive prefix. Legend labels include
+          formulas: ''Gini: 2p(1−p) [normalized]'' and ''Entropy: −p log₂p − (1−p)
+          log₂(1−p)''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both Gini and Entropy across full probability range, normalization
+          for comparison, and the key coincidence of maxima at p=0.5.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ML education context — theoretical comparison of decision tree splitting
+          criteria. Neutral, real scientific/academic use case.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Mathematically correct: Gini = 2p(1-p), entropy = -p log2(p) - (1-p)log2(1-p),
+          both normalized to [0,1]. 100 points for smooth curves. Edge cases handled
+          correctly.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → constants → data → plot → save. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set. Data is deterministic mathematical functions
+          but seed is good practice.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-structured. Appropriate complexity for the visualization.
+          No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct output
+          naming and current Makie API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Figure/Axis/grid layout. colorant strings, RGBAf for alpha,
+          Legend placed in fig[1,2] using Makie layout system, collect(p) for range
+          conversion. Above 'correct but not leveraging best patterns'.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! for fill between two curves is a distinctly Makie primitive.
+          vlines! for vertical guide. Legend in grid column using Makie's declarative
+          layout — not easily replicated in matplotlib without manual patches.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
