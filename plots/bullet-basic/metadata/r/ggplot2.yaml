@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bullet-basic
 created: '2026-05-29T15:34:29Z'
-updated: '2026-05-29T15:42:14Z'
+updated: '2026-05-29T15:54:25Z'
 generated_by: claude-sonnet
 workflow_run: 26646078997
 issue: 999
@@ -15,47 +15,48 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Correct bullet chart with all required components — background bands, performance
-    bars, target markers, and value labels all present and properly composed using
-    ggplot2 layered grammar
-  - 'Perfect Imprint palette compliance: #009E73 bars on theme-adaptive grayscale
-    qualitative bands; light/dark backgrounds match #FAF8F1/#1A1A17 exactly; all chrome
-    tokens (INK, INK_SOFT, INK_MUTED) applied to title, axis, legend, caption'
-  - 'Perfect spec compliance and data quality: 5 KPI metrics with varied performance
-    (some below, at, and above target) show the full bullet chart feature set in a
-    realistic Q2 dashboard scenario'
-  - 'Expert ggplot2 usage: scale_fill_identity() with guide_legend(), breaks, and
-    labels is an advanced library-specific idiom for generating a proper legend from
-    raw hex fill values'
-  - Clean KISS code structure — flat Imports → Data → Plot → Save with section headers;
-    no functions/classes; explicit font sizes set throughout the theme() hierarchy
+  - 'Correct bullet chart structure: layered geom_rect for qualitative bands, narrower
+    bars for actual performance, geom_segment for target markers — all spec-required
+    elements present'
+  - Theme-adaptive grayscale bands (BAND_POOR/SATS/GOOD) flip correctly between light
+    and dark — visually distinct in both renders
+  - Above-target value label highlighted in Imprint green (#009E73) creates a clear
+    focal point for Product Quality at 91%
+  - Zone labels via annotate() is idiomatic ggplot2 — avoids a legend while still
+    guiding interpretation
+  - scale_fill_identity() + scale_color_identity() pattern used cleanly for pre-specified
+    band fills and conditional label colors
+  - Caption used as a decoder (Bar / Vertical line / Green label) instead of a redundant
+    legend — clean design decision
+  - X-axis grid only (panel.grid.major.y = element_blank()) suits horizontal bullet
+    layout perfectly
+  - All theme chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG) threaded consistently
+    through every text and background element
   weaknesses:
-  - 'DE-01 (5/8): Design lacks publication-ready sophistication — all bars are uniform
-    green with no visual emphasis on over/under-performing metrics. Product Quality
-    (91% vs 85% target) is the only metric beating its target, but nothing in the
-    render highlights this insight. Consider giving the value label of the exceeding
-    metric a distinct color (e.g., INK instead of INK_SOFT), or adding a subtle annotation
-    like ''Above target'' for Product Quality to create a clear focal point and narrative.'
-  - 'VQ-01 (7/8): Caption text at size=7 (≈39 source-px) is borderline for mobile
-    viewports scaled to ~400px. Bump plot.caption to size=8 to improve readability
-    without disrupting the typography hierarchy.'
-  - 'LM-02 (3/5): The implementation builds the bullet chart by composing basic geoms
-    (geom_rect, geom_segment) rather than using any distinctly ggplot2-unique feature
-    such as ggplot2''s stat framework, faceting, or a more advanced coord_* transform.
-    A small ggplot2-idiomatic touch (e.g., using coord_flip on a vertical chart, or
-    annotate() for zone labels instead of a side legend) would raise this score.'
+  - Zone labels ('Poor', 'Satisfactory', 'Good') rendered at geom size=2.3 mm (~6.5
+    pt) — readable at full 3200 px resolution but will likely fall below mobile-readable
+    threshold (~4–5 px) when the plot is scaled to 400 px width. Increase to size=2.8–3.0
+    to ensure legibility at thumbnail sizes.
+  - DE-02 Visual Refinement is adequate but the implementation does not go beyond
+    theme_minimal defaults plus standard overrides; a touch more polish (e.g. a subtle
+    left-axis hairline or more intentional inter-row whitespace) would lift the score
+    further.
+  - 'LM-02 Distinctive Features: the layer-composition approach (stacked geom_rect
+    + geom_segment) is correct ggplot2 but doesn''t showcase any advanced or less-obvious
+    ggplot2 capability (e.g. coord_flip, stat layers, custom facet strips, or ggplot2
+    extensions).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — matches the required surface exactly, not pure white.
-      Chrome: Title "bullet-basic · r · ggplot2 · anyplot.ai" is bold dark (#1A1A17) at ~12pt, fills ~55% of width; x-axis label "Performance (% of target)" is dark at 10pt; y-axis category labels (Revenue, Customer Sat., Cost Efficiency, Product Quality, Market Share) are dark at 9pt; x-axis tick labels (0%–100%) are readable at 8pt; caption "Bar = actual performance · Vertical line = target" is visible though small at 7pt. Legend "Zone: Poor/Satisfactory/Good" has dark text on elevated #FFFDF6 background with subtle border.
-      Data: Three progressively lighter gray bands per row (poor=#C4C4BE, satisfactory=#D8D8D2, good=#EBEBEA) create qualitative zones; green (#009E73) bars show actual performance; thin black target markers at each target value; value labels (87%, 72%, 63%, 91%, 58%) positioned right of bar ends.
-      Legibility verdict: PASS — all text is readable against the light background, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Bold title "bullet-basic · r · ggplot2 · anyplot.ai" in near-black, clearly readable at ~55% canvas width. Y-axis metric labels (Revenue, Customer Sat., Cost Efficiency, Product Quality, Market Share) in near-black at size 9, readable. X-axis tick labels (0%–100%) in INK_SOFT gray, readable. X-axis title "Performance (% of target)" at size 10, readable. Caption in muted gray, readable.
+      Data: Three-tone grayscale background bands (Poor: medium-light gray #C4C4BE, Satisfactory: lighter #D8D8D2, Good: near-white #EBEBEA). Green (#009E73) actual performance bars clearly visible against bands. Near-black vertical target markers at the correct positions. Zone labels "Poor", "Satisfactory", "Good" in small italic muted text above the top Revenue row — slightly small but legible at full resolution. Value labels: "91%" in Imprint green for above-target Product Quality; others (87%, 72%, 63%, 58%) in INK_SOFT gray.
+      Legibility verdict: PASS — all text readable; zone labels small but not illegible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — matches the required dark surface exactly, not pure black.
-      Chrome: Title is light (#F0EFE8) and clearly readable; y-axis labels and x-axis tick labels are light-colored and readable; caption text is visible (muted light); legend has dark elevated background (#242420) with light text.
-      Data: Green (#009E73) bars are identical to the light render — data colors unchanged. Background bands adapt to dark shades (#353530 poor, #464641 satisfactory, #575752 good); target markers appear as light/white vertical lines (INK=#F0EFE8 in dark theme). Value labels visible in INK_SOFT (#B8B7B0).
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed. Brand green #009E73 is highly visible on the dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and all axis text rendered in light cream (#F0EFE8) and INK_SOFT (#B8B7B0) — fully readable against dark background. No dark-on-dark failures observed. Caption visible in muted light gray.
+      Data: Grayscale bands flip to dark variants (#353530 poor, #464641 satisfactory, #575752 good) — three distinct dark-gray tones clearly distinguishable. Green (#009E73) bars identical to light render and clearly visible on dark background. Target markers render as light cream (#F0EFE8) lines — correct and visible. "91%" in green for Product Quality; other labels in INK_SOFT (#B8B7B0). Zone labels faintly visible in INK_MUTED (#A8A79F).
+      Legibility verdict: PASS — all chrome elements adapted correctly; no dark-on-dark failures; Imprint green data color identical to light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,56 +67,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set with good hierarchy (title=12, axis.x=10,
-          axis.y=9, ticks=8, caption=7). Caption at 7pt is borderline small at mobile
-          scale (~400px). Both themes fully readable.
+        comment: All primary text readable in both themes; zone labels at size=2.3
+          mm (~6.5 pt) are slightly small for mobile scaling
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Value labels positioned right of bar ends
-          with adequate spacing from target markers. Y-axis labels well-separated.
+        comment: Zone labels, value labels, and bars are at distinct y-positions;
+          no collisions observed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements optimally visible: bands clearly distinguished, green
-          bars prominent, target markers legible (black in light / light in dark),
-          value labels readable.'
+        comment: All bars, target markers, and band layers clearly visible in both
+          renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Grayscale bands are inherently CVD-safe. Brand green #009E73 against
-          gray bands has strong contrast. Target markers in high-contrast INK.'
+        comment: Green (#009E73) high contrast; grayscale bands use progressive lightness;
+          no CVD red-green conflict
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas. Five bullet rows well-distributed. Legend
-          right-aligned without overlap. Generous whitespace with explicit margins.
+        comment: 3200x1800 canvas correct; margins generous; nothing clipped; good
+          proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Performance (% of target)'' — descriptive with units.
-          Y-axis: implicit from category labels. Caption explains bar/marker meaning.'
+        comment: Title matches required format; X-axis label descriptive with units;
+          Y-axis uses metric names directly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Performance bars use #009E73 (Imprint position 1). Background bands
-          use theme-adaptive grayscale (not from Imprint categorical pool, appropriate
-          for qualitative zones). Backgrounds #FAF8F1/#1A1A17. All chrome tokens correctly
-          flip between themes.'
+        comment: 'Imprint green #009E73 for actual bar; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -123,28 +120,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: theme-adaptive grayscale bands, value labels, explanatory
-          caption, clean Imprint palette usage. However no visual emphasis on outlier
-          metrics (Product Quality exceeds target; Market Share is the worst performer)
-          — misses publication-ready storytelling opportunity.'
+        comment: Professional polish with above-target color emphasis and zone annotation
+          via annotate(); not exceptional but clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: x-axis-only grid with ~15% opacity, no visible
-          spines via theme_minimal, clean band boundaries (color=NA), subtle legend
-          frame. Not perfect — legend border adds minor visual noise; bands lack inner
-          separation.'
+        comment: theme_minimal base, X-only grid, no tick marks, adequate margins
+          — solid refinement but no standout touches
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling inherent to bullet chart format: position of bars
-          vs target markers immediately communicates pass/fail. Qualitative zones
-          add context. Mixed performance (1 above target, 2 near, 2 below) creates
-          a compelling KPI narrative. No explicit emphasis isolates the key insight.'
+        comment: Green label focal point on above-target metric, zone labels guide
+          interpretation, caption decodes visual encoding
     spec_compliance:
       score: 15
       max: 15
@@ -154,30 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bullet chart with all canonical components: background qualitative
-          bands, narrower performance bar, thin perpendicular target marker.'
+        comment: 'Correct horizontal bullet chart with all three required elements:
+          qualitative bands, actual bar, target marker'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: actual bar, target marker, 3 qualitative ranges
-          (poor/satisfactory/good), category labels, value text labels, horizontal
-          orientation, common scale across metrics.'
+        comment: Grayscale bands, thin contrasting target marker, multiple bullets
+          on common scale, value labels — all spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis maps performance (% of target), Y-axis maps metrics. All data
-          points visible and correctly positioned.
+        comment: X-axis 0-100% performance scale; 5 metrics on Y-axis; target markers
+          at correct positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bullet-basic · r · ggplot2 · anyplot.ai' matches required
-          format. Legend labels 'Poor/Satisfactory/Good' match data zones.
+        comment: Title is exactly 'bullet-basic · r · ggplot2 · anyplot.ai'; caption
+          serves as decoder; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -187,26 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: '5 metrics with varied performance: above target (Product Quality
-          91% vs 85%), near target (Revenue 87% vs 95%), below target (Customer Sat.
-          72% vs 80%, Cost Efficiency 63% vs 75%, Market Share 58% vs 70%). Full spectrum
-          shown.'
+        comment: 'All bullet chart elements demonstrated: 3-zone bands, 5 metrics
+          with varying performance levels, above/below target scenarios'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Q2 departmental KPI dashboard — Revenue, Customer Satisfaction, Cost
-          Efficiency, Product Quality, Market Share. Standard neutral business metrics
-          with no controversial content.
+        comment: Q2 departmental KPI dashboard with realistic business metrics (Revenue,
+          Customer Sat., Cost Efficiency, Product Quality, Market Share) — neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values as % of target (0-100%). Actual values 58-91%, targets
-          70-95%, zone thresholds 40-100%. Proportions are realistic for a mixed-performance
-          KPI dashboard.
+        comment: 0-100% performance scale sensible for KPI metrics; poor/satisfactory/good
+          thresholds are realistic
     code_quality:
       score: 10
       max: 10
@@ -216,67 +203,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat Imports → Data → Plot → Save with clear section comments. No
-          functions or classes.
+        comment: Linear script, no functions or classes, clear section comments
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present. Data is hardcoded so deterministic regardless.
+        comment: set.seed(42) present; data is also deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported; both actively used.
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable names, section headers, appropriate complexity for
-          a multi-layer bullet chart. bands_df construction via rbind is slightly
-          repetitive but readable. No fake UI elements.
+        comment: No fake interactivity; appropriate complexity for a bullet chart;
+          clean data preparation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as sprintf('plot-%s.png', THEME) → plot-light.png / plot-dark.png.
-          Uses ragg::agg_png device as required.
+        comment: sprintf('plot-%s.png', THEME) correct; ragg::agg_png device used
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Expert use of scale_fill_identity() with guide_legend(), breaks,
-          and labels — an advanced ggplot2 pattern for custom legend from identity
-          fills. Correct use of expansion(), scale_*_continuous() with label functions,
-          and theme() hierarchy.
+        comment: geom_rect for bands/bars, geom_segment for markers, annotate('text')
+          for zone labels, scale_fill_identity + scale_color_identity — all idiomatic
+          ggplot2 patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_fill_identity() with a custom legend is distinctly ggplot2.
-          The layered grammar-of-graphics approach to building a non-native chart
-          type by composing basic geoms showcases ggplot2's core strength. No stat
-          framework, coord transforms, or other distinctly ggplot2 features used.
-  verdict: REJECTED
+        comment: scale_fill_identity() with pre-specified fill vectors and scale_color_identity()
+          for conditional label colors are distinctive ggplot2 patterns; however no
+          advanced capabilities (custom stats, coord transforms, extensions) demonstrated
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
-  - layer-composition
   - annotations
-  - custom-legend
+  - layer-composition
   - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - grid-styling
+  - minimal-chrome
