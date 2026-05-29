@@ -1,14 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
-Library: plotly 6.5.2 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-21
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-29
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - 4 categories with distinct distribution shapes
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — 4 categorical colors (hybrid-v3 sort order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Data — 4 departments with distinct salary distribution shapes
 np.random.seed(42)
 data = {
     "Engineering": np.concatenate([np.random.normal(92000, 8000, 120), np.random.normal(75000, 5000, 80)]),
@@ -17,12 +30,7 @@ data = {
     "Support": np.random.normal(55000, 8000, 190),
 }
 
-# Colors - 4 distinct, colorblind-safe colors starting with Python Blue
-# Engineering highlighted with higher opacity to emphasize bimodal distribution
-colors = ["#306998", "#E8873D", "#C44E52", "#6AAB73"]
-opacities = [0.85, 0.6, 0.6, 0.6]
-
-# Create figure
+# Plot
 fig = go.Figure()
 
 for i, (cat, values) in enumerate(data.items()):
@@ -30,59 +38,50 @@ for i, (cat, values) in enumerate(data.items()):
         go.Violin(
             y=values,
             name=cat,
-            line={"color": colors[i], "width": 2},
-            fillcolor=colors[i],
-            opacity=opacities[i],
+            line=dict(color=IMPRINT_PALETTE[i], width=2),
+            fillcolor=IMPRINT_PALETTE[i],
+            opacity=0.8,
             points=False,
-            box={"visible": True, "width": 0.2, "fillcolor": "white", "line": {"color": "#333333", "width": 2}},
-            meanline={"visible": True, "color": "#333333", "width": 2},
+            box=dict(visible=True, width=0.2, fillcolor=ELEVATED_BG, line=dict(color=INK, width=1.5)),
+            meanline=dict(visible=True, color=INK, width=2),
             hoveron="violins+kde",
             hoverinfo="y+name",
             scalemode="width",
         )
     )
 
-# Annotation highlighting the bimodal Engineering distribution
-fig.add_annotation(
-    x="Engineering",
-    y=100000,
-    text="Bimodal: two salary<br>clusters at ~75k & ~92k",
-    showarrow=True,
-    arrowhead=2,
-    arrowsize=1.2,
-    arrowwidth=2,
-    arrowcolor="#306998",
-    ax=120,
-    ay=-50,
-    font={"size": 15, "color": "#306998"},
-    bordercolor="#306998",
-    borderwidth=1.5,
-    borderpad=6,
-    bgcolor="rgba(255,255,255,0.85)",
-)
-
-# Layout
-fig.update_layout(
-    title={"text": "violin-basic \u00b7 plotly \u00b7 pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
-    xaxis={"title": {"text": "Department", "font": {"size": 22}}, "tickfont": {"size": 18}},
-    yaxis={
-        "title": {"text": "Annual Salary ($)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "tickformat": ",.0f",
-        "tickprefix": "$",
-        "gridcolor": "rgba(0,0,0,0.08)",
-        "gridwidth": 1,
-        "zeroline": False,
-    },
-    template="plotly_white",
-    showlegend=False,
-    margin={"l": 110, "r": 60, "t": 100, "b": 80},
-    plot_bgcolor="rgba(0,0,0,0)",
-)
-
-# Update violin traces for visibility
 fig.update_traces(width=0.7, spanmode="soft")
 
+# Style
+title = "violin-basic · python · plotly · anyplot.ai"
+fig.update_layout(
+    autosize=False,
+    margin=dict(l=110, r=40, t=80, b=60),
+    title=dict(text=title, font=dict(size=16, color=INK), x=0.5, xanchor="center"),
+    xaxis=dict(
+        title=dict(text="Department", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
+        linecolor=INK_SOFT,
+        showgrid=False,
+    ),
+    yaxis=dict(
+        title=dict(text="Annual Salary ($)", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
+        tickformat=",.0f",
+        tickprefix="$",
+        gridcolor=GRID,
+        gridwidth=1,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
+        zeroline=False,
+    ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    legend=dict(bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1, font=dict(color=INK_SOFT)),
+    showlegend=False,
+)
+
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
