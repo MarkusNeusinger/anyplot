@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-29
@@ -150,25 +150,30 @@ for i in range(n):
     label_chars = len(labels_sorted[i])
     min_r_for_label = 0.48 + label_chars * 0.018
     if radii_sorted[i] > min_r_for_label:
-        font_scale = min(1.0, radii_sorted[i] / 1.4)
-        label_fontsize = max(10, int(12 * font_scale))
-        value_fontsize = max(9, int(10 * font_scale))
+        font_scale = min(1.0, radii_sorted[i] / 1.6)
+        label_fontsize = max(9, int(11 * font_scale))
+        value_fontsize = max(8, int(9 * font_scale))
 
         # Contrast-appropriate text color (WCAG relative luminance)
         bg_hex = colors_sorted[i]
         rgb = [int(bg_hex[j : j + 2], 16) / 255 for j in (1, 3, 5)]
         luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
         text_color = "#1A1A17" if luminance > 0.35 else "#F0EFE8"
-        stroke_fg = "#00000033" if luminance > 0.35 else "#ffffff33"
-        stroke = pe.withStroke(linewidth=3, foreground=stroke_fg)
+        # RGBA tuples — portable across matplotlib versions
+        stroke_fg = (0, 0, 0, 0.15) if luminance > 0.35 else (1, 1, 1, 0.15)
+        # linewidth=1.0 at 400 dpi ≈ 6 px — crisp without garish stroke
+        stroke = pe.withStroke(linewidth=1.0, foreground=stroke_fg)
 
-        display_label = labels_sorted[i]
-        is_wrapped = " " in display_label and radii_sorted[i] < 1.0
-        if is_wrapped:
-            display_label = display_label.replace(" ", "\n")
-
-        label_y_offset = 0.05 if is_wrapped else 0.12
-        value_y_offset = -0.35 if is_wrapped else -0.22
+        # Wrap multi-word labels to reduce horizontal text extent within the circle
+        words = labels_sorted[i].split(" ")
+        if len(words) > 1:
+            display_label = "\n".join(words)
+            label_y_offset = 0.05
+            value_y_offset = -0.35
+        else:
+            display_label = labels_sorted[i]
+            label_y_offset = 0.12
+            value_y_offset = -0.22
 
         ax.text(
             positions[i, 0],
@@ -198,11 +203,27 @@ for i in range(n):
         small_circles.append(i)
 
 # External labels with leader lines for small circles
+# Scan 16 candidate angles and pick the direction with maximum clearance from
+# all other circle edges — avoids the angle-from-origin pitfall where a small
+# circle near the cluster centre gets a label that points into a large neighbor.
 for i in small_circles:
     cx, cy = positions[i, 0], positions[i, 1]
     r = radii_sorted[i]
-    angle = np.arctan2(cy, cx)
-    offset_dist = r + 0.58
+    offset_dist = r + 0.65
+    best_angle = np.arctan2(cy, cx)
+    best_clearance = -np.inf
+    for test_angle in np.linspace(0, 2 * np.pi, 16, endpoint=False):
+        lx = cx + offset_dist * np.cos(test_angle)
+        ly = cy + offset_dist * np.sin(test_angle)
+        clearance = min(
+            np.sqrt((lx - positions[j, 0]) ** 2 + (ly - positions[j, 1]) ** 2) - radii_sorted[j]
+            for j in range(n)
+            if j != i
+        )
+        if clearance > best_clearance:
+            best_clearance = clearance
+            best_angle = test_angle
+    angle = best_angle
     lx = cx + offset_dist * np.cos(angle)
     ly = cy + offset_dist * np.sin(angle)
     ax.annotate(
