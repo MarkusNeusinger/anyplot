@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bullet-basic
 created: '2026-05-29T15:43:14Z'
-updated: '2026-05-29T15:50:03Z'
+updated: '2026-05-29T16:08:32Z'
 generated_by: claude-sonnet
 workflow_run: 26646181323
 issue: 999
@@ -15,49 +15,44 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance — all bullet chart elements (bands, actual bar, target
-    marker, data labels) correctly implemented with proper proportions and positioning
-  - 'Perfect Imprint palette compliance — brand green #009E73 for actual bars, theme-adaptive
-    grayscale bands, correct background tokens (#FAF8F1 light / #1A1A17 dark) in both
-    renders'
-  - Clean idiomatic Makie code — poly! with Rect2f for bands/bars, custom PolyElement
-    and LineElement legend elements, colsize! layout system, all idiomatic
-  - Both renders fully readable — all text (title, axis labels, tick labels, percentage
-    annotations, legend) adapts correctly to theme via INK/INK_SOFT tokens with no
-    dark-on-dark failures
-  - Exemplary code quality — KISS structure (tokens → data → plot → save), deterministic
-    hardcoded data, clean imports, no over-engineering
+  - 'Perfect spec compliance: all bullet chart elements (bands, actual bar, target
+    marker, value labels, multi-row stacking) correctly implemented'
+  - Realistic KPI dashboard scenario exercises all three performance band zones
+  - Theme-adaptive grayscale bands with warm tones in light mode and cooler near-blacks
+    in dark mode
+  - 'Storytelling touch: exceeds-target label renders in brand green (#009E73) with
+    larger font to visually flag Code Quality outperforming its target'
+  - 'Clean Makie idioms: poly! with Rect2f for band rects, PolyElement/LineElement
+    in Legend, colsize! for right-panel layout'
+  - Correct title scaling formula prevents overflow on the long descriptive-prefix
+    title
   weaknesses:
-  - 'DE-01/DE-03: Design lacks a focal point to guide the viewer — only the Code Quality
-    metric exceeds its target (91 actual > 88 target), but nothing visually emphasizes
-    this insight; consider a subtle annotation or slightly bolder label on this row
-    to create visual hierarchy'
-  - 'DQ-01: No actual value falls in the ''poor'' zone (<50%), which would better
-    demonstrate the full expressiveness of the three-band bullet chart; lower one
-    metric (e.g. Cost Efficiency) to ~40 to show the chart handling all three qualitative
-    zones'
-  - 'DE-02: Legend box has a visible frame (framecolor = INK_SOFT) and background
-    which adds minor visual weight; a frameless legend or lighter frame treatment
-    would improve refinement'
-  - 'LM-02: The implementation uses Rect2f polygons and custom legend elements which
-    are Makie-distinctive, but there is no deeper use of Makie''s layout system beyond
-    colsize! — e.g. per-row sublabels or Makie-specific theme objects would demonstrate
-    deeper mastery'
+  - 'Dark-render contrast for the exceeds-target value label: the green #009E73 text
+    for "91%" sits on BAND_GOOD dark (~#616060), giving ~1.8:1 contrast ratio — below
+    readable threshold. Fix: in dark mode use INK (#F0EFE8) for the exceeds label
+    instead of BRAND, so the label is always light text on dark background. Alternatively
+    add a very small semi-transparent PAGE_BG backdrop behind the label text.'
+  - 'Design Excellence ceiling: while the exceeds color indicator adds hierarchy,
+    overall aesthetic is still well-configured-default level. Adding a subtle visual
+    anchor (e.g. a faint reference line or small icon at the 75% target zone boundary)
+    and reducing inter-row whitespace slightly for compactness would push DE-01 and
+    DE-03 higher.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "Sales KPI Dashboard · bullet-basic · julia · makie · anyplot.ai" in dark INK (#1A1A17), spanning ~62% of canvas width, fully readable. X-axis label "Score (%)" in INK, readable. Y-axis category labels (Q1 Revenue, Customer Satisfaction, Project Completion, Code Quality, Cost Efficiency) in INK_SOFT, clearly readable. X-tick labels (0, 25, 50, 75, 100) in INK_SOFT, readable. Percentage annotations (63%, 91%, 68%, 78%, 82%) in INK_SOFT at fontsize 11, legible.
-      Data: Five horizontal bullet bars in Imprint brand green #009E73. Three grayscale background bands per row — dark gray (Poor <50%), medium gray (Satisfactory 50–75%), light gray (Good ≥75%). Black vertical target markers, thin (linewidth=4). Legend on right with correct labels (Good, Satisfactory, Poor, Actual, Target).
-      Legibility verdict: PASS — all text readable in light theme.
+      Chrome: Title "Sales KPI Dashboard · bullet-basic · julia · makie · anyplot.ai" is bold, well-proportioned (~75% canvas width), dark ink color. X-axis label "Score (%)" readable in dark ink. Y-axis tick labels (Q1 Revenue, Customer Satisfaction, Project Completion, Code Quality, Cost Efficiency) visible in medium-dark ink. X-tick labels (0, 25, 50, 75, 100) readable. No left or top/right spines; only bottom spine shown.
+      Data: Three horizontally-stacked background band zones (dark gray = Poor <50%, medium gray = Satisfactory 50-75%, light gray = Good ≥75%) spanning each row. Brand green (#009E73) actual bars clearly visible. Thin black vertical target markers contrast against bands. Value labels (38%, 68%, 78%, 82% in INK_SOFT; 91% in brand green) readable against respective band backgrounds. Legend at right side with correct 5 entries.
+      Legibility verdict: PASS — all text readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light INK (#F0EFE8), fully readable against dark background. Y-axis category labels and x-tick labels in INK_SOFT (#B8B7B0), readable. X-axis label readable. Percentage labels readable. Legend text in INK_SOFT on elevated background (#242420). No dark-on-dark failures detected.
-      Data: Actual bars remain identical Imprint brand green #009E73 — same as light render. Grayscale bands are darker theme-adaptive versions (lower luminance). Target markers now appear in light INK (#F0EFE8 — near white), providing good contrast against dark bands. Data colors identical to light render.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct.
+      Chrome: Title visible in near-white (#F0EFE8). Axis labels and tick labels flip to light gray (#B8B7B0). Bottom spine rendered in lighter tone. Target markers become white/near-white lines — correct theme flip. Legend labels light gray on dark elevated background.
+      Data: Band colors flip to dark-tone grays (BAND_POOR ≈ #383837, BAND_SAT ≈ #4D4D4A, BAND_GOOD ≈ #616060). Brand green bars identical to light render — correct. Non-exceeding value labels (38%, 68%, 78%, 82%) in INK_SOFT (#B8B7B0) are readable on respective band backgrounds (~3.2:1 contrast).
+      ISSUE: "91%" exceeds-target label uses BRAND green (#009E73) on BAND_GOOD dark background (~#616060), yielding ~1.8:1 contrast ratio — below WCAG 3:1 threshold. The label is technically visible but accessibility-suboptimal.
+      Legibility verdict: PARTIAL PASS — all chrome and non-exceeding labels readable; the single exceeds-target value label ("91%") has insufficient contrast in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,58 +60,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (titlesize adaptive, xlabelsize=14,
-          xticklabelsize=12, yticklabelsize=12, annotations=11). All text readable
-          in both themes. Minor: percentage annotation at fontsize=11 is on the small
-          end but legible at 3200x1800px.'
+        comment: 'All font sizes explicitly set; proportions good in both themes.
+          One deduction: the green exceeds-target label ''91%'' has ~1.8:1 contrast
+          on BAND_GOOD dark background, reducing legibility in dark render.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps — category labels, percentage annotations, tick
-          labels, and legend are all well-separated.
+        comment: No overlapping text. Y-axis labels, value labels, and legend entries
+          all have adequate spacing.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green bars clearly visible, gray bands distinctly shaded, target
-          markers prominent (linewidth=4), percentage labels add readability.
+        comment: Bars, target markers, and band zones all clearly visible at canvas
+          size. Target markers at linewidth=4 are prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Good contrast: green bars on gray bands, black/white target markers
-          on bands. CVD-safe: Imprint green is the primary data encoding, grayscale
-          bands use luminance-only differentiation.'
+        comment: 'Grayscale bands plus brand green bar is CVD-safe. Minor deduction:
+          green exceeds-target label on dark gray band background has ~1.8:1 contrast
+          — acceptable but below WCAG 3:1.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 80% of canvas width with 20% legend column. Balanced margins,
-          no content cut off. Canvas gate passed (3200x1800).
+        comment: Five-row layout fills canvas well. Legend properly sized at 20% relative
+          column. Margins balanced around the chart area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Score (%)'' with units. Title includes descriptive prefix
-          ''Sales KPI Dashboard''. No separate y-axis label needed (categories as
-          tick labels).'
+        comment: X-axis label 'Score (%)' includes units. Y-axis uses descriptive
+          category tick labels (appropriate for bullet chart). Title has descriptive
+          prefix.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Actual bars use Imprint #009E73. Grayscale bands are theme-adaptive
-          (spec explicitly calls for grayscale shading). Backgrounds: #FAF8F1 light
-          / #1A1A17 dark. Chrome tokens correctly flip. Data colors identical between
-          renders.'
+        comment: 'Actual bars use brand green #009E73 (Imprint position 1). Grayscale
+          bands follow spec requirement. Target markers use theme-adaptive INK token.
+          Backgrounds #FAF8F1 / #1A1A17 correct. Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -124,25 +117,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: thoughtful grayscale band shading, brand
-          green bar, clean spines, theme-adaptive legend. Not quite publication-ready
-          — lacks typographic hierarchy variations and any emphasis on key insight.'
+        comment: 'Above well-configured default: intentional exceeds-indicator color,
+          theme-adaptive band tones, clean L-frame axes. Not FiveThirtyEight level
+          — no typographic hierarchy beyond title scaling.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: top/right/left spines removed, y-grid disabled,
-          subtle x-grid at 12% opacity, y-axis tick marks hidden. Legend frame slightly
-          heavy (framecolor = INK_SOFT with background).'
+        comment: Top/right/left spines removed, only bottom shown. X-only grid at
+          0.12 alpha. Generous inter-row whitespace. Clearly refined beyond library
+          defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Visual hierarchy is clear — green bars vs gray bands immediately
-          show performance vs zones. Mixed results: 4 of 5 miss target, 1 exceeds
-          (Code Quality). But no visual emphasis directs viewer to the key insight.'
+        comment: 'Some visual hierarchy: exceeds-target highlighted in green, Cost
+          Efficiency visually prominent at top in poor zone. Could be stronger with
+          a benchmark annotation or sorted ordering by performance gap.'
     spec_compliance:
       score: 15
       max: 15
@@ -152,59 +145,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct horizontal bullet chart with all subtypes: qualitative bands,
-          actual bar, target marker, multiple stacked bullets.'
+        comment: 'Correct horizontal bullet chart with all three required elements:
+          background qualitative bands, actual performance bar, target marker line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: actual bar, target marker, range bands
-          [0-50/50-75/75-100], category labels, grayscale band shading, contrasting
-          target line, horizontal orientation, value text labels, common scale.'
+        comment: 'All spec features present: actual bar, target marker, qualitative
+          ranges (poor/satisfactory/good), metric labels, multiple stacked bullets,
+          value text annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: 0-100% range. Y-axis: reversed categories (top=Q1 Revenue).
-          Bands properly positioned. Target markers at correct x-positions.'
+        comment: Horizontal orientation, x=Score(%), y=metric categories. All five
+          rows fully rendered with correct values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Sales KPI Dashboard · bullet-basic · julia · makie · anyplot.ai''
-          — correct optional descriptive prefix format. Legend: Good (≥75%), Satisfactory
-          (50–75%), Poor (<50%), Actual, Target — all correct.'
+        comment: Title format 'Sales KPI Dashboard · bullet-basic · julia · makie
+          · anyplot.ai' is correct with optional descriptive prefix. Legend entries
+          match all chart components.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 5 varied KPIs with actuals ranging 63–91%. Most actuals miss
-          target (4/5) with one exceeding (Code Quality 91>88). However, no actual
-          falls in the 'poor' zone (<50%), leaving the lowest qualitative band unused
-          by any data point.
+        comment: 'Data exercises all three performance band zones: Cost Efficiency
+          in poor (<50%), Project Completion in satisfactory, others in good zone.
+          One metric (Code Quality) exceeds its target, exercising the exceeds condition.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real business KPI dashboard: Q1 Revenue, Customer Satisfaction,
-          Project Completion, Code Quality, Cost Efficiency. Neutral domain, no controversial
-          content.'
+        comment: 'Business KPI dashboard with realistic metrics: Q1 Revenue, Customer
+          Satisfaction, Project Completion, Code Quality, Cost Efficiency. Neutral,
+          neutral scenario.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 63–91% for actuals, 70–90% for targets — realistic KPI ranges.
-          Band thresholds at 50/75/100 are standard performance tiers.
+        comment: Percentage scale 0-100% with targets in 55-90% range is realistic
+          for KPI tracking. Values reflect plausible relative performance.
     code_quality:
       score: 10
       max: 10
@@ -214,66 +206,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: theme tokens → data → plot → save. No functions
-          or classes. Loop for multi-bullet rendering is appropriate.'
+        comment: Theme tokens → Data → Plot → Save. No functions or classes. Loop
+          for drawing rows is clean and necessary.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data — no randomness, no seed needed.
+        comment: Data is fully deterministic hardcoded arrays; no randomness used.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors — both used throughout. No unused imports.
+        comment: Only CairoMakie and Colors imported; both are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over bullet rows. Appropriate use of poly!, lines!, text!
-          primitives. Custom legend construction is necessary and well-done. No fake
-          interactive elements.
+        comment: Clean, idiomatic Julia. No fake UI elements. Title scaling formula
+          is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct filename
-          pattern and current API.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good idiomatic usage: poly! with Rect2f geometry, lines! for markers,
-          text! for labels, Legend with PolyElement/LineElement, colsize! for layout.
-          Could leverage Makie''s barplot! or more advanced layout features.'
+        comment: Uses poly! with Rect2f for band rectangles, lines! for markers, text!
+          for labels, Legend with PolyElement/LineElement, colsize! for layout — all
+          idiomatic Makie patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses Makie-distinctive features: Rect2f polygon primitives, PolyElement/LineElement
-          custom legend entries, Relative() layout sizing. Doesn''t go deeper into
-          Makie''s compositional figure system.'
-  verdict: REJECTED
+        comment: Leverages Makie's composable primitive system (Rect2f + poly!), figure
+          layout system (colsize! with Relative), and PolyElement/LineElement legend
+          construction. These are Makie-specific and would require significant API
+          changes in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - patches
   - annotations
   - custom-legend
-  - patches
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
   - grid-styling
