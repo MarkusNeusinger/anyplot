@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -51,18 +51,18 @@ custom_style = Style(
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
+    foreground_subtle=INK_SOFT,  # INK_SOFT (not INK_MUTED) for legible tick labels against green fill
     colors=IMPRINT_PALETTE,
-    opacity=0.85,
+    opacity=0.38,  # semi-transparent fill so y-axis labels remain legible beneath the green area
     opacity_hover=1.0,
     stroke_opacity=1.0,
     stroke_opacity_hover=1.0,
     stroke_width=2.5,
     dot_opacity=1.0,
     guide_stroke_color=INK_MUTED,
-    guide_stroke_dasharray="2,6",
+    guide_stroke_dasharray="2,12",  # longer gap — guides recede behind data
     major_guide_stroke_color=INK_SOFT,
-    major_guide_stroke_dasharray="4,4",
+    major_guide_stroke_dasharray="8,12",  # longer gap for major guides at 90%/95%
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -96,77 +96,82 @@ chart = pygal.Line(
     legend_box_size=26,
     truncate_legend=-1,
     range=(0, 105),
-    secondary_range=(0, 50),
+    secondary_range=(0, 55),  # individual variance secondary axis; wider margin ensures labels are visible
     margin=30,
     margin_bottom=90,
-    margin_left=120,
-    margin_right=140,
+    margin_left=220,  # wider left margin so y-axis labels sit clearly outside the green fill
+    margin_right=220,  # wider right margin for secondary-axis tick labels on right side
     margin_top=40,
     print_values=True,
     print_values_position="top",
     value_formatter=lambda x: "",
     spacing=20,
-    x_labels_major_count=13,
-    show_minor_x_labels=False,
+    show_minor_x_labels=True,
     tooltip_fancy_mode=True,
     tooltip_border_radius=10,
     interpolate="cubic",
     interpolation_precision=200,
+    human_readable=False,
+    no_data_text="No variance data",
 )
 
-# Axes
+# Axes — custom y-tick positions highlight the decision thresholds
 chart.x_labels = component_labels
+# Mark the three decision-point components as major x-labels (bold, guided)
+chart.x_labels_major = [str(elbow_idx + 1), str(cross_90 + 1), str(cross_95 + 1)]
 chart.y_labels = [0, 20, 40, 60, 80, 90, 95, 100]
-chart.y_labels_major = [90, 95]
-chart.show_minor_y_labels = True
+chart.y_labels_major = [90, 95]  # major guide lines drawn at the two decision thresholds
 
-# Concise annotations at key decision points to avoid crowding
+# Annotations at key decision points
 annotations = {
-    elbow_idx: lambda x: f"Elbow ({x:.0f}%)",
+    elbow_idx: lambda x: f"Elbow: n={elbow_idx + 1} ({x:.0f}%)",
     cross_90: lambda x: f"90%: n={cross_90 + 1}",
     cross_95: lambda x: f"95%: n={cross_95 + 1}",
 }
 
-# Cumulative variance line (brand green, filled)
+# Cumulative variance — brand green filled area, thick primary stroke for visual hierarchy
 cumulative_values = [
-    {"value": round(v, 1), "formatter": annotations.get(i, lambda x: "")} for i, v in enumerate(cumulative_variance)
+    {"value": round(v, 1), "label": f"PC{i + 1}", "formatter": annotations.get(i, lambda x: "")}
+    for i, v in enumerate(cumulative_variance)
 ]
 chart.add(
     "Cumulative Variance",
     cumulative_values,
-    stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
+    stroke_style={"width": 10, "linecap": "round", "linejoin": "round"},
     fill=True,
 )
 
-# 90% threshold (lavender, dashed)
+# 90% threshold — lavender dashed, thinner to reinforce secondary role
 chart.add(
     "90% Threshold",
-    [{"value": 90, "formatter": lambda x: ""} for _ in range(n_components)],
+    [{"value": 90, "label": "90% variance threshold", "formatter": lambda x: ""} for _ in range(n_components)],
     show_dots=False,
     fill=False,
-    stroke_style={"width": 4, "dasharray": "20, 10", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "22, 12", "linecap": "round"},
 )
 
-# 95% threshold (blue, dotted)
+# 95% threshold — blue dotted, thinner for visual hierarchy
 chart.add(
     "95% Threshold",
-    [{"value": 95, "formatter": lambda x: ""} for _ in range(n_components)],
+    [{"value": 95, "label": "95% variance threshold", "formatter": lambda x: ""} for _ in range(n_components)],
     show_dots=False,
     fill=False,
-    stroke_style={"width": 4, "dasharray": "8, 8", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "8, 10", "linecap": "round"},
 )
 
-# Individual variance on secondary Y-axis (ochre), larger dots for visibility
+# Individual variance on secondary Y-axis — ochre with larger dots for salience
+# Per-point formatters serve as secondary-axis labels for components with meaningful variance
 individual_values = [
-    {"value": round(v, 1), "formatter": lambda x: f"{x:.1f}%" if x > 3 else ""} for v in individual_variance
+    {"value": round(v, 1), "label": f"PC{i + 1}: {v:.1f}%", "formatter": lambda x: f"{x:.1f}%" if x > 3 else ""}
+    for i, v in enumerate(individual_variance)
 ]
 chart.add(
     "Individual Variance (%)",
     individual_values,
     secondary=True,
-    stroke_style={"width": 6, "linecap": "round", "linejoin": "round"},
+    stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
     show_dots=True,
-    dots_size=9,
+    dots_size=11,
     fill=False,
 )
 
