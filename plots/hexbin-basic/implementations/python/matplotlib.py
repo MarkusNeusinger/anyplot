@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-29
@@ -16,11 +16,13 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.ticker import LogFormatterSciNotation
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
@@ -56,9 +58,10 @@ hb = ax.hexbin(
     norm=mcolors.LogNorm(),
 )
 
-# Colorbar
+# Colorbar with LogFormatterSciNotation for cleaner log-scale tick labels
 cbar = fig.colorbar(hb, ax=ax, shrink=0.85, pad=0.02)
 cbar.set_label("Sensor Reading Count", fontsize=10, color=INK)
+cbar.ax.yaxis.set_major_formatter(LogFormatterSciNotation())
 cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 cbar.outline.set_linewidth(0.5)
 cbar.outline.set_edgecolor(INK_SOFT)
@@ -77,6 +80,24 @@ ax.spines["left"].set_color(INK_SOFT)
 ax.spines["left"].set_linewidth(0.5)
 ax.spines["bottom"].set_color(INK_SOFT)
 ax.spines["bottom"].set_linewidth(0.5)
+
+# Cluster annotations — label the three density zones to aid data storytelling
+_ann_style = {
+    "fontsize": 7,
+    "color": INK_SOFT,
+    "ha": "center",
+    "va": "center",
+    "bbox": {
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "alpha": 0.85,
+        "boxstyle": "round,pad=0.3",
+        "linewidth": 0.5,
+    },
+}
+ax.text(2, 2, "Downtown", **_ann_style)
+ax.text(-2, -1, "Industrial District", **_ann_style)
+ax.text(1, -2, "Suburban Area", **_ann_style)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
