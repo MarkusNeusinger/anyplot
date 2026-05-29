@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bubble-packed
 created: '2026-05-29T23:13:38Z'
-updated: '2026-05-29T23:21:02Z'
+updated: '2026-05-29T23:32:08Z'
 generated_by: claude-sonnet
 workflow_run: 26666348803
 issue: 992
@@ -15,45 +15,44 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect Imprint palette compliance: Africa=green(1), Americas=lavender(2), Asia=blue(3),
-    Europe=ochre(4); backgrounds and chrome correct in both themes'
-  - Area-proportional circle sizing (r proportional to sqrt of value) correctly encodes
-    population perception
-  - Force-directed physics simulation (6000 iterations) produces clean non-overlapping
-    packing
-  - Theme-adaptive chrome correctly implemented — title, legend text, stroke colors
-    all flip between themes without affecting data colors
-  - Perfect spec compliance, data realism, and code quality — all three score full
-    marks
-  - Julia-native force simulation with poly! and PolyElement shows genuine library
-    mastery
+  - 'Perfect spec compliance: all required packed-bubble features implemented (area-scaling,
+    force simulation, conditional labels, continent color grouping)'
+  - Real-world population data with accurate 2023 values creates an immediately compelling
+    visualization
+  - 'Thoughtful dual-level labeling: large circles get country + population, medium
+    circles get country only, small circles unlabeled — respects space constraints
+    without cluttering'
+  - Full Imprint palette compliance with correct first-series brand green assignment;
+    both themes render correctly
+  - 'Clean, minimal chrome: all spines/ticks removed, no grid, appropriate for packed
+    bubble chart type'
+  - 88% alpha + 1.5px stroke outlines give circles soft definition that works in both
+    themes
   weaknesses:
-  - Legend frame (framevisible = true) adds unnecessary visual weight — set framevisible
-    = false for cleaner minimal look
-  - ~16 of 30 countries have no label (r < 38); lowering the label threshold or using
-    a smaller font for additional circles would improve country identification
-  - Bubble cluster layout leans lower-left after simulation, leaving upper-right and
-    lower-right quadrants notably empty — subtract centroid mean from positions after
-    simulation to center the cluster
-  - No population value annotations inside top circles — adding formatted values like
-    '1.43B' below the country name in the largest circles would elevate data storytelling
-  - Medium circle labels (Bangladesh, Nigeria at 10pt) are at the minimum comfortable
-    size; slightly larger base font would improve legibility
+  - 'Layout asymmetry: force simulation settles with significant empty space in the
+    upper-right quadrant; centering heuristic post-simulation reduces but does not
+    eliminate visual imbalance — consider ring-based initial position seeding for
+    more compact packing'
+  - 'Title font weight: at titlesize=20 (40px effective in 2400px canvas) the title
+    is readable but light relative to canvas weight; a bump to 22-24pt would improve
+    typographic hierarchy'
+  - 'LM-02 gap: the force simulation is library-agnostic; leveraging Makies @recipe
+    system or PolyElement more extensively would demonstrate deeper Makie mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "World Population 2023 · bubble-packed · julia · makie · anyplot.ai" in dark ink at top, clearly readable. Horizontal legend below cluster with Africa/Americas/Asia/Europe labels and color swatches — all readable. No axis labels (correct for this chart type).
-      Data: 30 circles sized proportionally to population. Africa=brand green (#009E73), Americas=lavender (#C475FD), Asia=steel blue (#4467A3), Europe=ochre (#BD8233). White text labels inside larger circles (India, China, USA, Brazil, Nigeria, Indonesia, Bangladesh, Pakistan). Alpha-blended circles (0.88) with subtle INK_SOFT stroke.
-      Legibility verdict: PASS — all text readable; cluster leans slightly lower-left but no clipping.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "World Population 2023 · bubble-packed · julia · makie · anyplot.ai" in dark INK (#1A1A17), readable; no axis labels/ticks (intentionally hidden for packed bubble type); legend labels in dark text, readable
+      Data: 30 bubbles color-coded by continent — Africa (#009E73 brand green), Americas (#C475FD lavender), Asia (#4467A3 blue), Europe (#BD8233 ochre). White text labels inside circles sized ≥38 radius. Population values (e.g. 1.43B, 1.41B) shown in large circles.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title and legend text render in light ink (#F0EFE8), clearly readable against the dark background. Circle strokes adapt to INK_SOFT (#B8B7B0 in dark mode). No dark-on-dark failures observed.
-      Data: Identical data colors to light render — Africa=green, Americas=lavender, Asia=blue, Europe=ochre. White text labels inside large circles remain readable against colored circle fills.
-      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures.
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and legend labels in light (#F0EFE8) text, clearly readable against dark background; no dark-on-dark failures observed
+      Data: All four continent colors identical to light render — brand green, lavender, blue, ochre bubbles at same hues; white circle labels visible on dark background
+      Legibility verdict: PASS — all text readable, chrome correctly inverted, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,52 +60,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set for all elements. Minor deduction: medium
-          circles (Bangladesh, Nigeria) at 10pt minimum — slightly tight but readable.'
+        comment: 'All font sizes explicitly set; title 20pt, legend 14pt, circle labels
+          clamped. Readable in both themes. Minor: title could be 22-24pt for more
+          presence.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Force-directed packing produces no circle overlaps. Text labels do
-          not overlap.
+        comment: Force simulation with 3px padding prevents overlap. Circle labels
+          inside bubbles, no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Circles well-proportioned. Minor deduction: ~16 of 30 countries
-          unlabeled (r < 38), reducing identification.'
+        comment: All 30 bubbles visible with 0.88 alpha and 1.5px stroke. Unlabeled
+          small bubbles still distinguishable by color and shape.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: White text on colored circles provides strong contrast. Imprint palette
-          is CVD-safe.
+        comment: 4 Imprint palette colors clearly distinct. White text on colored
+          circles passes contrast. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Square 2400x2400 appropriate. Cluster fills ~70% of canvas. Minor
-          deduction: cluster leans lower-left, leaving empty space upper-right and
-          lower-right.'
+        comment: Square 2400x2400 canvas appropriate. Some asymmetric empty space
+          in upper-right from force simulation. Axis limits correctly encompass all
+          circles.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for packed bubble chart. Title is descriptive
-          and contextually complete.
+        comment: 'No axis labels needed for packed bubble. Title descriptive: World
+          Population 2023.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Imprint palette: Africa=#009E73(1), Americas=#C475FD(2),
-          Asia=#4467A3(3), Europe=#BD8233(4). Correct theme backgrounds. Data colors
-          identical across themes.'
+        comment: 'Africa→#009E73 (position 1), Americas→#C475FD, Asia→#4467A3, Europe→#BD8233.
+          Correct canonical order. Backgrounds #FAF8F1/#1A1A17. Chrome adapts correctly.'
     design_excellence:
       score: 13
       max: 20
@@ -116,23 +115,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: clean minimal approach, Imprint palette applied,
-          alpha-blended circles with stroke. Not publication-ready — missing population
-          annotations and stronger typography hierarchy.'
+        comment: 'Above defaults: continent color coding, population annotations,
+          0.88 alpha fills, stroke outlines. Professional. Lacks typographic hierarchy
+          differentiation.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'All spines removed, no grid, generous whitespace. Deduction: framevisible=true
-          on legend adds unnecessary visual weight.'
+        comment: All spines removed, no grid, ticks hidden, rowgap! control. Good
+          refinement appropriate for chart type.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: India and China dominate immediately, communicating scale disparity.
-          Loses points for no population value annotations on top circles.
+        comment: Real-world data, size hierarchy communicates Asia dominance and India/China
+          scale immediately. No explicit annotation emphasis beyond natural proportions.
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with force-directed physics simulation.
+        comment: Correct packed bubble chart with force-directed simulation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-proportional sizing, force simulation, inside labels for large
-          circles, continent color encoding. Optional spatial grouping absent (acceptable
-          per spec).
+        comment: Area-proportional scaling (sqrt), force simulation, labels inside
+          large circles, group color encoding, continent grouping.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value -> circle area; group -> color; label -> inside circle. All
-          correct.
+        comment: Size encodes population value; color encodes continent group. No
+          traditional axes (correct).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · julia · makie · anyplot.ai
-          format. Legend labels match data groups.
+        comment: Title with optional descriptive prefix valid. Legend shows 4 continent
+          labels with correct colors.
     data_quality:
       score: 15
       max: 15
@@ -174,22 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full range: wide size variation (31x ratio), continent grouping,
-          inside labeling, natural circle packing.'
+        comment: Wide size range (46M to 1429M), 4 continent groups, varied circle
+          counts, demonstrates chart type comprehensively.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: World population 2023 is real, neutral, widely-understood. No controversial
-          elements.
+        comment: 'Top-30 countries by 2023 population: neutral, educational, science-appropriate.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values factually accurate for 2023 estimates (India slightly
-          above China at 1429M vs 1412M is correct).
+        comment: India 1.43B, China 1.41B, USA 339M — factually accurate 2023 estimates.
     code_quality:
       score: 10
       max: 10
@@ -199,36 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> theme tokens -> data -> radii -> force simulation
-          -> Figure/Axis -> draw -> legend -> save.'
+        comment: 'Flat script: imports, theme tokens, data, force simulation, figure,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) at top level.
+        comment: Random.seed!(42) at top; deterministic throughout.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used.
+        comment: CairoMakie, Colors, Random — all used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Force simulation loop is necessary for this
-          chart type.
+        comment: O(n^2) force simulation appropriate for n=30. No fake UI. Clean structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Modern size= kwarg
-          used.
+        comment: Saves plot-$(THEME).png with px_per_unit=2. Correct CairoMakie API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -236,23 +230,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good Makie idioms: Figure/Axis layout, poly! for circles, text!
-          for labels, Legend with PolyElement, DataAspect(), rowgap!. Minor deduction:
-          could use higher-level Makie approach.'
+        comment: poly! for data-coordinate circles is correct Makie approach. PolyElement
+          for legend, DataAspect(), rowgap! all idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Julia-native force simulation, PolyElement in Legend, DataAspect()
-          for geometric accuracy, Point2f polygon construction are CairoMakie-distinctive.
-  verdict: REJECTED
+        comment: PolyElement, poly!, DataAspect(), RGBAf are Makie-specific. Force
+          simulation is library-agnostic. @recipe or Observable use would score higher.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   - patches
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
