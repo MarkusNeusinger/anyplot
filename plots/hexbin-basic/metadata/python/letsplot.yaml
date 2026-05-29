@@ -1,15 +1,277 @@
 library: letsplot
+language: python
 specification_id: hexbin-basic
 created: '2025-12-23T01:31:08Z'
-updated: '2026-02-21T21:21:13Z'
-generated_by: claude-opus-4-6
-workflow_run: 20448655355
-issue: 0
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/letsplot/plot.html
+updated: '2026-05-29T09:38:51Z'
+generated_by: claude-sonnet
+workflow_run: 26629429950
+issue: 859
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/letsplot/plot-dark.html
 quality_score: 92
+review:
+  strengths:
+  - 'Perfect spec compliance: correct hexbin plot type with color bar, Imprint sequential
+    colormap (green→blue), sqrt-scaled density transform, and coord_fixed() for isotropy'
+  - 'Excellent data quality: realistic GPS metro-area density scenario with three
+    distinct spatial clusters (downtown corridor, university campus, transit hub)
+    and sparse residential background noise'
+  - Proper Imprint sequential colormap implementation using scale_fill_gradient(low='#009E73',
+    high='#4467A3') with sqrt transform — both colors are Imprint palette anchors
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens applied
+    to all elements including legend background, correctly flipping between light
+    (#FAF8F1) and dark (#1A1A17)'
+  - 'All font sizes explicitly set via theme(): title=16/bold, subtitle=11, axis_title=12,
+    axis_text=10, legend_title=12/bold, legend_text=10 — proportions look well-balanced
+    in both renders'
+  - Idiomatic letsplot usage with layer_tooltips() showing computed aesthetics @..count..
+    and @..density.. with .format() formatting — a distinctive letsplot-only feature;
+    HTML export included
+  weaknesses:
+  - 'White hex edges (color=''#FFFFFF'') create subtle visual inconsistency between
+    themes: on the light (#FAF8F1) background the edges are barely visible and look
+    polished, but on the dark (#1A1A17) background they become prominent bright grid
+    lines that add visual noise — consider using color=INK_SOFT or a semi-transparent
+    edge so the border weight feels consistent across both renders'
+  - Grid is entirely removed (panel_grid_major=element_blank()) — for a spatial hexbin
+    where readers need to locate density clusters by km coordinates, subtle Y-only
+    or both-axis grid lines at 15% opacity would aid position reading without competing
+    with the data
+  - 'DE-01 not exceptional: design is clean and correct but lacks a standout design
+    element that would push it to publication-ready level — e.g. a descriptive title
+    prefix (e.g. ''Metro Density Hotspots · ''), direct cluster annotations, or a
+    refined subtitle that names the visible clusters rather than describing the colormap'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface matching #FAF8F1 — not pure white, correct anyplot light surface.
+      Chrome: Title "hexbin-basic · python · letsplot · anyplot.ai" in bold dark ink at ~70% plot width. Subtitle "GPS ping density — sqrt-scaled Imprint sequential colormap" in softer dark ink below. X-axis label "East–West (km from center)" and Y-axis label "North–South (km from center)" both readable with units. Tick labels in muted dark ink, all legible. Legend titled "Ping Count" with color ramp from green to blue and labels 4/16/36/64/100/144.
+      Data: Hexagonal bins covering roughly −8 to 12 km east, −6 to 8 km north. Low-density bins render in Imprint brand green (#009E73); high-density bins transition to Imprint blue (#4467A3). White hex edges add definition. Three density clusters visible: dense blue-shifted cluster in upper-right (downtown corridor ~4 km east), moderate cluster left of center (campus ~−3 km east), and tight cluster in lower-center (transit hub ~0.5 km east, −3.5 km north). Sparse green outer bins represent residential background noise.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface matching #1A1A17 — not pure black, correct anyplot dark surface.
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light cream/off-white tones (INK → #F0EFE8, INK_SOFT → #B8B7B0 in dark mode). Legend box has slightly elevated dark background (#242420). All chrome elements flip correctly from the light render.
+      Data: Hex bin colors are identical to the light render — same green (#009E73) for low density, same blue (#4467A3) for high density — only chrome flips. White hex edges (#FFFFFF) are more visually prominent on the dark background, creating a brighter grid-line effect compared to the subtle appearance on light. The three density cluster patterns remain clearly visible.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures. White hex edges more prominent in dark mode but not a blocking issue.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set via theme(): title=16/bold, subtitle=11,
+          axis_title=12, axis_text=10, legend text=10. Well-proportioned in both renders.
+          Title fills ~70% of plot width as expected for the mandated format.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Legend positioned cleanly to the right of the hex
+          data area. No axis tick collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hex bins clearly visible with white edge definition. sqrt-scaled
+          colormap reveals both high-density clusters and sparse outer bins effectively.
+          10,000 points aggregated well.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential colormap is CVD-safe. No red-green as sole
+          signal. Sequential gradient distinguishable under deuteranopia/protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200×1800 confirmed). coord_fixed() correctly
+          equalizes axis scales. Data fills a good portion of canvas with balanced
+          margins. Legend well-placed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''East–West (km from center)'', Y: ''North–South (km from center)''
+          — both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: scale_fill_gradient(low='#009E73', high='#4467A3') matches Imprint
+          imprint_seq stops. Light bg=#FAF8F1, dark bg=#1A1A17. All chrome tokens
+          theme-adaptive. Data colors identical across both renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: correct Imprint sequential cmap, white hex
+          edges, clean background, themed subtitle. Professional and polished but
+          not FiveThirtyEight publication-level — no distinguishing design elements
+          beyond correct spec execution.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Grid entirely removed (clean), axis lines present via axis_line,
+          legend background elevated. Good refinement. White hex borders add definition.
+          Minor: no grid means position estimation is harder for a spatial plot.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear spatial density story: three distinct clusters visible through
+          color contrast. sqrt transform is a deliberate storytelling choice to reveal
+          full density range. Subtitle names the colormap but doesn''t call out the
+          clusters by name. Visual hierarchy through color is present, but no annotations
+          to guide the viewer to specific features.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hexagonal binning plot using geom_hex().
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color bar present (legend with Ping Count). Perceptually-uniform
+          colormap (Imprint sequential, project-approved). Gridsize parameter (bins=[35,35]).
+          Sqrt scale for density variation.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=east_km (East-West position), Y=north_km (North-South position),
+          fill=..count.. (density). All data visible within axis range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''hexbin-basic · python · letsplot · anyplot.ai'' matches
+          required format exactly. Legend: ''Ping Count'' with correct sqrt-scaled
+          density values.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all hexbin features: multiple density levels (low/medium/high),
+          sparse outer areas, distinct clusters, color gradient spanning full range.
+          Three different cluster shapes (elongated downtown, circular campus, tight
+          transit hub) demonstrate varied bin patterns.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: GPS ping density across metro area is a real-world application explicitly
+          listed in the spec. Downtown commercial corridor, university campus, transit
+          hub are all authentic urban geography features. Neutral, non-controversial
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range of −8 to 12 km east, −6 to 8 km north is a plausible metropolitan
+          area extent. Ping counts 4–144 per bin are realistic for GPS data. Cluster
+          spacing and density ratios are geographically plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
+          Linear flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before all random data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports are used: LetsPlot, aes, coord_fixed, element_blank/line/rect/text,
+          geom_hex, ggplot, ggsize, labs, layer_tooltips, scale_fill_gradient, theme,
+          theme_minimal, ggsave. No unused imports.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. layer_tooltips() is legitimate interactive functionality
+          (not fake — letsplot is an interactive library with HTML export). Appropriate
+          complexity for the visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=4 → 3200×1800) and plot-{THEME}.html.
+          Uses current letsplot API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic letsplot: ggplot grammar with geom_hex(), scale_fill_gradient(),
+          coord_fixed(), theme_minimal() + theme() overrides, ggsize() for canvas,
+          ggsave() with scale. All letsplot-recommended patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with computed stat aesthetics @..count.. and
+          @..density.., .format() for precision formatting, and HTML export — all
+          letsplot-specific interactive features that go beyond what other grammar-of-graphics
+          libraries offer out of the box. Docks at 4 rather than 5 as the tooltip
+          configuration is solid but not uniquely creative.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -21,209 +283,3 @@ impl_tags:
   styling:
   - custom-colormap
   - edge-highlighting
-  - grid-styling
-review:
-  strengths:
-  - Excellent data storytelling through three distinct density clusters with different
-    shapes and intensities
-  - Smart use of sqrt color transform to reveal low-density structure while preserving
-    hotspot visibility
-  - Warm magma colormap with clipped begin/end avoids extreme palette edges
-  - Informative subtitle explaining the color scaling strategy
-  - Clean code structure with descriptive variable names and comments
-  - Full use of letsplot tooltip builder API for the HTML export
-  weaknesses:
-  - Title text slightly cramped against top canvas edge; additional top margin would
-    improve breathing room
-  - Grid lines could be further reduced or removed for cleaner aesthetics
-  - Missing coord_fixed() which would enforce equal aspect ratio for spatial coordinate
-    data
-  image_description: 'The plot displays a hexagonal binning density map titled "hexbin-basic
-    · letsplot · pyplots.ai" with a subtitle "GPS ping density — sqrt-scaled color
-    reveals low-density structure." The x-axis is labeled "East–West (km from center)"
-    ranging from about -8 to 13, and the y-axis "North–South (km from center)" ranging
-    from about -6 to 8. Hexagonal bins are colored using a magma colormap (dark purple
-    for low counts through magenta/pink to bright yellow-orange for high counts),
-    with thin white borders separating each hexagon. Three distinct density clusters
-    are visible: a bright hotspot around (-2, 1) representing a university campus,
-    a large moderate-density region around (3–5, 2–4) for a downtown core, and a smaller
-    tight bright cluster around (0, -3.5) for a transit hub. Sparse dark hexagons
-    populate the periphery representing residential pings. A legend on the right labeled
-    "Ping Count" shows sqrt-scaled values (4, 16, 36, 64, 100, 144). The panel background
-    is a warm off-white (#F5F5F0) with dashed light gray grid lines.'
-  criteria_checklist:
-    visual_quality:
-      score: 29
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title=26, subtitle=17, axis_title=22,
-          axis_text=18, legend_text=16, legend_title=18'
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements anywhere
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Hexagons well-sized with white borders, density variation clearly
-          distinguishable
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Magma colormap is perceptually uniform and colorblind-safe with clipped
-          begin/end
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills 55-65% of canvas, title slightly cramped at top edge
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: km from center'
-    design_excellence:
-      score: 14
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: 'Strong design: magma colormap, sqrt transform, warm background,
-          white hex borders, muted subtitle'
-      - id: DE-02
-        name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: theme_minimal, dashed subtle grid, warm background, good typographic
-          hierarchy
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Three distinct clusters create visual hierarchy, sqrt transform reveals
-          low-density structure, subtitle explains design choice
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct hexagonal binning plot using geom_hex()
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Color legend, perceptually uniform colormap, bin resolution control,
-          non-linear color scaling
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X/Y correctly mapped as spatial coordinates, all data visible
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title follows exact format, legend labeled Ping Count matching context
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Multiple clusters of different shapes, sparse background, wide density
-          range
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: GPS ping density across metro area is neutral and real-world relevant
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Realistic metro footprint ~20km across, 10000 pings is reasonable
-          sample
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean Imports → Data → Plot → Save flow, no functions or classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set before all random generation
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used, specific rather than wildcard
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean Pythonic code, good numpy concatenation, readable grammar-of-graphics
-          chain
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves plot.png via ggsave with scale=3, also saves HTML for interactivity
-    library_mastery:
-      score: 9
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert grammar of graphics: ggplot + geom_hex + aes + scale + theme
-          chain, proper ggsize and ggsave'
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: layer_tooltips() builder pattern, HTML export, scale_fill_viridis
-          with built-in transform support
-  verdict: APPROVED
