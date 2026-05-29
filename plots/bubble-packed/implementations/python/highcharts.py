@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -46,7 +46,7 @@ sectors = [
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-title = "bubble-packed · python · highcharts · anyplot.ai"
+title = "Global Market Capitalization · bubble-packed · python · highcharts · anyplot.ai"
 title_len = len(title)
 title_fs = round(66 * min(1.0, 67 / title_len))
 title_fs = max(title_fs, 44)
@@ -57,7 +57,7 @@ chart.options.chart = {
     "height": H,
     "backgroundColor": PAGE_BG,
     "style": {"color": INK, "fontFamily": "system-ui, sans-serif"},
-    "margin": [90, 20, 110, 20],
+    "margin": [60, 20, 110, 20],
 }
 
 chart.options.title = {
@@ -108,19 +108,22 @@ chart.options.plot_options = {
         "zMin": 0,
         "zMax": 1000,
         "layoutAlgorithm": {
-            "gravitationalConstant": 0.05,
+            "gravitationalConstant": 0.12,
             "splitSeries": True,
             "seriesInteraction": True,
             "dragBetweenSeries": False,
             "parentNodeLimit": True,
-            "parentNodeOptions": {"gravitationalConstant": 0.06, "marker": {"fillOpacity": 0, "lineWidth": 0}},
+            "parentNodeOptions": {
+                "gravitationalConstant": 0.15,
+                "marker": {"fillOpacity": 0.08, "lineWidth": 2, "lineColor": "rgba(0,0,0,0.25)"},
+            },
             "bubblePadding": 4,
         },
         "dataLabels": {
             "enabled": True,
             "format": "{point.name}",
-            "filter": {"property": "y", "operator": ">", "value": 400},
-            "style": {"fontSize": "36px", "fontWeight": "600", "color": "white", "textOutline": "2px rgba(0,0,0,0.5)"},
+            "filter": {"property": "y", "operator": ">", "value": 200},
+            "style": {"fontSize": "28px", "fontWeight": "600", "color": "white", "textOutline": "2px rgba(0,0,0,0.5)"},
         },
         "marker": {"lineWidth": 2, "lineColor": "rgba(255,255,255,0.4)"},
     }
