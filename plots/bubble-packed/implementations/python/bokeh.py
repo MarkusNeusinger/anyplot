@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
@@ -106,7 +106,7 @@ tier_defs = [
 p = figure(
     width=W,
     height=H,
-    title="Department Budgets by Spending Tier",
+    title="Department Budgets by Spending Tier · bubble-packed · python · bokeh · anyplot.ai",
     x_range=xr,
     y_range=yr,
     tools="",
@@ -187,7 +187,7 @@ for lo, hi, name_fs, val_fs, y_off in brackets:
         )
 
 # Theme-adaptive chrome
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "41pt"
 p.title.align = "center"
 p.title.text_color = INK
 p.xaxis.visible = False
@@ -196,7 +196,7 @@ p.xgrid.visible = False
 p.ygrid.visible = False
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = None
+p.outline_line_color = INK_SOFT
 p.min_border = 50
 
 # Legend — theme-adaptive styling with improved sizing for 2400px canvas
