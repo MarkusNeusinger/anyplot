@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: line-pca-variance-cumulative
+created: '2026-05-29T05:59:31Z'
+updated: '2026-05-29T06:15:10Z'
+generated_by: claude-sonnet
+workflow_run: 26620585481
+issue: 4131
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Dual-panel layout (cumulative line + individual bars) implements the spec's optional
+    enhancement, adding genuine analytical value
+  - Elbow detection via max-distance-from-diagonal method is principled and annotated
+    clearly with a distinct color
+  - Amber threshold band with dotted vertical drop lines creates strong visual connection
+    between thresholds and component counts
+  - 'Full theme compliance: all chrome tokens wired, data colors identical across
+    both renders — no dark-on-dark failures'
+  - PCA implemented from scratch via eigendecomposition of Symmetric covariance matrix
+    — no sklearn dependency needed
+  weaknesses:
+  - The 90%/95% right-margin text labels (fontsize=13) are on the smaller side — increasing
+    to fontsize=14-15 would improve legibility at mobile scale
+  - PC6-18 individual bars are nearly invisible due to data structure (not a rendering
+    bug); a note or minimum y-floor could make tail components slightly more visible
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white.
+      Chrome: Title "line-pca-variance-cumulative · julia · makie · anyplot.ai" in dark ink (#1A1A17), fully readable. Y-axis labels "Cumulative Variance (%)" and "Individual (%)" in dark ink, readable. X-axis label "Number of Components" in dark ink, readable. Tick labels in secondary dark ink (#4A4A44), readable. Right-margin threshold labels "95%" and "90%" in muted ink, readable (slightly small at fontsize=13).
+      Data: Brand green (#009E73) cumulative line with circular markers ascending from ~40% at PC1 to ~100% by PC8. Amber (#DDCC77) dashed horizontal lines at 90% and 95% with subtle amber shaded band between them. Dotted amber vertical drop lines at intersection components. Blue (#4467A3) dot marks elbow at PC5 with "PC5 (elbow)" annotation. Lower panel: brand green (#009E73) bars for individual variance, tall for PC1-5, near-invisible for PC6-18 (data-driven).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct surface color, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. All axis labels and tick labels flip to light/gray tones (INK #F0EFE8 / INK_SOFT #B8B7B0), all readable. No dark-on-dark failures detected. Right-margin threshold labels in light-gray INK_SOFT (#B8B7B0), readable.
+      Data: Brand green (#009E73) identical to light render — data colors unchanged as required. Amber threshold lines (#DDCC77) remain clearly visible on dark surface. Blue elbow marker (#4467A3) visible. Bar panel identical structure and colors to light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, annotations all readable in both
+          themes. Right-margin threshold labels (fontsize=13) are slightly small but
+          legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text. Elbow annotation clears
+          the curve cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cumulative line and markers prominent. PC6-18 individual bars near-invisible
+          but data-driven (5-factor model), not a render defect.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + blue + amber encoding is CVD-safe. No red-green sole-signal
+          dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). 70/30 row split well-proportioned.
+          No content overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Cumulative Variance (%), Individual
+          (%), Number of Components.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, amber anchor for thresholds, blue for elbow.
+          Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional dual-panel composition, amber threshold band with dotted
+          vertical lines, elbow detection and annotation. Beyond generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine frame, y-only grid at 12% opacity, minimal decoration,
+          tightly gapped panels.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point at PC5 elbow. Amber threshold zone guides component-selection
+          decisions. Supporting bar panel provides curve context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative explained variance line plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative sum on y-axis, percentage scale, 90%/95% dashed horizontal
+          lines, elbow marked and annotated, markers at each component, x-axis starts
+          at 1, optional individual variance panel included.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: components 1-18, Y: cumulative % (0-108). All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. No legend needed for single-series
+          with direct annotations.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers cumulative line, individual bars, elbow detection, threshold
+          lines, drop lines, and shaded zone.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic metabolomics dataset (200 samples, 18 spectral features,
+          5 true latent factors) is scientifically plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 18 components typical for medium-dimensional spectral data. Cumulative
+          trajectory (40%-100%) and elbow at PC5 match the 5-factor ground truth.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no classes or functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (CairoMakie, Colors, Random, Statistics, LinearAlgebra)
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Idiomatic Julia: broadcasting, eigen decomposition on Symmetric,
+          findfirst with something().'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Axis/Figure construction, RGBAf for alpha colors, theme tokens
+          wired to all chrome parameters.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses linkxaxes! for synchronized x-axes, hspan! for shaded region,
+          rowsize! for proportional panel sizing, Symmetric eigendecomposition, rowgap!
+          for compact panel spacing.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - pca
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
