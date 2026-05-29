@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: band-basic
 created: '2025-12-23T09:08:23Z'
-updated: '2026-05-29T17:44:12Z'
+updated: '2026-05-29T17:53:19Z'
 generated_by: claude-sonnet
 workflow_run: 26652083917
 issue: 979
@@ -15,43 +15,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basi
 quality_score: 88
 review:
   strengths:
-  - Semi-transparent Imprint green band (#009E73) correctly used as band fill; blue
-    line (#4467A3) provides good contrast
-  - Realistic battery capacity decay scenario with widening tolerance band — scientifically
-    grounded and clearly neutral
-  - Annotation with arrow at cycle ~450 highlights the storytelling element; dashed
-    reference line at y=80 provides threshold context
-  - 'Both renders pass theme-readability: warm off-white background in light, near-black
-    in dark, chrome flips correctly'
-  - 'Perfect spec compliance: geom_ribbon with alpha=0.25, central line in contrasting
-    color, smooth interpolation over 100 data points'
-  - Code follows KISS structure, all imports used, deterministic data — no seed needed
-  - HTML export alongside PNG leverages lets-plot interactive capabilities
-  - tooltips=none on non-data layers is idiomatic lets-plot usage
+  - Excellent spec compliance — all required features (transparent band, central trend
+    line, smooth interpolation) correctly implemented with geom_ribbon and geom_line
+  - Perfect data quality — realistic battery capacity decay with widening 95% tolerance
+    band; exponential decay formula and tolerance scaling are physically plausible
+  - Proper Imprint palette usage — band in brand green (#009E73, position 1), center
+    line in blue (#4467A3, position 3), correct theme-adaptive chrome tokens applied
+    to both renders
+  - Rich data storytelling — 80% capacity threshold reference line with label, arrow
+    annotation highlighting widening uncertainty, clear visual hierarchy between band
+    and center line
   weaknesses:
-  - Reference line at y=80 (dashed) carries implicit meaning (EOL threshold) but has
-    no label — add geom_text or a legend entry explaining this context to strengthen
-    storytelling
-  - 'No legend: band and line have no labels. For a multi-element plot a small legend
-    or direct labels (e.g. "Mean" on the line, "95% tolerance" on band) would improve
-    comprehension and push DE-01 toward 6'
-  - 'DE-02: Axis line is present on both bottom and left; removing left axis spine
-    and relying only on grid-y would produce a cleaner minimal look'
-  - The annotation text size=5 renders somewhat small at the final 3200×1800 canvas
-    — increasing to size=6-7 would improve legibility of the callout without overcrowding
+  - 'Dark render band low contrast: alpha=0.25 composited over #1A1A17 yields ~#133B2E
+    (dark teal), barely distinguishable from the near-black background — increase
+    alpha to 0.35-0.40 in dark mode or use a theme-adaptive alpha value'
+  - 'Annotation placement tight: "Widening tolerance band" label at y=18.5 is very
+    close to the lower y-axis limit (scale_y_continuous lower=10), leaving minimal
+    whitespace at the bottom — shift label to y=22-25 for breathing room'
+  - 'Center line uses Imprint position 3 (blue, #4467A3) — correct as a secondary
+    series but VQ-01 slightly docked because the annotation in the lower-left sits
+    in a crowded zone near the arrowhead destination'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — not pure white, correct anyplot light surface.
-      Chrome: Title "band-basic · python · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Charge Cycles" (x) and "Capacity (%)" (y) in dark ink, proportionate. Tick labels in muted dark color, legible. Horizontal-only grid lines subtle.
-      Data: Semi-transparent green band (#009E73, alpha 0.25) fills the confidence region — first Imprint palette position correct. Blue trend line (#4467A3, Imprint position 3) clearly overlaid on center. Dashed gray reference line at y=80. Arrow annotation "Widening tolerance band" points to lower band edge near cycle 450.
-      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background. No light-on-light failures.
+      Background: Warm off-white (~#FAF8F1) — correct; clearly not pure white, has a slight cream tint.
+      Chrome: Title "band-basic · python · letsplot · anyplot.ai" in dark ink (top-left), fully readable. Y-axis label "Capacity (%)" and X-axis label "Charge Cycles" in dark ink at appropriate sizes. Tick labels in INK_SOFT dark gray, clearly legible. Horizontal grid lines are subtle and thin.
+      Data: Green semi-transparent ribbon (Imprint position 1, #009E73, alpha=0.25) fills from ~100% at cycle 0 down to ~27-47% at cycle 500, visibly widening. Blue center line (Imprint position 3, #4467A3, size=1.5) runs through the middle of the band. Dashed gray horizontal reference line at y=80 with "80% capacity threshold" label at far right. Arrow + "Widening tolerance band" annotation in lower center-left.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black matching #1A1A17 — not pure black, correct anyplot dark surface.
-      Chrome: Title and axis labels in light off-white text, clearly readable. Tick labels in light-gray matching INK_SOFT dark token. Grid lines visible but subtle. Chrome adaptation is correct throughout.
-      Data: The #009E73 band with alpha=0.25 composites over the dark surface to produce a darker teal-green appearance — expected alpha-blending behavior, source hex is unchanged. Blue trend line (#4467A3) remains distinguishable from the band. Dashed reference line appears lighter (INK_MUTED dark token). Annotation text in light gray, arrow visible.
-      Data color identity check: Both renders use the same Imprint hexes; the darker perceived band fill in dark mode is an expected alpha-over-dark composite, not a palette deviation.
-      Legibility verdict: PASS — all text elements clearly readable against the near-black background. No dark-on-dark failures observed.
+      Background: Warm near-black (#1A1A17) — correct; not pure black.
+      Chrome: Title in light cream text, readable. Axis labels and tick labels in lighter gray (INK_SOFT dark token #B8B7B0), readable against the dark surface. Grid lines subtle. Reference line label "80% capacity threshold" visible in muted gray. Annotation text "Widening tolerance band" readable in muted light gray. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — band is still #009E73 and center line is still #4467A3. However, the semi-transparent green band (alpha=0.25) composited over the dark background renders as a very dark teal (#133B2E approximation), significantly reducing visual contrast compared to the light render. The band IS visible but less prominent than in light mode. The blue center line stands out clearly against the dark background.
+      Legibility verdict: PASS — all text elements readable against the dark background. No dark-on-dark failures. Minor issue: band contrast is low in dark mode due to alpha compositing.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -59,57 +54,57 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16,
-          geom_text=5). Both renders readable at full resolution and scale-down. Title
-          occupies ~55% of width, balanced axis labels.
+        comment: 'All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          geom_text sizes 4.5mm and 6mm). Well-proportioned and readable in both themes.
+          Minor deduction: annotation at y=18.5 near bottom of y-range creates a slightly
+          tight lower zone.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotation and arrow positioned away
-          from axis labels.
+        comment: No overlapping text or data elements. Arrow annotation, threshold
+          text, and axis labels are all spatially separated.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Band and line clearly visible in both themes. Alpha=0.25 appropriate
-          — band does not obscure the line. Reference line and arrow annotation also
-          clearly rendered.
+        comment: 'Band and center line clearly visible in light render. Dark render
+          band has low contrast due to alpha=0.25 composited over #1A1A17 yielding
+          dark teal. Center line remains clearly visible in both themes.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green band (#009E73) and blue line (#4467A3) are both Imprint palette
-          members selected for CVD safety. Elements also distinguishable by type (fill
-          vs line).
+        comment: Green band and blue center line are CVD-safe Imprint palette members
+          with distinct hue families. Good contrast for the primary data elements.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 produced correctly). Plot fills canvas
-          well with generous margins. No content cut off.
+        comment: Good proportions, plot fills canvas well (landscape 800x450 at scale=4).
+          No content cut off. Margins balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'x: ''Charge Cycles'' (descriptive), y: ''Capacity (%)'' (descriptive
-          with units). Title format correct.'
+        comment: 'Y-axis: ''Capacity (%)'' with units. X-axis: ''Charge Cycles'' (descriptive).
+          Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Band fill IMPRINT_PALETTE[0]=#009E73 (first series, correct). Line
-          IMPRINT_PALETTE[2]=#4467A3. Backgrounds #FAF8F1/#1A1A17. Chrome adaptive.
-          Both renders theme-correct.'
+        comment: 'Band uses Imprint position 1 (#009E73). Center line uses Imprint
+          position 3 (#4467A3). Background #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive
+          chrome tokens applied correctly. Both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -119,25 +114,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured-default level: intentional Imprint colors, annotation
-          with arrow, dashed reference line as context. Not yet at ''strong design''
-          (6) — reference line is unlabeled, no legend to identify band/line semantics.'
+        comment: Above a well-configured default thanks to the annotation layer (threshold
+          line, arrow, label) and intentional color pairing. Not quite 'strong design'
+          level but clearly above 'well-configured default'.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid, theme_minimal removes top/right spines, axis line
-          retained. Good but not perfect — left axis spine presence reduces minimalism
-          score.
+        comment: Y-axis grid only (no X grid). Left spine removed, bottom axis line
+          kept. Subtle grid (size=0.3). theme_minimal removes top/right spines. Good
+          refinement above minimal defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation + arrow at cycle 450 guides the viewer to the widening
-          tolerance band. Dashed reference line at y=80 provides threshold context.
-          Good storytelling but unlabeled dashed line reduces communicative clarity.
+        comment: 'Clear story: battery capacity decay with widening uncertainty. 80%
+          threshold contextualizes practical significance. Arrow annotation highlights
+          the widening band. Visual hierarchy: band < line < annotations. Good focal
+          point guidance.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct band plot using geom_ribbon + central geom_line.
+        comment: Correct band plot with geom_ribbon (filled band) and geom_line (center
+          line).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.25), central trend line in contrasting
-          color, smooth interpolation (100 points), y_lower and y_upper boundaries
-          all present.
+        comment: Semi-transparent fill (alpha=0.25), central trend line, smooth interpolation
+          (100 points), widening band visible.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=cycles, ymin=lower, ymax=upper for ribbon; y=mean for line. All
-          data visible.
+        comment: X=charge cycles, Y=capacity. Lower/upper bounds correctly mapped
+          to ymin/ymax in geom_ribbon.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'band-basic · python · letsplot · anyplot.ai'. No legend
-          needed (appropriate for single band + line with annotation context).
+        comment: Title 'band-basic · python · letsplot · anyplot.ai' matches required
+          format. No legend needed (elements annotated inline).
     data_quality:
       score: 15
       max: 15
@@ -179,24 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all band plot features: filled region between lower/upper
-          bounds, central trend line, widening uncertainty over time (dynamic band
-          width).'
+        comment: 'Shows all band plot aspects: filled region between boundaries, center
+          trend line, widening uncertainty (heteroscedastic), reference threshold.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Battery capacity exponential decay with 95% tolerance band — highly
-          realistic, scientifically grounded, neutral domain.
+        comment: Battery capacity decay over charge cycles is a real engineering scenario.
+          95% tolerance band is statistically motivated. Neutral technology domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100% starting capacity decaying to ~37% at 500 cycles (plausible
-          li-ion behavior). Widening tolerance physically motivated. 80% EOL threshold
-          is a recognized industry standard.
+        comment: 100% starting capacity, exponential decay exp(-0.002*t). 80% threshold
+          reached ~cycle 111 (plausible for Li-ion). Band widening over time (degradation
+          uncertainty increases) is physically realistic.
     code_quality:
       score: 10
       max: 10
@@ -206,32 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save. No functions or classes.
+        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data (no randomness). No seed needed.
+        comment: Data is fully deterministic (mathematical formula, no randomness).
+          No seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used in the code.
+        comment: All 20 imported symbols from lets_plot are used in the implementation.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. tooltips='none' prevents tooltip noise. No over-engineering.
+        comment: Clean, Pythonic, appropriate complexity. Layer composition is clear.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Current lets-plot
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly with scale=4.
     library_mastery:
       score: 7
       max: 10
@@ -241,23 +238,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar chaining, ggsave with scale=4, LetsPlot.setup_html().
-          tooltips='none' on specific layers is idiomatic. Good but not expert-level.
+        comment: Correct ggplot grammar with geom_ribbon for band, geom_line for center,
+          theme customization. geom_segment with arrow function is idiomatic lets-plot.
+          Not quite perfect (5) but strong usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export (interactive output), tooltips='none' per-layer control,
-          arrow() for annotation styling — all lets-plot distinctive. Not using advanced
-          lets-plot features like custom tooltips or themes.
-  verdict: REJECTED
+        comment: Uses lets-plot's arrow() function for segment annotation, tooltips='none'
+          for interactive control, and HTML export. Some library-specific features
+          leveraged.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
