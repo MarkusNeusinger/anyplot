@@ -1,7 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, userEvent } from '../test-utils';
 import { SpecDetailView } from './SpecDetailView';
+import { ThemeContext, type ThemeContextValue } from '../hooks/useLayoutContext';
 import type { Implementation } from '../types';
+
+const darkThemeValue: ThemeContextValue = {
+  mode: 'dark',
+  effective: 'dark',
+  isDark: true,
+  setMode: vi.fn(),
+  cycle: vi.fn(),
+};
 
 vi.mock('../utils/responsiveImage', () => ({
   buildDetailSrcSet: (url: string, fmt: string) => `${url}-srcset-${fmt}`,
@@ -153,6 +162,23 @@ describe('SpecDetailView', () => {
 
     await user.click(screen.getByRole('button', { name: 'Zoom out' }));
     expect(screen.getByRole('button', { name: 'Zoom in' })).toBeInTheDocument();
+  });
+
+  it('adapts overlay action buttons to a dark surface in dark mode', () => {
+    // Light mode (default context): bright surface so buttons read on a light preview.
+    const { unmount } = render(<SpecDetailView {...defaultProps} />);
+    const lightBtn = screen.getByRole('button', { name: /download png/i });
+    expect(lightBtn).toHaveStyle({ backgroundColor: 'rgba(255,255,255,0.9)' });
+    unmount();
+
+    // Dark mode: dark surface so the button no longer clashes with the dark preview.
+    render(
+      <ThemeContext.Provider value={darkThemeValue}>
+        <SpecDetailView {...defaultProps} />
+      </ThemeContext.Provider>,
+    );
+    const darkBtn = screen.getByRole('button', { name: /download png/i });
+    expect(darkBtn).toHaveStyle({ backgroundColor: 'rgba(36,36,32,0.9)' });
   });
 
   it('renders nothing special when currentImpl is null', () => {
