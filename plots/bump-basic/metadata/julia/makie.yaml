@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bump-basic
 created: '2026-05-29T13:34:32Z'
-updated: '2026-05-29T13:40:22Z'
+updated: '2026-05-29T13:50:03Z'
 generated_by: claude-sonnet
 workflow_run: 26639886904
 issue: 982
@@ -15,99 +15,87 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Full Imprint palette in canonical order — NovaTech first in brand green #009E73'
-  - All theme-adaptive chrome tokens correctly wired (INK, INK_SOFT, PAGE_BG, ELEVATED_BG,
-    GRID_INK)
-  - Y-axis correctly inverted so rank 1 appears at the top
-  - Dot markers with PAGE_BG stroke (strokecolor=PAGE_BG, strokewidth=2) give visual
-    clarity at line crossings
-  - Custom legend built with LineElement handles placed correctly in Makie's figure
-    grid at fig[1,2]
-  - 'Varied, story-rich ranking data: PulseAI climbs steadily to #1, CircleCloud falls
-    from leader, NovaTech has late slip'
-  - Perfect spec compliance — correct chart type, all required features implemented,
-    correct title format
-  - Perfect code quality — KISS structure, seed(42) reproducibility, clean imports,
-    idiomatic save call
+  - Correct bump chart implementation with inverted Y-axis and markers at every data
+    point
+  - Differential line widths for PulseAI and CircleCloud provide intentional visual
+    hierarchy
+  - Endpoint rank callouts (#1-#6) add immediate storytelling value
+  - All theme-adaptive chrome tokens correctly applied — both renders pass readability
+    check with no dark-on-dark or light-on-light failures
+  - 'Clean code: linear structure, idiomatic Makie primitives, proper colsize! layout
+    control'
   weaknesses:
-  - 'No visual storytelling emphasis — all 6 series have equal visual weight; consider
-    thickening or highlighting the most dramatic trajectories (e.g. PulseAI''s rise
-    to #1 or CircleCloud''s fall) to create a focal point'
-  - 'DE-03 LOW: No annotations or callout markers on key crossing events or final
-    rank positions; a bump chart benefits greatly from endpoint rank labels or annotated
-    overtake moments'
-  - 'LM-02: Makie''s distinctive features (e.g. `Makie.LaTeXStrings`, `text!` annotations,
-    `deregister_interaction!` for clean static output, or `rowsize!`/`colsize!` for
-    legend proportioning) are unused — the plot is idiomatic but not showcasing what
-    distinguishes Makie from generic line plotters'
+  - Endpoint callout labels at fontsize=11 are too small at mobile widths (~2.8 px
+    at 400-px display) — increase to fontsize=13 or 14 for better mobile legibility
+  - 'Design excellence could be pushed higher with a slightly larger base fontsize
+    or a brief subtitle/annotation to orient readers to the key story (PulseAI climb
+    to #1)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 fills the entire canvas including margins — correct.
-      Chrome: Title "bump-basic · julia · makie · anyplot.ai" is bold dark ink (#1A1A17), centered, fontsize=20 — fully readable. X-axis label "Quarter" and Y-axis label "Rank" in dark ink, fontsize=14 — readable. Tick labels (Q1'23–Q2'24, 1–6) in INK_SOFT (#4A4A44), fontsize=12 — readable. Left and bottom spines visible; top and right removed (L-frame). Subtle horizontal grid lines in semi-transparent ink. Legend on right with ELEVATED_BG fill (#FFFDF6) and INK_SOFT frame.
-      Data: 6 colored lines using Imprint palette in canonical order — NovaTech (#009E73 green), PulseAI (#C475FD lavender), CircleCloud (#4467A3 blue), ApexRobotics (#BD8233 ochre), QuantumIO (#AE3030 matte red), ShieldSec (#2ABCCD cyan). Each line has circular dot markers (markersize=16) with PAGE_BG stroke ring. Lines cross cleanly, rank 1 at top (inverted Y-axis). All series distinguishable.
-      Legibility verdict: PASS — all text and data elements clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bump-basic · julia · makie · anyplot.ai" at fontsize=20 — readable in dark INK (#1A1A17). Axis labels "Quarter" (x) and "Rank" (y) at fontsize=14 with INK color — readable. Tick labels at fontsize=12 with INK_SOFT (#4A4A44) — readable. Legend labels in INK — readable. Endpoint callout labels (#1-#6) at fontsize=11 — readable at full resolution but very small.
+      Data: Six company lines in Imprint palette order: NovaTech=#009E73 (brand green, first series correct), PulseAI=#C475FD (lavender), CircleCloud=#4467A3 (blue), ApexRobotics=#BD8233 (ochre), QuantumIO=#AE3030 (matte-red), ShieldSec=#2ABCCD (cyan). Markers size=16 with strokecolor=PAGE_BG for crisp definition. Differential line widths: 4.5 for PulseAI and CircleCloud, 3.0 for others.
+      Legibility verdict: PASS (all primary text readable; minor concern: fontsize=11 callouts small at mobile scale)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 fills the entire canvas — correct.
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Axis labels "Quarter" / "Rank" light-colored, readable. Tick labels in INK_SOFT (#B8B7B0), readable — no dark-on-dark failure. Grid lines are subtle semi-transparent light lines. Legend has elevated dark background (#242420), label text is light. Spines (left, bottom) are INK_SOFT colored and visible.
-      Data: Data colors are identical to the light render — NovaTech green, PulseAI lavender, CircleCloud blue, ApexRobotics ochre, QuantumIO red, ShieldSec cyan. Only chrome flipped, not palette colors. Marker strokes now use the dark PAGE_BG, giving the same visual ring effect.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors consistent with light render.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8) — clearly readable. Axis labels in INK — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Legend labels in INK — readable. No dark-on-dark failures detected. All chrome tokens correctly adapted to dark theme.
+      Data: All six series colors are identical to the light render — NovaTech green, PulseAI lavender, CircleCloud blue, ApexRobotics ochre, QuantumIO red, ShieldSec cyan. Marker strokecolor flips to dark PAGE_BG, maintaining definition. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS (all text readable; same minor callout-size concern as light render)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title=20, labels=14, ticks=12 — good
-          hierarchy. Both themes fully readable. Minor: title span is slightly below
-          50% of plot width at fontsize=20 for this short spec-id.'
+        comment: 'Title/axis/tick labels all correctly themed and readable. Deduction:
+          endpoint callout labels at fontsize=11 are too small at 400px mobile display
+          (~2.8px rendered).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Line crossings are expected for bump charts. PAGE_BG
-          marker strokes aid clarity at crossing points.
+        comment: No overlap between lines, markers, callout labels, or legend entries.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 6 series clearly visible. markersize=16 is appropriate for 36
-          sparse data points. linewidth=3.0 appropriate for 6 series.
+        comment: Markers size=16 with strokecolor=PAGE_BG for crisp definition. Line
+          widths 3.0-4.5 appropriate for 6 sparse series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. No red-green sole-signal encoding.
+        comment: Full Imprint palette, CVD-safe. Marker stroke adds definition.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Legend placed in fig[1,2] grid position. No overflow
-          or clipping. Y-axis inverted correctly. Proportions balanced.
+        comment: Canvas gate passed (3200x1800). Legend column at Relative(0.18).
+          No clipping or overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format. Axis labels Quarter/Rank are descriptive
-          for this chart type.
+        comment: Quarter and Rank are descriptive; title format matches spec.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series NovaTech = #009E73. All 6 companies use canonical Imprint
-          order. Background #FAF8F1 light / #1A1A17 dark. Chrome adapts correctly.'
+        comment: 'First series #009E73, canonical Imprint order, correct backgrounds
+          both themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -115,25 +103,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Imprint palette applied correctly, marker strokes add polish, L-frame
-          spine treatment is intentional. Missing: no focal point, no emphasis on
-          interesting trajectories — all series equal visual weight.'
+        comment: 'Above default: differential line widths and endpoint callouts show
+          intentional hierarchy. Falls short of top tier.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, Y-only grid at alpha=0.12, elevated legend
-          background, marker outlines. Solid refinements but no extra touches like
-          custom line spacing or rank-label callouts.
+        comment: Top/right spines removed, Y-only grid at 0.12 opacity, ELEVATED_BG
+          on legend frame.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Data has rich stories (PulseAI's climb, CircleCloud's fall) but no
-          visual emphasis, annotations, or highlighted narrative. Bump charts especially
-          benefit from endpoint labels or key-crossing callouts.
+        passed: true
+        comment: Differential line widths encode dramatic arcs; endpoint callouts
+          provide final standings; Y-axis inversion correct.
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bump chart: rank over time with connected lines and dot
-          markers, inverted Y-axis.'
+        comment: Correct bump chart with lines + dot markers per period.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Y-axis inverted, distinct colors per entity, dot markers at each
-          period, lines connect same entity across all periods.
+          period, lines connect each entity.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters, Y=rank. All 6 companies across 6 periods shown. Axes
-          display all data.
+        comment: X=time period, Y=rank; all 6x6 data points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'bump-basic · julia · makie · anyplot.ai'. Legend labels
+        comment: Title exactly bump-basic · julia · makie · anyplot.ai; legend labels
           match company names.
     data_quality:
       score: 15
@@ -175,23 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key bump chart patterns: rank inversion (NovaTech/CircleCloud
-          swap #1), steady climb (PulseAI), stability (ApexRobotics), fall (ShieldSec).
-          Comprehensive feature coverage.'
+        comment: 'All bump-chart features demonstrated: rising, falling, stable trajectories
+          across 6 entities and 6 periods.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech startup investor-ranking competition. Plausible company names,
-          realistic progression patterns. Neutral domain.
+        comment: Tech startup investor-ranking scenario is plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 6 entities × 6 periods — within spec range (5-10 entities, 4-8 periods).
-          Rankings 1-6 are valid for 6 entities.
+        comment: 6 entities, complete permutation matrix, 6 quarters — appropriate
+          for this chart type.
     code_quality:
       score: 10
       max: 10
@@ -201,33 +182,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean top-to-bottom procedural structure.
+        comment: Linear script, no unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present.
+        comment: Random.seed!(42) present; rankings are deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three are used.
+        comment: CairoMakie, Colors, Random all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean for-loop for multi-series rendering. LineElement array for
-          legend. Appropriate complexity.
+        comment: Clean iteration loop; no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save('plot-$(THEME).png', fig; px_per_unit=2) — correct format. Uses
-          `size` (current Makie API, replacing legacy `resolution`).
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct.
     library_mastery:
       score: 7
       max: 10
@@ -237,22 +216,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic CairoMakie: Axis attributes set at construction, lines!/scatter!
-          compound plot, Legend in fig grid, RGBAf for alpha colors. Solid usage throughout.'
+        comment: Correct use of lines!, scatter!, text!, Legend with LineElement,
+          colsize!, RGBAf.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'Good use of Makie-specific features: figure grid layout for legend
-          placement, LineElement custom legend handles, strokecolor/strokewidth on
-          scatter markers. However, no use of more distinctive Makie capabilities
-          like text! for endpoint labels, rowsize!/colsize! for layout tuning, or
-          other advanced Makie idioms.'
+        passed: true
+        comment: text! for endpoint callouts, LineElement for legend, colsize! Relative
+          for column sizing, RGBAf semi-transparent grid.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   - manual-ticks
   patterns:
