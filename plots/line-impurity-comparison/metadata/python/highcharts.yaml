@@ -1,49 +1,55 @@
 library: highcharts
+language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:52:46Z'
-updated: '2026-02-17T19:07:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22111342642
+updated: '2026-05-29T01:06:17Z'
+generated_by: claude-sonnet
+workflow_run: 26611238697
 issue: 4133
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/highcharts/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent text legibility with all font sizes explicitly configured for the 4800x2700
-    canvas
-  - Strong design sophistication with refined legend (shadow, border, padding), annotation
-    boxes, and polished tooltip styling
-  - Complete spec compliance including formulas in legend, annotation at p=0.5, and
-    proper edge case handling at p=0 and p=1
-  - 'Good use of distinctive Highcharts features: SplineSeries, AreaRangeSeries for
-    fill between curves, annotations API, plotLines with labels'
-  - Clean KISS code structure with appropriate complexity
+  - 'Correct Imprint palette: brand green (#009E73) for Gini as first series, lavender
+    (#C475FD) for Entropy as second series, both themes render with correct backgrounds
+    and readable chrome'
+  - 'Full spec compliance: both curves with formulas in legend, annotation at p=0.5,
+    reference lines at both maxima with labeled values, edge-case handling for entropy
+    at p=0 and p=1'
+  - 'Excellent use of Highcharts-distinctive features: AreaRangeSeries fill between
+    curves, plotLines with labels on y-axis, annotations API for the p=0.5 callout'
+  - 'Strong data storytelling: subtitle explains the key insight, annotation quantifies
+    both maxima, fill region visualizes the difference — viewer immediately sees the
+    educational message'
+  - 'Perfect technical execution: all font sizes explicitly set, canvas exactly 3200x1800,
+    both HTML and PNG artifacts saved, PIL belt-and-braces canvas normalization included'
   weaknesses:
-  - The area range fill between the two curves is extremely subtle (opacity 0.08)
-    — making it slightly more visible would better highlight the difference region
-  - The plotLines reference labels (Gini max = 0.5, Entropy max = 1.0) at the far
-    right edge are somewhat small compared to other text and could be more prominent
-  - Data storytelling could be enhanced — the plot does not communicate why the similarity
-    between Gini and entropy matters in practice
-  image_description: 'The plot displays two smooth spline curves on a light gray (#fafafa)
-    background. A blue (Python Blue #306998) curve represents Gini Impurity: 2p(1-p),
-    rising from (0,0) to a peak of 0.5 at p=0.5, then descending back to (1,0). An
-    orange (#E8793A) curve represents Entropy: -p log2p - (1-p) log2(1-p), following
-    a similar arc but peaking at 1.0 at p=0.5. A very subtle shaded area fills the
-    region between the two curves. Horizontal dashed reference lines are drawn at
-    y=0.5 (labeled "Gini max = 0.5" in blue on the right) and y=1.0 (labeled "Entropy
-    max = 1.0" in orange on the right). An annotation box near p=0.5 reads "Both peak
-    at p = 0.5 / Entropy = 1.0 | Gini = 0.5". The legend in the top-right corner lists
-    both series with their mathematical formulas. Title reads "line-impurity-comparison
-    · highcharts · pyplots.ai" with subtitle "Gini Impurity vs Entropy as Decision
-    Tree Splitting Criteria". X-axis labeled "Probability (p)" from 0 to 1, Y-axis
-    labeled "Impurity Measure" from 0 to ~1.1. Dotted grid lines provide readability.'
+  - 'Legend box border adds visual noise on the elevated-background box — consider
+    removing the border (borderWidth: 0) or softening it to let the data breathe more
+    cleanly'
+  - 'DE-01: Design is well-configured Highcharts but not yet FiveThirtyEight-level
+    polish — removing the legend frame border and adding some typographic weight variation
+    could lift it further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold dark title ("line-impurity-comparison · python · highcharts · anyplot.ai") fully visible; subtitle in secondary text below; "Probability (p)" x-axis label and "Impurity Measure [0–1]" y-axis label both dark and clear; tick labels (0, 0.1 … 1.0 on x; 0, 0.2 … 1.0 on y) readable in INK_SOFT; legend box top-right with bordered background shows both series names with formulas
+      Data: Gini curve in brand green #009E73, Entropy curve in lavender #C475FD; AreaRange fill between curves in lavender at 15% opacity; dashed y-axis plotLines at 0.5 (green) and 1.0 (lavender) with "Gini max = 0.5" / "Entropy max = 1.0" labels; annotation box at p=0.5 reading "Both peak at p = 0.5 / Entropy = 1.0 | Gini = 0.5"
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark brownish-black, not pure black
+      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light cream/off-white text; clearly readable against the dark surface; legend text light-colored; no dark-on-dark text failures
+      Data: Gini green #009E73 and Entropy lavender #C475FD are identical to the light render; AreaRange fill at 15% opacity creates a dark-purple shaded region between curves; reference plotLines, annotation box (slightly elevated dark background #242420 with light text), all visible
+      Legibility verdict: PASS — all text readable against near-black background; dark chrome tokens correctly applied throughout
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,63 +57,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 56px, subtitle 36px, axis titles
-          40px, tick labels 32px, legend 34px, annotation 28px'
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, annotations 36px); proportionate layout; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements; annotation box placed cleanly at p=0.5;
+          legend does not overlap curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 6 excellent for 4800x2700 canvas
+        comment: Both spline curves clearly visible with lineWidth=7; AreaRange fill
+          adds depth without obscuring data; no markers on 200-point smooth curves
+          (correct)
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1 and 2 are CVD-safe distinct hues; green/lavender
+          distinguishable without relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue and orange colorblind-safe with high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: false
-        comment: Plot lines reference labels at far right edge slightly faint
+        comment: Canvas exactly 3200x1800; plot fills ~70% of canvas area; balanced
+          margins (160-200px); no elements cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but dimensionless quantities lack units
+        passed: true
+        comment: 'X: ''Probability (p)'' descriptive with unit; Y: ''Impurity Measure
+          [0-1]'' descriptive with range'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); second series #C475FD (Imprint
+          position 2); backgrounds #FAF8F1 light / #1A1A17 dark; all chrome theme-adaptive'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Publication-ready: custom palette, title/subtitle hierarchy, refined
-          legend with shadow/border'
+        comment: 'Strong design: custom Imprint palette, subtitle adds context, fill
+          area adds depth, formula-text in legend shows sophistication — above default
+          but legend box border adds slight visual noise'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Dotted grid, no axis lines, generous whitespace, shadow on legend,
-          crosshair styling
+        comment: 'Good: subtle dotted grid, clean data area, generous whitespace;
+          legend box border is present and adds some weight'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Annotation and plotLines create narrative but area fill too subtle
-          and missing practical context
+        passed: true
+        comment: 'Good storytelling: subtitle explains key insight, annotation at
+          p=0.5 quantifies both maxima, fill region shows difference, reference lines
+          create visual anchors'
     spec_compliance:
       score: 15
       max: 15
@@ -117,49 +138,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line/spline comparison chart
+        comment: Correct line comparison chart with SplineSeries for smooth curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: curves with formulas, annotation at p=0.5,
-          grid, edge cases'
+        comment: Both curves present, legend with formulas, annotation at p=0.5, edge
+          cases handled, grid, normalization to [0,1]
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability [0,1], Y=impurity measure correctly assigned
+        comment: 'X: probability [0,1]; Y: impurity [0,1.1]; 200 smooth points; both
+          curves fully visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels include mathematical formulas
+        comment: Title exactly 'line-impurity-comparison · python · highcharts · anyplot.ai';
+          legend shows both series with mathematical formulas
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Shows both curves and their relationship but missing deeper practical
-          context
+        passed: true
+        comment: Full probability range [0,1]; both functions shown; convergence at
+          boundaries; both maxima highlighted; difference region visualized
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real ML educational scenario with mathematically correct formulas
+        comment: Mathematically correct ML theory visualization; neutral educational
+          topic; real-world applicable to decision tree algorithm selection
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically exact values, 200 points for smooth curves
+        comment: Both functions normalized to [0,1]; correct mathematical formulas;
+          y-axis to 1.1 gives breathing room; x-axis exactly [0,1]
     code_quality:
       score: 10
       max: 10
@@ -169,58 +194,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, chart config, series, export'
+        comment: 'Flat script: imports → data → chart config → series → export; no
+          unnecessary functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical functions, no randomness
+        comment: 'Fully deterministic: np.linspace + mathematical formulas, no randomness'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used including AreaRangeSeries
+        comment: 'All imports used: os, tempfile, time, urllib.request, Path, numpy,
+          highcharts_core classes, PIL.Image, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean Pythonic code
+        comment: Clean, well-organized; appropriate comments explaining non-obvious
+          decisions (canvas sizing approach, edge case handling)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, also produces plot.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current highcharts_core
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good use of Highcharts Python API: HighchartsOptions, SplineSeries,
-          AreaRangeSeries, annotations, plotLines'
+        comment: Expert use of Chart(container='container'), HighchartsOptions, SplineSeries,
+          AreaRangeSeries, plotLines, annotations API — all idiomatic Highcharts patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: SplineSeries, AreaRangeSeries, annotations API, plotLines with labels,
-          crosshair, shared tooltip
+        comment: AreaRangeSeries fill between curves (Highcharts-specific), plotLines
+          with labeled value markers, annotations API callout at p=0.5, shared crosshair
+          tooltip — multiple distinctively Highcharts features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
