@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bump-basic: Basic Bump Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-29
+Quality: 90/100 | Updated: 2026-05-29
 """
 
 import os

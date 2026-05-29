@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:13Z'
-updated: '2026-05-29T13:20:11Z'
+updated: '2026-05-29T13:33:55Z'
 generated_by: claude-sonnet
 workflow_run: 26638997085
 issue: 982
@@ -12,44 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Alpha hierarchy creates clear visual emphasis — Apple/Microsoft top-2 swap is
-    prominently visible at full alpha while lower-ranked companies recede
-  - End-of-line company labels replace legend cleanly — eliminates visual clutter
-    while maintaining clear entity identification
-  - Distinct marker shapes per company (circle, square, diamond, triangle, plus) provide
-    redundant CVD-safe encoding for 5 series
-  - Imprint palette correctly applied in canonical order with brand green (#009E73)
-    for Apple as first series
-  - Both light and dark renders pass full legibility check — theme-adaptive chrome
-    correctly propagated throughout
-  - Realistic, topical data (tech company market cap Q1\u201922\u2013Q4\u201923) with
-    correct rank inversion (rank 1 at top) matching spec
+  - Correct Imprint palette with Apple (#009E73) first, canonical order for remaining
+    4 companies
+  - Alpha hierarchy de-emphasizes lower-ranked companies, creating clear visual prominence
+    for Apple and Microsoft
+  - Amber dashed vertical line + 'overtake' annotation at Q2'23–Q3'23 crossing is
+    an excellent storytelling device
+  - End-of-line direct labels replace the legend cleanly, reducing visual clutter
+  - Distinct marker shapes per company (circle/square/diamond/triangle/cross) provide
+    redundant encoding for CVD safety
+  - Y-axis correctly inverted with rank 1 at top; only y-axis grid shown at alpha=0.15;
+    spines removed via sns.despine
+  - Theme-adaptive chrome fully implemented — light (#FAF8F1) and dark (#1A1A17) backgrounds,
+    all text/grid tokens flip correctly
+  - 'Data is factually grounded: Microsoft did overtake Apple in late 2023, Nvidia
+    did rise dramatically due to AI boom'
   weaknesses:
-  - 'DE-01 moderate: Design is competent but not publication-ready — the dramatic
-    Apple/Microsoft crossing at Q2-Q3\u201923 is the most interesting story moment
-    but receives no annotation or highlight'
-  - 'DE-02: Crossing points in the chart are not visually emphasized; a subtle dot
-    enlargement or annotation at the overtake point would improve storytelling'
-  - 'LM-02: Only axes-level lineplot is used — seaborn figure-level capabilities are
-    not leveraged'
+  - The 'overtake' annotation is at fontsize=7pt (~39 source pixels), which at 400px
+    mobile width renders as ~5px — nearly invisible at small display sizes. Consider
+    bumping to fontsize=8pt or 9pt.
+  - 'LM-02 is limited: most of the bump-chart logic is matplotlib-level code (line
+    alpha loops, ax.annotate); seaborn''s distinctive FacetGrid / multi-encoding features
+    (hue+style+markers simultaneously via relplot) are used well but the annotation
+    layer is library-agnostic.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "bump-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable at fontsize 12. X-axis label "Quarter" and Y-axis label "Market Cap Rank" both dark ink at fontsize 10 — readable. Tick labels (Q1'22...Q4'23, ranks 1–5) in INK_SOFT at fontsize 8 — readable. End-of-line labels ("Microsoft", "Apple", "Nvidia", "Alphabet", "Amazon") in their respective palette colors at fontsize 8 — readable.
-      Data: 5 companies with Imprint palette in canonical order: Apple=#009E73 (green, circles), Microsoft=#C475FD (lavender, squares), Amazon=#4467A3 (blue, diamonds), Alphabet=#BD8233 (ochre, triangles), Nvidia=#AE3030 (red, plus). Lines width=3 with prominent markersize=14. Alpha hierarchy at 1.0 (Apple, Microsoft), 0.75 (Nvidia, rank 3), 0.55 (Alphabet, Amazon). Y-axis inverted — rank 1 at top. Subtle Y-axis-only grid. Apple/Microsoft rank swap at Q2-Q3'23 is clearly visible.
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bump-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable at top. Y-axis label "Market Cap Rank" and X-axis label "Quarter" in dark ink at fontsize=10. Tick labels (Q1'22–Q4'23 on X; 1–5 on Y) in secondary ink (#4A4A44) at fontsize=8. End-of-line company labels ("Microsoft", "Apple", "Nvidia", "Alphabet", "Amazon") in their respective data colors at fontsize=8 — all readable.
+      Data: 5 companies rendered with Imprint palette in canonical order: Apple=#009E73 (circles), Microsoft=#C475FD (squares), Amazon=#4467A3 (diamonds), Alphabet=#BD8233 (triangles), Nvidia=#AE3030 (crosses). Alpha hierarchy applied — Apple and Microsoft at full opacity, Nvidia at 0.75, Alphabet/Amazon at 0.55. Amber (#DDCC77) dashed vertical line at Q2.5'23 marks the crossing, with an "overtake" label in amber italic at fontsize=7.
+      Legibility verdict: PASS — all critical text is readable. The "overtake" annotation at 7pt is very small but intentionally tertiary.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, tick labels all rendered in light INK (#F0EFE8) — clearly readable against dark background. End-of-line company labels in their palette colors — visible (ochre #BD8233 for Alphabet is lighter contrast on dark bg but still readable). No dark-on-dark failures observed.
-      Data: Imprint palette colors identical to light render — Apple green, Microsoft lavender, Amazon blue, Alphabet ochre, Nvidia red. Alpha hierarchy preserved. All data elements clearly distinguishable from dark background.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures; brand green #009E73 clearly visible.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly visible. Axis labels and tick labels in light secondary tone (#B8B7B0). Grid lines subtle. End-of-line labels in their respective data colors — all readable against dark background. No dark-on-dark failures observed. Brand green #009E73 (Apple) remains clearly visible on dark background.
+      Data: Colors are identical to the light render — Apple=#009E73, Microsoft=#C475FD, Amazon=#4467A3, Alphabet=#BD8233, Nvidia=#AE3030. Alpha hierarchy preserved. Amber dashed vertical line visible. "overtake" annotation in amber, readable.
+      Legibility verdict: PASS — all text is readable against the dark background. No chrome inversion failures. Data colors match light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,76 +60,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, ticks 8pt — all readable in both themes;
-          end-of-line annotations at 8pt are small but legible
+        comment: 'All font sizes explicitly set (title=12, axis=10, ticks=8, labels=8).
+          Well-proportioned in both renders. Minor: ''overtake'' annotation at fontsize=7
+          (~5px at 400px mobile) is nearly invisible at small display sizes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data overlaps; end-of-line labels at distinct rank positions
-          avoid collision
+        comment: No overlapping text or data elements. End-of-line labels are well-spaced.
+          'overtake' annotation does not collide with line markers.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Large markers (size=14) and thick lines (width=3) are prominent;
-          0.55 alpha on 2 lower companies slightly reduces their visibility but is
-          a deliberate design choice
+        comment: markersize=14 and linewidth=3 are appropriate for 5 entities with
+          8 time points (sparse data). Alpha hierarchy is intentional and still keeps
+          all series distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with redundant marker shapes — excellent CVD safety
-          for 5 series
+        comment: Imprint palette with distinct marker shapes per company provides
+          redundant encoding. CVD-safe palette with ΔE ≥ 13.7 through n=5.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title at ~65% width; right margin reserved for
-          end-of-line labels; no clipping or overflow
+        comment: subplots_adjust(left=0.09, right=0.87, top=0.90, bottom=0.13) provides
+          generous margins. Right margin extended to accommodate end-of-line labels.
+          Canvas well-utilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly; axis labels descriptive
+        comment: 'Y-axis: ''Market Cap Rank'' (descriptive, no units needed for ordinal
+          ranks). X-axis: ''Quarter'' (descriptive). Title: correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Apple = #009E73; canonical Imprint order; backgrounds
-          #FAF8F1/#1A1A17 correct in both renders'
+        comment: 'First series (Apple) = #009E73. Remaining 4 companies follow canonical
+          Imprint order (#C475FD, #4467A3, #BD8233, #AE3030). Light bg=#FAF8F1, dark
+          bg=#1A1A17. All chrome tokens theme-adaptive. Amber used correctly for warning
+          annotation.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default (4): alpha hierarchy and end-of-line labels show design
-          intent; but no annotation at key crossing events and no title hierarchy
-          variation'
+        comment: 'Strong design: alpha hierarchy creates perceptual prominence for
+          top-ranked companies, direct end-of-line labels eliminate legend clutter,
+          crossing highlight annotation adds narrative layer. Clearly above a well-configured
+          default.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed via despine, Y-axis-only grid, X-axis grid disabled
-          — clean but not exceptional
+        comment: Spines removed via sns.despine, y-only grid at alpha=0.15, generous
+          margins via subplots_adjust, no legend box. Good refinement visible.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Alpha hierarchy drives focus to Apple/Microsoft swap; but the most
-          dramatic crossing moment is not explicitly annotated or highlighted
+        comment: 'Visual hierarchy guides the reader: alpha de-emphasizes lower-ranked
+          companies, amber crossing line + ''overtake'' annotation direct attention
+          to the key event. Story is clear (Microsoft overtook Apple; Nvidia rose
+          sharply). Good storytelling.'
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart — ranked lines with markers over time periods
+        comment: 'Correct bump chart: rank on inverted Y-axis, time on X-axis, connected
+          lines per entity, dot markers at each period.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, dot markers at each period, lines connecting same
-          entity, distinct colors and labels
+        comment: Y-axis inverted (rank 1 at top), distinct colors and labels for each
+          entity, dot markers at each period, lines connecting same entity across
+          all periods.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Quarter (time), Y=Market Cap Rank (inverted), all 5 companies across
-          all 8 periods
+        comment: Quarter on X, Rank on Y (inverted). All 5 companies × 8 quarters
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bump-basic · python · seaborn · anyplot.ai'; end-of-line
-          labels identify all companies
+        comment: Title is exactly 'bump-basic · python · seaborn · anyplot.ai'. End-of-line
+          labels correctly identify all 5 companies.
     data_quality:
       score: 15
       max: 15
@@ -167,22 +180,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple entities, multiple periods, rank changes, rank inversions,
-          crossings — all bump chart aspects shown
+        comment: 'Shows rank stability (Apple at #1 for 6 quarters), crossing/overtake
+          (Apple↔Microsoft), dramatic rise (Nvidia #5→#3), and rank swapping (Amazon/Alphabet).
+          All key bump chart dynamics represented.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech company market cap rankings 2022-2023 — real-world, topical,
-          neutral data
+        comment: Tech company market cap rankings by quarter (2022–2023). Real-world
+          business scenario, neutral, comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 entities × 8 quarters — within spec's 5-10 entities, 4-8 periods
-          guidance
+        comment: 'Factually grounded: Microsoft did overtake Apple in market cap in
+          late 2023; Nvidia did rise dramatically due to AI hardware demand. Proportions
+          are historically accurate.'
     code_quality:
       score: 10
       max: 10
@@ -192,33 +207,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script
+        comment: 'Linear structure: imports → tokens → data → theme setup → plot →
+          style → annotations → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data — fully deterministic
+        comment: Fully deterministic — hardcoded rank data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, pandas, seaborn — all used
+        comment: Only os, matplotlib.pyplot, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; alpha hierarchy and annotation loops are clean and concise
+        comment: Clean, idiomatic. Alpha loop and end-of-line annotation loop are
+          appropriate complexity for the effect. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; no bbox_inches='tight'; seaborn 0.14+ compatible
+        comment: Saves as plot-{THEME}.png. Uses current seaborn 0.13 API. No bbox_inches='tight'.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,25 +243,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.lineplot with hue+style+markers, sns.set_theme with rc params,
-          sns.despine — idiomatic seaborn patterns
+        comment: Uses sns.relplot with kind='line', hue, style, markers simultaneously
+          — seaborn's figure-level multi-encoding API. sns.set_theme with rc dict
+          for theme-adaptive chrome. sns.despine for spine removal. Good idiomatic
+          usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: hue_order, per-company marker dict via style parameter — seaborn-specific
-          features used; figure-level API not leveraged
+        comment: Multi-level encoding via relplot(hue + style + markers) is a distinctive
+          seaborn feature. However, annotation and alpha loop code is library-agnostic
+          matplotlib. Some distinctive features used.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - custom-legend
   patterns:
-  - wide-to-long
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
