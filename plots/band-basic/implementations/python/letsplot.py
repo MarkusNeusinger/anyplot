@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
-Library: letsplot 4.8.2 | Python 3.14
-Quality: 91/100 | Updated: 2026-02-23
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-29
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -23,7 +25,6 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
-    layer_tooltips,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -33,73 +34,70 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Data - sensor temperature readings with 95% confidence interval
-np.random.seed(42)
-time_seconds = np.linspace(0, 10, 100)
-temp_mean = 2 * np.sin(time_seconds) + 0.5 * time_seconds  # Central trend
-uncertainty = 0.3 + 0.15 * time_seconds  # Growing uncertainty over time
-temp_lower = temp_mean - 1.96 * uncertainty  # 95% CI lower bound
-temp_upper = temp_mean + 1.96 * uncertainty  # 95% CI upper bound
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-df = pd.DataFrame({"time": time_seconds, "mean": temp_mean, "lower": temp_lower, "upper": temp_upper})
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BAND_FILL = IMPRINT_PALETTE[0]  # brand green — Imprint position 1
+LINE_COLOR = IMPRINT_PALETTE[2]  # blue — Imprint position 3
 
-# Annotation with arrow connector pointing to the widening band region
-annot_df = pd.DataFrame({"x": [7.0], "y": [9.2], "label": ["Growing uncertainty"]})
-target_idx = np.argmin(np.abs(time_seconds - 9.5))
-arrow_df = pd.DataFrame({"x": [8.7], "y": [9.0], "xend": [9.5], "yend": [temp_upper[target_idx] + 0.15]})
+# Data — battery capacity exponential decay over charge cycles (95% tolerance band)
+cycles = np.linspace(0, 500, 100)
+capacity_mean = 100 * np.exp(-0.002 * cycles)
+tolerance = 2.5 + 0.008 * cycles
+capacity_lower = capacity_mean - 1.96 * tolerance
+capacity_upper = capacity_mean + 1.96 * tolerance
 
-# Plot
+df = pd.DataFrame({"cycles": cycles, "mean": capacity_mean, "lower": capacity_lower, "upper": capacity_upper})
+
+# Annotation — arrow pointing to widening lower band edge at cycle ~450
+idx_450 = np.argmin(np.abs(cycles - 450))
+annot_df = pd.DataFrame({"x": [285], "y": [18.5], "label": ["Widening tolerance band"]})
+arrow_df = pd.DataFrame({"x": [375], "y": [20.5], "xend": [450], "yend": [float(capacity_lower[idx_450]) + 0.5]})
+
+title = "band-basic · python · letsplot · anyplot.ai"
+
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_x=element_blank(),
+    panel_grid_major_y=element_line(color=INK_MUTED, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(size=16, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG),
+    legend_text=element_text(size=10, color=INK_SOFT),
+)
+
 plot = (
-    ggplot(df, aes(x="time"))
-    # Baseline reference at 0°C
-    + geom_hline(yintercept=0, color="#BBBBBB", size=0.7, linetype="dashed", tooltips="none")
-    + geom_ribbon(
-        aes(ymin="lower", ymax="upper"),
-        fill="#306998",
-        size=0,
-        alpha=0.2,
-        tooltips=layer_tooltips()
-        .format("lower", "{.2f}")
-        .format("upper", "{.2f}")
-        .line("95% CI")
-        .line("Upper|@upper")
-        .line("Lower|@lower"),
-    )
-    + geom_line(
-        aes(y="mean"),
-        color="#C75B2E",
-        size=2.0,
-        tooltips=layer_tooltips()
-        .format("mean", "{.2f}")
-        .format("time", "{.1f}")
-        .line("Time|@time s")
-        .line("Mean|@mean"),
-    )
-    # Arrow connector from annotation to widening band
+    ggplot(df, aes(x="cycles"))
+    + geom_hline(yintercept=80, color=INK_MUTED, size=0.8, linetype="dashed", tooltips="none")
+    + geom_ribbon(aes(ymin="lower", ymax="upper"), fill=BAND_FILL, alpha=0.25, size=0)
+    + geom_line(aes(y="mean"), color=LINE_COLOR, size=1.5)
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=arrow_df,
-        color="#555555",
+        color=INK_SOFT,
         size=0.7,
         arrow=arrow(length=8, type="open"),
         tooltips="none",
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=annot_df, size=12, color="#444444")
-    + labs(x="Time (s)", y="Temperature (\u00b0C)", title="band-basic \u00b7 letsplot \u00b7 pyplots.ai")
-    + scale_x_continuous(limits=[-0.3, 10.8])
-    + scale_y_continuous(limits=[-2.2, 9.5], expand=[0, 0.02])
+    + geom_text(aes(x="x", y="y", label="label"), data=annot_df, size=5, color=INK_SOFT)
+    + labs(x="Charge Cycles", y="Capacity (%)", title=title)
+    + scale_x_continuous(limits=[-15, 520])
+    + scale_y_continuous(limits=[10, 110])
     + theme_minimal()
-    + theme(
-        axis_title=element_text(size=20, color="#333333"),
-        axis_text=element_text(size=16, color="#555555"),
-        plot_title=element_text(size=24, color="#222222"),
-        panel_grid_major=element_line(size=0.3, color="#E8E8E8"),
-        panel_grid_minor=element_blank(),
-        plot_background=element_rect(color="white", fill="white", size=0),
-    )
-    + ggsize(1600, 900)
+    + anyplot_theme
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-plot.to_html("plot.html")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
