@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
@@ -9,6 +9,7 @@ import os
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.interpolate import CubicSpline
 
 
 # Theme
@@ -52,8 +53,11 @@ for driver, ranks in rankings.items():
     ranks_arr = np.array(ranks)
     col = colors[driver]
 
-    # Line
-    ax.plot(x, ranks_arr, linewidth=2.0, color=col, zorder=3, solid_capstyle="round")
+    # Smooth S-curve bump line via cubic spline interpolation
+    cs = CubicSpline(x, ranks_arr)
+    x_smooth = np.linspace(x[0], x[-1], 300)
+    y_smooth = cs(x_smooth)
+    ax.plot(x_smooth, y_smooth, linewidth=2.0, color=col, zorder=3, solid_capstyle="round")
 
     # Markers — size encodes rank prominence: rank 1 → largest, rank 7 → smallest
     marker_s = [max(50, 180 - (r - 1) * 22) for r in ranks_arr]
@@ -77,7 +81,7 @@ ax.invert_yaxis()
 
 # Labels
 title = "bump-basic · python · matplotlib · anyplot.ai"
-ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.set_title(title, fontsize=13, fontweight="medium", color=INK, pad=8)
 ax.set_xlabel("Grand Prix", fontsize=10, color=INK)
 ax.set_ylabel("Championship Position", fontsize=10, color=INK)
 
