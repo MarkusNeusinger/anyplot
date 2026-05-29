@@ -1,15 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
-Library: plotly 6.5.2 | Python 3.14
-Quality: 90/100 | Updated: 2026-02-23
+Library: plotly | Python 3.13
+Quality: pending | Updated: 2026-05-29
 """
+
+import os
+import sys
+
+
+# Prevent this file's directory from shadowing the installed plotly package.
+# When Python runs "python plotly.py" it inserts the script's directory as
+# sys.path[0], which causes "import plotly" to resolve to this file itself.
+_impl_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != "" and os.path.normpath(p) != os.path.normpath(_impl_dir)]
+del _impl_dir
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+
 # Data
-np.random.seed(42)
 hours = np.linspace(0, 48, 100)
 # Sensor temperature reading with slight oscillation
 temperature = 20 + 0.15 * hours + 1.5 * np.sin(hours * 0.3)
@@ -21,13 +40,13 @@ temp_upper = temperature + 1.96 * uncertainty
 # Plot
 fig = go.Figure()
 
-# Band (fill between lower and upper bounds)
+# Band (fill between lower and upper bounds using concat/toself pattern)
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([temp_upper, temp_lower[::-1]]),
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.25)",
+        fillcolor="rgba(0,158,115,0.25)",
         line={"width": 0},
         hoverinfo="skip",
         showlegend=True,
@@ -41,7 +60,7 @@ fig.add_trace(
         x=hours,
         y=temperature,
         mode="lines",
-        line={"color": "#306998", "width": 3},
+        line={"color": BRAND, "width": 3},
         name="Measured Temperature",
         customdata=np.stack([temp_lower, temp_upper], axis=-1),
         hovertemplate=(
@@ -53,29 +72,47 @@ fig.add_trace(
     )
 )
 
+title = "band-basic · python · plotly · anyplot.ai"
+
 # Layout
 fig.update_layout(
-    title={"text": "band-basic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Elapsed Time (hours)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "title": {"text": "Elapsed Time (hours)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "linecolor": INK_SOFT,
+        "showgrid": True,
     },
     yaxis={
-        "title": {"text": "Temperature (°C)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "linecolor": INK_SOFT,
+        "showgrid": True,
     },
-    legend={"font": {"size": 16}, "yanchor": "top", "y": 0.99, "xanchor": "left", "x": 0.01, "borderwidth": 0},
-    template="plotly_white",
-    margin={"l": 80, "r": 40, "t": 80, "b": 80},
+    legend={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"size": 10, "color": INK_SOFT},
+        "yanchor": "top",
+        "y": 0.99,
+        "xanchor": "left",
+        "x": 0.01,
+    },
+    margin={"l": 80, "r": 60, "t": 80, "b": 60},
     hoverlabel={"font": {"size": 14}},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
