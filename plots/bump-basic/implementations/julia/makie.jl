@@ -83,17 +83,27 @@ ax = Axis(
     ygridcolor         = GRID_INK,
     xminorgridvisible  = false,
     yminorgridvisible  = false,
+    limits             = (0.3, n_periods + 1.1, nothing, nothing),
 )
 
 for i in 1:n_companies
     ranks = Float64.(rankings[i, :])
     color = IMPRINT_PALETTE[i]
-    lines!(ax, x, ranks; color = color, linewidth = 3.0)
+    # Thicker stroke on the two most dramatic arcs: PulseAI (#1 climber) and CircleCloud (biggest faller)
+    lw = (i == 2 || i == 3) ? 4.5 : 3.0
+    lines!(ax, x, ranks; color = color, linewidth = lw)
     scatter!(ax, x, ranks;
         color       = color,
         markersize  = 16,
         strokecolor = PAGE_BG,
         strokewidth = 2,
+    )
+    # Endpoint rank callouts via Makie's text! — surface final positions for storytelling
+    text!(ax, n_periods + 0.18, Float64(rankings[i, end]);
+        text     = "#$(rankings[i, end])",
+        fontsize = 11,
+        color    = color,
+        align    = (:left, :center),
     )
 end
 
@@ -106,6 +116,9 @@ Legend(
     framecolor      = INK_SOFT,
     labelcolor      = INK,
 )
+
+# Proportion the legend column to ~18% of figure width using colsize!
+colsize!(fig.layout, 2, Relative(0.18))
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
