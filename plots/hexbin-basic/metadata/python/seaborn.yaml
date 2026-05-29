@@ -1,56 +1,54 @@
 library: seaborn
+language: python
 specification_id: hexbin-basic
 created: '2025-12-23T01:30:30Z'
-updated: '2026-02-21T21:09:38Z'
-generated_by: claude-opus-4-6
-workflow_run: 20448651717
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-29T09:26:28Z'
+generated_by: claude-sonnet
+workflow_run: 26628792969
+issue: 859
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - custom-colormap
-  - grid-styling
-  - alpha-blending
 review:
   strengths:
-  - Excellent use of seaborn JointGrid with marginal KDE distributions for hexbin
-    — a sophisticated combination showcasing seaborn distinctive features
-  - Realistic GPS coordinate data with three named clusters creates natural density
-    patterns
-  - LogNorm color scale properly handles wide density variation across clusters
-  - All font sizes explicitly set, viridis colormap, spines removed, subtle grid —
-    production-quality polish
-  - Clean minimal code structure with appropriate complexity
+  - JointGrid with hexbin + marginal KDE distributions is the ideal seaborn-specific
+    approach — showcases library's distinctive joint distribution API
+  - Correct use of imprint_seq (green-to-blue) sequential colormap for continuous
+    density data, with LogNorm that reveals both sparse and dense regions simultaneously
+  - 'Full theme-adaptive chrome: background, ink, tick colors, and colorbar outline
+    all switch correctly between light (#FAF8F1) and dark (#1A1A17) renders'
+  - Realistic NYC GPS coordinate data with three meaningful clusters (downtown, airport,
+    shopping) illustrating real urban traffic hotspot use case
+  - Colorbar placement via figure.add_axes avoids clipping the right marginal KDE
+    — deliberate layout care
+  - No bbox_inches='tight' on savefig — preserves exact 2400×2400 canvas as specified
   weaknesses:
-  - Minor gap between title and top marginal creates unused white space
-  - Marginal distribution panels retain grid lines which looks slightly less polished
-    than the main axes
-  - Colorbar positioning slightly crowds the right side of the layout
-  image_description: 'The plot displays a hexagonal binning density map of simulated
-    GPS coordinates using seaborn''s JointGrid. The main panel shows two distinct
-    clusters of hexagonal bins colored with the viridis colormap (dark purple for
-    low density, through teal/green to bright yellow for high density). The left cluster
-    is elongated vertically centered around longitude -74.00, latitude 40.75, with
-    a secondary density peak toward the north (shopping district merging with downtown).
-    The right cluster is centered around longitude -73.88, latitude 40.78 (airport
-    area). A vertical colorbar on the right shows "Point Count (log scale)" ranging
-    from 10^0 to 10^2+. Top marginal panel shows a bimodal KDE distribution in blue
-    (#306998) with fill, corresponding to the two longitude clusters. Right marginal
-    panel shows a multimodal KDE distribution reflecting the latitude spread. Axis
-    labels read "Longitude (°W)" and "Latitude (°N)". Title at top: "hexbin-basic
-    · seaborn · pyplots.ai". Top and right spines are removed on the main axes, grid
-    is subtle dashed lines at alpha=0.2.'
+  - The imprint_seq colormap (green→blue) produces very similar teal tones at mid-density,
+    making the 10^1 range visually close to the low-density edge; a slight gamma/brightness
+    stretch on the colormap could improve perceptual separation across the mid range
+  - Marginal KDE fill (alpha=0.35) over the dark background renders slightly darker
+    than over the light background — minor aesthetic inconsistency but not a legibility
+    failure
+  - Grid styling uses both INK color (dark ink) for grid.color in the sns.set_theme
+    rc dict at alpha=0.15, then overrides with ax_joint.grid(..., color=INK) — the
+    redundancy is harmless but slightly inconsistent (rc dict alpha=0.15 is ignored
+    when the explicit call sets its own alpha)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed, no pure white.
+      Chrome: Title "hexbin-basic · python · seaborn · anyplot.ai" in dark ink ~12pt, fully readable and centered. X-axis label "Longitude (°W)" and Y-axis label "Latitude (°N)" in dark ink 10pt — balanced and proportional. Tick labels at 8pt in dark muted ink — legible. Colorbar label "Point Count (log scale)" at 10pt in dark ink, readable. Log-scale tick values (10^0, 10^1, 10^2) at 8pt — readable.
+      Data: Hexbin plot showing two main clusters. Left cluster (downtown/Manhattan area, ~-74.0°W, ~40.74–40.80°N) is large and dense. Right cluster (airport area, ~-73.875°W, ~40.775°N) is smaller. Color gradient runs from #009E73 green (low density) to #4467A3 blue (high density) via imprint_seq with log normalization. Marginal KDE distributions in #009E73 with alpha=0.35 fill show bimodal X-distribution and unimodal Y-distribution. Subtle grid lines (alpha~0.15) visible in joint plot area. Top/right spines removed.
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed, not pure black.
+      Chrome: Title, axis labels, tick labels all render in light cream/off-white ink (#F0EFE8) — clearly readable. Colorbar label and tick values render in light ink. No dark-on-dark failures observed. Marginal axes background correctly set to #1A1A17. Colorbar outline in muted light tone (INK_SOFT = #B8B7B0).
+      Data: Hexbin data colors are identical to light render — same green-to-blue gradient, same two-cluster structure. The imprint_seq palette is theme-independent as required. KDE fills in #009E73 render slightly differently against dark background (darker perceived fill) but remain clearly visible. Grid lines visible at low opacity against near-black background.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,43 +56,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt,
-          colorbar label=20pt, colorbar ticks=16pt'
+        comment: 'All font sizes explicitly set (12pt title, 10pt labels, 8pt ticks).
+          Both themes readable. Minor: marginal KDE outline very thin but not a legibility
+          issue.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no collisions between elements
+        comment: No text/data overlap. Colorbar placement carefully avoids right marginal
+          KDE.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexbins well-sized at gridsize=35, density gradients clearly visible,
-          edgecolors=none for clean appearance
+        comment: Hexbin hexagons well-sized (gridsize=35 appropriate for extent).
+          Log normalization ensures low- and high-density bins both visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green-to-blue) is CVD-safe. No red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: JointGrid fills canvas well but gap between title and top marginal,
-          colorbar slightly crowds right side
+        comment: Canvas gate passed (2400x2400). Square format appropriate for JointGrid.
+          Good proportions throughout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude with units, colorbar labeled descriptively
+        comment: Axes labeled with units. Colorbar labeled with scale type. Title
+          follows mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used for continuous density (correct). Marginals use
+          #009E73 (brand green). Both backgrounds theme-correct.'
     design_excellence:
       score: 14
       max: 20
@@ -104,22 +112,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: JointGrid + hexbin + LogNorm + KDE marginals is intentional cohesive
-          design; Python Blue KDE fills complement viridis hexbins
+        comment: JointGrid + hexbin + marginal KDE is a sophisticated composition.
+          Custom imprint_seq with LogNorm. Professional polish. Above default (4)
+          but layout is standard JointGrid pattern.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, grid subtle, edgecolors none on hexbins; marginal
-          panels still show grid lines
+        comment: Spines removed from marginals and joint axes. Subtle grid (alpha=0.15).
+          Custom colorbar placement. Above default (2).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Multiple GPS clusters create natural focal points; log scale reveals
-          full density range
+        comment: Three-cluster NYC structure (downtown/airport/shopping) tells a clear
+          density story. Log colorbar reveals density variation. Above default (2).
     spec_compliance:
       score: 15
       max: 15
@@ -129,25 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning plot
+        comment: Correct hexbin plot via matplotlib hexbin in JointGrid.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, viridis colormap, gridsize parameter, log scale all present
+        comment: Colorbar included, perceptually uniform colormap (imprint_seq), gridsize=35,
+          LogNorm for log-scale color mapping — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude, density mapped to hex color correctly
+        comment: X=longitude, Y=latitude correct. 50,000 points within specified range
+          (1K-1M+).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format hexbin-basic seaborn pyplots.ai correct, colorbar labeled
+        comment: Title is 'hexbin-basic · python · seaborn · anyplot.ai'. No separate
+          legend needed (colorbar serves as the density legend).
     data_quality:
       score: 15
       max: 15
@@ -157,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple density clusters, wide density range, demonstrates hexbin
-          advantage over scatter
+        comment: Shows hexbin density with color gradient, log scale, marginal distributions
+          — covers all aspects of hexbin plot type.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NYC GPS coordinates for urban traffic hotspot analysis, realistic
-          and neutral
+        comment: NYC GPS coordinates for urban traffic analysis — plausible, neutral,
+          real-world relevant.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic NYC coordinates, plausible covariance matrices for spatial
-          density
+        comment: 50,000 points appropriate for hexbin. NYC coordinate ranges accurate.
     code_quality:
       score: 10
       max: 10
@@ -182,31 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save flow, no functions or classes
+        comment: No functions or classes. Sequential, direct code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, seaborn, LogNorm'
+        comment: 'All imports used: os, numpy, seaborn, LinearSegmentedColormap, LogNorm.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with appropriate complexity
+        comment: Clean, appropriate complexity. No fake UI. Colorbar placement code
+          is purposeful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          API.
     library_mastery:
       score: 8
       max: 10
@@ -216,13 +229,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses JointGrid, plot_marginals, sns.set_theme with context; hexbin
-          itself is matplotlib ax.hexbin since seaborn has no native hexbin
+        comment: JointGrid is the idiomatic seaborn API for joint distributions. plot_marginals
+          used correctly. sns.set_theme for theming.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: JointGrid with marginal KDE distributions is distinctively seaborn,
-          hard to replicate easily in other libraries
+        comment: JointGrid with plot_marginals is distinctively seaborn — combining
+          hexbin density with marginal KDE is a feature unique to seaborn's figure-level
+          API.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
