@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -48,7 +48,7 @@ metrics = [
 
 fig = go.Figure()
 n = len(metrics)
-spacing = 0.016
+spacing = 0.025
 row_height = (1.0 - spacing * (n - 1)) / n
 
 for i, m in enumerate(metrics):
@@ -72,7 +72,7 @@ for i, m in enumerate(metrics):
                 "shape": "bullet",
                 "axis": {
                     "range": [0, m["ranges"][-1]],
-                    "tickfont": {"size": 9, "color": INK_SOFT, "family": "Helvetica Neue, Arial, sans-serif"},
+                    "tickfont": {"size": 10, "color": INK_SOFT, "family": "Helvetica Neue, Arial, sans-serif"},
                 },
                 "bar": {"color": bar_color, "thickness": 0.4},
                 "bgcolor": PAGE_BG,
@@ -111,7 +111,7 @@ fig.add_annotation(
 fig.update_layout(
     autosize=False,
     title={
-        "text": "bullet-basic · plotly · pyplots.ai",
+        "text": "bullet-basic · python · plotly · anyplot.ai",
         "font": {"size": 16, "family": "Helvetica Neue, Arial, sans-serif", "color": INK},
         "x": 0.5,
         "xanchor": "center",
