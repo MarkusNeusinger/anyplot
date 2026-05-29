@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: hexbin-basic
 created: '2026-05-29T09:38:57Z'
-updated: '2026-05-29T09:46:52Z'
+updated: '2026-05-29T09:59:55Z'
 generated_by: claude-sonnet
 workflow_run: 26629619110
 issue: 859
@@ -12,48 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Correct hexbin implementation using Makie's native hexbin! recipe with all spec
-    features
-  - Full theme-adaptive chrome across light and dark renders — all tokens (INK, INK_SOFT,
-    PAGE_BG) wired to every axis and colorbar element
-  - Realistic multi-cluster urban GPS dataset with varied cluster densities and plausible
-    named districts
-  - 'Clean, idiomatic Makie layout system usage: colsize!, colgap!, and proportional
-    Relative() sizing'
-  - 'Perfect spec compliance: colorbar, Imprint sequential colormap, bins parameter,
-    axis labels with units'
+  - 'Full spec compliance: hexbin plot with colorbar, perceptually uniform colormap,
+    and log colorscale all present'
+  - Theme-adaptive chrome correctly implemented — all INK/INK_SOFT/PAGE_BG tokens
+    applied to every axis and colorbar element, dark mode renders without any dark-on-dark
+    failures
+  - Realistic multi-cluster GPS dataset with named hotspot areas adds narrative context
+  - Log10 colorscale is the right call for data where density spans multiple orders
+    of magnitude
+  - 'Clean code structure: flat script, reproducible seed, no unnecessary complexity'
+  - colsize! and Relative() used correctly for proportional colorbar sizing
   weaknesses:
-  - Design sophistication is at the configured-default level (DE-01=4/8) — no focal-point
-    emphasis, no annotation calling out the highest-density city center cluster to
-    guide the viewer
-  - 'Data storytelling is minimal (DE-03=3/6): the four clusters are well-chosen but
-    nothing visually directs the reader to the key insight; consider using a text
-    annotation or a differently-sized marker/ring to highlight the peak density hex'
-  - LM-02 scores low (2/5) — the implementation uses hexbin! and the layout system
-    but does not leverage other Makie-distinctive capabilities such as Colorbar.ticks
-    customization, a custom logarithmic colorscale (colorscale = log10), or CairoMakie-specific
-    rendering options that would showcase deeper library mastery
-  - 'Minor verbosity: Float32(INK.r) casts are unnecessary since Colors.jl already
-    returns Float32 channel values from colorant literals — use RGBAf(INK.r, INK.g,
-    INK.b, 0.12f0) directly'
-  - 'No log scale on the colorbar: with density ranging from ~1 to 250+, a log scale
-    would better surface the mid-density clusters and prevent the low-density periphery
-    from washing out'
+  - Colorbar tick labels show auto-generated linear values (~50, 100, 150, 200) instead
+    of the custom log-landmark ticks ([1, 5, 20, 80, 250] with string labels). The
+    custom ticks specification likely conflicts with colorscale=log10 — positions
+    need to be in log10-transformed space (e.g. [log10(1), log10(5), log10(20), log10(80),
+    log10(250)]) rather than raw count values
+  - City center annotation text at (0.5, 0.1) with color=INK has low contrast against
+    the green hexbin tiles in light mode; the annotation would benefit from a white
+    or ELEVATED_BG text halo/background to ensure readability in both themes
+  - Design Excellence limited by default styling choices — removing bottom/left spines
+    entirely for a cleaner hexbin look, and ensuring the annotation visually pops,
+    would elevate the plot further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, covers both the Figure background and Axis interior.
-      Chrome: Title "hexbin-basic · julia · makie · anyplot.ai" in bold near-black, centered above the plot — clearly readable. X-axis label "Longitude (relative km)" and Y-axis label "Latitude (relative km)" in dark ink, appropriately sized. Tick labels in softer dark ink (#4A4A44) at 12pt — readable. Bottom and left spines visible in INK_SOFT; top and right spines removed (L-shaped frame). Grid lines present on both axes at ~12% opacity — subtle and non-intrusive. Colorbar on the right with label "Point Count" and tick marks at 50, 100, 150, 200 — all readable.
-      Data: Four distinct hexbin clusters representing urban GPS hotspots. City center cluster (highest density, ~200+ points/bin) rendered in deep blue (#4467A3); peripheral clusters (eastern, northern, southern) rendered in mid-to-light green (#009E73 region). Imprint sequential colormap (green → blue) correctly applied. Hexagonal bins well-sized at bins=50; sparse singleton hexagons visible at cluster peripheries.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "hexbin-basic · julia · makie · anyplot.ai" in bold dark #1A1A17 text — clearly readable. Axis labels "Longitude (relative km)" and "Latitude (relative km)" in dark ink — readable. Tick labels in #4A4A44 (INK_SOFT) — readable. Colorbar label "Point Count" and tick labels readable. Colorbar shows auto-generated linear tick values (~50, 100, 150, 200) instead of custom log-landmark ticks.
+      Data: Hexagonal bins coloured with Imprint sequential cmap (brand green #009E73 to blue #4467A3) via log10 colorscale. 4 density clusters visible: city center at (0,0) in deep blue (highest density), northern district at (-2, 2.2), eastern zone at (2.4, 0.6), southern hub at (0.4, -2.5) all in green/teal (lower density). Annotation circle at (0,0) and text "City Center (peak density)" at (0.5, 0.1) — present but with limited contrast against green hexbin tiles in light mode.
+      Legibility verdict: PASS — all structural chrome text fully readable; annotation text marginal but visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct for dark theme. Axis interior also correctly set to PAGE_BG.
-      Chrome: Title in light cream text (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in INK_SOFT light (#B8B7B0) — visible. Colorbar "Point Count" label and tick marks (50/100/150/200) in light ink — all readable. Left and bottom spines in INK_SOFT light; grid lines subtle. No dark-on-dark failures detected.
-      Data: Data colors are identical to light render — same green-to-blue Imprint sequential gradient, same four clusters, same density distribution. The deep-blue city center and green peripheral clusters read correctly on the dark surface. Colorbar gradient unchanged.
-      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures observed.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light #F0EFE8 text — clearly readable against dark background. Axis labels and tick labels in light/soft tones (#F0EFE8 / #B8B7B0) — all readable. No dark-on-dark failures detected. Colorbar chrome correctly adapts with light-coloured labels.
+      Data: Hexbin data colours are visually identical to the light render — same green→blue Imprint sequential gradient, same 4 cluster pattern. Only surrounding chrome changes. Annotation text is more readable in dark mode since light INK (#F0EFE8) contrasts better over the dark hexbin area.
+      Legibility verdict: PASS — all text elements clearly readable against dark background
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,77 +59,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
-          xticklabelsize=12, yticklabelsize=12). Text clearly readable in both themes.
-          Minor point off: text proportions are good but not exceptional.'
+        comment: All structural chrome readable in both themes; city center annotation
+          text has reduced contrast overlaid on green hexbins in light render
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render. Colorbar cleanly
-          separated.
+        comment: No text-text or text-data collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Hexbins clearly visible with good density gradient. bins=50 appropriate.
-          Sparse singleton hexagons at periphery are small but still visible.
+        comment: Hexbins and colorbar clearly visible; annotation ring somewhat subtle
+          over dense hexbin area
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential (green→blue) is CVD-safe. No red-green confusion.
+        comment: Imprint sequential cmap is CVD-safe; adequate perceptual gradient
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (no gate file). Layout balanced with colsize!(Relative(0.87))
-          and colgap!(14). Good whitespace.
+        comment: Canvas gate passed; colsize!/colgap! proportions good; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. Axis labels descriptive with units. Colorbar
-          labeled Point Count.
+        comment: Descriptive labels with units; correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'ANYPLOT_SEQ (green→blue) = imprint_seq — correct for single-polarity
-          density data. Backgrounds #FAF8F1 / #1A1A17. All theme chrome correct.'
+        comment: 'imprint_seq used correctly; backgrounds #FAF8F1/#1A1A17; full theme-adaptive
+          chrome'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured following the template. Correct Imprint cmap, L-shaped
-          spine, clean colorbar. No additional design sophistication beyond the required
-          elements.
+        passed: true
+        comment: Custom Imprint sequential cmap, log10 colorscale, focal annotation
+          callout, theme tokens — above default; stops short of exceptional polish
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Spines removed (top/right), subtle grid at 12% opacity, strokewidth=0
-          on hexbins, careful colsize/colgap layout tuning. Slightly above default.
+        passed: true
+        comment: Top/right spines removed; grid at 0.12 opacity; thin colorbar width=22;
+          strokewidth=0 on hexbins
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Four-cluster urban dataset with named districts tells a plausible
-          story. Density gradient clearly visible. No focal-point emphasis or annotation
-          to guide viewer to the key insight.
+        passed: true
+        comment: Log scale exposes peripheral clusters; annotation callout adds narrative;
+          limited by marginal annotation visibility in light mode
     spec_compliance:
       score: 15
       max: 15
@@ -144,52 +133,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexbin plot using Makie's native hexbin! recipe.
+        comment: Correct hexbin plot via CairoMakie native hexbin! recipe
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, Imprint sequential colormap (perceptually uniform),
-          bins=50 parameter set.
+        comment: Colorbar included; perceptually uniform colormap; log colorscale
+          applied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude, color=point count density. All data visible.
+        comment: X/Y coordinates mapped correctly; all 4 clusters visible; density
+          encoded via colour
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: hexbin-basic · julia · makie · anyplot.ai — correct format.
-          Colorbar labeled Point Count.'
+        comment: Title exact format; colorbar label Point Count correct
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows hexagonal binning, density gradient, multiple clusters (4),
-          colorbar scale. No log scale demonstration for wide density range.
+        comment: 12,000 points across 4 distinct hotspot clusters; demonstrates hexbin
+          density-compression strengths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Urban GPS coordinates with named districts. Neutral, comprehensible,
-          real-world scenario.
+        comment: Simulated urban GPS coordinates with named districts; neutral and
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12,000 points in 4 clusters at plausible relative km distances. Cluster
-          sizes (5000/2500/2500/2000) create meaningful density variation.
+        comment: Values in relative km range; cluster spreads (0.4-0.5 std dev) sensible
     code_quality:
       score: 10
       max: 10
@@ -199,33 +187,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → data → plot → save. No functions or
-          classes.'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, ColorSchemes, Random — all four imports are used.
+        comment: All four imports (CairoMakie, Colors, ColorSchemes, Random) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Clean code, no fake interactivity. Minor verbosity: Float32() casts
-          on INK channel values are unnecessary.'
+        comment: Well-organised, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct.
+        comment: Saves as plot-$(THEME).png; current CairoMakie API
     library_mastery:
       score: 6
       max: 10
@@ -235,24 +221,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: hexbin!, Colorbar, colsize!, colgap!, RGBAf, colorant literals —
-          idiomatic Makie patterns throughout. Slightly above default for correct
-          layout system usage.
+        comment: hexbin!, Colorbar, colsize!/colgap! layout controls, colorscale parameter
+          — all idiomatic Makie
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: hexbin! is Makie-native and the layout grid system is distinctive.
-          No log colorscale, no custom tick formatting, no additional Makie-specific
-          capabilities leveraged.
-  verdict: REJECTED
+        comment: Uses Makie native hexbin recipe and colorscale=log10; layout system
+          leveraged; could further exploit Makie unique capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - colors
   - colorschemes
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   dataprep: []
