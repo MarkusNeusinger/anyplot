@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: band-basic
 created: '2025-12-23T09:08:40Z'
-updated: '2026-05-29T17:34:19Z'
+updated: '2026-05-29T17:42:13Z'
 generated_by: claude-sonnet
 workflow_run: 26651792755
 issue: 979
@@ -12,91 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec compliance: geom_ribbon + geom_line combination directly matches
-    the band-basic spec requirements'
-  - Strong data storytelling via phase annotations, dashed separator, and subtitle
-    — narrative is self-contained within the plot
-  - Correct theme adaptation throughout — all chrome tokens switch correctly between
-    light and dark; no dark-on-dark failures
-  - Accurate title fontsize scaling formula applied (73-char title → 11pt)
-  - Clean, reproducible code with proper Imprint palette usage
+  - 'Perfect spec compliance: geom_ribbon + geom_line correctly models band-basic
+    with semi-transparent fill (alpha=0.35) and contrasting central trend line'
+  - 'Excellent storytelling: dashed phase separator at day 15 with Calibration Phase
+    / Extrapolation annotations and explanatory subtitle communicates the narrowing-then-widening
+    CI dynamic clearly'
+  - 'Full theme-adaptive chrome: all chrome tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED)
+    correctly flip between light (#FAF8F1) and dark (#1A1A17) — no dark-on-dark failures'
+  - 'Clean, idiomatic plotnine grammar: geom_ribbon, annotate(segment), scale_y_continuous
+    with custom label lambda, coord_cartesian, and theme composition are all library-native
+    patterns'
+  - 'Correct Imprint palette use: band fill = #009E73 (first series), INK neutral
+    anchor for central reference line, backgrounds are exact spec values'
   weaknesses:
-  - Phase annotations (size=3.0 mm, italic, INK_MUTED) are small enough to be near-illegible
-    when the image is scaled to mobile widths (~400px) — increasing to size=3.5 and/or
-    using INK_SOFT instead of INK_MUTED would improve readability
-  - Subtitle is set to 7pt — borderline small; 8pt would match tick label size and
-    improve legibility at small render sizes
-  - Band alpha=0.25 produces a very dark green blended fill on the dark background
-    (approx RGB 26,59,46) — marginally distinct from the near-black background; consider
-    alpha=0.35 for better visibility in dark mode
+  - 'LM-02 moderate: geom_ribbon and annotate(segment) are good library-specific choices,
+    but no plotnine-unique feature (e.g. stat_smooth, facet_wrap for comparison, geom_smooth
+    with se=True to demonstrate native CI support) was used that would distinguish
+    it from a generic grammar-of-graphics implementation'
+  - 'DE-01 not at publication level: design is clean and thoughtful but the overall
+    aesthetic, while above default, does not reach FiveThirtyEight/Nature-level polish
+    — the phase annotations at 3.5mm are small and could benefit from slightly more
+    visual weight'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Sensor Calibration Forecast · band-basic · python · plotnine · anyplot.ai" in dark near-black text — fully readable. Subtitle in lighter grey — readable. Y-axis label "Temperature (°C)" and x-axis label "Time (days)" clearly visible. Tick labels (15°C, 20°C, 25°C; 0,5,10,15,20,25,30) in INK_SOFT grey — readable.
-      Data: Band fill #009E73 at alpha=0.25 creates mint-teal shaded region. Central trend line in near-black (INK). Dashed vertical separator at day 15. Phase annotations "Calibration Phase" and "Extrapolation" in small italic muted grey — small but readable at full resolution.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Sensor Calibration Forecast · band-basic · python · plotnine · anyplot.ai" in dark ink at 11pt fills ~78% of plot width (expected for 73-char title). Subtitle in INK_SOFT at 8pt readable. Y-axis label "Temperature (°C)" and X-axis label "Time (days)" in INK at 10pt. Tick labels in INK_SOFT at 8pt with degree-symbol formatting. All chrome readable.
+      Data: Band fill is #009E73 (Imprint brand green) with alpha=0.35 — clearly visible against warm off-white background. Central trend line in INK (#1A1A17) stands out distinctly against the green band. Dashed vertical separator at day=15 in INK_SOFT. Phase annotations "Calibration Phase" and "Extrapolation" in small italic INK_SOFT text below the ribbon. Subtle horizontal-only grid lines at 15% opacity.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and subtitle in light near-white/grey text — clearly readable against dark background. Axis labels and tick labels adapt to light tones via INK/INK_SOFT tokens — readable. No dark-on-dark failures observed. Phase annotations render in theme-adaptive muted light grey.
-      Data: #009E73 at alpha=0.25 over #1A1A17 creates a dark green fill (distinctly visible from the background). Central trend line adapts to near-white (#F0EFE8) — strong contrast. Colors identical to light render (only chrome flips). Dashed separator and annotations remain visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light (#F0EFE8 / #B8B7B0) — clearly readable against the dark surface. No dark-on-dark failures detected.
+      Data: Band fill is the same #009E73 Imprint green (identical to light render). On the dark surface the band appears as a darker teal-green but the hue is unchanged — palette identity maintained. Central trend line is white (#F0EFE8), clearly distinct from the green band. Dashed separator and phase annotations adapt to INK_SOFT (#B8B7B0) for the dark theme.
+      Legibility verdict: PASS — both Chrome and data are readable. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title (11pt scaled for 73-char length), axis titles (10pt), tick
-          labels (8pt) all readable. Minor deduction: phase annotations size=3.0mm
-          and subtitle 7pt borderline at mobile scale.'
+        comment: All font sizes explicitly set (title=11pt, axis_title=10pt, axis_text=8pt,
+          subtitle=8pt, geom annotations=3.5mm). Title correctly scaled for 73-char
+          string. Both themes legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotations below data band.
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 60-point medium density dataset; band and trend line clearly visible
-          in both themes.
+        comment: Ribbon, central line, and separator all clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series, CVD-safe #009E73, no red-green conflict.'
+        comment: Imprint green band + INK central line provides strong luminance contrast.
+          CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed; title ~75% width expected; no overflow.
+        comment: 3200x1800 canvas (8x4.5 @ 400dpi). Good proportions, balanced margins,
+          plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes include units; title format correct.
+        comment: Temperature (°C) and Time (days) — both descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Band fill #009E73 (first series); INK neutral for reference line;
-          backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'Band fill = #009E73 (Imprint first series). Backgrounds = #FAF8F1/#1A1A17.
+          Chrome adaptive. No forbidden cmaps.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,22 +109,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Imprint palette correct, descriptive title prefix, intentional visual
-          hierarchy. Above default but not exceptional.
+        comment: 'Above ''well-configured default'' (4): custom Imprint palette, intentional
+          phase annotations, subtitle narrative, clean visual hierarchy. Not at publication/FiveThirtyEight
+          level (8).'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Panel border removed, x-grid removed, y-only subtle grid, L-frame
-          axis lines.
+        comment: panel_border removed, y-only grid at 15% opacity, axis lines retained
+          for structure, generous whitespace. Near-perfect refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Phase annotations, dashed separator at day 15, subtitle explaining
-          CI behavior — clear narrative.
+        comment: Phase separator + zone labels + explanatory subtitle create clear
+          visual narrative about CI narrowing/widening. Guides viewer effectively.
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_ribbon for band, geom_line for trend — correct.
+        comment: 'Correct band/ribbon plot: geom_ribbon for filled band + geom_line
+          for central trend.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill alpha=0.25, central trend line, 95% CI bounds,
-          continuous data — all present.
+        comment: Semi-transparent fill (alpha=0.35), central trend line, confidence
+          interval, continuous smooth interpolation.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=days, ymin=temp_lower, ymax=temp_upper, y=temperature; full 0-30
-          range visible.
+        comment: x=days, ymin=temp_lower, ymax=temp_upper, y=temperature. Correct
+          mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; no legend appropriate
-          for single series.
+        comment: 'Title: ''Sensor Calibration Forecast · band-basic · python · plotnine
+          · anyplot.ai'' (correct format with optional prefix). No legend needed (subtitle
+          explains).'
     data_quality:
       score: 15
       max: 15
@@ -160,20 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Band fill, trend line, phase-dependent CI width (narrowing then widening),
-          separator annotation.
+        comment: 'Shows all aspects: ribbon, central line, CI narrowing (calibration
+          phase), CI widening (extrapolation), phase boundary.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature sensor calibration with 95% CI — plausible, neutral.
+        comment: Sensor calibration forecast is a realistic, neutral scientific scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 14-25C range, 30-day timeline, 60 data points — all realistic.
+        comment: Temperature 15-25°C realistic for ambient sensor. 60 points over
+          30 days appropriate. CI spread sensible.
     code_quality:
       score: 10
       max: 10
@@ -183,56 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; clean sequential script.
+        comment: 'Linear structure: imports → data generation → plot composition →
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported plotnine components are used.
+        comment: All imports used. sys.path manipulation needed due to filename conflict.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable; correct title-length fontsize scaling applied.
+        comment: Clean, idiomatic plotnine code. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves as plot-{THEME}.png. Current plotnine 0.15.4 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Grammar-of-graphics structure, correct aes() mapping, labs(), theme(),
-          scale_*() — solid idiomatic usage.
+        comment: 'Expert use of plotnine grammar: geom_ribbon, geom_line, annotate
+          (text+segment), scale_y_continuous with lambda, coord_cartesian, theme composition.
+          All idiomatic.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon (canonical band geom), annotate('segment'), scale_y_continuous(labels=lambda...),
-          coord_cartesian.
+        comment: geom_ribbon (ggplot2 grammar, not easily replicated elsewhere), annotate('segment')
+          for dashed divider, custom scale_y_continuous formatter are library-specific
+          but not uniquely distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
