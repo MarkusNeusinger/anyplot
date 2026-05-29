@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:11:31Z'
-updated: '2026-05-29T03:33:01Z'
+updated: '2026-05-29T03:47:36Z'
 generated_by: claude-sonnet
 workflow_run: 26615785331
 issue: 4130
@@ -12,49 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Excellent spec compliance — all required KS-plot features present: step ECDFs,
-    vertical KS line, endpoint dots, D-statistic annotation, p-value in subtitle'
-  - Semantic color pairing (green=#009E73 for Good, red=#AE3030 for Bad) is appropriate
-    and immediately readable; redundant stroke-dash encoding adds colorblind safety
-  - Idiomatic Altair layer composition with typed encodings, custom scales, and configure_*
-    theme adaptation
-  - Realistic credit-scoring context with statistically meaningful 300-point samples
-    and correct ECDF computation via searchsorted on union grid
-  - Monospace bold font for the KS annotation adds data-science aesthetic; subtitle
-    with K-S stat and p-value provides immediate interpretive context
+  - 'Semantic color assignment is exemplary: #009E73 (brand green) for Good Customers
+    and #AE3030 (Imprint matte red, semantic anchor for bad/loss/error) for Bad Customers
+    — maximally intuitive and palette-compliant.'
+  - Redundant strokeDash encoding alongside color provides robust CVD safety — a deliberate
+    and correct accessibility choice.
+  - 'Full spec compliance: all K-S test visualization requirements met (ECDFs, KS
+    distance line with endpoint dots, D annotation, p-value in subtitle, legend, Y-axis
+    0-1).'
+  - Both themes render correctly with no dark-on-dark failures and identical data
+    colors across themes.
+  - PAD-only canvas strategy correctly implemented; canvas gate passed.
   weaknesses:
-  - 'DE-01/DE-02: Well-configured but not publication-ready — the chart has both horizontal
-    and vertical grid lines; prefer Y-axis-only gridlines in configure_axis (set gridOpacity=0
-    on X axis) and consider adding a more distinct typographic hierarchy (larger title
-    weight/size delta vs subtitle)'
-  - 'DE-03: The D=0.623 annotation is positioned at the midpoint of the KS gap, but
-    extends to the right into the region where the green ECDF rises — repositioning
-    the label to the left of the KS line (align=right, slight x offset) or nudging
-    it further right and up would give it cleaner whitespace and improve storytelling
-    clarity'
-  - 'CQ-04: ks_line_df and ks_endpoints_df are defined as identical DataFrames; ks_dots
-    could reuse ks_line_df directly, removing the redundant definition'
-  - 'VQ-05: The padded canvas results in noticeable background-only margins; consider
-    slightly larger inner view dimensions (e.g., width=680, height=360) to make the
-    chart fill more of the 3200x1800 canvas'
+  - 'The D = 0.623 annotation uses #4467A3 (Imprint blue) which reads clearly on light
+    but has slightly lower contrast on the dark background #1A1A17 — a theme-adaptive
+    annotation color (lighter blue or INK_SOFT) for dark mode would improve legibility.'
+  - DE-01 is limited by lack of a distinctive visual treatment beyond clean defaults
+    — e.g., subtle shading of the K-S gap region between the two ECDFs would make
+    the maximum divergence more immediately visually prominent.
+  - LM-02 could be pushed further with Altair-specific features like selection-based
+    conditional encoding or vconcat for an inset panel showing the distribution histograms.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, no pure white.
-      Chrome: Title "ks-test-comparison · python · altair · anyplot.ai" in bold dark ink at top-left, clearly readable. Subtitle "K-S Statistic: 0.623 · p < 0.001 · Credit scoring Good vs. Bad customers" in soft ink below. X-axis label "Credit Score" and Y-axis label "Cumulative Proportion" both readable. Tick labels (250–950 on X; 0.0–1.0 on Y) clearly legible in INK_SOFT color. Legend box top-right with rounded corners, elevated background fill, "Good Customers" and "Bad Customers" entries readable.
-      Data: Two ECDF step curves — Good Customers in brand green (#009E73, solid), Bad Customers in matte red (#AE3030, dashed). Blue (#4467A3) dashed vertical KS line at ~score 550, with two filled blue dots at endpoints. Bold monospace "D = 0.623" label in blue positioned between the two endpoints. Subtle grid lines at 15% opacity over warm background.
-      Legibility verdict: PASS — all text elements clearly readable against light background. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "ks-test-comparison · python · altair · anyplot.ai" in bold dark ink, clearly readable. Subtitle in muted INK_SOFT tone, readable. Y-axis label "Cumulative Proportion" and X-axis label "Credit Score" clearly visible. Tick labels (250–950 on X, 0.0–1.0 on Y) readable. Legend box top-right with styled rounded-corner border, both series labeled clearly. "D = 0.623" annotation in bold monospace blue (#4467A3), clearly readable.
+      Data: Good Customers in solid green (#009E73), Bad Customers in dashed dark-red (#AE3030). Blue dashed vertical KS line with filled endpoint dots at divergence point ~Score=547. Two ECDFs clearly separated.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, no pure black.
-      Chrome: Title and subtitle in light (#F0EFE8) — clearly readable. Axis labels and tick labels in lighter INK_SOFT (#B8B7B0) — readable against dark background. Legend box uses elevated dark fill (#242420) with INK_SOFT stroke; legend text readable. Grid lines subtle at 15% opacity on dark surface.
-      Data: Green (#009E73) and red (#AE3030) ECDF curves are identical to light render — data colors unchanged. Blue KS annotation line and dots identical. "D = 0.623" annotation visible in blue on dark background.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All text is light-colored against the near-black background. Chrome correctly flipped; data colors identical to light render.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle flip to light text (#F0EFE8 / #B8B7B0), fully readable. Axis labels and tick labels in light colors, no dark-on-dark failure. Legend box uses elevated-dark fill #242420 with muted border; legend text light-colored and readable. "D = 0.623" annotation in #4467A3 (Imprint blue) — readable but slightly lower contrast against dark background than in light render.
+      Data: Colors identical to light render — Good Customers #009E73, Bad Customers #AE3030, KS line #4467A3. Data colors unchanged, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,52 +57,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title, subtitle, axis labels, ticks
-          readable in both themes. Minor: chart text is slightly compact given the
-          canvas padding'
+        comment: 'All font sizes explicitly set (title 16px, subtitle 12px, axis labels
+          12px, ticks 10px, annotation 13px). All readable in both themes. Minor:
+          D=0.623 annotation in #4467A3 has slightly lower contrast on dark background.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minimal overlap — D=0.623 annotation is placed in gap between curves
-          but extends into area where green ECDF rises
+        comment: No overlapping elements. Annotation in open whitespace; legend clear
+          of data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Step lines at strokeWidth=3.5 clearly visible; endpoint dots (size=100)
-          prominent; KS dashed line clearly distinct
+        comment: Step lines strokeWidth=3.5, clearly visible. Dashed pattern [8,4]
+          distinguishable. KS line and filled endpoint dots prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant stroke-dash encoding adds CVD safety beyond color alone;
-          green and red have good luminance contrast
+        comment: Redundant strokeDash encoding (solid vs dashed) alongside color for
+          CVD safety.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout; noticeably padded background margins from Altair 620x320
-          inner view on 3200x1800 canvas
+        comment: Canvas gate passed. Good proportions, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Credit Score and Cumulative Proportion are descriptive; subtitle
-          provides full statistical context
+        comment: Credit Score and Cumulative Proportion are descriptive. Title format
+          correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Green #009E73 for Good (position 1), red #AE3030 for Bad (semantic
-          exception, good/bad pairing); blue #4467A3 for annotation. Backgrounds #FAF8F1
-          / #1A1A17 correct. Chrome theme-adaptive.'
+        comment: 'First series #009E73 correct. Bad Customers #AE3030 (semantic red
+          via exception). KS #4467A3 (Imprint pos 3). Backgrounds #FAF8F1/#1A1A17
+          correct.'
     design_excellence:
       score: 13
       max: 20
@@ -117,24 +111,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic color choices, monospace KS annotation, endpoint dots, and
-          subtitle context show design intent. Well-configured but not FiveThirtyEight-level
-          publication quality
+        comment: 'Above defaults: semantic color assignment, dual encoding, styled
+          legend, monospace annotation, informative subtitle. Not FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid at 15% opacity, legend padding and corner radius, view
-          stroke removed. Both axes have grid lines — Y-only would be cleaner
+        comment: X-grid removed, Y-grid subtle (0.15 opacity), view border removed,
+          legend styled with rounded corners and elevated fill.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: KS annotation line creates a clear focal point; semantic colors reinforce
-          Good vs Bad narrative; p-value in subtitle provides immediate interpretation.
-          Annotation placement could be cleaner
+        comment: Clear visual hierarchy. D=0.623 annotation as focal point. Subtitle
+          provides statistical context. Endpoint dots create visual anchor.
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct KS plot: two step ECDFs with KS distance line and annotation'
+        comment: Correct K-S ECDF comparison with step functions, KS distance line,
+          annotation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: step functions, K-S statistic value, max divergence
-          highlight (vertical line + dots), p-value, clear legend, 0-1 Y-axis'
+        comment: Both ECDFs as step functions, KS statistic highlighted, p-value reported,
+          distributions labeled, Y-axis 0-1.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Credit Score, Y: Cumulative Proportion 0-1; both distributions
-          fully visible'
+        comment: Credit Score on X-axis, Cumulative Proportion on Y-axis, full data
+          range displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels Good Customers
-          / Bad Customers match data
+        comment: 'Title: ks-test-comparison · python · altair · anyplot.ai. Legend:
+          Good Customers / Bad Customers.'
     data_quality:
       score: 15
       max: 15
@@ -175,24 +168,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 300-point samples produce smooth ECDFs; both distributions well-separated;
-          K-S stat, p-value, and max divergence all shown
+        comment: 'All K-S aspects shown: ECDFs, max divergence point, both D and p-value,
+          endpoint markers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring (Good vs Bad customers) is a primary real-world application
-          of K-S tests; financial risk context is neutral and professional
+        comment: Credit scoring (Good vs Bad customers) is a textbook K-S application,
+          real-world, neutral, professionally relevant.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score means (620 Good, 480 Bad) and spreads (80, 90) are realistic;
-          distributions have plausible separation for credit risk context
+        comment: Good (mean=620, sd=80) and Bad (mean=480, sd=90) are realistic credit
+          score distributions. 300 samples within spec range.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -200,55 +193,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports→data→compute→plot→save; no functions or classes
+        comment: 'Linear script: imports → tokens → data → ECDF computation → charts
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: importlib/sys/os for altair import workaround,
-          numpy, pandas, PIL, scipy.stats'
+        comment: 'All imports used: numpy, pandas, PIL.Image, scipy.stats, importlib,
+          os, sys.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Clean and Pythonic overall; minor: ks_line_df and ks_endpoints_df
-          are identical DataFrames — redundant definition'
+        comment: importlib dynamic import is a necessary workaround for altair.py
+          naming conflict. ECDF computation via searchsorted on union grid is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; canvas padding via
-          PIL; modern Altair API
+        comment: Saves plot-{THEME}.png (PAD-only) and plot-{THEME}.html correctly.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Idiomatic alt.layer() composition, typed encodings (Q/N), alt.Scale
-          domain/range, alt.Title with subtitle, configure_* methods for theme adaptation
-          — all recommended Altair patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages Altair's declarative grammar for multi-layer composition,
-          redundant strokeDash encoding in a single declarative spec, and interactive
-          HTML with tooltips alongside static PNG
-  verdict: REJECTED
+        comment: Excellent use of configure_* chain, alt.Title with subtitle, alt.Scale/alt.Axis,
+          proper encoding type annotations. Above default 3/5.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: step-after interpolation (Altair-native ECDF), alt.layer() with 4
+          marks, alt.StrokeDash redundant encoding, tooltip encoding, HTML export.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -260,7 +251,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
-  - alpha-blending
   - edge-highlighting
