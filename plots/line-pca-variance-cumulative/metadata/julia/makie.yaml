@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-pca-variance-cumulative
 created: '2026-05-29T05:59:31Z'
-updated: '2026-05-29T06:05:21Z'
+updated: '2026-05-29T06:15:10Z'
 generated_by: claude-sonnet
 workflow_run: 26620585481
 issue: 4131
@@ -12,108 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance — cumulative line, individual variance bars, elbow detection,
-    90%/95% threshold lines with vertical dotted drop-lines all present and correctly
-    implemented
-  - 'Perfect theme-adaptive chrome: both renders pass legibility checks, warm off-white
-    (#FAF8F1) and near-black (#1A1A17) backgrounds with correctly flipped text and
-    grid tokens'
-  - 'Imprint palette used correctly — primary series #009E73, elbow marker #4467A3
-    (Imprint blue), threshold lines #DDCC77 (amber semantic anchor); no unapproved
-    custom hexes'
-  - Two-panel layout with 70/30 rowsize split and linkxaxes! is idiomatic Makie and
-    clearly tells the cumulative vs individual variance story
-  - Pure Julia PCA via eigendecomposition of sample covariance (no sklearn) is elegant
-    and illustrates the data-prep well
-  - Clean KISS structure with all font sizes explicitly set and Random.seed!(42) for
-    reproducibility
+  - Dual-panel layout (cumulative line + individual bars) implements the spec's optional
+    enhancement, adding genuine analytical value
+  - Elbow detection via max-distance-from-diagonal method is principled and annotated
+    clearly with a distinct color
+  - Amber threshold band with dotted vertical drop lines creates strong visual connection
+    between thresholds and component counts
+  - 'Full theme compliance: all chrome tokens wired, data colors identical across
+    both renders — no dark-on-dark failures'
+  - PCA implemented from scratch via eigendecomposition of Symmetric covariance matrix
+    — no sklearn dependency needed
   weaknesses:
-  - Annotation text for elbow label ('PC5 (elbow)') and threshold labels ('90%', '95%')
-    is set at fontsize=11, which is small for a 3200×1800 canvas — increase to 13-14pt
-    to improve mobile readability
-  - 'DE-01/DE-02 design polish: spines and grid are correctly refined, but the overall
-    composition could benefit from a subtle horizontal annotation line or shaded region
-    between 90% and 95% to create a more deliberate visual target zone'
-  - 'DE-03 storytelling: the elbow annotation is good but uses a generic marker —
-    a more prominent callout (e.g., a dashed vertical reference line extending into
-    the bottom panel with the same elbow color) would create a stronger narrative
-    thread between the two panels'
-  - The top panel y-axis label 'Cumulative Variance (%)' uses ylabelsize=13 while
-    the bottom panel uses ylabelsize=11 — this slight asymmetry between panels is
-    noticeable; align both to 12 or 13
+  - The 90%/95% right-margin text labels (fontsize=13) are on the smaller side — increasing
+    to fontsize=14-15 would improve legibility at mobile scale
+  - PC6-18 individual bars are nearly invisible due to data structure (not a rendering
+    bug); a note or minimum y-floor could make tail components slightly more visible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white
-      Chrome: Title "line-pca-variance-cumulative · julia · makie · anyplot.ai" in dark ink, clearly readable. Y-axis labels "Cumulative Variance (%)" (top) and "Individual (%)" (bottom) in dark ink, readable. X-axis label "Number of Components" visible in bottom panel. Tick labels in #4A4A44 (INK_SOFT), readable. Top/right spines removed; subtle y-axis grid at 12% opacity.
-      Data: Primary cumulative line and scatter markers in #009E73 (brand green). Blue elbow marker (#4467A3 from Imprint palette) at PC5 with "PC5 (elbow)" text annotation. Amber dashed lines (#DDCC77) at 90% and 95% with dotted vertical drop-lines. Bottom panel green bars for individual variance per component.
-      Legibility verdict: PASS — all text readable; annotation text at fontsize=11 is on the small side but visible at canvas resolution
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white.
+      Chrome: Title "line-pca-variance-cumulative · julia · makie · anyplot.ai" in dark ink (#1A1A17), fully readable. Y-axis labels "Cumulative Variance (%)" and "Individual (%)" in dark ink, readable. X-axis label "Number of Components" in dark ink, readable. Tick labels in secondary dark ink (#4A4A44), readable. Right-margin threshold labels "95%" and "90%" in muted ink, readable (slightly small at fontsize=13).
+      Data: Brand green (#009E73) cumulative line with circular markers ascending from ~40% at PC1 to ~100% by PC8. Amber (#DDCC77) dashed horizontal lines at 90% and 95% with subtle amber shaded band between them. Dotted amber vertical drop lines at intersection components. Blue (#4467A3) dot marks elbow at PC5 with "PC5 (elbow)" annotation. Lower panel: brand green (#009E73) bars for individual variance, tall for PC1-5, near-invisible for PC6-18 (data-driven).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct for dark theme, not pure black
-      Chrome: Title in light (#F0EFE8) ink, clearly readable against dark background. Axis labels in light ink, readable. Tick labels in #B8B7B0 (INK_SOFT dark), readable. No dark-on-dark failures detected — all chrome correctly flipped to light values.
-      Data: Cumulative line and markers remain #009E73 (identical to light render). Blue elbow marker (#4467A3) visible. Amber threshold lines (#DDCC77) clearly visible against dark background. Bottom panel green bars visible and clearly distinguishable from the dark background.
-      Legibility verdict: PASS — both renders meet theme-readability requirements; no dark-on-dark issues; data colors are identical between light and dark
+      Background: Warm near-black (#1A1A17) — correct surface color, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. All axis labels and tick labels flip to light/gray tones (INK #F0EFE8 / INK_SOFT #B8B7B0), all readable. No dark-on-dark failures detected. Right-margin threshold labels in light-gray INK_SOFT (#B8B7B0), readable.
+      Data: Brand green (#009E73) identical to light render — data colors unchanged as required. Amber threshold lines (#DDCC77) remain clearly visible on dark surface. Blue elbow marker (#4467A3) visible. Bar panel identical structure and colors to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; annotation
-          text at fontsize=11 is slightly small for 3200x1800 canvas
+        comment: Title, axis labels, tick labels, annotations all readable in both
+          themes. Right-margin threshold labels (fontsize=13) are slightly small but
+          legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; elbow annotation well-positioned; threshold
-          labels stacked vertically without collision
+        comment: No text overlaps with data or other text. Elbow annotation clears
+          the curve cleanly.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and bars clearly visible; scatter markers at markersize=9 adequate;
-          could be slightly larger for the large canvas
+        comment: Cumulative line and markers prominent. PC6-18 individual bars near-invisible
+          but data-driven (5-factor model), not a render defect.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; elbow marker (blue) distinct from primary
-          series (green) and threshold lines (amber)
+        comment: Green + blue + amber encoding is CVD-safe. No red-green sole-signal
+          dependency.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Two-panel layout fills canvas well; minor: top panel has empty lower-half
-          due to data starting at ~40% cumulative variance (data-inherent, not a design
-          flaw)'
+        comment: Canvas gate passed (3200x1800). 70/30 row split well-proportioned.
+          No content overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Cumulative Variance (%)'', ''Individual
-          (%)'', ''Number of Components'''
+        comment: 'Descriptive labels with units: Cumulative Variance (%), Individual
+          (%), Number of Components.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, elbow #4467A3 (Imprint palette pos 3), thresholds
-          #DDCC77 (amber anchor); backgrounds #FAF8F1 / #1A1A17; chrome correctly
-          themed in both renders'
+        comment: 'First series #009E73, amber anchor for thresholds, blue for elbow.
+          Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -121,23 +106,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: intentional two-panel layout, semantic color choices,
-          elbow annotation; not yet FiveThirtyEight-level polish'
+        comment: Intentional dual-panel composition, amber threshold band with dotted
+          vertical lines, elbow detection and annotation. Beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, y-only grid at 12% opacity, clean panel separation
-          with rowgap; left/bottom spines at full opacity
+        comment: L-shaped spine frame, y-only grid at 12% opacity, minimal decoration,
+          tightly gapped panels.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Elbow annotation + threshold lines + vertical drop-lines guide the
-          viewer; two panels together tell the cumulative vs individual story; could
-          extend elbow drop-line into bottom panel for stronger narrative
+        comment: Clear focal point at PC5 elbow. Amber threshold zone guides component-selection
+          decisions. Supporting bar panel provides curve context.
     spec_compliance:
       score: 15
       max: 15
@@ -147,55 +131,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot for cumulative variance; optional bar chart overlay
-          included
+        comment: Correct cumulative explained variance line plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative sum on y-axis, percentage scale, 90%+95% threshold lines,
-          elbow annotation, markers at each component, secondary bar overlay
+        comment: Cumulative sum on y-axis, percentage scale, 90%/95% dashed horizontal
+          lines, elbow marked and annotated, markers at each component, x-axis starts
+          at 1, optional individual variance panel included.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Components on x-axis starting at 1, cumulative % on top y-axis, individual
-          % on bottom y-axis; linkxaxes! syncs panels
+        comment: 'X: components 1-18, Y: cumulative % (0-108). All data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format 'line-pca-variance-cumulative · julia · makie
-          · anyplot.ai' exactly; no legend needed (single primary series with inline
-          annotations)
+        comment: Title matches required format. No legend needed for single-series
+          with direct annotations.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows cumulative curve, individual bars, elbow shape, threshold lines;
-          all key PCA variance aspects covered
+        comment: Covers cumulative line, individual bars, elbow detection, threshold
+          lines, drop lines, and shaded zone.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Synthetic metabolomics dataset with 18 spectral features and 5 true
-          latent factors is a plausible real-world PCA scenario
+        comment: Synthetic metabolomics dataset (200 samples, 18 spectral features,
+          5 true latent factors) is scientifically plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: First PC explains ~39%, elbow at PC5, rapid decay to near-zero —
-          realistic behavior for structured data with 5 true factors
+        comment: 18 components typical for medium-dimensional spectral data. Cumulative
+          trajectory (40%-100%) and elbow at PC5 match the 5-factor ground truth.
     code_quality:
       score: 10
       max: 10
@@ -205,34 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → constants → data → plot → save structure; no functions
-          or classes
+        comment: Flat script, no classes or functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation
+        comment: Random.seed!(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics, LinearAlgebra — all used
+        comment: All imports (CairoMakie, Colors, Random, Statistics, LinearAlgebra)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code; something(findfirst(...), n_comp) is elegant Julia idiom;
-          no over-engineering
+        comment: 'Idiomatic Julia: broadcasting, eigen decomposition on Symmetric,
+          findfirst with something().'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
-          API
+        comment: Saves as plot-$(THEME).png with px_per_unit=2.
     library_mastery:
       score: 7
       max: 10
@@ -242,28 +223,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: linkxaxes!, rowsize!(fig.layout, ..., Relative(...)), rowgap!, RGBAf
-          for grid — idiomatic Makie layout API
+        comment: Proper Axis/Figure construction, RGBAf for alpha colors, theme tokens
+          wired to all chrome parameters.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Makie's grid layout with Relative row sizing and axis linking are
-          distinctive; pure Julia eigendecomposition PCA without sklearn is a nice
-          Julia-native touch
-  verdict: REJECTED
+        comment: Uses linkxaxes! for synchronized x-axes, hspan! for shaded region,
+          rowsize! for proportional panel sizing, Symmetric eigendecomposition, rowgap!
+          for compact panel spacing.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
-  - cumulative-sum
   - pca
+  - cumulative-sum
   styling:
+  - alpha-blending
   - grid-styling
