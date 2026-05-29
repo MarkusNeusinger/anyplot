@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hexbin-basic: Basic Hexbin Plot
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-05-29
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 94/100 | Created: 2026-05-29
 """
 
 import os
