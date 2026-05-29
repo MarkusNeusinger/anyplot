@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-29
@@ -40,7 +40,7 @@ if THEME == "light":
     BAND_SAT = "#C0BFB8"
     BAND_GOOD = "#8E8D87"
 else:
-    BAND_POOR = "#2F2F27"
+    BAND_POOR = "#3A3A30"
     BAND_SAT = "#484843"
     BAND_GOOD = "#60605A"
 
@@ -75,7 +75,7 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    colors=(BAND_POOR, BAND_SAT, BAND_GOOD, COLOR_ABOVE, COLOR_BELOW, COLOR_TARGET),
+    colors=(COLOR_ABOVE, COLOR_BELOW, COLOR_TARGET, BAND_POOR, BAND_SAT, BAND_GOOD),
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -87,7 +87,7 @@ custom_style = Style(
 chart = pygal.HorizontalStackedBar(
     width=3200,
     height=1800,
-    title="bullet-basic · pygal · anyplot.ai",
+    title="bullet-basic · python · pygal · anyplot.ai",
     style=custom_style,
     show_legend=True,
     legend_at_bottom=True,
@@ -105,15 +105,15 @@ chart = pygal.HorizontalStackedBar(
 )
 chart.x_labels = labels
 
-# Background bands: stacked segments for Poor / Satisfactory / Good zones
-chart.add("Poor (0–50%)", [{"value": POOR_PCT, "label": lbl} for lbl in labels])
-chart.add("Satisfactory (50–75%)", [{"value": SAT_PCT - POOR_PCT, "label": lbl} for lbl in labels])
-chart.add("Good (75–100%)", [{"value": 100 - SAT_PCT, "label": lbl} for lbl in labels])
-
-# Legend-only placeholder series for injected performance bars and target marker
+# Legend-only placeholder series (serie-0/1/2): first series gets brand green (#009E73)
 chart.add("Above Target", [None] * len(metrics))
 chart.add("Below Target", [None] * len(metrics))
 chart.add("Target", [None] * len(metrics))
+
+# Background bands: stacked segments for Poor / Satisfactory / Good zones (serie-3/4/5)
+chart.add("Poor (0–50%)", [{"value": POOR_PCT, "label": lbl} for lbl in labels])
+chart.add("Satisfactory (50–75%)", [{"value": SAT_PCT - POOR_PCT, "label": lbl} for lbl in labels])
+chart.add("Good (75–100%)", [{"value": 100 - SAT_PCT, "label": lbl} for lbl in labels])
 
 # Parse rendered SVG for coordinate-space injection of actual bars and markers
 ET.register_namespace("", "http://www.w3.org/2000/svg")
@@ -124,15 +124,13 @@ NS = "http://www.w3.org/2000/svg"
 
 parent_map = {child: parent for parent in root.iter() for child in parent}
 
-# Remove dashed leader lines for cleaner appearance
-for line in list(root.iter(f"{{{NS}}}line")):
-    if line.get("stroke-dasharray"):
-        p = parent_map.get(line)
-        if p is not None:
-            p.remove(line)
+# Make all stroked lines solid — style guide requires solid reference lines
+for elem in root.iter():
+    if "stroke-dasharray" in elem.attrib:
+        del elem.attrib["stroke-dasharray"]
 
-# serie-0 (Poor band) rects serve as the coordinate reference for injection
-serie_0 = next((g for g in root.iter(f"{{{NS}}}g") if "serie-0" in g.get("class", "")), None)
+# serie-3 (Poor band) rects serve as the coordinate reference for injection
+serie_0 = next((g for g in root.iter(f"{{{NS}}}g") if "serie-3" in g.get("class", "")), None)
 
 poor_bars = []
 if serie_0 is not None:
