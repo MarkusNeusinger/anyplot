@@ -1,74 +1,88 @@
-""" pyplots.ai
+""" anyplot.ai
 bump-basic: Basic Bump Chart
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-22
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-29
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
 
-# Data - Formula 1 constructor standings across a 6-race season
-entities = ["Red Bull Racing", "McLaren", "Ferrari", "Mercedes", "Aston Martin"]
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic assignment for F1 teams:
+# McLaren (protagonist, rising) → brand green; Ferrari → matte-red (iconic);
+# Red Bull → blue (close to livery); others → canonical tail positions
+SERIES_COLORS = (
+    "#009E73",  # McLaren — brand green, first series
+    "#AE3030",  # Ferrari — matte red, semantic: iconic Ferrari red
+    "#4467A3",  # Red Bull Racing — blue, close to livery
+    "#BD8233",  # Mercedes — ochre
+    "#C475FD",  # Aston Martin — lavender
+)
+
+# Data — F1 constructor standings across 6 Grand Prix weekends
+entities = ["McLaren", "Ferrari", "Red Bull Racing", "Mercedes", "Aston Martin"]
 periods = ["Bahrain", "Jeddah", "Melbourne", "Imola", "Monaco", "Barcelona"]
 
-# Rankings for each constructor across race weekends (1 = best)
-# Red Bull dominates early then McLaren surges to take the lead
+# Rankings (1 = leading); McLaren surges from P4 to lead by Melbourne
 rankings = {
-    "Red Bull Racing": [1, 1, 2, 2, 3, 3],
     "McLaren": [4, 3, 1, 1, 1, 1],
     "Ferrari": [2, 2, 3, 3, 2, 2],
+    "Red Bull Racing": [1, 1, 2, 2, 3, 3],
     "Mercedes": [3, 4, 4, 4, 4, 4],
     "Aston Martin": [5, 5, 5, 5, 5, 5],
 }
 
 max_rank = len(entities)
 
-# Refined palette: warm tones for falling teams, cool tones for rising teams
-# McLaren (rising protagonist) = bold orange, Red Bull (falling) = deep navy
-# Intentional warm/cool contrast reinforces the narrative
+# Y-axis is inverted: rank 1 at top, rank 5 at bottom
+inverted_rankings = {e: [max_rank + 1 - r for r in ranks] for e, ranks in rankings.items()}
+
+# Title font size — mandated format is ~40 chars (<67 baseline), no shrink needed
+title_str = "bump-basic · python · pygal · anyplot.ai"
+n = len(title_str)
+ratio = 67 / n if n > 67 else 1.0
+title_font_size = max(44, round(66 * ratio))
+
 custom_style = Style(
-    background="white",
-    plot_background="#FAFAFA",
-    foreground="#2D2D2D",
-    foreground_strong="#1A1A1A",
-    foreground_subtle="#E8E8E8",
-    colors=(
-        "#1E3A5F",  # Red Bull - deep navy (falling from lead)
-        "#FF8C00",  # McLaren - bold orange (rising protagonist)
-        "#C0392B",  # Ferrari - classic red (steady runner-up)
-        "#00A38D",  # Mercedes - teal (stable midfield)
-        "#6B6B6B",  # Aston Martin - darker gray for visibility
-    ),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=40,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=SERIES_COLORS,
+    title_font_size=title_font_size,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
-    stroke_width=8,
+    stroke_width=6,
     opacity=1.0,
     opacity_hover=1.0,
     transition="200ms ease-in",
 )
 
-# Invert rankings so rank 1 appears at top of chart
-inverted_rankings = {e: [max_rank + 1 - r for r in ranks] for e, ranks in rankings.items()}
-
-# Visual hierarchy: protagonist lines (McLaren rising, Red Bull falling) are bolder
-stroke_widths = {"Red Bull Racing": 14, "McLaren": 16, "Ferrari": 10, "Mercedes": 8, "Aston Martin": 7}
-dot_sizes = {"Red Bull Racing": 18, "McLaren": 20, "Ferrari": 14, "Mercedes": 12, "Aston Martin": 12}
+# Per-series stroke and dot sizes — visual hierarchy: protagonist boldest
+stroke_widths = {"McLaren": 18, "Ferrari": 12, "Red Bull Racing": 14, "Mercedes": 10, "Aston Martin": 12}
+dot_sizes_map = {"McLaren": 22, "Ferrari": 16, "Red Bull Racing": 18, "Mercedes": 14, "Aston Martin": 16}
 
 chart = pygal.Line(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="bump-basic · pygal · pyplots.ai",
+    title=title_str,
     x_title="Grand Prix",
     y_title="Constructor Standing",
     show_dots=True,
     dots_size=14,
     show_x_guides=False,
-    show_y_guides=True,
+    show_y_guides=False,
     x_label_rotation=0,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -77,10 +91,10 @@ chart = pygal.Line(
     interpolate=None,
     min_scale=1,
     max_scale=max_rank,
-    margin_top=60,
-    margin_right=100,
-    margin_bottom=60,
-    margin_left=60,
+    margin_top=80,
+    margin_right=160,
+    margin_bottom=40,
+    margin_left=80,
     value_formatter=lambda v: f"P{max_rank + 1 - int(v)}" if v == int(v) else "",
     tooltip_border_radius=10,
     tooltip_fancy_mode=True,
@@ -90,15 +104,17 @@ chart = pygal.Line(
 
 chart.x_labels = periods
 
-# Custom y-axis labels showing actual rank positions
+# Dict-format y_labels map inverted values to human-readable rank positions (P1–P5)
 chart.y_labels = [{"value": max_rank + 1 - i, "label": f"P{i}"} for i in range(1, max_rank + 1)]
 
-# Add each constructor with differentiated stroke width for visual hierarchy
 for entity in entities:
     chart.add(
-        entity, inverted_rankings[entity], stroke_style={"width": stroke_widths[entity]}, dots_size=dot_sizes[entity]
+        entity,
+        inverted_rankings[entity],
+        stroke_style={"width": stroke_widths[entity]},
+        dots_size=dot_sizes_map[entity],
     )
 
 # Save
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")
