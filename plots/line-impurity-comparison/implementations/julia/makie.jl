@@ -77,6 +77,9 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
+band!(ax, collect(p), gini, entropy;
+    color = (IMPRINT_PALETTE[3], 0.12))
+
 lines!(ax, collect(p), gini;
     color     = IMPRINT_PALETTE[1],
     linewidth = 3.0,
@@ -97,7 +100,7 @@ vlines!(ax, [0.5];
 text!(ax, 0.52, 0.97;
     text     = "max at p = 0.5",
     color    = INK_MUTED,
-    fontsize = 11,
+    fontsize = 13,
     align    = (:left, :top))
 
 Legend(fig[1, 2], ax;
