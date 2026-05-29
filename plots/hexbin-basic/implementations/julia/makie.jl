@@ -73,26 +73,45 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(Float32(INK.r), Float32(INK.g), Float32(INK.b), 0.12f0),
-    ygridcolor         = RGBAf(Float32(INK.r), Float32(INK.g), Float32(INK.b), 0.12f0),
+    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
+    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 
+# Log colorscale surfaces peripheral mid-density clusters that would otherwise wash out
 hb = hexbin!(ax, x_coords, y_coords;
     bins        = 50,
     colormap    = ANYPLOT_SEQ,
+    colorscale  = log10,
     strokewidth = 0,
 )
 
+# Colorbar with log-scale ticks at interpretable landmark counts
 Colorbar(fig[1, 2], hb;
     label          = "Point Count",
     labelsize      = 14,
     labelcolor     = INK,
-    ticklabelsize  = 12,
+    ticklabelsize  = 11,
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,
+    ticks          = ([1, 5, 20, 80, 250], ["1", "5", "20", "80", "250"]),
     width          = 22,
+)
+
+# Focal annotation: ring + label calling out the city center peak-density cluster
+scatter!(ax, [0.0], [0.0];
+    marker      = :circle,
+    markersize  = 42,
+    color       = :transparent,
+    strokewidth = 2.2,
+    strokecolor = INK,
+)
+text!(ax, 0.5, 0.1;
+    text     = "City Center\n(peak density)",
+    color    = INK,
+    fontsize = 11,
+    align    = (:left, :center),
 )
 
 colsize!(fig.layout, 1, Relative(0.87))
