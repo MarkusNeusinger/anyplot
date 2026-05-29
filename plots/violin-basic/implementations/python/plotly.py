@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -52,26 +52,46 @@ for i, (cat, values) in enumerate(data.items()):
 
 fig.update_traces(width=0.7, spanmode="soft")
 
+# Annotate the bimodal Engineering distribution
+fig.add_annotation(
+    x="Engineering",
+    y=106000,
+    text="Bimodal: junior<br>vs senior tiers",
+    showarrow=True,
+    arrowhead=2,
+    arrowsize=1,
+    arrowwidth=1.5,
+    arrowcolor=INK_SOFT,
+    ax=55,
+    ay=-30,
+    font=dict(size=10, color=INK_SOFT),
+    align="left",
+)
+
 # Style
 title = "violin-basic · python · plotly · anyplot.ai"
 fig.update_layout(
     autosize=False,
-    margin=dict(l=110, r=40, t=80, b=60),
-    title=dict(text=title, font=dict(size=16, color=INK), x=0.5, xanchor="center"),
+    margin=dict(l=110, r=80, t=80, b=60),
+    title=dict(text=title, font=dict(size=16, color=INK, weight="bold"), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Department", font=dict(size=12, color=INK)),
+        title=dict(text="Department", font=dict(size=12, color=INK), standoff=12),
         tickfont=dict(size=10, color=INK_SOFT),
         linecolor=INK_SOFT,
+        showline=True,
+        mirror=False,
         showgrid=False,
     ),
     yaxis=dict(
-        title=dict(text="Annual Salary ($)", font=dict(size=12, color=INK)),
+        title=dict(text="Annual Salary ($)", font=dict(size=12, color=INK), standoff=12),
         tickfont=dict(size=10, color=INK_SOFT),
         tickformat=",.0f",
         tickprefix="$",
         gridcolor=GRID,
         gridwidth=1,
         linecolor=INK_SOFT,
+        showline=True,
+        mirror=False,
         zerolinecolor=INK_SOFT,
         zeroline=False,
     ),
