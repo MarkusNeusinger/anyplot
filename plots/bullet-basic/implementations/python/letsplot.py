@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -37,11 +37,11 @@ else:
 
 # Data — Q4 2024 KPI dashboard with varied performance levels
 metrics = ["Revenue ($K)", "Profit Margin (%)", "Satisfaction", "New Customers"]
-actual = [275, 88, 3.8, 42]
-target = [300, 85, 4.5, 40]
-poor = [100, 40, 2.5, 15]
-satisfactory = [200, 70, 3.5, 30]
-good = [350, 100, 5.0, 50]
+actual = [275, 38, 3.8, 42]
+target = [300, 42, 4.5, 40]
+poor = [100, 20, 2.5, 15]
+satisfactory = [200, 35, 3.5, 30]
+good = [350, 50, 5.0, 50]
 
 n = len(metrics)
 
@@ -96,16 +96,29 @@ for i in range(n):
 df_target = pd.DataFrame(target_rows)
 
 # Value annotations (actual units, beside each bar)
-annot_labels = ["$275K", "88%", "3.8", "42"]
+# When the bar end is within 8 pp of the target marker, place annotation after the
+# marker instead of between bar-end and marker to avoid overlap.
+annot_labels = ["$275K", "38%", "3.8", "42"]
 annot_rows = []
 for i in range(n):
-    annot_rows.append({"x": actual_pct[i] + 2, "y": float(y_pos[i]), "label": annot_labels[i], "status": status[i]})
+    crowd_target = actual_pct[i] < target_pct[i] and (target_pct[i] - actual_pct[i]) < 8
+    if crowd_target:
+        annot_rows.append(
+            {"x": target_pct[i] + 2, "y": float(y_pos[i]), "label": annot_labels[i], "status": status[i], "hjust": 0.0}
+        )
+    else:
+        annot_rows.append(
+            {"x": actual_pct[i] + 4, "y": float(y_pos[i]), "label": annot_labels[i], "status": status[i], "hjust": 0.0}
+        )
 df_annot = pd.DataFrame(annot_rows)
 
-# Band legend note
-df_band_note = pd.DataFrame(
-    [{"x": 0, "y": -0.58, "label": "Bands:  Dark = Poor  ·  Medium = Satisfactory  ·  Light = Good"}]
-)
+# Band legend note — dark-mode bands are lighter for Poor (more contrast on dark bg),
+# so the descriptor text must flip to avoid being factually wrong in dark render
+if THEME == "light":
+    band_note_text = "Bands:  Dark = Poor  ·  Medium = Satisfactory  ·  Light = Good"
+else:
+    band_note_text = "Bands:  Light = Poor  ·  Medium = Satisfactory  ·  Dark = Good"
+df_band_note = pd.DataFrame([{"x": 0, "y": -0.58, "label": band_note_text}])
 
 # Build layered bullet chart
 plot = (
@@ -147,7 +160,7 @@ plot = (
             "Above Target": ABOVE_COLOR,
             "Below Target": BELOW_COLOR,
         },
-        labels={"Above Target": "Above Target", "Below Target": "Below Target"},
+        labels={"Above Target": "↑ Above Target", "Below Target": "↓ Below Target"},
         breaks=["Above Target", "Below Target"],
         name="Performance",
     )
