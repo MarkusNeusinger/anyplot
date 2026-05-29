@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-impurity-comparison
 created: '2026-05-29T00:59:57Z'
-updated: '2026-05-29T01:06:49Z'
+updated: '2026-05-29T01:20:39Z'
 generated_by: claude-sonnet
 workflow_run: 26611370835
 issue: 4133
@@ -12,46 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Full spec compliance: both Gini and entropy curves rendered correctly with proper
-    edge-case handling (ifelse for p=0,1), legend with full formulas, vertical reference
-    line at p=0.5 with annotation'
-  - Dual encoding (color + linetype) ensures CVD accessibility — green/lavender distinction
-    is backed by solid/dashed linestyle redundancy
-  - 'Both renders are fully readable: warm off-white (#FAF8F1) and near-black (#1A1A17)
-    backgrounds with correctly flipped chrome tokens in all elements (title, axis,
-    ticks, legend, annotation)'
-  - 'Mathematically correct data: Gini peaks at 0.5, entropy naturally [0,1] with
-    max 1.0 at p=0.5, demonstrating the standard textbook comparison'
-  - Unified combined legend through matching scale names — a clean ggplot2 idiom that
-    avoids duplicate legend entries for color+linetype
+  - 'Correct Imprint palette: brand green (#009E73) for Gini (first series), lavender
+    for Entropy'
+  - Excellent dual encoding via color + linestyle (solid vs dashed) — redundant encoding
+    aids CVD accessibility
+  - 'Formula labels in legend ("Gini: 2p(1-p)", "Entropy: -p log2(p) - (1-p) log2(1-p)")
+    satisfy the spec requirement and enhance educational value'
+  - Proper theme-adaptive chrome in both renders; no dark-on-dark failures in dark
+    theme
+  - Unified ggplot2 legend (color + linetype merged by matching name =) is idiomatic
+    and clean
+  - Correct edge case handling at p=0 and p=1 for entropy
   weaknesses:
-  - 'DE-01 LOW: Design sophistication sits at configured-defaults level (4/8). Consider
-    adding subtle semi-transparent area fills (geom_area with alpha≈0.1) under both
-    curves to add visual depth, or add direct in-chart labels at the curve peaks instead
-    of/alongside the legend to reduce legend dependency.'
-  - 'DE-02 MODERATE: Visual refinement stops at theme_minimal defaults. Consider adding
-    explicit axis lines (axis.line = element_line(color = INK_SOFT)) for an L-shaped
-    frame, which adds structural clarity without adding chartjunk — theme_minimal
-    removes them entirely which can make the data float.'
-  - 'DE-03 MODERATE: Annotation ''p = 0.5 (max impurity)'' is placed at y=0.10 (near
-    the x-axis), creating distance from the actual curve maxima at y=0.5 (Gini) and
-    y=1.0 (entropy). Moving the annotation to y≈0.85–0.90 or annotating each curve
-    peak separately would strengthen the visual storytelling.'
+  - library(dplyr) and library(scales) are imported but no functions from either package
+    are called; remove both unused imports
+  - Both X and Y major grid lines are drawn; style guide recommends Y-axis grid only
+    for line charts — add panel.grid.major.x = element_blank() to the theme() call
+  - Annotation text (size=3 ggplot mm units) is slightly compact — consider raising
+    to size=3.5 for better mobile readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "line-impurity-comparison · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) at top-left, clearly readable. X-axis label "Probability p" and Y-axis label "Impurity (normalized to [0, 1])" both dark and clearly visible. Tick labels in #4A4A44 (INK_SOFT) at [0, 0.25, 0.5, 0.75, 1] on both axes — readable. Annotation text "p = 0.5 (max impurity)" in INK_SOFT at lower-right area, readable but small.
-      Data: Two smooth curves — Gini (#009E73 brand green, solid) peaks at y=0.5 at x=0.5; Entropy (#C475FD lavender, dashed) peaks at y=1.0 at x=0.5. Vertical dotted line at x=0.5 in INK_SOFT spans full plot height. Legend at bottom with themed off-white background, labels "Gini: 2p(1-p)" and "Entropy: -p log2(p) - (1-p) log2(1-p)".
-      Legibility verdict: PASS — all text readable against the light background. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-impurity-comparison · r · ggplot2 · anyplot.ai" in dark ink, clearly readable; axis labels "Probability p" (x) and "Impurity (normalized to [0, 1])" (y) in dark ink; tick labels at 0, 0.25, 0.5, 0.75, 1 on both axes in muted dark ink; legend title "Splitting Criterion" and formula labels readable
+      Data: Solid green (#009E73) Gini curve peaking at 0.5; dashed lavender (#C475FD) Entropy curve peaking at 1.0; both with subtle alpha=0.08 area fills; dotted vertical reference line at p=0.5 with annotation "p = 0.5 (max impurity)"
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct theme surface, not pure black.
-      Chrome: Title in light cream (#F0EFE8), clearly visible. Axis labels in light cream, clearly visible. Tick labels in #B8B7B0 (INK_SOFT dark variant) — readable against the near-black background. Annotation text in INK_SOFT variant — readable. Legend has elevated background (#242420), white-ish text.
-      Data: IDENTICAL to light render — Gini #009E73 solid green, Entropy #C475FD dashed lavender. Colors are theme-independent as required. Dotted vertical line in INK_SOFT adapts correctly.
-      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored on dark background. Brand green #009E73 remains clearly visible on the near-black surface.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, legend text all rendered in light INK/INK_SOFT tokens (#F0EFE8 / #B8B7B0); all clearly readable; no dark-on-dark issues; annotation text uses INK_SOFT dark (#B8B7B0) — visible; legend background uses elevated dark surface (#242420)
+      Data: Data colors identical to light render — solid green (#009E73) Gini, dashed lavender (#C475FD) Entropy; both clearly visible against dark background
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,79 +55,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8/10,
-          annotation=3mm). Readable in both themes. Minor deduction: annotation text
-          is on the small side.'
+        comment: Font sizes explicitly set (title=12pt, axis=10pt, ticks=8pt, legend=8pt);
+          all text readable in both themes; annotation size=3 ggplot mm units is slightly
+          compact but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Annotation placed at y=0.10 clears all data.
+        comment: No text or data element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at linewidth=1.2 are clearly visible. Two-series dual encoding
-          makes both curves prominent.
+        comment: Both curves clearly visible; dual encoding (color + linestyle) aids
+          distinguishability; area fills add context without obscuring lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Dual encoding (color + linetype) ensures distinguishability under
-          CVD. Green/lavender are CVD-safe Imprint positions.
+        comment: Color + linestyle redundant encoding; Imprint palette CVD-safe; no
+          red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas. Good margins. Nothing cut off. Title at ~65% width
-          — expected for the mandated title format.
+        comment: Canvas gate passed (3200x1800); legend at bottom doesn't crowd data;
+          margins adequate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Probability p'', Y: ''Impurity (normalized to [0, 1])'' — descriptive
-          with units/context.'
+        comment: 'X: Probability p; Y: Impurity (normalized to [0, 1]); both descriptive
+          with appropriate context'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Gini = #009E73, second series Entropy = #C475FD. Light
-          bg #FAF8F1, dark bg #1A1A17. All chrome theme-adaptive. Full Imprint palette
-          compliance.'
+        comment: 'First series (Gini) = #009E73 (brand green); second (Entropy) =
+          #C475FD (lavender, position 2); backgrounds #FAF8F1 / #1A1A17; chrome properly
+          themed'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default. Clean Imprint palette, dual encoding,
-          but no distinctive compositional choices. No area fills, no direct labels,
-          no additional visual flourishes.
+        passed: true
+        comment: 'Above generic defaults: formula labels in legend add educational
+          value; area fills with alpha=0.08; proper dual encoding with solid/dashed
+          lines; intentional palette hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Above defaults: alpha-adjusted grid (0.25), minor grid disabled,
-          themed legend background. Missing: L-shaped axis lines (theme_minimal removes
-          all axis lines, leaving data floating without structural anchoring).'
+        passed: true
+        comment: Subtle grid via adjustcolor; minor grid removed; L-frame axis lines;
+          however, both X and Y grid lines shown (style guide prefers Y-only for line
+          charts)
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Vertical reference line + annotation creates focal point. Annotation
-          placement at y=0.10 (near x-axis) is disconnected from the curve maxima
-          at y=0.5/1.0, weakening the storytelling impact.
+        passed: true
+        comment: Dotted reference line at p=0.5 with annotation guides viewer to key
+          insight; area fills reinforce area under curve concept; formula labels create
+          effective educational storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -144,27 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with two curves as specified.
+        comment: Correct dual-line comparison chart with smooth curves across [0,
+          1]
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both Gini and entropy curves, legend with formulas, p=0.5 annotation,
-          edge cases handled, grid present.
+        comment: Both curves; different colors + linestyles; legend with formulas;
+          p=0.5 annotation; edge case handling; grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability p [0,1], Y=impurity [0,1]. All data visible.
+        comment: 'X: probability p [0, 1]; Y: normalized impurity; 100 points for
+          smooth rendering'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-impurity-comparison · r · ggplot2 · anyplot.ai''.
-          Legend labels include full formulas as specified.'
+        comment: 'Title: line-impurity-comparison · r · ggplot2 · anyplot.ai; legend
+          labels include mathematical formulas as specified'
     data_quality:
       score: 15
       max: 15
@@ -174,24 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both curves shown with different shapes (Gini peaks at 0.5, entropy
-          at 1.0), demonstrating their relationship and differences.
+        comment: Both Gini and entropy shown across full range; maximum annotated;
+          edge cases handled; comparison clearly visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Educational ML visualization — decision tree splitting criteria.
-          Neutral, scientifically accurate context.
+        comment: Standard ML educational visualization; neutral mathematical content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'p in [0,1], both measures naturally in [0,1]. Mathematically correct:
-          Gini max=0.5, entropy max=1.0.'
+        comment: Y-axis [0, 1.08] leaves headroom; X-axis [0, 1] for probability;
+          sensible tick positions
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -199,36 +193,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: tokens → data → plot → save. No functions or classes.'
+        comment: Linear script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present. Data is deterministic by construction.
+        comment: set.seed(42) present; data is deterministic mathematical functions
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: ggplot2, dplyr, scales, ragg — all standard ggplot2 template imports.
-          dplyr not substantively called but is part of the standard ggplot2 ecosystem
-          imports.
+        passed: false
+        comment: library(dplyr) and library(scales) are imported but neither package's
+          functions are called anywhere in the script; only ggplot2 and ragg are actively
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, appropriate complexity. No fake interactivity. ifelse()
-          for edge cases is idiomatic R.
+        comment: Clean, readable code; proper factor ordering for legend; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf(). Uses ragg::agg_png device.
+        comment: Saves as plot-{THEME}.png; uses current linewidth = API (not deprecated
+          size =)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -236,26 +231,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot2 idioms: factor() for legend ordering, dual aes() mapping
-          (color+linetype), scale_color_manual + scale_linetype_manual with matching
-          names for unified legend.'
+        comment: Proper grammar of graphics; data in long format with factor levels;
+          same name = in scale_color_manual and scale_linetype_manual to produce unified
+          single legend — a classic ggplot2 idiom
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Unified legend through matching aesthetic scale names is a ggplot2-distinctive
-          feature. Factor level ordering controls legend order. geom_vline + annotate
-          combo is characteristic ggplot2 pattern.
-  verdict: REJECTED
+        comment: geom_area + geom_line layering; scale_linetype_manual for redundant
+          encoding; adjustcolor() for alpha-equivalent grid styling (ggplot2 does
+          not expose alpha on element_line)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
