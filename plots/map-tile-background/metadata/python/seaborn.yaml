@@ -1,161 +1,197 @@
 library: seaborn
+language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:41:00Z'
-updated: '2026-01-20T22:44:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21189771533
+updated: '2026-05-27T15:27:56Z'
+generated_by: claude-sonnet
+workflow_run: 26519933031
 issue: 3756
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of Web Mercator projection for accurate point placement
-  - Proper OpenStreetMap tile fetching with appropriate User-Agent header
-  - Good use of coolwarm palette for temperature visualization
-  - White marker edges provide excellent contrast against varied map backgrounds
-  - Station labels with semi-transparent backgrounds ensure readability over complex
-    tile imagery
-  - Proper OSM attribution as required by license terms
+  - Real OSM tile fetching with proper Web Mercator projection math — asinh/atan formulas
+    correctly used for coordinate conversion
+  - Dual encoding (color + size) for temperature shows both spatial distribution and
+    magnitude, with imprint_seq correctly applied to continuous data
+  - Per-station anti-collision label offsets prevent overlap in the dense southern
+    peninsula cluster
+  - Theme-adaptive tokens correctly applied in both renders — ELEVATED_BG for label
+    boxes prevents dark-on-dark in dark theme
+  - OSM attribution included as required by tile provider license
+  - Canvas dimensions correct (3200×1800, no bbox_inches='tight'), saving exactly
+    as plot-{THEME}.png
   weaknesses:
-  - Minor label overlap in densely-clustered southern stations (Mountain View/Sunnyvale/Santa
-    Clara area)
-  - Seaborn role is somewhat limited compared to the manual tile/projection work
-  image_description: The plot displays a map of the San Francisco Bay Area using OpenStreetMap
-    tile backgrounds. Fifteen weather station locations are shown as circular markers
-    scattered across the region from Richmond in the north to San Jose in the south.
-    The markers are sized and colored according to temperature values using a "coolwarm"
-    diverging palette - cooler temperatures (around 15-17°C) appear in blue (Richmond,
-    Berkeley) while warmer temperatures (24-26°C) appear in red/pink (Concord, Livermore).
-    Each station has a white text label with a semi-transparent background showing
-    the station name. A vertical colorbar on the right shows the temperature scale
-    from ~16°C to ~25°C. The title "Bay Area Weather Stations · map-tile-background
-    · seaborn · pyplots.ai" appears at the top. OpenStreetMap attribution appears
-    in the bottom-right corner with a white background box.
+  - Southern cluster (Mountain View / Sunnyvale / Santa Clara / San Jose) still has
+    tight label boxes with marginal overlap — consider larger offsets or leader-line
+    annotations for that subgroup
+  - Only OSM tile provider used; spec requests awareness of multiple providers (CartoDB,
+    Stamen) — at minimum, document or parameterise the tile URL so a provider can
+    be swapped
+  - seaborn's contribution is limited to sns.scatterplot — the heavy lifting (tile
+    fetch, Web Mercator projection, PIL stitching) is pure PIL + matplotlib; LM-02
+    penalised accordingly
+  - np.random.seed(42) called but no random data generated — all station data is hardcoded;
+    seed call is dead code
+  - 'DE-02: whitespace around the map edges is tighter than ideal; adding modest fig.subplots_adjust()
+    padding on all sides would improve breathing room'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 fills the canvas — correct theme surface.
+      Chrome: Title "Bay Area Weather Stations · map-tile-background · python · seaborn · anyplot.ai" rendered in dark ink (#1A1A17) at fontsize=10, spanning ~70% of the canvas width — readable and well-proportioned. Colorbar label "Temperature (°C)" and tick values in INK/INK_SOFT — fully legible. OSM attribution in small (6pt) text at bottom-right inside a rounded ELEVATED_BG box.
+      Data: 15 weather station dots encoded with dual imprint_seq color (green #009E73 at cool end → blue #4467A3 at warm end) and size (150–600 pts²). White marker edges contrast well against the OSM tile background. Station name labels appear in dark ink inside rounded ELEVATED_BG (#FFFDF6) boxes with no visible border. OSM tile background shows San Francisco Bay Area street/terrain detail clearly.
+      Legibility verdict: PASS — all text readable; minor crowding in the southern cluster (Mountain View / Sunnyvale / Santa Clara / San Jose) but labels are mostly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 fills the canvas outside the map tile area — correct dark-theme surface.
+      Chrome: Title and all text rendered in #F0EFE8 (INK token for dark theme) against the near-black background — fully legible. Station label boxes use ELEVATED_BG (#242420) which contrasts from the dark canvas background and prevents dark-on-dark failure. Colorbar ticks use INK_SOFT (#B8B7B0) — readable against dark side panel. OSM attribution box uses ELEVATED_BG fill.
+      Data: Data point colors (imprint_seq gradient: #009E73→#4467A3) are identical to the light render — only the canvas chrome has flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all label boxes visually distinct from the dark background; colorbar readable.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'Title is large and readable, station labels are well-sized with
-          background boxes for contrast. Minor: some station labels could be slightly
-          larger.'
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Most labels are well-positioned. Minor overlap between Mountain View/Sunnyvale/Santa
-          Clara labels in the south.
+        comment: All font sizes explicitly set; title/colorbar/labels all readable
+          in both themes; OSM attribution at 6pt is very small but acceptable for
+          legal text
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Per-station offset dictionary prevents most overlap; minor crowding
+          in the southern peninsula cluster (Mountain View/Sunnyvale/Santa Clara/San
+          Jose)
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are appropriately sized (200-800) for 15 data points with
-          good alpha (0.85). White edge color provides excellent contrast.
+        comment: Dual encoding (size + color) for 15 points; white edges contrast
+          against tile; all markers clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: coolwarm palette is colorblind-friendly (blue-to-red diverging).
-          Good contrast between markers and map.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills the canvas well, colorbar is properly positioned with appropriate
-          shrink factor.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Axes are hidden (appropriate for maps), colorbar label has units.
-          No geographic coordinate labels.
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed (map provides context), legend disabled appropriately
-          since colorbar shows the encoding.
+        comment: imprint_seq (green→blue) is CVD-safe; white marker edges add contrast;
+          no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200×1800 canvas confirmed; map fills canvas well; colorbar properly
+          placed; no content cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels (correct for map); colorbar labeled 'Temperature (°C)'
+          with units; title descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly used for continuous temperature data; backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: real OSM tile fetching, proper Web Mercator
+          projection, dual encoding, anti-collision label offsets show genuine design
+          thought'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines/axes removed (appropriate for map); label boxes rounded
+          with ELEVATED_BG; colorbar styled cleanly; whitespace at canvas edges slightly
+          tight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic context clearly supports interpretation; inland vs coastal
+          temperature pattern immediately visible; dual encoding reinforces the temperature
+          story
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct: map with tile background showing data points'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly converted to pixel coordinates via Web Mercator
-          projection
-      - id: SC-03
+        comment: Map with tile background implemented correctly via OSM tile stitching
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: 'Includes: tile provider (OSM), auto-fit zoom, marker contrast with
-          white edges, attribution. Missing: marker clustering not implemented.'
-      - id: SC-04
-        name: Data Range
+        comment: Tile background, auto-fit zoom, contrast markers, attribution all
+          present; spec requests multiple tile providers but only OSM implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 15 stations visible within the map bounds with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct lat/lon → Web Mercator → pixel coordinate transformation;
+          all 15 stations visible and correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly represents temperature range
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Format includes spec-id, library, and pyplots.ai, but adds extra
-          context at start
+        comment: 'Title format correct: ''Bay Area Weather Stations · map-tile-background
+          · python · seaborn · anyplot.ai''; colorbar serves as temperature legend'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows temperature variation across locations with both size and color
-          encoding.
+        comment: Shows tile background, lat/lon mapping, value encoding (temp as color+size),
+          station labels, attribution — all key features of tile-based maps
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real Bay Area cities with plausible weather station scenario, neutral
-          scientific context.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (15.6-25.8°C) are realistic for Bay Area microclimates.
+        comment: SF Bay Area weather stations with plausible temperatures; real station
+          names; neutral scientific topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 points within 10-500 range; temperatures 15.6–25.8°C plausible
+          for Bay Area; coordinates accurate for real locations
     code_quality:
       score: 10
       max: 10
@@ -165,56 +201,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → tile fetching → coordinate conversion
-          → plotting → save'
+        comment: 'No functions/classes; flat structure: imports → data → tile fetch
+          → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for consistency
+        comment: np.random.seed(42) set; data is fully deterministic (hardcoded)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io, math, urllib, matplotlib, numpy, pandas, seaborn,
-          PIL'
+        comment: All imports used; numpy only for seed call on hardcoded data (minor
+          dead code but not a deduction)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean, well-organized; per-station offset dict is elegant; proper
+          coordinate projection math
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; dpi=400 correct
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses seaborn scatterplot with hue/size mapping and set_theme, but
-          heavy lifting done with matplotlib/PIL.
-  verdict: APPROVED
+        comment: sns.scatterplot with hue, size, sizes, hue_norm, edgecolor, linewidth,
+          alpha, ax, legend=False — idiomatic axes-level seaborn API; correct hue_norm
+          for continuous normalization
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Dual hue+size encoding via sns.scatterplot is a seaborn feature;
+          but tile fetching, coordinate projection, and PIL stitching are all PIL+matplotlib
+          — seaborn's distinctive contribution is limited
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   patterns:
-  - data-generation
+  - explicit-figure
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
+  - minimal-chrome
   - custom-colormap
   - alpha-blending
   - edge-highlighting
