@@ -1,15 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-22
+Library: matplotlib | Python
 """
+
+import os
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch, Patch
 
 
-# Data - Quarterly KPI dashboard with percentage-based metrics for consistent comparison
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome — Imprint palette
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic: green = above target (good/pass), red = below target (bad/fail)
+COLOR_ABOVE = "#009E73"  # Imprint brand green
+COLOR_BELOW = "#AE3030"  # Imprint matte red
+
+# Qualitative range band shading — neutral grayscale, theme-adaptive
+if THEME == "light":
+    band_colors = ["#dcdcdc", "#b8b8b8", "#949494"]  # lighter = poor, darker = good
+else:
+    band_colors = ["#2C2C29", "#3A3A37", "#484845"]  # slightly lighter than bg = poor -> good
+
+# Data: Quarterly KPI dashboard with percentage-based metrics
 metrics = [
     {"label": "Revenue", "actual": 92, "target": 85, "ranges": [40, 70, 100]},
     {"label": "Profit Margin", "actual": 38, "target": 45, "ranges": [20, 40, 60]},
@@ -18,14 +38,8 @@ metrics = [
     {"label": "On-Time Delivery", "actual": 96, "target": 95, "ranges": [60, 80, 100]},
 ]
 
-# Qualitative band colors (grayscale: poor -> satisfactory -> good, wider contrast)
-band_colors = ["#d9d9d9", "#b3b3b3", "#8c8c8c"]
-color_above = "#306998"  # Python Blue for above-target
-color_below = "#c0392b"  # Muted red for below-target
-target_color = "#1a1a1a"
-
-# Create plot (4800x2700 px)
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 bar_height = 0.32
 band_height = bar_height * 2.4
@@ -36,7 +50,7 @@ for i, metric in enumerate(metrics):
     y = y_positions[i]
     ranges = metric["ranges"]
 
-    # Draw qualitative range bands using FancyBboxPatch for rounded corners
+    # Qualitative range bands with rounded corners
     band_starts = [0] + ranges[:-1]
     for j, (start, end) in enumerate(zip(band_starts, ranges, strict=True)):
         width = end - start
@@ -51,10 +65,9 @@ for i, metric in enumerate(metrics):
         )
         ax.add_patch(box)
 
-    # Determine bar color based on target attainment
-    bar_color = color_above if metric["actual"] >= metric["target"] else color_below
+    bar_color = COLOR_ABOVE if metric["actual"] >= metric["target"] else COLOR_BELOW
 
-    # Draw actual value bar
+    # Actual value bar with rounded corners
     actual_bar = FancyBboxPatch(
         (0, y - bar_height / 2),
         metric["actual"],
@@ -66,66 +79,69 @@ for i, metric in enumerate(metrics):
     )
     ax.add_patch(actual_bar)
 
-    # Draw target marker as thin vertical line perpendicular to the bar
+    # Target marker: thin vertical line perpendicular to bar
     ax.vlines(
-        metric["target"],
-        y - band_height / 2 * 0.85,
-        y + band_height / 2 * 0.85,
-        colors=target_color,
-        linewidth=2.5,
-        zorder=3,
+        metric["target"], y - band_height / 2 * 0.85, y + band_height / 2 * 0.85, colors=INK, linewidth=2.0, zorder=3
     )
 
-    # Actual value label to the right of the max range
+    # Value label to the right of the max range
     ax.text(
         ranges[-1] + 2,
         y,
         f"{metric['actual']}%",
         va="center",
         ha="left",
-        fontsize=16,
+        fontsize=8,
         fontweight="bold",
         color=bar_color,
         zorder=4,
     )
 
-# Y-axis labels (metric names)
+# Y-axis: metric name labels
 ax.set_yticks(y_positions)
-ax.set_yticklabels([m["label"] for m in metrics], fontsize=18, fontweight="bold")
+ax.set_yticklabels([m["label"] for m in metrics], fontsize=8, fontweight="bold")
+ax.tick_params(axis="y", length=0, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-# X-axis label — all metrics share a percentage scale
-ax.set_xlabel("Performance (%)", fontsize=20)
-ax.tick_params(axis="x", labelsize=16)
-ax.tick_params(axis="y", length=0)
+# X-axis
+ax.set_xlabel("Performance (%)", fontsize=10, color=INK)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-# Title
-ax.set_title("bullet-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+# Title — language token required
+title = "bullet-basic · python · matplotlib · anyplot.ai"
+title_len = len(title)
+title_fontsize = max(8, round(12 * 67 / title_len)) if title_len > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=12, color=INK)
 
-# Grid on x-axis only, subtle
-ax.xaxis.grid(True, alpha=0.2, linewidth=0.8, linestyle="--", zorder=0)
+# Subtle x-axis grid
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK, zorder=0)
 ax.set_axisbelow(True)
 
-# Remove spines for cleaner look
+# Spines — keep bottom only for clean look
 for spine in ["top", "right", "left"]:
     ax.spines[spine].set_visible(False)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Set axis limits
-ax.set_xlim(left=0, right=112)
+# Axis limits
+ax.set_xlim(left=0, right=115)
 ax.set_ylim(-spacing * 0.5, y_positions[-1] + spacing * 0.5)
-
-# Invert y-axis so first metric is at top
 ax.invert_yaxis()
 
 # Legend
 legend_elements = [
-    Patch(facecolor=color_above, edgecolor="none", label="Above Target"),
-    Patch(facecolor=color_below, edgecolor="none", label="Below Target"),
-    Line2D([0], [0], color=target_color, linewidth=2.5, label="Target"),
-    Patch(facecolor=band_colors[2], edgecolor="none", label="Good"),
-    Patch(facecolor=band_colors[1], edgecolor="none", label="Satisfactory"),
-    Patch(facecolor=band_colors[0], edgecolor="none", label="Poor"),
+    Patch(facecolor=COLOR_ABOVE, edgecolor="none", label="Above Target"),
+    Patch(facecolor=COLOR_BELOW, edgecolor="none", label="Below Target"),
+    Line2D([0], [0], color=INK, linewidth=2.0, label="Target"),
+    Patch(facecolor=band_colors[2], edgecolor=INK_SOFT, linewidth=0.5, label="Good"),
+    Patch(facecolor=band_colors[1], edgecolor=INK_SOFT, linewidth=0.5, label="Satisfactory"),
+    Patch(facecolor=band_colors[0], edgecolor=INK_SOFT, linewidth=0.5, label="Poor"),
 ]
-ax.legend(handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=6, fontsize=14, frameon=False)
+leg = ax.legend(
+    handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=6, fontsize=8, frameon=True
+)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Explicit padding — do NOT use bbox_inches="tight" on savefig (trims canvas)
+fig.subplots_adjust(left=0.18, right=0.93, top=0.91, bottom=0.26)
+plt.savefig(f"plot-{THEME}.png", dpi=400)
