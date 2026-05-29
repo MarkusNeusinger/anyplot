@@ -37,7 +37,7 @@ type Swatch = {
   wcagD: number;
 };
 
-const PALETTE: Swatch[] = [
+export const PALETTE: Swatch[] = [
   { hex: '#009E73', name: 'brand green', family: 'green',  role: 'first series',       L: 0.620, C: 0.130, H: 165.5, oklch: 'oklch(0.620 0.130 165.5)', minNorm: 22.51, minCvd: 13.70, wcagL: 3.08, wcagD: 5.48 },
   { hex: '#C475FD', name: 'lavender',    family: 'purple', role: 'creative',           L: 0.704, C: 0.202, H: 308.9, oklch: 'oklch(0.704 0.202 308.9)', minNorm: 30.03, minCvd: 13.81, wcagL: 2.59, wcagD: 6.53 },
   { hex: '#4467A3', name: 'blue',        family: 'blue',   role: 'cool / info',        L: 0.516, C: 0.104, H: 260.6, oklch: 'oklch(0.516 0.104 260.6)', minNorm: 32.35, minCvd: 10.70, wcagL: 5.09, wcagD: 3.32 },
@@ -210,12 +210,12 @@ const HISTORY: HistoryEntry[] = [
 // Code snippets per language
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Lang = 'python' | 'r' | 'julia' | 'js';
+export type Lang = 'python' | 'r' | 'julia' | 'js';
 const LANG_LABELS: Record<Lang, string> = {
   python: 'Python', r: 'R', julia: 'Julia', js: 'JavaScript',
 };
 
-function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): string {
+export function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): string {
   const values = oklch ? sortedPalette.map(s => s.oklch) : sortedPalette.map(s => s.hex);
   const amberVal = oklch ? 'oklch(0.841 0.108 98.3)' : '#DDCC77';
   const seqStart = oklch ? 'oklch(0.620 0.130 165.5)' : '#009E73';
@@ -224,13 +224,13 @@ function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): string {
   const divEnd   = oklch ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
   switch (lang) {
     case 'python':
-      return `ANYPLOT_PALETTE = [
+      return `IMPRINT_PALETTE = [
 ${values.map(v => `    "${v}"`).join(',\n')},
 ]
-ANYPLOT_AMBER = "${amberVal}"  # warning / caution
+IMPRINT_AMBER = "${amberVal}"  # warning / caution
 
 # first series is ALWAYS slot 0 (brand green)
-color = ANYPLOT_PALETTE[0]
+color = IMPRINT_PALETTE[0]
 
 # continuous data — sequential + diverging cmaps
 from matplotlib.colors import LinearSegmentedColormap
@@ -238,40 +238,40 @@ imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["${seqStart}", "
 midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["${divStart}", midpoint, "${divEnd}"])`;
     case 'r':
-      return `ANYPLOT_PALETTE <- c(
+      return `IMPRINT_PALETTE <- c(
 ${values.map(v => `  "${v}"`).join(',\n')}
 )
-ANYPLOT_AMBER <- "${amberVal}"  # warning / caution
+IMPRINT_AMBER <- "${amberVal}"  # warning / caution
 
 # first series is ALWAYS slot 0 (brand green)
-color <- ANYPLOT_PALETTE[1]
+color <- IMPRINT_PALETTE[1]
 
 # continuous data — ggplot2 gradient scales
 midpoint <- if (theme == "light") "#FAF8F1" else "#1A1A17"
 scale_color_gradient(low = "${seqStart}", high = "${seqEnd}")                         # sequential
 scale_color_gradient2(low = "${divStart}", mid = midpoint, high = "${divEnd}", midpoint = 0)  # diverging`;
     case 'julia':
-      return `const ANYPLOT_PALETTE = [
+      return `const IMPRINT_PALETTE = [
 ${values.map(v => oklch ? `    "${v}"` : `    colorant"${v}"`).join(',\n')},
 ]
-const ANYPLOT_AMBER = ${oklch ? `"${amberVal}"` : `colorant"${amberVal}"`}  # warning
+const IMPRINT_AMBER = ${oklch ? `"${amberVal}"` : `colorant"${amberVal}"`}  # warning
 
 # first series is ALWAYS slot 0 (brand green)
-color = ANYPLOT_PALETTE[1]
+color = IMPRINT_PALETTE[1]
 
 # continuous data — Makie cgrad
 using ColorSchemes
 midpoint = theme == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const ANYPLOT_SEQ = cgrad([colorant"${seqStart}", colorant"${seqEnd}"])
-const ANYPLOT_DIV = cgrad([colorant"${divStart}", midpoint, colorant"${divEnd}"])`;
+const IMPRINT_SEQ = cgrad([colorant"${seqStart}", colorant"${seqEnd}"])
+const IMPRINT_DIV = cgrad([colorant"${divStart}", midpoint, colorant"${divEnd}"])`;
     case 'js':
-      return `const ANYPLOT_PALETTE = [
+      return `const IMPRINT_PALETTE = [
 ${values.map(v => `  "${v}"`).join(',\n')},
 ];
-const ANYPLOT_AMBER = "${amberVal}"; // warning / caution
+const IMPRINT_AMBER = "${amberVal}"; // warning / caution
 
 // first series is ALWAYS slot 0 (brand green)
-const color = ANYPLOT_PALETTE[0];
+const color = IMPRINT_PALETTE[0];
 
 // continuous data — two-stop / three-stop gradients
 const midpoint = theme === "light" ? "#FAF8F1" : "#1A1A17"; // theme-adaptive
