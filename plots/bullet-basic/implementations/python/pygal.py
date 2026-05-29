@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bullet-basic: Basic Bullet Chart
-Library: pygal 3.1.0 | Python 3.14.3
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-29
 """
 
 import importlib.util
