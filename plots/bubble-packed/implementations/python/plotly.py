@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -73,10 +73,9 @@ for _ in range(600):
         x_pos[i] += fx
         y_pos[i] += fy
 
-# Weight-based centering for better visual balance (larger bubbles pull center)
-area_weights = radii**2
-x_pos -= np.average(x_pos, weights=area_weights)
-y_pos -= np.average(y_pos, weights=area_weights)
+# Unweighted mean centering for symmetric empty-space distribution
+x_pos -= np.mean(x_pos)
+y_pos -= np.mean(y_pos)
 
 # Format values for display
 formatted = [f"${v / 1e6:.1f}M" if v >= 1e6 else f"${v / 1e3:.0f}K" for v in values]
@@ -135,8 +134,14 @@ for group_name in GROUP_NAMES:
 # Text labels inside bubbles — proportional to marker diameter
 for i in range(n):
     d = marker_diameters[i]
-    font_size = max(7, min(13, int(d * 0.18)))
-    label_text = f"<b>{labels[i]}</b><br>{formatted[i]}" if d > 45 else f"<b>{labels[i]}</b>"
+    font_size = max(9, min(12, int(d * 0.15)))
+    label_text = (
+        f"<b>{labels[i]}</b><br>{formatted[i]}"
+        if d > 60 and len(labels[i]) <= 9
+        else f"<b>{labels[i]}</b>"
+        if d > 30
+        else ""
+    )
     fig.add_annotation(
         x=x_pos[i],
         y=y_pos[i],
@@ -190,6 +195,51 @@ fig.add_annotation(
     xanchor="right",
     showarrow=False,
     font={"size": 10, "color": INK_MUTED, "family": "Arial"},
+)
+
+# Storytelling callouts — guide viewer to key budget insight
+eng_idx = labels.index("Engineering")
+rd_idx = labels.index("R&D")
+tech_total = sum(v for _, v, g in departments if g == "Technology")
+tech_share = tech_total / values.sum() * 100
+
+fig.add_annotation(
+    x=x_pos[eng_idx],
+    y=y_pos[eng_idx],
+    text=f"<b>Largest dept</b><br>${values[eng_idx] / 1e6:.1f}M — {values[eng_idx] / values.sum() * 100:.1f}% of total",
+    showarrow=True,
+    arrowhead=2,
+    arrowwidth=1.5,
+    arrowcolor=INK_SOFT,
+    axref="pixel",
+    ayref="pixel",
+    ax=0,
+    ay=-80,
+    font={"size": 9, "color": INK, "family": "Arial"},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=4,
+    align="center",
+)
+fig.add_annotation(
+    x=x_pos[rd_idx],
+    y=y_pos[rd_idx],
+    text=f"<b>Tech group</b>: {tech_share:.0f}% of budget<br>leads all four divisions",
+    showarrow=True,
+    arrowhead=2,
+    arrowwidth=1.5,
+    arrowcolor=INK_SOFT,
+    axref="pixel",
+    ayref="pixel",
+    ax=70,
+    ay=-60,
+    font={"size": 9, "color": INK, "family": "Arial"},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=4,
+    align="center",
 )
 
 # Save — landscape 3200×1800 (width=800, height=450, scale=4)
