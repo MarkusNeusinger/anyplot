@@ -1,16 +1,18 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
 """
 
 import os
+import re
 import sys
 
 
 # Prevent importing local pygal.py file
 sys.path = [p for p in sys.path if not p.endswith("/implementations/python")]
 
+import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
@@ -60,7 +62,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    value_label_font_size=36,
+    value_label_font_size=48,
     tooltip_font_size=32,
     font_family=_font,
     label_font_family=_font,
@@ -82,14 +84,12 @@ chart = pygal.XY(
     fill=False,
     show_y_guides=True,
     show_x_guides=False,
-    show_minor_x_labels=False,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
     legend_box_size=24,
     truncate_legend=-1,
     xrange=(0, 1),
     range=(0, 1.05),
-    x_labels=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
     y_labels=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
     show_y_labels=True,
     x_label_rotation=0,
@@ -99,9 +99,10 @@ chart = pygal.XY(
     margin_right=80,
     margin_top=80,
     interpolate="cubic",
-    show_x_labels=True,
     print_values=False,
     print_zeroes=False,
+    print_labels=True,
+    x_value_formatter=lambda x: f"{x:.1f}",
     js=[],
 )
 
@@ -132,7 +133,31 @@ chart.add(
     dots_size=10,
 )
 
-chart.render_to_png(f"plot-{THEME}.png")
+
+def _render_png(chart, filepath):
+    """Render chart to PNG, softening the default hard rectangular axis border."""
+    svg_bytes = chart.render()
+    svg_str = svg_bytes.decode("utf-8")
+    # Extract chart id to scope the injected rule precisely
+    m = re.search(r'id="(chart-[^"]+)"', svg_str)
+    chart_id = f"#{m.group(1)} " if m else ""
+    # Soften the default axis border lines (left/bottom frame) to INK_MUTED at 45% opacity.
+    # .axis .line targets the axis spine paths; more-specific .axis .major.line continues
+    # to use the theme INK color for the major grid anchors, both at reduced opacity.
+    border_css = (
+        f"\n      {chart_id}.axis .line {{"
+        f" stroke: {INK_MUTED} !important;"
+        f" stroke-opacity: 0.45 !important; }}"
+        f"\n      {chart_id}.axis .major.line {{"
+        f" stroke: {INK_MUTED} !important;"
+        f" stroke-opacity: 0.45 !important; }}"
+        f"\n    "
+    )
+    svg_str = svg_str.replace("</style>", border_css + "</style>", 1)
+    cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to=filepath, output_width=3200, output_height=1800)
+
+
+_render_png(chart, f"plot-{THEME}.png")
 chart.render_to_file(f"plot-{THEME}.svg")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
