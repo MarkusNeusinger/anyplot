@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: hexbin-basic
 created: '2026-05-29T09:34:53Z'
-updated: '2026-05-29T09:39:30Z'
+updated: '2026-05-29T09:50:55Z'
 generated_by: claude-sonnet
 workflow_run: 26629522401
 issue: 859
@@ -12,87 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Correct geom_hex with Imprint sequential colormap (green→blue)
-  - 'Strong real-world data narrative: three GPS mobility clusters (downtown, transit
-    hub, university campus)'
-  - Full theme-adaptive chrome with all tokens correctly wired
-  - Dynamic title font-size scaling included
-  - Clean removal of panel border, minor grid, and axis ticks
-  - Correct canvas 3200×1800 with ragg device
+  - Uses imprint_seq gradient (green→blue) perfectly matched to density data — correct
+    continuous cmap choice
+  - Three-cluster GPS dataset tells a clear urban-mobility story with annotated region
+    labels
+  - All font sizes explicitly set with adaptive title-fontsize formula
+  - 'Theme-adaptive chrome: grid opacity via #RRGGBBAA hex alpha, no tick marks, no
+    border, only major grid'
+  - Clean flat script with proper KISS structure and reproducible set.seed(42)
+  - guide_colorbar() with unit() sizing is idiomatic ggplot2 — compact vertical bar
+    well-placed
   weaknesses:
-  - Colorbar dimensions (barwidth=0.4cm, barheight=3cm) are quite narrow on a 3200×1800
-    canvas — consider barwidth=0.6cm, barheight=4.5cm for better mobile legibility
-  - 'DE-01/DE-03 headroom: no annotation or callout highlighting the three urban cluster
-    peaks — a subtle text label for each cluster (downtown, transit hub, campus) would
-    elevate data storytelling without adding complexity'
+  - Log scale not applied to colorbar despite density range of ~1–100 (2 orders of
+    magnitude) — spec suggests considering it; trans="log10" in scale_fill_gradient
+    would reveal low-density periphery detail better
+  - annotation text at size=2.8 mm (~8pt) blends into the dense hex area at mobile
+    widths; nudging Transit Hub label slightly away from the peak-density cell or
+    using INK rather than INK_SOFT would improve contrast
+  - 'LM-02: could use coord_fixed() to preserve geographic aspect ratio (easting vs
+    northing should have equal-distance axes)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "hexbin-basic · r · ggplot2 · anyplot.ai" in bold dark ink, occupies ~55% of plot width; X-axis label "Easting (km from city center)" and Y-axis label "Northing (km from city center)" in dark ink at 10pt; tick labels in INK_SOFT (#4A4A44) at 8pt; subtle semi-transparent grid lines at ~15% opacity
-      Data: Three visible clusters in the Imprint sequential gradient: low-density bins in #009E73 (brand green), high-density peaks transitioning to #4467A3 (blue) — matching the imprint_seq definition exactly. Colorbar on right side labeled "Count" with values 30, 60, 90; legend background in elevated #FFFDF6.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Bold dark title "hexbin-basic · r · ggplot2 · anyplot.ai" at ~55% of plot width, clearly readable. Both axis labels ("Easting (km from city center)", "Northing (km from city center)") use dark INK color, descriptive with geographic units. Tick labels in INK_SOFT dark grey, fully readable. Grid lines extremely subtle (hex alpha notation #1A1A1726) — barely visible, correct. Colorbar "Count" label dark, tick values readable.
+      Data: imprint_seq gradient from #009E73 (low-density periphery, teal-green hexagons) to #4467A3 (high-density Transit Hub, dark blue hexagons). Three distinct density clusters visible. Italic annotations "Transit Hub", "Downtown Core", "University Campus" placed at cluster centers in INK_SOFT — readable.
+      Legibility verdict: PASS — all text clear against light background.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title and all axis text rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) tokens, fully readable against the dark background; grid lines in subtle semi-transparent light tone; colorbar legend background in elevated #242420
-      Data: Data colors are identical to the light render — same green (#009E73) to blue (#4467A3) gradient with the same three-cluster distribution. The inter-hexagon gaps now show as dark instead of warm-white (expected behavior due to panel background change). No dark-on-dark text failure observed.
-      Legibility verdict: PASS — all chrome elements correctly flip to light tokens; no text legibility failure; brand green #009E73 clearly visible
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Same title in light #F0EFE8 — clearly readable. Axis labels and tick labels in light-colored INK/INK_SOFT tokens — fully readable, no dark-on-dark issues. Grid lines near-invisible (hex alpha #F0EFE826) — correct subtle treatment.
+      Data: Identical imprint_seq gradient — same teal-green periphery and dark-blue peak hexagons as light render. Data colors are confirmed identical between themes. The dark blue (#4467A3) high-density cells are distinguishable from the dark background due to hue contrast. Annotations remain readable in INK_SOFT light-grey on dark background.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at correct sizes (title 12pt, axis
-          10pt, ticks 8pt); colorbar labels slightly small for optimal mobile legibility
-          at 0.4cm width
+        comment: All font sizes explicitly set (title adaptive formula, axis.title=10,
+          axis.text=8, legend 10/8). Proportional and readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; hexagons, labels and colorbar well-separated
+        comment: Annotations placed at distinct cluster locations with no mutual overlap.
+          Tick labels and axis titles do not collide.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10,000 points appropriately aggregated into hexbins; density gradient
-          clearly visible in both themes
+        comment: geom_hex bins=35 for 10,000 points — appropriate resolution. Color
+          gradient reveals three density tiers clearly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential (green-to-blue) is CVD-safe; no red-green conflict
+        comment: Green-to-blue gradient is CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 landscape canvas; title ~55% width; no overflow
-          or clipping
+        comment: Landscape 3200x1800 (8in x 4.5in @ 400dpi) passes canvas gate. Hex
+          data fills plot well; colorbar compact and well-positioned right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; axis labels include units (km from
-          city center)
+        comment: Both axes have descriptive geographic labels with units (km from
+          city center). Colorbar labeled 'Count'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient low=#009E73 high=#4467A3 is exact imprint_seq;
-          backgrounds #FAF8F1/#1A1A17 correct'
+        comment: 'scale_fill_gradient(low=#009E73, high=#4467A3) = imprint_seq. Backgrounds
+          #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive. Data colors identical
+          across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -102,22 +109,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Good real-world data narrative with three urban clusters; purposeful
-          colormap; no cluster annotations to create focal points
+        comment: 'Above well-configured default: Imprint sequential gradient, cluster
+          annotations, adaptive title sizing — but not FiveThirtyEight publication
+          level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed, minor grid removed, axis ticks removed, subtle
-          semi-transparent major grid; compact colorbar
+        comment: Ticks removed, border removed, minor grid removed, subtle major grid
+          via hex-alpha, generous margins. Good refinement visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three urban activity clusters with meaningful labels; density gradient
-          story clear; no annotations for peak cluster labels
+        comment: GPS urban mobility scenario with labeled clusters tells a clear density
+          story. Viewer immediately identifies which zones are busiest.
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_hex is native ggplot2 hexbin implementation
+        comment: Correct hexbin plot via geom_hex().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present; imprint_seq colormap (perceptually uniform); bins=35
-          parameter; 10,000 points large dataset
+        comment: Colorbar present, perceptually-uniform cmap (imprint_seq), gridsize
+          via bins=35, large dataset (10,000 pts). Log scale not used but spec says
+          'consider' — density range (~1–100) is manageable without it.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=easting, Y=northing; all data shown; axes fully cover data range
+        comment: Easting=X, Northing=Y, fill=count. All axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'hexbin-basic · r · ggplot2 · anyplot.ai' matches required
-          format; Count legend correctly labeled
+          format. Legend 'Count' is correct.
     data_quality:
       score: 15
       max: 15
@@ -157,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates density aggregation, gradient encoding, multi-cluster
-          patterns, large dataset handling
+        comment: Shows varying density (periphery ~1 to peak ~100), multiple clusters,
+          continuous color gradient — all hexbin features represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GPS mobility data with plausible urban clusters (downtown, transit
-          hub, university campus); neutral scenario
+        comment: GPS urban mobility scenario (downtown core, transit hub, university
+          campus) is real-world, neutral, and comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in km from city center (-5 to 5 range); realistic for urban
-          geography
+        comment: 10,000 total points with plausible cluster proportions (5000/3000/2000).
+          Coordinate ranges (−5 to +6 km) are realistic for urban geography.
     code_quality:
       score: 10
       max: 10
@@ -182,56 +191,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear script structure
+        comment: 'Flat script: tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported; both used
+        comment: Only ggplot2 and ragg imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code; no fake UI; proper linewidth= usage (not
-          deprecated size=)
+        comment: Clean, idiomatic R. Adaptive title fontsize formula is a nice touch
+          without over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current ggplot2 API
+        comment: Saves plot-{THEME}.png via ragg::agg_png. Uses linewidth= (not deprecated
+          size=).
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: geom_hex + scale_fill_gradient + guide_colorbar is canonical ggplot2
-          pattern; theme_minimal base + theme() override is idiomatic
+        comment: geom_hex() native ggplot2 hexbin, scale_fill_gradient() for continuous
+          fill, guide_colorbar() with unit() sizing — expert grammar-of-graphics approach.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_hex is ggplot2's native hexbin; guide_colorbar with custom barwidth/barheight
-          dimensions; dynamic title fontsize scaling
+        comment: geom_hex() native (no external hexbin package), guide_colorbar(barwidth=unit(),
+          barheight=unit()) for precise sizing, hex-alpha grid color (#RRGGBBAA notation).
+          Could add coord_fixed() for geographic proportionality.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - ragg
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   dataprep: []
