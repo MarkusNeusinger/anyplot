@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
@@ -94,7 +94,7 @@ ann_rule = (
 
 ann_text = (
     alt.Chart(ann_df)
-    .mark_text(align="left", dx=10, fontSize=16, fontWeight="bold", color=IMPRINT_RED)
+    .mark_text(align="left", dx=10, fontSize=12, fontWeight="bold", color=IMPRINT_RED)
     .encode(x="x:Q", y="y_mid:Q", text="label:N")
 )
 
@@ -132,7 +132,7 @@ title_fs = max(11, round(16 * ratio))
 chart = (
     (band_outer + band_inner + line + ann_rule + ann_text + tooltip_points + guide_rule)
     .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title, fontSize=title_fs, color=INK))
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
@@ -143,6 +143,7 @@ chart = (
         gridColor=INK,
         gridOpacity=0.12,
     )
+    .configure_axisX(grid=False)
 )
 
 # Save PNG
