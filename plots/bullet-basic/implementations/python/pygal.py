@@ -1,62 +1,92 @@
-""" pyplots.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 85/100 | Updated: 2026-02-22
 """
 
+import importlib.util
+import os
+import sys
 import xml.etree.ElementTree as ET
 
 import cairosvg
-import pygal
-from pygal.style import Style
 
 
-# Data - Sales KPIs showing actual vs target with qualitative ranges
+# Guard against self-import: this file is named pygal.py, so a plain
+# `import pygal` picks up itself instead of the installed package.
+pygal_spec = importlib.util.find_spec("pygal")
+if pygal_spec and pygal_spec.origin != __file__:
+    import pygal
+    from pygal.style import Style
+else:
+    _cwd = os.getcwd()
+    sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.abspath(_cwd)]
+    try:
+        import pygal
+        from pygal.style import Style
+    finally:
+        sys.path.insert(0, _cwd)
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome — Imprint palette
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Qualitative range band colors: warm-neutral grays, theme-adaptive
+if THEME == "light":
+    BAND_POOR = "#E4E3DC"
+    BAND_SAT = "#C0BFB8"
+    BAND_GOOD = "#8E8D87"
+else:
+    BAND_POOR = "#2F2F27"
+    BAND_SAT = "#484843"
+    BAND_GOOD = "#60605A"
+
+# Imprint semantic anchors: green for at/above target, red for below
+COLOR_ABOVE = "#009E73"  # brand green — at or above target
+COLOR_BELOW = "#AE3030"  # matte red — below target
+COLOR_TARGET = INK  # theme-adaptive neutral for target marker
+
+# Manufacturing & supply chain KPIs (7 metrics across ops domains)
 metrics = [
-    {"label": "Revenue", "actual": 275, "target": 250, "max": 300, "fmt": "${}K"},
-    {"label": "Profit", "actual": 85, "target": 100, "max": 120, "fmt": "${}K"},
-    {"label": "New Orders", "actual": 320, "target": 350, "max": 400, "fmt": "{}"},
-    {"label": "Customers", "actual": 1450, "target": 1400, "max": 1600, "fmt": "{}"},
-    {"label": "Satisfaction", "actual": 4.2, "target": 4.5, "max": 5.0, "fmt": "{}/5"},
-    {"label": "Avg Deal Size", "actual": 42, "target": 50, "max": 60, "fmt": "${}K"},
-    {"label": "Retention", "actual": 92, "target": 85, "max": 100, "fmt": "{}%"},
+    {"label": "On-Time Delivery", "actual": 91, "target": 95, "max": 100, "fmt": "{}%"},
+    {"label": "First Pass Yield", "actual": 88, "target": 90, "max": 100, "fmt": "{}%"},
+    {"label": "OEE", "actual": 72, "target": 85, "max": 100, "fmt": "{}%"},
+    {"label": "Inventory Turnover", "actual": 8, "target": 10, "max": 12, "fmt": "{}x"},
+    {"label": "Supplier On-Time", "actual": 87, "target": 90, "max": 100, "fmt": "{}%"},
+    {"label": "Capacity Utilization", "actual": 82, "target": 80, "max": 100, "fmt": "{}%"},
+    {"label": "Quality Score", "actual": 94, "target": 92, "max": 100, "fmt": "{}/100"},
 ]
 
 POOR_PCT = 50
 SAT_PCT = 75
 
-# Normalize to percentages and classify performance vs target
 actual_pcts = [round((m["actual"] / m["max"]) * 100, 1) for m in metrics]
 target_pcts = [round((m["target"] / m["max"]) * 100, 1) for m in metrics]
 above_target = [m["actual"] >= m["target"] for m in metrics]
 labels = [f"{m['label']} ({m['fmt'].format(m['actual'])})" for m in metrics]
 
-# Performance-coded colors for data storytelling (colorblind-safe teal vs amber)
-COLOR_ABOVE = "#2A9D8F"
-COLOR_BELOW = "#D4770B"
-COLOR_TARGET = "#1a1a1a"
-
-# Style: grayscale range bands + performance-coded bars + black target
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    colors=("#E0E0E0", "#BFBFBF", "#969696", COLOR_ABOVE, COLOR_BELOW, COLOR_TARGET),
-    title_font_size=64,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=34,
-    value_font_size=30,
-    tooltip_font_size=30,
+    colors=(BAND_POOR, BAND_SAT, BAND_GOOD, COLOR_ABOVE, COLOR_BELOW, COLOR_TARGET),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
 chart = pygal.HorizontalStackedBar(
-    width=4800,
-    height=2700,
-    title="bullet-basic \u00b7 pygal \u00b7 pyplots.ai",
+    width=3200,
+    height=1800,
+    title="bullet-basic · pygal · anyplot.ai",
     style=custom_style,
     show_legend=True,
     legend_at_bottom=True,
@@ -74,17 +104,17 @@ chart = pygal.HorizontalStackedBar(
 )
 chart.x_labels = labels
 
-# Qualitative range bands as stacked series with per-value config dicts
-chart.add("Poor (0-50%)", [{"value": POOR_PCT, "label": labels[i]} for i in range(len(metrics))])
-chart.add("Satisfactory (50-75%)", [{"value": SAT_PCT - POOR_PCT, "label": labels[i]} for i in range(len(metrics))])
-chart.add("Good (75-100%)", [{"value": 100 - SAT_PCT, "label": labels[i]} for i in range(len(metrics))])
+# Background bands: stacked segments for Poor / Satisfactory / Good zones
+chart.add("Poor (0–50%)", [{"value": POOR_PCT, "label": lbl} for lbl in labels])
+chart.add("Satisfactory (50–75%)", [{"value": SAT_PCT - POOR_PCT, "label": lbl} for lbl in labels])
+chart.add("Good (75–100%)", [{"value": 100 - SAT_PCT, "label": lbl} for lbl in labels])
 
-# Legend-only series for performance-coded actual bars and target marker
+# Legend-only placeholder series for injected performance bars and target marker
 chart.add("Above Target", [None] * len(metrics))
 chart.add("Below Target", [None] * len(metrics))
 chart.add("Target", [None] * len(metrics))
 
-# Render SVG and parse for programmatic element injection
+# Parse rendered SVG for coordinate-space injection of actual bars and markers
 ET.register_namespace("", "http://www.w3.org/2000/svg")
 ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 svg_bytes = chart.render()
@@ -100,10 +130,9 @@ for line in list(root.iter(f"{{{NS}}}line")):
         if p is not None:
             p.remove(line)
 
-# Locate serie-0 (Poor range) bars as coordinate reference
+# serie-0 (Poor band) rects serve as the coordinate reference for injection
 serie_0 = next((g for g in root.iter(f"{{{NS}}}g") if "serie-0" in g.get("class", "")), None)
 
-# Extract bar positions from Poor range (x, y, width, height per metric row)
 poor_bars = []
 if serie_0 is not None:
     for rect in serie_0.iter(f"{{{NS}}}rect"):
@@ -111,14 +140,12 @@ if serie_0 is not None:
         if w > 1 and h > 1:
             poor_bars.append((float(rect.get("x")), float(rect.get("y")), w, h))
 
-# Inject actual bars and target markers into the plot coordinate space
 inject_parent = parent_map.get(serie_0, root)
 for i, (bx, by, bw, bh) in enumerate(poor_bars):
-    # Convert percentage to pixel width using Poor band as scale reference
     px_per_pct = bw / POOR_PCT
-    cy = by + bh / 2  # vertical center of this metric row
+    cy = by + bh / 2
 
-    # Actual value bar (42% of band height for classic bullet chart layering)
+    # Actual value bar at 42% of band height (classic bullet chart layering)
     actual_w = actual_pcts[i] * px_per_pct
     bar_h = bh * 0.42
     bar_color = COLOR_ABOVE if above_target[i] else COLOR_BELOW
@@ -130,7 +157,7 @@ for i, (bx, by, bw, bh) in enumerate(poor_bars):
     a.set("fill", bar_color)
     a.set("rx", "2")
 
-    # Target marker (prominent vertical line at target percentage)
+    # Target marker: prominent vertical rectangle at target percentage
     tx = bx + target_pcts[i] * px_per_pct
     marker_h = bh * 0.75
     t = ET.SubElement(inject_parent, f"{{{NS}}}rect")
@@ -140,5 +167,9 @@ for i, (bx, by, bw, bh) in enumerate(poor_bars):
     t.set("height", f"{marker_h:.1f}")
     t.set("fill", COLOR_TARGET)
 
-# Save as PNG at native 4800×2700 resolution
-cairosvg.svg2png(bytestring=ET.tostring(root, encoding="utf-8"), write_to="plot.png")
+svg_modified = ET.tostring(root, encoding="utf-8")
+
+# Save PNG at canonical 3200x1800 and interactive HTML
+cairosvg.svg2png(bytestring=svg_modified, write_to=f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(svg_modified)
