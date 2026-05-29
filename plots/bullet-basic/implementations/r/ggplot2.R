@@ -79,12 +79,21 @@ targets_df <- data.frame(
   ymax = metrics$y_pos + band_h * 0.9
 )
 
-# Value labels positioned just past the bar end
+# Value labels — above-target metric highlighted with bar color for emphasis
+above_target <- metrics$actual >= metrics$target
 labels_df <- data.frame(
-  x     = metrics$actual + 1.5,
-  y     = metrics$y_pos,
-  label = paste0(metrics$actual, "%")
+  x      = metrics$actual + 1.5,
+  y      = metrics$y_pos,
+  label  = paste0(metrics$actual, "%"),
+  lcolor = ifelse(above_target, IMPRINT_PALETTE[1], INK_SOFT),
+  stringsAsFactors = FALSE
 )
+
+# Zone midpoints for annotate() labels in the top row (Revenue, y_pos = 5)
+top_y    <- metrics$y_pos[1]
+poor_mid <- metrics$range_poor[1] / 2
+sats_mid <- metrics$range_poor[1] + (metrics$range_sats[1] - metrics$range_poor[1]) / 2
+good_mid <- metrics$range_sats[1] + (metrics$range_good[1] - metrics$range_sats[1]) / 2
 
 # --- Plot -------------------------------------------------------------------
 title_str  <- "bullet-basic · r · ggplot2 · anyplot.ai"
@@ -98,12 +107,14 @@ p <- ggplot() +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill_color),
     color = NA
   ) +
-  scale_fill_identity(
-    name   = "Zone",
-    guide  = guide_legend(),
-    breaks = c(BAND_POOR, BAND_SATS, BAND_GOOD),
-    labels = c("Poor", "Satisfactory", "Good")
-  ) +
+  scale_fill_identity(guide = "none") +
+  # Zone labels via annotate() — ggplot2-idiomatic alternative to a side legend
+  annotate("text", x = poor_mid, y = top_y + band_h * 0.62,
+           label = "Poor", color = INK_MUTED, size = 2.3, fontface = "italic") +
+  annotate("text", x = sats_mid, y = top_y + band_h * 0.62,
+           label = "Satisfactory", color = INK_MUTED, size = 2.3, fontface = "italic") +
+  annotate("text", x = good_mid, y = top_y + band_h * 0.62,
+           label = "Good", color = INK_MUTED, size = 2.3, fontface = "italic") +
   # Actual performance bars (Imprint palette position 1)
   geom_rect(
     data = bars_df,
@@ -116,12 +127,13 @@ p <- ggplot() +
     aes(x = x, xend = x, y = ymin, yend = ymax),
     color = INK, linewidth = 1.5
   ) +
-  # Actual value text labels
+  # Value labels — above-target metric rendered in bar color for clear emphasis
   geom_text(
     data = labels_df,
-    aes(x = x, y = y, label = label),
-    color = INK_SOFT, size = 3.0, hjust = 0
+    aes(x = x, y = y, label = label, color = lcolor),
+    size = 3.0, hjust = 0
   ) +
+  scale_color_identity() +
   scale_y_continuous(
     breaks = metrics$y_pos,
     labels = metrics$label,
@@ -137,7 +149,7 @@ p <- ggplot() +
     title   = title_str,
     x       = "Performance (% of target)",
     y       = NULL,
-    caption = "Bar = actual performance  ·  Vertical line = target"
+    caption = "Bar = actual performance  ·  Vertical line = target  ·  Green label = above target"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -153,12 +165,8 @@ p <- ggplot() +
     plot.title         = element_text(
       color = INK, size = title_size, face = "bold", margin = margin(b = 10)
     ),
-    plot.caption       = element_text(color = INK_MUTED, size = 7, hjust = 0),
-    legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.2),
-    legend.text        = element_text(color = INK_SOFT, size = 7.5),
-    legend.title       = element_text(color = INK, size = 8.5),
-    legend.position    = "right",
-    legend.key.size    = unit(0.4, "cm"),
+    plot.caption       = element_text(color = INK_MUTED, size = 8, hjust = 0),
+    legend.position    = "none",
     plot.margin        = margin(t = 15, r = 20, b = 12, l = 10)
   )
 
