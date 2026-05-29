@@ -253,3 +253,12 @@ secrets/
 # Generated OG image samples (issue #5652) — review-only output of scripts/generate_og_samples.py
 /out/
 .migration-progress.json
+
+# Rendered plot artifacts must NOT be checked into the repo — they live in
+# GCS production (gs://anyplot-images/plots/...). The .regen-preview/ rule
+# above already excludes the staging dir; this rule catches the rarer case
+# of plot-{light,dark}.{png,html} accidentally landing at the impl-dir root
+# (e.g. from impls that call savefig(script_dir, ...) instead of cwd).
+plots/*/implementations/*/plot-*.png
+plots/*/implementations/*/plot-*.html
+plots/*/implementations/*/plot-*.webp
