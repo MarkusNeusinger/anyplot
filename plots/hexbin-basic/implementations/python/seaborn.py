@@ -1,58 +1,97 @@
-""" pyplots.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-21
+Quality: 91/100 | Updated: 2026-05-29
 """
+
+import os
 
 import numpy as np
 import seaborn as sns
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LinearSegmentedColormap, LogNorm
 
 
-# Data - simulate GPS coordinates for urban traffic hotspot analysis
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap for continuous density data
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Data — NYC GPS coordinates for urban traffic hotspot analysis
 np.random.seed(42)
-
-# 50,000 points to demonstrate hexbin advantage over scatter
 n_points = 50000
 
-# Downtown business district - high density cluster
 downtown = np.random.multivariate_normal([-73.985, 40.748], [[0.0001, 0.00005], [0.00005, 0.0001]], n_points // 2)
-
-# Airport area - medium density cluster
 airport = np.random.multivariate_normal([-73.875, 40.775], [[0.00008, -0.00003], [-0.00003, 0.00008]], n_points // 3)
-
-# Shopping district - smaller cluster
 shopping = np.random.multivariate_normal([-73.965, 40.785], [[0.00004, 0], [0, 0.00006]], n_points // 6)
 
 longitude = np.concatenate([downtown[:, 0], airport[:, 0], shopping[:, 0]])
 latitude = np.concatenate([downtown[:, 1], airport[:, 1], shopping[:, 1]])
 
-# Plot - seaborn JointGrid with hexbin and marginal distributions
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.2)
+# Plot
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-g = sns.JointGrid(x=longitude, y=latitude, height=12, ratio=5, space=0.15)
+# Square canvas: height=6 @ dpi=400 → 2400×2400 px
+g = sns.JointGrid(x=longitude, y=latitude, height=6, ratio=5, space=0.15)
+g.figure.set_dpi(400)
+g.figure.patch.set_facecolor(PAGE_BG)
 
-# Main hexbin with log-normalized color scale for wide density variation
-hb = g.ax_joint.hexbin(longitude, latitude, gridsize=35, cmap="viridis", mincnt=1, norm=LogNorm(), edgecolors="none")
+# Main hexbin with Imprint sequential colormap and log normalization
+hb = g.ax_joint.hexbin(longitude, latitude, gridsize=35, cmap=imprint_seq, mincnt=1, norm=LogNorm(), edgecolors="none")
 
-# Marginal distributions - distinctive seaborn feature
-g.plot_marginals(sns.kdeplot, color="#306998", fill=True, alpha=0.4, linewidth=2)
+# Marginal KDE distributions — seaborn's distinctive JointGrid feature
+g.plot_marginals(sns.kdeplot, color="#009E73", fill=True, alpha=0.35, linewidth=1.5)
 
-# Colorbar for density scale
-cbar = g.figure.colorbar(hb, ax=g.ax_joint, pad=0.02, shrink=0.8)
-cbar.set_label("Point Count (log scale)", fontsize=20)
-cbar.ax.tick_params(labelsize=16)
+# Remove grid and spines from marginals for polished appearance
+for ax_marg in [g.ax_marg_x, g.ax_marg_y]:
+    ax_marg.grid(False)
+    ax_marg.set_facecolor(PAGE_BG)
+    for spine in ax_marg.spines.values():
+        spine.set_visible(False)
 
-# Style
-g.ax_joint.set_xlabel("Longitude (°W)", fontsize=20)
-g.ax_joint.set_ylabel("Latitude (°N)", fontsize=20)
-g.ax_joint.tick_params(axis="both", labelsize=16)
-g.ax_joint.grid(True, alpha=0.2, linestyle="--", linewidth=0.8)
+# Style — joint axes
+g.ax_joint.set_xlabel("Longitude (°W)", fontsize=10, color=INK)
+g.ax_joint.set_ylabel("Latitude (°N)", fontsize=10, color=INK)
+g.ax_joint.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+g.ax_joint.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 g.ax_joint.spines["top"].set_visible(False)
 g.ax_joint.spines["right"].set_visible(False)
+for spine_name in ["left", "bottom"]:
+    g.ax_joint.spines[spine_name].set_color(INK_SOFT)
 
-g.figure.suptitle("hexbin-basic · seaborn · pyplots.ai", fontsize=24, y=0.98)
+# Reserve top for title and right for colorbar without crowding the marginal
+g.figure.subplots_adjust(top=0.93, right=0.83, left=0.1, bottom=0.09, hspace=0.15, wspace=0.15)
 
-# Save
-g.figure.tight_layout(rect=[0, 0, 1, 0.96])
-g.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Colorbar in dedicated right-side space — positioned to avoid overlapping marginal
+cbar_ax = g.figure.add_axes([0.86, 0.1, 0.025, 0.56])
+cbar = g.figure.colorbar(hb, cax=cbar_ax)
+cbar.set_label("Point Count (log scale)", fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+
+# Title — 44 chars, ratio=1.0, fontsize=12pt (at or below 67-char baseline)
+title = "hexbin-basic · python · seaborn · anyplot.ai"
+title_fontsize = max(8, round(12 * (67 / len(title) if len(title) > 67 else 1.0)))
+g.figure.suptitle(title, fontsize=title_fontsize, color=INK, fontweight="medium", y=0.975)
+
+# Save — no bbox_inches='tight' so canvas stays exactly 2400×2400 px
+g.figure.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
