@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -18,6 +18,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — canonical order, first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
@@ -90,8 +91,8 @@ sns.stripplot(
     palette=IMPRINT_PALETTE,
     dodge=False,
     jitter=0.2,
-    size=1.5,
-    alpha=0.2,
+    size=2.5,
+    alpha=0.25,
     legend=False,
     ax=ax,
 )
@@ -108,8 +109,20 @@ ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, linewidth=0.8)
 ax.set_axisbelow(True)
+
+# Annotation: highlight the bimodal East distribution (the key storytelling insight)
+ax.annotate(
+    "Bimodal: cold winters\n& hot summers",
+    xy=(2, 27),
+    xytext=(2.55, 37),
+    fontsize=7.5,
+    color=INK_MUTED,
+    ha="left",
+    va="center",
+    arrowprops={"arrowstyle": "-|>", "color": INK_MUTED, "lw": 0.9},
+)
 
 # Save — no bbox_inches='tight' (seaborn canvas contract: figsize×dpi sets exact target)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
