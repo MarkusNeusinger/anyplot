@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -135,7 +135,7 @@ target_chart = (
 # Value labels at end of each bar
 value_labels = (
     alt.Chart(df_actual)
-    .mark_text(align="left", dx=6, fontSize=11, fontWeight="bold")
+    .mark_text(align="left", dx=6, fontSize=12, fontWeight="bold")
     .encode(
         y=alt.Y("metric:N", sort=metric_order, scale=y_scale),
         x=alt.X("actual_pct:Q"),
@@ -158,7 +158,7 @@ chart = (
     )
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, grid=False, labelColor=INK_SOFT, titleColor=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=None, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save PNG and HTML
