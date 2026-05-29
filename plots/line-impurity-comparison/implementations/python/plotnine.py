@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -21,6 +21,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_manual,
+    scale_linetype_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -64,17 +65,24 @@ title_fontsize = max(8, round(12 * (67 / n if n > 67 else 1.0)))
 
 # Plot
 plot = (
-    ggplot(df, aes(x="p", y="impurity", color="measure"))
+    ggplot(df, aes(x="p", y="impurity", color="measure", linetype="measure"))
     + geom_vline(xintercept=0.5, color=INK_SOFT, size=0.6, linetype="dashed", alpha=0.5)
     + geom_line(size=2.5)
     + geom_point(data=maxima, size=5, show_legend=False)
     + annotate(
-        "text", x=0.5, y=1.07, label="Both maxima at p = 0.5", size=4, ha="center", color=INK_SOFT, fontstyle="italic"
+        "text", x=0.5, y=1.07, label="Both maxima at p = 0.5", size=5.5, ha="center", color=INK_SOFT, fontstyle="italic"
     )
     + scale_color_manual(values={GINI_LABEL: GINI_COLOR, ENTROPY_LABEL: ENTROPY_COLOR})
+    + scale_linetype_manual(values={GINI_LABEL: "solid", ENTROPY_LABEL: "dashed"})
     + scale_x_continuous(breaks=np.arange(0, 1.1, 0.1))
     + scale_y_continuous(breaks=np.arange(0, 1.1, 0.2), limits=(0, 1.15))
-    + labs(x="Probability (p)", y="Impurity Measure (normalized)", title=title, color="Splitting Criterion")
+    + labs(
+        x="Probability (p)",
+        y="Impurity Measure (normalized)",
+        title=title,
+        color="Splitting Criterion",
+        linetype="Splitting Criterion",
+    )
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -86,7 +94,7 @@ plot = (
         plot_title=element_text(size=title_fontsize, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=9, color=INK, weight="bold"),
-        legend_position=(0.72, 0.25),
+        legend_position=(0.15, 0.78),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_key=element_blank(),
         panel_grid_major_x=element_blank(),
