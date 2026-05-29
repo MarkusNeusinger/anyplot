@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-29
@@ -45,6 +45,9 @@ df = pd.DataFrame(
     }
 )
 
+# Wide-format for shaded band between the two curves
+df_area = pd.DataFrame({"p": p, "gini": gini, "entropy": entropy})
+
 annotation_df = pd.DataFrame(
     {"p": [0.5, 0.5], "Impurity": [0.5, 1.0], "label": ["Gini max = 0.5", "Entropy max = 1.0"]}
 )
@@ -58,6 +61,10 @@ title_fontsize = max(11, round(16 * (67 / n if n > 67 else 1.0)))
 color_scale = alt.Scale(domain=[GINI_LABEL, ENTROPY_LABEL], range=[GINI_COLOR, ENTROPY_COLOR])
 dash_scale = alt.Scale(domain=[GINI_LABEL, ENTROPY_LABEL], range=[[1, 0], [8, 4]])
 
+# Shaded band between Gini and Entropy — entropy > Gini across all of (0,1)
+# This is the key educational insight: entropy is uniformly higher than Gini impurity
+area_fill = alt.Chart(df_area).mark_area(opacity=0.12, color=ENTROPY_COLOR).encode(x="p:Q", y="gini:Q", y2="entropy:Q")
+
 # Lines with color and dash differentiation
 lines = (
     alt.Chart(df)
@@ -67,7 +74,9 @@ lines = (
             "p:Q",
             title="Probability p",
             scale=alt.Scale(domain=[0, 1]),
-            axis=alt.Axis(labelFontSize=10, titleFontSize=12),
+            axis=alt.Axis(
+                labelFontSize=10, titleFontSize=12, values=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+            ),
         ),
         y=alt.Y(
             "Impurity:Q",
@@ -79,7 +88,7 @@ lines = (
             "Measure:N",
             scale=color_scale,
             legend=alt.Legend(
-                title=None, labelFontSize=10, orient="top-right", offset=10, symbolStrokeWidth=4, symbolSize=300
+                title=None, labelFontSize=10, orient="bottom-right", offset=10, symbolStrokeWidth=4, symbolSize=300
             ),
         ),
         strokeDash=alt.StrokeDash("Measure:N", scale=dash_scale, legend=None),
@@ -91,10 +100,10 @@ annotation_point = (
     alt.Chart(annotation_df).mark_point(size=150, filled=True, color=INK, opacity=0.75).encode(x="p:Q", y="Impurity:Q")
 )
 
-# Text labels at maxima
+# Text labels at maxima — dx=40 keeps annotations clear of the legend
 annotation_text = (
     alt.Chart(annotation_df)
-    .mark_text(fontSize=10, dx=65, fontWeight="bold", align="left", color=INK)
+    .mark_text(fontSize=10, dx=40, fontWeight="bold", align="left", color=INK)
     .encode(x="p:Q", y="Impurity:Q", text="label:N")
 )
 
@@ -102,15 +111,21 @@ annotation_text = (
 rule_df = pd.DataFrame({"p": [0.5]})
 vertical_rule = alt.Chart(rule_df).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color=INK_MUTED).encode(x="p:Q")
 
-# Compose
+# Compose — area_fill rendered first (behind lines)
 chart = (
-    (lines + vertical_rule + annotation_point + annotation_text)
+    (area_fill + lines + vertical_rule + annotation_point + annotation_text)
     .properties(
         width=620, height=320, background=PAGE_BG, title=alt.Title(title_text, fontSize=title_fontsize, color=INK)
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.13, labelColor=INK_SOFT, titleColor=INK
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.13,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domain=False,
     )
     .configure_legend(
         fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, labelFontSize=10
