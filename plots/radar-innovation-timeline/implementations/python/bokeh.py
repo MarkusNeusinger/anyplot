@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-Library: bokeh | Python
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-29
 """
 
 import os
