@@ -1,134 +1,129 @@
 library: altair
+language: python
 specification_id: hexbin-basic
 created: '2025-12-23T01:30:50Z'
-updated: '2026-02-21T21:40:43Z'
-generated_by: claude-opus-4-6
-workflow_run: 20448653325
-issue: 0
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - hover-tooltips
-  - layer-composition
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - groupby-aggregation
-  dataprep:
-  - binning
-  styling:
-  - custom-colormap
-  - grid-styling
-  - edge-highlighting
+updated: '2026-05-29T09:46:16Z'
+generated_by: claude-sonnet
+workflow_run: 26629063058
+issue: 859
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Manual hexagonal binning computation is well-implemented and produces clean, properly
-    tiled hexagons
-  - 'Excellent use of Altair-specific features: interactive hover selection, conditional
-    encoding, custom SVG shape paths, and rich tooltips'
-  - Strong data storytelling with three named geographic clusters and contextual subtitle
-  - 'High visual refinement: subtle grid, removed view stroke, light background, text
-    halo annotations, custom axis styling'
-  - Symlog color scale handles density variation effectively as suggested by the spec
+  - Custom SVG hexagon shape via mark_point is the idiomatic Altair approach for hexbin
+    without a native transform
+  - Geographic annotation labels with text-halo technique (PAGE_BG stroke + INK foreground)
+    provide excellent readability over data
+  - symlog color scale correctly handles wide-range density data
+  - Full theme-adaptive chrome with all tokens correctly applied across both renders
+  - Realistic Seattle GPS scenario with factually accurate coordinates adds genuine
+    credibility
+  - Hover interaction using alt.selection_point is correctly identified as real Altair
+    interactivity (not fake)
   weaknesses:
-  - Some edge hexagons appear slightly inconsistent in visual size compared to central
-    ones
-  - Industrial zone tight cluster creates a bright hotspot that slightly muddies the
-    density narrative
-  image_description: 'The plot displays a hexagonal binning visualization of Seattle
-    metropolitan traffic density based on 5,000 GPS vehicle observations. The chart
-    uses pointy-top hexagonal shapes rendered via custom SVG paths, colored using
-    the viridis colormap ranging from dark purple (low vehicle counts, ~1-10) through
-    teal/green (medium, ~20-60) to bright yellow (high, ~80-100+). Three distinct
-    geographic clusters are visible: a Downtown Core cluster (bottom-center) with
-    the highest density bright-yellow hexagons, a Shopping District cluster (right
-    side, around lat 47.62) with broad medium-to-high density, and a smaller Industrial
-    Zone cluster (upper-left) that is sparser overall but has a tight bright center.
-    Each cluster is labeled with a text annotation using a white halo effect for readability.
-    The background is light gray (#f9f9fb), grid lines are extremely subtle (0.08
-    opacity), and the view has no border stroke. A vertical color bar on the right
-    labeled "Vehicle Count" shows the density scale. The title reads "hexbin-basic
-    · altair · pyplots.ai" with a subtitle "Seattle metropolitan traffic density —
-    5,000 GPS vehicle observations." Axis labels show "Longitude (°W)" and "Latitude
-    (°N)" with formatted tick values.'
+  - Downtown Core annotation placed at lat=47.587 is very close to the bottom axis
+    line — shift upward to ~47.592 for breathing room from x-axis tick labels
+  - Annotation labels positioned directly over hexbin data; while the halo technique
+    helps, positioning them adjacent to clusters would further reduce visual noise
+  - Design is solid but not yet publication-ready — a density contour layer or highlighting
+    the peak-density hexagon could elevate DE-01 and DE-03 further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "hexbin-basic · python · altair · anyplot.ai" in dark INK text clearly visible; subtitle in INK_SOFT; axis labels "Longitude (°W)" and "Latitude (°N)" in INK with units; tick labels in INK_SOFT at 10pt; legend "Vehicle Count" readable
+      Data: Three hexagonal bin clusters rendered with imprint_seq (#009E73→#4467A3) gradient; green = low density, blue = high density; hex markers well-sized; geographic annotation labels (Industrial Zone, Shopping District, Downtown Core) use text-halo technique (PAGE_BG stroke + INK foreground)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle switch to light #F0EFE8 text; axis labels and tick labels use #B8B7B0; legend box uses #242420 elevated fill; all text clearly visible; no dark-on-dark failures observed; grid lines remain subtle
+      Data: Hexbin density gradient colors are IDENTICAL to light render (#009E73→#4467A3) — only chrome flips; annotation labels remain readable with adapted halo
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt, subtitle 18pt, legend title 20pt, legend labels 16pt, annotations
-          16pt'
+        comment: All font sizes explicitly set; all text readable in both themes;
+          Downtown Core annotation placed close to bottom axis but still visible
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text collisions; annotations placed at offset positions outside
-          data clusters
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Hexagons well-sized with dynamic hex_area; white stroke provides
-          separation; minor edge inconsistency
+        comment: Minimal overlap between geographic annotation labels and hexbin data;
+          text-halo technique mitigates this
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hexagon markers well-sized for data density, clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: imprint_seq gradient is CVD-safe; symlog scale spreads density contrast
+          well
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions at 1600x900; data fills ~60% of chart; some natural
-          empty space in corners
+        comment: Good canvas utilization with balanced margins and properly positioned
+          legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°W) and Latitude (°N) with units
+        comment: Longitude (degrees W) and Latitude (degrees N) with units; subtitle
+          provides additional context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 to #4467A3) used correctly for continuous density;
+          backgrounds #FAF8F1/#1A1A17 correct; chrome fully theme-adaptive'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Viridis + symlog, light gray background, custom axis colors, text
-          halo annotations, white hex borders
+        comment: 'Above well-configured default: geographic annotation labels with
+          halo effect, contextual subtitle, symlog density scale show intentional
+          design thinking'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View stroke removed, very subtle grid (0.08 opacity), light background,
-          custom padding, muted axis styling
+        comment: View border removed, gridOpacity=0.12 subtle, hex-stroke PAGE_BG
+          for visual separation, manually curated axis tick values
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three named clusters create clear narrative; annotations guide viewer;
-          subtitle provides context; computed density levels in tooltips
+        comment: Geographic context labels guide viewer to three density clusters;
+          subtitle contextualizes scenario; viewer is guided to structure
     spec_compliance:
       score: 15
       max: 15
@@ -138,49 +133,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning plot with manual hex grid computation
+        comment: Correct hexbin implementation using custom SVG hex path with manually
+          computed bins
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color bar, viridis colormap, symlog scale, configurable hex resolution
+        comment: Colorbar legend present; imprint_seq as perceptually uniform colormap;
+          symlog color scale; hex_radius controls bin resolution
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Longitude, Y=Latitude correctly mapped with zero=False
+        comment: X=longitude, Y=latitude correctly assigned; color=count density;
+          all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; Vehicle Count legend is descriptive
+        comment: Title is hexbin-basic · python · altair · anyplot.ai; legend labeled
+          Vehicle Count
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Three clusters at different densities demonstrate hexbin advantages;
-          minor: industrial zone bright center slightly confuses narrative'
+        comment: Three distinct density clusters with varying intensities; demonstrates
+          core hexbin use case for spatial concentration
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Seattle GPS traffic density with actual coordinates and named zones
+        comment: Seattle GPS vehicle traffic is neutral, realistic, comprehensible;
+          geographic coordinates factually match Seattle's downtown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic lat/lon for Seattle; 5000 observations appropriate; bin
-          counts sensible
+        comment: Longitude ~-122.3xx and latitude ~47.6xx factually correct for Seattle;
+          vehicle counts up to 130 per hex bin plausible for 5000 observations
     code_quality:
       score: 10
       max: 10
@@ -190,7 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, hex computation, chart, save'
+        comment: Clean imports-data-plot-save structure; no functions or classes;
+          hex binning complexity is necessary
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -202,36 +203,54 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: All imports (os, altair, numpy, pandas, PIL) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual hex binning necessary for Altair; well-organized with clear
-          comments
+        comment: Hover interaction is Altair's real interactive selection; layer composition
+          and conditional encoding are clean and idiomatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html; current Altair 6.x API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PIL padding to exact
+          3200x1800 target
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Altair API: layer composition, encoding types, Scale/Axis/Legend/Title,
-          transform_calculate, configure methods'
+        comment: Correct use of transform_calculate, selection_point, alt.condition,
+          layer composition, configure_* for theme-adaptive chrome
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point hover, conditional encoding, custom SVG shape path,
-          rich tooltips, HTML export
+        comment: Custom SVG hex path in mark_point, alt.selection_point hover with
+          conditional strokeWidth, transform_calculate for density categories — distinctively
+          Altair
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - hover-tooltips
+  - layer-composition
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - edge-highlighting
