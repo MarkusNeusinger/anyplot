@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-29
@@ -125,7 +125,8 @@ for item in innovations:
     step = (s_end - s_start) / max(n, 1)
     angle_deg = s_start + step * (pos + 0.5)
 
-    jitter = np.random.uniform(-0.15, 0.15)
+    jitter_range = 0.25 if ring_r <= 1.3 else 0.20 if ring_r <= 2.4 else 0.15
+    jitter = np.random.uniform(-jitter_range, jitter_range)
     radius = ring_r + jitter
     angle_rad = math.radians(angle_deg)
     item["x"] = round(radius * math.cos(angle_rad), 3)
@@ -181,7 +182,7 @@ for sector in sectors:
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.name}",
-                "style": {"fontSize": "22px", "fontWeight": "normal", "color": INK, "textOutline": text_outline},
+                "style": {"fontSize": "30px", "fontWeight": "normal", "color": INK, "textOutline": text_outline},
                 "padding": 5,
             },
         }
@@ -313,7 +314,7 @@ renderer_js = f"""load: function() {{
     for (i = 0; i < S.names.length; i++) {{
         a = S.mids[i] * Math.PI / 180;
         c.renderer.text(S.names[i],
-            cx + 4.65 * Math.cos(a) * sx, cy - 4.65 * Math.sin(a) * sy
+            cx + 5.1 * Math.cos(a) * sx, cy - 5.1 * Math.sin(a) * sy
         ).attr({{zIndex: 3, align: 'center'}}).css({{
             fontSize: '32px', fontWeight: 'bold', color: S.colors[i]}}).add();
     }}
