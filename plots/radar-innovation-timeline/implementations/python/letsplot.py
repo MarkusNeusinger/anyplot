@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 88/100 | Created: 2026-02-18
+Quality: 88/100 | Updated: 2026-05-29
 """
 
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -35,19 +36,41 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — 8 hues, hybrid-v3 sort
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 np.random.seed(42)
 
 # --- Data ---
 rings = ["Adopt", "Trial", "Assess", "Hold"]
 # Sector order chosen to separate heavy-label sectors (AI & ML, Infrastructure) across the arc
 sectors = ["AI & ML", "Biotech", "Sustainability", "Infrastructure"]
+
+# Sector colors: Imprint palette positions 1–4 in canonical order
 sector_colors = {
-    "AI & ML": "#306998",
-    "Infrastructure": "#E56910",
-    "Biotech": "#D63484",  # Deep pink: high contrast vs blue for colorblind viewers
-    "Sustainability": "#00897B",  # Teal: clearly distinct from orange for deuteranopia
+    "AI & ML": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Biotech": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "Sustainability": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "Infrastructure": IMPRINT_PALETTE[3],  # #BD8233 ochre
 }
-ring_fills = {"Adopt": "#DCEDC8", "Trial": "#FFF9C4", "Assess": "#FFE0B2", "Hold": "#FFCDD2"}
+
+# Ring fills: semantic green→amber→ochre→red gradient communicates adoption readiness
+if THEME == "light":
+    ring_fills = {"Adopt": "#DCEDC8", "Trial": "#FFF9C4", "Assess": "#FFE0B2", "Hold": "#FFCDD2"}
+    ring_alpha = 0.55
+else:
+    # Imprint-derived tints at low alpha for dark background
+    ring_fills = {"Adopt": "#009E73", "Trial": "#DDCC77", "Assess": "#BD8233", "Hold": "#AE3030"}
+    ring_alpha = 0.14
+
 ring_inner = {"Adopt": 0.5, "Trial": 1.5, "Assess": 2.5, "Hold": 3.5}
 ring_outer = {"Adopt": 1.5, "Trial": 2.5, "Assess": 3.5, "Hold": 4.5}
 # Angular nudge for Hold ring items to prevent overlap with sector header labels
@@ -105,7 +128,7 @@ df["radius"] = df["ring"].map(ring_mid_map) + np.random.uniform(-0.15, 0.15, len
 df["x"] = df["radius"] * np.cos(df["angle"])
 df["y"] = df["radius"] * np.sin(df["angle"])
 
-# Label positions: pushed radially outward (more offset for inner rings)
+# Label positions: pushed radially outward
 label_offsets = {"Adopt": 0.72, "Trial": 0.62, "Assess": 0.52, "Hold": 0.42}
 df["label_r"] = df["radius"] + df["ring"].map(label_offsets)
 df["lx"] = df["label_r"] * np.cos(df["angle"])
@@ -182,34 +205,34 @@ plot = ggplot()
 # Ring background fills with semantic color gradient (green=safe → pink=risky)
 for rname in rings:
     rdata = ring_bg_df[ring_bg_df["ring"] == rname]
-    plot += geom_polygon(aes("x", "y"), data=rdata, fill=ring_fills[rname], alpha=0.55)
+    plot += geom_polygon(aes("x", "y"), data=rdata, fill=ring_fills[rname], alpha=ring_alpha)
 
 # Structural lines: ring boundaries and sector spokes
-plot += geom_path(aes("x", "y", group="g"), data=bnd_df, color="#CCCCCC", size=0.3, alpha=0.7)
-plot += geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=spoke_df, color="#CCCCCC", size=0.3, alpha=0.7)
+plot += geom_path(aes("x", "y", group="g"), data=bnd_df, color=INK_SOFT, size=0.3, alpha=0.5)
+plot += geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=spoke_df, color=INK_SOFT, size=0.3, alpha=0.5)
 
 # Sector header labels
-plot += geom_text(aes("x", "y", label="label"), data=sector_label_df, size=15, color="#1A1A1A", fontface="bold")
+plot += geom_text(aes("x", "y", label="label"), data=sector_label_df, size=5, color=INK, fontface="bold")
 
-# Ring labels with background box (letsplot geom_label for visual clarity over ring fills)
+# Ring labels with background box (geom_label for visual clarity over ring fills)
 plot += geom_label(
     aes("x", "y", label="label"),
     data=ring_label_df,
-    size=12,
-    color="#555555",
+    size=4,
+    color=INK_SOFT,
     fontface="bold",
-    fill="white",
-    alpha=0.85,
+    fill=ELEVATED_BG,
+    alpha=0.9,
 )
 
 # Thin connector lines from points to labels (aids readability after repulsion)
-plot += geom_segment(aes(x="x", y="y", xend="lx", yend="ly"), data=df, size=0.3, alpha=0.30, color="#888888")
+plot += geom_segment(aes(x="x", y="y", xend="lx", yend="ly"), data=df, size=0.3, alpha=0.25, color=INK_MUTED)
 
 # Innovation points with interactive tooltips (letsplot-specific for HTML export)
 plot += geom_point(
     aes("x", "y", color="sector"),
     data=df,
-    size=8,
+    size=4,
     alpha=0.9,
     tooltips=layer_tooltips().line("@name").line("Ring: @ring").line("Sector: @sector"),
 )
@@ -217,7 +240,9 @@ plot += geom_point(
 # Innovation labels split by side for outward text alignment
 for side, hj in [("left", 1), ("right", 0)]:
     side_df = df[df["side"] == side]
-    plot += geom_text(aes("lx", "ly", label="name", color="sector"), data=side_df, size=12, hjust=hj)
+    plot += geom_text(aes("lx", "ly", label="name", color="sector"), data=side_df, size=3.5, hjust=hj)
+
+title = "radar-innovation-timeline · python · letsplot · anyplot.ai"
 
 # Styling
 plot += (
@@ -225,23 +250,24 @@ plot += (
     + scale_x_continuous(limits=(-7.0, 7.0))
     + scale_y_continuous(limits=(-6.8, 5.5))
     + coord_fixed()
-    + labs(title="radar-innovation-timeline · letsplot · pyplots.ai", color="Sector")
-    + ggsize(1200, 1200)
+    + labs(title=title, color="Sector")
+    + ggsize(600, 600)
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_title=element_text(size=16, color=INK, face="bold"),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="bottom",
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
-        plot_background=element_rect(fill="white", color="white"),
-        panel_background=element_rect(fill="white", color="white"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
 )
 
-# Save PNG (scale=3 → 3600×3600 px) and interactive HTML
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save PNG (scale=4 → 2400×2400 px) and interactive HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
