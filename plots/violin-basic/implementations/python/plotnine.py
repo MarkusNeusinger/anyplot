@@ -1,13 +1,16 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-basic: Basic Violin Plot
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-02-21
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-29
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -16,62 +19,79 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
+    stat_summary,
     theme,
     theme_minimal,
 )
 
 
-# Data
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — positions 1–4 in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Data — annual salary distributions across 4 departments
 np.random.seed(42)
 
 records = []
 
-# Biology: right-skewed (many average, few high scorers)
-scores_bio = np.concatenate([np.random.normal(68, 6, 150), np.random.normal(85, 3, 30)])
-records.extend([("Biology", s) for s in scores_bio])
+# Engineering: right-skewed (many mid-range, few senior high earners)
+salaries_eng = np.concatenate([np.random.normal(95000, 12000, 180), np.random.normal(148000, 7000, 40)])
+records.extend([("Engineering", s) for s in salaries_eng])
 
-# Statistics: bimodal (two distinct clusters)
-scores_stat = np.concatenate([np.random.normal(55, 5, 100), np.random.normal(82, 5, 100)])
-records.extend([("Statistics", s) for s in scores_stat])
+# Design: bimodal (junior / senior pay split)
+salaries_design = np.concatenate([np.random.normal(70000, 7000, 100), np.random.normal(108000, 7000, 100)])
+records.extend([("Design", s) for s in salaries_design])
 
-# Chemistry: tight normal (consistent performance)
-scores_chem = np.random.normal(74, 4, 200)
-records.extend([("Chemistry", s) for s in scores_chem])
+# Marketing: tight normal (narrow pay band)
+salaries_mkt = np.random.normal(82000, 5000, 200)
+records.extend([("Marketing", s) for s in salaries_mkt])
 
-# Psychology: wide spread (high variance)
-scores_psych = np.random.normal(70, 14, 200)
-records.extend([("Psychology", s) for s in scores_psych])
+# Sales: wide spread (base + commission-driven variance)
+salaries_sales = np.random.normal(90000, 22000, 200)
+records.extend([("Sales", s) for s in salaries_sales])
 
-df = pd.DataFrame(records, columns=["course", "score"])
-df["score"] = df["score"].clip(0, 100)
-df["course"] = pd.Categorical(
-    df["course"], categories=["Biology", "Statistics", "Chemistry", "Psychology"], ordered=True
+df = pd.DataFrame(records, columns=["department", "salary"])
+df["salary"] = df["salary"].clip(35000, 200000)
+df["department"] = pd.Categorical(
+    df["department"], categories=["Engineering", "Design", "Marketing", "Sales"], ordered=True
 )
 
-# Custom palette: Python Blue for focal bimodal distribution, muted tones for context
-palette = {"Biology": "#7BAE7F", "Statistics": "#306998", "Chemistry": "#E8A87C", "Psychology": "#B8B3D6"}
+departments = ["Engineering", "Design", "Marketing", "Sales"]
+palette = dict(zip(departments, IMPRINT_PALETTE, strict=True))
 
 # Plot
+title = "violin-basic · python · plotnine · anyplot.ai"
+
 plot = (
-    ggplot(df, aes(x="course", y="score", fill="course"))
-    + geom_violin(draw_quantiles=[0.25, 0.5, 0.75], alpha=0.82, color="#666666", size=0.35, trim=False)
+    ggplot(df, aes(x="department", y="salary", fill="department"))
+    + geom_violin(draw_quantiles=[0.25, 0.5, 0.75], alpha=0.82, color=INK_SOFT, size=0.6, trim=False)
+    + stat_summary(geom="point", fun_y=np.mean, shape="D", size=2.5, color=INK, fill=INK)
     + scale_fill_manual(values=palette)
-    + labs(x="Course", y="Final Exam Score (pts)", title="violin-basic \u00b7 plotnine \u00b7 pyplots.ai")
+    + labs(x="Department", y="Annual Salary (USD)", title=title)
+    + annotate("text", x=2, y=148000, label="Bimodal:\njunior/senior split", size=2.8, color=INK_SOFT)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14, color="#333333"),
-        axis_title=element_text(size=20, color="#333333"),
-        axis_text=element_text(size=16, color="#444444"),
-        plot_title=element_text(size=24, color="#222222", weight="bold"),
+        figure_size=(8, 4.5),
+        text=element_text(size=9, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK),
         legend_position="none",
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#dedede", size=0.3),
-        plot_background=element_rect(fill="#fafafa", color="none"),
-        panel_background=element_rect(fill="#fafafa", color="none"),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        axis_line=element_line(color=INK_SOFT),
+        panel_border=element_blank(),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
