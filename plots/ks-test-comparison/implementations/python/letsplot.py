@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-05-29
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-29
 """
 
 import os
