@@ -1,8 +1,9 @@
-""" pyplots.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-22
+Library: plotnine | Python
 """
+
+import os
 
 import pandas as pd
 from plotnine import (
@@ -27,7 +28,25 @@ from plotnine import (
 )
 
 
-# Data - Multiple KPIs with different performance levels
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — brand green is always first series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # #009E73 — actual value bar
+
+# Grayscale bands: darker = worse performance zone (theme-adaptive for readability)
+if THEME == "light":
+    band_colors = {"Poor": "#686868", "Satisfactory": "#9E9E9E", "Good": "#C8C8C8"}
+else:
+    band_colors = {"Poor": "#383838", "Satisfactory": "#555555", "Good": "#727272"}
+
+# Data — four business KPIs with mixed above/below-target performance
 metrics = [
     {"label": "Revenue ($K)", "actual": 275, "target": 250, "ranges": [150, 225, 300]},
     {"label": "Profit (%)", "actual": 22, "target": 26, "ranges": [15, 22.5, 30]},
@@ -35,16 +54,18 @@ metrics = [
     {"label": "Satisfaction", "actual": 4.5, "target": 4.2, "ranges": [2.5, 3.5, 5.0]},
 ]
 
-# Build data - normalize all values to 0-100 scale for consistent display
+# Build dataframes — all values normalized to 0–100 scale for aligned x-axis
 tile_data = []
 actual_data = []
 target_data = []
 
+range_height = 0.68
+actual_height = 0.28
+
 for i, m in enumerate(metrics):
-    y_pos = len(metrics) - 1 - i  # Reverse order so first metric is at top
+    y_pos = len(metrics) - 1 - i  # first metric at top
     max_val = m["ranges"][-1]
 
-    # Qualitative range bands: compute center + width for geom_tile
     band_bounds = [0, (m["ranges"][0] / max_val) * 100, (m["ranges"][1] / max_val) * 100, 100]
     band_names = ["Poor", "Satisfactory", "Good"]
     for j, band in enumerate(band_names):
@@ -52,92 +73,87 @@ for i, m in enumerate(metrics):
         width = band_bounds[j + 1] - band_bounds[j]
         tile_data.append({"y": y_pos, "x": x_center, "width": width, "band": band})
 
-    # Actual value bar
     actual_pct = (m["actual"] / max_val) * 100
     val = m["actual"]
     val_str = str(int(val)) if val == int(val) else str(val)
-    actual_data.append({"y": y_pos, "xmin": 0, "xmax": actual_pct, "label": m["label"], "actual": val_str})
+    actual_data.append(
+        {
+            "y": y_pos,
+            "xmin": 0,
+            "xmax": actual_pct,
+            "ymin": y_pos - actual_height / 2,
+            "ymax": y_pos + actual_height / 2,
+            "label": m["label"],
+            "actual": val_str,
+            "label_y": y_pos + range_height / 2 + 0.04,
+        }
+    )
 
-    # Target marker
     target_pct = (m["target"] / max_val) * 100
-    target_data.append({"y": y_pos, "target": target_pct})
+    target_data.append(
+        {
+            "y": y_pos,
+            "target": target_pct,
+            "seg_ymin": y_pos - range_height / 2.2,
+            "seg_ymax": y_pos + range_height / 2.2,
+        }
+    )
 
 df_tiles = pd.DataFrame(tile_data)
 df_actual = pd.DataFrame(actual_data)
 df_target = pd.DataFrame(target_data)
 
-# Intentional grayscale gradient (darker = worse performance zone)
-band_colors = {"Poor": "#686868", "Satisfactory": "#9E9E9E", "Good": "#D2D2D2"}
+# Band label x positions: 3 of 4 metrics share 50%/75% band boundaries
+poor_mid = 25.0
+satis_mid = 62.5
+good_mid = 87.5
 
-# Band label positions centered in each zone of the bottom metric
-sat = metrics[-1]
-sat_max = sat["ranges"][-1]
-poor_mid = (sat["ranges"][0] / sat_max) * 50
-satis_mid = ((sat["ranges"][0] + sat["ranges"][1]) / (2 * sat_max)) * 100
-good_mid = ((sat["ranges"][1] + sat_max) / (2 * sat_max)) * 100
-
-# Bar dimensions
-range_height = 0.68
-actual_height = 0.28
-
-# Plot - horizontal bullet charts using grammar of graphics layering
 plot = (
     ggplot()
-    # Qualitative range bands via geom_tile (center-based GoG geometry)
+    # Qualitative range bands
     + geom_tile(df_tiles, aes(x="x", y="y", width="width", fill="band"), height=range_height, color="none")
     + scale_fill_manual(values=band_colors, limits=["Good", "Satisfactory", "Poor"])
     + guides(fill=False)
-    # Actual value bar with subtle edge for depth
-    + geom_rect(
-        df_actual,
-        aes(xmin="xmin", xmax="xmax", ymin="y - actual_height/2", ymax="y + actual_height/2"),
-        fill="#306998",
-        color="#24537a",
-        size=0.3,
-    )
-    # Target marker (thin contrasting line perpendicular to the bar)
-    + geom_segment(
-        df_target,
-        aes(x="target", xend="target", y="y - range_height/2.2", yend="y + range_height/2.2"),
-        color="#1a1a1a",
-        size=2.5,
-    )
-    # Actual value labels above each bar
+    # Actual value bar
+    + geom_rect(df_actual, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=BRAND, color="none")
+    # Target marker — thin contrasting line perpendicular to the bar
+    + geom_segment(df_target, aes(x="target", xend="target", y="seg_ymin", yend="seg_ymax"), color=INK, size=2.0)
+    # Actual value labels (geom_text size in mm; ~3.5 ≈ 10pt at 400dpi)
     + geom_text(
         df_actual,
-        aes(x="xmax", y="y + range_height/2 + 0.04", label="actual"),
+        aes(x="xmax", y="label_y", label="actual"),
         ha="right",
         va="bottom",
-        size=10,
-        color="#306998",
+        size=3.5,
+        color=BRAND,
         fontweight="bold",
     )
-    # Band labels via annotate layers (plotnine annotation system)
-    + annotate("text", x=poor_mid, y=-0.5, label="Poor", size=8, color="#555555", va="top")
-    + annotate("text", x=satis_mid, y=-0.5, label="Satisfactory", size=8, color="#555555", va="top")
-    + annotate("text", x=good_mid, y=-0.5, label="Good", size=8, color="#555555", va="top")
+    # Band zone labels below the bottom metric
+    + annotate("text", x=poor_mid, y=-0.5, label="Poor", size=3.0, color=INK_MUTED, va="top")
+    + annotate("text", x=satis_mid, y=-0.5, label="Satisfactory", size=3.0, color=INK_MUTED, va="top")
+    + annotate("text", x=good_mid, y=-0.5, label="Good", size=3.0, color=INK_MUTED, va="top")
     # Scales
     + scale_x_continuous(limits=(0, 100), breaks=[0, 25, 50, 75, 100], expand=(0, 0.02))
     + scale_y_continuous(
-        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.15, 0.08)
+        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.18, 0.08)
     )
-    + labs(title="bullet-basic · plotnine · pyplots.ai", x="Performance (%)", y="")
-    # Theme - refined styling with plotnine theming system
+    + labs(title="bullet-basic · python · plotnine · anyplot.ai", x="Performance (%)", y="")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
-        axis_title_x=element_text(size=20),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
+        axis_title_x=element_text(size=10, color=INK),
         axis_title_y=element_blank(),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=18, ha="right"),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_y=element_text(size=9, ha="right", color=INK_SOFT),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_line(color="#e0e0e0", size=0.3),
-        plot_background=element_rect(fill="white", color="none"),
-        panel_background=element_rect(fill="#fafafa", color="none"),
+        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.15),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color="none"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT),
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
