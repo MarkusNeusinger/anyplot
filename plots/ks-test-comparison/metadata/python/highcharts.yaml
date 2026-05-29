@@ -1,122 +1,170 @@
 library: highcharts
+language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:13:29Z'
-updated: '2026-02-17T20:59:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22113799154
+updated: '2026-05-29T03:49:25Z'
+generated_by: claude-sonnet
+workflow_run: 26615965680
 issue: 4130
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/highcharts/plot.html
-quality_score: 85
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance — all required K-S test features are present and clearly
-    rendered (ECDFs, max divergence, K-S stat, p-value)
-  - Strong design work with the callout annotation, plot band highlighting, and subtitle
-    conveying the statistical conclusion
-  - Good use of Highcharts-distinctive features (annotations API with callout shape
-    and shadow, plotBands, step series)
-  - Colorblind-safe color scheme with additional dashed-line differentiation for the
-    Bad Customers series
-  - Realistic credit scoring context with appropriate data generation using beta distributions
+  - 'Perfect spec compliance: both ECDFs rendered as step functions (series.step=''left''),
+    K-S statistic prominently displayed in subtitle and annotation, vertical line
+    at max divergence with band highlight, p-value in subtitle, legend labels all
+    correct.'
+  - 'Excellent semantic color encoding: Good Customers → #009E73 (Imprint brand green),
+    Bad Customers → #AE3030 (Imprint semantic red anchor for bad/loss/error) — the
+    most obvious palette exception, correctly applied and strongly reinforced by the
+    category labels.'
+  - 'Strong storytelling: callout annotation ''D = 0.7300 · Strong separation'' with
+    interpretive text, subtitle reports both D-statistic and p-value, band highlight
+    at max divergence draws the eye to the key feature.'
+  - 'Redundant encoding for CVD-accessibility: solid line for Good Customers vs. dashed
+    line for Bad Customers supplements the green/red color difference — colorblind
+    users can distinguish series by line style alone.'
+  - 'Full theme adaptation: all chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    INK_MUTED, GRID) correctly branch on ANYPLOT_THEME; data colors identical across
+    light and dark renders; annotation callout background and border use elevated
+    and soft ink tokens.'
+  - All 4 canvas-size anchors properly aligned (chart options width/height, --window-size,
+    CDP setDeviceMetricsOverride, div style) plus PIL safety-net pad — canvas gate
+    passed.
+  - 'Clean KISS structure: linear imports → tokens → data → chart → export, no functions
+    or classes, seed set (np.random.seed(42)), only used imports, correct output filenames.'
   weaknesses:
-  - Layout balance could be improved — the x-axis starts at 100 but data begins around
-    200, creating wasted left margin; asymmetric margins (180 left vs 60 right)
-  - Max distance line color (#2c3e50) is too similar to Good Customers color (#306998),
-    reducing visual distinction
-  - LineSeries imported from options.series.area instead of options.series.line —
-    works but is not idiomatic
-  - Extra Path('plot.html').write_text() call creates an unnecessary file beyond the
-    temp file already used
-  image_description: 'The plot displays a Kolmogorov-Smirnov test comparison for credit
-    score distributions. Two ECDF step functions are shown: a solid blue line (#306998)
-    for "Good Customers" and a dashed orange line (#e67e22) for "Bad Customers". The
-    x-axis shows "Credit Score (200–1000)" ranging from 100 to 1000, and the y-axis
-    shows "Cumulative Proportion (0–1)" from 0 to 1. The title reads "ks-test-comparison
-    · highcharts · pyplots.ai" with a subtitle reporting "K-S Statistic = 0.7300 |
-    p-value = 9.54e-78 | Distributions are significantly different". A vertical dashed
-    dark line with diamond markers at both endpoints marks the point of maximum divergence
-    around credit score ~620. A callout annotation box with shadow reads "D = 0.7300
-    / Strong separation". A subtle gray plot band highlights the region of maximum
-    divergence. The background is light gray (#f5f6f8) with dashed horizontal grid
-    lines. The legend is centered at the bottom with entries for all three series.
-    The Bad Customers distribution rises earlier (lower scores) while Good Customers
-    rises later (higher scores), showing clear separation.'
+  - Annotation label text (36px) is at the lower end of tertiary-text sizing for this
+    3200×1800 canvas — at mobile scale (~400 px wide) this renders at ≈4.5 px, below
+    the readable threshold. Increase to 40–44px to match tertiary text conventions.
+  - 'Design Excellence capped at mid-range: DE-01 sits at the boundary between ''well-configured
+    default'' and ''strong design.'' The callout and semantic colors are thoughtful
+    but the overall composition doesn''t quite reach publication-ready polish — consider
+    removing the legend border (use borderWidth:0) and making the band more visually
+    prominent to reinforce the chart''s focal point.'
+  - 'Library Mastery is average: the distinctive highcharts features used (plotBands,
+    plotLines with labels, Annotations module, step-function lines) are correct but
+    relatively straightforward. More advanced usage — e.g., Highcharts'' built-in
+    responsive rules, dynamic series visibility, or chart.renderer custom SVG elements
+    — would push this higher.'
+  - LineSeries imported from highcharts_core.options.series.area (the area module)
+    rather than highcharts_core.options.series.line — while functionally equivalent,
+    this is non-idiomatic and could confuse maintainers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
+      Chrome: Title "ks-test-comparison · python · highcharts · anyplot.ai" in dark bold text (~70% plot width), clearly readable. Subtitle "K-S Statistic = 0.7300 | p-value = 9.54e-78 | Distributions are significantly different" in secondary ink, readable. X-axis label "Credit Score (200–1000)" and Y-axis label "Cumulative Proportion (0–1)" both in primary ink at 56px, well-balanced. Tick labels in INK_SOFT at 44px, readable. Legend at bottom with bordered elevated background.
+      Data: Good Customers ECDF is a solid green (#009E73, Imprint position 1) step function rising steeply from ~200 to ~1000. Bad Customers ECDF is a dashed red (#AE3030, Imprint semantic red) step function rising more steeply at lower score values. The two curves show clear separation. A vertical dashed line marks the max divergence at x≈621. A subtle grey band highlights the region around x=621. A callout annotation box "D = 0.7300 | Strong separation" appears at the mid-chart position with diamond markers at both endpoints of the max-distance segment. The Y-axis has subtle dashed grid lines at 15% opacity.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light ink (#F0EFE8 / #B8B7B0 tokens) — clearly readable against the dark background. Legend text in light secondary ink against dark elevated background (#242420). Annotation callout box renders with dark elevated background (#242420) and light text (#F0EFE8), readable.
+      Data: Good Customers ECDF remains solid #009E73 (identical to light render) — data color is theme-independent, correct. Bad Customers ECDF remains #AE3030 dashed — identical to light render. Max Distance segment with diamond markers unchanged in color. The subtle band and grid lines use the dark-theme GRID token (rgba(240,239,232,0.15)), visible but not dominant. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all chrome correctly adapts to dark theme; data colors identical to light render; no text rendered dark-on-dark.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 60px, subtitle 40px, axis titles
-          42px, tick labels 32px, legend 36px, annotation 36px'
+        comment: 'All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, legend 44px). Minor deduction: annotation text at 36px is at the lower
+          end for the canvas size and may render below readable threshold at mobile
+          scale (~4.5px).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No overlapping text elements. Annotation callout box positioned correctly
+          between the two ECDF curves without obscuring critical data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Lines well-sized at lineWidth 6 with step functions clearly visible;
-          diamond markers on max distance line are good. Minor: max-distance line
-          color (#2c3e50) is close to Good Customers blue (#306998)'
+        comment: Step function lines at lineWidth=5 are clearly visible. Dashed line
+          style for Bad Customers adds redundant encoding. Diamond markers at max-distance
+          endpoints are prominent (radius=10). Band highlight is subtle and appropriate.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CVD-safe: solid vs. dashed line styles provide redundant encoding
+          beyond color. Green/red semantic pairing is reinforced by line style so
+          colorblind users can distinguish series by line pattern.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
         max: 4
         passed: true
-        comment: Blue vs orange is colorblind-safe with dashed differentiation; max-distance
-          line (#2c3e50) is very similar to Good Customers (#306998)
-      - id: VQ-05
-        name: Layout Balance
-        score: 2
-        max: 4
-        passed: false
-        comment: Significant white space on left side (x-axis starts at 100, data
-          begins ~200); marginLeft=180 vs marginRight=60 creates imbalance
+        comment: 'Canvas: 3200x1800 confirmed (canvas gate passed). Plot fills canvas
+          well with proper margins (marginBottom:260, marginTop:180, marginLeft:160,
+          marginRight:80). Legend at bottom properly integrated. No canvas dimension
+          issues.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with ranges: Credit Score (200-1000) and Cumulative
-          Proportion (0-1)'
+        comment: 'X-axis: ''Credit Score (200–1000)'' — descriptive with range. Y-axis:
+          ''Cumulative Proportion (0–1)'' — descriptive with range. Both with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Good Customers): #009E73 (Imprint position 1, brand
+          green). Second series (Bad Customers): #AE3030 (Imprint position 5, semantic
+          red anchor) — valid semantic exception: category labels explicitly say ''bad''.
+          Max Distance uses theme-adaptive INK (neutral anchor) appropriate for a
+          reference/structural line. Light background #FAF8F1, dark #1A1A17. Chrome
+          tokens flip correctly. Data colors identical across themes.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom background, intentional typography with letter-spacing, callout
-          annotation with shadow, plot band highlighting, dashed line differentiation
-          — clearly above defaults
+        comment: Thoughtful semantic color assignment and interpretive annotation
+          callout demonstrate design intention above library defaults. However the
+          overall composition sits at the boundary between 'well-configured default'
+          (4) and 'strong design' (6) — the annotation and band are effective but
+          the chart doesn't quite reach publication-ready polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid lines with low opacity, clean axis lines, plot
-          band is a nice touch
+        comment: 'Good refinement: Y-axis-only dashed grid at 15% opacity, no X-axis
+          grid, subtle band highlight, custom font family, bordered legend with elevated
+          background, clean margins. Not ''every detail polished'' but clearly above
+          minimal customization.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtitle conveys statistical conclusion, annotation at max divergence
-          guides the eye, plot band draws attention to key region; clear visual hierarchy
+        comment: 'Strong storytelling: semantic colors (green=good, red=bad) create
+          immediate visual narrative; callout annotation ''D = 0.7300 · Strong separation''
+          provides interpretive text beyond raw data; subtitle delivers both D-statistic
+          and p-value; band + vertical line draw the eye to the key divergence point.
+          Viewer immediately grasps: Bad customers have lower credit scores with strong,
+          highly significant separation.'
     spec_compliance:
       score: 15
       max: 15
@@ -126,52 +174,67 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct K-S plot with two ECDFs as step functions
+        comment: 'Correct: two ECDF step functions, vertical line at max divergence,
+          annotation highlighting the K-S statistic — exactly the K-S test comparison
+          plot specified.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: both ECDFs, K-S statistic, max divergence
-          highlighted, p-value, legend'
+        comment: 'All spec features present: ECDFs as step functions with distinct
+          colors/styles, K-S statistic prominently shown (subtitle + annotation +
+          legend), max divergence highlighted (vertical line + band + diamond markers),
+          p-value in subtitle, both distributions clearly labeled in legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = credit scores, Y = cumulative proportion (0-1)
+        comment: 'X-axis: Credit Score 200–1000, Y-axis: Cumulative Proportion 0–1.
+          Both ECDFs span the full data range. Step function rendering is left-continuous,
+          correct for ECDF.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels
+        comment: 'Title: ''ks-test-comparison · python · highcharts · anyplot.ai''
+          — exact required format. Legend entries: ''Good Customers'', ''Bad Customers'',
+          ''Max Distance (D = 0.7300)'' — all clear and descriptive.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clear separation between distributions, max divergence well demonstrated;
-          beta distributions create realistic shapes
+        comment: 'Shows all aspects of K-S test visualization: two clearly separated
+          distributions with different shapes (beta distributions with opposite skew),
+          large D=0.7300 showing strong separation, highly significant p-value (9.54e-78),
+          all computed and displayed correctly.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring (Good vs Bad customers) is a real, neutral business
-          scenario
+        comment: Credit scoring is a canonical real-world application of K-S tests
+          (model discrimination testing). Good vs. Bad customers is a standard business-neutral
+          framing. The data scenario is directly from the spec's examples.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores 200-1000, 300 samples per group, plausible values
+        comment: Credit score range 200–1000 is within plausible scoring model ranges.
+          Beta distributions with opposite skew (beta(5,2) for good → right-skewed
+          toward higher scores; beta(2,4) for bad → left-skewed toward lower scores)
+          are realistic and create the expected separation pattern. D=0.73 is strong
+          but not impossible for well-discriminating credit models.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,61 +242,74 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → ECDF → chart → series → export'
+        comment: 'Linear structure: imports → theme tokens → data generation → ECDF
+          computation → chart + series + annotations → HTML/screenshot → cleanup.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: LineSeries imported from options.series.area instead of options.series.line
+        passed: true
+        comment: 'All imports are used. Minor note: LineSeries imported from highcharts_core.options.series.area
+          (area module) rather than highcharts_core.options.series.line — non-idiomatic
+          but functionally equivalent.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Slightly verbose; extra Path('plot.html').write_text() creates unnecessary
-          file
+        passed: true
+        comment: Appropriate complexity for a multi-series chart with annotations,
+          plotLines, plotBands, and HTML export. No fake UI elements, no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via element screenshot
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes. No
+          deprecated APIs.
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Good use of Highcharts API: annotations, plotBands, step series,
-          tooltip formatting; import path for LineSeries is slightly off'
+        comment: 'Uses highcharts_core Python API correctly: Chart(container=''container''),
+          HighchartsOptions, chart.add_series(), to_js_literal(). Minor non-idiomatic
+          points: LineSeries from area module, Annotation.from_dict() verbose dict
+          construction vs. typed API.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Annotation callout with shadow, plotBands for region highlighting,
-          step series type, HTML tooltip formatting — all Highcharts-distinctive features
+        comment: 'Uses some distinctive highcharts features: plotBands for region
+          highlighting, plotLines with inline labels, Annotations module (requiring
+          separate annotations.js download and inclusion), series.step for step function
+          rendering. However these are relatively standard uses of these features;
+          deeper exploitation of highcharts'' unique capabilities (e.g., responsive
+          rules, chart.renderer SVG, dynamic series) would score higher.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - selenium
+  - pillow
   techniques:
   - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep:
-  - ecdf
+  dataprep: []
   styling:
   - grid-styling
+  - alpha-blending
