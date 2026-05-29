@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -68,7 +68,7 @@ p = figure(
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
-    min_border_right=320,  # extra right margin for end-of-line team labels
+    min_border_right=380,  # extra right margin for end-of-line team labels
 )
 
 # Lines and markers for each entity with visual hierarchy
@@ -93,7 +93,7 @@ for i, (entity, ranks) in enumerate(rankings.items()):
         text_color=color,
         text_alpha=1.0,
         text_font_style="bold" if is_highlight else "normal",
-        x_offset=22,
+        x_offset=40 if is_highlight else 22,
         y_offset=-12,
     )
     p.add_layout(label)
