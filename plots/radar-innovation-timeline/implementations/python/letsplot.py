@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-29
+Quality: 85/100 | Updated: 2026-05-29
 """
 
 import math
