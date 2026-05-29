@@ -1,15 +1,33 @@
-""" pyplots.ai
+"""pyplots.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-02-18
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the altair package when run from its own directory
+_self_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _self_dir]
 
 from collections import defaultdict
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 np.random.seed(42)
 
@@ -22,19 +40,27 @@ n_sectors = len(sectors)
 start_angle = -np.pi / 4
 total_arc = 1.5 * np.pi
 sector_arc = total_arc / n_sectors
+
 sector_bounds = {s: (start_angle + i * sector_arc, start_angle + (i + 1) * sector_arc) for i, s in enumerate(sectors)}
 
-# Ring bands — wider Adopt ring to reduce crowding at inner radius
 ring_inner = {"Adopt": 0.5, "Trial": 1.45, "Assess": 2.4, "Hold": 3.35}
 ring_outer = {"Adopt": 1.3, "Trial": 2.25, "Assess": 3.2, "Hold": 4.1}
 ring_boundary_radii = [1.375, 2.325, 3.275, 4.175]
 
-sector_colors = {"AI & ML": "#306998", "Cloud & Infra": "#E07A2F", "Data Engineering": "#2CA02C", "Security": "#9467BD"}
-ring_tints = {"Adopt": "#306998", "Trial": "#4A8FBF", "Assess": "#7BB5D6", "Hold": "#B0D4E8"}
-ring_opacities = {"Adopt": 0.18, "Trial": 0.11, "Assess": 0.05, "Hold": 0.02}
+# Imprint palette for sectors (positions 1–4)
+sector_colors = {
+    "AI & ML": "#009E73",  # Imprint #1 — green
+    "Cloud & Infra": "#C475FD",  # Imprint #2 — lavender
+    "Data Engineering": "#4467A3",  # Imprint #3 — blue
+    "Security": "#BD8233",  # Imprint #4 — ochre
+}
+
+# Ring fills using corresponding Imprint colors at low opacity
+ring_fill_colors = {"Adopt": "#009E73", "Trial": "#4467A3", "Assess": "#C475FD", "Hold": "#BD8233"}
+ring_opacities = {"Adopt": 0.12, "Trial": 0.07, "Assess": 0.04, "Hold": 0.02}
 ring_shapes = {"Adopt": "circle", "Trial": "diamond", "Assess": "triangle-up", "Hold": "square"}
 
-# --- Data: 25 technology items ---
+# --- Data: 26 technology items ---
 items = [
     {"name": "LLM Agents", "ring": "Adopt", "sector": "AI & ML"},
     {"name": "RAG Pipelines", "ring": "Adopt", "sector": "AI & ML"},
@@ -64,7 +90,7 @@ items = [
     {"name": "Homomorphic Enc.", "ring": "Hold", "sector": "Security"},
 ]
 
-# --- Position items with alternating label offsets to prevent overlap ---
+# --- Position items: increased padding + stronger ring jitter to reduce overlap ---
 groups = defaultdict(list)
 for item in items:
     groups[(item["sector"], item["ring"])].append(item)
@@ -72,36 +98,25 @@ for item in items:
 records = []
 for (sector, ring), group_items in groups.items():
     a_min, a_max = sector_bounds[sector]
-    padding = 0.12 * sector_arc
+    padding = 0.20 * sector_arc  # wider padding keeps items away from sector boundaries
     n = len(group_items)
     r_in, r_out = ring_inner[ring], ring_outer[ring]
     r_mid = (r_in + r_out) / 2
     ring_idx = rings.index(ring)
-    # Stagger angular positions by ring to separate cross-ring labels
-    ring_jitter = 0.16 * sector_arc * ((-1) ** ring_idx)
+    # Alternating jitter shifts adjacent rings apart angularly
+    ring_jitter = 0.14 * sector_arc * ((-1) ** ring_idx)
     for idx, it in enumerate(group_items):
         angle = a_min + padding + (idx + 0.5) / n * (a_max - a_min - 2 * padding) + ring_jitter
-        r_offset = 0.30 * ((-1) ** idx) if n > 1 else 0
-        radius = r_mid + r_offset
+        r_off = 0.18 * ((-1) ** idx) if n > 1 else 0
+        radius = r_mid + r_off
         x = radius * np.cos(angle)
         y = radius * np.sin(angle)
-        # Push label outward from center along radial direction
-        outward_r = 0.42 + 0.16 * (idx % 2)  # alternate offset for separation
-        label_x = x + outward_r * np.cos(angle)
-        label_y = y + outward_r * np.sin(angle)
-        # Align text outward: left-align on right side, right-align on left side
-        text_align = "left" if x > 0 else "right" if x < -0.5 else "center"
+        # Label placed along the same radial ray, beyond the marker
+        label_r = radius + 0.68
+        label_x = label_r * np.cos(angle)
+        label_y = label_r * np.sin(angle)
         records.append(
-            {
-                "name": it["name"],
-                "ring": ring,
-                "sector": sector,
-                "x": x,
-                "y": y,
-                "label_x": label_x,
-                "label_y": label_y,
-                "text_align": text_align,
-            }
+            {"name": it["name"], "ring": ring, "sector": sector, "x": x, "y": y, "label_x": label_x, "label_y": label_y}
         )
 
 df = pd.DataFrame(records)
@@ -121,10 +136,9 @@ for rn in rings:
     )
 df_fills = pd.DataFrame(ring_fill_rows)
 
-arc_pts = 100
 arc_rows = []
 for rb in ring_boundary_radii:
-    for i, t in enumerate(np.linspace(start_angle, start_angle + total_arc, arc_pts)):
+    for i, t in enumerate(np.linspace(start_angle, start_angle + total_arc, 100)):
         arc_rows.append({"x": rb * np.cos(t), "y": rb * np.sin(t), "rb": rb, "order": i})
 df_arcs = pd.DataFrame(arc_rows)
 
@@ -132,11 +146,11 @@ spoke_rows = []
 for i in range(n_sectors + 1):
     a = start_angle + i * sector_arc
     spoke_rows.append({"x": 0, "y": 0, "sid": i, "order": 0})
-    spoke_rows.append({"x": 4.3 * np.cos(a), "y": 4.3 * np.sin(a), "sid": i, "order": 1})
+    spoke_rows.append({"x": 4.35 * np.cos(a), "y": 4.35 * np.sin(a), "sid": i, "order": 1})
 df_spokes = pd.DataFrame(spoke_rows)
 
-# Sector headers beyond outer ring
-sec_r = 4.85
+# Sector headers at the outer edge
+sec_r = 4.95
 df_sec = pd.DataFrame(
     [
         {
@@ -148,12 +162,12 @@ df_sec = pd.DataFrame(
     ]
 )
 
-# Ring labels in the gap area (below center, aligned with ring radii)
-gap_angle = 3 * np.pi / 2  # Bottom center of the gap
+# Ring labels in the gap area at the bottom of the arc
+gap_angle = 3 * np.pi / 2
 df_rlabels = pd.DataFrame(
     [
         {
-            "x": (ring_inner[rn] + ring_outer[rn]) / 2 * np.cos(gap_angle) + 0.15,
+            "x": (ring_inner[rn] + ring_outer[rn]) / 2 * np.cos(gap_angle) + 0.22,
             "y": (ring_inner[rn] + ring_outer[rn]) / 2 * np.sin(gap_angle),
             "ring": rn,
         }
@@ -162,20 +176,19 @@ df_rlabels = pd.DataFrame(
 )
 
 # --- Altair chart assembly ---
-chart_size = 1200
-dom = [-5.7, 5.7]
+dom = [-6.4, 6.4]
 x_enc = alt.X("x:Q", scale=alt.Scale(domain=dom), axis=None)
 y_enc = alt.Y("y:Q", scale=alt.Scale(domain=dom), axis=None)
+
 color_scale = alt.Scale(domain=list(sector_colors), range=list(sector_colors.values()))
 shape_scale = alt.Scale(domain=rings, range=[ring_shapes[r] for r in rings])
 
-# Hover selection — Altair interactive highlight
 hover = alt.selection_point(on="pointerover", fields=["name"], nearest=True, empty=False)
 
 # Ring fill bands
 fill_layers = [
     alt.Chart(df_fills[df_fills["ring"] == rn])
-    .mark_line(strokeWidth=0, filled=True, fill=ring_tints[rn], fillOpacity=ring_opacities[rn])
+    .mark_line(strokeWidth=0, filled=True, fill=ring_fill_colors[rn], fillOpacity=ring_opacities[rn])
     .encode(x=x_enc, y=y_enc, order="order:Q")
     for rn in rings
 ]
@@ -183,132 +196,121 @@ fill_layers = [
 # Ring boundary arcs
 arcs = (
     alt.Chart(df_arcs)
-    .mark_line(strokeWidth=1.2, stroke="#aaaaaa", opacity=0.4)
+    .mark_line(strokeWidth=0.9, stroke=INK_SOFT, opacity=0.30)
     .encode(x=x_enc, y=y_enc, detail="rb:N", order="order:Q")
 )
 
 # Sector spokes
 spokes = (
     alt.Chart(df_spokes)
-    .mark_line(strokeWidth=1.2, stroke="#999999", opacity=0.4)
+    .mark_line(strokeWidth=0.9, stroke=INK_MUTED, opacity=0.30)
     .encode(x=x_enc, y=y_enc, detail="sid:N", order="order:Q")
 )
 
-# Data points with hover-driven size highlight
+# Leader lines from markers to labels (single rule layer — avoids 3-layer label split)
+leaders = (
+    alt.Chart(df)
+    .mark_rule(strokeWidth=0.55, opacity=0.20)
+    .encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=dom), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=dom), axis=None),
+        x2="label_x:Q",
+        y2="label_y:Q",
+        color=alt.value(INK_MUTED),
+    )
+)
+
+# Data points with hover-driven size highlight and explicit dual legend
 points = (
     alt.Chart(df)
-    .mark_point(filled=True, strokeWidth=1.5, stroke="white", opacity=0.92)
+    .mark_point(filled=True, strokeWidth=1.2, stroke=PAGE_BG, opacity=0.92)
     .encode(
         x=x_enc,
         y=y_enc,
         color=alt.Color(
             "sector:N",
             scale=color_scale,
-            legend=alt.Legend(
-                title="Sector",
-                titleFontSize=18,
-                labelFontSize=16,
-                orient="none",
-                legendX=300,
-                legendY=1050,
-                symbolSize=280,
-                symbolStrokeWidth=0,
-                direction="horizontal",
-            ),
+            legend=alt.Legend(title="Sector"),
         ),
         shape=alt.Shape(
             "ring:N",
             scale=shape_scale,
-            legend=alt.Legend(
-                title="Ring",
-                titleFontSize=18,
-                labelFontSize=16,
-                orient="none",
-                legendX=300,
-                legendY=1105,
-                symbolSize=280,
-                symbolStrokeWidth=0,
-                direction="horizontal",
-            ),
+            legend=alt.Legend(title="Ring"),
         ),
-        size=alt.condition(hover, alt.value(500), alt.value(300)),
+        size=alt.condition(hover, alt.value(380), alt.value(200)),
         tooltip=["name:N", "sector:N", "ring:N"],
     )
     .add_params(hover)
 )
 
-# Item labels at offset positions, aligned outward from center
-# Split by text alignment to avoid overlap
-labels_left = (
-    alt.Chart(df[df["text_align"] == "left"])
-    .mark_text(fontSize=20, color="#222222", fontWeight="normal", align="left")
+# Single unified label layer (center alignment — eliminates 3-layer split)
+labels = (
+    alt.Chart(df)
+    .mark_text(fontSize=10, fontWeight="normal", align="center", baseline="middle")
     .encode(
         x=alt.X("label_x:Q", scale=alt.Scale(domain=dom), axis=None),
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=dom), axis=None),
         text="name:N",
-        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.85)),
-    )
-)
-labels_right = (
-    alt.Chart(df[df["text_align"] == "right"])
-    .mark_text(fontSize=20, color="#222222", fontWeight="normal", align="right")
-    .encode(
-        x=alt.X("label_x:Q", scale=alt.Scale(domain=dom), axis=None),
-        y=alt.Y("label_y:Q", scale=alt.Scale(domain=dom), axis=None),
-        text="name:N",
-        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.85)),
-    )
-)
-labels_center = (
-    alt.Chart(df[df["text_align"] == "center"])
-    .mark_text(fontSize=20, color="#222222", fontWeight="normal", align="center")
-    .encode(
-        x=alt.X("label_x:Q", scale=alt.Scale(domain=dom), axis=None),
-        y=alt.Y("label_y:Q", scale=alt.Scale(domain=dom), axis=None),
-        text="name:N",
-        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.85)),
+        color=alt.value(INK_SOFT),
+        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.82)),
     )
 )
 
-# Sector headers
-sec_headers = (
-    alt.Chart(df_sec)
-    .mark_text(fontSize=24, fontWeight="bold", color="#333333")
+# Sector headers: one layer per sector with hardcoded color (avoids legend channel conflict)
+sec_header_layers = [
+    alt.Chart(df_sec[df_sec["sector"] == s])
+    .mark_text(fontSize=12, fontWeight="bold", color=sector_colors[s])
     .encode(x=x_enc, y=y_enc, text="sector:N")
-)
+    for s in sectors
+]
 
-# Ring labels inside bands
+# Ring labels in the gap area
 rlabels = (
     alt.Chart(df_rlabels)
-    .mark_text(fontSize=20, fontWeight="bold", color="#555555", align="left", baseline="middle")
-    .encode(x=x_enc, y=y_enc, text="ring:N")
+    .mark_text(fontSize=10, fontWeight="bold", align="left", baseline="middle")
+    .encode(x=x_enc, y=y_enc, text="ring:N", color=alt.value(INK_MUTED))
 )
 
-# Leader lines connecting markers to labels
-leaders = (
-    alt.Chart(df)
-    .mark_rule(strokeWidth=0.7, opacity=0.25, color="#888888")
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=dom), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=dom), axis=None),
-        x2="label_x:Q",
-        y2="label_y:Q",
-    )
-)
-
-# Combine all layers
 chart = (
-    alt.layer(
-        *fill_layers, arcs, spokes, leaders, points, labels_left, labels_right, labels_center, sec_headers, rlabels
-    )
+    alt.layer(*fill_layers, arcs, spokes, leaders, points, labels, *sec_header_layers, rlabels)
     .properties(
-        width=chart_size,
-        height=chart_size,
-        title=alt.Title("radar-innovation-timeline · altair · pyplots.ai", fontSize=28, anchor="middle", offset=20),
+        width=500,
+        height=460,
+        background=PAGE_BG,
+        title=alt.Title(
+            "radar-innovation-timeline · altair · pyplots.ai", fontSize=14, anchor="middle", offset=14, color=INK
+        ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(padding=12, cornerRadius=4, fillColor="#fafafa", strokeColor="#dddddd")
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(
+        padding=8,
+        cornerRadius=4,
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+        orient="bottom",
+        direction="horizontal",
+        symbolSize=180,
+        symbolStrokeWidth=0,
+    )
 )
 
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad to exact 2400×2400 target (square — radar chart)
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
