@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-29
+Quality: 88/100 | Updated: 2026-05-29
 """
 
 import os
