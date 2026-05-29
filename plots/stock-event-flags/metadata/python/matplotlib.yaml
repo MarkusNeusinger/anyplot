@@ -89,7 +89,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-optimised. White text on colored flag boxes
+        comment: Imprint palette is CVD-optimised. White text on colored flag boxes
           provides high contrast. Legend uses redundant text labels for all event
           types.
       - id: VQ-05
@@ -111,7 +111,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Price line uses brand green #009E73. Event colors use anyplot palette
+        comment: 'Price line uses brand green #009E73. Event colors use Imprint palette
           positions 2-5 with semantic intent. Background #FAF8F1 (light) / #1A1A17
           (dark). All theme-adaptive chrome correctly applied in both renders.'
     design_excellence:

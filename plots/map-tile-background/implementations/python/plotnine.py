@@ -48,7 +48,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 np.random.seed(42)
 
@@ -184,9 +184,9 @@ coast_coords = [
 coastline = [{"region": "sf", "order": i, "lon": c[0], "lat": c[1]} for i, c in enumerate(coast_coords)]
 df_coast = pd.DataFrame(coastline)
 
-# anyplot palette assigned alphabetically by category
+# Imprint palette assigned alphabetically by category
 categories_sorted = sorted(df["category"].unique())
-category_colors = {cat: ANYPLOT_PALETTE[i] for i, cat in enumerate(categories_sorted)}
+category_colors = {cat: IMPRINT_PALETTE[i] for i, cat in enumerate(categories_sorted)}
 
 # Labels for top 3 most-visited landmarks (well-separated geographically)
 top3 = df.nlargest(3, "visitors")  # Union Square, Fisherman's Wharf, Golden Gate Bridge

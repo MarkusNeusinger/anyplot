@@ -20,7 +20,7 @@ review:
   - 'Excellent Plotly feature usage: updatemenus toggle buttons, customdata for hover
     labels, per-trace hovertemplate, add_vrect shading — genuinely idiomatic interactive
     library usage'
-  - 'Perfect palette compliance: modes use anyplot palette in canonical order (green→lavender→blue→ochre),
+  - 'Perfect palette compliance: modes use Imprint palette in canonical order (green→lavender→blue→ochre),
     critical speeds use semantic matte red #AE3030, EO lines use theme-adaptive INK_SOFT'
   - 'Both themes fully correct: warm #FAF8F1 light and #1A1A17 dark backgrounds with
     all chrome tokens properly applied — no dark-on-dark or light-on-light failures'
@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used. EO lines distinguished by color (grey) AND
+        comment: Imprint palette used. EO lines distinguished by color (grey) AND
           linestyle from mode curves. Critical speeds use semantic red. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas

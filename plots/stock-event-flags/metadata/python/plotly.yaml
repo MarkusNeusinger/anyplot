@@ -36,7 +36,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct anyplot light surface
       Chrome: Title "stock-event-flags · python · plotly · anyplot.ai" at fontsize=16 centered and readable; Y-axis label "Price ($)" and X-axis label "Date" at fontsize=12, clearly visible in dark ink; tick labels at fontsize=10 in INK_SOFT (#4A4A44) readable; legend top-right with elevated background (#FFFDF6) and border
-      Data: Bullish candles in #009E73 (brand green), bearish in #AE3030 (matte red) — semantic exception for finance; event flags: Earnings (star, #009E73), Dividend (diamond, #C475FD), News (triangle, #4467A3), Split (square, #BD8233) — canonical anyplot palette order; dashed connector lines in matching colors; flag labels in Arial Black 11px
+      Data: Bullish candles in #009E73 (brand green), bearish in #AE3030 (matte red) — semantic exception for finance; event flags: Earnings (star, #009E73), Dividend (diamond, #C475FD), News (triangle, #4467A3), Split (square, #BD8233) — canonical Imprint palette order; dashed connector lines in matching colors; flag labels in Arial Black 11px
       Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
@@ -96,7 +96,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Canonical anyplot palette order for event types; semantic exception
+        comment: Canonical Imprint palette order for event types; semantic exception
           for bull/bear; correct backgrounds and theme-adaptive chrome
     design_excellence:
       score: 13

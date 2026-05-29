@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Anyplot palette assignments
+# Imprint palette assignments
 BIAS_COLOR = "#009E73"  # position 1 — first series (brand green)
 VARIANCE_COLOR = "#C475FD"  # position 2 — lavender
 IRRED_COLOR = INK_MUTED  # semantic muted — baseline noise floor

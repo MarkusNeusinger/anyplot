@@ -41,7 +41,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data
 np.random.seed(42)
@@ -108,7 +108,7 @@ plot = (
         .line("Min|$@{..ymin..}")
         .line("Max|$@{..ymax..}"),
     )
-    + scale_fill_manual(values=ANYPLOT_PALETTE)
+    + scale_fill_manual(values=IMPRINT_PALETTE)
     + geom_text(
         aes(x="department", y="median_salary", label="label"),
         data=medians,

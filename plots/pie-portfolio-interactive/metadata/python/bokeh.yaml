@@ -22,7 +22,7 @@ review:
     CustomJS callbacks for client-side interactivity, annular_wedge for donut chart'
   - Excellent data quality with realistic portfolio (Apple, Microsoft, Google, US
     Treasury, Corporate Bonds, Gold ETF, Real Estate Fund) totalling $1,000,000
-  - Correct anyplot palette with semantic color mapping (green=equities/growth, blue=fixed
+  - Correct Imprint palette with semantic color mapping (green=equities/growth, blue=fixed
     income/stable, ochre=alternatives/commodity, muted neutral=cash)
   - Theme-adaptive chrome tokens applied correctly — all text, legend, center labels
     use INK/INK_SOFT tokens; both renders are theme-correct and fully legible

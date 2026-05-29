@@ -18,7 +18,7 @@ review:
   - 'Excellent dual-panel donut design: main portfolio allocation + equities drill-down
     with connecting dashed arrow creates a compelling static narrative of the interactive
     concept'
-  - 'Perfect anyplot palette compliance — Equities #009E73 (brand green), Fixed Income
+  - 'Perfect Imprint palette compliance — Equities #009E73 (brand green), Fixed Income
     #4467A3 (blue/stability), Alternatives #C475FD (lavender), Cash #BD8233 (ochre)
     — all semantic assignments are defensible and from the palette'
   - 'Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with full theme-adaptive
@@ -79,14 +79,14 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All segments clearly visible with distinct anyplot palette colors;
+        comment: All segments clearly visible with distinct Imprint palette colors;
           labels on segments are readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; white text on colored segments provides
+        comment: CVD-safe Imprint palette; white text on colored segments provides
           good contrast.
       - id: VQ-05
         name: Layout & Canvas
@@ -107,7 +107,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 for Equities. All colors from anyplot palette
+        comment: 'First series #009E73 for Equities. All colors from Imprint palette
           with defensible semantic assignments. Both backgrounds correct (#FAF8F1
           / #1A1A17).'
     design_excellence:

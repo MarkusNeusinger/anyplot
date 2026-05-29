@@ -17,7 +17,7 @@ review:
   strengths:
   - 'Perfect spec compliance: dual-panel design with detail chart + navigator pane,
     selection highlight (poly + vlines!), and contextual annotation'
-  - 'Correct anyplot palette — brand green #009E73 as the single data series across
+  - 'Correct Imprint palette — brand green #009E73 as the single data series across
     both themes; all chrome tokens (INK, INK_SOFT, INK_MUTED) applied to both axes'
   - 'Proper theme-adaptive chrome throughout: titlecolor, xlabelcolor, ylabelcolor,
     xticklabelcolor, yticklabelcolor, spinecolor all wired to theme tokens'

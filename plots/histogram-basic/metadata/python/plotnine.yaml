@@ -93,7 +93,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Bars #009E73; mean #AE3030 and median #4467A3 from anyplot palette;
+        comment: 'Bars #009E73; mean #AE3030 and median #4467A3 from Imprint palette;
           correct backgrounds in both themes.'
     design_excellence:
       score: 14

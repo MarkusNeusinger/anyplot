@@ -17,7 +17,7 @@ review:
   strengths:
   - 'Perfect spec compliance: 3 coordinated views (scatter + bar + box) with real
     HTML/JS linked selection implementing all spec requirements'
-  - 'Consistent anyplot palette across all three views with correct theme adaptation
+  - 'Consistent Imprint palette across all three views with correct theme adaptation
     (light #FAF8F1 / dark #1A1A17)'
   - 'Excellent data choice: Iris dataset revealing different structural aspects —
     cluster separation (scatter), magnitude differences (bar), distribution overlap
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; three species clearly distinguishable
+        comment: Imprint palette is CVD-safe; three species clearly distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 3
@@ -101,7 +101,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'anyplot palette correctly applied; backgrounds #FAF8F1/#1A1A17;
+        comment: 'Imprint palette correctly applied; backgrounds #FAF8F1/#1A1A17;
           theme-adaptive chrome in both renders; data colors identical across themes'
     design_excellence:
       score: 11

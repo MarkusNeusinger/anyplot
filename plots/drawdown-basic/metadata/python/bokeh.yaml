@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 quality_score: 87
 review:
   strengths:
-  - 'Semantic anyplot palette usage: red for financial loss, green for recovery —
+  - 'Semantic Imprint palette usage: red for financial loss, green for recovery —
     meaningful color storytelling within palette rules'
   - Complete spec compliance with all required features implemented and working
   - 'Perfect code quality: clean, reproducible, idiomatic bokeh with proper output

@@ -17,7 +17,7 @@ review:
   strengths:
   - Correct anyplot_seq colormap (green to azure) applied consistently across both
     themes
-  - 'Top-3/bottom-3 performer highlights using anyplot palette colors (lime #99B314,
+  - 'Top-3/bottom-3 performer highlights using Imprint palette colors (lime #99B314,
     red #B71D27) create immediate visual storytelling'
   - Breadcrumb annotation World > USA > States elegantly conveys hierarchical context
     without faking interactivity

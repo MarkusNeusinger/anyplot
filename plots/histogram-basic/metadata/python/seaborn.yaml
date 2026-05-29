@@ -19,7 +19,7 @@ review:
     with annotated modes and mean/median divergence
   - Correct use of sns.histplot + sns.kdeplot + sns.rugplot — seaborn-distinctive
     layered approach
-  - 'Perfect anyplot palette compliance: bars in #009E73, KDE in #4467A3, mean #AE3030,
+  - 'Perfect Imprint palette compliance: bars in #009E73, KDE in #4467A3, mean #AE3030,
     median #BD8233'
   - Theme-adaptive chrome correctly implemented via sns.set_theme rc params; dark
     render is fully readable with no dark-on-dark issues
@@ -115,7 +115,7 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: correct anyplot palette, intentional typography hierarchy,
+        comment: 'Strong design: correct Imprint palette, intentional typography hierarchy,
           multi-layer approach (hist + KDE + rugplot + annotations + reference lines).
           Above defaults but not quite FiveThirtyEight publication level.'
       - id: DE-02

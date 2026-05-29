@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — canonical order
+# Imprint palette — canonical order
 IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data — simulated daily stock prices for ~1 year (252 trading days)

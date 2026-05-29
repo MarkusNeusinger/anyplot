@@ -24,8 +24,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
-LOSS_RED = "#AE3030"  # anyplot palette position 3 — semantic: loss/drawdown
-RECOVERY_GREEN = "#009E73"  # anyplot palette position 1 — semantic: recovery/new high
+LOSS_RED = "#AE3030"  # Imprint palette position 3 — semantic: loss/drawdown
+RECOVERY_GREEN = "#009E73"  # Imprint palette position 1 — semantic: recovery/new high
 
 # Data — simulated stock price with realistic volatility
 np.random.seed(42)

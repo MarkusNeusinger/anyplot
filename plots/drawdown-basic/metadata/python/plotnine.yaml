@@ -112,7 +112,7 @@ review:
         max: 2
         passed: true
         comment: 'Semantic exception applied correctly for finance domain (red=loss,
-          green=recovery). Both colors from anyplot palette. Backgrounds #FAF8F1 /
+          green=recovery). Both colors from Imprint palette. Backgrounds #FAF8F1 /
           #1A1A17 correct. Chrome tokens correctly threaded.'
     design_excellence:
       score: 13

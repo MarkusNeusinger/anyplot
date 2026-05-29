@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - 'Correct anyplot palette usage throughout: first series #009E73, canonical order
+  - 'Correct Imprint palette usage throughout: first series #009E73, canonical order
     for remaining modes, amber semantic anchor for caution/warning (in-range critical
     speeds)'
   - 'Semantic marker differentiation: amber diamonds for in-range critical speeds
@@ -44,7 +44,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
       Chrome: Title "campbell-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt, comma-formatted. Legend in upper-left with ELEVATED_BG (#FFFDF6) frame. All text is readable.
-      Data: 5 mode curves in anyplot palette — 1st Bending #009E73 (green), 2nd Bending #C475FD (lavender), 1st Torsional #4467A3 (blue), Axial #BD8233 (ochre), 3rd Bending #AE3030 (matte red). Engine order lines in INK_SOFT dashed. Critical speeds outside operating range: gray circles. Critical speeds inside operating range: amber (#DDCC77) diamonds with annotated boxes.
+      Data: 5 mode curves in Imprint palette — 1st Bending #009E73 (green), 2nd Bending #C475FD (lavender), 1st Torsional #4467A3 (blue), Axial #BD8233 (ochre), 3rd Bending #AE3030 (matte red). Engine order lines in INK_SOFT dashed. Critical speeds outside operating range: gray circles. Critical speeds inside operating range: amber (#DDCC77) diamonds with annotated boxes.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -83,7 +83,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'anyplot palette is CVD-safe. Redundant encodings: linestyle and
+        comment: 'Imprint palette is CVD-safe. Redundant encodings: linestyle and
           marker shape.'
       - id: VQ-05
         name: Layout & Canvas

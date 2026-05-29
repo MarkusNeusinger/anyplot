@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-
 quality_score: 92
 review:
   strengths:
-  - Correct anyplot palette across all 9 series (5 mode curves + 3 EO lines + amber
+  - Correct Imprint palette across all 9 series (5 mode curves + 3 EO lines + amber
     critical speed anchor)
   - Semantic amber (#DDCC77) for critical speed markers — correctly uses the warning/caution
     semantic anchor outside the categorical pool
@@ -88,7 +88,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. Redundant linestyle encoding (solid
+        comment: Imprint palette is CVD-safe. Redundant linestyle encoding (solid
           vs. 3 different dash patterns) provides non-color distinction for EO vs
           mode curves.
       - id: VQ-05
@@ -112,7 +112,7 @@ review:
         max: 2
         passed: true
         comment: 'First series (#009E73 green) correct. Full 9-color sequence follows
-          anyplot palette positions 1-8 plus amber semantic anchor for critical speeds.
+          Imprint palette positions 1-8 plus amber semantic anchor for critical speeds.
           Light bg #FAF8F1, dark bg #1A1A17. Chrome adapts correctly in both renders.'
     design_excellence:
       score: 13

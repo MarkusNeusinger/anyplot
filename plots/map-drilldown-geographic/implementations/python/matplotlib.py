@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BOX_TEXT = "#F0EFE8"  # light text on dark anyplot_seq boxes (good contrast on both ends)
-HIGHLIGHT = "#C475FD"  # anyplot palette position 2 — selected-region indicator
+HIGHLIGHT = "#C475FD"  # Imprint palette position 2 — selected-region indicator
 
 # anyplot sequential colormap: green → dark azure (single-polarity continuous)
 anyplot_seq = LinearSegmentedColormap.from_list("anyplot_seq", ["#009E73", "#003D94"])

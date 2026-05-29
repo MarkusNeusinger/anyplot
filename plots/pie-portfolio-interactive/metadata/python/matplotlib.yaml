@@ -17,7 +17,7 @@ review:
   strengths:
   - Dual-ring concentric donut correctly implements the hierarchical portfolio concept
     as a static visualization without any fake interactivity
-  - Anyplot palette applied in canonical order with correct first-series brand green;
+  - Imprint palette applied in canonical order with correct first-series brand green;
     full theme adaptation with correct dark/light chrome tokens
   - Hierarchical legend with both percentage and dollar value context adds real investment
     utility
@@ -75,7 +75,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette. Four distinct hue families. Wedge edges
+        comment: CVD-safe Imprint palette. Four distinct hue families. Wedge edges
           provide shape separation.
       - id: VQ-05
         name: Layout & Canvas

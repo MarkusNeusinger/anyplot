@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — semantic color mapping for ESG portfolio categories
+# Imprint palette — semantic color mapping for ESG portfolio categories
 # Sustainable Equities → brand green (environmental)
 # Technology → blue (tech/stability)
 # Green Fixed Income → lavender (debt markets, calm)

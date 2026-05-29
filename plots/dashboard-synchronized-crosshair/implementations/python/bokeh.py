@@ -34,7 +34,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# anyplot palette — assigned across the three metric series
+# Imprint palette — assigned across the three metric series
 C_PRICE = "#009E73"  # green  (position 1)
 C_VOLUME = "#C475FD"  # purple (position 2)
 C_RSI = "#4467A3"  # sky blue (position 4)

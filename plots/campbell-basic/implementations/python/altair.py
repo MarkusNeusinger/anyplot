@@ -25,7 +25,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — low-speed industrial machinery operating range 2500–4500 RPM
 np.random.seed(42)
@@ -93,14 +93,14 @@ y_scale = alt.Scale(domain=[0, 310])
 # Operating range shaded band
 op_band = (
     alt.Chart(pd.DataFrame({"x": [op_min], "x2": [op_max]}))
-    .mark_rect(opacity=0.07, color=ANYPLOT_PALETTE[2])
+    .mark_rect(opacity=0.07, color=IMPRINT_PALETTE[2])
     .encode(x=alt.X("x:Q", scale=x_scale), x2="x2:Q")
 )
 
 # Operating range label
 op_label = (
     alt.Chart(pd.DataFrame({"RPM": [(op_min + op_max) / 2], "Hz": [10], "label": ["Operating Range"]}))
-    .mark_text(fontSize=10, fontStyle="italic", fontWeight="bold", color=ANYPLOT_PALETTE[2])
+    .mark_text(fontSize=10, fontStyle="italic", fontWeight="bold", color=IMPRINT_PALETTE[2])
     .encode(x=alt.X("RPM:Q", scale=x_scale), y=alt.Y("Hz:Q", scale=y_scale), text="label:N")
 )
 
@@ -136,7 +136,7 @@ modes_chart = (
         y=alt.Y("Hz:Q", title="Frequency (Hz)", scale=y_scale),
         color=alt.Color(
             "Mode:N",
-            scale=alt.Scale(domain=mode_labels, range=ANYPLOT_PALETTE[:5]),
+            scale=alt.Scale(domain=mode_labels, range=IMPRINT_PALETTE[:5]),
             legend=alt.Legend(
                 title="Natural Frequencies", titleFontSize=10, labelFontSize=10, symbolStrokeWidth=2.5, symbolSize=100
             ),
@@ -151,7 +151,7 @@ crit_out_chart = (
     .encode(
         x=alt.X("RPM:Q", scale=x_scale),
         y=alt.Y("Hz:Q", scale=y_scale),
-        color=alt.value(ANYPLOT_PALETTE[4]),
+        color=alt.value(IMPRINT_PALETTE[4]),
         tooltip=["Label:N", "RPM:Q", "Hz:Q"],
     )
 )
@@ -163,7 +163,7 @@ crit_in_chart = (
     .encode(
         x=alt.X("RPM:Q", scale=x_scale),
         y=alt.Y("Hz:Q", scale=y_scale),
-        color=alt.value(ANYPLOT_PALETTE[4]),
+        color=alt.value(IMPRINT_PALETTE[4]),
         tooltip=["Label:N", "RPM:Q", "Hz:Q"],
     )
 )
@@ -176,7 +176,7 @@ annot_chart = (
         x=alt.X("RPM:Q", scale=x_scale),
         y=alt.Y("Hz:Q", scale=y_scale),
         text="Label:N",
-        color=alt.value(ANYPLOT_PALETTE[4]),
+        color=alt.value(IMPRINT_PALETTE[4]),
     )
 )
 

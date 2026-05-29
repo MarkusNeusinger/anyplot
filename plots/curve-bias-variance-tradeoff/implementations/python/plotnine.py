@@ -36,7 +36,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data
 complexity = np.linspace(0.1, 10, 100)
@@ -63,7 +63,7 @@ df = pd.DataFrame(
     }
 )
 
-colors = dict(zip(series_order, ANYPLOT_PALETTE, strict=False))
+colors = dict(zip(series_order, IMPRINT_PALETTE, strict=False))
 linetypes = {"Bias²": "dashed", "Variance": "dashed", "Irreducible Error": "dotted", "Total Error": "solid"}
 line_sizes = {"Bias²": 0.9, "Variance": 0.9, "Irreducible Error": 0.7, "Total Error": 1.3}
 

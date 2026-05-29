@@ -42,7 +42,7 @@ TILE_URL = (
     else "https://a.basemaps.cartocdn.com/dark_all/{Z}/{X}/{Y}.png"
 )
 
-# anyplot palette — canonical imprint slot order (green, lavender, blue, ochre)
+# Imprint palette — canonical imprint slot order (green, lavender, blue, ochre)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — coffee shop chain locations across NYC neighborhoods

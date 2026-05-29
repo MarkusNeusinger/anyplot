@@ -14,7 +14,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID_COLOR  <- adjustcolor(INK, alpha.f = 0.15)
 
-ANYPLOT_PALETTE <- c(
+IMPRINT_PALETTE <- c(
   "#009E73", "#C475FD", "#4467A3", "#BD8233",
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
 )
@@ -62,8 +62,8 @@ p <- ggplot(df, aes(x = department, y = budget, fill = highlight)) +
   ) +
   scale_fill_manual(
     values = c(
-      "top"  = ANYPLOT_PALETTE[1],
-      "rest" = adjustcolor(ANYPLOT_PALETTE[1], alpha.f = 0.45)
+      "top"  = IMPRINT_PALETTE[1],
+      "rest" = adjustcolor(IMPRINT_PALETTE[1], alpha.f = 0.45)
     ),
     guide = "none"
   ) +

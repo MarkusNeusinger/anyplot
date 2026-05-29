@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette with redundant shape encoding (triangle/circle/square/diamond).
+        comment: Imprint palette with redundant shape encoding (triangle/circle/square/diamond).
           CVD-safe.
       - id: VQ-05
         name: Layout & Canvas

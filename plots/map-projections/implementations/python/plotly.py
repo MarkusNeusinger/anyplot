@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Map geographic colors
-LAND_COLOR = "#009E73"  # anyplot palette position 1 — consistent across themes
+LAND_COLOR = "#009E73"  # Imprint palette position 1 — consistent across themes
 OCEAN_COLOR = "#C8E0F0" if THEME == "light" else "#192632"
 COAST_COLOR = "#006B4F" if THEME == "light" else "#00C990"
 GRATICULE = "rgba(26,26,23,0.20)" if THEME == "light" else "rgba(240,239,232,0.20)"

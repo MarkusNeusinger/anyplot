@@ -35,7 +35,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 ANYPLOT_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot categorical palette — first series always #009E73
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Global smartphone market share (2024)
 data = {
@@ -45,7 +45,7 @@ data = {
 }
 
 # Colors: anyplot positions 1–4, muted for "Others" (rest category)
-colors = [ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2], ANYPLOT_PALETTE[3], ANYPLOT_MUTED]
+colors = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], IMPRINT_PALETTE[2], IMPRINT_PALETTE[3], ANYPLOT_MUTED]
 
 # Title — minimal required format
 title = "pie-basic · python · letsplot · anyplot.ai"

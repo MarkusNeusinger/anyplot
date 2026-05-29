@@ -76,7 +76,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used — colorblind-safe by design.
+        comment: Imprint palette used — colorblind-safe by design.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
@@ -96,7 +96,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'AAPL (first series) = #009E73. Full anyplot palette canonical order.
+        comment: 'AAPL (first series) = #009E73. Full Imprint palette canonical order.
           Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
     design_excellence:
       score: 13

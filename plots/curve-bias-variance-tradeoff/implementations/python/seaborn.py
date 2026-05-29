@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — semantic assignments for bias-variance curves
+# Imprint palette — semantic assignments for bias-variance curves
 C_BIAS = "#009E73"  # position 1 brand green — decreasing / improving direction
 C_VAR = "#C475FD"  # position 2 lavender — increasing / overfitting direction
 C_TOTAL = "#AE3030"  # position 5 matte red — semantic: error / loss

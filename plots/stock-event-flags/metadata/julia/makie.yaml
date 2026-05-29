@@ -85,7 +85,7 @@ review:
         max: 2
         passed: true
         comment: 'Redundant encoding: distinct marker shapes (triangle/diamond/circle)
-          plus distinct colors. anyplot palette is CVD-safe. Red (#AE3030) is only
+          plus distinct colors. Imprint palette is CVD-safe. Red (#AE3030) is only
           used semantically for negative returns, not as a primary categorical distinguisher.'
       - id: VQ-05
         name: Layout & Canvas

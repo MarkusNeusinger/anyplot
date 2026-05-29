@@ -40,7 +40,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # anyplot palette position 1 — always first series
+BRAND = "#009E73"  # Imprint palette position 1 — always first series
 
 # Data — non-monotonic: Clothing and Home & Garden are close rivals
 data = pd.DataFrame(

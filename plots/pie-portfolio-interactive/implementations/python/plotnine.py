@@ -39,27 +39,27 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # anyplot categorical palette — hybrid-v3 order
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Portfolio data — anyplot palette with semantic assignments
+# Portfolio data — Imprint palette with semantic assignments
 np.random.seed(42)
 
 TOTAL_PORTFOLIO = 1_200_000
 
 MAIN_COLORS = {
-    "Equities": ANYPLOT_PALETTE[0],  # #009E73 green  — growth / equities
-    "Fixed Income": ANYPLOT_PALETTE[2],  # #4467A3 blue   — stability / bonds
-    "Alternatives": ANYPLOT_PALETTE[1],  # #C475FD lavender — non-standard assets
-    "Cash": ANYPLOT_PALETTE[3],  # #BD8233 ochre  — value / currency
+    "Equities": IMPRINT_PALETTE[0],  # #009E73 green  — growth / equities
+    "Fixed Income": IMPRINT_PALETTE[2],  # #4467A3 blue   — stability / bonds
+    "Alternatives": IMPRINT_PALETTE[1],  # #C475FD lavender — non-standard assets
+    "Cash": IMPRINT_PALETTE[3],  # #BD8233 ochre  — value / currency
 }
 MAIN_WEIGHTS = {"Equities": 45, "Fixed Income": 30, "Alternatives": 15, "Cash": 10}
 
 # Equities sub-holdings — semantic colors within holding categories
 HOLDINGS = [
-    {"name": "Tech Stocks", "weight": 18, "color": ANYPLOT_PALETTE[5]},  # #2ABCCD cyan  — tech
-    {"name": "Healthcare", "weight": 12, "color": ANYPLOT_PALETTE[6]},  # #954477 rose  — health
-    {"name": "Financials", "weight": 10, "color": ANYPLOT_PALETTE[2]},  # #4467A3 blue  — finance
-    {"name": "Energy", "weight": 5, "color": ANYPLOT_PALETTE[3]},  # #BD8233 ochre — commodity
+    {"name": "Tech Stocks", "weight": 18, "color": IMPRINT_PALETTE[5]},  # #2ABCCD cyan  — tech
+    {"name": "Healthcare", "weight": 12, "color": IMPRINT_PALETTE[6]},  # #954477 rose  — health
+    {"name": "Financials", "weight": 10, "color": IMPRINT_PALETTE[2]},  # #4467A3 blue  — finance
+    {"name": "Energy", "weight": 5, "color": IMPRINT_PALETTE[3]},  # #BD8233 ochre — commodity
 ]
 
 # Geometry constants

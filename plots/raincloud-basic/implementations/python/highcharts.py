@@ -34,7 +34,7 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 np.random.seed(42)
 categories = ["Control", "Treatment A", "Treatment B", "Treatment C"]
 
-# anyplot palette positions 1–4 (canonical order: green, lavender, blue, ochre)
+# Imprint palette positions 1–4 (canonical order: green, lavender, blue, ochre)
 colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 fills = ["rgba(0,158,115,0.45)", "rgba(196,117,253,0.45)", "rgba(68,103,163,0.45)", "rgba(189,130,51,0.45)"]
 

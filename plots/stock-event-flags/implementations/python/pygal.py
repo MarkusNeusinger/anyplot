@@ -40,7 +40,7 @@ events = [
     {"date": pd.Timestamp("2024-03-11"), "type": "split", "label": "2:1 Split"},
 ]
 
-# Event colors from anyplot palette (positions 2-5; position 1 reserved for price line)
+# Event colors from Imprint palette (positions 2-5; position 1 reserved for price line)
 event_type_colors = {
     "earnings": "#C475FD",  # lavender
     "dividend": "#4467A3",  # blue — steady income

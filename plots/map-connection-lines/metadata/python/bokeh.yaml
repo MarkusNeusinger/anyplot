@@ -89,7 +89,7 @@ review:
         max: 2
         passed: true
         comment: Green arcs and blue markers are perceptually distinct. No red-green
-          sole signal. Anyplot palette CVD-safe.
+          sole signal. Imprint palette CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data: employee performance scores across 5 departments
 np.random.seed(42)
@@ -80,7 +80,7 @@ widest_iqr = spreads[widest_dept_idx]
 n_outliers = len(outlier_data)
 outlier_s = "s" if n_outliers != 1 else ""
 
-# Box plot data with per-point anyplot palette colors (color property is native to BoxPlotData)
+# Box plot data with per-point Imprint palette colors (color property is native to BoxPlotData)
 box_data = [
     BoxPlotData(
         low=box_stats[i]["low"],
@@ -88,7 +88,7 @@ box_data = [
         median=box_stats[i]["median"],
         q3=box_stats[i]["q3"],
         high=box_stats[i]["high"],
-        color=ANYPLOT_PALETTE[i],
+        color=IMPRINT_PALETTE[i],
     )
     for i in range(len(departments))
 ]

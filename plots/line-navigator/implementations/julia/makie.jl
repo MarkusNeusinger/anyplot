@@ -17,7 +17,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",
     colorant"#C475FD",
     colorant"#4467A3",
@@ -111,7 +111,7 @@ rowsize!(fig.layout, 2, Relative(0.22))
 rowgap!(fig.layout, 1, 8)
 
 # Detail view: selected window
-brand = ANYPLOT_PALETTE[1]
+brand = IMPRINT_PALETTE[1]
 lines!(ax_main, detail_t, detail_vals; color = brand, linewidth = 2.0f0)
 
 # Annotation: selected range with insight context

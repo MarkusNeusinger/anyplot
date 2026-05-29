@@ -14,7 +14,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const LABEL_FG    = colorant"#FFFFFF"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",
     colorant"#C475FD",
     colorant"#4467A3",
@@ -69,7 +69,7 @@ ax = Axis(
 # High-level Makie pie! recipe — idiomatic slice rendering
 p = pie!(
     ax, fracs;
-    color       = ANYPLOT_PALETTE[1:length(categories)],
+    color       = IMPRINT_PALETTE[1:length(categories)],
     strokecolor = PAGE_BG,
     strokewidth = 3,
     offset      = PIE_OFFSET,
@@ -106,7 +106,7 @@ end
 # Explicit limits so the translated slice stays fully in view
 limits!(ax, -1.2, 1.2, -1.2, 1.2)
 
-legend_entries = [PolyElement(color = ANYPLOT_PALETTE[i], strokecolor = :transparent) for i in 1:length(categories)]
+legend_entries = [PolyElement(color = IMPRINT_PALETTE[i], strokecolor = :transparent) for i in 1:length(categories)]
 legend_labels  = [@sprintf("%s  %.1f%%", categories[i], pct[i]) for i in 1:length(categories)]
 
 Legend(

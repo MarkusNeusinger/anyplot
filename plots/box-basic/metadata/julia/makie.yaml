@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; box strokes add edge contrast.
+        comment: Imprint palette is CVD-safe; box strokes add edge contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -110,7 +110,7 @@ review:
         max: 8
         passed: true
         comment: Intentional opacity hierarchy for focal emphasis, reference line,
-          anyplot palette, theme-adaptive chrome — above generic defaults.
+          Imprint palette, theme-adaptive chrome — above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4

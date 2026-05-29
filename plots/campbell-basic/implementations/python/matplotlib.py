@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 ANYPLOT_AMBER = "#DDCC77"  # warning / caution — semantic anchor for critical condition
 
-# anyplot palette positions 1–5 for mode curves
+# Imprint palette positions 1–5 for mode curves
 mode_colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data

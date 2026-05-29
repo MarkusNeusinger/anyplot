@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basi
 quality_score: 89
 review:
   strengths:
-  - 'Palette and dual-theme implementation are textbook-correct: anyplot palette in
+  - 'Palette and dual-theme implementation are textbook-correct: Imprint palette in
     canonical order, all chrome tokens derived from ANYPLOT_THEME, both renders visually
     identical data colors with flipped chrome.'
   - Cubic interpolation with opacity=0.47 fill produces a smooth, polished area chart
@@ -77,7 +77,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Four-series anyplot palette is CVD-safe with sufficient perceptual
+        comment: Four-series Imprint palette is CVD-safe with sufficient perceptual
           separation
       - id: VQ-05
         name: Layout & Canvas

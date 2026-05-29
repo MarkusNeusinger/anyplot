@@ -30,7 +30,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 ANYPLOT_AMBER = "#DDCC77"
 
 # Data
@@ -51,7 +51,7 @@ modes = {
     "Axial": mode_axial,
     "3rd Bending": mode_3_bending,
 }
-mode_colors = ANYPLOT_PALETTE[:5]
+mode_colors = IMPRINT_PALETTE[:5]
 
 # Engine order lines: frequency = order * speed / 60
 engine_orders = [1, 2, 3]
@@ -156,7 +156,7 @@ for rpm_val, freq_val, in_op in zip(critical_speeds_rpm, critical_speeds_freq, c
         )
         p.add_layout(danger)
 
-# Natural frequency curves (anyplot palette positions 1–5)
+# Natural frequency curves (Imprint palette positions 1–5)
 legend_items = []
 for i, (mode_name, mode_freq) in enumerate(modes.items()):
     source = ColumnDataSource(data={"speed": speeds, "freq": mode_freq})

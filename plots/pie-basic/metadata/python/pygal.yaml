@@ -75,7 +75,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; white labels conventional for pie charts.
+        comment: Imprint palette is CVD-safe; white labels conventional for pie charts.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

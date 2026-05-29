@@ -80,7 +80,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Sequential green→blue uses two anyplot palette anchors; no red-green
+        comment: Sequential green→blue uses two Imprint palette anchors; no red-green
           sole signal
       - id: VQ-05
         name: Layout & Canvas
@@ -101,7 +101,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Sequential colormap uses #009E73→#4467A3 (anyplot palette); airport
+        comment: 'Sequential colormap uses #009E73→#4467A3 (Imprint palette); airport
           markers use brand green; backgrounds #FAF8F1 / #1A1A17 correct'
     design_excellence:
       score: 13

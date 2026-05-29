@@ -17,7 +17,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Helper: spherical linear interpolation along a great circle arc
@@ -166,7 +166,7 @@ p <- ggplot() +
     mapping = aes(x = lon, y = lat),
     shape   = 21,
     size    = 2.5,
-    fill    = ANYPLOT_PALETTE[1],
+    fill    = IMPRINT_PALETTE[1],
     color   = PAGE_BG,
     stroke  = 0.9
   ) +

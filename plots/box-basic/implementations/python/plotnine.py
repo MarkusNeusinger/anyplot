@@ -39,7 +39,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data
 np.random.seed(42)
@@ -78,7 +78,7 @@ plot = (
         outlier_size=2.5, outlier_alpha=0.65, outlier_colour=INK_SOFT, size=0.5, alpha=0.85, width=0.6, color=INK_SOFT
     )
     + stat_summary(fun_y=np.median, geom="point", size=4, shape="D", color=INK, fill=INK)
-    + scale_fill_manual(values=ANYPLOT_PALETTE[:5])
+    + scale_fill_manual(values=IMPRINT_PALETTE[:5])
     + scale_y_continuous(labels=lambda vals: [f"${v / 1000:.0f}k" for v in vals], breaks=range(20000, 160001, 20000))
     + coord_cartesian(ylim=(12000, 160000))
     # Gap annotation — bracket style with ticks at Support (x=1) and Engineering (x=5)

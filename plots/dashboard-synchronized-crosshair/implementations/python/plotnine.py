@@ -35,8 +35,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # anyplot palette 1 — data lines
-ACCENT = "#AE3030"  # anyplot palette 3 — crosshair marker
+BRAND = "#009E73"  # Imprint palette 1 — data lines
+ACCENT = "#AE3030"  # Imprint palette 3 — crosshair marker
 
 # Data — seasonal stock: trend + annual cycle + quarterly earnings ripple + mild noise
 np.random.seed(42)

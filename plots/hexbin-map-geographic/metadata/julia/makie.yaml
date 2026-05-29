@@ -16,7 +16,7 @@ quality_score: 85
 review:
   strengths:
   - Correct hexbin! native recipe with proper ANYPLOT_SEQ sequential colormap (green→blue)
-  - Well-implemented dual-theme (light/dark) with correct anyplot palette tokens applied
+  - Well-implemented dual-theme (light/dark) with correct Imprint palette tokens applied
     throughout
   - 'Clean KISS structure with idiomatic Makie patterns: hexbin!, poly!, Colorbar,
     colgap!, limits!'

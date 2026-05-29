@@ -19,7 +19,7 @@ review:
     grammar — outer ring click filters inner holdings ring via transform_filter
   - 'Perfect spec compliance across all required features: hover tooltips, click-to-drill-down
     by asset class, return-to-overview toggle, legend, color-coded by category'
-  - Anyplot palette in canonical order (green=Equities, purple=Fixed Income, blue=Alternatives);
+  - Imprint palette in canonical order (green=Equities, purple=Fixed Income, blue=Alternatives);
     both light and dark themes render correctly with proper chrome adaptation
   - Clean idiomatic Altair code using alt.selection_point + transform_filter linked-selection
     pattern and alt.condition for conditional opacity — library strengths well demonstrated
@@ -41,7 +41,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white matching #FAF8F1 — correct
       Chrome: Title "pie-portfolio-interactive · python · altair · anyplot.ai" in dark (#1A1A17) text fills ~75% of width — fully readable. Subtitle "Click outer ring to drill into category holdings · click again to reset" in muted secondary color — legible. Legend box has elevated background with Asset Class title and three labeled swatches.
-      Data: Outer ring (category totals) and inner ring (individual holdings) both use the anyplot palette — green (#009E73) for Equities (largest arc ~45%), lavender (#C475FD) for Fixed Income (~35%), blue (#4467A3) for Alternatives (~20%). Center shows "100%" bold and "10 Holdings" in softer text. Ring-gap strokes are PAGE_BG (white/cream), clearly separating segments.
+      Data: Outer ring (category totals) and inner ring (individual holdings) both use the Imprint palette — green (#009E73) for Equities (largest arc ~45%), lavender (#C475FD) for Fixed Income (~35%), blue (#4467A3) for Alternatives (~20%). Center shows "100%" bold and "10 Holdings" in softer text. Ring-gap strokes are PAGE_BG (white/cream), clearly separating segments.
       Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
@@ -81,7 +81,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Three anyplot palette colors with good perceptual separation; CVD-safe.
+        comment: Three Imprint palette colors with good perceptual separation; CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3

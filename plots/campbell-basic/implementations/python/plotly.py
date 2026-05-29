@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 CRITICAL_COLOR = "#AE3030"
 
 # Data
@@ -84,7 +84,7 @@ for i, (mode_name, mode_freq) in enumerate(modes.items()):
             y=mode_freq,
             mode="lines",
             name=mode_name,
-            line={"color": ANYPLOT_PALETTE[i], "width": 3.5, "dash": line_dashes[i]},
+            line={"color": IMPRINT_PALETTE[i], "width": 3.5, "dash": line_dashes[i]},
             hovertemplate=f"<b>{mode_name}</b><br>Speed: %{{x:.0f}} RPM<br>Freq: %{{y:.1f}} Hz<extra></extra>",
         )
     )

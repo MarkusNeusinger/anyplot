@@ -41,13 +41,13 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct anyplot light surface, no pure white.
       Chrome: Title "campbell-basic · python · altair · anyplot.ai" in dark ink at fontsize 16, clearly readable. Subtitle "Natural Frequencies vs Engine Order Excitations" in muted ink below. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" both readable in dark ink at 12pt. Tick labels at 10pt in INK_SOFT are clear. Grid lines are subtle (opacity 0.15) and non-intrusive.
-      Data: Five mode curves in anyplot palette order — 1st Bending green (#009E73), 2nd Bending lavender (#C475FD), 1st Torsional blue (#4467A3), Axial ochre (#BD8233), 3rd Bending matte red (#AE3030). Three dashed gray EO excitation lines (1x, 2x, 3x) labeled at right edge in INK_SOFT. Operating range shaded blue band (opacity 0.07). Critical speed diamond markers in matte red (#AE3030) — outlined for outside operating range, filled/larger for inside range. Three text annotations (1st Bending/3x, 2nd Bending/2x, Axial/3x) in matte red. Legend at bottom with 5 columns. First series is #009E73 (brand green).
+      Data: Five mode curves in Imprint palette order — 1st Bending green (#009E73), 2nd Bending lavender (#C475FD), 1st Torsional blue (#4467A3), Axial ochre (#BD8233), 3rd Bending matte red (#AE3030). Three dashed gray EO excitation lines (1x, 2x, 3x) labeled at right edge in INK_SOFT. Operating range shaded blue band (opacity 0.07). Critical speed diamond markers in matte red (#AE3030) — outlined for outside operating range, filled/larger for inside range. Three text annotations (1st Bending/3x, 2nd Bending/2x, Axial/3x) in matte red. Legend at bottom with 5 columns. First series is #009E73 (brand green).
       Legibility verdict: PASS — all text readable against the light background; no light-on-light issues detected.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct anyplot dark surface, no pure black.
       Chrome: Title and subtitle flip to off-white (#F0EFE8) and muted light respectively, clearly readable against dark background. Axis labels and tick labels in B8B7B0 (INK_SOFT dark) — good contrast on near-black. Grid lines subtle (opacity 0.15 on dark). Legend background elevated to #242420 with soft border — readable.
-      Data: All five mode curves and critical speed markers retain identical anyplot palette colors as the light render — only chrome elements flip. The green #009E73 first series (1st Bending) reads well on the dark surface. Matte red (#AE3030) markers and annotation text are visible. Dashed EO lines in INK_MUTED (#A8A79F) are visible. "Operating Range" label in ANYPLOT_PALETTE[2] blue remains readable.
+      Data: All five mode curves and critical speed markers retain identical Imprint palette colors as the light render — only chrome elements flip. The green #009E73 first series (1st Bending) reads well on the dark surface. Matte red (#AE3030) markers and annotation text are visible. Dashed EO lines in INK_MUTED (#A8A79F) are visible. "Operating Range" label in IMPRINT_PALETTE[2] blue remains readable.
       Legibility verdict: PASS — no dark-on-dark failures observed; all labels, ticks, title, and axis text are readable against the dark background.
   criteria_checklist:
     visual_quality:
@@ -84,7 +84,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette used — CVD-safe. EO lines in gray are distinct from
+        comment: Imprint palette used — CVD-safe. EO lines in gray are distinct from
           all palette colors. Red markers for critical speeds are semantically appropriate
           and distinguishable.
       - id: VQ-05
@@ -107,7 +107,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series (1st Bending) = #009E73. All 5 modes use anyplot palette
+        comment: 'First series (1st Bending) = #009E73. All 5 modes use Imprint palette
           positions 1-5 in canonical order. Critical speed markers use #AE3030 (matte
           red) — semantically correct for danger. Backgrounds #FAF8F1 (light) / #1A1A17
           (dark) correct.'

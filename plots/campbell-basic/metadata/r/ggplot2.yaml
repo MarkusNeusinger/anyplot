@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Correct anyplot palette applied in canonical order across all 4 natural frequency
+  - Correct Imprint palette applied in canonical order across all 4 natural frequency
     modes
   - Excellent theme-adaptive chrome — all text, backgrounds, and legend adapt correctly
     to light/dark
@@ -86,7 +86,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette CVD-safe, theme-adaptive muted ink for secondary
+        comment: Imprint palette CVD-safe, theme-adaptive muted ink for secondary
           lines, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
@@ -118,7 +118,7 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: anyplot palette, L-spine, subtle
+        comment: 'Above well-configured default: Imprint palette, L-spine, subtle
           grid, elevated legend background, critical zone shading. Not yet at strong-design
           (6) level — could use stronger zone emphasis or RPM annotations at critical
           points'

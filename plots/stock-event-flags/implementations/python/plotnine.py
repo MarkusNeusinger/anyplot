@@ -39,14 +39,14 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# anyplot palette — canonical order
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint palette — canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 color_map = {
-    "Earnings": ANYPLOT_PALETTE[0],  # #009E73 brand green
-    "Dividend": ANYPLOT_PALETTE[1],  # #C475FD lavender
-    "News": ANYPLOT_PALETTE[2],  # #4467A3 blue
-    "Split": ANYPLOT_PALETTE[3],  # #BD8233 ochre
+    "Earnings": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Dividend": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "News": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "Split": IMPRINT_PALETTE[3],  # #BD8233 ochre
 }
 shape_map = {"Earnings": "s", "Dividend": "D", "News": "^", "Split": "o"}
 # Earnings get larger markers — primary price catalyst deserves visual emphasis
@@ -126,8 +126,8 @@ plot = (
         data=df_price,
         mapping=aes(x="date", y="close"),
         method="lowess",
-        color=ANYPLOT_PALETTE[0],
-        fill=ANYPLOT_PALETTE[0],
+        color=IMPRINT_PALETTE[0],
+        fill=IMPRINT_PALETTE[0],
         size=0.7,
         alpha=0.1,
     )

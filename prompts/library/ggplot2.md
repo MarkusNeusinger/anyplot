@@ -120,11 +120,11 @@ ggsave(
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical
 Palette"). First series is **always** `#009E73`.
 
 ```r
-ANYPLOT_PALETTE <- c(
+IMPRINT_PALETTE <- c(
   "#009E73",  # 1 — first categorical series (brand green)
   "#C475FD",  # 2 — lavender
   "#4467A3",  # 3 — blue
@@ -137,13 +137,13 @@ ANYPLOT_PALETTE <- c(
 ANYPLOT_AMBER <- "#DDCC77"  # warning / caution (outside the categorical pool)
 
 # Single-series
-geom_point(color = ANYPLOT_PALETTE[1])
+geom_point(color = IMPRINT_PALETTE[1])
 
 # Multi-series — categorical
-scale_color_manual(values = ANYPLOT_PALETTE)
-scale_fill_manual(values  = ANYPLOT_PALETTE)
+scale_color_manual(values = IMPRINT_PALETTE)
+scale_fill_manual(values  = IMPRINT_PALETTE)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Continuous — only the two Imprint palette-derived cmaps are allowed:
 # Sequential (single-polarity)
 scale_color_gradient(low = "#009E73", high = "#4467A3")
 scale_fill_gradient(low  = "#009E73", high = "#4467A3")
@@ -190,7 +190,7 @@ anyplot_theme <- theme_minimal(base_size = 8) +
 # contrast against PAGE_BG instead.
 
 p <- ggplot(df, aes(x, y)) +
-  geom_point(color = ANYPLOT_PALETTE[1], size = 2.5) +
+  geom_point(color = IMPRINT_PALETTE[1], size = 2.5) +
   anyplot_theme
 ```
 
@@ -230,7 +230,7 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # --- Data -------------------------------------------------------------------
@@ -241,7 +241,7 @@ df <- tibble::tibble(
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x, y)) +
-  geom_point(color = ANYPLOT_PALETTE[1], size = 2.5, alpha = 0.7) +
+  geom_point(color = IMPRINT_PALETTE[1], size = 2.5, alpha = 0.7) +
   labs(title = "scatter-basic · r · ggplot2 · anyplot.ai", x = "X", y = "Y") +
   theme_minimal(base_size = 8) +
   theme(

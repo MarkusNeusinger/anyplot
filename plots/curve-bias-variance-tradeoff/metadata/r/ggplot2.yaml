@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - 'Perfect anyplot palette usage: first series green (#009E73), canonical order
+  - 'Perfect Imprint palette usage: first series green (#009E73), canonical order
     for 4 series, correct theme-adaptive chrome in both renders'
   - Direct color-matched curve labeling replaces legend — cleaner and more informative
     for a 4-curve plot
@@ -77,7 +77,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette. Redundant linestyle encoding ensures distinguishability
+        comment: CVD-safe Imprint palette. Redundant linestyle encoding ensures distinguishability
           without color alone.
       - id: VQ-05
         name: Layout & Canvas

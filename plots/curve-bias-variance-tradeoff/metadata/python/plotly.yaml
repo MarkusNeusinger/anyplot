@@ -79,7 +79,7 @@ review:
         max: 2
         passed: true
         comment: 4 distinct hue families; green/red pair differentiated by dash style
-          and thickness; CVD-safe anyplot palette.
+          and thickness; CVD-safe Imprint palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

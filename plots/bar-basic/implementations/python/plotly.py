@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# anyplot palette: brand green for top performer, blue for rest
+# Imprint palette: brand green for top performer, blue for rest
 BRAND = "#009E73"
 BASE = "#4467A3"
 

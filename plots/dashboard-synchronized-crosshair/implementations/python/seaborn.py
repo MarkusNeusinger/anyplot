@@ -37,7 +37,7 @@ sns.set_theme(
 )
 sns.set_context("notebook", font_scale=1.0)
 
-# Anyplot palette — canonical order: green, purple, red, sky-blue, lime, …
+# Imprint palette — canonical order: green, purple, red, sky-blue, lime, …
 IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233"]
 sns.set_palette(IMPRINT)
 

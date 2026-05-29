@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 ANYPLOT_AMBER = "#DDCC77"
 
 # Data
@@ -109,7 +109,7 @@ ax.text(
 )
 
 # Natural frequency curves via seaborn lineplot with hue
-mode_colors = ANYPLOT_PALETTE[:5]
+mode_colors = IMPRINT_PALETTE[:5]
 sns.lineplot(
     data=df,
     x="RPM",
@@ -147,7 +147,7 @@ sns.scatterplot(
     data=cs_in_df,
     x="RPM",
     y="Frequency (Hz)",
-    color=ANYPLOT_PALETTE[4],
+    color=IMPRINT_PALETTE[4],
     s=120,
     ax=ax,
     zorder=5,
@@ -201,7 +201,7 @@ ax.set_axisbelow(True)
 sns.despine(ax=ax)
 
 # Compact legend: critical speed status + operating range only
-cs_in = mpatches.Patch(facecolor=ANYPLOT_PALETTE[4], label="Critical (in range)")
+cs_in = mpatches.Patch(facecolor=IMPRINT_PALETTE[4], label="Critical (in range)")
 cs_out = mpatches.Patch(facecolor=INK_MUTED, label="Critical (outside)")
 op_leg = mpatches.Patch(facecolor=ANYPLOT_AMBER, alpha=0.45, label=f"Operating ({op_low}–{op_high} RPM)")
 ax.legend(handles=[cs_in, cs_out, op_leg], fontsize=8, loc="lower right", frameon=True, fancybox=False, framealpha=0.9)

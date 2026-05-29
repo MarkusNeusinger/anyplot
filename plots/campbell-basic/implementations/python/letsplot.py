@@ -22,10 +22,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A36"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 # Modes: positions 1,2,3,4,6 — skip #AE3030 (pos 5), reserved for critical markers
-MODE_COLORS = [ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2], ANYPLOT_PALETTE[3], ANYPLOT_PALETTE[5]]
-CRIT_COLOR = ANYPLOT_PALETTE[4]  # #AE3030 — semantic: danger/resonance risk
+MODE_COLORS = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], IMPRINT_PALETTE[2], IMPRINT_PALETTE[3], IMPRINT_PALETTE[5]]
+CRIT_COLOR = IMPRINT_PALETTE[4]  # #AE3030 — semantic: danger/resonance risk
 
 # Data
 np.random.seed(42)

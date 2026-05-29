@@ -14,7 +14,7 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Data: Employee annual salaries — right-skewed distribution
@@ -42,7 +42,7 @@ dens_df  <- data.frame(
 p <- ggplot(df, aes(x = salary)) +
   geom_histogram(
     bins      = n_bins,
-    fill      = ANYPLOT_PALETTE[1],
+    fill      = IMPRINT_PALETTE[1],
     color     = PAGE_BG,
     linewidth = 0.3
   ) +
@@ -57,7 +57,7 @@ p <- ggplot(df, aes(x = salary)) +
   # Median reference line as visual focal point
   geom_vline(
     xintercept = med_salary,
-    color      = ANYPLOT_PALETTE[4],
+    color      = IMPRINT_PALETTE[4],
     linewidth  = 0.9
   ) +
   annotate(
@@ -65,7 +65,7 @@ p <- ggplot(df, aes(x = salary)) +
     x     = med_salary,
     y     = Inf,
     label = sprintf("Median: $%.0fk", med_salary / 1000),
-    color = ANYPLOT_PALETTE[4],
+    color = IMPRINT_PALETTE[4],
     hjust = -0.1,
     vjust = 1.8,
     size  = 3

@@ -26,16 +26,16 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # anyplot categorical palette — 8 hues, hybrid-v3 sort order
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 title = "pie-portfolio-interactive · python · highcharts · anyplot.ai"
 
 # Data — portfolio allocation with drill-down structure
 portfolio_data = [
-    {"name": "Equities", "y": 55.0, "drilldown": "equities", "color": ANYPLOT_PALETTE[0]},
-    {"name": "Fixed Income", "y": 25.0, "drilldown": "fixed-income", "color": ANYPLOT_PALETTE[1]},
-    {"name": "Alternatives", "y": 12.0, "drilldown": "alternatives", "color": ANYPLOT_PALETTE[2]},
-    {"name": "Cash", "y": 8.0, "drilldown": "cash", "color": ANYPLOT_PALETTE[3]},
+    {"name": "Equities", "y": 55.0, "drilldown": "equities", "color": IMPRINT_PALETTE[0]},
+    {"name": "Fixed Income", "y": 25.0, "drilldown": "fixed-income", "color": IMPRINT_PALETTE[1]},
+    {"name": "Alternatives", "y": 12.0, "drilldown": "alternatives", "color": IMPRINT_PALETTE[2]},
+    {"name": "Cash", "y": 8.0, "drilldown": "cash", "color": IMPRINT_PALETTE[3]},
 ]
 
 # Drill-down data — sub-holdings within each asset class

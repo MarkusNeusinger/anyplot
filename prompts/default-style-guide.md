@@ -32,11 +32,11 @@ Two formats are allowed (same pixel count for consistent font sizing across both
 
 ## Color Philosophy
 
-anyplot uses the **anyplot palette** (codename **imprint**) — a bespoke, colorblind-safe categorical palette tuned for paper-ink rendering on both warm-cream and warm-black surfaces. It is the single consistency rule that spans every library and every plot. Full design rationale: [`docs/reference/palette-variants-v3/decision-rationale.md`](../docs/reference/palette-variants-v3/decision-rationale.md).
+anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical palette tuned for paper-ink rendering on both warm-cream and warm-black surfaces. It is the single consistency rule that spans every library and every plot. Always refer to it as **Imprint** (capitalised, no other names) in code comments, metadata, and review notes. Full design rationale: [`docs/reference/palette-variants-v3/decision-rationale.md`](../docs/reference/palette-variants-v3/decision-rationale.md).
 
-### Categorical Palette (anyplot, canonical order)
+### Categorical Palette (Imprint, canonical order)
 
-8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 4 is the deferred semantic-red anchor.
+8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 5 is the deferred semantic-red anchor (matte red `#AE3030`) — reached intentionally for bad/loss/error roles, not by ordinal position in every chart.
 
 | # | Hex | Name | Hue family | Role |
 |---|-----|------|------------|------|
@@ -53,7 +53,7 @@ anyplot uses the **anyplot palette** (codename **imprint**) — a bespoke, color
 - **First series is ALWAYS `#009E73`** — across every library, every plot type. A "Gentoo penguin" is the same green in matplotlib as it is in plotly.
 - Use positions 1→N in order by default. Don't cherry-pick for aesthetic reasons.
 - All 8 categorical positions stay identical across light and dark themes so a category keeps its identity.
-- Never introduce custom hex values when the anyplot palette already covers the need.
+- Never introduce custom hex values when the Imprint palette already covers the need.
 
 **Semantic exception:**
 The default rule is "use positions 1→N in canonical order." But whenever a category has a strong, widely-shared color association that a reader would expect, pick the closest palette member instead of the next ordinal position. This isn't a niche carve-out — there are many such cases. Some illustrative examples (not an exhaustive list):
@@ -79,18 +79,18 @@ Three additional anchors that are **never** returned by the canonical `palette[:
 Practical: in matplotlib `plt.plot(x, y, color="#DDCC77")` for a "warning" annotation; for theme-adaptive neutrals, branch on `ANYPLOT_THEME` (see Reference Python snippet below).
 
 **Constraints (always):**
-- Colors must come **from the anyplot palette or the 3 anchors** (no custom hexes).
+- Colors must come **from the Imprint palette or the 3 anchors** (no custom hexes).
 - The semantic mapping must be obvious from the data labels — the legend or category names should literally say "Pass / Fail", "Profit / Loss", "Up / Down", "Hot / Cold", "OK / Warning / Error", etc.
 - Default to canonical order whenever the categories are abstract (groups A/B/C, regions, models, anonymous bins, k-means clusters) — no expectation to break ordinal there.
 
 ### Continuous Data — the categorical palette is NOT used
 
-Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two palette-derived continuous colormaps; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow. Both anyplot cmaps are perceptually-uniform in CAM02-UCS:
+Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two Imprint-derived continuous colormaps; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow. Both Imprint cmaps are perceptually-uniform in CAM02-UCS:
 
 - **`imprint_seq` (sequential):** brand green → blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). Build with `LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])` (matplotlib) or the library's equivalent two-stop gradient API.
 - **`imprint_div` (diverging):** matte-red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps). The midpoint is theme-adaptive — use `#FAF8F1` on light bg, `#1A1A17` on dark bg. Build with `LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])`.
 
-Pick `imprint_seq` vs `imprint_div` from the data's polarity. Never substitute a matplotlib/library-native cmap "because it looks nicer" — palette identity is part of the brand.
+Pick `imprint_seq` vs `imprint_div` from the data's polarity. Never substitute a matplotlib/library-native cmap "because it looks nicer" — Imprint identity is part of the brand.
 
 ### Color Restraint & series-count guidance
 
@@ -127,7 +127,7 @@ Recommended stroke: 1px solid in the chart's ink color (`palette.neutral(theme)`
 
 ### Colorblind Safety
 
-The anyplot palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 4 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position 2 of every chart. This keeps red as a free semantic resource rather than spending it on slot 2. Never override the palette with custom categorical hexes unless you have a documented reason.
+The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 5 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position in every chart. This keeps red as a free semantic resource rather than spending it as a default categorical color. Never override the palette with custom categorical hexes unless you have a documented reason.
 
 ---
 
@@ -162,7 +162,7 @@ anyplot plots live inside page surfaces that are warm off-white / near-black, **
 
 ### Theme-adaptive Chrome
 
-In addition to the background, every non-data element (title, axis labels, tick labels, spines, grid, legend text, annotations, callout-box fills, footnotes) must use theme-adaptive tokens. Only the anyplot palette data colors (positions 1–8) stay constant. The `neutral` and `muted` semantic anchors are theme-adaptive by design.
+In addition to the background, every non-data element (title, axis labels, tick labels, spines, grid, legend text, annotations, callout-box fills, footnotes) must use theme-adaptive tokens. Only the Imprint palette data colors (positions 1–8) stay constant. The `neutral` and `muted` semantic anchors are theme-adaptive by design.
 
 | Role | Light theme | Dark theme |
 |------|-------------|------------|
@@ -186,10 +186,10 @@ INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE        = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# anyplot categorical palette — 8 hues, theme-independent, hybrid-v3 sort
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
+# Imprint categorical palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
                    "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]  # "#009E73" — ALWAYS first series
+BRAND = IMPRINT_PALETTE[0]  # "#009E73" — ALWAYS first series
 
 # semantic anchors — outside the categorical pool
 ANYPLOT_AMBER   = "#DDCC77"     # warning / caution
@@ -308,7 +308,7 @@ The review step checks these proportions visually from the source PNG. There are
 The AI makes the following design decisions for each visualization:
 
 **Color & Palette:**
-- Use anyplot palette positions 1→N in order for categorical data (see Color Philosophy). No custom hexes. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue, water→blue) — see Semantic Exception in Color Philosophy. Use the 3 semantic anchors (amber, neutral, muted) only when their role is the right fit, not as overflow slots.
+- Use Imprint palette positions 1→N in order for categorical data (see Color Philosophy). No custom hexes. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue, water→blue) — see Semantic Exception in Color Philosophy. Use the 3 semantic anchors (amber, neutral, muted) only when their role is the right fit, not as overflow slots.
 - Colormap choice for continuous data: **`imprint_seq`** (single-polarity) or **`imprint_div`** (diverging-polarity). No other colormaps — see Continuous Data.
 - Alpha/opacity values based on data density
 

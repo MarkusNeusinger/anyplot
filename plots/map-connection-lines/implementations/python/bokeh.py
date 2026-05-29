@@ -24,9 +24,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]  # green — connection lines (first series)
-ACCENT = ANYPLOT_PALETTE[2]  # blue — airport markers
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # green — connection lines (first series)
+ACCENT = IMPRINT_PALETTE[2]  # blue — airport markers
 
 # Simplified continent outlines (approximate polygons for geographic context)
 CONT_LON = [

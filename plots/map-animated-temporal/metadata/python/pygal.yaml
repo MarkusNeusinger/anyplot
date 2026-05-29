@@ -16,7 +16,7 @@ quality_score: 87
 review:
   strengths:
   - 'Correctly uses imprint_seq colormap (#009E73 → #4467A3) for seismic intensity
-    binning, matching anyplot continuous palette rules'
+    binning, matching Imprint continuous palette rules'
   - 'Full spec compliance: small multiples PNG (6 temporal panels in 2×3 grid) plus
     interactive HTML with play/pause, time slider, and tab navigation'
   - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with theme-adaptive

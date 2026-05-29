@@ -20,9 +20,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — canonical order; first series is always brand green
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = ANYPLOT_PALETTE[0]
+# Imprint palette — canonical order; first series is always brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 # Data
 np.random.seed(42)
@@ -56,10 +56,10 @@ events_df["date"] = pd.to_datetime(events_df["date"])
 
 # Event colors — palette positions 2-5 (position 1 used by price line)
 event_colors = {
-    "earnings": ANYPLOT_PALETTE[2],  # #4467A3 blue — financial analytics
-    "dividend": ANYPLOT_PALETTE[3],  # #BD8233 ochre — value/commodity
-    "split": ANYPLOT_PALETTE[1],  # #C475FD lavender — corporate action
-    "news": ANYPLOT_PALETTE[4],  # #AE3030 red — alert semantic fit
+    "earnings": IMPRINT_PALETTE[2],  # #4467A3 blue — financial analytics
+    "dividend": IMPRINT_PALETTE[3],  # #BD8233 ochre — value/commodity
+    "split": IMPRINT_PALETTE[1],  # #C475FD lavender — corporate action
+    "news": IMPRINT_PALETTE[4],  # #AE3030 red — alert semantic fit
 }
 
 event_markers = {"earnings": "E", "dividend": "D", "split": "S", "news": "!"}

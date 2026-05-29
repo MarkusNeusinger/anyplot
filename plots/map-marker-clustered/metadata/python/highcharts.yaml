@@ -20,7 +20,7 @@ review:
     hierarchy of density
   - Full theme-adaptive chrome — PAGE_BG, ELEVATED_BG, INK, INK_SOFT, MAP_FILL, MAP_BORDER
     all switch correctly between light and dark
-  - 'anyplot palette applied in canonical order: Grocery=#009E73 (position 1), Electronics=#9418DB
+  - 'Imprint palette applied in canonical order: Grocery=#009E73 (position 1), Electronics=#9418DB
     (2), Clothing=#B71D27 (3), Home Goods=#16B8F3 (4)'
   - Saves both plot-{THEME}.html and plot-{THEME}.png artifacts as required for interactive
     libraries
@@ -45,7 +45,7 @@ review:
       Background: Warm off-white #FAF8F1 — PASS (correct anyplot light surface)
       Map fill: Light beige-gray #E8E4DB for US state polygons; state borders in #B0AC9F — theme-correct
       Chrome: Title "map-marker-clustered · python · highcharts · anyplot.ai" in bold dark #1A1A17 at 66px — fully readable; subtitle "402 store locations across 15 US cities — zoom to expand clusters" in #4A4A44 at 36px — readable; legend on right side with four category labels (Grocery, Electronics, Clothing, Home Goods) in #4A4A44 — all readable
-      Data: Four per-category cluster series: Grocery=#009E73 (green), Electronics=#9418DB (purple), Clothing=#B71D27 (red), Home Goods=#16B8F3 (sky blue) — correct anyplot palette positions 1-4; clusters sized by count (radius 28-60); white count labels with dark outline on each cluster
+      Data: Four per-category cluster series: Grocery=#009E73 (green), Electronics=#9418DB (purple), Clothing=#B71D27 (red), Home Goods=#16B8F3 (sky blue) — correct Imprint palette positions 1-4; clusters sized by count (radius 28-60); white count labels with dark outline on each cluster
       Legibility verdict: PASS — all text clearly visible against warm off-white background
 
     Dark render (plot-dark.png):
@@ -89,7 +89,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is colorblind-safe; 4 colors with sufficient pairwise
+        comment: Imprint palette is colorblind-safe; 4 colors with sufficient pairwise
           ΔE.
       - id: VQ-05
         name: Layout & Canvas

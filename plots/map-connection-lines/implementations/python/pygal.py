@@ -142,9 +142,9 @@ custom_style = Style(
     guide_stroke_color=GRID_COLOR,
     guide_stroke_dasharray="2,6",
     colors=(
-        "#009E73",  # Routes < 2M (anyplot palette pos 0 — brand green, first series)
-        "#C475FD",  # Routes 2-3M (anyplot palette pos 1)
-        "#4467A3",  # Routes > 3M (anyplot palette pos 2)
+        "#009E73",  # Routes < 2M (Imprint palette pos 0 — brand green, first series)
+        "#C475FD",  # Routes 2-3M (Imprint palette pos 1)
+        "#4467A3",  # Routes > 3M (Imprint palette pos 2)
         INK,  # Airports (theme-adaptive endpoint markers)
         INK_MUTED,  # Coastlines (geographic context, drawn last)
     ),

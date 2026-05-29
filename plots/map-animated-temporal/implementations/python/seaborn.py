@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Sequential colormap for magnitude (single-polarity continuous)
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
@@ -128,7 +128,7 @@ for idx in range(n_periods):
 
     # Epicenter marker (matte red — danger semantic anchor)
     ax.scatter(
-        epicenter_lon, epicenter_lat, marker="*", s=90, c=ANYPLOT_PALETTE[4], edgecolors=INK, linewidths=0.5, zorder=10
+        epicenter_lon, epicenter_lat, marker="*", s=90, c=IMPRINT_PALETTE[4], edgecolors=INK, linewidths=0.5, zorder=10
     )
 
     ax.set_xlim(epicenter_lon - 3.5, epicenter_lon + 3.5)
@@ -174,7 +174,7 @@ epicenter_handle = Line2D(
     [0],
     marker="*",
     color="w",
-    markerfacecolor=ANYPLOT_PALETTE[4],
+    markerfacecolor=IMPRINT_PALETTE[4],
     markeredgecolor=INK,
     markersize=7,
     linestyle="None",

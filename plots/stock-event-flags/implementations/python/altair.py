@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # anyplot position 1 — price line
 
-# Event type colors — anyplot palette positions 2–5
+# Event type colors — Imprint palette positions 2–5
 EVENT_COLORS = {"Earnings": "#C475FD", "Dividend": "#4467A3", "News": "#BD8233", "Split": "#AE3030"}
 EVENT_SHAPES = {"Earnings": "triangle-up", "Dividend": "diamond", "News": "circle", "Split": "square"}
 

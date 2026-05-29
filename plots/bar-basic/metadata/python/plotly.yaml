@@ -104,7 +104,7 @@ review:
         max: 2
         passed: true
         comment: 'First bar (Electronics) uses brand green #009E73. Remaining bars
-          use #4467A3 (anyplot palette position 3). Backgrounds: #FAF8F1 light / #1A1A17
+          use #4467A3 (Imprint palette position 3). Backgrounds: #FAF8F1 light / #1A1A17
           dark — correct. All chrome theme-adaptive. Data colors identical between
           both renders.'
     design_excellence:

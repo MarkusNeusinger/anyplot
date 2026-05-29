@@ -23,7 +23,7 @@ review:
   - Theme-adaptive chrome wired through PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID
     tokens; box fill, polygon outlines, whisker chrome and annotation backgrounds
     all flip cleanly between renders.
-  - 'Anyplot palette in canonical order with first series #009E73; partially transparent
+  - 'Imprint palette in canonical order with first series #009E73; partially transparent
     cloud fills keep distributions distinct without competing with rain dots.'
   - 'Idiomatic highcharts-core use: inverted chart, PolygonSeries for the half-violin,
     native BoxPlotSeries with highcharts-more, and chart.renderer.label for the four
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe
+        comment: Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4

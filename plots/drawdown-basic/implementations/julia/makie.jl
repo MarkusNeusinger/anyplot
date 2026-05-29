@@ -15,7 +15,7 @@ const PAGE_BG = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-# Drawdown = loss → semantic red (anyplot palette position 3)
+# Drawdown = loss → semantic red (Imprint palette position 3)
 const DRAW_RED = colorant"#AE3030"
 # Recovery = new high → anyplot green (palette position 1)
 const RECOVER_GREEN = colorant"#009E73"

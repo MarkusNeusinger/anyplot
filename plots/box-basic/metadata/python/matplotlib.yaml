@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 91
 review:
   strengths:
-  - Correct anyplot palette in canonical order with full theme-adaptive chrome in
+  - Correct Imprint palette in canonical order with full theme-adaptive chrome in
     both renders
   - matplotlib.patheffects.withStroke on box patches adds distinctive depth without
     visual noise
@@ -77,7 +77,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe; annotation colors provide redundant
+        comment: Imprint palette is CVD-safe; annotation colors provide redundant
           encoding
       - id: VQ-05
         name: Layout & Canvas

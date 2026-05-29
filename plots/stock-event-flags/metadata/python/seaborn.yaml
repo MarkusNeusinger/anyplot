@@ -18,7 +18,7 @@ review:
   - 'Proper seaborn API usage: sns.lineplot for price, sns.regplot with ci=95 for
     confidence-interval trend bands — genuinely seaborn-distinctive statistical visualization'
   - 'Excellent spec compliance: all four event types (earnings, dividend, split, news)
-    with distinct marker shapes plus anyplot palette colors, vertical dashed connector
+    with distinct marker shapes plus Imprint palette colors, vertical dashed connector
     lines, and alternating flag heights'
   - 'Correct theme adaptation in both renders: theme tokens wired to every chrome
     element (background, spines, tick colors, legend, annotation boxes), data colors
@@ -42,7 +42,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct surface color, no pure white
       Chrome: Title "stock-event-flags · python · seaborn · anyplot.ai" at fontsize=12 is fully visible in dark ink; x-axis label "Date" and y-axis label "Stock Price ($)" at fontsize=10 both readable; tick labels at fontsize=8 readable; all text dark against light background
-      Data: Primary stock price line in brand green #009E73 with matching semi-transparent area fill (alpha=0.12); 8 event flags in anyplot palette colors — earnings=lavender #C475FD, dividend=blue #4467A3, split=ochre #BD8233, news=red #AE3030; two dotted trend-line segments with 95% CI bands in muted gray; legend in lower right with elevated background box
+      Data: Primary stock price line in brand green #009E73 with matching semi-transparent area fill (alpha=0.12); 8 event flags in Imprint palette colors — earnings=lavender #C475FD, dividend=blue #4467A3, split=ochre #BD8233, news=red #AE3030; two dotted trend-line segments with 95% CI bands in muted gray; legend in lower right with elevated background box
       Legibility verdict: PASS — all text readable; flags in the pre-split Jan–Apr window are closely spaced but no actual overlap; flag boxes use colored borders with elevated background fill
 
     Dark render (plot-dark.png):
@@ -84,7 +84,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Four event types use distinct anyplot palette colors AND distinct
+        comment: Four event types use distinct Imprint palette colors AND distinct
           marker shapes — redundant encoding is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
