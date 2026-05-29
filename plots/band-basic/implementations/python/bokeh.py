@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -43,7 +43,7 @@ y_lower = np.maximum(irradiance - 1.96 * uncertainty, 0)
 source = ColumnDataSource(data={"hours": hours, "irradiance": irradiance, "y_upper": y_upper, "y_lower": y_lower})
 
 # Plot
-title = "band-basic · python · bokeh · anyplot.ai"
+title = "Solar Irradiance Forecast · band-basic · python · bokeh · anyplot.ai"
 
 p = figure(
     width=3200,
@@ -59,19 +59,21 @@ p = figure(
 )
 
 # Confidence interval band — first series → Imprint position 1
+# Higher alpha in dark theme: alpha=0.25 on #1A1A17 composites to near-invisible forest-green
+band_alpha = 0.38 if THEME == "dark" else 0.25
 p.varea(
     x="hours",
     y1="y_lower",
     y2="y_upper",
     source=source,
     fill_color=IMPRINT_PALETTE[0],
-    fill_alpha=0.25,
+    fill_alpha=band_alpha,
     legend_label="95% Confidence Interval",
 )
 
 # Forecast mean line — second series → Imprint position 2
 p.line(
-    x="hours", y="irradiance", source=source, line_color=IMPRINT_PALETTE[1], line_width=4, legend_label="Forecast Mean"
+    x="hours", y="irradiance", source=source, line_color=IMPRINT_PALETTE[1], line_width=6, legend_label="Forecast Mean"
 )
 
 # Theme-adaptive chrome
@@ -87,6 +89,8 @@ p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
 
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
@@ -114,7 +118,7 @@ p.legend.label_text_color = INK_SOFT
 p.legend.location = "top_right"
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.85
-p.legend.border_line_color = None
+p.legend.border_line_color = INK_SOFT
 p.legend.glyph_width = 60
 p.legend.glyph_height = 40
 p.legend.padding = 20
