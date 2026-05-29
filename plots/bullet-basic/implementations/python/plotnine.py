@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -130,13 +130,13 @@ plot = (
         fontweight="bold",
     )
     # Band zone labels below the bottom metric
-    + annotate("text", x=poor_mid, y=-0.5, label="Poor", size=3.0, color=INK_MUTED, va="top")
-    + annotate("text", x=satis_mid, y=-0.5, label="Satisfactory", size=3.0, color=INK_MUTED, va="top")
-    + annotate("text", x=good_mid, y=-0.5, label="Good", size=3.0, color=INK_MUTED, va="top")
+    + annotate("text", x=poor_mid, y=-0.5, label="Poor", size=3.4, color=INK_MUTED, va="top")
+    + annotate("text", x=satis_mid, y=-0.5, label="Satisfactory", size=3.4, color=INK_MUTED, va="top")
+    + annotate("text", x=good_mid, y=-0.5, label="Good", size=3.4, color=INK_MUTED, va="top")
     # Scales
     + scale_x_continuous(limits=(0, 100), breaks=[0, 25, 50, 75, 100], expand=(0, 0.02))
     + scale_y_continuous(
-        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.18, 0.08)
+        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.08, 0.08)
     )
     + labs(title="bullet-basic · python · plotnine · anyplot.ai", x="Performance (%)", y="")
     + theme_minimal()
