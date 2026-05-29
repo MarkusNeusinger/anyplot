@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-29
@@ -103,7 +103,7 @@ hexbin_layer = (
             ),
         ),
         size=alt.value(hex_area),
-        strokeWidth=alt.condition(hover, alt.value(2.5), alt.value(0.4)),
+        strokeWidth=alt.condition(hover, alt.value(1.5), alt.value(0.1)),
         tooltip=[
             alt.Tooltip("lon:Q", title="Longitude", format=".4f"),
             alt.Tooltip("lat:Q", title="Latitude", format=".4f"),
@@ -117,7 +117,7 @@ hexbin_layer = (
 # Cluster annotation labels for geographic context
 annotations = pd.DataFrame(
     {
-        "lon": [-122.335, -122.317, -122.360],
+        "lon": [-122.335, -122.322, -122.360],
         "lat": [47.587, 47.626, 47.648],
         "label": ["Downtown Core", "Shopping District", "Industrial Zone"],
     }
