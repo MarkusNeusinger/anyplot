@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -15,6 +15,7 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_hline,
     geom_segment,
     geom_step,
     ggplot,
@@ -94,6 +95,8 @@ colors = {"Good Customers": COLOR_GOOD, "Bad Customers": COLOR_BAD}
 # Plot
 plot = (
     ggplot(df, aes(x="score", y="ecdf", color="group"))
+    # Midpoint reference line at 0.5 for structural anchor
+    + geom_hline(yintercept=0.5, color=INK_MUTED, size=0.4, linetype="dotted", inherit_aes=False)
     # Max divergence vertical line
     + geom_segment(
         aes(x="x", xend="xend", y="y", yend="yend"),
@@ -121,9 +124,9 @@ plot = (
     + annotate(
         "label",
         x=x_min + 0.50 * (x_max - x_min),
-        y=0.07,
+        y=0.03,
         label=f"K-S Statistic = {ks_stat:.3f}  |  p-value = {p_value:.2e}",
-        size=3.0,
+        size=3.4,
         ha="center",
         va="center",
         color=COLOR_BAD,
@@ -139,7 +142,7 @@ plot = (
         x=x_min + 0.50 * (x_max - x_min),
         y=1.06,
         label="Distributions are highly distinct (D > 0.5) — strong evidence the groups differ",
-        size=2.8,
+        size=3.2,
         ha="center",
         va="center",
         color=INK_MUTED,
