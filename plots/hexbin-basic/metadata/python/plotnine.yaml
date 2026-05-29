@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: hexbin-basic
 created: 2025-12-14 19:50:01+00:00
-updated: '2026-05-29T09:31:48Z'
+updated: '2026-05-29T09:51:44Z'
 generated_by: claude-sonnet
 workflow_run: 26629154156
 issue: 859
@@ -12,50 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Imprint sequential cmap (#009E73 → #4467A3) correctly applied for continuous
-    density data; both themes fully palette-compliant'
-  - Theme-adaptive chrome implemented correctly with all 4 token levels (INK, INK_SOFT,
-    PAGE_BG, ELEVATED_BG)
-  - Seismic epicenter dataset is realistic, neutral, and demonstrates hexbin across
-    multiple density levels
-  - coord_fixed(ratio=1) preserves geographic aspect ratio — appropriate and idiomatic
-    for spatial data
-  - Title fontsize scaled dynamically with title length to prevent overflow
-  - Vectorized numpy implementation avoids Python loops for hexbin computation
+  - Custom vectorized hexagonal binning using geom_polygon correctly handles the absence
+    of a native hexbin geom in plotnine, with a clever 1.08 oversize factor to minimize
+    inter-hex gaps
+  - 'Correct Imprint sequential palette (#009E73 → #4467A3) for single-polarity continuous
+    density data — exactly matching the imprint_seq spec'
+  - Full theme-adaptive chrome with all required tokens (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT) applied consistently to every text and background element in both renders
+  - coord_fixed(ratio=1) for geographic data ensures accurate latitude/longitude proportions
+    without distortion
+  - Seismic event density context with multi-cluster Eastern Mediterranean data is
+    realistic, scientific, and neutral
+  - Title fontsize dynamically scaled (max(8, round(12 * 67 / len(title)))) to prevent
+    overflow with the long mandated title string
+  - Grid lines completely removed (element_blank) for a clean, focused hexbin visualization
+  - np.random.seed(42) ensures full reproducibility
+  - 'Clean KISS code structure: Imports → Tokens → Data → Binning → Plot → Save —
+    no functions or classes'
   weaknesses:
-  - 'Gap artifacts between hexagons in sparse outer regions: the 1.05x polygon oversize
-    reduces but does not fully eliminate cosmetic gaps, especially at the boundary.
-    Consider increasing the oversize factor to 1.08-1.10 or clipping the hex grid
-    to the data bounding box.'
-  - 'DE-01 (Aesthetic Sophistication, 5/8): The visualization is functional and palette-compliant
-    but lacks a distinctive typographic or visual hierarchy feature that elevates
-    it to publication level. Consider adding a subtle annotation highlighting the
-    primary fault zone, or using alpha variation across density levels to amplify
-    the depth effect.'
-  - 'DE-02 (Visual Refinement, 4/6): The discrete-appearing colorbar steps and visible
-    polygon gaps slightly reduce polish. A higher nbin or explicitly requesting a
-    smooth gradient legend, plus eliminating gaps, would improve refinement.'
-  - 'CQ-01 (2/3): Manual hexagonal binning code is significantly more complex than
-    spec complexity warrants; this is inherent to plotnine''s limitations but still
-    notable.'
+  - Annotation text (annotate('text', size=3)) renders at ~47px on the 3200×1800 canvas
+    — barely visible as tiny labels in practice; increase to size=4–5 for better readability
+    without crowding the plot area
+  - Isolated edge hexagons at the sparse perimeter of the distribution create a slightly
+    ragged visual boundary; applying a minimum-count filter (e.g. counts[counts['count']
+    >= 2]) would produce a cleaner convex hull-like boundary
+  - 'DE-03: Although two annotations name the main clusters, the visual hierarchy
+    relies entirely on the color gradient; adding a subtle focal indicator (e.g. a
+    thin INK_SOFT circle outline around the densest bin or a slight increase in hex
+    edge alpha for high-count bins) would strengthen the data story'
+  - 'DE-01: The design is competent and above defaults but stops short of ''strong
+    design'' — the hex geometry and annotations carry the weight; richer typographic
+    hierarchy (bolder axis titles, slightly larger legend title) would elevate polish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct Imprint light surface
-      Chrome: Title "Seismic Event Density · hexbin-basic · python · plotnine · anyplot.ai" fully visible in dark ink at top. Axis labels "Longitude (°E)" and "Latitude (°N)" in dark ink, tick labels in soft dark ink — all readable. Legend title "Event Count" and tick labels readable.
-      Data: Hexagonal polygon tiles with green-to-blue Imprint sequential gradient (#009E73 at low density → #4467A3 at high density). Dense cluster (blue) centered around lon 35-38°E, lat 37-39°N. Sparse periphery in teal-green. White/cream gaps between hexagons in sparse regions (polygon edge = PAGE_BG).
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Seismic Event Density · hexbin-basic · python · plotnine · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude (°E)" and "Latitude (°N)" in dark ink at appropriate size. Tick labels (32–40 on x, 36–40 on y) in INK_SOFT — all readable. Legend title "Event Count" and tick values (10–50) visible. Two small annotations ("Primary\nFault Zone →" lower-left, "← Aftershock\n   Region" upper-right) present but very small.
+      Data: Hexagonal tiles cover the plot area, gradient from brand green #009E73 (low density, ~1–10 events) through teal/cyan mid-range to deep blue #4467A3 (high density, 50+ events). Dense blue cluster centered around Lon 35–36°E, Lat 37°N corresponds to the primary fault zone. A secondary blue cluster at Lon 37°E, Lat 38°N is the aftershock region. Sparse green hexagons scatter at the distribution edges. White inter-hex gaps (PAGE_BG) at edges of sparse region. Colorbar on the right with continuous green-to-blue gradient.
+      Legibility verdict: PASS — all primary chrome elements are clearly readable; annotations are small but functional at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct Imprint dark surface
-      Chrome: Title, axis labels, tick labels, and legend text all render in light-colored ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures observed.
-      Data: Colors are identical to light render — same green-to-blue gradient, same cluster pattern. Hexagon edge gaps show as near-black (PAGE_BG for dark theme), consistent with design intent.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title readable in light INK (#F0EFE8) text against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — clearly visible, no dark-on-dark failure. Legend title and colorbar labels readable. Annotations rendered in INK (#F0EFE8) — light text on dark background, correctly theme-adapted.
+      Data: Hex colors identical to light render — same green-to-blue gradient, same two dense blue clusters at same geographic positions. Inter-hex gaps are now near-black (PAGE_BG = #1A1A17), creating darker separation lines. Colorbar gradient unchanged. Data color identity between themes confirmed.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,48 +68,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; readable in both themes. Minor: legend
-          text small but functional.'
+        comment: All primary text (title, axis labels, ticks, legend) explicitly sized
+          and readable in both themes. Annotation size=3mm (~47px) is small but functional
+          at full resolution; slight deduction for thumbnail readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements.
+        comment: No overlapping elements. Hex tiles tile cleanly, annotations placed
+          in sparse regions, colorbar separate from plot.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hexagonal polygons clearly visible. Minor gap artifacts in sparse
-          regions.
+        comment: All hexagons clearly visible in both renders. Gradient from green
+          to blue clearly encodes density. Dense and sparse regions well-distinguished.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq (green-blue) is CVD-safe and perceptually distinct.
+        comment: Imprint sequential palette (#009E73→#4467A3) is CVD-safe. Green-to-blue
+          transition is distinguishable under deuteranopia and protanopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape, good canvas utilization, balanced margins.
+        comment: Canvas 3200×1800 px (8in × 4.5in at 400dpi). Plot area fills ~65%
+          of canvas with balanced margins. Colorbar well-positioned. No canvas gate
+          failure.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°E) and Latitude (°N) with units.
+        comment: Longitude (°E) and Latitude (°N) are descriptive with units. Title
+          includes descriptive prefix + spec-id + language + library + anyplot.ai.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: scale_fill_gradient(low='#009E73', high='#4467A3') = imprint_seq.
-          Correct backgrounds both themes.
+        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') matches imprint_seq
+          exactly. Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Chrome uses
+          INK/INK_SOFT tokens throughout. Both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -112,22 +124,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Imprint palette, theme-adaptive chrome, coord_fixed. Above defaults
-          but not publication-level.
+        comment: 'Above-default design: geographic seismic context, custom hexbin
+          geometry with 1.08 oversize factor, cluster annotations, coord_fixed. Competent
+          and intentional but not yet ''strong design clearly above defaults''.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, panel border kept, elevated legend background. Hex
-          gap artifacts slightly reduce polish.
+        comment: Grid fully removed (element_blank). Legend styled with ELEVATED_BG.
+          Panel border retained (appropriate for geographic map-like framing). Theme-adaptive
+          hex edge color. Clearly above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Multi-cluster seismic distribution tells a meaningful story; blue
-          density peak creates focal point.
+        comment: Two annotations name the main seismic clusters and guide the viewer.
+          Green-to-blue gradient creates visual hierarchy between low and high density
+          areas. Storytelling present but visual emphasis could be stronger (e.g.
+          focal outline around densest region).
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hexagonal binning via geom_polygon with group aesthetic — correct
-          plot type.
+        comment: Correct hexagonal binning plot. Custom geom_polygon-based hexbin
+          is the right approach since plotnine lacks native geom_hex.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, Imprint seq cmap, gridsize=30, large dataset (5000 pts)
-          — all present.
+        comment: Colorbar included (guide_colorbar). Perceptually uniform colormap
+          (imprint_seq in CAM02-UCS). Gridsize=30 controls bin resolution. Log scale
+          is a 'consider' recommendation only — not required.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Longitude, Y=Latitude, fill=count. All axes cover data range correctly.
+        comment: X=Longitude, Y=Latitude, fill=count. Both axes span the full data
+          range. coord_fixed preserves geographic proportions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec format with descriptive prefix. Legend label 'Event
-          Count' is descriptive.
+        comment: 'Title: ''Seismic Event Density · hexbin-basic · python · plotnine
+          · anyplot.ai'' — correct format with descriptive prefix. Legend: ''Event
+          Count'' colorbar with continuous gradient.'
     data_quality:
       score: 15
       max: 15
@@ -168,57 +187,63 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three distinct clusters plus diffuse activity; shows full density
-          range from sparse to dense.
+        comment: 'Shows all key hexbin features: density encoding, colorbar, multi-cluster
+          distribution, large synthetic dataset (5000 points), sparse and dense regions.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Seismic event density in Eastern Mediterranean — realistic, neutral,
-          scientific scenario.
+        comment: Eastern Mediterranean seismic event density — realistic scientific
+          scenario. Multiple clusters represent primary fault zone, aftershock region,
+          and background seismicity. Neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinates match seismically active Anatolian region; event counts
-          plausible for 5000-event catalogue.
+        comment: Longitude 32–39°E, Latitude 35–40°N — correct Mediterranean geographic
+          range. Cluster centers at realistic seismic coordinates. Event count range
+          (1–60+) appropriate for gridsize=30.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Logical flow but manual vectorized hexbin computation is substantially
-          complex (necessary given no geom_hex in plotnine).
+        comment: 'Flat top-level structure: tokens → data generation → vectorized
+          binning → hex polygon construction → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before all random calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used; no dead imports.
+        comment: All imports are used. os, numpy, pandas, and all plotnine symbols
+          are referenced in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, vectorized; no fake UI elements.
+        comment: No fake UI elements. Vectorized hexbin computation with numpy/pandas
+          is appropriately concise. 1.08 oversize comment explains the non-obvious
+          choice.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5, units='in'.
+          No bare plot.png.
     library_mastery:
       score: 7
       max: 10
@@ -228,19 +253,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar-of-graphics composition used correctly: aes(group=), scale_fill_gradient,
-          guide_colorbar, coord_fixed, theme_minimal + theme overrides.'
+        comment: 'Fluent ggplot grammar: aes(), labs(), theme(), scale_fill_gradient(),
+          guide_colorbar(), coord_fixed(), annotate(). Multiple advanced plotnine
+          features used correctly and composited with + operator.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses guide_colorbar(nbin=200), coord_fixed, group aesthetic on geom_polygon.
-          Core hexbin computation is manual numpy — not plotnine-distinctive.
-  verdict: REJECTED
+        comment: geom_polygon with group aesthetic for custom hexbin (plotnine-specific
+          grammar of graphics approach), guide_colorbar(nbin=200) for continuous colorbar,
+          coord_fixed for geographic proportions. Above generic usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - colorbar
   patterns:
   - data-generation
