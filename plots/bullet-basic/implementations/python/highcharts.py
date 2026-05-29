@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
@@ -42,12 +42,14 @@ metrics = [
 # Normalize to 0-100% scale for a shared axis
 series_data = []
 for m in metrics:
+    exceeds = m["actual"] >= m["target"]
+    arrow = "↑" if exceeds else "↓"  # ↑ / ↓ — non-color CVD redundancy
     series_data.append(
         {
             "y": round(m["actual"] / m["max"] * 100, 1),
             "target": round(m["target"] / m["max"] * 100, 1),
-            "label": m["label"],
-            "color": IMPRINT_GREEN if m["actual"] >= m["target"] else IMPRINT_RED,
+            "label": f"{m['label']} {arrow}",
+            "color": IMPRINT_GREEN if exceeds else IMPRINT_RED,
         }
     )
 
@@ -79,7 +81,7 @@ chart_options = {
     "subtitle": {
         "text": (
             f'<span style="font-size:40px; color:{INK_SOFT}; font-family:{FONT};">'
-            "Actual performance vs targets — green exceeds target, red falls short"
+            "Actual performance vs targets — ↑ green exceeds target · ↓ red falls short"
             "</span>"
         ),
         "useHTML": True,
