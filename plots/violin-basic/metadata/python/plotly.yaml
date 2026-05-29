@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:34:58Z'
-updated: '2026-05-29T11:23:40Z'
+updated: '2026-05-29T11:34:27Z'
 generated_by: claude-sonnet
 workflow_run: 26633961273
 issue: 722
@@ -12,40 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Correct violin plot with box-in-violin and meanline
-  - Perfect Imprint palette compliance (#009E73 first, canonical order)
-  - Both light and dark themes fully readable with correct background colors
-  - 'Theme-adaptive chrome: box fill uses ELEVATED_BG, tick labels use INK_SOFT tokens'
-  - Realistic salary dataset with bimodal Engineering distribution adding interest
-  - Clean KISS code structure with reproducible seed
-  - 'Plotly-distinctive features: hoveron, hoverinfo, scalemode, spanmode, HTML export'
+  - 'Correct Imprint palette with brand green #009E73 as first series and all 4 positions
+    in canonical order'
+  - 'All spec requirements met: mirrored violin density, quartile box markers, and
+    median line via box plot'
+  - Intentional bimodal Engineering distribution as the narrative focal point with
+    annotation callout
+  - Clean theme-adaptive chrome with all INK/INK_SOFT/ELEVATED_BG tokens correctly
+    threaded through box fill, line colors, fonts, and backgrounds
+  - 'Perfect code quality: seed(42) for reproducibility, no functions/classes, clean
+    imports, correct plot-{THEME}.png output'
+  - Realistic and neutral salary domain with 4 distinct distribution shapes (bimodal,
+    symmetric, wide, narrow)
+  - 'Plotly-idiomatic violin parameters: hoveron=''violins+kde'', scalemode=''width'',
+    spanmode=''soft'' show library mastery'
+  - L-shaped spine handling (showline=True, mirror=False) and horizontal-only subtle
+    grid provide clean visual chrome
   weaknesses:
-  - 'DE-01 LOW: Design is clean but looks like a well-configured default — no bold
-    title weight, no typographic hierarchy beyond font size. Raise sophistication
-    by making the title font bold (font.weight) and spacing axis labels with more
-    deliberate padding.'
-  - 'DE-02 LOW: Grid is y-axis only at 15% opacity (good), but all four spines remain
-    visible. Remove top and right axes lines (update_layout xaxis.showline=False on
-    top, mirror=False) for a cleaner L-shaped or open frame.'
-  - 'DE-03 LOW: The bimodal Engineering distribution is a natural storytelling opportunity
-    but is not emphasized. Add a short annotation (fig.add_annotation) pointing to
-    the bimodal shape, e.g. "Bimodal: junior vs senior tiers", to create a clear focal
-    point and guide the viewer.'
+  - Annotation text at fontsize=10 is at the minimum readable size; consider raising
+    to 11-12 for better legibility at mobile widths
+  - 'DE-01: Design sophistication is good but not exceptional — the annotation and
+    bimodal data choice are the main differentiators; overall visual treatment is
+    functional rather than artistically refined'
+  - 'DE-02: Legend is appropriately hidden (showlegend=False) but could remove tick
+    marks from both axes for additional chrome reduction'
+  - 'LM-02: Plotly''s interactive features (hoveron, scalemode) are used but there
+    is room to exploit more Plotly-specific capabilities such as updatemenus or richer
+    hover templates'
+  - 'DE-03: Annotation creates a focal point but the overall storytelling could be
+    strengthened — e.g., a subtitle or caption below the title summarizing the key
+    takeaway'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "violin-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), centered, readable. Y-axis label "Annual Salary ($)" and X-axis label "Department" in dark ink, clearly legible. Tick labels in secondary ink (#4A4A44), dollar-formatted on Y-axis. Y-axis grid lines are subtle (15% opacity).
-      Data: 4 violins — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), Support (#BD8233 ochre) — Imprint palette canonical order. Box plots visible inside each violin with elevated white/cream fill (ELEVATED_BG). Median dashes and mean lines clearly visible in dark ink.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "violin-basic · python · plotly · anyplot.ai" centered at top in dark bold text, clearly readable. Y-axis label "Annual Salary ($)" in dark text, readable. X-axis label "Department" in dark text, readable. Tick labels in muted dark (#4A4A44) with dollar formatting ($20,000–$140,000) clearly legible. Horizontal grid lines are subtle and unobtrusive.
+      Data: Four violin shapes in Imprint palette canonical order — Engineering=green (#009E73), Marketing=lavender (#C475FD), Sales=blue (#4467A3), Support=ochre (#BD8233). Each violin has a white-filled box plot centered inside showing IQR. Meanlines visible as dark lines through each box. Engineering violin shows clear bimodal shape (two bulges separated by a waist). Sales violin is widest (highest spread). Support violin is tallest-but-narrow (tightly clustered). Annotation with arrow at the top-right of the Engineering violin labels the bimodal feature. Violins at 0.8 opacity allow subtle background show-through.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background with no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8), clearly readable. Y-axis and X-axis labels in near-white. Tick labels in secondary dark-theme ink (#B8B7B0), legible against dark background. Grid lines subtle with reversed opacity token.
-      Data: Violin colors are identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — data colors unchanged as required. Box plots have dark elevated fill (#242420) with near-white outlines, clearly distinguishable. Mean lines visible in near-white.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels render in near-white (#F0EFE8), clearly readable against the dark surface. Tick labels in muted light (#B8B7B0) are clearly legible. Grid lines are subtle light-on-dark at 15% opacity. No dark-on-dark failures observed — all text is light-colored on the dark background.
+      Data: Data colors are identical to the light render — same green, lavender, blue, ochre for the four departments. Box plot fills use ELEVATED_BG (#242420, near-black) creating a dark rectangle inside each colored violin body; box outlines are near-white (#F0EFE8), clearly delineating the IQR. Meanlines are near-white and visible through the dark box interior. All four violin shapes and their distribution differences are clearly visible.
+      Legibility verdict: PASS — all text is light-colored against dark background, no dark-on-dark issues. Data colors are identical between renders, only chrome flips correctly.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,76 +67,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, axis labels, ticks readable
-          in both themes; proportions balanced — minor deduction for no bold title
-          weight
+        comment: All main text (title 16px, axis labels 12px, ticks 10px) clearly
+          legible in both themes. Annotation text at fontsize=10 is at minimum readable
+          size — slightly small for mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: No text or data element overlaps observed in either render. Violins
+          well-spaced, annotation positioned to the right of Engineering violin without
+          collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins, boxes, median and mean lines all clearly visible; opacity=0.8
-          appropriate
+        comment: All four violins clearly visible at 0.8 opacity. Box plots with light-colored
+          outlines delineate IQR clearly in both themes. Meanlines visible. Distribution
+          shape differences between categories are clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green sole signal
+        comment: Imprint palette is CVD-safe (max-min delta-E optimised). 4 distinct
+          hue families (green/purple/blue/ochre) used.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions; margins adequate
+        comment: Canvas 3200x1800 correct (width=800, height=450, scale=4). Canvas
+          gate passed. Generous margins (l=110, r=80, t=80, b=60). Title not clipped,
+          labels within bounds. Good proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: Annual Salary ($) with dollar-formatted ticks; X: Department
-          — descriptive with units'
+        comment: 'Y-axis: ''Annual Salary ($)'' descriptive with units. X-axis: ''Department''
+          appropriate. Title format correct: ''violin-basic · python · plotly · anyplot.ai''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order; backgrounds #FAF8F1/#1A1A17;
-          chrome theme-correct in both renders'
+        comment: 'First series (Engineering) = #009E73 brand green. Canonical Imprint
+          order (green/lavender/blue/ochre). Light bg #FAF8F1, dark bg #1A1A17. Data
+          colors identical across both renders. Chrome flips correctly.'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default — Imprint palette correctly applied,
-          clean layout — but no bold title, no typographic hierarchy beyond size,
-          no exceptional polish
+        passed: true
+        comment: 'Above generic defaults: intentional bimodal data choice, annotation
+          callout, correct palette application. Clean professional look. Not yet maximally
+          sophisticated — visual treatment is functional rather than artistically
+          refined.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Y-axis-only grid at 15% opacity is good; theme-adaptive box fill
-          (ELEVATED_BG) is a nice detail; but all 4 spines remain visible — missing
-          L-shaped or open frame
+        passed: true
+        comment: 'Good refinement: L-shaped spines (showline=True, mirror=False),
+          horizontal-only subtle grid, no legend (appropriate for violin with categorical
+          x-axis tick labels), generous margins, theme-adaptive backgrounds.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data is displayed correctly but not interpreted — the bimodal Engineering
-          distribution is visible but not highlighted or annotated; viewer must find
-          the story themselves
+        passed: true
+        comment: Bimodal Engineering distribution serves as clear focal point, annotation
+          with arrow guides viewer's eye. Four distinct distribution shapes (bimodal/symmetric/wide/narrow)
+          create compelling comparison narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +154,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with KDE density, box plot embedded, meanline
+        comment: Correct violin plot using go.Violin. KDE-based violin with mirrored
+          density on both sides.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quartile markers (box), mirrored density (symmetric violin), median
-          line (box shows Q2) — all present
+        comment: Quartile markers inside violin via box=dict(visible=True). Mirrored
+          density on both sides (default violin behavior). Median visible through
+          box plot visualization.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Department categories; Y: Annual Salary — correct mapping, all
-          data shown'
+        comment: 'Y-axis: salary values. X-axis: department categories. All 4 categories
+          visible. 4 categories within spec requirement (2-6). Data sizes 180-220
+          per category within 30-1000 range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'violin-basic · python · plotly · anyplot.ai'; no
-          legend needed — categories on X-axis
+        comment: 'Title: ''violin-basic · python · plotly · anyplot.ai'' matches required
+          format. showlegend=False is appropriate since categories are labeled on
+          x-axis tick marks.'
     data_quality:
       score: 15
       max: 15
@@ -166,23 +189,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all violin aspects: bimodal (Engineering), high variance (Sales),
-          normal (Marketing), narrow (Support) — excellent coverage of distribution
-          shapes'
+        comment: 'Demonstrates full violin plot feature set: distribution shape (KDE),
+          quartile range (box), median, mean, bimodal distribution. Four distinct
+          shapes show comparative power of violin plots.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distributions by department — real, neutral, comprehensible
-          business scenario
+        comment: 'US salary domain across departments is realistic and neutral. Values
+          plausible: Engineering ~$75-92k, Marketing ~$72k, Sales ~$78k, Support ~$55k.
+          No controversial content.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Engineering $75k-92k, Marketing ~$72k, Sales ~$78k, Support ~$55k
-          — factually plausible salary ranges
+        comment: Dollar formatting ($20,000-$150,000) makes scale intuitive. Salary
+          range appropriate for US tech/business roles. Y-axis range accommodates
+          all data.
     code_quality:
       score: 10
       max: 10
@@ -192,31 +217,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens → data → figure → traces → layout → save'
+        comment: 'No functions or classes. Clean linear structure: tokens → data →
+          figure → traces → annotation → layout → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used
+        comment: 'All imports used: os (ANYPLOT_THEME), numpy (data generation), plotly.graph_objects
+          (figure).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over categories, idiomatic plotly, no over-engineering
+        comment: Clean iteration over data dict. Appropriate complexity for task.
+          No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
+          Correct width=800, height=450, scale=4.
     library_mastery:
       score: 7
       max: 10
@@ -226,20 +255,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Violin with proper box, meanline, spanmode, scalemode options;
-          fig.update_traces for batch updates; idiomatic plotly patterns
+        comment: 'Uses go.Violin (graph_objects) for fine-grained control. Proper
+          fig.add_trace(), fig.update_layout(), fig.update_traces() patterns. Violin-specific
+          params: box dict, meanline dict, hoveron, scalemode, spanmode.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Leverages plotly-distinctive capabilities: hoveron=''violins+kde'',
-          hoverinfo=''y+name'', HTML export, scalemode=''width'', spanmode=''soft''
-          — features that differentiate plotly from static libraries'
-  verdict: REJECTED
+        comment: hoveron='violins+kde' uses Plotly's interactive KDE tooltip. scalemode='width'
+          and spanmode='soft' are Plotly violin-specific. include_plotlyjs='cdn' for
+          portable HTML. Could leverage richer hover templates or more interactive
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
