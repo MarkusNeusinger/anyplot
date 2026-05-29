@@ -43,19 +43,26 @@ standings <- data.frame(
   )
 )
 
-driver_colors       <- setNames(IMPRINT_PALETTE, drivers)
-labels_end          <- standings[standings$race == 8, ]
-labels_end$x_label  <- 8.35
+# Visual storytelling: highlight the Hamilton/Verstappen championship battle
+TOP_DRIVERS  <- c("Hamilton", "Verstappen")
+driver_alpha <- setNames(ifelse(drivers %in% TOP_DRIVERS, 1.0, 0.5), drivers)
+
+driver_colors      <- setNames(IMPRINT_PALETTE, drivers)
+labels_end         <- standings[standings$race == 8, ]
+labels_end$x_label <- 8.35
+
+# Softer grid via embedded alpha
+GRID_COLOR <- adjustcolor(INK, alpha.f = 0.15)
 
 # Plot
 p <- ggplot(standings, aes(x = race, y = rank, color = driver, group = driver)) +
-  geom_line(linewidth = 1.4, lineend = "round", linejoin = "round") +
-  geom_point(size = 3.5) +
+  geom_line(aes(alpha = driver), linewidth = 1.4, lineend = "round", linejoin = "round") +
+  geom_point(aes(alpha = driver), size = 3.5) +
   geom_text(
     data     = labels_end,
-    aes(x = x_label, label = driver),
+    aes(x = x_label, label = driver, alpha = driver),
     hjust    = 0,
-    size     = 3.0,
+    size     = 3.5,
     fontface = "bold"
   ) +
   scale_y_reverse(
@@ -69,6 +76,7 @@ p <- ggplot(standings, aes(x = race, y = rank, color = driver, group = driver)) 
     expand = expansion(mult = c(0.03, 0.20))
   ) +
   scale_color_manual(values = driver_colors) +
+  scale_alpha_manual(values = driver_alpha, guide = "none") +
   labs(
     title = "bump-basic · r · ggplot2 · anyplot.ai",
     x     = "Race Round",
@@ -78,7 +86,7 @@ p <- ggplot(standings, aes(x = race, y = rank, color = driver, group = driver)) 
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.15),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
     axis.title         = element_text(color = INK, size = 10),
@@ -86,7 +94,7 @@ p <- ggplot(standings, aes(x = race, y = rank, color = driver, group = driver)) 
     axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.3),
     plot.title         = element_text(color = INK, size = 12, face = "bold"),
     legend.position    = "none",
-    plot.margin        = margin(t = 12, r = 48, b = 12, l = 12, unit = "pt")
+    plot.margin        = margin(t = 18, r = 48, b = 18, l = 12, unit = "pt")
   )
 
 # Save
