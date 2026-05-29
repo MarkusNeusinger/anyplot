@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: band-basic
 created: '2026-05-29T17:34:38Z'
-updated: '2026-05-29T17:40:54Z'
+updated: '2026-05-29T17:55:10Z'
 generated_by: claude-sonnet
 workflow_run: 26652182273
 issue: 979
@@ -12,47 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correct band plot implementation using idiomatic ggplot2 geom_ribbon + geom_line
-    layer composition
-  - 'Both light and dark themes render correctly with proper background colors (#FAF8F1
-    / #1A1A17) and fully readable chrome'
-  - 'Imprint palette correctly applied — brand green #009E73 used for both band fill
-    and center line'
-  - Realistic temperature forecast dataset with widening 95% CI uncertainty over 60
-    months, effectively demonstrating the band plot's primary use case
-  - Canvas dimensions correct (3200x1800, landscape), proper ragg device usage, set.seed(42)
-    for reproducibility
-  - Selective horizontal-only grid (no vertical grid lines) and removed panel border
-    show deliberate design choices
+  - 'Correct Imprint palette usage: brand green (#009E73) as 95% CI band fill, with
+    theme-adaptive chrome implemented cleanly across both light and dark renders'
+  - 'All spec requirements met: semi-transparent ribbon (alpha=0.35), central forecast
+    line in contrasting color, widening CI feature, smooth interpolation'
+  - 'Excellent code quality: KISS structure, set.seed(42), only necessary imports
+    (ggplot2, ragg), clean idiomatic ggplot2 patterns throughout'
+  - Annotation 'uncertainty widens →' adds effective data storytelling by pointing
+    to the key insight at Year 4-5
+  - 'Idiomatic ggplot2 usage: geom_ribbon for band, guide_legend(override.aes) for
+    legend swatch polishing, horizontal-only grid, L-shaped frame'
+  - 'Realistic and neutral data context: 60-month seasonal temperature forecast with
+    plausible values and naturally widening CI'
   weaknesses:
-  - Band fill and center line use the same color (#009E73) — spec says 'contrasting
-    color/style'; a different color for the center trend line (e.g. INK or a second
-    Imprint palette color) would improve readability and spec fidelity
-  - No legend or annotation explaining what the band represents (95% confidence interval
-    / forecast uncertainty) — makes the plot harder to interpret for catalog viewers
-  - 'Band fill has reduced visual weight in dark render: alpha=0.25 of #009E73 on
-    #1A1A17 renders as a very dark greenish fill (~#143B30), making the band less
-    visually prominent compared to the light render'
-  - Design Excellence is template-level — no visual hierarchy emphasis, no annotation
-    callout, no subtitle providing context for the seasonal temperature forecast story
+  - 'VQ-07 palette ordering: Central Forecast line uses IMPRINT_PALETTE[3] (blue #4467A3)
+    instead of canonical IMPRINT_PALETTE[2] (lavender #C475FD), skipping position
+    2 without a documented semantic reason — change to scale_color_manual(values =
+    c(''Central Forecast'' = IMPRINT_PALETTE[2]))'
+  - 'VQ-01 annotation size: annotation text uses size=2.6 (~7.4pt) which may be difficult
+    to read when the plot is scaled down to ~400px mobile width — increase to size=3.5
+    minimum'
+  - 'DE-03 storytelling: visual hierarchy relies mainly on the annotation; consider
+    using bolder linewidth on the central forecast line (linewidth=1.8) or a slightly
+    higher alpha on the band (0.40) to reinforce the dual-encoding narrative'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — PASS
-      Chrome: Title "band-basic · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly readable. Y-axis label "Temperature (°C)" rotated, dark ink, readable. X-axis label "Forecast Horizon" readable. Tick labels ("Year 1"–"Year 5" on x; "5"/"10"/"15"/"20"/"25" on y) rendered in muted dark (#4A4A44), clearly legible. Horizontal grid lines in soft ink, subtle. Axis lines on left and bottom edges.
-      Data: Semi-transparent green band (alpha=0.25, #009E73) fills the confidence interval; a solid dark green line (#009E73) traces the central forecast trend. Seasonal oscillation clearly visible over 5 years with widening band amplitude over time. No markers on data points (continuous line/ribbon). First (and only) series correctly uses brand green #009E73.
-      Legibility verdict: PASS — all text elements are readable against the off-white background. No "light on light" failures.
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "band-basic · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), clearly readable. Subtitle "Seasonal temperature forecast with widening 95% confidence interval" in secondary ink, readable. Axis labels "Forecast Horizon" (x) and "Temperature (°C)" (y) in dark ink, appropriately sized at 10pt. Tick labels (Year 1–Year 5, temperature 5–25) in ink-soft, readable at 8pt. Legend at top-left shows green swatch for "95% CI" and blue line for "Central Forecast" — both readable. Annotation "uncertainty widens →" in muted ink near Year 4–5, small but legible at full resolution.
+      Data: Semi-transparent green band (#009E73 at alpha=0.35) shows the 95% CI filling; blue central line (#4467A3) tracks the seasonal oscillation over 60 months. The widening band is clearly visible toward Year 5. Horizontal-only grid lines are subtle and unobtrusive.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — PASS
-      Chrome: Title "band-basic · r · ggplot2 · anyplot.ai" in light text (#F0EFE8), clearly readable. Y-axis and X-axis labels in light text, readable. Tick labels rendered in muted light (#B8B7B0), legible. Horizontal grid lines visible against dark background. No dark-on-dark failures detected.
-      Data: Center line (#009E73 full opacity) appears as a vivid/bright teal-green on the dark background, very prominent. Band fill (#009E73 at alpha=0.25) on #1A1A17 background renders as a dark greenish fill (~#143B30) — visually distinguishable from the background but significantly less prominent than in the light render. Data colors are identical between renders (same hex values); only chrome flips.
-      Legibility verdict: PASS — all title, axis, and tick labels are readable in light text on dark background. Band is visible but has reduced visual weight in dark mode.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8), clearly visible against the dark background. Axis labels in light ink, readable. Tick labels in #B8B7B0 (ink-soft dark variant), clearly distinguishable. Legend text readable in light-gray against the elevated dark background (#242420). Annotation "uncertainty widens →" visible in muted light gray (#A8A79F). No dark-on-dark failures — all text elements properly use light-mode tokens.
+      Data: Green band (#009E73) with alpha=0.35 appears as a muted dark-green fill on the dark surface — this is expected alpha-blending behavior and the band boundary is still distinguishable. The blue central line (#4467A3) is clearly visible and unchanged from the light render. Data colors are identical between both renders — only chrome flips.
+      Legibility verdict: PASS — all text is readable against the near-black background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,76 +60,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text clearly legible in both renders; font sizes explicitly set
-          (title=12, axis.title=10, axis.text=8); title spans ~40-45% of canvas width
-          — slightly compact for the shorter spec-id but readable
+        comment: All text sizes explicitly set and readable in both themes. Annotation
+          size=2.6 (~7.4pt) is borderline for mobile scale at ~400px.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; x-axis tick labels well-spaced
+        comment: No overlapping text or data/text collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Band and center line clearly visible in light render; band visible
-          but darker in dark render; alpha=0.25 appropriate for this plot type
+        comment: Band and central line clearly distinguishable in both themes. Alpha=0.35
+          appropriate for a 60-point time series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series with brand green; good contrast in both themes; CVD-safe
+        comment: CVD-safe Imprint palette. Green band + blue line are perceptually
+          distinct. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good margins; no overflow or clipping;
-          proportions balanced
+        comment: Canvas gate passed (3200x1800). Good proportions, generous margins.
+          No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Temperature (°C)' with units; x-axis 'Forecast Horizon' descriptive;
-          title format correct
+        comment: Y-axis includes units (°C). Both axes descriptive. Subtitle adds
+          context.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First (only) series uses #009E73; light bg #FAF8F1, dark bg #1A1A17
-          correct; Imprint palette defined in full'
+        passed: false
+        comment: 'First series correctly uses #009E73 (brand green). However, second
+          series (Central Forecast line) uses IMPRINT_PALETTE[3] = #4467A3 (blue),
+          skipping canonical position 2 (#C475FD lavender) without documented semantic
+          justification. Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Chrome
+          theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Default template-level styling; no notable design thinking beyond
-          following the ggplot2 guide; no legend, no annotation, no visual emphasis
+        passed: true
+        comment: 'Above default (4): intentional annotation, deliberate color pairing
+          (green/blue), clean hierarchy with title+subtitle+legend. Not exceptional
+          — no ambitious typography or visual engineering.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Horizontal-only grid (no vertical) is a good choice; panel border
-          removed; axis lines added for structure; plot margins set — above minimal
-          defaults but not highly refined
+        passed: true
+        comment: 'Good refinement: horizontal-only grid (no vertical), panel.border
+          removed, L-shaped axis frame, subtle grid linewidth=0.25, generous plot
+          margins. Clearly above library defaults.'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Widening band implicitly communicates increasing forecast uncertainty
-          — a meaningful story — but no legend or annotation to make it explicit for
-          catalog viewers
+        passed: true
+        comment: Annotation 'uncertainty widens →' guides the viewer to the key insight.
+          Clear focal point in the widening CI. Storytelling is effective but somewhat
+          simple.
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct band plot: geom_ribbon for the filled region + geom_line
-          for center trend'
+        comment: 'Correct band plot: geom_ribbon for the CI band + geom_line for the
+          central trend.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.25, within 0.2-0.4 range); central
-          line included (solid vs transparent ribbon = contrasting style); smooth
-          continuous interpolation via geom_line/geom_ribbon
+        comment: Semi-transparent fill (alpha=0.35 within 0.2–0.4 spec range), central
+          line in contrasting color, widening CI band, smooth continuous interpolation,
+          annotation noting uncertainty source.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=month (displayed as Year 1-5); y_lower/y_upper mapped to ribbon;
-          y_center mapped to line; all data visible
+        comment: x=month, ymin=y_lower, ymax=y_upper for band, y=y_center for line.
+          All axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'band-basic · r · ggplot2 · anyplot.ai' matches required format;
-          single series so legend is N/A
+        comment: 'Title: ''band-basic · r · ggplot2 · anyplot.ai'' — correct mandatory
+          format. Legend: ''95% CI'' and ''Central Forecast'' — descriptive and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -172,23 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows band (ribbon), center line, widening uncertainty over time
-          — covers all key aspects of a band plot
+        comment: 'Shows all aspects of band plots: the filled region, the central
+          trend, the widening uncertainty over time, and seasonal variation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature forecast with widening 95% CI is a common, real-world
-          scenario; values realistic for temperate climate; neutral topic
+        comment: 60-month seasonal temperature forecast with widening 95% CI is a
+          real, neutral, scientifically standard use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 60 months (5 years) is a reasonable forecast horizon; temperature
-          range 5-25°C plausible; band half-width 1.0-2.08°C credible for seasonal
-          forecast uncertainty
+        comment: Temperature range 5–25°C with seasonal oscillation is plausible for
+          a temperate climate. CI starting at ±1°C and growing linearly over 5 years
+          is realistic.
     code_quality:
       score: 10
       max: 10
@@ -198,34 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Flat script: tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) at the top of the script.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported and used
+        comment: Only library(ggplot2) and library(ragg) — both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; no fake UI
+        comment: Clean, appropriately complex. Named aesthetic approach (aes(fill='95%
+          CI'), aes(color='Central Forecast')) for legend generation is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf; modern ggplot2 API (linewidth=
-          not size=)
+        comment: ggsave(sprintf('plot-%s.png', THEME), device=ragg::agg_png, width=8,
+          height=4.5, dpi=400) — correct.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,23 +238,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_ribbon() is the idiomatic ggplot2 approach for band plots; proper
-          aes() mapping; scale_x_continuous with custom breaks/labels; theme layering
-          done correctly
+        comment: 'Good idiomatic ggplot2: aes() mapping for legend entry generation,
+          scale_fill_manual + scale_color_manual with guide_legend(override.aes) for
+          legend polish, theme() layering over theme_minimal. Strong usage.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses geom_ribbon which is ggplot2-distinctive for band plots; scale_x_continuous
-          with custom labels is a nice touch; no other distinctive ggplot2 features
-          leveraged
+        passed: true
+        comment: geom_ribbon is ggplot2's distinctive feature for band plots. guide_legend(override.aes=list(alpha=0.5,
+          linewidth=1.5)) demonstrates ggplot2-specific legend control. Named aesthetics
+          for multi-guide coordination is idiomatic ggplot2.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
