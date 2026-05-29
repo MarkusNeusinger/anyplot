@@ -39,12 +39,14 @@ items <- tibble::tibble(
   ),
   sector = rep(sector_names, each = 4),
   ring_r = rep(1:4, times = 4),
-  # Stagger angles within the 90-degree sector for visual separation
-  angle_offset = rep(c(30, 55, 38, 62), times = 4)
+  # Spread angles evenly within each 90-degree sector (15/40/62/78 → 25°+ gaps)
+  angle_offset = rep(c(15, 40, 62, 78), times = 4)
 )
 
-items$angle <- sector_starts[items$sector] + items$angle_offset
-items$color <- color_map[items$sector]
+items$angle      <- sector_starts[items$sector] + items$angle_offset
+items$color      <- color_map[items$sector]
+# Larger points for more-immediate rings to convey urgency/immediacy
+items$point_size <- c(6.5, 5.5, 4.5, 3.5)[items$ring_r]
 
 # Helper: annular polygon for filled ring bands
 make_ring_poly <- function(r_inner, r_outer, grp, n = 300) {
@@ -124,17 +126,18 @@ p <- ggplot() +
     aes(x = angle, y = r, label = label),
     size = 2.3, color = INK_MUTED, fontface = "bold", hjust = 0
   ) +
-  # Technology item points
+  # Technology item points — larger for more-immediate rings
   geom_point(
     data = items,
-    aes(x = angle, y = ring_r, color = sector),
-    size = 4.5, alpha = 0.95
+    aes(x = angle, y = ring_r, color = sector, size = point_size),
+    alpha = 0.95
   ) +
-  # Technology item labels (offset outward; suppress overlapping text)
+  scale_size_identity(guide = "none") +
+  # Technology item labels (offset outward; angles are spread 25°+ so no overlap)
   geom_text(
     data = items,
     aes(x = angle, y = ring_r + 0.42, label = name, color = sector),
-    size = 2.1, hjust = 0.5, vjust = 0, check_overlap = TRUE
+    size = 2.5, hjust = 0.5, vjust = 0
   ) +
   coord_polar(theta = "x", start = 0) +
   scale_x_continuous(limits = c(0, 360), breaks = NULL, expand = c(0, 0)) +
@@ -157,7 +160,7 @@ p <- ggplot() +
     legend.text     = element_text(color = INK_SOFT, size = 8),
     legend.title    = element_text(color = INK, size = 10),
     legend.key.size = unit(0.45, "cm"),
-    plot.margin     = margin(30, 30, 30, 30)
+    plot.margin     = margin(15, 30, 30, 30)
   )
 
 ggsave(
