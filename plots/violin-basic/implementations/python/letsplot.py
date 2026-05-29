@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -21,6 +21,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_manual,
     scale_x_discrete,
     scale_y_continuous,
@@ -80,8 +81,28 @@ title = "violin-basic · python · letsplot · anyplot.ai"
 # Plot — violins colored by Imprint palette, thin boxplot overlay for clear quartile markers
 plot = (
     ggplot(df, aes(x="Department", y="Salary", fill="Department"))
-    + geom_violin(alpha=0.82, trim=False, color=INK_SOFT, size=0.8)
-    + geom_boxplot(width=0.07, fill=PAGE_BG, color=INK, size=1.2, outlier_color=PAGE_BG, outlier_fill=PAGE_BG)
+    + geom_violin(
+        alpha=0.82,
+        trim=True,
+        color=INK_SOFT,
+        size=0.8,
+        tooltips=layer_tooltips().format("@Salary", "${,.0f}").line("^fill").line("Salary|@Salary"),
+    )
+    + geom_boxplot(
+        width=0.10,
+        fill=PAGE_BG,
+        color=INK,
+        size=1.2,
+        outlier_color=PAGE_BG,
+        outlier_fill=PAGE_BG,
+        tooltips=layer_tooltips()
+        .format("@{..middle..}", "${,.0f}")
+        .format("@{..lower..}", "${,.0f}")
+        .format("@{..upper..}", "${,.0f}")
+        .line("^fill")
+        .line("Median|@{..middle..}")
+        .line("IQR|@{..lower..} – @{..upper..}"),
+    )
     + scale_x_discrete(limits=dept_order)
     + scale_fill_manual(values=dict(zip(dept_order, IMPRINT_PALETTE, strict=True)))
     + scale_y_continuous(format="${,.0f}")
