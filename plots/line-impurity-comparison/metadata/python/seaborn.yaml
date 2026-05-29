@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:54:49Z'
-updated: '2026-05-29T00:49:42Z'
+updated: '2026-05-29T01:01:56Z'
 generated_by: claude-sonnet
 workflow_run: 26610833933
 issue: 4133
@@ -15,102 +15,85 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: both curves with correct formulas, legend with mathematical
-    notation, max-impurity annotation at p=0.5, edge-case entropy handling — all implemented
-    correctly'
-  - 'Perfect data quality: mathematically accurate Gini and entropy formulas with
-    proper normalization; factually correct and neutral educational ML content'
-  - 'Perfect code quality: deterministic mathematical data (no seed needed), clean
-    KISS structure, all imports used, correct plot-{THEME}.png output'
-  - 'Excellent palette compliance: Gini in #009E73 (position 1), Entropy in #C475FD
-    (position 2); warm off-white/#1A1A17 backgrounds; all chrome tokens (INK, INK_SOFT,
-    INK_MUTED, ELEVATED_BG) correctly applied to both themes'
-  - 'Redundant encoding: solid vs. dashed linestyles complement color distinction
-    — strong CVD safety'
-  - The shaded fill_between (alpha=0.08) elegantly highlights the divergence region
-    between the two criteria without visual noise
-  - 'Dark render is fully readable: light-on-dark text, annotation box uses ELEVATED_BG
-    (#242420) with INK (#F0EFE8) text — no dark-on-dark failure'
+  - 'Full spec compliance: both curves with formulas, max-impurity annotation at p=0.5,
+    edge-case handling, and light grid all present'
+  - 'Strong theme adaptation: every chrome element (title, labels, ticks, legend,
+    annotation box, marker) uses adaptive INK tokens; both renders pass legibility
+    check'
+  - 'Idiomatic seaborn: long-format DataFrame + hue+style dual mapping is the canonical
+    seaborn multi-series pattern, yielding clean merged legend handles automatically'
+  - 'Educational storytelling: fill_between + two targeted annotations effectively
+    convey why both criteria are similar yet distinguishable'
   weaknesses:
-  - 'Design Excellence gap (DE-01 5/8, DE-02 4/6, DE-03 4/6): the plot is above defaults
-    but not yet publication-level — consider adding a very subtle y-axis-only grid
-    (alpha~0.12) as suggested by the spec, and a short descriptive prefix to the title
-    (e.g. ''Gini vs Entropy · line-impurity-comparison · python · seaborn · anyplot.ai'')
-    to add editorial voice'
-  - Annotation text at fontsize=8pt may be marginally small for mobile scaling (3200→400px
-    gives ~5px effective height) — increase annotation text to 9-10pt for better readability
-    at small sizes
-  - 'Library Mastery limited (LM-02 2/5): seaborn''s distinctive statistical features
-    (confidence intervals, statistical estimation via lineplot''s estimator, theme-aware
-    palette mapping via hue) are unused; for mathematical curves this is expected
-    but leaves seaborn-specific value on the table'
+  - fill_between alpha=0.08 renders near-invisible in dark theme; increase to alpha=0.10-0.12
+    for better visual signal of the divergence region
+  - Grid alpha=0.12 uses INK_MUTED color rather than the style guide rgba rule token;
+    could be more precisely aligned with the reference spec for maximum theme consistency
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "line-impurity-comparison · python · seaborn · anyplot.ai" in dark ink, clearly readable, occupying ~75% of plot width at fontsize=12pt (expected for this title length). X-axis label "Probability (p)" and Y-axis label "Impurity (normalized)" in dark ink at 10pt, both readable. Tick labels (0.0–1.0 on both axes) in INK_SOFT at 8pt, readable. Legend in upper right with title "Splitting Criterion", clean fancybox=False frame using ELEVATED_BG fill.
-      Data: Solid green (#009E73) line for Gini impurity; lavender dashed (#C475FD) line for entropy. Light green fill between curves (alpha=0.08) highlights divergence region. Annotation box "Max impurity p = 0.5" with rounded corners near peak. Italic "Max divergence" arrow annotation on left slope.
-      Legibility verdict: PASS — all elements readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-impurity-comparison · python · seaborn · anyplot.ai" in dark ink, readable; X-axis "Probability (p)" and Y-axis "Impurity (normalized)" in dark ink, readable; tick labels in INK_SOFT (#4A4A44), readable; all chrome clearly visible
+      Data: Solid green (#009E73) Gini line and dashed lavender (#C475FD) Entropy line, both normalized to [0,1]; very subtle green fill between curves (alpha=0.08); "Max impurity p=0.5" annotation with rounded box and arrow; "Max divergence" italic annotation with arrow; legend with formula labels in upper right
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels in light ink (#F0EFE8 / #B8B7B0), all clearly visible against dark background. No dark-on-dark failures detected. Annotation box uses ELEVATED_BG (#242420) with INK (#F0EFE8) text — readable. "Max divergence" italic text in INK_SOFT (#B8B7B0) — visible. Legend frame uses ELEVATED_BG with INK_SOFT border.
-      Data: Data colors are IDENTICAL to light render — Gini in #009E73, Entropy in #C475FD, fill region same green tint. The peak marker at p=0.5 is white (INK for dark theme = #F0EFE8) vs black in light — appropriate theme adaptation. Only chrome elements flipped.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failure.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white (#F0EFE8) ink, clearly readable against dark background; axis labels in same near-white token, readable; tick labels in INK_SOFT dark token (#B8B7B0), readable; no dark-on-dark failures detected; "Max impurity" annotation box has dark elevated fill (#242420) with near-white text — high contrast; "Max divergence" text in lighter gray (#B8B7B0), readable
+      Data: Gini (#009E73) and Entropy (#C475FD) colors identical to light render — only chrome flipped; marker dot at (0.5, 1.0) is white (INK dark token), correctly adapted; legend has dark elevated background with light text
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, labels 10pt, ticks 8pt,
-          annotations 8pt). Well-proportioned in both themes. Annotation text at 8pt
-          is borderline small for mobile scaling.
+        comment: Title 12pt, axis labels 10pt, ticks 8pt — all readable in both themes;
+          no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Annotation box and arrow are clear of data lines
-          and each other.
+        comment: Annotations spatially separated; legend does not collide with curves;
+          no text-on-data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at linewidth=2.5 are perfectly visible for smooth 500-point
-          mathematical curves. Fill alpha=0.08 is subtle but visible.
+        comment: Both lines clearly distinguishable via color + linestyle; linewidth=2.5
+          appropriate for 500-point smooth curves
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender with solid vs dashed redundant encoding — strong
-          CVD safety.
+        comment: Redundant encoding (solid vs dashed) ensures CVD safety; no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills canvas well with balanced margins.
-          tight_layout used without bbox_inches='tight' per seaborn guide.
+        comment: Canvas gate passed (3200x1800); good whitespace; title at ~70% width
+          is expected for the mandated title string
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Probability (p)'' and ''Impurity (normalized)'' — descriptive
-          with variable/unit context.'
+        comment: Descriptive labels with units; title uses correct format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint positions 1 and 2).
-          Backgrounds #FAF8F1 light / #1A1A17 dark. All theme chrome tokens correct.'
+        comment: 'First series Gini #009E73; second Entropy #C475FD; backgrounds correct;
+          chrome tokens correctly flip'
     design_excellence:
       score: 13
       max: 20
@@ -120,24 +103,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: custom Imprint palette, fill_between
-          adds visual interest, dual encoding (color+linestyle), tasteful annotation
-          styling. Not yet publication/FiveThirtyEight level.'
+        comment: 'Intentional design: fill_between, dual annotations, formula-rich
+          legend, explicit Imprint palette assignment, linestyle differentiation'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, clean legend (fancybox=False), subtle fill.
-          No grid — the spec suggests one; minor omission.
+        comment: Spines removed via sns.despine; y-axis-only grid at alpha=0.12; fancybox=False
+          legend with thin border; tight_layout for clean whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Shaded fill guides eye to divergence region; annotations at max
-          divergence and peak create clear visual narrative. Story: ''both metrics
-          peak at p=0.5 but entropy deviates more from the Gini baseline.'''
+        comment: 'Three visual elements guide viewer: fill shows similarity, max divergence
+          annotation marks key difference region, max impurity annotation pinpoints
+          shared peak'
     spec_compliance:
       score: 15
       max: 15
@@ -147,27 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart comparing two mathematical criteria.
+        comment: Correct line comparison chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both curves, different colors+linestyles, legend with formulas, max-impurity
-          annotation at p=0.5, edge-case entropy handling at p=0/1.
+        comment: Both curves present; formula legend; p=0.5 annotation; edge-case
+          handling; light grid; different colors and linestyles
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability p [0,1], Y=normalized impurity [0,1]. Correct.
+        comment: 'X: probability p in [0,1]; Y: normalized impurity in [0,1]; both
+          curves correctly computed'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format. Legend with mathematical formulas and 'Splitting
-          Criterion' title.
+        comment: Title matches required format; legend labels include mathematical
+          formulas
     data_quality:
       score: 15
       max: 15
@@ -177,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full probability range, both criteria, peak annotation, divergence
-          region — comprehensive coverage.
+        comment: 'Shows all aspects: curve shapes, normalization, relative behavior,
+          peak coincidence, edge-case handling, 500-point resolution'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard ML textbook concept. Completely neutral, educational.
+        comment: Mathematical ML foundation visualization, neutral educational framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically correct: Gini=2p(1-p) peaks at 0.5, entropy=-p*log2(p)-(1-p)*log2(1-p)
-          peaks at 1.0, both normalized to [0,1]. Edge cases correctly handled with
-          mask.'
+        comment: Y-axis [-0.02, 1.1] gives breathing room; X-axis exactly [0,1] as
+          specified
     code_quality:
       score: 10
       max: 10
@@ -202,34 +184,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: imports → tokens → data → plot → save.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic mathematical data — no random seed needed.
+        comment: Fully deterministic mathematical computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all used.
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No over-engineering.
+        comment: Long-format DataFrame for seaborn hue+style mapping is idiomatic;
+          masked entropy computation is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches='tight' per seaborn
-          guide.
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'; current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -237,24 +219,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes-level sns.lineplot(ax=ax), sns.set_theme() for rc params, sns.despine()
-          — correct idiomatic seaborn patterns.
+        comment: Long-format DataFrame with hue+style dual mapping; sns.set_theme
+          with rc dict; sns.despine — clearly idiomatic seaborn patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses seaborn lineplot and theme system, but fill_between and annotations
-          are matplotlib. Seaborn's statistical estimation, CI bands, or hue-palette
-          mapping unused. Limited by the mathematical curve spec.
-  verdict: REJECTED
+        passed: true
+        comment: hue+style in sns.lineplot automatically merges handles in legend
+          and applies both color and dash differentiation — distinctive seaborn pattern
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
-  - explicit-figure
+  - data-generation
   dataprep:
   - normalization
   styling:
   - alpha-blending
+  - grid-styling
