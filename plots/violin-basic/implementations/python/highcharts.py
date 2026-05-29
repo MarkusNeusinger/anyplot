@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -214,7 +214,7 @@ for v in violin_data:
     ]
     med_line.name = "Median" if v["index"] == 0 else f"Median {v['category']}"
     med_line.show_in_legend = v["index"] == 0
-    med_line.color = PAGE_BG
+    med_line.color = PAGE_BG if THEME == "light" else INK
     med_line.line_width = 8
     med_line.fill_opacity = 0
     med_line.z_index = 15
@@ -237,9 +237,9 @@ for v in violin_data:
     box_series.name = f"{v['category']} IQR"
     box_series.show_in_legend = False
     box_series.color = v["color"]
-    box_series.fill_color = f"rgba({v['rgb']},0.85)"
+    box_series.fill_color = f"rgba({v['rgb']},0.3)"
     box_series.fill_opacity = 1.0
-    box_series.line_width = 3
+    box_series.line_width = 4
     box_series.z_index = 12
     box_series.enable_mouse_tracking = False
     chart.add_series(box_series)
