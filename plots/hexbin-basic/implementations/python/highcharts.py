@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 hexbin-basic: Basic Hexbin Plot
-Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 90/100 | Created: 2026-02-21
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Created: 2026-05-29
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,9 +14,21 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap: brand green → blue (single-polarity density)
+CMAP_LOW = "#009E73"  # Imprint palette position 1
+CMAP_HIGH = "#4467A3"  # Imprint palette position 3
 
 # Data - seismic sensor readings: 10,000 measurements across a monitoring grid
 np.random.seed(42)
@@ -43,85 +56,84 @@ for px, py in points:
     col = int((px - x_min - col_offset) / hex_width)
     hex_bins[(col, row)] = hex_bins.get((col, row), 0) + 1
 
-# Find peak density per zone for annotations
-zone_peak_bins = {}
-for label, zone_data in [("A", zone_a), ("B", zone_b), ("C", zone_c)]:
-    zbins = {}
-    for px, py in zone_data:
-        row = int((py - y_min) / vert_spacing)
-        col_offset = (row % 2) * hex_width * 0.5
-        col = int((px - x_min - col_offset) / hex_width)
-        zbins[(col, row)] = zbins.get((col, row), 0) + 1
-    peak = max(zbins, key=zbins.get)
-    zone_peak_bins[label] = {"col": peak[0], "row": peak[1], "count": zbins[peak]}
-
-# Build tilemap data
 tilemap_data = [{"x": col, "y": row, "value": count} for (col, row), count in hex_bins.items()]
 max_count = max(item["value"] for item in tilemap_data)
 
-# Configure chart using highcharts-core SDK
+
+# Zone center col/row positions for annotations
+def _to_col_row(px, py):
+    r = int((py - y_min) / vert_spacing)
+    c_off = (r % 2) * hex_width * 0.5
+    c = int((px - x_min - c_off) / hex_width)
+    return c, r
+
+
+za_col, za_row = _to_col_row(2.0, 3.0)  # Zone A — upper-center
+zb_col, zb_row = _to_col_row(-1.0, -1.0)  # Zone B — lower-left
+zc_col, zc_row = _to_col_row(4.0, -2.0)  # Zone C — lower-right (peak density)
+
+# Annotation style (readable on hexbin colors, both themes)
+ann_fill = "rgba(26,26,23,0.72)" if THEME == "light" else "rgba(240,239,232,0.18)"
+ann_text = "#F0EFE8"
+
+# Title with length-scaled fontsize
+title_text = "Seismic Activity Density · hexbin-basic · python · highcharts · anyplot.ai"
+title_fs = max(44, round(66 * 67 / len(title_text)))
+
+subtitle_text = (
+    f"Three seismic monitoring zones — peak density: {max_count} events/bin"
+    f" · 10,000 readings across {len(hex_bins)} hexagonal bins"
+)
+
+# Configure chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 chart.options.chart = {
     "type": "tilemap",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginTop": 160,
-    "marginBottom": 240,
-    "marginLeft": 200,
-    "marginRight": 260,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 140,
+    "marginBottom": 160,
+    "marginLeft": 160,
+    "marginRight": 220,
     "animation": False,
 }
-chart.options.title = {
-    "text": "Seismic Activity Density \u00b7 hexbin-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "500", "color": "#1a1a2e"},
-}
-chart.options.subtitle = {
-    "text": (
-        f"Three monitoring zones detected \u2014 peak intensity: "
-        f"{zone_peak_bins['C']['count']} events/bin (SE quadrant) \u00b7 "
-        f"10,000 readings across {len(hex_bins)} hexagonal bins"
-    ),
-    "style": {"fontSize": "30px", "color": "#555555"},
-}
+chart.options.title = {"text": title_text, "style": {"fontSize": f"{title_fs}px", "fontWeight": "500", "color": INK}}
+chart.options.subtitle = {"text": subtitle_text, "style": {"fontSize": "44px", "color": INK_SOFT}}
 chart.options.x_axis = {
-    "title": {"text": "Longitude Grid (\u00b0E)", "style": {"fontSize": "28px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "20px", "color": "#666666"}},
+    "title": {"text": "X Position", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 0,
-    "lineColor": "#aaaaaa",
-    "tickColor": "#aaaaaa",
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "lineWidth": 1,
 }
 chart.options.y_axis = {
-    "title": {"text": "Latitude Grid (\u00b0N)", "style": {"fontSize": "28px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "20px", "color": "#666666"}},
+    "title": {"text": "Y Position", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 0,
-    "lineColor": "#aaaaaa",
-    "tickColor": "#aaaaaa",
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "lineWidth": 1,
 }
 chart.options.color_axis = {
-    "min": 0,
+    "type": "logarithmic",
+    "min": 1,
     "max": int(max_count),
-    "stops": [
-        [0, "#440154"],
-        [0.05, "#482878"],
-        [0.15, "#3b528b"],
-        [0.35, "#21918c"],
-        [0.6, "#5ec962"],
-        [1, "#fde725"],
-    ],
-    "labels": {"style": {"fontSize": "24px", "color": "#333333"}},
+    "stops": [[0, CMAP_LOW], [1, CMAP_HIGH]],
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
 }
 chart.options.legend = {
     "align": "right",
     "layout": "vertical",
     "verticalAlign": "middle",
-    "symbolHeight": 600,
-    "symbolWidth": 40,
-    "title": {"text": "Event Count", "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#333333"}},
-    "itemStyle": {"fontSize": "24px"},
+    "symbolHeight": 280,
+    "symbolWidth": 36,
+    "title": {"text": "Event Count", "style": {"fontSize": "44px", "fontWeight": "bold", "color": INK}},
+    "itemStyle": {"fontSize": "44px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderWidth": 0,
 }
 chart.options.tooltip = {"enabled": False}
 chart.options.credits = {"enabled": False}
@@ -134,10 +146,6 @@ chart.options.plot_options = {
         "states": {"hover": {"enabled": False}, "inactive": {"enabled": False}},
     }
 }
-
-# Generate chart JS using SDK's to_js_literal()
-# Note: tilemap borderWidth/borderColor are not serialized by highcharts-core SDK,
-# so those are applied via a post-render update below
 chart.options.series = [
     {
         "type": "tilemap",
@@ -149,39 +157,15 @@ chart.options.series = [
 ]
 js_literal = chart.to_js_literal()
 
-# Zone annotation config (applied post-render for module compatibility)
-zone_descs = {"A": "Moderate Activity", "B": "Low-Activity Spread", "C": "High-Intensity Hotspot"}
-annotation_labels = [
-    {
-        "point": {"x": zone_peak_bins[z]["col"], "y": zone_peak_bins[z]["row"], "xAxis": 0, "yAxis": 0},
-        "text": f"{zone_descs[z]}<br>({zone_peak_bins[z]['count']} events/bin)",
-    }
-    for z in ["A", "B", "C"]
-]
-annotation_config = json.dumps(
-    {
-        "draggable": "",
-        "labelOptions": {
-            "borderRadius": 8,
-            "padding": 12,
-            "style": {"fontSize": "24px", "fontWeight": "bold", "color": "#1a1a2e"},
-            "backgroundColor": "rgba(255, 255, 255, 0.88)",
-            "borderColor": "#444444",
-            "borderWidth": 2,
-        },
-        "labels": annotation_labels,
-    }
-)
+# Tilemap border (not serialized by highcharts-core SDK — applied via post-render update)
+border_color = "rgba(240,239,232,0.25)" if THEME == "dark" else "rgba(26,26,23,0.2)"
+border_patch = json.dumps({"borderWidth": 1, "borderColor": border_color})
 
-# Tilemap border styling (not serialized by highcharts-core SDK)
-border_patch = json.dumps({"borderWidth": 1, "borderColor": "rgba(255,255,255,0.3)"})
-
-# Download Highcharts JS modules (inline for headless Chrome compatibility)
+# Download Highcharts JS modules inline (CDN scripts blocked in headless Chrome file:// context)
 module_urls = {
     "highcharts": "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js",
     "heatmap": "https://cdn.jsdelivr.net/npm/highcharts@11/modules/heatmap.js",
     "tilemap": "https://cdn.jsdelivr.net/npm/highcharts@11/modules/tilemap.js",
-    "annotations": "https://cdn.jsdelivr.net/npm/highcharts@11/modules/annotations.js",
 }
 js_modules = {}
 for name, url in module_urls.items():
@@ -189,7 +173,6 @@ for name, url in module_urls.items():
     with urllib.request.urlopen(req, timeout=30) as response:
         js_modules[name] = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -197,44 +180,66 @@ html_content = f"""<!DOCTYPE html>
     <script>{js_modules["highcharts"]}</script>
     <script>{js_modules["heatmap"]}</script>
     <script>{js_modules["tilemap"]}</script>
-    <script>{js_modules["annotations"]}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{js_literal}</script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {{
             var chart = Highcharts.charts[0];
             if (chart) {{
-                chart.series[0].update({border_patch}, false);
-                chart.addAnnotation({annotation_config});
-                chart.redraw();
+                chart.series[0].update({border_patch}, true);
+                var zones = [
+                    {{x: {za_col}, y: {za_row}, label: 'Zone A'}},
+                    {{x: {zb_col}, y: {zb_row}, label: 'Zone B'}},
+                    {{x: {zc_col}, y: {zc_row}, label: 'Zone C ★'}}
+                ];
+                zones.forEach(function(z) {{
+                    var px = chart.xAxis[0].toPixels(z.x, false);
+                    var py = chart.yAxis[0].toPixels(z.y, false);
+                    chart.renderer.label(z.label, px - 55, py - 110)
+                        .attr({{padding: 12, r: 4, fill: '{ann_fill}', zIndex: 5}})
+                        .css({{color: '{ann_text}', fontSize: '40px', fontWeight: '600'}})
+                        .add();
+                }});
             }}
         }});
     </script>
 </body>
 </html>"""
 
-# Save interactive HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Screenshot with headless Chrome
+# Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative: --window-size alone is eaten by Chrome chrome (~139 px)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# PIL safety net: pin to exact 3200×1800 in case of ±1–2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
