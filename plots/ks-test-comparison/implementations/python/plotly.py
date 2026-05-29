@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -141,7 +141,7 @@ fig.update_layout(
     autosize=False,
     title={
         "text": (
-            "ks-test-comparison · plotly · anyplot.ai"
+            "ks-test-comparison · python · plotly · anyplot.ai"
             f'<br><span style="font-size:10px;color:{INK_MUTED}">'
             f"Good vs. Bad customers — distributions differ significantly "
             f"(D = {ks_stat:.3f}, {p_text})</span>"
@@ -155,8 +155,7 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
-        "showline": True,
-        "linecolor": INK_SOFT,
+        "showline": False,
         "range": [-2, 102],
         "dtick": 20,
     },
@@ -166,8 +165,7 @@ fig.update_layout(
         "range": [-0.02, 1.05],
         "showgrid": False,
         "zeroline": False,
-        "showline": True,
-        "linecolor": INK_SOFT,
+        "showline": False,
         "dtick": 0.25,
         "tickformat": ".2f",
     },
@@ -189,6 +187,11 @@ fig.update_layout(
     xaxis_spikethickness=1,
     xaxis_spikecolor=GRID,
     xaxis_spikedash="dot",
+    yaxis_spikemode="across",
+    yaxis_spikesnap="cursor",
+    yaxis_spikethickness=1,
+    yaxis_spikecolor=GRID,
+    yaxis_spikedash="dot",
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
