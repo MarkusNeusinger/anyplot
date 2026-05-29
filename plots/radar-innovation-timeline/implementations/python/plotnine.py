@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-Library: plotnine | Python
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-29
 """
 
 import math
