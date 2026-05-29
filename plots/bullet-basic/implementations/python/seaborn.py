@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -30,7 +30,7 @@ if THEME == "light":
 else:
     BAND_GOOD = "#525250"
     BAND_SATISFACTORY = "#3D3D3B"
-    BAND_POOR = "#2D2D2B"
+    BAND_POOR = "#353532"  # lightened for better dark-mode band differentiation
 
 # Data — department KPI dashboard with varied performance scenarios
 metrics = ["Revenue", "Customer\nSatisfaction", "Efficiency", "Quality\nScore"]
@@ -77,9 +77,26 @@ for i, ranges in enumerate(ranges_list):
         ax.barh(i, end - prev, left=prev, height=range_height, color=color, edgecolor="none", zorder=1)
         prev = end
 
-# Actual value bars — narrower, centered on each row
-for i, (actual, s) in enumerate(zip(actuals, status, strict=True)):
-    ax.barh(i, actual, height=0.28, color=status_palette[s], edgecolor=PAGE_BG, linewidth=0.8, zorder=3)
+# Actual value bars — seaborn-native barplot, narrower than background bands
+n_patches_before = len(ax.patches)
+sns.barplot(
+    y=list(range(n_metrics)),
+    x=actuals,
+    hue=status,
+    palette=status_palette,
+    width=0.28,
+    orient="h",
+    ax=ax,
+    native_scale=True,
+    dodge=False,
+    errorbar=None,
+    saturation=1.0,
+    legend=False,
+)
+for patch in ax.patches[n_patches_before:]:
+    patch.set_zorder(3)
+    patch.set_edgecolor(PAGE_BG)
+    patch.set_linewidth(0.8)
 
 # Target markers — thin vertical line spanning the full range-band height
 for i, target in enumerate(targets):
@@ -106,7 +123,11 @@ ax.set_xlabel("Performance (%)", fontsize=10, color=INK)
 ax.set_ylabel("")
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
 ax.set_yticks(range(n_metrics))
-ax.set_yticklabels(metrics, fontsize=8, color=INK_SOFT)
+yticklabels = ax.set_yticklabels(metrics, fontsize=8, color=INK_SOFT)
+for i, lbl in enumerate(yticklabels):
+    if i == 2:  # Efficiency — most dramatic underperformance (35% vs 75% target)
+        lbl.set_fontweight("bold")
+        lbl.set_color(BELOW_TARGET_COLOR)
 ax.tick_params(axis="y", length=0)
 ax.tick_params(axis="x", labelsize=8)
 
