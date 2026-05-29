@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-29
@@ -22,15 +22,21 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — first 4 positions mapped to sectors
+# Subtle ring zone fill colors — drawn first (positions 0–3 in color_sequence),
+# then Imprint sector colors at positions 4–7.
+# Light theme: warm tints graduating from pale green (Adopt) to off-white (Hold)
+# Dark theme: dark tints graduating from dark green to near-background
+if THEME == "light":
+    zone_colors = ("#C8EBE0", "#E2D8F5", "#D4DCEA", "#EDEAE2")  # Adopt/Trial/Assess/Hold
+else:
+    zone_colors = ("#1A3028", "#26203A", "#1E2430", "#252420")  # Adopt/Trial/Assess/Hold
+
+# Imprint palette — first 4 positions mapped to sectors (positions 4–7 in full palette)
 sectors = ["Data Engineering", "Cloud Platforms", "Security", "DevOps"]
-sector_colors = {
-    "Data Engineering": "#009E73",  # Imprint pos 1 — brand green
-    "Cloud Platforms": "#C475FD",  # Imprint pos 2
-    "Security": "#4467A3",  # Imprint pos 3
-    "DevOps": "#BD8233",  # Imprint pos 4
-}
+sector_colors_tuple = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
+sector_colors = dict(zip(sectors, sector_colors_tuple, strict=False))
 ring_values = {"Adopt": 1, "Trial": 2, "Assess": 3, "Hold": 4}
+rings_ordered = ["Adopt", "Trial", "Assess", "Hold"]
 
 # Data — 24 innovations across 4 sectors and 4 time-horizon rings
 innovations = [
@@ -86,7 +92,13 @@ series_data = {s: [None] * total_slots for s in sectors}
 for name, sector, ring, slot in item_placements:
     series_data[sector][slot] = {"value": ring_values[ring], "label": name}
 
-color_sequence = tuple(sector_colors[s] for s in sectors)
+# Ring zone background fill series — all spokes set to ring boundary value.
+# Drawn outermost-first (Hold=4) so each inner fill layers on top, creating
+# distinct concentric bands: Hold → Assess → Trial → Adopt from outer to inner.
+ring_zone_data = {ring: [ring_values[ring]] * total_slots for ring in rings_ordered}
+
+# Full color sequence: zone fills first (4), then sector data colors (4)
+color_sequence = zone_colors + sector_colors_tuple
 
 title_str = "radar-innovation-timeline · python · pygal · anyplot.ai"
 n_chars = len(title_str)
@@ -101,12 +113,12 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     colors=color_sequence,
     title_font_size=title_font_size,
-    label_font_size=34,  # Increased from 18 for better perimeter readability
-    major_label_font_size=44,
+    label_font_size=56,
+    major_label_font_size=56,
     legend_font_size=44,
-    value_font_size=36,
-    opacity=0.9,
-    opacity_hover=1.0,
+    value_font_size=40,
+    opacity=0.35,  # Low opacity so zone fills are subtle background tints
+    opacity_hover=0.7,
     stroke_width=2.5,
 )
 
@@ -119,10 +131,10 @@ chart = pygal.Radar(
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
     legend_box_size=30,
-    fill=False,
-    stroke=False,  # Disable polygon connecting lines — dots only for independent items
+    fill=True,  # fill=True enables zone fills; sector series dots still show on top
+    stroke=False,
     show_dots=True,
-    dots_size=18,
+    dots_size=22,
     show_y_guides=True,
     show_x_guides=False,
     range=(0, 5),
@@ -133,7 +145,7 @@ chart = pygal.Radar(
         {"value": 3, "label": "Assess"},
         {"value": 4, "label": "Hold"},
     ],
-    show_minor_x_labels=True,
+    show_minor_x_labels=False,  # Hide per-item spoke labels; item names appear as tooltips in HTML
     x_labels_major=sectors,
     x_label_rotation=0,
     margin_bottom=80,
@@ -145,6 +157,11 @@ chart = pygal.Radar(
 
 chart.x_labels = x_labels
 
+# Add ring zone fills first (drawn behind sector data) — outermost (Hold) to innermost (Adopt)
+for ring in reversed(rings_ordered):
+    chart.add(ring, ring_zone_data[ring])
+
+# Add sector data series on top of zone fills
 for sector in sectors:
     chart.add(sector, series_data[sector])
 
