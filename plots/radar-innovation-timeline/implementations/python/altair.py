@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-29
@@ -99,7 +99,7 @@ for item in items:
 records = []
 for (sector, ring), group_items in groups.items():
     a_min, a_max = sector_bounds[sector]
-    padding = 0.20 * sector_arc  # wider padding keeps items away from sector boundaries
+    padding = 0.28 * sector_arc  # wider padding keeps items away from sector boundaries
     n = len(group_items)
     r_in, r_out = ring_inner[ring], ring_outer[ring]
     r_mid = (r_in + r_out) / 2
@@ -112,8 +112,8 @@ for (sector, ring), group_items in groups.items():
         radius = r_mid + r_off
         x = radius * np.cos(angle)
         y = radius * np.sin(angle)
-        # Label placed along the same radial ray, beyond the marker
-        label_r = radius + 0.68
+        # Alternate label radii so paired items don't stack at the same distance
+        label_r = radius + 0.55 + (idx % 2) * 0.22
         label_x = label_r * np.cos(angle)
         label_y = label_r * np.sin(angle)
         records.append(
@@ -228,16 +228,8 @@ points = (
     .encode(
         x=x_enc,
         y=y_enc,
-        color=alt.Color(
-            "sector:N",
-            scale=color_scale,
-            legend=alt.Legend(title="Sector"),
-        ),
-        shape=alt.Shape(
-            "ring:N",
-            scale=shape_scale,
-            legend=alt.Legend(title="Ring"),
-        ),
+        color=alt.Color("sector:N", scale=color_scale, legend=alt.Legend(title="Sector")),
+        shape=alt.Shape("ring:N", scale=shape_scale, legend=alt.Legend(title="Ring")),
         size=alt.condition(hover, alt.value(380), alt.value(200)),
         tooltip=["name:N", "sector:N", "ring:N"],
     )
@@ -276,10 +268,14 @@ chart = (
     alt.layer(*fill_layers, arcs, spokes, leaders, points, labels, *sec_header_layers, rlabels)
     .properties(
         width=500,
-        height=460,
+        height=410,
         background=PAGE_BG,
         title=alt.Title(
-            "radar-innovation-timeline · altair · pyplots.ai", fontSize=14, anchor="middle", offset=14, color=INK
+            "radar-innovation-timeline · python · altair · anyplot.ai",
+            fontSize=14,
+            anchor="middle",
+            offset=14,
+            color=INK,
         ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
