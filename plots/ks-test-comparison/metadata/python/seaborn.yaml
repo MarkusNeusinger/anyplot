@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:13:04Z'
-updated: '2026-05-29T03:25:38Z'
+updated: '2026-05-29T03:37:43Z'
 generated_by: claude-sonnet
 workflow_run: 26615601261
 issue: 4130
@@ -12,53 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'All required K-S test features correctly implemented: ECDFs as step functions,
-    K-S statistic annotation with arrow, p-value, dotted vertical line at max divergence,
-    dots at max-divergence intersection points, and shaded band highlighting the separation
-    region'
-  - 'Full Imprint palette and theme compliance: #009E73 for Good Customers (first
-    series), #C475FD for Bad Customers (Imprint position 2), correct warm backgrounds
-    in both themes'
-  - 'Excellent theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, ELEVATED_BG,
-    PAGE_BG) correctly propagated through sns.set_theme rc params and savefig; both
-    renders fully readable'
-  - Realistic and well-contextualized credit scoring use case with appropriate beta
-    distribution modeling; redundant encoding (solid vs dashed lines) adds CVD accessibility
-  - Flat KISS code structure, reproducible seed (np.random.seed(42)), all imports
-    used, correct dynamic title fontsize scaling, no bbox_inches=tight
+  - 'Full spec compliance: both ECDFs, K-S stat, p-value, max-divergence annotation,
+    vertical line, endpoint dots, shaded band — all present'
+  - Four-layer focal point emphasis (dotted line + dots + shaded band + callout) makes
+    the K-S distance immediately obvious
+  - sns.ecdfplot() used idiomatically; KDE inset leverages seaborn statistical distribution
+    API distinctively
+  - Theme adaptation complete and correct across all elements (backgrounds, text,
+    annotation box, inset spines, dot edge colors)
+  - Credit scoring domain is realistic, neutral, and pedagogically appropriate; Beta
+    distributions produce convincing score profiles
   weaknesses:
-  - 'DE-01 (5/8): Aesthetic sophistication sits just above well-configured defaults
-    but has not reached strong-design level. The annotation arrow and shaded band
-    show intent, but overall layout still reads as a styled library default. To raise:
-    strengthen the visual hierarchy — e.g., make the K-S stat bolder or larger in
-    the callout box, increase shaded band alpha slightly for better contrast, or add
-    a subtle horizontal reference annotation at the midpoint of the KS span.'
-  - 'LM-02 (2/5): Only seaborn-specific feature used is sns.ecdfplot. The max-divergence
-    computation, fill_between, annotate, and all dot/line overlays are pure matplotlib.
-    To raise: explore seaborn-specific parameters on ecdfplot (complementary, weights,
-    log_scale) or pair with a seaborn kdeplot as a secondary panel to showcase seaborn
-    capabilities more distinctively.'
-  - 'VQ-01 (7/8): Annotation callout text at fontsize=8 is at the minimum readable
-    threshold. Increase annotation fontsize to 9pt for better legibility when the
-    PNG is scaled to mobile width (~400px).'
+  - 'Inset KDE container has very low background contrast in light render: ELEVATED_BG
+    (#FFFDF6) vs PAGE_BG (#FAF8F1) difference is barely perceptible — add full rectangular
+    border at linewidth=1.0 in INK_SOFT'
+  - 'DE-03 storytelling could be pushed further: no text callout describing the direction
+    of divergence (e.g. Bad customers skew lower scores) which would make the narrative
+    immediately clear'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — matches spec exactly, not pure white.
-      Chrome: Title "Credit Scoring · ks-test-comparison · python · seaborn · anyplot.ai" at ~12pt rendered in dark ink, fully readable. X-axis label "Credit Score (points)" and Y-axis label "Cumulative Proportion" at 10pt, both clearly visible. Tick labels at 8pt, readable. Legend box with elevated background (#FFFDF6) in upper left shows "Good Customers" (solid green line) and "Bad Customers" (dashed lavender line).
-      Data: Good Customers ECDF in #009E73 (solid), Bad Customers ECDF in #C475FD (dashed). Dotted black vertical line at ~x=595 marks max K-S divergence. Two black dots at intersection points. Lavender shaded band around max-divergence region. Annotation callout box in lower-left with arrow pointing to KS line: "K-S = 0.463 / p = 9.69e-24".
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Credit Scoring · ks-test-comparison · python · seaborn · anyplot.ai" in dark INK text, clearly readable; axis labels "Credit Score (points)" (x) and "Cumulative Proportion" (y) at 10pt in INK; tick labels at 8pt in INK_SOFT; annotation box in elevated #FFFDF6 background with INK bold text "K-S = 0.463 / p = 9.69e-24"
+      Data: Good Customers ECDF in #009E73 (solid, linewidth=2.5); Bad Customers ECDF in #C475FD (dashed, linewidth=2.5); shaded lavender band highlighting divergence region; dotted black vertical line at max divergence; two black filled dots at divergence endpoints; KDE inset in bottom-right with same colors; first series is #009E73 ✓
+      Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title in light cream (#F0EFE8), fully readable against dark background. Axis labels and tick labels in appropriately light tones. Legend box with elevated dark background (#242420), legend text light-colored and readable. Annotation callout box with dark elevated background and light text — readable.
-      Data: Good Customers ECDF remains #009E73 (identical to light render), Bad Customers ECDF remains #C475FD (identical to light render). KS line is now dotted white/light instead of black — theme-adaptive. Dots at max-divergence are white circles (theme-adapted from black). Shaded band appears as a darker purple region, still visible.
-      Legibility verdict: PASS — no dark-on-dark failures. All text uses light chrome tokens correctly. Data colors are identical to light render.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels in light #F0EFE8 text, clearly readable; tick labels in #B8B7B0; annotation box in elevated dark #242420 background with light text; inset labels in INK_SOFT (#B8B7B0); no dark-on-dark failures observed
+      Data: Colors identical to light render — Good Customers #009E73, Bad Customers #C475FD; shaded band retains lavender; K-S dotted line rendered in light color; dot markers appear as white circles; all data elements clearly visible against dark background
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,80 +54,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title dynamically scaled; axis labels
-          10pt, ticks 8pt, annotation 8pt — readable in both themes but annotation
-          callout text at fontsize=8 is at the minimum mobile-readable threshold
+        comment: All font sizes explicitly set; proper hierarchy; both themes legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotation box in dead space (lower left),
-          legend in upper left
+        comment: No overlapping text or elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: ECDF lines at linewidth=2.5 clearly visible; KS dotted line, dots,
-          and shaded band all well-visible
+        comment: ECDFs, K-S line, dots, band all clear; inset KDE slightly low contrast
+          in light mode
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender combination CVD-safe; redundant solid/dashed linestyle
-          encoding adds accessibility
+        comment: Imprint palette; linestyle redundancy for CVD safety
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions; no clipping; well-balanced
-          layout
+        comment: Canvas gate passed (3200x1800); good proportions, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Credit Score (points) includes units; Cumulative Proportion is descriptive
+        comment: Credit Score (points) and Cumulative Proportion with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Good Customers = #009E73 (Imprint position 1), Bad Customers = #C475FD
-          (Imprint position 2); backgrounds #FAF8F1/#1A1A17; data colors identical
-          across themes; chrome correctly adaptive'
+        comment: 'First series #009E73; second #C475FD; backgrounds #FAF8F1/#1A1A17;
+          colors identical across themes'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults (4): intentional design with shaded
-          band, arrow annotation, dots at max divergence, elevated callout box. Not
-          yet at strong-design level (6): overall look still reads as styled library
-          default rather than publication-ready'
+        comment: 'Strong design above defaults: shaded band, styled callout with arc
+          arrow, KDE inset, theme-adaptive elevated backgrounds'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: top/right spines removed, y-axis only grid at alpha=0.15,
-          labelpad=8 spacing, rounded annotation box with proper padding. Not perfect:
-          margin whitespace could be more generous'
+        comment: Spines removed, y-only subtle grid, elevated backgrounds, inset spine
+          styling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good: arrow annotation creates focal point at KS divergence; shaded
-          band emphasizes region of maximum separation; K-S and p-value prominently
-          displayed. Viewer is guided to the key statistical insight'
+        comment: K-S point emphasized with 4 visual treatments; KDE inset adds context;
+          guides viewer but lacks narrative text
     spec_compliance:
       score: 15
       max: 15
@@ -149,28 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct K-S test visualization with ECDFs as step functions
+        comment: Correct K-S ECDF comparison using sns.ecdfplot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: ECDFs, KS statistic, max divergence annotation
-          with vertical line, p-value, legend labels, y-axis 0-1'
+        comment: Both ECDFs, K-S stat, p-value, max-divergence highlight, labels all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Credit Score, Y=Cumulative Proportion; correct ECDF orientation
+        comment: X=credit score (points), Y=cumulative proportion (0-1); both samples
+          fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Credit Scoring · ks-test-comparison · python · seaborn · anyplot.ai'
-          — correct format with optional descriptive prefix; legend labels Good/Bad
-          Customers appropriate
+        comment: Title format correct with descriptive prefix; legend labels Good/Bad
+          Customers with matching styles
     data_quality:
       score: 15
       max: 15
@@ -180,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all K-S test aspects: both ECDFs, max divergence point, statistical
-          significance via p-value, shaded separation region'
+        comment: ECDFs, K-S stat, max-divergence point, shaded band, KDE inset — all
+          aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring domain is realistic, commonly used in industry, and
-          neutral
+        comment: Credit scoring with Good/Bad customers; neutral real-world business
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores in 350-850 range realistic; beta distribution appropriate
-          for score modeling; sample sizes 300/200 suitable for reliable inference
+        comment: 300/200 samples in spec range; Beta-distributed scores 350-850+ realistic;
+          KS=0.463 meaningful effect
     code_quality:
       score: 10
       max: 10
@@ -205,34 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → plot → save'
+        comment: 'Flat script: imports→tokens→data→stats→plot→save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, matplotlib.ticker, numpy,
-          seaborn, Line2D, scipy.stats'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; no fake interactivity; no over-engineering
+        comment: Clean Pythonic code; no over-engineering; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current API
+        comment: plot-{THEME}.png; no bbox_inches=tight; current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -240,31 +217,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.ecdfplot is the correct seaborn high-level API for ECDF visualization;
-          sns.set_theme with rc params is the proper seaborn theme setup; custom Line2D
-          legend handles is a clean workaround for seaborn ecdfplot limitation. Above
-          default 3.
+        comment: sns.ecdfplot() axes-level, sns.kdeplot(fill=True), sns.set_theme()
+          with rc dict; explicit handles for legend
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: sns.ecdfplot is distinctively seaborn (above default 1). However,
-          all other elements (fill_between, annotate, scatter dots, KS line) are pure
-          matplotlib. The max-divergence computation is manual numpy rather than leveraging
-          seaborn's statistical capabilities.
-  verdict: REJECTED
+        passed: true
+        comment: sns.ecdfplot() is seaborn-native (not in raw matplotlib); sns.kdeplot
+          with fill in inset leverages seaborn stat API
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
   - custom-legend
+  - inset-axes
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
-  - cumulative-sum
+  - kde
   styling:
   - alpha-blending
   - grid-styling
