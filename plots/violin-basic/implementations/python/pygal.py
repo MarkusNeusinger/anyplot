@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -111,6 +111,8 @@ for i, (category, values) in enumerate(data.items()):
     q1 = float(np.percentile(values, 25))
     q3 = float(np.percentile(values, 75))
     tooltip = f"{category} — Median: {median_val:.1f}%, Q1: {q1:.1f}%, Q3: {q3:.1f}%"
+    if category == "Advanced":
+        tooltip += " · Bimodal: two sub-populations (75% & 93%)"
 
     # Mirrored violin shape
     left_pts = [(center_x - d, y) for y, d in zip(y_grid, density, strict=True)]
@@ -127,7 +129,7 @@ for i, (category, values) in enumerate(data.items()):
         (center_x + box_w, q1),
         (center_x - box_w, q1),
     ]
-    chart.add(None, iqr_box, stroke=True, fill=True, show_dots=False, stroke_style={"width": 5})
+    chart.add(None, iqr_box, stroke=True, fill=True, show_dots=False, stroke_style={"width": 4, "color": INK_MUTED})
 
     # Median line — warm white against dark IQR box (third palette slot per violin)
     median_line = [(center_x - box_w * 1.1, median_val), (center_x + box_w * 1.1, median_val)]
