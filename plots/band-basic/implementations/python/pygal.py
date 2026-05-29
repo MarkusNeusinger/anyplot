@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-29
@@ -25,7 +25,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+# Series order: band=green(0), center=blue(1) for contrast against green, wilting=red(2) semantic anchor
+IMPRINT_PALETTE = ("#009E73", "#4467A3", "#AE3030", "#C475FD", "#BD8233", "#2ABCCD", "#954477", "#99B314")
 
 # Data — soil moisture sensor readings with 95% confidence interval
 np.random.seed(42)
@@ -113,22 +114,17 @@ chart = pygal.XY(
     margin_left=30,
     margin_right=50,
     spacing=18,
-    js=[],
 )
+
 
 # Band as closed polygon: upper boundary forward, then lower boundary reversed
 band_polygon = [(float(h), float(y)) for h, y in zip(hours, y_upper, strict=True)]
 for h, y in zip(reversed(hours), reversed(y_lower), strict=True):
     band_polygon.append((float(h), float(y)))
 
-chart.add(
-    "95% Confidence Band",
-    band_polygon,
-    stroke_style={"width": 0.5, "color": IMPRINT_PALETTE[0], "opacity": 0.2},
-    show_dots=False,
-)
+chart.add("95% Confidence Band", band_polygon, stroke_style={"width": 0.5}, show_dots=False)
 
-# Central trend line — contrasting blue, bold stroke
+# Central trend line — blue (palette pos 1) for high contrast against green band, bold stroke
 center_data = [(float(h), float(y)) for h, y in zip(hours, y_center, strict=True)]
 chart.add(
     "Sensor Mean",
@@ -136,7 +132,7 @@ chart.add(
     fill=False,
     stroke=True,
     dots_size=0,
-    stroke_style={"width": 8, "color": IMPRINT_PALETTE[2], "linecap": "round", "linejoin": "round"},
+    stroke_style={"width": 10, "linecap": "round", "linejoin": "round"},
 )
 
 # Wilting point reference — semantic red for danger threshold
@@ -147,7 +143,7 @@ chart.add(
     stroke=True,
     dots_size=0,
     formatter=lambda x: f"{x:.0f}%",
-    stroke_style={"width": 5, "dasharray": "16,10", "linecap": "round", "color": "#AE3030"},
+    stroke_style={"width": 5, "dasharray": "16,10", "linecap": "round"},
 )
 
 # Save PNG and interactive HTML
