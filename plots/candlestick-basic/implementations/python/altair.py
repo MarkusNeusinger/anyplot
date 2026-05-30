@@ -1,20 +1,42 @@
-""" pyplots.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 93/100 | Updated: 2026-02-24
+Library: altair | Python
 """
+
+import os
+import sys
+
+
+# Remove the script's own directory from sys.path so `import altair` finds the
+# installed package, not this file (which is named altair.py).
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p and os.path.abspath(p) != _this_dir]
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - Simulated 30 days of stock price data
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens (Imprint palette style guide)
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — finance semantic exception: green=profit/bullish, red=loss/bearish
+BULLISH = "#009E73"  # Imprint position 1, brand green
+BEARISH = "#AE3030"  # Imprint position 5, matte red (loss/error semantic anchor)
+SMA_COLOR = "#4467A3"  # Imprint position 3, blue
+
+# Simulated 30 business days of stock price data
 np.random.seed(42)
 n_days = 30
 dates = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
 
-# Generate realistic OHLC data with random walk
 prices = [100.0]
 for _ in range(n_days - 1):
     change = np.random.randn() * 2
@@ -24,12 +46,10 @@ data = []
 for i, date in enumerate(dates):
     base = prices[i]
     volatility = np.random.uniform(1, 3)
-
     open_price = base + np.random.uniform(-volatility, volatility)
     close_price = base + np.random.uniform(-volatility, volatility)
     high_price = max(open_price, close_price) + np.random.uniform(0.5, volatility)
     low_price = min(open_price, close_price) - np.random.uniform(0.5, volatility)
-
     data.append(
         {
             "date": date,
@@ -44,10 +64,10 @@ df = pd.DataFrame(data)
 df["direction"] = np.where(df["close"] >= df["open"], "Bullish", "Bearish")
 df["sma5"] = df["close"].rolling(window=5).mean()
 
-# Colors - colorblind-safe: teal for bullish, warm orange for bearish
-color_scale = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#FF8F00"])
+# Imprint color scale — finance semantic: green=bullish, red=bearish
+color_scale = alt.Scale(domain=["Bullish", "Bearish"], range=[BULLISH, BEARISH])
 
-# Candlestick wicks (high-low lines)
+# Wicks: high-low lines, thinner than bodies
 wicks = (
     alt.Chart(df)
     .mark_rule(strokeWidth=1.5)
@@ -59,16 +79,16 @@ wicks = (
     )
 )
 
-# Candlestick bodies (open-close bars)
+# Bodies: open-close bars
 bodies = (
     alt.Chart(df)
-    .mark_bar(size=20)
+    .mark_bar(size=12)
     .encode(
         x="date:T",
         y="open:Q",
         y2="close:Q",
         color=alt.Color(
-            "direction:N", scale=color_scale, legend=alt.Legend(title="Direction", labelFontSize=16, titleFontSize=18)
+            "direction:N", scale=color_scale, legend=alt.Legend(title="Direction", labelFontSize=10, titleFontSize=10)
         ),
         tooltip=[
             alt.Tooltip("date:T", title="Date", format="%b %d, %Y"),
@@ -80,44 +100,76 @@ bodies = (
     )
 )
 
-# 5-day moving average trend line — guides the eye along the price trend
+# 5-day simple moving average overlay
 sma_df = df.dropna(subset=["sma5"])
 sma_line = (
     alt.Chart(sma_df)
-    .mark_line(strokeWidth=2.5, strokeDash=[6, 3], opacity=0.75)
-    .encode(x="date:T", y="sma5:Q", color=alt.value("#5C6BC0"))
+    .mark_line(strokeWidth=2.0, strokeDash=[6, 3], opacity=0.85)
+    .encode(x="date:T", y="sma5:Q", color=alt.value(SMA_COLOR))
 )
 
-# SMA label positioned at mid-chart for clear visibility
+# SMA inline label
 sma_mid = sma_df.iloc[[len(sma_df) // 3]]
 sma_label = (
     alt.Chart(sma_mid)
-    .mark_text(align="left", dy=-12, fontSize=15, fontWeight="bold", fontStyle="italic")
-    .encode(x="date:T", y="sma5:Q", text=alt.value("5-day MA"), color=alt.value("#5C6BC0"))
+    .mark_text(align="left", dy=-10, fontSize=10, fontWeight="bold", fontStyle="italic")
+    .encode(x="date:T", y="sma5:Q", text=alt.value("5-day MA"), color=alt.value(SMA_COLOR))
 )
 
-# Layer wicks, bodies, and trend line with interactive zoom/pan
 chart = (
     alt.layer(wicks, bodies, sma_line, sma_label)
     .resolve_scale(color="independent")
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        background=PAGE_BG,
         title=alt.Title(
-            "candlestick-basic \u00b7 altair \u00b7 pyplots.ai",
-            fontSize=28,
+            "candlestick-basic · python · altair · anyplot.ai",
+            fontSize=16,
             anchor="middle",
+            color=INK,
             subtitle="30-day price action with 5-day moving average",
-            subtitleFontSize=16,
-            subtitleColor="#78909C",
+            subtitleFontSize=12,
+            subtitleColor=INK_MUTED,
         ),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
-    .configure_legend(labelFontSize=16, titleFontSize=18)
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.15,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
     .interactive()
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG at canonical landscape target: 3200 × 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to canonical target — never crop (cropping clips title/labels, triggers AR-09)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
