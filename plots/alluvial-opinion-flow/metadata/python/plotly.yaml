@@ -1,44 +1,61 @@
 library: plotly
+language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:14:30Z'
-updated: '2026-03-03T20:42:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22640501214
+updated: '2026-05-30T13:02:34Z'
+generated_by: claude-sonnet
+workflow_run: 26683848990
 issue: 4430
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/plotly/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling with subtitle narrative, net change annotations, and
-    opacity-based flow distinction
-  - Thoughtful diverging color palette that semantically maps to opinion polarity
-  - Full spec compliance with all required features implemented
-  - Clean, idiomatic Plotly code with expert use of go.Sankey API and hovertemplate/customdata
-  - Realistic, neutral dataset with plausible opinion dynamics over time
+  - 'Semantic color exception applied correctly: positive (Strongly Agree) → brand
+    green #009E73, negative (Strongly Disagree) → matte red #AE3030, neutral → theme-adaptive
+    muted anchor'
+  - Narrative subtitle explicitly states the key insight ('Neutral respondents declined
+    35%...')
+  - Color-coded net change annotations (+35, -65, -105, +25, +110) on the right side
+    create an immediate visual summary layer
+  - Flow opacity differentiates stable transitions (0.55) from changers (0.35) — fulfills
+    spec requirement elegantly
+  - 'All spec requirements met: node count labels, wave column headers, chronological
+    L-to-R ordering, proportional flow widths, transparency for overlapping flows'
+  - Clean deterministic data showing realistic polarization trend (Neutral shrinking,
+    extremes growing) across 4 quarters
+  - 'Idiomatic Plotly usage: go.Sankey with arrangement=''snap'', custom x/y node
+    positions, multi-field customdata hovertemplate, invisible scatter traces for
+    legend'
+  - HTML export for interactive hover tooltips — leverages Plotly's interactive strengths
   weaknesses:
-  - Q4 column nodes are slightly compressed, making labels marginally less readable
-    than earlier waves
-  - Top margin is generous, creating some vertical space that could be better utilized
-  image_description: 'The plot displays a Sankey/alluvial diagram titled "Opinion
-    Polarization on Public Transit · alluvial-opinion-flow · plotly · pyplots.ai"
-    with a subtitle "Neutral respondents declined 35% as opinions polarized toward
-    extremes over four quarters." Four columns represent quarterly waves (Q1–Q4 2025),
-    each containing five category nodes: Strongly Agree (dark blue #306998), Agree
-    (light blue #72B7D4), Neutral (gray #888888), Disagree (orange #E8853D), and Strongly
-    Disagree (dark red #9B2226). Each node displays the category name and respondent
-    count (e.g., "Strongly Agree 150"). Flows between columns show transitions with
-    higher opacity (0.55) for stable respondents and lower opacity (0.35) for changers,
-    colored by source category. Net change annotations appear on the right side (+35,
-    -65, -105, +25, +110), clearly showing the polarization trend. A horizontal legend
-    at the bottom identifies all five categories with colored squares. The Neutral
-    block visibly shrinks from 300 to 195 while Strongly Disagree grows from 100 to
-    210, making the polarization narrative immediately apparent.'
+  - Wave column headers (fontsize=20) are larger than the chart title (fontsize=14),
+    creating an inverted typography hierarchy — column headers visually dominate over
+    the title
+  - Large empty gap between title (y≈0.985) and subtitle annotation (y=1.18) in the
+    top margin area — roughly 25% of canvas height is unused white space in the top
+    region due to t=180 margin combined with annotations near y=1
+  - Green-red as primary color pairing for Strongly Agree / Strongly Disagree without
+    additional redundant encoding beyond position — mildly CVD-unfriendly for deuteranopes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "Opinion Polarization · alluvial-opinion-flow · python · plotly · anyplot.ai" at top in dark ink, readable. Subtitle "Neutral respondents declined 35% as opinions polarized toward extremes over four quarters" in muted dark text, visible. Wave column headers Q1–Q4 2025 in bold dark ink at size 20 (larger than title). Node count labels (150, 250, 300, 200, 100, etc.) in white on colored nodes, clearly legible. Net change annotations (+35, -65, -105, +25, +110) in category-matched colors on the right, readable. Legend at bottom with bordered box on elevated background.
+      Data: Five Sankey node rows colored: brand green #009E73 (Strongly Agree, top), blue #4467A3 (Agree), dark gray/muted (Neutral), ochre #BD8233 (Disagree), matte red #AE3030 (Strongly Disagree, bottom). Flows show polarization trend clearly — Neutral row visibly shrinks across waves while green and red rows grow. Flow opacity differentiates stable (0.55) from changers (0.35).
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title, subtitle, wave headers, node labels, net change annotations all render in light-colored text (#F0EFE8 / #B8B7B0 tokens). Legend box uses elevated dark background #242420 with light text. All chrome elements are clearly readable against the dark surface — no dark-on-dark failures detected.
+      Data: Category colors are identical to light render for Strongly Agree (green), Agree (blue), Disagree (ochre), Strongly Disagree (red). Neutral nodes appear as lighter gray (#A8A79F) due to the theme-adaptive muted anchor — this is correct by design for the muted semantic anchor. Flow ribbons maintain the same opacity differentiation.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -46,67 +63,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, headers 24pt, subtitle/annotations
-          20pt, global 18pt). Q4 nodes slightly compressed but readable.
+        comment: All font sizes explicitly set; minor hierarchy inversion — wave headers
+          (size=20) larger than title (size=14), column headers visually dominate
+          title
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant text collisions. Q4 node labels compact but legible.
+        comment: No overlapping text or data elements; node count labels well-separated
+          despite close Q3/Q4 values
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Flows visible with good opacity distinction (0.55 stable vs 0.35
-          changed). Node thickness and padding provide clear separation.
+        comment: Sankey nodes, flow ribbons, count labels, and annotations all clearly
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 1
+        max: 2
         passed: true
-        comment: Diverging blue-gray-orange/red palette is colorblind-safe with good
-          contrast.
+        comment: Green-red pairing for Strongly Agree/Disagree is a CVD concern; partially
+          mitigated by position encoding and node labels
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Top margin generous for title/subtitle/headers.
-          Overall good proportions.
+        comment: 2400x2400 square canvas passes gate; large empty gap (~25% canvas
+          height) between title and subtitle in top margin region reduces layout efficiency
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with spec-id format. Wave headers serve as column
-          labels. N/A for traditional axes on Sankey.
+        comment: No traditional axes for Sankey; wave column headers serve as structural
+          labels, appropriate for chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Imprint palette with semantic exception (positive→#009E73,
+          negative→#AE3030, neutral→muted anchor). Backgrounds correct: #FAF8F1 light
+          / #1A1A17 dark. Theme-adaptive chrome correct in both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful diverging palette matching opinion polarity. Clear typography
-          hierarchy. White node borders. Professional appearance above defaults.
+        comment: Above well-configured default — semantic color exception, color-coded
+          net change annotations, and narrative subtitle show intentional design thinking
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, white node borders (width=2), horizontal legend
-          with constant sizing, generous whitespace.
+        comment: Axes hidden, node borders set to PAGE_BG for clean separation, flow
+          opacity differentiation, subtle legend border — good refinement above defaults
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Subtitle narrates insight, net change annotations quantify polarization,
-          opacity distinction guides eye. Viewer immediately grasps the trend.
+        comment: 'Excellent storytelling: narrative subtitle states the key insight,
+          quantified net change annotations (+35/-65/-105/+25/+110) immediately summarize
+          the polarization trend, flow widths visually encode the shift'
     spec_compliance:
       score: 15
       max: 15
@@ -116,29 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey diagram using go.Sankey with snap arrangement.
+        comment: Correct Sankey/alluvial diagram with flows connecting opinion categories
+          across waves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: consistent colors, proportional flows,
-          count labels, opacity distinction, net flow annotations, chronological order,
-          transparency.'
+        comment: 'All spec features present: consistent colors, proportional flow
+          widths, node count labels, stable/changer opacity distinction, net flow
+          highlights, L-to-R wave ordering, flow transparency'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves correctly ordered. Categories consistent. Counts verified consistent
-          with transition matrices.
+        comment: Waves left-to-right chronologically, categories stacked vertically,
+          flow thickness proportional to respondent count
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with spec-id. Horizontal legend with all 5 categories
-          and matching colors.
+        comment: Title 'Opinion Polarization · alluvial-opinion-flow · python · plotly
+          · anyplot.ai' matches {Descriptive Title} · {spec-id} · {lang} · {lib} ·
+          anyplot.ai format. Legend shows all 5 categories correctly
     data_quality:
       score: 15
       max: 15
@@ -148,22 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 waves, 5 categories, stable and cross-category flows, polarization
-          and asymmetric change patterns.
+        comment: 'Shows all aspects: polarization trend, stable vs. changing flows,
+          multiple wave transitions, categories growing and shrinking'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Public transit opinion survey is neutral, real-world civic topic.
-          Quarterly waves with 1000 respondents is realistic.
+        comment: Public transit expansion opinion survey — neutral civic topic, 1000
+          respondents over 4 quarterly waves Q1-Q4 2025, plausible panel study design
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 respondents realistic for survey. Plausible distributions. Gradual
-          quarterly changes are realistic opinion dynamics.
+        comment: Each wave sums to exactly 1000 respondents, transition counts are
+          internally consistent, polarization trend magnitudes are realistic for a
+          4-quarter panel
     code_quality:
       score: 10
       max: 10
@@ -173,33 +204,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, node/link construction, figure, annotations,
-          layout, save. No functions or classes.'
+        comment: 'Linear flow: imports → tokens → data → node arrays → link arrays
+          → figure → annotations → layout → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic (hardcoded transition counts). No random elements.
+        comment: Fully deterministic hardcoded data — no random generation needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Single import plotly.graph_objects as go, fully utilized.
+        comment: Only os and plotly.graph_objects — both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Loop-based construction is Pythonic. Hex-to-rgba
-          conversion clean.
+        comment: Clean, appropriately complex for a Sankey diagram; hex-to-rgba conversion
+          for flow colors is concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (4800x2700) and plot.html. Current Plotly API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; autosize=False with
+          explicit dimensions; current API
     library_mastery:
       score: 9
       max: 10
@@ -209,15 +241,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of go.Sankey with node/link dicts, arrangement=snap, customdata
-          with hovertemplate, fig.add_annotation.
+        comment: go.Sankey with arrangement='snap', custom x/y node positions, hovertemplate,
+          customdata — all idiomatic Plotly Sankey patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Plotly-distinctive: go.Sankey, hovertemplate with customdata, HTML
-          in labels, write_html, snap arrangement.'
+        comment: Multi-field customdata hovertemplate, invisible scatter traces for
+          cross-trace legend, HTML export — distinctly Plotly features not replicable
+          in static libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -231,4 +264,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
