@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-30
@@ -95,6 +95,9 @@ points_df = pd.DataFrame(
 
 center_df = pd.DataFrame({"sigma": [sigma_c], "tau": [0.0]})
 
+# Accent segment along x-axis between σ2 and σ1 — draws eye to the principal stress result
+span_df = pd.DataFrame({"x": [sigma_2], "xend": [sigma_1], "y": [0.0], "yend": [0.0]})
+
 # 2θp arc label — bisecting angle, outside the arc
 angle_mid = angle_A / 2
 arc_lbl_df = pd.DataFrame(
@@ -149,6 +152,8 @@ anyplot_theme = theme(
 
 plot = (
     ggplot(circle_df, aes(x="sigma", y="tau"))
+    # Accent segment from σ2 to σ1 — guides eye to the principal stress result
+    + geom_segment(data=span_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=BRAND, size=4.0, alpha=0.25)
     # Dashed reference lines through center
     + geom_segment(
         data=ref_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_MUTED, size=0.5, linetype="dashed"
@@ -174,11 +179,11 @@ plot = (
     # Center mark C
     + geom_point(data=center_df, color=INK, size=2.5)
     # Left-aligned labels
-    + geom_text(data=labels_left, mapping=aes(label="label"), ha="left", size=3.2, color=INK)
+    + geom_text(data=labels_left, mapping=aes(label="label"), ha="left", size=3.8, color=INK)
     # Right-aligned labels
-    + geom_text(data=labels_right, mapping=aes(label="label"), ha="right", size=3.2, color=INK)
+    + geom_text(data=labels_right, mapping=aes(label="label"), ha="right", size=3.8, color=INK)
     # Angle arc label
-    + geom_text(data=arc_lbl_df, mapping=aes(label="label"), ha="left", size=3.0, color=INK_SOFT)
+    + geom_text(data=arc_lbl_df, mapping=aes(label="label"), ha="left", size=3.5, color=INK_SOFT)
     + labs(x="Normal Stress σ (MPa)", y="Shear Stress τ (MPa)", title=title)
     + coord_fixed(ratio=1, xlim=(-18, 120), ylim=(-70, 70))
     + anyplot_theme
