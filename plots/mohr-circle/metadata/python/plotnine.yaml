@@ -1,0 +1,282 @@
+library: plotnine
+language: python
+specification_id: mohr-circle
+created: '2026-05-30T09:13:24Z'
+updated: '2026-05-30T09:29:53Z'
+generated_by: claude-sonnet
+workflow_run: 26679890991
+issue: 4432
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Complete spec compliance — all required Mohr''s circle elements present: circle,
+    principal stresses (σ1/σ2), max shear (±τmax), stress state points A/B, angle
+    arc (2θp), reference cross-lines, and equal aspect ratio via coord_fixed'
+  - 'Theme-adaptive chrome fully implemented: PAGE_BG, INK, INK_SOFT, INK_MUTED all
+    flip correctly between light and dark, producing readable renders in both themes
+    with no dark-on-dark failures'
+  - Accent segment (semi-transparent brand-green horizontal band between σ2 and σ1)
+    effectively guides the viewer's eye to the principal stress result — intentional
+    storytelling
+  - Brand green (#009E73) correctly used for the Mohr's circle (the primary data element),
+    establishing visual hierarchy
+  - 'Data is deterministic and physically correct: σ1=100 MPa, σ2=0 MPa, τmax=50 MPa,
+    2θp≈53.1° all match the analytic solution for σx=80, σy=20, τxy=40 MPa'
+  - Clean KISS code structure with theme tokens, no functions or classes, good separation
+    of geometric elements into named DataFrames
+  - Square format (2400×2400) correctly chosen for the circular plot
+  weaknesses:
+  - 'Palette order non-canonical: point categories use Imprint positions [1], [2],
+    [4] (skipping position [3] ochre #BD8233) to reach matte red #AE3030 for ''Max
+    Shear''. Canonical order for 3 secondary categories starting at position 2 would
+    be [1], [2], [3]. ''Max Shear'' does not clearly signal a ''bad/error'' role that
+    would justify the semantic-red exception — fix by using IMPRINT_PALETTE[3] (#BD8233)
+    for ''Max Shear'' instead of IMPRINT_PALETTE[4]'
+  - Annotation text sizes (3.8mm ≈ 10.8pt for labels, 3.5mm ≈ 9.9pt for arc label)
+    are on the smaller side for a 2400×2400 canvas — increasing to 4.2–4.5mm would
+    improve mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "mohr-circle · python · plotnine · anyplot.ai" centered at top in dark ink, clearly readable. Axis labels "Normal Stress σ (MPa)" (x) and "Shear Stress τ (MPa)" (y) in dark ink at 10pt, well-balanced. Tick labels in INK_SOFT (#4A4A44) at 8pt, readable. Subtle grid lines at alpha=0.12 are visible but unobtrusive.
+      Data: Mohr's circle rendered in brand green (#009E73), prominent. Reference cross-lines (dashed) through center in muted ink. Diameter line A→B in INK_SOFT. Accent segment (green semi-transparent horizontal band) between σ2 and σ1 draws eye to principal stress span. Key points: Max Shear in matte red (#AE3030) at top/bottom, Principal Stress in blue (#4467A3) at σ1=100/σ2=0, Stress State in lavender (#C475FD) at A(80,40)/B(20,-40). Angle arc with "2θp ≈ 53.1°" label. Legend at bottom with styled frame.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0), clearly readable against the dark background. Axis text, tick labels, and legend text all flip to light-colored tokens correctly. No dark-on-dark failures observed. Grid lines are subtly visible as slightly lighter lines on the dark surface.
+      Data: All Imprint palette data colors are identical to light render — brand green circle, matte red Max Shear points, blue Principal Stress points, lavender Stress State points. Center dot flips to light (#F0EFE8) correctly. Legend background uses elevated dark (#242420) with INK_SOFT border — styled correctly.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark text failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (axis_title=10, axis_text=8, plot_title=12,
+          geom_text=3.8mm). Both renders pass legibility check. Minor: annotation
+          text at 3.8mm is on the smaller side for a 2400×2400 canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels well-placed with no overlapping text or data elements.
+          Offset anchoring strategy (left/right alignment with coordinate offsets)
+          works effectively.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle at size=1.4 is prominent; key points at size=4.0 are clearly
+          visible; reference lines and diameter line provide useful context without
+          competing with primary data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; three distinct hue families (red, blue,
+          lavender) for point categories; circle in brand green provides strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400 format correct for circular plot. coord_fixed(ratio=1)
+          ensures true circle geometry. Canvas gate passed. Plot fills canvas well
+          with balanced margins and bottom legend.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes labeled 'Normal Stress σ (MPa)' and 'Shear Stress τ (MPa)' —
+          descriptive with units, matching spec requirement exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Main circle correctly uses brand green #009E73. However, point categories
+          use Imprint positions [1], [2], [4] — skipping position [3] ochre to reach
+          matte red for ''Max Shear''. Canonical order for 3 secondary categories
+          should be [1], [2], [3]. ''Max Shear'' does not clearly qualify for the
+          semantic-red exception (not an error/failure role). Backgrounds and chrome
+          are theme-correct in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design: custom Imprint palette, theme-adaptive chrome, intentional
+          color hierarchy (circle vs. points), accent segment as a design device.
+          Clearly above library defaults. Not quite publication-ready exceptional
+          — the overall composition is clean but could be more refined.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed, subtle grid (alpha=0.12), axis lines kept for
+          the engineering diagram context, legend frame styled with elevated background.
+          Good refinement overall.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Accent segment (semi-transparent green band) explicitly guides the
+          eye to the σ1–σ2 span — an intentional storytelling choice. Color coding
+          of point roles creates clear visual hierarchy. Angle arc annotation explains
+          the engineering quantity. Good visual narrative for a Mohr's circle.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's circle chart type with all required geometric elements.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: circle (correct center/radius), σ1/σ2
+          marked with labels, ±τmax shown, points A and B plotted, 2θp angle arc annotated,
+          equal aspect ratio (coord_fixed), axis labels with correct notation, reference
+          lines through center.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: Normal Stress σ (MPa), Y-axis: Shear Stress τ (MPa). All
+          data visible within xlim=(-18, 120), ylim=(-70, 70). Correct mapping.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'mohr-circle · python · plotnine · anyplot.ai' matches required
+          format exactly. Legend labels 'Max Shear', 'Principal Stress', 'Stress State'
+          are descriptive and match the engineering roles.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Mohr''s circle aspects: the circle itself, both principal
+          stresses, both max shear stress points, both stress state points A and B,
+          the diameter line, the angle arc for 2θp, and reference lines — complete
+          feature coverage.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Steel shaft under bending + torsion — concrete, neutral engineering
+          scenario. Values σx=80, σy=20, τxy=40 MPa are realistic for structural steel
+          under combined loading.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Derived quantities are analytically correct: σ_c=50, radius=50,
+          σ1=100, σ2=0, τmax=50, 2θp≈53.13°. All pass physical consistency checks.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean KISS flow: theme tokens → stress inputs → derived quantities
+          → dataframes → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is deterministic analytical computation from fixed inputs
+          — no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used. os/sys are required for the naming conflict
+          workaround (plotnine.py filename vs plotnine package).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code. Each geometric element has its own named
+          DataFrame with a clear purpose. No over-engineering or fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct dimensions (width=6, height=6,
+          dpi=400 → 2400×2400). Current plotnine API used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong idiomatic use of plotnine''s grammar of graphics: geom_path
+          for circle/arc, geom_segment for lines, geom_point with scale_color_manual
+          for categorical encoding, coord_fixed for aspect ratio, theme() for all
+          chrome. Well-leveraged.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses coord_fixed (distinctive for ensuring true circle geometry),
+          multiple geom layer composition (plotnine's core strength), and separate
+          DataFrames per geometric role. Solid but not spectacularly distinctive beyond
+          core grammar patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
