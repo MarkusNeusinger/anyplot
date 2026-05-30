@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: letsplot | Python 3.14
-Quality: pending | Updated: 2026-05-30
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-30
 """
 
 import os
