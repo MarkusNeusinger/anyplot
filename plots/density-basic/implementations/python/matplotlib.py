@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 density-basic: Basic Density Plot
-Library: matplotlib | Python 3.13
-Quality: 91/100 | Updated: 2026-05-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-30
 """
 
 import os
