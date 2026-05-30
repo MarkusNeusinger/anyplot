@@ -1,49 +1,75 @@
-""" pyplots.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-02-27
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-30
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    coord_fixed,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_line,
+    geom_path,
+    geom_point,
+    geom_polygon,
+    geom_text,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    layer_tooltips,
+    theme,
+    theme_minimal,
+)
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
 
-# Data - stress state for a beam under combined loading
-sigma_x = 80.0  # MPa, normal stress in x-direction
-sigma_y = -30.0  # MPa, normal stress in y-direction
-tau_xy = 50.0  # MPa, shear stress on xy-plane
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Mohr's Circle parameters
+# Imprint palette — semantic assignments for stress diagram elements
+C_CIRCLE = "#4467A3"  # blue — structural circle outline
+C_INPUT = "#AE3030"  # matte red — applied input stress points (semantic: danger/input)
+C_PRINCIPAL = "#009E73"  # brand green — principal stress results (primary outcome)
+C_SHEAR = "#BD8233"  # ochre — shear stress components
+
+# Data — steel column under combined axial and bending load
+sigma_x = 80.0  # MPa, axial + bending normal stress
+sigma_y = -30.0  # MPa, lateral normal stress
+tau_xy = 50.0  # MPa, shear stress from torsion
+
+# Mohr's Circle geometry
 center = (sigma_x + sigma_y) / 2.0
 radius = np.sqrt(((sigma_x - sigma_y) / 2.0) ** 2 + tau_xy**2)
-sigma_1 = center + radius  # major principal stress
-sigma_2 = center - radius  # minor principal stress
-tau_max = radius  # maximum shear stress
+sigma_1 = center + radius
+sigma_2 = center - radius
+tau_max = radius
 theta_p = 0.5 * np.degrees(np.arctan2(2 * tau_xy, sigma_x - sigma_y))
 
-# Circle geometry
+# Circle path
 theta = np.linspace(0, 2 * np.pi, 360)
 df_circle = pd.DataFrame({"sigma": center + radius * np.cos(theta), "tau": radius * np.sin(theta)})
 
-# Colorblind-safe palette (replaces red-green with crimson-teal)
-C_CIRCLE = "#306998"
-C_INPUT = "#B91C1C"
-C_PRINCIPAL = "#0891B2"
-C_SHEAR = "#D97706"
-
-# Key point DataFrames (used for both markers and labels)
+# Input stress points A and B
 df_input = pd.DataFrame(
     {
         "sigma": [sigma_x, sigma_y],
         "tau": [tau_xy, -tau_xy],
-        "label": [
-            f"A (\u03c3x, \u03c4xy) = ({sigma_x:.0f}, {tau_xy:.0f})",
-            f"B (\u03c3y, \u2212\u03c4xy) = ({sigma_y:.0f}, {-tau_xy:.0f})",
-        ],
+        "label": [f"A (σx={sigma_x:.0f}, τxy={tau_xy:.0f})", f"B (σy={sigma_y:.0f}, −τxy={-tau_xy:.0f})"],
         "detail": [
             f"Normal: {sigma_x:.0f} MPa | Shear: {tau_xy:.0f} MPa",
             f"Normal: {sigma_y:.0f} MPa | Shear: {-tau_xy:.0f} MPa",
@@ -51,24 +77,27 @@ df_input = pd.DataFrame(
     }
 )
 
+# Principal stress points (on the horizontal axis)
 df_principal = pd.DataFrame(
     {
         "sigma": [sigma_1, sigma_2],
         "tau": [0.0, 0.0],
-        "label": [f"\u03c3\u2081 = {sigma_1:.1f}", f"\u03c3\u2082 = {sigma_2:.1f}"],
-        "detail": [f"Max principal stress: {sigma_1:.1f} MPa", f"Min principal stress: {sigma_2:.1f} MPa"],
+        "label": [f"σ₁ = {sigma_1:.1f}", f"σ₂ = {sigma_2:.1f}"],
+        "detail": [f"Max principal: {sigma_1:.1f} MPa", f"Min principal: {sigma_2:.1f} MPa"],
     }
 )
 
+# Maximum shear stress points (top and bottom of circle)
 df_shear = pd.DataFrame(
     {
         "sigma": [center, center],
         "tau": [tau_max, -tau_max],
-        "label": [f"\u03c4_max = {tau_max:.1f}", f"\u2212\u03c4_max = {-tau_max:.1f}"],
-        "detail": [f"Max shear stress: {tau_max:.1f} MPa", f"Min shear stress: {-tau_max:.1f} MPa"],
+        "label": [f"τmax = {tau_max:.1f}", f"−τmax = {tau_max:.1f}"],
+        "detail": [f"Max shear: {tau_max:.1f} MPa", f"Min shear: {-tau_max:.1f} MPa"],
     }
 )
 
+# Center point
 df_center = pd.DataFrame(
     {
         "sigma": [center],
@@ -78,207 +107,175 @@ df_center = pd.DataFrame(
     }
 )
 
-# Reference geometry
+# Reference lines through center
 pad = radius * 0.45
 df_hline = pd.DataFrame({"sigma": [center - radius - pad, center + radius + pad], "tau": [0.0, 0.0]})
 df_vline = pd.DataFrame({"sigma": [center, center], "tau": [-radius - pad, radius + pad]})
 df_diameter = pd.DataFrame({"sigma": [sigma_x, sigma_y], "tau": [tau_xy, -tau_xy]})
 
-# Angle arc for 2θp
+# Angle arc for 2θp (principal plane angle)
 arc_r = radius * 0.35
 arc_t = np.linspace(0, np.radians(2 * theta_p), 50)
 df_arc = pd.DataFrame({"sigma": center + arc_r * np.cos(arc_t), "tau": arc_r * np.sin(arc_t)})
 
+# Title
+title = "mohr-circle · python · letsplot · anyplot.ai"
+
 # Build plot
 plot = (
-    ggplot()  # noqa: F405
+    ggplot()
     # Reference lines through center
-    + geom_line(  # noqa: F405
-        data=df_hline,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        color="#D4D4D4",
-        size=0.7,
-        linetype="dashed",
-    )
-    + geom_line(  # noqa: F405
-        data=df_vline,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        color="#D4D4D4",
-        size=0.7,
-        linetype="dashed",
-    )
-    # Subtle circle fill
-    + geom_polygon(  # noqa: F405
-        data=df_circle,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        fill=C_CIRCLE,
-        color=C_CIRCLE,
-        alpha=0.06,
-        size=0,
-    )
-    # Circle outline
-    + geom_path(  # noqa: F405
-        data=df_circle,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        color=C_CIRCLE,
-        size=1.8,
-        alpha=0.85,
-    )
-    # Diameter line A-B
-    + geom_line(  # noqa: F405
-        data=df_diameter,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        color="#737373",
-        size=0.9,
-        linetype="dashed",
-    )
-    # Angle arc
-    + geom_path(  # noqa: F405
-        data=df_arc,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        color=C_SHEAR,
-        size=1.3,
-    )
-    # Input stress points with interactive tooltips
-    + geom_point(  # noqa: F405
+    + geom_line(data=df_hline, mapping=aes(x="sigma", y="tau"), color=INK_MUTED, size=0.6, linetype="dashed")
+    + geom_line(data=df_vline, mapping=aes(x="sigma", y="tau"), color=INK_MUTED, size=0.6, linetype="dashed")
+    # Circle fill (subtle) then solid outline
+    + geom_polygon(data=df_circle, mapping=aes(x="sigma", y="tau"), fill=C_CIRCLE, color=C_CIRCLE, alpha=0.07, size=0)
+    + geom_path(data=df_circle, mapping=aes(x="sigma", y="tau"), color=C_CIRCLE, size=2.0, alpha=0.9)
+    # Diameter line A–B
+    + geom_line(data=df_diameter, mapping=aes(x="sigma", y="tau"), color=INK_MUTED, size=0.8, linetype="dashed")
+    # Principal plane angle arc
+    + geom_path(data=df_arc, mapping=aes(x="sigma", y="tau"), color=C_SHEAR, size=1.5)
+    # Input stress points (filled circle)
+    + geom_point(
         data=df_input,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau"),
         color=C_INPUT,
         size=7,
         shape=16,
-        tooltips=layer_tooltips().line("@label").line("@detail"),  # noqa: F405
+        tooltips=layer_tooltips().line("@label").line("@detail"),
     )
-    # Principal stress points with tooltips
-    + geom_point(  # noqa: F405
+    # Principal stress points (filled diamond)
+    + geom_point(
         data=df_principal,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau"),
         color=C_PRINCIPAL,
         size=7,
         shape=18,
-        tooltips=layer_tooltips().line("@label").line("@detail"),  # noqa: F405
+        tooltips=layer_tooltips().line("@label").line("@detail"),
     )
-    # Max shear stress points with tooltips
-    + geom_point(  # noqa: F405
+    # Max shear stress points (filled triangle)
+    + geom_point(
         data=df_shear,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau"),
         color=C_SHEAR,
         size=7,
         shape=17,
-        tooltips=layer_tooltips().line("@label").line("@detail"),  # noqa: F405
+        tooltips=layer_tooltips().line("@label").line("@detail"),
     )
-    # Center point with tooltip
-    + geom_point(  # noqa: F405
+    # Center marker (X cross)
+    + geom_point(
         data=df_center,
-        mapping=aes(x="sigma", y="tau"),  # noqa: F405
-        color=C_CIRCLE,
+        mapping=aes(x="sigma", y="tau"),
+        color=INK_SOFT,
         size=5,
         shape=4,
-        tooltips=layer_tooltips().line("@label").line("@detail"),  # noqa: F405
+        tooltips=layer_tooltips().line("@label").line("@detail"),
     )
-    # Annotation labels
-    + geom_text(  # noqa: F405
+    # Point A label — nudged right and up to separate from tau_max region
+    + geom_text(
         data=df_input.iloc[[0]],
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau", label="label"),
         color=C_INPUT,
-        size=14,
-        nudge_y=radius * 0.08,
-        nudge_x=-radius * 0.05,
-        hjust=1,
-    )
-    + geom_text(  # noqa: F405
-        data=df_input.iloc[[1]],
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
-        color=C_INPUT,
-        size=14,
-        nudge_y=-radius * 0.12,
+        size=5,
+        hjust=0,
         nudge_x=radius * 0.05,
-        hjust=0,
+        nudge_y=radius * 0.10,
     )
-    + geom_text(  # noqa: F405
+    # Point B label — nudged left and down
+    + geom_text(
+        data=df_input.iloc[[1]],
+        mapping=aes(x="sigma", y="tau", label="label"),
+        color=C_INPUT,
+        size=5,
+        hjust=1,
+        nudge_x=-radius * 0.05,
+        nudge_y=-radius * 0.14,
+    )
+    # Principal stress labels
+    + geom_text(
         data=df_principal.iloc[[0]],
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau", label="label"),
         color=C_PRINCIPAL,
-        size=14,
-        nudge_y=-radius * 0.14,
+        size=5,
         hjust=0.5,
+        nudge_y=-radius * 0.14,
     )
-    + geom_text(  # noqa: F405
+    + geom_text(
         data=df_principal.iloc[[1]],
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau", label="label"),
         color=C_PRINCIPAL,
-        size=14,
-        nudge_y=-radius * 0.14,
+        size=5,
         hjust=0.5,
+        nudge_y=-radius * 0.14,
     )
-    # Shear labels - nudge τ_max up further to avoid proximity with point A label
-    + geom_text(  # noqa: F405
+    # Tau_max label — nudged right, above the top marker
+    + geom_text(
         data=df_shear.iloc[[0]],
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau", label="label"),
         color=C_SHEAR,
-        size=14,
-        nudge_x=radius * 0.1,
-        nudge_y=radius * 0.08,
+        size=5,
         hjust=0,
+        nudge_x=radius * 0.12,
+        nudge_y=radius * 0.07,
     )
-    + geom_text(  # noqa: F405
+    # -Tau_max label
+    + geom_text(
         data=df_shear.iloc[[1]],
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau", label="label"),
         color=C_SHEAR,
-        size=14,
-        nudge_x=radius * 0.1,
-        nudge_y=-radius * 0.08,
+        size=5,
         hjust=0,
+        nudge_x=radius * 0.12,
+        nudge_y=-radius * 0.07,
     )
-    # Angle label
-    + geom_text(  # noqa: F405
+    # Principal plane angle annotation
+    + geom_text(
         data=pd.DataFrame(
             {
-                "sigma": [center + arc_r * 1.3 * np.cos(np.radians(theta_p))],
-                "tau": [arc_r * 1.3 * np.sin(np.radians(theta_p))],
-                "label": [f"2\u03b8p = {2 * theta_p:.1f}\u00b0"],
+                "sigma": [center + arc_r * 1.5 * np.cos(np.radians(theta_p))],
+                "tau": [arc_r * 1.5 * np.sin(np.radians(theta_p))],
+                "label": [f"2θp = {2 * theta_p:.1f}°"],
             }
         ),
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
+        mapping=aes(x="sigma", y="tau", label="label"),
         color=C_SHEAR,
-        size=14,
+        size=5,
         hjust=0,
     )
     # Center label
-    + geom_text(  # noqa: F405
-        data=df_center,
-        mapping=aes(x="sigma", y="tau", label="label"),  # noqa: F405
-        color=C_CIRCLE,
-        size=13,
-        nudge_y=-radius * 0.12,
+    + geom_text(
+        data=df_center, mapping=aes(x="sigma", y="tau", label="label"), color=INK_SOFT, size=5, nudge_y=-radius * 0.13
     )
-    # Styling
-    + labs(  # noqa: F405
-        x="Normal Stress \u03c3 (MPa)",
-        y="Shear Stress \u03c4 (MPa)",
-        title="mohr-circle \u00b7 letsplot \u00b7 pyplots.ai",
+    # Axes, title, subtitle
+    + labs(
+        x="Normal Stress σ (MPa)",
+        y="Shear Stress τ (MPa)",
+        title=title,
         subtitle=(
-            f"Stress state: \u03c3x = {sigma_x:.0f}, \u03c3y = {sigma_y:.0f},"
-            f" \u03c4xy = {tau_xy:.0f} MPa \u2014 Beam under combined loading"
-            f" | \u03c3\u2081 = {sigma_1:.1f}, \u03c3\u2082 = {sigma_2:.1f},"
-            f" \u03c4max = {tau_max:.1f} MPa"
+            f"σx = {sigma_x:.0f}, σy = {sigma_y:.0f},"
+            f" τxy = {tau_xy:.0f} MPa"
+            f" | σ₁ = {sigma_1:.1f}, σ₂ = {sigma_2:.1f},"
+            f" τmax = {tau_max:.1f} MPa"
         ),
     )
-    + coord_fixed()  # noqa: F405
-    + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        plot_title=element_text(size=24, face="bold", color="#1A1A2E"),  # noqa: F405
-        plot_subtitle=element_text(size=16, color="#525252", face="italic"),  # noqa: F405
-        axis_title=element_text(size=20, color="#2D2D44"),  # noqa: F405
-        axis_text=element_text(size=16, color="#525252"),  # noqa: F405
-        panel_grid_major=element_line(size=0.3, color="#E8E8E8"),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),  # noqa: F405
-        panel_background=element_rect(fill="white", color="#D8D8D8", size=0.4),  # noqa: F405
-        plot_margin=[30, 30, 20, 20],
+    + coord_fixed()
+    + theme_minimal()
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_MUTED, size=0.3),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=10, face="italic", color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT),
+        legend_title=element_text(color=INK),
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(600, 600)
 )
 
 # Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
