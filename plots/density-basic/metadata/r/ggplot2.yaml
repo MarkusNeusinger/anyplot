@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: density-basic
 created: '2026-05-30T03:28:35Z'
-updated: '2026-05-30T03:33:34Z'
+updated: '2026-05-30T03:44:04Z'
 generated_by: claude-sonnet
 workflow_run: 26673198139
 issue: 912
@@ -12,39 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct density plot with proper rug plot — all spec features implemented
-  - 'Excellent data choice: bimodal seedling height distribution with realistic two-cultivar
-    context'
-  - SJ bandwidth selection (bw="sj") demonstrates statistical depth and ggplot2 knowledge
-  - Full Imprint palette compliance with properly theme-adaptive chrome across both
-    renders
-  - Clean KISS code structure — flat script, reproducible seed, idiomatic ggplot2
-    grammar
+  - Perfect Imprint palette implementation with theme-adaptive chrome tokens and per-theme
+    fill alpha adjustment (0.22 light / 0.35 dark)
+  - 'Excellent data storytelling: bimodal seedling height distribution illustrates
+    two cultivar populations with annotated peaks and sample counts'
+  - 'Well-calibrated visual refinement: y-only grid, removed panel border, L-shape
+    axis lines, generous margins'
+  - Correct canvas size (3200x1800) via ggsave with ragg::agg_png
+  - Uses SJ bandwidth selector (bw=sj) for a cleaner density estimate
+  - 'Full spec coverage: smooth KDE + fill + rug + annotations all present'
   weaknesses:
-  - 'In the dark render the fill area (alpha=0.22 of brand green on #1A1A17) produces
-    a very dark forest-green fill that merges visually with the background in low-density
-    regions — consider raising alpha to ~0.35 for the dark theme so the fill silhouette
-    reads clearly in both renders'
-  - No descriptive title prefix — the spec allows an optional Descriptive Title prefix;
-    adding one (e.g. Bimodal Seedling Heights) would improve storytelling without
-    extra code
-  - 'Design excellence is minimal: no annotation highlighting the bimodal nature of
-    the distribution, no visual hierarchy device to draw the eye to the two peaks'
+  - library(dplyr) is imported but never used — no dplyr verbs are called; all data
+    operations use base R (rnorm, data.frame, density, approx) — remove the unused
+    import
+  - Annotation text size=2.8 (approx 8pt) is slightly small for mobile readability
+    at 400px viewport — raise to size=3.2 or 3.5 in the annotate() calls
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "density-basic · r · ggplot2 · anyplot.ai" in bold dark (#1A1A17) text at ~50% plot width — clearly readable. Y-axis label "Density" and X-axis label "Seedling Height (mm)" in dark ink, appropriately sized. Tick labels in INK_SOFT (#4A4A44), readable at full resolution. Subtle horizontal Y-grid lines only.
-      Data: Brand green (#009E73) density curve with light semi-transparent fill (alpha=0.22). Bimodal distribution clearly visible — tall peak near ~38mm, smaller peak near ~70mm. Rug marks at baseline, subtle but visible (alpha=0.12).
-      Legibility verdict: PASS — all text readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "density-basic · r · ggplot2 · anyplot.ai" in bold dark ink (#1A1A17) — clearly readable. Axis labels "Seedling Height (mm)" and "Density" in dark ink (size 10). Tick labels in muted dark (#4A4A44, size 8) — all readable. Y-axis gridlines are thin and subtle.
+      Data: Density curve in #009E73 (brand green) with linewidth=1.2. Fill under curve in same green with alpha=0.22 (transparent). Rug plot ticks in #009E73 at alpha=0.12. Two annotations above peaks: "Short-growing (n = 420)" and "Tall-growing (n = 180)" in INK_SOFT color.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in bold near-white (#F0EFE8) — clearly readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) light gray — readable. No dark-on-dark failures observed. Grid lines are faint light lines on dark background, subtle and appropriate.
-      Data: Same brand green (#009E73) boundary line — identical to light render. Fill color is visually very dark (alpha=0.22 green on near-black) producing a dark forest-green silhouette — the bimodal shape is still discernible from the line but the fill contributes less in this theme. Rug marks barely visible at the baseline (very faint against dark bg at alpha=0.12).
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures. Minor note: fill in dark theme is quite dark and merges with background in low-density tails.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all in light cream (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures. Grid lines visible as subtle light lines.
+      Data: Density curve and fill remain identical #009E73 (brand green) — same as light render, only chrome inverted. Rug ticks same green at same alpha.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,49 +52,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title, axis labels, and tick labels are readable in both renders.
-          Minor: rug marks are faint in dark render but intentionally low-alpha.'
+        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8).
+          All readable in both themes. Annotation size=2.8 (approx 8pt) slightly small
+          for mobile viewport.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Clean layout.
+        comment: No overlapping text or data elements. Annotations well-placed above
+          peaks.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density curve and fill clearly visible. Rug plot intentionally subtle.
-          Bimodal distribution structure apparent in both themes.
+        comment: Density curve and fill clearly visible. Rug appropriately subtle
+          for 600 observations.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series brand green — CVD-safe. No red-green only encoding.
+        comment: Single series, no CVD issues.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas. Good margins, no overflow, no clipping.
+        comment: 3200x1800 canvas, generous margins, no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title correct format. X-axis: Seedling Height (mm). Y-axis: Density.
-          All descriptive with units.'
+        comment: Seedling Height (mm) with units; Density is standard and correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73. PAGE_BG correct for both themes. Chrome
-          fully theme-adaptive.'
+        comment: 'First series #009E73. Backgrounds #FAF8F1 / #1A1A17. All chrome
+          tokens theme-adaptive. Both renders pass.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,24 +103,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: Imprint palette correctly used, SJ bandwidth shows
-          statistical care, bimodal data creates interesting visual. No decorative
-          embellishments or descriptive annotations.'
+        comment: 'Above defaults: full Imprint tokens, adaptive fill alpha per theme,
+          informative bimodal data with peak annotations. Not yet publication-ready
+          but clearly above configured-default level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed (top/right), Y-only grid, subtle grid lines, clean
-          axis lines. Refined but not exceptional.
+        comment: Panel border removed, x-axis grid off, minor grid off, thin y-grid
+          (linewidth=0.2), L-shape axis lines, generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Bimodal distribution tells a real-world story. Rug plot adds observational
-          context. No annotations or visual hierarchy devices highlighting the two
-          peaks.
+        comment: Bimodal distribution illustrates two cultivar populations; annotations
+          identify peaks with n counts. Clear visual hierarchy with dominant left
+          peak.
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE density plot via geom_density.
+        comment: Correct KDE density plot via geom_density().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth KDE curve, fill with transparency, rug plot, appropriate SJ
-          bandwidth — all spec features present.
+        comment: Smooth KDE curve, fill with transparency, rug plot, SJ bandwidth
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: continuous seedling height. Y: density. 600 observations within
-          recommended range.'
+        comment: Continuous variable on x, density on y, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'density-basic · r · ggplot2 · anyplot.ai'. No legend
-          needed (single series).
+        comment: 'Title: density-basic · r · ggplot2 · anyplot.ai. Single series:
+          no legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -163,24 +160,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows KDE, bimodality, fill, rug — demonstrates all key aspects of
-          density plots.
+        comment: Bimodal distribution, KDE, fill, rug, annotations all in one view.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant seedling heights from two mixed cultivars — plausible real-world
-          scenario with sound scientific basis.
+        comment: Plant seedling heights from two cultivar types — real, neutral, scientific
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600 observations, heights 20-100mm, realistic standard deviations.
-          All values domain-plausible.
+        comment: Short cultivar mean=38mm sd=6mm, tall cultivar mean=72mm sd=9mm —
+          biologically plausible. 600 obs within spec range.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,7 +184,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, readable top-to-bottom.
+        comment: 'Linear: imports -> tokens -> data -> annotations -> plot -> save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,22 +193,22 @@ review:
         comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: ggplot2, dplyr, ragg — all standard per library guide.
+        passed: false
+        comment: library(dplyr) imported but unused — all data ops use base R.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity, well-structured ggplot2 grammar.
+        comment: Clean, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, uses ragg::agg_png, modern linewidth= API.
+        comment: Saves plot-{THEME}.png via ragg::agg_png. Modern linewidth= throughout.
     library_mastery:
       score: 7
       max: 10
@@ -222,21 +218,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct geom_density + geom_rug layering, scale expansions, theme()
-          customization — idiomatic ggplot2.
+        comment: geom_density() + geom_rug(), expansion(), unit(npc), modern linewidth=.
+          Well above baseline.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: bw='sj' (Sheather-Jones bandwidth) and geom_rug are distinctive ggplot2
-          capabilities well-used.
+        comment: geom_rug() with unit() npc control, density() + approx() for annotation
+          y-interpolation — distinctively R/ggplot2.
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
