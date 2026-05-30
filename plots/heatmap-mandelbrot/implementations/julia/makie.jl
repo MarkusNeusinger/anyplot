@@ -14,7 +14,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
 # Imprint sequential colormap: brand green → blue (single-polarity continuous data)
-const ANYPLOT_SEQ = [colorant"#009E73", colorant"#4467A3"]
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
 # Interior of the Mandelbrot set: near-black (canonical convention, never escapes)
 const INTERIOR_COLOR = colorant"#0A0A0A"
@@ -54,7 +54,7 @@ for i in 1:WIDTH, j in 1:HEIGHT
     if escaped
         zmod = sqrt(zx * zx + zy * zy)
         smooth = iter + 1.0 - log2(log2(zmod))
-        escape[i, j] = clamp(smooth / MAX_ITER, 0.0, 1.0)
+        escape[i, j] = mod(smooth, 8.0) / 8.0
     else
         escape[i, j] = NaN
     end
