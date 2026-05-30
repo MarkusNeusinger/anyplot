@@ -1,48 +1,65 @@
 library: highcharts
+language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:51:49Z'
-updated: '2026-02-27T21:25:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22502879577
+updated: '2026-05-30T07:39:25Z'
+generated_by: claude-sonnet
+workflow_run: 26677828759
 issue: 4434
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/highcharts/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/highcharts/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Physically accurate hydrogen atom data with correct energy levels and wavelengths
-  - Excellent use of y-axis break to handle 10x energy gap between ground and excited
-    states
-  - Clear visual hierarchy with alpha transition emphasis and spectral series color-coding
-  - Distinctive Highcharts features (broken-axis module, plotBands, linkedTo) well-leveraged
-  - Dual output (PNG + interactive HTML) maximizes Highcharts web-native advantage
+  - Excellent Imprint palette usage — Lyman (#009E73), Balmer (#C475FD), Paschen (#4467A3)
+    in correct canonical order with clear UV/Visible/IR semantic grouping
+  - Sophisticated Highcharts broken-axis module for y-axis break elegantly compresses
+    the n=1 ground-state gap, making all levels visible without distortion
+  - Plot bands with alpha overlays distinguish ground state vs excited states region
+    — adds physics context without visual clutter
+  - Series linking (linkedTo) correctly groups transition arrows under three legend
+    entries, keeping the legend clean despite many individual series
+  - Wavelength labels on alpha transitions (Lyman 122nm, Balmer 656nm, Paschen 1879nm)
+    highlight the most important spectral lines in each series
+  - Staggered label y-offsets for closely-spaced upper levels (n=4/5/6) prevent label
+    overlap in the congested upper region
+  - 'Full spec compliance: partial-width energy lines, downward emission arrows, ionization
+    limit dashed reference, correct hydrogen energy values (E_n = -13.6/n² eV)'
+  - Canvas gate passed; PIL safety-net and CDP override correctly ensure exact 3200×1800
+    output
+  - 'Perfect code quality: KISS structure, deterministic data, clean imports, no fake
+    interactivity'
   weaknesses:
-  - Minor visual density in upper energy levels (n=4-n=6) region where labels and
-    wavelength annotations cluster
-  - Plot band labels (Ground state, Excited states) at 24px are quite small relative
-    to other text
-  image_description: 'The plot displays a hydrogen atom energy level diagram on a
-    light gray (#fafafa) background. The title "energy-level-atomic · highcharts ·
-    pyplots.ai" appears in large bold dark text at top, with a subtitle "Hydrogen
-    Atom Energy Levels and Spectral Transitions" in lighter gray below. The y-axis
-    is labeled "Energy (eV)" with tick marks at -14, -13, -3, -2, -1, 0. A y-axis
-    break separates the ground state region (-13.6 eV) from the excited states (-3.4
-    to 0 eV). Six horizontal dark slate (#2c3e50) lines represent energy levels n=1
-    through n=6, each labeled on the right with quantum number and energy value (e.g.,
-    "n=1 (-13.60 eV)"). A dashed gray line at 0 eV marks the ionization limit. Three
-    spectral series are shown as colored vertical transition arrows: Lyman Series
-    (UV) in magenta/pink (#D63384) targeting n=1, Balmer Series (Visible) in blue
-    (#306998) targeting n=2, and Paschen Series (IR) in orange (#e67e22) targeting
-    n=3. Alpha transitions are visually emphasized with larger markers and wavelength
-    labels (lambda = 122 nm, 656 nm, 1879 nm). Circles mark upper levels and triangle-down
-    markers point to lower levels. Subtle plot bands shade the ground state region
-    (faint pink) and excited states region (faint blue) with italic labels. A horizontal
-    legend at the bottom identifies the three spectral series.'
+  - Wavelength annotation labels (λ = 122nm, λ = 656nm, λ = 1879nm) are rendered at
+    32px — slightly on the small side; bumping to 36px would improve mobile readability
+  - Upper levels (n=4/5/6) are tightly packed on the right-side label column; the
+    staggering helps but minor visual crowding remains — a larger marginRight (420px)
+    could give more breathing room
+  - 'Design Excellence has headroom: the plot reads as a well-configured technical
+    diagram rather than a publication-ready infographic — adding subtle emphasis (e.g.,
+    slightly heavier Balmer series line weight, since visible light is the most recognizable
+    series) would improve storytelling'
+  - 'LM-01: Series are added via raw dict literals rather than typed series objects
+    (e.g., LineSeries()) — using the highcharts_core typed API is more idiomatic'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "energy-level-atomic · python · highcharts · anyplot.ai" in bold dark text (~70% width, good proportion); subtitle "Hydrogen Atom Energy Levels and Spectral Transitions" below in smaller muted text; Y-axis label "Energy (eV)" in dark ink; tick labels (-14, -13, -3, -2, -1, 0) in muted dark; all readable
+      Data: Six horizontal black energy level lines spanning partial width (n=1 at -13.60 eV through n=6 at -0.38 eV), with right-side labels (e.g. "n=1 (-13.60 eV)"); Y-axis break clearly shown between -12.5 and -3.6 eV; Lyman series transitions in #009E73 (green), Balmer in #C475FD (lavender), Paschen in #4467A3 (blue); alpha-transition wavelength labels (λ=122nm, λ=656nm, λ=1879nm) in matching colors; ionization dashed line at 0 eV; light ground-state and excited-state plot bands; legend at bottom
+      Legibility verdict: PASS — all text readable; wavelength labels slightly small (32px) but legible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all text rendered in light cream (#F0EFE8 / #B8B7B0 range) — clearly readable against dark background; no dark-on-dark failures observed; legend text and axis labels all light-colored
+      Data: Energy level lines now rendered in white/light ink; data colors identical to light render — Lyman (#009E73 green), Balmer (#C475FD lavender), Paschen (#4467A3 blue) all unchanged; wavelength labels in matching palette colors with light-colored text outline; legend at bottom with same colors
+      Legibility verdict: PASS — complete theme adaptation, no chrome failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,43 +67,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 64px, subtitle 42px, axis 42px/34px,
-          labels 32px, legend 36px). Plot band annotations at 24px are small but supplementary.
+        comment: All font sizes explicitly set; good proportions; title at ~70% width
+          expected; wavelength annotations at 32px are slightly small but readable
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Upper energy levels (n=4-n=6) closely spaced; y-offsets prevent label
-          collision but region is visually dense.
+        comment: Minor crowding in upper n=4/5/6 label column despite staggering;
+          transitions in that region are dense but distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Energy lines at lineWidth 6, transition arrows at 4-6, markers 10-18px
-          radius. Alpha transitions differentiated with larger markers.
+        comment: Energy level lines (6px), transition arrows (4-6px), and circle/triangle
+          markers all well-sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe; green/purple/blue triplet has good hue
+          separation under deuteranopia simulation
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Magenta/blue/orange palette is colorblind-safe with strong contrast
-          against light background.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization (~75%). Right margin generous but needed
-          for level labels. Axis break handles energy gap well.
+        comment: Canvas gate passed (3200x1800); generous marginRight=380 for level
+          labels; balanced margins; no content cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Energy (eV) with units. X-axis correctly hidden for
-          this diagram type.
+        comment: Y-axis 'Energy (eV)' with units; X-axis hidden appropriately; title
+          correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Lyman); Balmer #C475FD (pos 2); Paschen #4467A3
+          (pos 3); backgrounds #FAF8F1/#1A1A17; full theme-adaptive chrome'
     design_excellence:
       score: 15
       max: 20
@@ -96,23 +120,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, intentional typography hierarchy, professional
-          dark-slate text, subtle background. Clearly above configured defaults.
+        comment: 'Strong design with domain-specific choices: axis break, plot bands,
+          staggered labels, marker differentiation — clearly above well-configured
+          default'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid removed, subtle axis line, very faint plot bands, text outlines
-          on wavelength labels, marker size differentiation, dashed ionization line.
+        comment: Grid removed (gridLineWidth=0, correct for energy diagrams); axis
+          break elegantly handles scale; plot bands with alpha; generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Alpha transitions emphasized with larger markers and wavelength labels.
-          Spectral series spatially separated. Plot bands contextualize regions. Axis
-          break focuses on convergent levels.
+        comment: Color-coded spectral series (UV/Visible/IR), axis break emphasizes
+          ground-state isolation, alpha-transition wavelengths labeled — clear physics
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -122,29 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with horizontal lines and vertical transition
-          arrows.
+        comment: Correct energy level diagram with horizontal lines and downward emission
+          arrows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: quantum labels, emission arrows, color-coded
-          series, ionization line, axis break, wavelength labels.'
+        comment: Partial-width level lines, quantum number labels, emission arrows,
+          color-coded series, wavelength labels, ionization reference line — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy correctly mapped to y-axis, levels span partial width, transitions
-          connect correct levels.
+        comment: Energy axis correctly increases upward; all 6 levels and 3 spectral
+          series visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly labels three spectral
-          series.
+        comment: Title 'energy-level-atomic · python · highcharts · anyplot.ai' correct;
+          legend entries 'Lyman Series (UV)', 'Balmer Series (Visible)', 'Paschen
+          Series (IR)' descriptive
     data_quality:
       score: 15
       max: 15
@@ -154,21 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 6 energy levels, three spectral series (Lyman/Balmer/Paschen),
-          alpha wavelengths, ionization limit.
+        comment: All 6 energy levels, 3 spectral series with all transitions, ionization
+          limit, wavelength annotations for alpha transitions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom physics with correct E_n = -13.6/n^2 eV. Wavelengths
-          match real values.
+        comment: Hydrogen atom — canonical physics example; real spectral series (Lyman/Balmer/Paschen);
+          neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically correct energy values and wavelengths for hydrogen.
+        comment: Factually correct hydrogen energy levels (E_n = -13.6/n² eV); correct
+          wavelengths (122nm Lyman-α, 656nm Balmer-α, 1879nm Paschen-α)
     code_quality:
       score: 10
       max: 10
@@ -178,34 +205,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, chart config, series, export.
-          No functions or classes.'
+        comment: 'Flat script: data → chart config → series → HTML → screenshot; no
+          unnecessary abstraction'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: energy levels computed from formula, no random
-          elements.'
+        comment: Fully deterministic — hydrogen energy levels from exact formula,
+          no random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib, highcharts_core,
+          PIL, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration over transition groups, list comprehensions, CDN
-          fallback. No over-engineering.
+        comment: Clean iteration over transition groups; CDN fallback lists appropriate;
+          no fake UI; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Uses current Highcharts API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct for interactive
+          library
     library_mastery:
       score: 8
       max: 10
@@ -215,27 +244,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Chart with container, HighchartsOptions, add_series, to_js_literal,
-          linkedTo/id pattern, inline JS embedding.
+        comment: Correctly uses broken-axis module, plot bands, linked series (linkedTo),
+          data labels, CDP override — but adds series via raw dicts rather than typed
+          series objects
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Broken-axis module for y-axis break, plotBands with labels, linkedTo/id
-          series grouping, interactive tooltips, dataLabels overflow.
+        comment: Broken y-axis (Highcharts-specific module), plot bands with labels,
+          series linking for legend grouping — all Highcharts-specific; tooltip format
+          per series
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
-  - manual-ticks
   - html-export
+  - manual-ticks
+  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
+  - alpha-blending
+  - minimal-chrome
