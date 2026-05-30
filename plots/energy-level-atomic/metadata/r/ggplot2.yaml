@@ -1,0 +1,247 @@
+library: ggplot2
+language: r
+specification_id: energy-level-atomic
+created: '2026-05-30T07:39:00Z'
+updated: '2026-05-30T07:54:54Z'
+generated_by: claude-sonnet
+workflow_run: 26677908340
+issue: 4434
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Factually precise hydrogen atom data with all Bohr model energy levels and correct
+    wavelengths for annotated transitions
+  - Thoughtful non-linear display scale (-1/n) that spreads crowded upper levels without
+    distorting the physics story
+  - Full Imprint palette compliance and clean theme-adaptive chrome in both renders
+  - No grid on energy level diagram is the right call; clean L-shaped axis frame
+  - Color-coded series annotations below n=1 double as a legend, keeping the diagram
+    uncluttered
+  weaknesses:
+  - Wavelength annotation text (size=2.4 mm) is at the lower end of mobile-readable;
+    consider bumping to size=2.8 for all wl_label annotations
+  - Upper region (n=3/4/5 levels) is slightly crowded — Paschen arrows and termination
+    near n=3 could benefit from slightly more horizontal spread
+  - Balmer (visible) series does not receive special visual emphasis to distinguish
+    it as the humanly observable series; slightly thicker linewidth would improve
+    storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "Hydrogen Atom · energy-level-atomic · r · ggplot2 · anyplot.ai" in dark ink, readable; Y-axis label "Energy (eV)" in dark ink; tick labels (-13.60 eV, -3.40 eV, -1.51 eV, -0.85 eV, -0.54 eV, 0 eV) in INK_SOFT (#4A4A44); quantum number labels n=1..n=5 in INK_SOFT on right side — all readable
+      Data: First series Lyman UV arrows in #009E73 (brand green) ✓; Balmer visible in #C475FD (lavender) ✓; Paschen IR in #4467A3 (blue) ✓; energy level lines in #1A1A17; ionization dashed line in INK_SOFT
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct
+      Chrome: title in light #F0EFE8, y-axis label in light ink, tick labels in #B8B7B0 (INK_SOFT dark), quantum number labels all visible in light colors — no dark-on-dark failures
+      Data: All three series colors identical to light render (#009E73, #C475FD, #4467A3) — only chrome flipped; energy level lines render in white/light against dark background
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set; both themes readable. Minor: wl_label
+          annotations at size=2.4 mm (~6.8pt) are borderline at mobile width.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in upper n=3/4/5 region with Paschen arrows, but no
+          actual text collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Level lines (linewidth=0.9) and arrows (linewidth=1.1 with closed
+          arrowheads) perfectly visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three-series Imprint palette (green/lavender/blue) CVD-safe with
+          strong hue separation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas used well; energy levels span vertical space naturally;
+          good margins; no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Energy (eV) with units; no x-axis label appropriate for positional
+          x.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Balmer #C475FD, Paschen #4467A3; backgrounds
+          #FAF8F1/#1A1A17; chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clear design intent: Imprint palette, no grid, color-coded annotations,
+          non-linear y-axis spacing. Professionally clean but not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, only left y-axis spine, good whitespace. Level lines spanning
+          nearly full width create slight grid-like feel.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded spectral series with wavelength annotations guide viewer
+          through physics. Non-linear spacing is thoughtful. Balmer (visible) series
+          lacks emphasis as the humanly observable series.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct energy level diagram: horizontal lines plus downward emission
+          arrows.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Level lines with quantum labels, downward emission arrows, color
+          by spectral series, ionization reference line, wavelength annotations.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Energy on Y-axis in eV; all 5 levels visible; transitions correctly
+          connect states.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches optional-prefix format; color-coded series labels replace
+          legend appropriately.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three spectral series, multiple transitions per series, ionization
+          limit, representative wavelength annotations.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hydrogen atom physics with correct series names and factually
+          accurate wavelengths.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy values match Bohr model E_n=-13.6/n^2 eV exactly; wavelengths
+          (122 nm, 656 nm, 1875 nm) factually accurate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: tokens -> data -> plot -> save; no functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic (mathematical formula, no RNG).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R/ggplot2; adaptive title-size formula is a nice
+          touch.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; modern ggplot2 API (linewidth= not size=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics; geom_segment with arrow=; coord_cartesian(clip=off)
+          for out-of-bounds labels; custom scale_y_continuous breaks/labels.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_cartesian(clip=off) and arrow aesthetics in geom_segment are
+          ggplot2-specific. Could exploit more distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
