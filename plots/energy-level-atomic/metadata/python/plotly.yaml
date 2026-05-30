@@ -1,47 +1,58 @@
 library: plotly
+language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:47:32Z'
-updated: '2026-02-27T21:44:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22502879509
+updated: '2026-05-30T07:47:39Z'
+generated_by: claude-sonnet
+workflow_run: 26677625734
 issue: 4434
-python_version: 3.14.3
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/plotly/plot.html
-quality_score: 88
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent spatial organization with three spectral series clearly separated and
-    color-differentiated
-  - Physically accurate hydrogen atom data using exact E_n = -13.6/n² formula with
-    correct wavelengths
-  - 'Rich Plotly interactivity: hover templates on energy levels and invisible hover
-    targets on transitions'
-  - Strong data storytelling through series grouping, color-coded headers, and spatial
-    layout
-  - Clean code structure with comprehensive coverage of spec requirements
+  - 'Label staggering in attempt 2 resolves the primary VQ-02 failure: Balmer labels
+    spread across 1.5 eV range, n=4,5,6 combined into single label eliminating top-cluster
+    collision'
+  - Physically accurate hydrogen atom data (E_n = -13.6/n² eV) with correct published
+    wavelengths for all 9 transitions across three spectral series
+  - All colors from the Imprint palette with a clear, scientifically-motivated semantic
+    mapping (UV=purple/violet, visible=warm/cool spectrum, IR=green/amber)
+  - Invisible hover targets leverage Plotly's HTML interactivity for rich per-transition
+    tooltips (series, levels, wavelength, ΔE) — correct approach for an interactive
+    library
+  - 'Perfect spec compliance: all required features present (horizontal partial-width
+    level lines, quantum number labels, downward emission arrows, wavelength labels,
+    color-coded series, ionization reference line)'
+  - 'Both themes correctly implemented with full theme-adaptive chrome (backgrounds
+    #FAF8F1/#1A1A17, text, grid, annotation colors all flip correctly)'
+  - Deterministic data from closed-form formula, clean flat code structure, minimal
+    imports
   weaknesses:
-  - Minor label crowding in the Balmer/Paschen region between n=2 and n=3 energy levels
-  - Linear energy scale creates visual imbalance with sparse lower region
-  - Title includes extra Hydrogen Atom prefix beyond required format
-  - Some color similarity in warm hues (red/orange/brown) across Balmer and Paschen
-    series
-  image_description: 'The plot displays a hydrogen atom energy level diagram with
-    six horizontal blue lines representing quantized energy states (n=1 at -13.60
-    eV through n=6 near 0 eV). A dashed gray ionization limit line sits at 0 eV. Three
-    spectral series are spatially organized left to right: Lyman Series (Ultraviolet)
-    with three purple/magenta/indigo downward arrows to n=1, Balmer Series (Visible)
-    with four red/blue/teal/amber arrows to n=2, and Paschen Series (Infrared) with
-    two deep orange/brown arrows to n=3. Each transition is labeled with its name
-    and wavelength (e.g., Ly-α 121.6 nm, Hα 656.3 nm). Quantum number labels (n=1
-    through n=6) appear on the right side, energy values (-13.60, -3.40, -1.51 eV)
-    on the left. Series group headers in bold with italic spectrum type labels appear
-    at the top. White background with very subtle grid lines, y-axis labeled "Energy
-    (eV)". Title reads "Hydrogen Atom · energy-level-atomic · plotly · pyplots.ai".'
+  - Minor residual closeness between Pa-β label (y≈-1.03 eV, x=0.88 right-anchored)
+    and n=3 right-side label (y=-1.511 eV, x=0.90) — not overlapping but tighter than
+    ideal at the right margin
+  - Y-axis lower bound of -15 eV leaves unused whitespace below n=1 at -13.60 eV —
+    tightening to ≈-14.2 eV would improve vertical balance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "energy-level-atomic · python · plotly · anyplot.ai" in dark INK (#1A1A17), centered, ~65% width. Y-axis label "Energy (eV)" in INK, tick labels in INK_SOFT (#4A4A44). All readable.
+      Data: Six horizontal energy level lines in INK_SOFT. Downward emission arrows: Lyman (#C475FD, #954477, #4467A3), Balmer (#AE3030, #BD8233, #2ABCCD, #99B314), Paschen (#009E73, #DDCC77). Dashed ionization limit at 0 eV. Series headers and transition labels staggered to avoid overlap.
+      Legibility verdict: PASS — all text readable, labels meaningfully separated via staggering
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and all labels in light cream/off-white (#F0EFE8 / #B8B7B0). No dark-on-dark failures. Grid lines correctly use rgba(240,239,232,0.15). All chrome elements flip correctly.
+      Data: Data colors identical to light render — Lyman purple family, Balmer red/ochre/cyan/lime, Paschen green/amber. Only chrome elements flip between themes.
+      Legibility verdict: PASS — both themes fully readable, no accessibility failures
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,70 +60,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axis title 22pt, ticks
-          18pt, annotations 16-17pt). Annotations at 16pt readable but slightly small
-          for dense label regions.
+        comment: All font sizes explicitly set, readable in both themes. Minor deduction
+          for 11px annotation text at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding among Balmer/Paschen labels in the -2 to -3 eV vertical
-          band. Labels remain readable but tightly packed.
+        comment: Significant improvement from attempt 1. Balmer labels staggered across
+          1.5 eV range, n=4,5,6 combined. Minor residual closeness at Pa-beta/n=3
+          area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Energy level lines (width=3), transition arrows (arrowwidth=2.5),
-          and all annotations clearly visible.
+        comment: Energy level lines (3px) and arrows (arrowwidth=2.5) clearly visible
+          and well-proportioned.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Good per-series differentiation but red/deep orange/dark red-brown
-          share similar warm hue ranges.
+        comment: CVD-safe Imprint palette, spectral-type encoding adds redundancy
+          beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Linear energy scale creates visual imbalance: upper quarter has
-          most information density, lower two-thirds comparatively sparse.'
+        comment: Correct 3200x1800 canvas. Large margins justified by annotation placement.
+          Minor vertical imbalance (empty space below n=1).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Energy (eV) with units. X-axis appropriately hidden.
+        comment: Energy (eV) with units; x-axis hidden (appropriate for diagram type).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: All Imprint palette colors, semantic exception applies (UV=violet,
+          IR=green). Backgrounds correct. Chrome theme-adaptive.
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with custom per-series color palettes, Python Blue
-          energy levels, plotly_white template, and bold/italic series headers.
+        comment: 'Above defaults: semantic three-family color scheme, group headers,
+          ionization reference. Professional but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid at 6% opacity, x-axis hidden, zeroline removed, generous
-          margins, clean plotly_white template.
+        comment: X-axis hidden, subtle grid, theme-adaptive chrome. Good whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent spatial organization: three series separated left-to-right
-          with color-coded headers indicating spectrum region. Strong visual hierarchy.'
+        comment: 'Strong: color families map spectral regions, group headers orient
+          reader, wavelengths on arrows, ionization anchor.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with horizontal lines and transition
-          arrows.
+        comment: Correct energy level diagram with partial-width horizontal lines
+          and directional arrows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: partial-width lines, emission arrows,
-          color coding, series grouping, ionization line.'
+        comment: 'All required: level lines, quantum labels, arrows, wavelength labels,
+          color-coded series, ionization reference.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy correctly mapped to Y-axis. 6 levels and 9 transitions within
-          spec range.
+        comment: Energy axis upward, all 6 levels and 9 transitions correctly mapped.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra Hydrogen Atom prefix beyond required {spec-id} ·
-          {library} · pyplots.ai format. Inline series labels appropriate.
+        passed: true
+        comment: Title exactly correct. Series labeled inline with headers — appropriate,
+          no separate legend needed.
     data_quality:
       score: 15
       max: 15
@@ -152,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: 6 energy levels, 3 spectral series with multiple
-          transitions, ionization limit.'
+        comment: Three spectral series, 6 levels, 9 arrows, wavelengths, ionization
+          limit, quantum numbers, energy values.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom physics with exact analytical formula. Neutral
+        comment: Hydrogen atom energy levels — canonical physics landmark, neutral
           scientific topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically accurate energy values and wavelengths matching known
-          spectral lines.
+        comment: Energies from E_n=-13.6/n^2 eV (exact). Wavelengths match published
+          spectroscopic values.
     code_quality:
       score: 10
       max: 10
@@ -177,36 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, figure, layout, save. No functions or
-          classes.'
+        comment: Flat linear structure, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: energies from analytical formula, transitions
-          hardcoded.'
+        comment: Fully deterministic, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Single import plotly.graph_objects as go, fully utilized.
+        comment: Only os and plotly.graph_objects.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean organization with loop-based generation. Invisible hover targets
-          are legitimate Plotly technique.
+        comment: Clean, appropriate complexity. Invisible hover markers are legitimate
+          Plotly technique.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (4800x2700) and plot.html. Current Plotly API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct canvas dimensions.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,16 +228,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Scatter traces, annotation system, update_layout
-          with templates, write_image/write_html.
+        comment: Idiomatic go.Scatter, add_annotation with axref/ayref, update_layout
+          pattern. Correct write_image/write_html.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Leverages Plotly-specific hover templates, invisible hover targets
-          for transition interactivity, and HTML export with CDN.
-  verdict: REJECTED
+        comment: Invisible scatter hover targets with rich tooltips, arrow annotation
+          system with axref/ayref, HTML export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -231,8 +245,7 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - minimal-chrome

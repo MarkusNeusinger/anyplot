@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: highcharts unknown | Python 3.14.3
-Quality: 90/100 | Created: 2026-02-27
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-30
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,10 +17,21 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint categorical palette (hybrid-v3 sort order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # Data - Hydrogen atom energy levels: E_n = -13.6/n² eV
 energy_levels = {1: -13.60, 2: -3.40, 3: -1.51, 4: -0.85, 5: -0.54, 6: -0.38}
 
-# Spectral series transitions (emission: n_upper -> n_lower)
+# Spectral series transitions (emission: n_upper → n_lower)
 lyman_series = [(n, 1) for n in range(2, 7)]
 balmer_series = [(n, 2) for n in range(3, 7)]
 paschen_series = [(n, 3) for n in range(4, 7)]
@@ -31,75 +43,74 @@ for series in [lyman_series, balmer_series, paschen_series]:
     delta_e = abs(energy_levels[n_u] - energy_levels[n_l])
     alpha_wavelengths[(n_u, n_l)] = f"{1240 / delta_e:.0f} nm"
 
+# Title: "energy-level-atomic · python · highcharts · anyplot.ai" = 54 chars < 67, use default 66px
+title = "energy-level-atomic · python · highcharts · anyplot.ai"
+
 # Chart setup
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#fafafa",
-    "style": {"fontFamily": "'Segoe UI', Arial, Helvetica, sans-serif"},
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "'Segoe UI', Arial, Helvetica, sans-serif", "color": INK},
     "marginRight": 380,
-    "marginLeft": 200,
-    "marginTop": 200,
-    "marginBottom": 200,
+    "marginLeft": 160,
+    "marginTop": 160,
+    "marginBottom": 160,
 }
 
-chart.options.title = {
-    "text": "energy-level-atomic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "700", "color": "#2c3e50", "letterSpacing": "1px"},
-    "margin": 30,
-}
+chart.options.title = {"text": title, "style": {"fontSize": "66px", "fontWeight": "700", "color": INK}, "margin": 20}
 
 chart.options.subtitle = {
     "text": "Hydrogen Atom Energy Levels and Spectral Transitions",
-    "style": {"fontSize": "42px", "fontWeight": "400", "color": "#7f8c8d", "letterSpacing": "0.5px"},
+    "style": {"fontSize": "44px", "fontWeight": "400", "color": INK_SOFT},
 }
 
 chart.options.x_axis = {"visible": False, "min": 0, "max": 11}
 
+BAND_BG_GROUND = "rgba(26,26,23,0.04)" if THEME == "light" else "rgba(240,239,232,0.04)"
+BAND_BG_EXCITED = "rgba(68,103,163,0.05)" if THEME == "light" else "rgba(68,103,163,0.08)"
+
 chart.options.y_axis = {
-    "title": {
-        "text": "Energy (eV)",
-        "style": {"fontSize": "42px", "fontWeight": "600", "color": "#2c3e50"},
-        "margin": 30,
-    },
-    "labels": {"style": {"fontSize": "34px", "color": "#34495e"}, "format": "{value}"},
+    "title": {"text": "Energy (eV)", "style": {"fontSize": "56px", "fontWeight": "600", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "format": "{value}"},
     "gridLineWidth": 0,
     "lineWidth": 2,
-    "lineColor": "#95a5a6",
+    "lineColor": INK_SOFT,
     "min": -14.2,
     "max": 0.6,
     "tickPositions": [-14, -13, -3, -2, -1, 0],
     "tickWidth": 2,
     "tickLength": 10,
-    "tickColor": "#95a5a6",
+    "tickColor": INK_SOFT,
     "startOnTick": False,
     "endOnTick": False,
-    "breaks": [{"from": -12.5, "to": -3.6, "breakSize": 0.12}],
+    "breaks": [{"from": -12.5, "to": -3.6, "breakSize": 0.10}],
     "plotBands": [
         {
             "from": -14.2,
             "to": -12.5,
-            "color": "rgba(214, 51, 132, 0.04)",
+            "color": BAND_BG_GROUND,
             "label": {
                 "text": "Ground state",
                 "align": "left",
                 "x": 10,
-                "style": {"fontSize": "24px", "color": "#aab2b8", "fontStyle": "italic"},
+                "style": {"fontSize": "34px", "color": INK_SOFT, "fontStyle": "italic"},
             },
         },
         {
             "from": -3.6,
             "to": 0.6,
-            "color": "rgba(48, 105, 152, 0.03)",
+            "color": BAND_BG_EXCITED,
             "label": {
-                "text": "Excited states \u2192 Continuum",
+                "text": "Excited states → Continuum",
                 "align": "right",
+                "verticalAlign": "top",
                 "x": -10,
-                "y": 30,
-                "style": {"fontSize": "24px", "color": "#aab2b8", "fontStyle": "italic"},
+                "y": 10,
+                "style": {"fontSize": "34px", "color": INK_SOFT, "fontStyle": "italic"},
             },
         },
     ],
@@ -110,7 +121,9 @@ chart.options.legend = {
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
-    "itemStyle": {"fontSize": "36px", "fontWeight": "500", "color": "#2c3e50"},
+    "itemStyle": {"fontSize": "44px", "fontWeight": "500", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderWidth": 0,
     "symbolWidth": 60,
     "symbolHeight": 6,
     "itemMarginBottom": 10,
@@ -118,18 +131,22 @@ chart.options.legend = {
     "y": 10,
 }
 
-chart.options.tooltip = {"style": {"fontSize": "32px"}}
+chart.options.tooltip = {
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "style": {"fontSize": "36px", "color": INK},
+}
 
 chart.options.plot_options = {"line": {"states": {"hover": {"lineWidthPlus": 0}}}, "series": {"animation": False}}
 
 chart.options.credits = {"enabled": False}
 
-# Energy level lines
+# Energy level lines — span partial width as per spec
 level_x_start = 1.0
 level_x_end = 9.5
 
-# Y-offsets (px) to prevent label overlap for closely-spaced upper levels
-label_y_offsets = {1: 0, 2: 0, 3: 0, 4: 12, 5: 0, 6: -12}
+# Y-offsets (px) to stagger labels for closely-spaced upper levels (n=4-6)
+label_y_offsets = {1: 0, 2: 0, 3: 0, 4: 20, 5: 0, 6: -20}
 
 for n, energy in energy_levels.items():
     label_text = f"n={n}  ({energy:.2f} eV)"
@@ -151,11 +168,11 @@ for n, energy in energy_levels.items():
                         "y": label_y_offsets[n],
                         "crop": False,
                         "overflow": "allow",
-                        "style": {"fontSize": "32px", "fontWeight": "600", "color": "#2c3e50", "textOutline": "none"},
+                        "style": {"fontSize": "36px", "fontWeight": "600", "color": INK, "textOutline": "none"},
                     },
                 },
             ],
-            "color": "#2c3e50",
+            "color": INK,
             "lineWidth": 6,
             "marker": {"enabled": False},
             "enableMouseTracking": False,
@@ -163,7 +180,7 @@ for n, energy in energy_levels.items():
         }
     )
 
-# Ionization limit at 0 eV (dashed gray line - clearly a reference, not a series)
+# Ionization limit at 0 eV (dashed reference line)
 chart.add_series(
     {
         "type": "line",
@@ -179,14 +196,14 @@ chart.add_series(
                     "align": "left",
                     "verticalAlign": "middle",
                     "x": 20,
-                    "y": -10,
+                    "y": -12,
                     "crop": False,
                     "overflow": "allow",
-                    "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#95a5a6", "textOutline": "none"},
+                    "style": {"fontSize": "34px", "fontWeight": "bold", "color": INK_SOFT, "textOutline": "none"},
                 },
             },
         ],
-        "color": "#95a5a6",
+        "color": INK_SOFT,
         "lineWidth": 3,
         "dashStyle": "Dash",
         "marker": {"enabled": False},
@@ -195,11 +212,11 @@ chart.add_series(
     }
 )
 
-# Transition arrows grouped by spectral series
+# Transition arrows grouped by spectral series — Imprint palette positions 1-3
 transition_groups = [
-    ("Lyman Series (UV)", lyman_series, "#D63384", 2.5, "lyman"),
-    ("Balmer Series (Visible)", balmer_series, "#306998", 5.0, "balmer"),
-    ("Paschen Series (IR)", paschen_series, "#e67e22", 7.5, "paschen"),
+    ("Lyman Series (UV)", lyman_series, IMPRINT_PALETTE[0], 2.5, "lyman"),
+    ("Balmer Series (Visible)", balmer_series, IMPRINT_PALETTE[1], 5.0, "balmer"),
+    ("Paschen Series (IR)", paschen_series, IMPRINT_PALETTE[2], 7.5, "paschen"),
 ]
 
 for group_name, transitions, color, base_x, group_id in transition_groups:
@@ -219,29 +236,28 @@ for group_name, transitions, color, base_x, group_id in transition_groups:
             "marker": {
                 "enabled": True,
                 "symbol": "circle",
-                "radius": 12 if is_alpha else 10,
+                "radius": 13 if is_alpha else 10,
                 "fillColor": color,
                 "lineColor": color,
             },
         }
 
-        # Add wavelength label to alpha transitions for storytelling
         if is_alpha:
             upper_point["dataLabels"] = {
                 "enabled": True,
-                "format": f"\u03bb = {alpha_wavelengths[(n_upper, n_lower)]}",
+                "format": f"λ = {alpha_wavelengths[(n_upper, n_lower)]}",
                 "align": "left",
                 "verticalAlign": "middle",
                 "x": 18,
-                "y": -15,
+                "y": -16,
                 "crop": False,
                 "overflow": "allow",
                 "style": {
-                    "fontSize": "30px",
+                    "fontSize": "32px",
                     "fontStyle": "italic",
                     "fontWeight": "bold",
                     "color": color,
-                    "textOutline": "3px #fafafa",
+                    "textOutline": f"3px {PAGE_BG}",
                 },
             }
 
@@ -251,7 +267,7 @@ for group_name, transitions, color, base_x, group_id in transition_groups:
             "marker": {
                 "enabled": True,
                 "symbol": "triangle-down",
-                "radius": 18 if is_alpha else 15,
+                "radius": 18 if is_alpha else 14,
                 "fillColor": color,
                 "lineColor": color,
             },
@@ -264,10 +280,7 @@ for group_name, transitions, color, base_x, group_id in transition_groups:
             "color": color,
             "lineWidth": 6 if is_alpha else 4,
             "showInLegend": is_first,
-            "tooltip": {
-                "headerFormat": "",
-                "pointFormat": f"n={n_upper} \u2192 n={n_lower}<br/>\u0394E = {delta_e:.2f} eV",
-            },
+            "tooltip": {"headerFormat": "", "pointFormat": f"n={n_upper} → n={n_lower}<br/>ΔE = {delta_e:.2f} eV"},
         }
         if is_first:
             entry["id"] = group_id
@@ -283,7 +296,7 @@ for url in cdn_urls:
         with urllib.request.urlopen(url, timeout=30) as response:
             highcharts_js = response.read().decode("utf-8")
         break
-    except urllib.error.HTTPError:
+    except Exception:
         time.sleep(2)
         continue
 if highcharts_js is None:
@@ -300,16 +313,14 @@ for url in broken_axis_urls:
         with urllib.request.urlopen(url, timeout=30) as response:
             broken_axis_js = response.read().decode("utf-8")
         break
-    except urllib.error.HTTPError:
+    except Exception:
         time.sleep(2)
         continue
 if broken_axis_js is None:
     raise RuntimeError("Failed to download broken-axis.js from all CDNs")
 
-# Generate JS literal
 js_literal = chart.to_js_literal()
 
-# Inline HTML for rendering (embedded scripts for headless Chrome)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -317,51 +328,44 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{broken_axis_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{js_literal}</script>
 </body>
 </html>"""
 
-# Standalone HTML for interactive viewing (CDN links)
-standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/modules/broken-axis.js"></script>
-</head>
-<body style="margin:0; overflow:auto;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{js_literal}</script>
-</body>
-</html>"""
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(standalone_html)
-
-# Screenshot via headless Chrome
+# Screenshot via headless Chrome with CDP viewport override
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone is eaten by Chrome chrome (~139 px)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot_raw.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Crop to exact 4800x2700 dimensions
-img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
-Path("plot_raw.png").unlink()
-
 Path(temp_path).unlink()
+
+# Pin to exact 3200×1800 — guards against occasional ±1–2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
