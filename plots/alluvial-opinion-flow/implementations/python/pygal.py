@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-30
+Quality: 85/100 | Updated: 2026-05-30
 """
 
 # Ensure we import the installed pygal package, not this file
