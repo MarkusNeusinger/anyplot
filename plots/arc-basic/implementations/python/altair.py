@@ -1,13 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-30
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import importlib
+import os
+import sys
 
+from PIL import Image
+
+
+# Drop script directory from sys.path so the `altair` package resolves, not this file
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
+alt = importlib.import_module("altair")
+np = importlib.import_module("numpy")
+pd = importlib.import_module("pandas")
+
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data: Character interactions in a story chapter
 np.random.seed(42)
@@ -33,11 +48,9 @@ edges = [
     (8, 9, 2),  # Iris-Jack
 ]
 
-# Node positions along x-axis
 x_positions = np.linspace(0, 100, n_nodes)
 y_baseline = 0
 
-# Node dataframe with connection count for sizing
 connection_count = [0] * n_nodes
 for s, e, w in edges:
     connection_count[s] += w
@@ -76,15 +89,18 @@ for edge_id, (start, end, weight) in enumerate(edges):
 
 arcs_df = pd.DataFrame(arc_data)
 
-# Y-domain: tight around data for better canvas use
 max_arc_height = 7 * max_span / 2
-y_domain = [-5, max_arc_height + 4]
+y_domain = [-8, max_arc_height + 4]
 x_domain = [-4, 104]
 
-# Hover selection for interactive arc highlighting (HTML export)
 hover = alt.selection_point(on="pointerover", empty=False, fields=["edge_id"])
 
-# Arcs: weight drives color, thickness, and opacity for visual hierarchy
+# Imprint sequential palette for arc weight: brand green → blue (imprint_seq)
+ARC_LOW = "#009E73"  # Imprint position 1 — brand green (weak)
+ARC_MID = "#22828B"  # midpoint of imprint_seq
+ARC_HIGH = "#4467A3"  # Imprint position 3 — blue (strong)
+
+# Arcs: weight drives color (Imprint sequential), thickness, and opacity
 arcs = (
     alt.Chart(arcs_df)
     .mark_line()
@@ -94,12 +110,12 @@ arcs = (
         detail="edge_id:N",
         strokeWidth=alt.StrokeWidth(
             "weight:Q",
-            scale=alt.Scale(domain=[1, 3], range=[1.5, 6]),
+            scale=alt.Scale(domain=[1, 3], range=[1.5, 5]),
             legend=alt.Legend(
                 title="Interaction Strength",
-                titleFontSize=16,
-                labelFontSize=16,
-                orient="top-right",
+                titleFontSize=12,
+                labelFontSize=10,
+                orient="top-left",
                 offset=10,
                 values=[1, 2, 3],
                 symbolStrokeWidth=3,
@@ -109,47 +125,61 @@ arcs = (
         strokeOpacity=alt.condition(
             hover,
             alt.value(0.95),
-            alt.StrokeOpacity("weight:Q", scale=alt.Scale(domain=[1, 3], range=[0.3, 0.8]), legend=None),
+            alt.StrokeOpacity("weight:Q", scale=alt.Scale(domain=[1, 3], range=[0.5, 0.9]), legend=None),
         ),
-        color=alt.Color(
-            "weight:Q", scale=alt.Scale(domain=[1, 2, 3], range=["#7daed4", "#306998", "#152d4a"]), legend=None
-        ),
+        color=alt.Color("weight:Q", scale=alt.Scale(domain=[1, 2, 3], range=[ARC_LOW, ARC_MID, ARC_HIGH]), legend=None),
         tooltip=[alt.Tooltip("pair:N", title="Connection"), alt.Tooltip("weight:Q", title="Strength")],
     )
     .add_params(hover)
 )
 
-# Nodes: size proportional to total connection weight
+# Nodes: Imprint ochre fill, size proportional to total connection weight
 node_points = (
     alt.Chart(nodes_df)
-    .mark_circle(color="#FFD43B", stroke="#152d4a", strokeWidth=2.5)
+    .mark_circle(fill="#BD8233", stroke=INK, strokeWidth=2.0)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=y_domain)),
-        size=alt.Size("connections:Q", scale=alt.Scale(domain=[2, 11], range=[500, 1200]), legend=None),
+        size=alt.Size("connections:Q", scale=alt.Scale(domain=[2, 11], range=[100, 400]), legend=None),
         tooltip=[alt.Tooltip("name:N", title="Character"), alt.Tooltip("connections:Q", title="Total Weight")],
     )
 )
 
-# Node labels below baseline
+# Node labels below baseline — theme-adaptive ink color
 node_labels = (
     alt.Chart(nodes_df)
-    .mark_text(dy=30, fontSize=18, fontWeight="bold", color="#152d4a")
+    .mark_text(dy=22, fontSize=16, fontWeight="bold", color=INK)
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="name:N")
 )
 
-# Combine layers
+title_str = "arc-basic · python · altair · anyplot.ai"
+
 chart = (
     alt.layer(arcs, node_points, node_labels)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("arc-basic · altair · pyplots.ai", fontSize=28, anchor="middle", offset=15),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 10, "right": 10, "top": 10, "bottom": 30},
+        title=alt.Title(title_str, fontSize=16, anchor="middle", offset=10, color=INK),
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(strokeColor="transparent", padding=12, titleColor="#152d4a", labelColor="#333333")
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, titleColor=INK, labelColor=INK_SOFT, padding=10)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — canvas contract: 3200 × 1800 (landscape)
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
