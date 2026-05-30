@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: altair | Python
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-30
 """
 
 import os
