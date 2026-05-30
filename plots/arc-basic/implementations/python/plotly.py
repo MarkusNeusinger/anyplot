@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -23,10 +23,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint sequential palette for weight levels (green → cyan → blue)
+# Imprint palette positions 1→3 (green → lavender → blue)
 arc_styles = {
     1: {"color": "rgba(0, 158, 115, 0.65)", "width": 3.5, "label": "Weak (1)"},
-    2: {"color": "rgba(42, 188, 205, 0.82)", "width": 4.5, "label": "Medium (2)"},
+    2: {"color": "rgba(196, 117, 253, 0.82)", "width": 4.5, "label": "Medium (2)"},
     3: {"color": "rgba(68, 103, 163, 0.95)", "width": 6.0, "label": "Strong (3)"},
 }
 
@@ -151,7 +151,7 @@ for label, keep in filter_options:
 title_text = "Character Interactions · arc-basic · python · plotly · anyplot.ai"
 title_fontsize = max(11, round(16 * 67 / len(title_text))) if len(title_text) > 67 else 16
 title_html = (
-    f"{title_text}"
+    f"<b>{title_text}</b>"
     f"<br><span style='font-size:11px;color:{INK_MUTED};font-weight:normal'>"
     f"Story narrative · 10 characters · 12 connections</span>"
 )
@@ -194,7 +194,7 @@ fig.update_layout(
             "xanchor": "left",
             "yanchor": "top",
             "buttons": buttons,
-            "showactive": True,
+            "showactive": THEME == "light",
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
             "font": {"size": 11, "color": INK},
