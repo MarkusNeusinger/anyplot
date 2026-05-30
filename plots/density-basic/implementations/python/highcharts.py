@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-30
@@ -76,6 +76,7 @@ chart.options.chart = {
     "marginLeft": 180,
     "marginRight": 80,
     "marginTop": 120,
+    "plotBorderWidth": 0,
     "style": {"fontFamily": "Arial, Helvetica, sans-serif", "color": INK},
 }
 
@@ -154,7 +155,7 @@ chart.options.plot_options = {
         "states": {"hover": {"lineWidth": 5}},
     },
     "scatter": {
-        "marker": {"radius": 4, "fillColor": f"rgba({BRAND_RGB}, 0.30)", "symbol": "circle", "lineWidth": 0},
+        "marker": {"radius": 6, "fillColor": f"rgba({BRAND_RGB}, 0.42)", "symbol": "circle", "lineWidth": 0},
         "states": {"hover": {"enabled": False}},
     },
     "series": {"animation": False},
@@ -184,7 +185,7 @@ area_series.data = [[round(float(x), 2), round(float(y), 6)] for x, y in zip(x_g
 area_series.name = "Density"
 chart.add_series(area_series)
 
-# Rug plot — every 3rd observation as small circles (radius 4, 30% opacity avoids overlap clutter)
+# Rug plot — every 3rd observation as small circles (radius 6, 42% opacity — visible at thumbnail scale)
 rug_sample = values[::3]
 rug_y = max(density) * 0.008
 rug_data = [[round(float(v), 2), round(float(rug_y), 6)] for v in sorted(rug_sample)]
@@ -192,7 +193,7 @@ rug_data = [[round(float(v), 2), round(float(rug_y), 6)] for v in sorted(rug_sam
 rug_series = ScatterSeries()
 rug_series.data = rug_data
 rug_series.name = "Observations"
-rug_series.marker = {"symbol": "circle", "fillColor": f"rgba({BRAND_RGB}, 0.30)", "lineWidth": 0, "radius": 4}
+rug_series.marker = {"symbol": "circle", "fillColor": f"rgba({BRAND_RGB}, 0.42)", "lineWidth": 0, "radius": 6}
 chart.add_series(rug_series)
 
 # Download Highcharts JS for inline embedding (required for headless Chrome)
