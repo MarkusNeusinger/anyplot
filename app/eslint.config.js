@@ -47,6 +47,7 @@ export default [
         HTMLButtonElement: 'readonly',
         HTMLAnchorElement: 'readonly',
         HTMLImageElement: 'readonly',
+        HTMLCanvasElement: 'readonly',
         HTMLIFrameElement: 'readonly',
         Element: 'readonly',
         Node: 'readonly',
