@@ -1,63 +1,51 @@
 library: seaborn
+language: python
 specification_id: candlestick-basic
 created: '2025-12-23T10:00:56Z'
-updated: '2026-02-24T21:12:10Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457529450
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-30T05:35:21Z'
+generated_by: claude-sonnet
+workflow_run: 26675565930
+issue: 812
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - annotations
-  - custom-legend
-  - patches
-  patterns:
-  - data-generation
-  - wide-to-long
-  - iteration-over-groups
-  - explicit-figure
-  dataprep:
-  - time-series
-  - rolling-window
-  styling:
-  - grid-styling
-  - alpha-blending
-  - edge-highlighting
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual execution with no overlaps, clear text, and well-proportioned
-    elements
-  - Thoughtful color palette with derived edge colors via sns.dark_palette() — cohesive
-    and professional
-  - 'Strong data storytelling: intentional rally-then-selloff pattern with peak annotation
-    creates clear narrative'
-  - Moving average overlays add analytical value and demonstrate seaborn lineplot
-    integration
-  - Clean KISS code structure with proper reproducibility seed
+  - 'Full theme-adaptive chrome implementation: all tokens (PAGE_BG, ELEVATED_BG,
+    INK, INK_SOFT) correctly threaded to every chrome element in both light and dark
+    renders'
+  - 'Finance semantic exception correctly applied: green=bullish (#009E73), red=bearish
+    (#AE3030) per Imprint style guide — correctly documented in code comment'
+  - Meaningful Bollinger Bands overlay (SMA20 +/-2sigma) adds analytical depth beyond
+    the basic spec, with appropriate styling (solid SMA line, dashed band lines, subtle
+    6% alpha fill) and labeling
+  - bbox_inches not passed to savefig (correct per seaborn canvas rule) — canvas dimensions
+    are exact 3200x1800 with no drift
+  - 'Code is clean and reproducible (np.random.seed(42)), with all required seaborn
+    theming idiomatic patterns: sns.set_theme(style=''ticks'', rc={...})'
   weaknesses:
-  - Library mastery limited by seaborn lack of native candlestick support — core visualization
-    is necessarily matplotlib-based
-  - Design excellence could push further toward FiveThirtyEight-level polish (e.g.,
-    more refined typography hierarchy, custom font)
-  image_description: 'The plot displays a candlestick chart of 30 trading days (Jan
-    02 to ~Feb 10, 2024) on a light gray background (#f8f9fa). Blue candlestick bodies
-    represent bullish (up) days and red bodies represent bearish (down) days. Thin
-    wicks extend above and below each body showing high-low range. The price starts
-    around $145, rallies to a peak of ~$152 around Jan 16, then sells off to ~$134
-    by the end. Two moving average lines are overlaid: a 5-Day MA in orange and a
-    10-Day MA in purple. An annotation with an arrow reads "Peak $152" pointing to
-    the highest close. The title "candlestick-basic · seaborn · pyplots.ai" appears
-    at the top. The y-axis reads "Price ($)" and x-axis reads "Date" with labels every
-    5 trading days (Jan 02, Jan 09, Jan 16, Jan 23, Jan 30, Feb 06). A legend in the
-    upper left contains Bullish, Bearish, 5-Day MA, and 10-Day MA entries. Top and
-    right spines are removed. Subtle horizontal gridlines appear with very low opacity.
-    The chart fills the canvas well with balanced margins.'
+  - seaborn's distinctive statistical and visual features are limited by the chart
+    type — the implementation is necessarily more matplotlib than seaborn for candlestick
+    rendering; this is inherent to the spec and not a fixable flaw
+  - BB fill alpha (0.06) is very subtle in the light render — borderline invisible
+    on some displays; could be raised to ~0.08-0.10 for marginally better visibility
+    without becoming distracting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "candlestick-basic · python · seaborn · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Price ($)" and "Date" in dark ink at 10pt. Tick labels (Jan 02, Jan 09... Feb 06; 135, 140, 145, 150, 155) in secondary ink (#4A4A44) at 8pt. Legend in upper right with elevated background (#FFFDF6) and secondary ink border.
+      Data: 30 candlesticks — bullish in #009E73 (brand green), bearish in #AE3030 (matte red). Wicks in matching colors, thinner than bodies. Bollinger Bands in Imprint blue (#4467A3): solid SMA20 line, dashed BB +/-2sigma lines, very subtle blue fill (alpha=0.06) covering the band region. BB elements appear in final ~11 days (where 20-day rolling window is valid).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and axis labels in light cream ink (#F0EFE8), clearly readable against dark background. Tick labels in soft secondary ink (#B8B7B0). Legend with dark elevated background (#242420) and secondary ink border. Grid lines appear as subtle light-toned horizontal rules.
+      Data: Colors are IDENTICAL to light render — bullish green (#009E73), bearish red (#AE3030), Bollinger Bands in Imprint blue (#4467A3). No data colors changed between themes. BB fill subtly visible in dark render.
+      Legibility verdict: PASS — no dark-on-dark text failures. All title, axis, and tick text clearly legible against dark surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -68,69 +56,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=14,
-          annotation=12. All perfectly readable.'
+        comment: Title 12pt, axes 10pt, ticks 8pt, legend 8pt. All readable at full
+          resolution and when scaled. Title fills ~65% of width — proportional. Short
+          axis labels not oversized.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. X-axis labels well-spaced every 5 days. Legend
-          avoids data. Annotation positioned cleanly.
+        comment: No text-on-text or text-on-data overlaps in either render. Legend
+          has opaque background.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candle bodies at width=0.6 well-proportioned for 30 points. Wicks
-          thinner than bodies. MA lines clearly visible at linewidth=2.2.
+        comment: 30 candlesticks with bodies and wicks clearly visible. Wicks thinner
+          than bodies. Bollinger Band lines and fill clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red scheme is colorblind-safe. Orange and purple MAs also distinct.
-          No red-green-only distinction.
+        comment: 'Finance semantic exception: green=bullish, red=bearish. Imprint
+          palette is CVD-optimised; green and matte red differ in luminance for deuteranope
+          readability.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with good proportions. Plot fills canvas well with balanced
-          margins. tight_layout applied.
+        comment: Canvas gate passed. Landscape 3200x1800. Good proportions. Nothing
+          clipped. Adequate y-axis padding.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price ($)' includes units. X-axis 'Date' is descriptive.
-          Title in correct format.
+        comment: 'Price ($) includes units, Date is descriptive. Title format correct:
+          candlestick-basic · python · seaborn · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Finance semantic exception applied. Bollinger Bands use Imprint
+          blue (#4467A3). Backgrounds #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette with derived edge colors via dark_palette. Custom
-          background, text, and grid colors. Clearly above defaults but not FiveThirtyEight-level.
+        comment: 'Above default (4): fully theme-adaptive chrome tokens, finance semantic
+          exception leveraged, meaningful Bollinger Band overlay, custom legend handles.
+          Not exceptional-tier.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid (alpha=0.15), tick marks hidden, custom
-          facecolor. Clean overall with minor room for polish.
+        comment: 'Above default (2): top/right spines removed, y-only grid at 15%
+          alpha, tick length 0, BB fill at 6% alpha, body alpha 0.9.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Rally-then-selloff narrative with peak annotation. MAs show trend
-          crossover. Visual hierarchy through color coding. Viewer immediately grasps
-          the story.
+        comment: 'Above default (2): clear narrative arc (rally then selloff), Bollinger
+          Band volatility context, immediate visual hierarchy through bullish/bearish
+          color coding.'
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with bodies (open-close) and wicks (high-low).
+        comment: 'Correct candlestick chart: rectangular bodies (open-close) + wicks
+          (high-low), fully meeting the OHLC spec.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: OHLC data, color coding, thin wicks,
-          date formatting, subtle grid. MAs add value.'
+        comment: Green/red scheme, wicks thinner than bodies, date-formatted time
+          axis, subtle grid — all spec requirements satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time periods, Y = price. All data visible with appropriate axis
-          padding.
+        comment: X maps to date (formatted Mon DD), Y maps to price in dollars. Full
+          30-day range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels (Bullish, Bearish, 5-Day MA,
-          10-Day MA) match data.
+        comment: 'Title exactly ''candlestick-basic · python · seaborn · anyplot.ai''.
+          Legend labels: Bullish, Bearish, SMA 20, BB +-2sigma.'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish candles. Various body sizes and wick lengths.
-          Rally and selloff phases. Good candlestick variety.
+        comment: All OHLC components represented. Both bullish and bearish days present.
+          Bollinger Bands add meaningful technical overlay.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock-like prices at $145 over 30 business days. Neutral financial
-          context.
+        comment: Daily stock price, Jan-Feb 2024, starting ~$145, realistic drift.
+          Neutral and non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices $130-$155 with realistic daily movements. Volatility appropriate
-          for mid-cap stock.
+        comment: 30 trading days (within spec 20-100 range). Price range $130-$155
+          with realistic ~$2-3 daily volatility.
     code_quality:
       score: 10
       max: 10
@@ -196,51 +195,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, theme, data generation, plot, save. No functions
-          or classes.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: plt, np, pd, sns, PatchCollection, Line2D, Patch,
-          Rectangle.'
+        comment: All 8 imports are used. No dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean PatchCollection approach for candle bodies. Appropriate complexity.
+        comment: Appropriate complexity. Clean loop for rectangle construction. No
+          fake interactivity (AR-08 clear).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'. No deprecated
-          functions.
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'. Current seaborn
+          0.14+ API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses set_theme, set_context, lineplot with hue, despine, color_palette,
-          dark_palette. Core candlestick is necessarily matplotlib-based.
+        comment: sns.set_theme(style='ticks', rc={...}) is idiomatic seaborn theming.
+          sns.lineplot for overlay is appropriate. Matplotlib primitives for candlestick
+          rendering is correct (no native seaborn candlestick API).
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: dark_palette for edge color derivation, set_context for scaling,
-          lineplot with hue and melted DataFrame. Distinctive seaborn features used
-          where applicable.
+        comment: seaborn theming system distinctively and skillfully applied. sns.lineplot
+          overlay composition is idiomatic. Raised above default (1) for well-leveraged
+          theming.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
