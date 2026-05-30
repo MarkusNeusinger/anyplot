@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: arc-basic
 created: 2025-12-17 10:58:08+00:00
-updated: '2026-05-30T01:07:07Z'
+updated: '2026-05-30T01:22:21Z'
 generated_by: claude-sonnet
 workflow_run: 26669677508
 issue: 991
@@ -12,141 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - Correct arc diagram implementation using pygal.XY with semi-circle approximation
-    — arcs curve above baseline with height proportional to node distance
-  - Three-tier weight encoding via both color (Imprint palette positions 1–3) and
-    stroke width (5/14/26) clearly differentiates rare/moderate/frequent connections
-  - Amber (#DDCC77) semantic anchor used for nodes is appropriate — keeps nodes outside
-    the categorical color pool so arcs remain the data layer
-  - 'Perfect spec compliance: all 10 nodes, all 13 edges, opacity=0.85 for semi-transparent
-    overlapping arcs, node labels readable'
-  - 'Full pygal theme-adaptive chrome: background, INK, INK_MUTED properly derived
-    from ANYPLOT_THEME; dark render correctly flips chrome while keeping data colors
-    constant'
-  - Both PNG and HTML outputs saved (correct for pygal as interactive library)
-  - CSS injection cleanly hides axis lines and limits legend to 3 entries — shows
-    advanced pygal knowledge
-  - Clean KISS code structure with np.random.seed(42) for reproducibility
+  - Perfect spec compliance — all required arc diagram features implemented correctly
+    (height proportional to distance, semi-transparent arcs, color-coded by weight,
+    readable node labels)
+  - Excellent data quality — realistic academic word co-occurrence scenario with coherent
+    semantic weights; peripheral and hub node types both demonstrated
+  - Leverages pygal interactive HTML with per-element tooltips to expose weight and
+    degree info on hover — a distinctive library advantage
+  - 'Correct Imprint palette usage: Frequent=#009E73, Moderate=#C475FD, Rare=#4467A3;
+    amber nodes are appropriate non-categorical anchor'
+  - Clean KISS code structure with proper theme-adaptive chrome in both renders
   weaknesses:
-  - 'Large empty space in bottom ~20–25% of canvas (below the legend): the chart plus
-    legend only occupies ~60–65% of canvas height. Reduce y_range max or increase
-    arc height_scale, or use square canvas (2400×2400) to better fill the space.'
-  - No visual hierarchy or data storytelling — all nodes and all connections are treated
-    equally. The peripheral 'review' node (only 1 connection) and the highly-connected
-    hub nodes ('data', 'science', 'analysis') are not visually distinguished. Consider
-    scaling node dot_size by connection degree, or using a stronger green on the most
-    frequent arcs.
-  - Design Excellence is limited — the implementation renders correctly but doesn't
-    push visual sophistication beyond well-configured defaults. Consider adding degree-based
-    node sizing, or directional thickness variations that create a focal point.
-  - Node label spacing is tight for the middle cluster (study / analysis / result
-    / method) — these four labels crowd the central region at the default x-spacing.
-    Consider increasing node spacing or rotating labels 30–45° to reduce crowding.
-  - 'LM-02 (Distinctive Features): the implementation uses pygal.XY with manual arc
-    points but doesn''t leverage pygal''s interactive tooltip system (point labels
-    are set but not visible in PNG). The HTML render could expose the per-edge tooltip
-    — this is the library''s main differentiator and it''s partially present but not
-    highlighted in the design.'
+  - Font sizes are below the style-guide recommendation for 2400x2400 canvas (title=54
+    vs 66, label=46 vs 56, major=36 vs 44, legend=36 vs 44) — increase all to style-guide
+    defaults to improve readability
+  - Lower ~25% of canvas below the legend is unused empty space — reduce canvas height
+    or shift content to improve canvas utilization
+  - Degree-based node sizing differences (node_sizes {1:(30,20), 2:(46,34), 3:(62,48)})
+    are not clearly visible in PNG output — consider increasing the size differential
+    so hub vs. peripheral nodes are visually distinct
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — correct theme surface.
-      Chrome: Title "Word Co-occurrences · arc-basic · python · pygal · anyplot.ai" in dark ink, clearly readable at top (~65-70% of canvas width). Node labels (science, data, research, study, analysis, result, method, evidence, theory, review) in dark text below the baseline — readable but the central cluster (study/analysis/result/method) is tightly spaced. Legend text (Frequent co-occurrence, Moderate co-occurrence, Rare co-occurrence) is clearly readable.
-      Data: Ten amber/gold (#DDCC77) nodes with dark (#1A1A17) outline rings arranged along a horizontal baseline. Arcs above: green (#009E73) for Frequent arcs — 3 arcs with thick stroke (26px); lavender (#C475FD) for Moderate — 7 arcs with medium stroke (14px); blue (#4467A3) for Rare — 3 thin arcs (5px). Arc heights scale with node distance — the long-range science↔review arc rises highest. Significant empty space in the lower ~25% of the canvas below the legend.
-      Legibility verdict: PASS — all text readable, no light-on-light failures. Empty lower canvas is a layout concern, not a legibility one.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "Word Co-occurrences · arc-basic · python · pygal · anyplot.ai" in dark ink at top — readable. Node labels along x-axis in dark text, rotated 30°, readable. Legend text in dark ink — readable. All chrome is dark-on-light, no legibility issues.
+      Data: Ten amber/gold (#DDCC77) node circles along baseline with dark outlines. Thirteen arcs in brand-green #009E73 (Frequent, thick), lavender #C475FD (Moderate, medium), steel-blue #4467A3 (Rare, thin). Arc heights scale with node distance. Lower ~25% of canvas below legend is empty space.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — correct theme surface.
-      Chrome: Title and all labels rendered in light cream text — clearly readable against the dark background. Legend text is light-colored. No dark-on-dark failures observed.
-      Data: Data colors are identical to the light render — amber nodes, green/lavender/blue arcs. The amber nodes read slightly less distinctly against the dark background compared to light, but remain visible with the INK outline ring.
-      Legibility verdict: PASS — all text readable in both themes, chrome correctly adapts.
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Title and all text flip to light cream tones — readable. No dark-on-dark text failures observed. Legend entries readable in light-colored text.
+      Data: Arc colors (brand green, lavender, blue) are identical to light render — only chrome flips as expected. Amber node circles remain #DDCC77, clearly visible against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). All text readable in both themes. Slight proportional concern
-          with tight node labels in central cluster.
+        comment: Font sizes explicitly set but below style-guide recommendation (title=54
+          vs 66, label=46 vs 56, major=36 vs 44, legend=36 vs 44) for 2400x2400 canvas
+          — text slightly compact but readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No outright overlap, but study/analysis/result/method labels are
-          tightly spaced in the middle region and may crowd at mobile scale.
+        comment: Minimal to no overlap; 30-degree label rotation helps; slight crowding
+          between adjacent mid-section labels
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes well-sized (dots_size 42/32 for outline/fill). Arc weight differentiation
-          visible via color and stroke width. Rare arcs (stroke 5) are thin but identifiable.
+        comment: All arcs and nodes clearly visible; weight thickness encoding legible;
+          degree-based node sizing not clearly differentiated in PNG output — nodes
+          appear near-uniform
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue from Imprint palette — CVD-safe trio. No red-green
-          sole encoding.
+        comment: Green/purple/blue arc palette is CVD-safe; amber nodes contrast well
+          against both backgrounds; no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
         passed: true
-        comment: Bottom ~20-25% of canvas is empty (below legend). Chart content only
-          uses ~60-65% of canvas height. Layout not cut-off but significant wasted
-          space.
+        comment: Plot occupies upper ~70% of 2400x2400 canvas; lower ~25-30% below
+          legend is unused empty space creating visual imbalance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with context (Word Co-occurrences). No x/y axis
-          titles needed for arc diagram — node labels serve that role.
+        comment: Title correct with optional descriptive prefix; node labels serve
+          as x-axis identifiers; y-axis hidden as expected for arc diagram
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Frequent). Second #C475FD (Moderate). Third
-          #4467A3 (Rare). Amber #DDCC77 for nodes as semantic anchor. Both themes
-          correct.'
+        comment: 'First weight category (Frequent) uses #009E73; subsequent follow
+          Imprint canonical order (#C475FD, #4467A3); amber anchor #DDCC77 for nodes
+          appropriate; backgrounds correct #FAF8F1/#1A1A17; data colors identical
+          between themes'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean execution with correct palette and dual-encoding (color + width)
-          but no design choices that elevate beyond a well-configured default. Empty
-          canvas section and uniform node sizing reduce polish.
+        passed: true
+        comment: Thoughtful design with weight-encoded colors, arc thickness variation,
+          amber nodes for clear separation; above generic defaults but node size differentiation
+          not visually evident
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid hidden, axis lines removed via CSS, legend limited to 3 entries
-          via CSS — deliberate refinement effort. However, bottom whitespace imbalance
-          and lack of degree-based node differentiation limit the score.
+        passed: true
+        comment: Grid disabled, axis lines removed via CSS, legend at bottom in horizontal
+          layout; clean low-noise composition
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly but no visual hierarchy or emphasis on insights.
-          All nodes appear equally weighted visually despite having different connection
-          counts. No focal point guiding the viewer.
+        passed: true
+        comment: Arc color and thickness encodes connection frequency; arc height
+          shows near vs. long-range; peripheral node review is visually apparent;
+          viewer can identify hub and sparse nodes
     spec_compliance:
       score: 15
       max: 15
@@ -156,29 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes along horizontal line, semi-circular
-          arcs above, height proportional to node distance.'
+        comment: Correct arc diagram with nodes along horizontal baseline and arcs
+          curving above
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: node labels, weighted edges, arc height ∝
-          distance, semi-transparent arcs (opacity=0.85), color-coded by weight.'
+        comment: Arc height proportional to node distance, semi-transparent arcs (opacity=0.85),
+          node labels along axis, color-coding by weight, thickness encoding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 10 nodes visible, all 13 edges rendered. X positions map to node
-          sequence correctly.
+        comment: All 10 nodes and 13 edges rendered; arc heights correctly reflect
+          index distances
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format: ''Word Co-occurrences · arc-basic · python · pygal
-          · anyplot.ai'' — correct. Legend labels accurate.'
+        comment: Title is 'Word Co-occurrences · arc-basic · python · pygal · anyplot.ai';
+          legend labels (Frequent, Moderate, Rare co-occurrence) match data encoding
     data_quality:
       score: 15
       max: 15
@@ -188,24 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all arc diagram features: varied connection counts, peripheral
-          node (review with 1 edge), central hub nodes, short-range and long-range
-          arcs, three weight tiers.'
+        comment: 'Demonstrates all arc diagram features: short- and long-range connections,
+          hub nodes (degree 3), peripheral node (degree 1), three weight tiers'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Word co-occurrences in scientific corpus — neutral, realistic, recognizable
-          vocabulary with semantically meaningful connections (science-research, data-analysis,
-          method-evidence).
+        comment: Word co-occurrence in academic text is real, neutral, and comprehensible;
+          vocabulary is coherent and meaningful
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes (within spec's 10-50 range), 13 edges, plausible weight
-          distribution across the three categories.
+        comment: 10 nodes and 13 edges within spec recommended range; weight tiers
+          well-motivated; arc distances realistic
     code_quality:
       score: 10
       max: 10
@@ -215,62 +197,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → style → chart config → legend series
-          → arc generation → nodes → save.'
+        comment: 'Linear flow: imports → theme tokens → data → chart config → series
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Edge data is hardcoded — fully deterministic.
+        comment: np.random.seed(42) set; data is otherwise deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: math, os, numpy, pygal, pygal.style — all used.
+        comment: 'All imports used: math (cos/sin/pi), os (getenv), numpy (seed/linspace),
+          pygal, Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Dict lookups for arc colors/widths/labels
-          are idiomatic. CSS workarounds are minimal and well-commented.
+        comment: Clean, appropriately complex; CSS overrides are a reasonable pygal
+          idiom; arc generation loop is readable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
-          library pygal).
+          pygal)
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correctly uses pygal.XY for coordinate-based arc rendering. Style
-          object properly configured. CSS injection is advanced but also signals working
-          around library constraints.
+        passed: true
+        comment: Correct use of pygal.XY for coordinate-based arcs, Style object for
+          theming, chart.add() with per-series stroke/dot config, render_to_png +
+          render for dual output
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: HTML interactive export, CSS injection for legend filtering, x_labels
-          with value/label dict — these are library-specific features. However, the
-          main pygal differentiator (interactive tooltips in HTML) is not highlighted
-          as a design feature.
-  verdict: REJECTED
+        passed: true
+        comment: Leverages pygal interactive HTML output with per-edge and per-node
+          tooltips; CSS legend-entry hiding is a creative pygal-specific solution
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - html-export
-  - manual-ticks
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups

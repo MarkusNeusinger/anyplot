@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Created: 2026-05-30
 """
 
 import math
