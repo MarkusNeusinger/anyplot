@@ -77,7 +77,11 @@ Estimated share *within* JS charting demand. (npm downloads + GitHub stars +
 | **ApexCharts**       |  ~4 %  | MIT         | SVG             | yes     | Popular in admin templates / dashboards.                             |
 | **Observable Plot**  |  ~3 %  | ISC         | SVG, declarative| yes     | Mike Bostock's modern successor concept to D3 for everyday charts.   |
 | **Vega / Vega-Lite** |  ~3 %  | BSD         | JSON spec       | yes     | Altair already covers Vega-Lite from Python.                         |
+| **MUI X Charts**     |  ~2 %  | MIT †       | React (SVG)     | yes     | Charts in the MUI ecosystem. Community pkg `@mui/x-charts` is MIT; Pro features (zoom/pan, …) are commercial → out of scope. |
 | Nivo, Visx, amCharts |  ~4 %  | mixed       | various         | yes     | React/enterprise niches.                                             |
+
+† MIT applies to the community package `@mui/x-charts`. `@mui/x-charts-pro` (advanced
+zoom & pan, etc.) is commercially licensed and out of scope — see §9.
 
 ---
 
@@ -206,9 +210,9 @@ Benefits:
   relevant — no schema change needed.
 
 Framework-agnostic libraries set `framework: "none"` (the default).
-Framework-only libraries get tagged accordingly. **Recharts** is the only
-Tier 3 entry currently affected; everything in Tier 1 / Tier 2 is
-framework-agnostic.
+Framework-only libraries get tagged accordingly. **Recharts** and **MUI X
+Charts** are the Tier 3 entries currently affected; everything in Tier 1 /
+Tier 2 is framework-agnostic.
 
 ### Licensing policy
 
@@ -287,6 +291,9 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
    is mature.
 9. **ApexCharts (JavaScript)** — fills the "admin-template / dashboard" SEO
    long tail.
+10. **MUI X Charts (TypeScript / React)** — community `@mui/x-charts` (MIT) serves the
+    MUI/React dashboard audience; **Pro features stay out** (see §9). Framework-locked
+    like Recharts, so it sits in the same niche tier.
 
 ### Defer / skip
 
@@ -352,6 +359,10 @@ entries.
   commercial-with-free-tier model) at ~18× lower download volume, and a
   second commercial entry would weaken the FOSS-first stance. Revisit only
   if Plausible data shows unmet demand for amCharts-specific examples.
+- **MUI X Charts: community tier only.** `@mui/x-charts` (MIT) is in scope as a
+  React/JavaScript entry (Tier 3, §7). `@mui/x-charts-pro` / Premium features (advanced
+  zoom & pan, etc.) are commercially licensed and out of scope — same FOSS-first reasoning
+  as the Highcharts/amCharts policy in §6. Snippets must use only the MIT community surface.
 - **Phase 5 (Julia / Makie.jl) shipped before Phases 1+2 (JavaScript).**
   The original roadmap order was Phase 1 (Chart.js / D3 / ECharts) →
   Phase 2 (Highcharts JS) → Phase 3 (ggplot2) → Phase 4 (Recharts /
