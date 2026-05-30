@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -8,7 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import PowerNorm
+from matplotlib.colors import LinearSegmentedColormap, PowerNorm
 
 
 # Theme tokens
@@ -19,8 +19,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Plasma: perceptually uniform, multi-hue (change request: distinct from sibling Inferno implementations)
-cmap = plt.cm.plasma.copy()
+# Imprint sequential colormap (single-polarity: green→blue)
+cmap = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 cmap.set_bad(color="#1A1A17")  # interior of the set stays dark on both themes
 
 # Data — compute Mandelbrot escape iterations on the complex plane
