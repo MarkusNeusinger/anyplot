@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -34,11 +35,27 @@ n_bus  = 320
 bike_times = clamp.(randn(n_bike) .* 5.0  .+ 22.0,  8.0, 50.0)
 bus_times  = clamp.(randn(n_bus)  .* 11.0 .+ 38.0, 10.0, 85.0)
 
+mean_bike = mean(bike_times)
+mean_bus  = mean(bus_times)
+mean_diff = round(Int, mean_bus - mean_bike)
+
+# Theme-adaptive fill alpha: dark background absorbs low-alpha fills — boost for visibility
+bike_alpha = THEME == "dark" ? 0.42 : 0.30
+bus_alpha  = THEME == "dark" ? 0.48 : 0.30
+
 # Plot
 fig = Figure(
     size            = (1600, 900),
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
+)
+
+Label(fig[0, 1],
+    "Bus commutes average ~$(mean_diff) min longer — bicycle wins for most urban trips";
+    color     = INK_SOFT,
+    fontsize  = 11,
+    halign    = :left,
+    tellwidth = false,
 )
 
 ax = Axis(
@@ -69,18 +86,45 @@ ax = Axis(
     xminorgridvisible  = false,
 )
 
+# Density curves with theme-adaptive fills
 density!(ax, bike_times;
-    color       = (IMPRINT_PALETTE[1], 0.30),
+    color       = (IMPRINT_PALETTE[1], bike_alpha),
     strokecolor = IMPRINT_PALETTE[1],
     strokewidth = 2.5,
     label       = "Bicycle",
 )
 
 density!(ax, bus_times;
-    color       = (IMPRINT_PALETTE[3], 0.30),
+    color       = (IMPRINT_PALETTE[3], bus_alpha),
     strokecolor = IMPRINT_PALETTE[3],
     strokewidth = 2.5,
     label       = "Bus",
+)
+
+# Mean reference lines — dashed verticals highlight the distributional gap
+vlines!(ax, mean_bike;
+    color     = (IMPRINT_PALETTE[1], 0.65),
+    linestyle = :dash,
+    linewidth = 1.5,
+)
+vlines!(ax, mean_bus;
+    color     = (IMPRINT_PALETTE[3], 0.65),
+    linestyle = :dash,
+    linewidth = 1.5,
+)
+
+# Rug plot — individual observations as tick marks along x-axis baseline
+scatter!(ax, bike_times, zeros(n_bike);
+    marker      = :vline,
+    markersize  = 10,
+    color       = (IMPRINT_PALETTE[1], 0.30),
+    strokewidth = 0,
+)
+scatter!(ax, bus_times, zeros(n_bus);
+    marker      = :vline,
+    markersize  = 10,
+    color       = (IMPRINT_PALETTE[3], 0.30),
+    strokewidth = 0,
 )
 
 axislegend(ax;
