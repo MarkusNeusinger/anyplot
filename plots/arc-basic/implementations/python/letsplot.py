@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -145,6 +145,11 @@ legend_text_df = pd.DataFrame(
 )
 legend_title_df = pd.DataFrame({"x": [legend_x], "y": [legend_y_start + 0.075], "label": ["Connection Strength"]})
 
+alice_df = node_df[node_df["name"] == "Alice"].copy()
+arc_peak_x = float((x_positions[0] + x_positions[9]) / 2)
+arc_peak_y = float(y_baseline + 0.08 * 9 + 0.04)
+arc_label_df = pd.DataFrame({"x": [arc_peak_x], "y": [arc_peak_y], "label": ["longest range"]})
+
 # Plot
 plot = (
     ggplot()
@@ -159,6 +164,7 @@ plot = (
     + scale_size_identity()
     + scale_color_identity()
     + scale_alpha_identity()
+    + geom_point(data=alice_df, mapping=aes(x="x", y="y"), size=22, color="#009E73", fill=PAGE_BG, stroke=2.5, shape=21)
     + geom_point(
         data=node_df,
         mapping=aes(x="x", y="y", size="node_size"),
@@ -168,7 +174,6 @@ plot = (
         shape=21,
         tooltips=layer_tooltips().title("@name").line("Total weight|@connections"),
     )
-    + scale_size_identity()
     + geom_text(data=label_df, mapping=aes(x="x", y="y", label="name"), size=9, color=INK, fontface="bold", vjust=1)
     + geom_segment(
         data=legend_lines,
@@ -179,8 +184,9 @@ plot = (
     + geom_text(
         data=legend_title_df, mapping=aes(x="x", y="y", label="label"), size=8, color=INK, fontface="bold", hjust=0
     )
+    + geom_text(data=arc_label_df, mapping=aes(x="x", y="y", label="label"), size=7, color=INK_SOFT, fontface="italic")
     + xlim(-0.05, 1.48)
-    + ylim(-0.09, 0.92)
+    + ylim(-0.12, 0.92)
     + labs(
         title="arc-basic · python · letsplot · anyplot.ai",
         subtitle="Character interactions in a story chapter — node size reflects connection strength",
