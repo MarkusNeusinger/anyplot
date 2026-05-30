@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: highcharts | Python 3.13
-Quality: 90/100 | Created: 2026-03-03
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-30
 """
 
 import os
