@@ -15,9 +15,9 @@
 ## What is anyplot?
 
 **anyplot** is an AI-powered platform for data visualization that automatically discovers, generates, tests, and
-maintains plotting examples. Browse hundreds of plots across major visualization libraries — matplotlib, seaborn,
-plotly, bokeh, altair, plotnine, pygal, highcharts, and lets-plot — with an architecture ready to welcome additional
-ecosystems over time.
+maintains plotting examples. Browse hundreds of plots across 11 major visualization libraries in Python, R, and Julia —
+matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot, ggplot2, and Makie.jl — with an
+architecture ready to welcome additional ecosystems over time.
 
 **Community-driven, AI-maintained** - Propose plot ideas via GitHub Issues, AI generates the code, automated quality
 checks ensure excellence. Zero manual coding required.
@@ -38,7 +38,7 @@ checks ensure excellence. Zero manual coding required.
 ## Architecture
 
 **Specification-first design**: Every plot starts as a Markdown spec (library-agnostic), then AI generates
-implementations for all 10 supported libraries across Python and R.
+implementations for all 11 supported libraries across Python, R, and Julia.
 
 ```
 plots/scatter-basic/
@@ -72,6 +72,7 @@ See [docs/reference/](docs/reference/) for details.
 
 **Plotting (Python)**: matplotlib • seaborn • plotly • bokeh • altair • plotnine • pygal • highcharts • lets-plot
 **Plotting (R)**: ggplot2
+**Plotting (Julia)**: Makie.jl
 
 **Infrastructure**: Google Cloud Run • Cloud SQL • Cloud Storage
 
