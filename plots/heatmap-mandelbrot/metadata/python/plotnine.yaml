@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-mandelbrot
 created: '2026-03-03T13:48:57Z'
-updated: '2026-05-30T11:07:26Z'
+updated: '2026-05-30T11:17:59Z'
 generated_by: claude-sonnet
 workflow_run: 26681892698
 issue: 4431
@@ -12,46 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Correct Imprint sequential palette (low=#009E73, high=#4467A3) applied to continuous
-    escape-time data — no forbidden colormaps used
-  - Log-transform of escape time prevents flat-green exterior collapse and spreads
-    colour gradient across the boundary region
-  - Smooth escape-time formula (normalized iteration count minus log2(log2|z|)) correctly
-    avoids discrete banding
-  - 'Both themes fully wired: PAGE_BG, INK, INK_SOFT all propagate to title, axes,
-    tick labels, legend, and plot background'
-  - geom_raster(interpolate=True) + coord_fixed(ratio=1.0) is the idiomatic plotnine
-    combination for a correctly-proportioned continuous raster
-  - na_value=INTERIOR_COLOR in scale_fill_gradient cleanly handles the interior (never-escaping)
-    pixels as a distinct solid near-black
-  - Annotations ('Cardioid', 'Period-2 Bulb') placed on the dark interior with near-white
-    italic text at alpha=0.65 provide context without cluttering
+  - Mathematically accurate Mandelbrot computation with correct smooth escape-time
+    coloring (log-transform + normalized iteration count) that correctly reveals boundary
+    detail
+  - 'All Imprint palette rules followed for continuous data — only Imprint hex values
+    (#009E73, #2ABCCD, #4467A3) used in the gradient'
+  - Complete theme-adaptive chrome with correct token usage (INK, INK_SOFT, ELEVATED_BG,
+    PAGE_BG) producing correct renders in both light and dark themes
+  - Custom colorbar break labels mapping log-space positions back to original iteration
+    counts — accurate and informative
+  - Perfect canvas dimensions (3200x1800), mathematical aspect ratio preserved via
+    coord_fixed(1.0)
+  - 'All spec requirements met: coordinate ranges, grid resolution, interior near-black
+    coloring, annotations for named features (Cardioid, Period-2 Bulb)'
   weaknesses:
-  - Annotation size values (size=8 and size=7) exceed the plotnine library guide recommendation
-    of ~2.5–4 for annotate/geom_text (which uses mm, not pt) — at this scale the text
-    appears acceptable in the render but is technically above the recommended range;
-    reduce to size=4–5 for future-proofing
-  - 'Design excellence is moderate: no spine removal beyond theme_minimal defaults,
-    and the exterior gradient appears visually flat on the green side (most exterior
-    pixels escape in 1–5 iterations, clustering near 0 on the log-scale), which limits
-    boundary contrast between fast-escaping regions'
-  - LM-02 Distinctive Features is modest — could leverage more plotnine-specific strengths
-    (e.g. facet_wrap for zoom panel, stat_* transformations)
+  - Annotations ('Cardioid', 'Period-2 Bulb') use size=4mm and alpha=0.65, which makes
+    them subtle and potentially hard to read at small sizes — increase size to 5 or
+    alpha to 0.8 for better readability without disrupting the aesthetic
+  - DE-03 storytelling is limited by the dominant uniform-green exterior; the most
+    visually interesting region (the fractal boundary) lacks emphasis — consider a
+    slight color stretch or adding a subtle annotation pointing to the boundary complexity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, visible in margins around the plot panel and behind the legend.
-      Chrome: Title "heatmap-mandelbrot · python · plotnine · anyplot.ai" in bold dark ink, centred, clearly readable. Axis label "Re(c)" on x-axis and "Im(c)" on y-axis in dark ink, size 10pt, readable. Tick labels (-2, -1, 0, 1 and -1.0…1.0) in INK_SOFT dark-grey, size 8pt, all readable. Colorbar titled "Escape Iterations" with tick marks at 0, 9, and 100.
-      Data: Exterior pixels (fast escape) render as Imprint brand green #009E73 fading toward Imprint blue #4467A3 near the set boundary. Interior (never-escaping) pixels are near-black #0D0D0A. Annotations "Cardioid" and "Period-2 Bulb" appear in near-white italic text at alpha=0.65 on the dark interior, legible. Characteristic cardioid and period-2 bulb shapes are clearly identifiable.
-      Legibility verdict: PASS — all chrome text is dark on warm-off-white; no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "heatmap-mandelbrot · python · plotnine · anyplot.ai" in bold dark ink, fully readable. X-axis "Re(c)", Y-axis "Im(c)" readable in dark ink. Tick labels (-2,-1,0,1 / -1.0,-0.5,0.0,0.5,1.0) readable in INK_SOFT. Colorbar labeled "Escape\nIterations" with labels 0, 9, 100.
+      Data: Green (#009E73) to cyan (#2ABCCD) to blue (#4467A3) gradient exterior; near-black (#0D0D0A) interior. Fractal boundary clearly visible. Italic near-white annotations "Cardioid" and "Period-2 Bulb" inside black interior regions at alpha=0.65.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, visible in margins and behind the legend frame.
-      Chrome: Title in light F0EFE8 ink, centred, clearly readable against the dark background. Axis labels "Re(c)" / "Im(c)" and tick labels in light INK_SOFT B8B7B0, all readable — no dark-on-dark failures observed. Colorbar "Escape Iterations" label and tick values also light and readable. Legend frame uses elevated dark bg #242420.
-      Data: Identical data colours to the light render — green #009E73 exterior, blue #4467A3 near boundary, near-black interior. Annotations remain in near-white at alpha=0.65, legible against the dark interior region.
-      Legibility verdict: PASS — no dark-on-dark failures; all text is light-coloured on the near-black surface.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light #F0EFE8 text, readable. Axis labels in light ink, readable. Tick labels in #B8B7B0 (INK_SOFT dark), readable — no dark-on-dark failures. Colorbar with elevated background frame visible and readable.
+      Data: Colors identical to light render — same green-to-cyan-to-blue gradient exterior, same near-black interior. Brand green #009E73 clearly visible. Annotations "Cardioid" and "Period-2 Bulb" remain visible as near-white on black interior.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,50 +57,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels all legible in both themes. Minor:
-          annotation size=8/7 exceeds the plotnine mm-scale recommendation of ~2.5-4,
-          though visually acceptable.'
+        comment: All chrome text readable in both themes; annotations (size=4mm, alpha=0.65)
+          are intentionally subtle and borderline-readable at small sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps detected in either render.
+        comment: No text overlaps with other text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Fractal boundary, interior, and gradient all clearly visible. Annotations
-          readable on dark interior.
+        comment: Green-to-blue gradient clear, fractal boundary well-revealed by log-transform,
+          interior near-black contrasts correctly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe; interior black provides strong
-          separation from exterior gradient.
+        comment: Imprint palette CVD-safe; green-to-blue gradient avoids red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). coord_fixed preserves mathematical
-          aspect ratio. No overflow or clipping.
+        comment: Canvas gate passed; 3200x1800 confirmed; coord_fixed preserves proportions;
+          no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(c) and Im(c) are correct mathematical notation. Title format matches
-          spec.
+        comment: Re(c) and Im(c) are descriptive; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient uses imprint_seq stops (#009E73 low, #4467A3
-          high). Backgrounds #FAF8F1/#1A1A17 correct. Chrome adapts properly.'
+        comment: 'Continuous scale uses only Imprint colors (#009E73, #2ABCCD, #4467A3);
+          backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
       score: 12
       max: 20
@@ -115,25 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): log-transform is a thoughtful choice, near-white
-          italic annotations with alpha=0.65 show intentional design, Imprint gradient
-          is well-applied. Not exceptional but deliberate.'
+        comment: Log-transform, custom colorbar breaks mapping to original iteration
+          counts, ANNOT_COLOR constant, Imprint 3-stop gradient — thoughtful beyond
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: 'Above default (2): grid fully removed (correct for raster), annotations
-          subtle with alpha blending, clean colorbar with nbin=300 for smooth gradient.
-          Limited spine customization beyond theme_minimal.'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): key mathematical regions labelled (Cardioid,
-          Period-2 Bulb), log-transform creates visible boundary detail, gradient
-          guides from exterior to boundary. Clear focal point.'
+        comment: Grid removed, ticks removed, minimal chrome, clean margins, ELEVATED_BG
+          for legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Annotations for Cardioid/Period-2 Bulb and log-transform help, but
+          dominant uniform-green exterior limits visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -143,54 +134,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct raster heatmap of the Mandelbrot set using geom_raster.
+        comment: Correct heatmap via geom_raster for dense pixel grid data
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth coloring via normalized iteration count, cardioid and period-2
-          bulb visible, axes labelled with coordinate values, interior colored with
-          distinct solid near-black, aspect ratio preserved.
+        comment: Smooth coloring via log-transform, full Mandelbrot with cardioid
+          and period-2 bulb, interior near-black, aspect ratio preserved
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Re(c) [-2.5,1.0], Y=Im(c) [-1.25,1.25] — matches spec defaults
-          exactly. Grid 1200x857 exceeds 800x600 minimum.
+        comment: Real->x, imaginary->y, escape time->fill; correct ranges -2.5 to
+          1.0, -1.25 to 1.25
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-mandelbrot · python · plotnine · anyplot.ai' matches
-          required format. Colorbar labelled 'Escape Iterations' with original iteration
-          tick values.
+        comment: Title is exactly 'heatmap-mandelbrot · python · plotnine · anyplot.ai';
+          legend labeled 'Escape Iterations'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full Mandelbrot set with fractal boundary detail, smooth escape-time
-          gradient, distinguished interior, and annotated key structures.
+        comment: Full Mandelbrot set with smooth coloring, interior/exterior distinction,
+          named feature annotations; large uniform-green exterior slightly reduces
+          visual richness
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pure mathematical content, neutral and educational. No controversial
-          data.
+        comment: Mathematically correct z^2+c iteration; standard coordinate ranges;
+          realistic max_iter=100
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spec-specified ranges and max_iterations=100 used exactly.
+        comment: Grid 1200x857 exceeds 800x600 spec minimum; standard Mandelbrot domain;
+          sensible iteration limit
     code_quality:
       score: 10
       max: 10
@@ -200,32 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, straightforward procedural flow.
+        comment: No functions or classes; linear flow; vectorized numpy
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Mandelbrot computation is fully deterministic — no randomness.
+        comment: Fully deterministic; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path fix is necessary for self-reference avoidance.
+        comment: All imports used; sys.path manipulation necessary and explained
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized numpy iteration, log-transform explained in comments,
-          no fake UI.
+        comment: Vectorized iteration, grammar-of-graphics composition, non-obvious
+          choices commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png with correct parameters.
+        comment: Saves as plot-{THEME}.png; no bare plot.png; current plotnine 0.15.4
+          API
     library_mastery:
       score: 7
       max: 10
@@ -235,24 +227,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics composition with + operator, geom_raster for
-          continuous raster, coord_fixed for mathematical proportions, guides/guide_colorbar
-          for colorbar control. Idiomatic.
+        comment: geom_raster for dense pixel data, scale_fill_gradientn with na_value,
+          coord_fixed, guide_colorbar(nbin=300), expand=(0,0) — all idiomatic plotnine/ggplot2
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: geom_raster(interpolate=True), na_value in scale_fill_gradient for
-          interior handling, guide_colorbar(nbin=300) for smooth gradient. Solid but
-          not exceptional use of plotnine-specific features.
+        passed: false
+        comment: geom_raster(interpolate=True), coord_fixed, guide_colorbar with high
+          nbin — good plotnine-specific usage; solid but not deeply innovative
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
@@ -261,3 +250,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
+  - minimal-chrome
