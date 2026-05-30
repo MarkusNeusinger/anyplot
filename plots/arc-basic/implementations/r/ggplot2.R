@@ -52,17 +52,15 @@ edges_df <- tribble(
   rename(x2 = x) %>%
   mutate(edge_id = row_number())
 
-# Semi-ellipse arc: height proportional to span distance
-arc_points <- function(x1, x2, h_scale = 0.55, n = 80) {
-  cx <- (x1 + x2) / 2
-  r  <- abs(x2 - x1) / 2
-  t  <- seq(pi, 0, length.out = n)
-  tibble(arc_x = cx + r * cos(t), arc_y = h_scale * r * sin(t))
-}
-
+# Semi-ellipse arcs: height proportional to span distance, inlined per-row
 arc_data <- edges_df %>%
   rowwise() %>%
-  mutate(pts = list(arc_points(x1, x2))) %>%
+  mutate(pts = list({
+    cx <- (x1 + x2) / 2
+    r  <- abs(x2 - x1) / 2
+    t  <- seq(pi, 0, length.out = 80)
+    tibble(arc_x = cx + r * cos(t), arc_y = 0.55 * r * sin(t))
+  })) %>%
   ungroup() %>%
   unnest(cols = c(pts))
 
@@ -96,11 +94,11 @@ p <- ggplot() +
   # Node labels rotated below baseline
   geom_text(
     data = node_df, aes(x = x, y = -0.15, label = name),
-    color = INK_SOFT, size = 2.5, angle = 40, hjust = 1, vjust = 1
+    color = INK_SOFT, size = 3.0, angle = 40, hjust = 1, vjust = 1
   ) +
   scale_color_manual(values = rel_colors, name = "Relationship") +
   scale_x_continuous(expand = expansion(mult = c(0.04, 0.12))) +
-  coord_cartesian(ylim = c(-2.0, 2.8), clip = "off") +
+  coord_cartesian(ylim = c(-0.8, 2.8), clip = "off") +
   labs(title = plot_title) +
   theme_void() +
   theme(
