@@ -1,100 +1,104 @@
 library: plotnine
+language: python
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:36Z'
-updated: '2026-02-24T21:10:23Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457533627
-issue: 0
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/plotnine/plot.png
-preview_html: null
+updated: '2026-05-30T05:43:36Z'
+generated_by: claude-sonnet
+workflow_run: 26675728304
+issue: 812
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - grid-styling
-  - edge-highlighting
 review:
   strengths:
-  - Colorblind-safe blue/amber palette with darker edge colors for candle body definition
-  - Data storytelling through opening price reference line and closing price annotation
-    with percentage change
-  - Clean idiomatic plotnine grammar of graphics composition with proper layer ordering
-  - Subtle, well-tuned grid styling (y-only, low alpha) and removed chart chrome
-  - Good data generation producing realistic stock price movements with both bullish
-    and bearish periods
+  - Semantic color assignment (green=Bullish, red=Bearish) is a correct Imprint palette
+    exception perfectly aligned with universal finance conventions
+  - 'Clear data storytelling: dashed reference line at opening price + Close annotation
+    tell a complete narrative without over-annotating'
+  - Full theme adaptivity — all chrome tokens correctly flip between light/dark; data
+    colors stay constant
+  - 'Idiomatic plotnine grammar: clever suppression of duplicate legend via guide=None,
+    lambda tick formatter, coord_cartesian for clipping-free ylim'
+  - Dynamic title fontsize formula ensures correct proportions for any title length
   weaknesses:
-  - Minor extra vertical whitespace from coord_cartesian padding could be tightened
-  - Annotation text (size=9) is notably smaller than other text elements
-  image_description: The plot displays a candlestick chart of 30 trading days from
-    January 2 to approximately February 10, 2024. The title "candlestick-basic · plotnine
-    · pyplots.ai" appears in bold at the top. A legend at the top shows "Direction"
-    with blue squares for "Bullish" and orange squares for "Bearish." The y-axis is
-    labeled "Price ($)" with dollar-formatted values from ~$130 to ~$155. The x-axis
-    shows date labels (Jan 02, Jan 09, Jan 16, Jan 23, Jan 30, Feb 06). Each candlestick
-    has a colored rectangular body (blue for bullish, orange/amber for bearish) with
-    thinner wicks extending above and below. Wick colors use darker shades matching
-    their direction. A dashed horizontal reference line sits at $150 (the opening
-    price) with a gray "Open $150" annotation near the right edge. At the bottom-right,
-    an orange "Close $136 (-9.5%)" annotation shows the net change. The overall trend
-    is clearly downward. The background is clean with subtle horizontal grid lines
-    only, no vertical grid lines.
+  - Footnote annotations (size=3 ~8.5pt) are marginal at mobile-scaled width (~400px)
+    — consider size=3.5 or 4 for better readability on small screens
+  - Green/red are the sole visual differentiator for Bullish/Bearish; the legend labels
+    and universal finance convention mitigate CVD risk, but redundant encoding (e.g.,
+    slightly different body opacity per direction) would improve accessibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "candlestick-basic · python · plotnine · anyplot.ai" in large dark text, spans ~75-80% canvas width. Y-axis label "Price ($)" clearly readable. X-axis tick labels (Jan 02 – Feb 06) and Y-axis tick labels ($130, $140, $150) all clearly readable in dark ink. Legend "Direction" with Bullish/Bearish swatches at top — legible. Small annotations "Open $150" and "Close $136 (-9.5%)" present at size=3 (~8.5pt), visible but marginal at mobile scale.
+      Data: Green #009E73 bullish candles, matte-red #AE3030 bearish candles, matching wick segments. First series correctly uses #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels all use light-colored text — clearly readable against dark surface. Legend box uses elevated dark fill #242420 with border. "Open $150" annotation in muted light token, "Close $136 (-9.5%)" in red — both visible. No dark-on-dark failures detected.
+      Data: Colors are IDENTICAL to light render — green #009E73 bullish, matte-red #AE3030 bearish. All data elements clearly distinguishable on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt bold, axis_title=20pt,
-          axis_text=16pt, legend_title=16pt bold, legend_text=14pt. All text clearly
-          readable.'
+        comment: 'All major font sizes explicitly set; proportions well-balanced.
+          Minor deduction: footnote annotations at size=3 (~8.5pt) may be marginal
+          at 400px mobile-scaled width.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. X-axis date labels well-spaced. Annotations
-          placed in clear space.
+        comment: No text overlaps detected in either render; candlesticks well-spaced,
+          legend does not intrude on data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candlestick bodies appropriately sized (width 0.7). Wicks visible
-          at size=0.8 and thinner than bodies.
+        comment: 30 candlestick bodies and wicks well-sized; wicks visibly thinner
+          than bodies.
       - id: VQ-04
         name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Green/red is the Imprint semantic exception for finance (bullish/bearish);
+          legend provides text redundancy. CVD risk for deuteranopes remains as hue
+          is sole differentiator.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/amber palette is colorblind-safe with strong contrast against
-          white background.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills ~55-60% of canvas. Slight extra vertical whitespace from
-          coord_cartesian padding.
+        comment: Plot fills canvas well, balanced margins, no content cut off. Canvas
+          gate passed (3200x1800).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price ($)' is descriptive with units. Date tick labels are
-          self-explanatory.
+        comment: Y-axis 'Price ($)' with units; X-axis empty (standard for date axes).
+          Title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Bullish), second #AE3030 (semantic finance
+          exception). Backgrounds #FAF8F1 light / #1A1A17 dark. All chrome tokens
+          theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -104,22 +108,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue/amber palette, darker edge colors, dollar-formatted y-axis,
-          reference annotations. Clearly above defaults.
+        comment: 'Strong design: intentional semantic colors, reference line as visual
+          anchor, dynamic title sizing, warm Imprint chrome — clearly above well-configured
+          defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: theme_minimal base, x-grid removed, y-grid subtle,
-          legend styled at top.'
+        comment: Y-axis-only grid at 15% opacity, theme_minimal base, clean axis lines.
+          Legend background/border present per style guide.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reference line at opening price and closing annotation with percentage
-          change create clear narrative.
+        comment: Reference line at opening price + net-change annotation create a
+          clear downtrend narrative. Color-coded wicks reinforce direction instantly.
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with bodies (geom_rect) and wicks (geom_segment).
+        comment: 'Correct candlestick: geom_rect for body + geom_segment for wick.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: OHLC data, color coding, wicks thinner
-          than body, date formatting, subtle grid.'
+        comment: Bullish and bearish candles, visible wicks thinner than bodies, date-formatted
+          axis, subtle grid.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows dates, y-axis shows price. Bodies map to open/close,
-          wicks to high/low.
+        comment: X=time (business days), Y=Price ($); all 30 data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly labels Bullish and Bearish
-          directions.
+        comment: 'Title: ''candlestick-basic · python · plotnine · anyplot.ai''. Legend
+          labels ''Bullish''/''Bearish'' match categories.'
     data_quality:
       score: 15
       max: 15
@@ -160,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both bullish and bearish candles, varying body sizes, varying
-          wick lengths, clear trend with intermittent rallies.
+        comment: Both bullish and bearish days with realistic variation in body size,
+          wick length, and directional runs.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price simulation at $150 with realistic daily movements. 30
-          business days is standard.
+        comment: 30 business-day OHLC series (Jan-Feb 2024) starting at $150; plausible
+          mid-cap stock scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices $130-$155 with daily moves of a few dollars are realistic
-          for equities.
+        comment: ~$3 daily std dev, ~$1.5 wick extensions, -9.5% period return — all
+          realistic for a moderately volatile stock.
     code_quality:
       score: 10
       max: 10
@@ -185,49 +189,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, derived columns, plot,
-          save. No functions or classes.'
+        comment: Clean Imports → Data → Plot → Save; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the beginning.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. No unused imports.
+        comment: All imported symbols are used; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Derived columns approach appropriate for plotnine
-          grammar. No over-engineering.
+        comment: Idiomatic pandas, dynamic title-size formula, clean theme layering.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Uses current plotnine API.
+        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5, units='in'.
+          No deprecated API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good idiomatic plotnine: grammar of graphics layers, aes mappings,
-          scale_manual, theme layering, coord_cartesian, pd.Categorical.'
+        comment: 'Expert GG composition: scale_fill_manual/scale_color_manual with
+          guide=None, coord_cartesian, lambda tick formatter, pd.Categorical for legend
+          ordering.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layer composition, dual fill/color scales with guide=None, pd.Categorical
-          for factor control are ggplot-distinctive techniques.
+        comment: Candlestick via layer composition (geom_rect + geom_segment) demonstrates
+          GG grammar mastery — no native geom exists, so layering is distinctly plotnine-idiomatic.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
+  - edge-highlighting
