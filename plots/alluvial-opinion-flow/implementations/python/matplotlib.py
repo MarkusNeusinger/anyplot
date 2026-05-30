@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-03
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as patheffects
@@ -11,117 +13,128 @@ import numpy as np
 from matplotlib.path import Path
 
 
-# Data: Employee engagement survey tracking 1000 staff across 4 quarterly waves
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic mapping for diverging opinion scale
+# Strongly positive → green, positive → cyan, neutral → muted, negative → ochre, strongly negative → red
+CAT_COLORS = {
+    "Strongly Support": "#009E73",  # Imprint brand green — strongly positive
+    "Support": "#2ABCCD",  # Imprint cyan — positive
+    "Neutral": INK_MUTED,  # Imprint muted anchor — undecided
+    "Oppose": "#BD8233",  # Imprint ochre — negative leaning
+    "Strongly Oppose": "#AE3030",  # Imprint matte red — strongly negative
+}
+
+# Data: Voter opinion on climate legislation tracked across 4 quarterly waves (n=1000)
 np.random.seed(42)
 
 waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
-categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
-colors = {
-    "Strongly Agree": "#306998",
-    "Agree": "#5BA865",
-    "Neutral": "#95A5A6",
-    "Disagree": "#E67E22",
-    "Strongly Disagree": "#C0392B",
-}
+categories = ["Strongly Support", "Support", "Neutral", "Oppose", "Strongly Oppose"]
 
-# Respondent counts per category at each wave
 node_values = {
-    "Q1 2025": {"Strongly Agree": 180, "Agree": 250, "Neutral": 220, "Disagree": 200, "Strongly Disagree": 150},
-    "Q2 2025": {"Strongly Agree": 200, "Agree": 230, "Neutral": 190, "Disagree": 210, "Strongly Disagree": 170},
-    "Q3 2025": {"Strongly Agree": 220, "Agree": 210, "Neutral": 160, "Disagree": 220, "Strongly Disagree": 190},
-    "Q4 2025": {"Strongly Agree": 240, "Agree": 190, "Neutral": 140, "Disagree": 230, "Strongly Disagree": 200},
+    "Q1 2025": {"Strongly Support": 160, "Support": 260, "Neutral": 230, "Oppose": 195, "Strongly Oppose": 155},
+    "Q2 2025": {"Strongly Support": 180, "Support": 245, "Neutral": 200, "Oppose": 205, "Strongly Oppose": 170},
+    "Q3 2025": {"Strongly Support": 205, "Support": 225, "Neutral": 165, "Oppose": 215, "Strongly Oppose": 190},
+    "Q4 2025": {"Strongly Support": 230, "Support": 200, "Neutral": 135, "Oppose": 225, "Strongly Oppose": 210},
 }
 
-# Flow matrices between consecutive waves (source_cat -> target_cat: count)
+# Flow matrices — row = source, col = target; row sums match source wave totals
 flows = [
-    # Q1 -> Q2: moderate shifts toward poles
+    # Q1 → Q2
     {
-        ("Strongly Agree", "Strongly Agree"): 155,
-        ("Strongly Agree", "Agree"): 20,
-        ("Strongly Agree", "Neutral"): 5,
-        ("Strongly Agree", "Disagree"): 0,
-        ("Strongly Agree", "Strongly Disagree"): 0,
-        ("Agree", "Strongly Agree"): 30,
-        ("Agree", "Agree"): 185,
-        ("Agree", "Neutral"): 25,
-        ("Agree", "Disagree"): 10,
-        ("Agree", "Strongly Disagree"): 0,
-        ("Neutral", "Strongly Agree"): 10,
-        ("Neutral", "Agree"): 20,
-        ("Neutral", "Neutral"): 145,
-        ("Neutral", "Disagree"): 35,
-        ("Neutral", "Strongly Disagree"): 10,
-        ("Disagree", "Strongly Agree"): 5,
-        ("Disagree", "Agree"): 5,
-        ("Disagree", "Neutral"): 15,
-        ("Disagree", "Disagree"): 150,
-        ("Disagree", "Strongly Disagree"): 25,
-        ("Strongly Disagree", "Strongly Agree"): 0,
-        ("Strongly Disagree", "Agree"): 0,
-        ("Strongly Disagree", "Neutral"): 0,
-        ("Strongly Disagree", "Disagree"): 15,
-        ("Strongly Disagree", "Strongly Disagree"): 135,
+        ("Strongly Support", "Strongly Support"): 140,
+        ("Strongly Support", "Support"): 15,
+        ("Strongly Support", "Neutral"): 5,
+        ("Strongly Support", "Oppose"): 0,
+        ("Strongly Support", "Strongly Oppose"): 0,
+        ("Support", "Strongly Support"): 30,
+        ("Support", "Support"): 208,
+        ("Support", "Neutral"): 17,
+        ("Support", "Oppose"): 5,
+        ("Support", "Strongly Oppose"): 0,
+        ("Neutral", "Strongly Support"): 7,
+        ("Neutral", "Support"): 20,
+        ("Neutral", "Neutral"): 156,
+        ("Neutral", "Oppose"): 37,
+        ("Neutral", "Strongly Oppose"): 10,
+        ("Oppose", "Strongly Support"): 3,
+        ("Oppose", "Support"): 2,
+        ("Oppose", "Neutral"): 22,
+        ("Oppose", "Oppose"): 143,
+        ("Oppose", "Strongly Oppose"): 25,
+        ("Strongly Oppose", "Strongly Support"): 0,
+        ("Strongly Oppose", "Support"): 0,
+        ("Strongly Oppose", "Neutral"): 0,
+        ("Strongly Oppose", "Oppose"): 20,
+        ("Strongly Oppose", "Strongly Oppose"): 135,
     },
-    # Q2 -> Q3: accelerating polarization
+    # Q2 → Q3
     {
-        ("Strongly Agree", "Strongly Agree"): 175,
-        ("Strongly Agree", "Agree"): 20,
-        ("Strongly Agree", "Neutral"): 5,
-        ("Strongly Agree", "Disagree"): 0,
-        ("Strongly Agree", "Strongly Disagree"): 0,
-        ("Agree", "Strongly Agree"): 35,
-        ("Agree", "Agree"): 165,
-        ("Agree", "Neutral"): 20,
-        ("Agree", "Disagree"): 10,
-        ("Agree", "Strongly Disagree"): 0,
-        ("Neutral", "Strongly Agree"): 5,
-        ("Neutral", "Agree"): 20,
+        ("Strongly Support", "Strongly Support"): 155,
+        ("Strongly Support", "Support"): 20,
+        ("Strongly Support", "Neutral"): 5,
+        ("Strongly Support", "Oppose"): 0,
+        ("Strongly Support", "Strongly Oppose"): 0,
+        ("Support", "Strongly Support"): 38,
+        ("Support", "Support"): 180,
+        ("Support", "Neutral"): 18,
+        ("Support", "Oppose"): 9,
+        ("Support", "Strongly Oppose"): 0,
+        ("Neutral", "Strongly Support"): 9,
+        ("Neutral", "Support"): 22,
         ("Neutral", "Neutral"): 120,
-        ("Neutral", "Disagree"): 35,
-        ("Neutral", "Strongly Disagree"): 10,
-        ("Disagree", "Strongly Agree"): 5,
-        ("Disagree", "Agree"): 5,
-        ("Disagree", "Neutral"): 15,
-        ("Disagree", "Disagree"): 155,
-        ("Disagree", "Strongly Disagree"): 30,
-        ("Strongly Disagree", "Strongly Agree"): 0,
-        ("Strongly Disagree", "Agree"): 0,
-        ("Strongly Disagree", "Neutral"): 0,
-        ("Strongly Disagree", "Disagree"): 20,
-        ("Strongly Disagree", "Strongly Disagree"): 150,
+        ("Neutral", "Oppose"): 39,
+        ("Neutral", "Strongly Oppose"): 10,
+        ("Oppose", "Strongly Support"): 3,
+        ("Oppose", "Support"): 3,
+        ("Oppose", "Neutral"): 22,
+        ("Oppose", "Oppose"): 147,
+        ("Oppose", "Strongly Oppose"): 30,
+        ("Strongly Oppose", "Strongly Support"): 0,
+        ("Strongly Oppose", "Support"): 0,
+        ("Strongly Oppose", "Neutral"): 0,
+        ("Strongly Oppose", "Oppose"): 20,
+        ("Strongly Oppose", "Strongly Oppose"): 150,
     },
-    # Q3 -> Q4: continued polarization, neutral shrinks further
+    # Q3 → Q4
     {
-        ("Strongly Agree", "Strongly Agree"): 195,
-        ("Strongly Agree", "Agree"): 20,
-        ("Strongly Agree", "Neutral"): 5,
-        ("Strongly Agree", "Disagree"): 0,
-        ("Strongly Agree", "Strongly Disagree"): 0,
-        ("Agree", "Strongly Agree"): 35,
-        ("Agree", "Agree"): 150,
-        ("Agree", "Neutral"): 15,
-        ("Agree", "Disagree"): 10,
-        ("Agree", "Strongly Disagree"): 0,
-        ("Neutral", "Strongly Agree"): 5,
-        ("Neutral", "Agree"): 15,
+        ("Strongly Support", "Strongly Support"): 182,
+        ("Strongly Support", "Support"): 18,
+        ("Strongly Support", "Neutral"): 5,
+        ("Strongly Support", "Oppose"): 0,
+        ("Strongly Support", "Strongly Oppose"): 0,
+        ("Support", "Strongly Support"): 37,
+        ("Support", "Support"): 162,
+        ("Support", "Neutral"): 18,
+        ("Support", "Oppose"): 8,
+        ("Support", "Strongly Oppose"): 0,
+        ("Neutral", "Strongly Support"): 8,
+        ("Neutral", "Support"): 17,
         ("Neutral", "Neutral"): 105,
-        ("Neutral", "Disagree"): 25,
-        ("Neutral", "Strongly Disagree"): 10,
-        ("Disagree", "Strongly Agree"): 5,
-        ("Disagree", "Agree"): 5,
-        ("Disagree", "Neutral"): 15,
-        ("Disagree", "Disagree"): 165,
-        ("Disagree", "Strongly Disagree"): 30,
-        ("Strongly Disagree", "Strongly Agree"): 0,
-        ("Strongly Disagree", "Agree"): 0,
-        ("Strongly Disagree", "Neutral"): 0,
-        ("Strongly Disagree", "Disagree"): 30,
-        ("Strongly Disagree", "Strongly Disagree"): 160,
+        ("Neutral", "Oppose"): 25,
+        ("Neutral", "Strongly Oppose"): 10,
+        ("Oppose", "Strongly Support"): 3,
+        ("Oppose", "Support"): 3,
+        ("Oppose", "Neutral"): 7,
+        ("Oppose", "Oppose"): 172,
+        ("Oppose", "Strongly Oppose"): 30,
+        ("Strongly Oppose", "Strongly Support"): 0,
+        ("Strongly Oppose", "Support"): 0,
+        ("Strongly Oppose", "Neutral"): 0,
+        ("Strongly Oppose", "Oppose"): 20,
+        ("Strongly Oppose", "Strongly Oppose"): 170,
     },
 ]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 x_positions = [2.0, 4.5, 7.0, 9.5]
 node_width = 0.8
@@ -142,10 +155,7 @@ for t_idx, wave in enumerate(waves):
         node_bounds[(wave, cat)] = {"x": x_positions[t_idx], "y_start": y, "height": h}
         y += h + node_gap
 
-# Track the largest cross-category flows for net flow highlighting
-cross_flows = []
-
-# Draw flows between consecutive waves
+# Draw bezier flows between consecutive waves
 for t_idx in range(len(waves) - 1):
     wave_from = waves[t_idx]
     wave_to = waves[t_idx + 1]
@@ -179,15 +189,8 @@ for t_idx in range(len(waves) - 1):
             y1_start = to_node["y_start"] + to_offsets[to_cat]
             y1_end = y1_start + to_height
 
-            # Stable flows (same category) get higher opacity, changers get lower
             is_stable = from_cat == to_cat
-            alpha = 0.6 if is_stable else 0.25
-
-            # Highlight the largest cross-category flows with a subtle edge
-            is_major_cross = (not is_stable) and flow_val >= 25
-            edge_color = colors[from_cat] if is_major_cross else "none"
-            edge_alpha = 0.5 if is_major_cross else 0
-            edge_lw = 1.0 if is_major_cross else 0
+            alpha = 0.55 if is_stable else 0.22
 
             verts = [
                 (x0, y0_start),
@@ -212,30 +215,21 @@ for t_idx in range(len(waves) - 1):
                 Path.CLOSEPOLY,
             ]
             path = Path(verts, codes)
-            patch = mpatches.PathPatch(
-                path, facecolor=colors[from_cat], edgecolor=edge_color, alpha=alpha, linewidth=edge_lw
-            )
-            if is_major_cross:
-                patch.set_path_effects([patheffects.withStroke(linewidth=1.5, foreground=colors[from_cat], alpha=0.4)])
+            patch = mpatches.PathPatch(path, facecolor=CAT_COLORS[from_cat], edgecolor="none", alpha=alpha)
             ax.add_patch(patch)
-
-            # Track cross-category flows for annotation
-            if not is_stable and flow_val >= 30:
-                cross_flows.append(
-                    {
-                        "from": from_cat,
-                        "to": to_cat,
-                        "val": flow_val,
-                        "mid_x": mid_x,
-                        "mid_y": (y0_start + y0_end + y1_start + y1_end) / 4,
-                    }
-                )
 
             from_offsets[from_cat] += from_height
             to_offsets[to_cat] += to_height
 
-# Draw nodes with FancyBboxPatch for rounded corners
-shadow_effect = [patheffects.withSimplePatchShadow(offset=(1.5, -1.5), shadow_rgbFace="#00000015")]
+# Draw nodes with rounded corners
+shadow_effect = [patheffects.withSimplePatchShadow(offset=(1.0, -1.0), shadow_rgbFace="#00000012")]
+short_names = {
+    "Strongly Support": "Str.Sup",
+    "Support": "Support",
+    "Neutral": "Neutral",
+    "Oppose": "Oppose",
+    "Strongly Oppose": "Str.Opp",
+}
 for wave in waves:
     for cat in categories:
         node = node_bounds[(wave, cat)]
@@ -244,114 +238,110 @@ for wave in waves:
             node_width,
             node["height"],
             boxstyle="round,pad=0.02",
-            facecolor=colors[cat],
-            edgecolor="white",
-            linewidth=2.5,
+            facecolor=CAT_COLORS[cat],
+            edgecolor=PAGE_BG,
+            linewidth=1.5,
             path_effects=shadow_effect,
         )
         ax.add_patch(rect)
 
-        # Label with category abbreviation and respondent count
         count = node_values[wave][cat]
-        short = {
-            "Strongly Agree": "Str.\nAgree",
-            "Agree": "Agree",
-            "Neutral": "Neutral",
-            "Disagree": "Disagree",
-            "Strongly Disagree": "Str.\nDisagree",
-        }
-        label = f"{short[cat]}\nn={count}"
-        text_color = "white" if cat != "Neutral" else "#1a1a1a"
+        label = f"{short_names[cat]}\nn={count}"
+        text_color = INK if cat == "Neutral" else "white"
         ax.text(
             node["x"],
             node["y_start"] + node["height"] / 2,
             label,
             ha="center",
             va="center",
-            fontsize=16,
+            fontsize=7,
             fontweight="bold",
             color=text_color,
-            path_effects=[patheffects.withStroke(linewidth=1.5, foreground="#00000022")],
+            path_effects=[patheffects.withStroke(linewidth=0.8, foreground="#00000015")],
         )
 
 # Wave column headers
 for t_idx, wave in enumerate(waves):
     ax.text(
         x_positions[t_idx],
-        total_height + 0.9,
+        total_height + 0.75,
         wave,
         ha="center",
         va="bottom",
-        fontsize=20,
+        fontsize=9,
         fontweight="bold",
-        color="#333333",
+        color=INK,
     )
 
-# Annotate net polarization trend
-# Calculate net change from Q1 to Q4 for key categories
+# Trend annotations to the right of Q4
 q1_neutral = node_values["Q1 2025"]["Neutral"]
 q4_neutral = node_values["Q4 2025"]["Neutral"]
-q1_strong = node_values["Q1 2025"]["Strongly Agree"] + node_values["Q1 2025"]["Strongly Disagree"]
-q4_strong = node_values["Q4 2025"]["Strongly Agree"] + node_values["Q4 2025"]["Strongly Disagree"]
+q1_strong = node_values["Q1 2025"]["Strongly Support"] + node_values["Q1 2025"]["Strongly Oppose"]
+q4_strong = node_values["Q4 2025"]["Strongly Support"] + node_values["Q4 2025"]["Strongly Oppose"]
 
 ax.annotate(
-    f"Neutral: {q1_neutral} \u2192 {q4_neutral}  (\u2013{q1_neutral - q4_neutral})",
+    f"Neutral: {q1_neutral} → {q4_neutral}  (−{q1_neutral - q4_neutral})",
     xy=(
         x_positions[-1] + node_width / 2 + 0.15,
         node_bounds[("Q4 2025", "Neutral")]["y_start"] + node_bounds[("Q4 2025", "Neutral")]["height"] / 2,
     ),
-    fontsize=16,
-    fontweight="medium",
-    color="#666666",
+    fontsize=7.5,
+    color=INK_MUTED,
     va="center",
 )
 ax.annotate(
-    f"Strong opinions: {q1_strong} \u2192 {q4_strong}  (+{q4_strong - q1_strong})",
+    f"Strong views: {q1_strong} → {q4_strong}  (+{q4_strong - q1_strong})",
     xy=(
         x_positions[-1] + node_width / 2 + 0.15,
-        node_bounds[("Q4 2025", "Strongly Agree")]["y_start"]
-        + node_bounds[("Q4 2025", "Strongly Agree")]["height"] / 2,
+        node_bounds[("Q4 2025", "Strongly Support")]["y_start"]
+        + node_bounds[("Q4 2025", "Strongly Support")]["height"] / 2,
     ),
-    fontsize=16,
-    fontweight="medium",
-    color="#306998",
+    fontsize=7.5,
+    color=CAT_COLORS["Strongly Support"],
     va="center",
 )
 
-# Legend distinguishing stable vs changing flows
+# Legend
 legend_elements = [
-    mpatches.Patch(facecolor="#306998", alpha=0.6, edgecolor="#333333", linewidth=1.5, label="Stable (same opinion)"),
-    mpatches.Patch(facecolor="#306998", alpha=0.25, edgecolor="#333333", linewidth=1.5, label="Changed opinion"),
+    mpatches.Patch(facecolor=INK_SOFT, alpha=0.55, edgecolor="none", label="Stable (same view)"),
+    mpatches.Patch(facecolor=INK_SOFT, alpha=0.22, edgecolor="none", label="Changed view"),
 ]
 for cat in categories:
-    legend_elements.append(mpatches.Patch(facecolor=colors[cat], label=cat))
+    legend_elements.append(mpatches.Patch(facecolor=CAT_COLORS[cat], label=cat))
 
-ax.legend(
+leg = ax.legend(
     handles=legend_elements,
     loc="lower left",
     bbox_to_anchor=(0.0, -0.02),
-    fontsize=16,
-    framealpha=0.9,
+    fontsize=7,
+    framealpha=0.92,
     edgecolor="none",
     ncol=4,
 )
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Style
+# Title and subtitle
+title = "alluvial-opinion-flow · python · matplotlib · anyplot.ai"
+title_n = len(title)
+title_fontsize = max(8, round(12 * 67 / title_n)) if title_n > 67 else 12
+
 ax.set_xlim(0.5, 14.0)
-ax.set_ylim(-0.8, total_height + 2.6)
-ax.set_title("alluvial-opinion-flow \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=30)
+ax.set_ylim(-1.2, total_height + 2.4)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=10, color=INK)
 ax.text(
     0.5,
-    1.015,
-    "Neutral opinion declines as views polarize toward strong agreement and disagreement",
+    1.012,
+    "Neutral stance shrinks as voter opinion on climate policy polarizes toward stronger positions",
     transform=ax.transAxes,
     ha="center",
     va="bottom",
-    fontsize=18,
+    fontsize=8,
     fontstyle="italic",
-    color="#666666",
+    color=INK_MUTED,
 )
 ax.axis("off")
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+fig.subplots_adjust(left=0.02, right=0.98, bottom=0.08, top=0.88)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
