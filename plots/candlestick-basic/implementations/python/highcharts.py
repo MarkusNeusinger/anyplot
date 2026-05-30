@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-30
+Quality: 85/100 | Updated: 2026-05-30
 """
 
 import json

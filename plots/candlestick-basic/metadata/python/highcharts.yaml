@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: candlestick-basic
 created: '2025-12-23T10:02:49Z'
-updated: '2026-05-30T05:59:32Z'
+updated: '2026-05-30T06:09:33Z'
 generated_by: claude-sonnet
 workflow_run: 26675811178
 issue: 812
@@ -12,55 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required OHLC features present (candlestick type,
-    green/red bull/bear coding, visible wicks, date-formatted X-axis, subtle Y-only
-    grid)'
-  - 'Correct Imprint palette with justified financial semantic exception: bull=#009E73
-    (position 1), bear=#AE3030 (position 5), SMA=#4467A3 (position 3)'
-  - Both themes correctly implemented — warm off-white (#FAF8F1) light background,
-    near-black (#1A1A17) dark background, all chrome tokens (INK, INK_SOFT, ELEVATED_BG,
-    GRID) properly applied
-  - 'Excellent data quality: realistic stock simulation (Oct–Nov 2024, $140–$150 range),
-    30 trading days with both bullish and bearish candles clearly visible'
-  - 'Perfect code quality: flat KISS structure, np.random.seed(42), all imports used,
-    saves both plot-{THEME}.png and plot-{THEME}.html'
-  - 'Good Highstock mastery: proper Highstock.stockChart() usage, candlestick OHLC
-    data format [timestamp_ms, open, high, low, close], plotBands for trough annotation,
-    SMA spline overlay, navigator/rangeSelector/scrollbar disabled'
-  - Title correctly uses optional descriptive prefix format with linear font-size
-    scaling (75 chars → 59px floor-capped) preventing overflow
+  - 'Complete Imprint palette compliance with justified semantic exception for finance
+    (bullish green #009E73 / bearish red #AE3030)'
+  - 'Full spec compliance: all required features (green/red coding, visible wicks,
+    date formatting, subtle dotted grid) correctly implemented'
+  - Effective data storytelling via trough plotBand and 5-day SMA overlay creating
+    visual hierarchy and focal points
+  - Proper theme-adaptive chrome for both light and dark renders with no dark-on-dark
+    failures
+  - Clean reproducible code with appropriate Highstock-specific workarounds for candlestick
+    series type
   weaknesses:
-  - Trough plotband label ('Trough → $142.xx' in italic red, align:right, x:-12) overlaps
-    the '$142' Y-axis tick label in the same right-side position — move the label
-    to align:left or offset x to a negative value large enough to clear the tick area,
-    or reposition label.y to shift it above/below the tick row
-  - Legend itemStyle fontSize is 36px — below the 44px standard for highcharts at
-    3200×1800; change to '44px' to match axis tick label size and improve legend legibility
-    at mobile widths
-  - 'Design could be further refined: the floating legend in the top-right corner
-    leaves significant empty canvas space in the upper-middle region; consider reducing
-    that empty area by adjusting chart margins or moving the legend inline with the
-    subtitle area'
+  - Y-axis title "Price (USD)" overlaps with tick labels on the right side — increase
+    marginRight from 80 to ~180 in chart.options.chart to accommodate both the 56px
+    axis title and 44px tick labels on the right Y-axis (Highstock financial charts
+    default to right-side Y-axis)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Stock Price Movement · candlestick-basic · python · highcharts · anyplot.ai" in dark near-black text at ~59px, clearly readable. Subtitle "30 trading days with 5-day moving average — Oct–Nov 2024" in soft muted text below the title. X-axis label "Date" and Y-axis label "Price (USD)" in dark ink at 56px, both readable. Tick labels ($140–$150 on Y-axis right side, Oct 01–Nov 08 on X-axis) in INK_SOFT color at 44px, all readable. Legend box (top-right, floating) shows "OHLC" red square and "5-day SMA" dashed blue line at 36px — slightly small but readable.
-      Data: 30 trading-day candlesticks. Bullish candles in brand green (#009E73), bearish candles in matte red (#AE3030). Wicks clearly visible and thinner than candle bodies. Blue dashed SMA line (#4467A3) overlaid. Subtle red-tinted plotband near $142 with "Trough → $142.xx" annotation in italic red. Y-axis only has a dotted grid at low opacity. Candlestick widths are appropriate for the 30-day dataset.
-      Issues: The "Trough → $142.xx" italic annotation and the "$142" Y-axis tick label overlap on the right side of the chart — both are right-aligned at approximately the same vertical position.
-      Legibility verdict: PASS (all text readable, but trough/tick overlap is a minor issue)
+      Background: Warm off-white #FAF8F1 confirmed — not pure white
+      Chrome: Title "Stock Price Movement · candlestick-basic · python · highcharts · anyplot.ai" in dark bold text at ~70-75% canvas width (expected for long format). Subtitle in lighter weight. Y-axis label "Price (USD)" and X-axis label "Date" in dark INK color. Tick labels ($140-$150, Oct 01-Nov 08) in INK_SOFT. Minor crowding: Y-axis title overlaps $148 tick label on right side
+      Data: Candlestick bodies in #009E73 (bullish) and #AE3030 (bearish); dashed blue #4467A3 SMA line; trough plotBand in light red shading with italic annotation; wicks clearly thinner than bodies
+      Legibility verdict: PASS (minor Y-axis crowding but all text readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and subtitle in light (#F0EFE8) ink, clearly readable against dark background. X/Y axis labels in light ink. Tick labels in INK_SOFT light muted tone (#B8B7B0), all readable. Legend box uses ELEVATED_BG (#242420) with border color INK_SOFT. No dark-on-dark failures detected — all text is appropriately light.
-      Data: Candlestick data colors are identical to the light render — bullish green (#009E73), bearish red (#AE3030), SMA blue (#4467A3). The plotband tint is very subtle on dark background. Trough annotation in italic red readable.
-      Issues: Same trough annotation / tick label overlap as in light render.
-      Legibility verdict: PASS (both themes render correctly, no dark-on-dark failures)
+      Background: Warm near-black #1A1A17 confirmed — not pure black
+      Chrome: Title and all labels in light colors (#F0EFE8 / #B8B7B0). No dark-on-dark failures. Legend background uses #242420 elevated dark surface. Same Y-axis title/tick crowding present but readable
+      Data: Colors identical to light render — #009E73 bullish, #AE3030 bearish, #4467A3 SMA (Imprint palette data colors unchanged across themes as required)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -68,85 +52,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Title 59px (scaled for 75-char title),
-          axis labels 56px, ticks 44px — all correct. Legend items at 36px are slightly
-          below the 44px standard. Readable in both themes.
+        comment: All font sizes explicitly set (66px title, 56px axis labels, 44px
+          ticks/legend); readable in both themes; minor deduction for Y-axis crowding
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Trough plotband label ('Trough → $142.xx') overlaps the '$142' Y-axis
-          tick label — both right-aligned at the same vertical position on the right
-          side of the chart.
+        comment: Y-axis title 'Price (USD)' overlaps $148 tick label on right side;
+          marginRight=80 insufficient for 56px title + 44px ticks; main content readable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Candlesticks well-sized for 30 days. Wicks clearly visible and thinner
-          than bodies. SMA dashed line clearly distinguishable.
+        comment: Candlestick bodies prominently sized (pointWidth:55), wicks clearly
+          thinner; SMA dashed line well-visible; minor deduction for some small-body
+          candles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'CVD-safe: green and red are supplemented by position (bull candles
-          go up, bear go down) and the SMA line uses distinct blue. Shape encoding
-          redundantly reinforces color.'
+        comment: Semantic finance exception (up=green, down=red) from Imprint palette;
+          shape encoding supplements color; CVD-safe palette members
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Margins are generous (160 bottom, 220 left,
-          80 right, 140 top). Slight crowding on the right side where trough annotation
-          and tick overlap. Y-axis on right side (Highstock default) is appropriate
-          for financial charts.
+        comment: Canvas correct 3200x1800; plot fills ~75% of canvas; minor deduction
+          for tight right-side layout causing Y-axis crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Date'', Y-axis: ''Price (USD)'' — both descriptive with
-          units.'
+        comment: Y-axis 'Price (USD)' with units; X-axis 'Date'; title follows required
+          format with descriptive prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Financial semantic exception correctly applied: bull=#009E73 (Imprint
-          position 1), bear=#AE3030 (Imprint position 5), SMA=#4467A3 (Imprint position
-          3). Backgrounds #FAF8F1/#1A1A17 correct. Chrome tokens all theme-adaptive.'
+        comment: 'Bull #009E73 (Imprint pos 1), bear #AE3030 (Imprint pos 5 semantic),
+          SMA #4467A3 (Imprint pos 3); backgrounds #FAF8F1/#1A1A17; theme chrome correct
+          both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: semantic color assignment (bull/bear), plotband for
-          trough analytical annotation, SMA overlay, styled floating legend with border
-          and elevated background, descriptive subtitle. Clearly above library defaults.'
+        comment: 'Above default: Imprint palette with semantic exception, trough plotBand,
+          SMA overlay, floating custom legend, dotted grid; not publication-ready
+          but clearly above configured defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Y-axis only grid with dotted dash style at 15% opacity. Clean typography
-          hierarchy. Generous margins. X-axis grid disabled. Tick marks removed (tickWidth:
-          0).'
+        comment: Dotted Y-only grid, no X-axis grid, floating legend with custom border,
+          generous margins, subtitle context; meaningful refinement above library
+          defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy guides the reader: trough plotband creates a clear
-          analytical focal point, SMA overlay enables trend reading, bull/bear color
-          coding immediately conveys directional price action. Above the default ''data
-          just displayed''.'
+        comment: Trough plotBand creates visual focal point; SMA overlay provides
+          trend context; green/red immediately communicates price direction; subtitle
+          frames temporal scope
     spec_compliance:
       score: 15
       max: 15
@@ -156,31 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart using Highstock (Highcharts.stockChart).
-          Candlestick series type with OHLC data is Highstock-only.
+        comment: Correct Highstock candlestick chart with bodies (open-close) and
+          wicks (high-low); bullish and bearish candles both present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: OHLC data, green/red up/down coding,
-          visible wicks thinner than bodies, date-formatted X-axis (Oct dd), subtle
-          Y-only grid.'
+        comment: Green/red color scheme, wicks thinner than bodies, datetime X-axis
+          with %b %d formatting, subtle dotted Y-axis grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: trading dates Oct 1–Nov 8 2024. Y-axis: price in USD ($140–$150).
-          All 30 trading days visible.'
+        comment: Date on X-axis, Price (USD) on Y-axis; OHLC data correctly structured
+          as [ts, open, high, low, close]; all 30 trading days visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Stock Price Movement · candlestick-basic · python · highcharts
-          · anyplot.ai'' — correct format with descriptive prefix. Legend shows ''OHLC''
-          and ''5-day SMA'' matching the two series.'
+        comment: Title matches format with descriptive prefix; legend correctly labels
+          OHLC and 5-day SMA
     data_quality:
       score: 15
       max: 15
@@ -190,23 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: bullish AND bearish candles, varying sizes, wicks
-          of different lengths, a clear trend (price decline then partial recovery),
-          trough at $142.'
+        comment: Shows bullish AND bearish candles, visible wicks, SMA overlay, price
+          trend, trough annotation, realistic mixed price action
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real stock scenario: 30 trading days Oct–Nov 2024, weekend days
-          skipped, realistic intraday price ranges. Neutral financial content.'
+        comment: Fictional stock over Oct-Nov 2024 trading days; business/finance
+          scenario, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $140–$150 for a mid-cap stock is realistic. Daily movements
-          of $1–3 are plausible. 30 trading days matches spec recommendation.
+        comment: Starting price ~$150, range $140-$150 over 30 trading days; daily
+          volatility of $1-4 realistic for a mid-cap stock
     code_quality:
       score: 10
       max: 10
@@ -216,39 +192,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data generation → chart construction
-          → Highstock injection → HTML export → Selenium screenshot → PIL normalization.'
+        comment: 'Linear flow: imports → tokens → data generation → chart construction
+          → export; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: 'All imports used: json, os, tempfile, time, urllib.request, datetime,
-          timedelta, numpy, highcharts_core (Chart, HighchartsOptions, SplineSeries),
-          PIL.Image, selenium.'
+          pathlib, numpy, highcharts_core, PIL, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Hybrid Python API + raw dict injection
-          for Highstock-specific options is the correct approach given highcharts_core
-          limitations.
+        comment: Hybrid Python-API + JSON-injection for Highstock-specific options
+          is well-motivated and cleanly executed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Selenium
-          API with CDP override.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -256,20 +229,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses highcharts_core Python API (Chart, HighchartsOptions, SplineSeries)
-          as primary entry point, then injects Highstock-specific options as raw dict
-          — the correct hybrid pattern since highcharts_core doesn't natively support
-          all Highstock series types.
+        comment: Uses highcharts_core Python API for options and SplineSeries; correctly
+          uses Highcharts.stockChart for financial OHLC data; appropriate to_dict()
+          serialization
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Uses Highstock-only features: candlestick series type, stockChart()
-          constructor, plotBands with inline label, navigator/rangeSelector/scrollbar
-          disabled. SMA SplineSeries overlay with dashStyle and custom tooltip. These
-          are distinctly Highstock capabilities.'
-  verdict: REJECTED
+        comment: Uses Highstock-specific candlestick series type, plotBands with label
+          annotations, OHLC 5-tuple data format, navigator/rangeSelector/scrollbar
+          disable for static financial view
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -280,7 +251,7 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling:
   - grid-styling
