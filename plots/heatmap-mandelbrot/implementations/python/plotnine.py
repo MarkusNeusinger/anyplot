@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -26,7 +26,7 @@ from plotnine import (
     guide_colorbar,
     guides,
     labs,
-    scale_fill_gradient,
+    scale_fill_gradientn,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -86,9 +86,8 @@ title = "heatmap-mandelbrot · python · plotnine · anyplot.ai"
 plot = (
     ggplot(df, aes(x="real", y="imag", fill="escape"))
     + geom_raster(interpolate=True)
-    + scale_fill_gradient(
-        low="#009E73",  # Imprint palette position 1 — far exterior (fast escape)
-        high="#4467A3",  # Imprint palette position 3 — near boundary (slow escape)
+    + scale_fill_gradientn(
+        colors=["#009E73", "#2ABCCD", "#4467A3"],  # Imprint seq: green → cyan → blue
         limits=(0, max_iter),
         name="Escape\nIterations",
         na_value=INTERIOR_COLOR,
@@ -99,14 +98,14 @@ plot = (
     + coord_fixed(ratio=1.0)
     + scale_x_continuous(expand=(0, 0))
     + scale_y_continuous(expand=(0, 0))
-    + annotate("text", x=-0.25, y=0, label="Cardioid", color=ANNOT_COLOR, size=8, alpha=0.65, fontstyle="italic")
+    + annotate("text", x=-0.25, y=0, label="Cardioid", color=ANNOT_COLOR, size=4, alpha=0.65, fontstyle="italic")
     + annotate(
         "text",
         x=-1.0,
         y=0,
         label="Period-2\nBulb",
         color=ANNOT_COLOR,
-        size=7,
+        size=4,
         alpha=0.65,
         fontstyle="italic",
         ha="center",
@@ -119,6 +118,7 @@ plot = (
         axis_title_x=element_text(size=10, color=INK),
         axis_title_y=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
+        axis_ticks=element_blank(),
         legend_title=element_text(size=8, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
