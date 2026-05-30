@@ -1,0 +1,267 @@
+library: makie
+language: julia
+specification_id: mohr-circle
+created: '2026-05-30T09:21:30Z'
+updated: '2026-05-30T09:29:41Z'
+generated_by: claude-sonnet
+workflow_run: 26680087791
+issue: 4432
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Technically complete Mohr''s circle with all spec-required features: circle,
+    principal stress points (σ1, σ2) as matte-red diamonds, τmax top/bottom, stress
+    points A and B, 2θp arc, construction line, center C, and reference axes'
+  - 'Excellent semantic color coding: brand green (#009E73) for the primary Mohr''s
+    circle, matte red (#AE3030) diamonds for principal stresses (critical values),
+    ochre (#BD8233) for τmax and principal-plane angle arc — deliberate visual hierarchy'
+  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with all chrome
+    (title, axis labels, tick labels, spines, grid) adapting via INK/INK_SOFT tokens;
+    data colors identical between themes
+  - DataAspect() enforces equal aspect ratio ensuring the circle renders as a geometrically
+    true circle — correct Makie idiom for this plot type
+  - 'Clean, idiomatic Julia/Makie code: explicit font sizes, RGBAf for transparent
+    grid/reference lines, marker strokewidth for definition, parametric circle generation
+    via LinRange'
+  weaknesses:
+  - Annotation text (fontsize=11) is at the lower bound for legibility when the image
+    is scaled to mobile widths (~400px); consider bumping annotation fontsizes to
+    12-13 for better small-screen readability
+  - 'Design Excellence is functional rather than exceptional: the layout is clean
+    but has no standout visual refinement that would distinguish this from a typical
+    textbook Mohr''s circle diagram'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "mohr-circle · julia · makie · anyplot.ai" in dark ink, occupies ~60% of width, clearly readable. X-axis label "Normal Stress σ (MPa)" and Y-axis label "Shear Stress τ (MPa)" in dark ink with units. Tick labels in #4A4A44 (INK_SOFT), all clearly readable. Top and right spines removed (L-frame). Grid subtle at 10% alpha.
+      Data: Primary Mohr's circle in brand green (#009E73), linewidth=2.8 — prominent and clear. Stress point A (80, 40) as lavender (#C475FD) circle marker. Stress point B (20, -40) as blue (#4467A3) circle marker. Principal stresses σ1=100 MPa and σ2=0 MPa as matte-red (#AE3030) diamond markers. τmax points (50, -50 MPa) as ochre (#BD8233) circle markers. 2θp arc in ochre matching τmax color. Construction dashed line (A to B) in muted grey. Center C as small black dot. All data elements clearly visible.
+      Annotations: σ₁=100 MPa, σ₂=0 MPa, τmax=50 MPa, −τmax, A(80,40) MPa, B(20,−40) MPa, C, 2θₚ≈53.1° — all placed without overlap.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light (#F0EFE8) ink, clearly readable against dark background. Axis labels and tick labels in light INK/INK_SOFT tokens — all legible. No dark-on-dark failures: no black text on dark background. Grid lines faint but visible.
+      Data: All Imprint palette colors identical to light render — brand green circle, lavender point A, blue point B, matte-red principal stress diamonds, ochre τmax/arc. Data colors are theme-independent and match light render exactly.
+      Legibility verdict: PASS — all text readable against dark background; theme-adaptive chrome works correctly
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
+          xticklabelsize=12, yticklabelsize=12, annotation sizes 11-13). Well-proportioned,
+          readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations are well-placed with no overlapping text or collisions
+          with data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle (linewidth=2.8), markers (markersize=17), arc (linewidth=2.2)
+          all clearly visible. Center C at markersize=9 is intentionally smaller as
+          a reference point.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Different element types use distinct
+          marker shapes (circles vs diamonds) for redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas appropriate for circle. DataAspect() maintains
+          true circle geometry. Equal padding (30 MPa) on all sides provides balanced
+          margins. Circle occupies ~62% of plot area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Both axes labeled with units: ''Normal Stress σ (MPa)'' and ''Shear
+          Stress τ (MPa)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary element (Mohr''s circle) in brand green #009E73. Multi-element
+          uses Imprint palette in semantic order. Backgrounds #FAF8F1 (light) / #1A1A17
+          (dark). Both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Shows deliberate design: semantic color coding (matte red for critical
+          principal stresses, ochre for angle/τmax), diamond markers for principal
+          stresses differentiate them from measurement points. Above a configured
+          default but not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine frame, subtle 10% alpha grid, dashed reference lines
+          with alpha, marker strokes for definition. Good refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy guides the engineering reader: green circle (primary
+          element) → matte-red principal stress diamonds (critical values) → ochre
+          τmax and angle arc → supplementary annotations. Communicates the Mohr''s
+          circle analysis story effectively.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's circle on σ-τ plane with parametric circle geometry.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: circle, principal stresses σ1/σ2, τmax top/bottom,
+          points A and B, 2θp arc, equal aspect ratio, reference lines, labeled axes,
+          light grid.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: σ on x-axis, τ on y-axis. Circle correctly centered at (50, 0). All
+          data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'mohr-circle · julia · makie · anyplot.ai'. No legend
+          needed; all features annotated directly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Mohr''s circle aspects: circle, principal stresses, max
+          shear, stress points, construction line, principal-plane angle.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Steel plate under combined biaxial loading and shear (MPa). Pythagorean
+          triple stress state gives clean radius=50 MPa. Real engineering scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: σx=80, σy=20, τxy=40 MPa are physically realistic values for steel.
+          σ1=100 MPa, σ2=0 MPa, τmax=50 MPa are correct and within normal engineering
+          ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: constants/tokens → stress state → geometry → figure
+          → elements → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set. Stress state uses deterministic constants.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plotting), Colors (colorant, RGBAf), Random (seed) —
+          all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Julia idioms, broadcast syntax for parametric curves, appropriate
+          title scaling formula. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Current CairoMakie
+          API (size= not deprecated resolution=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses DataAspect() for mathematical equal-aspect constraint, hlines!/vlines!
+          convenience functions, RGBAf for transparent color tuples, all Axis attributes
+          set in constructor. Good idiomatic Makie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: DataAspect() is a Makie-specific mechanism for enforcing equal aspect
+          in data coordinates — essential for a geometrically correct Mohr's circle.
+          RGBAf color type and the colorant string macro are Julia/Makie ecosystem
+          specifics.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

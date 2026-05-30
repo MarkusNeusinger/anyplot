@@ -1,52 +1,64 @@
 library: highcharts
+language: python
 specification_id: mohr-circle
 created: '2026-02-27T22:10:08Z'
-updated: '2026-02-27T22:38:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22505482948
+updated: '2026-05-30T09:20:57Z'
+generated_by: claude-sonnet
+workflow_run: 26679971538
 issue: 4432
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/highcharts/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance and data quality: every specification requirement implemented
-    with accurate math and realistic engineering values'
-  - Square canvas format perfectly suits the circular visualization, eliminating previous
-    horizontal whitespace issue
-  - Colorblind-safe teal-red palette with marker shape differentiation
-  - Strong use of Highcharts Annotations API with text outlines and axis-anchored
-    positioning
-  - 'Excellent visual refinement: spines removed, 6% opacity grid, ticks hidden, generous
-    whitespace'
-  - Typed Series classes used idiomatically (ScatterSeries, LineSeries)
+  - Mathematically precise Mohr's Circle with correct equal-aspect-ratio canvas (2400×2400)
+    ensuring the circle renders as a true circle
+  - 'Semantic color assignments: brand green (#009E73) for the circle, matte red for
+    stress points A/B, blue for principal stresses, lavender for τmax, ochre for the
+    angle arc — all justified by physical meaning'
+  - Multiple distinct Highcharts marker shapes (circle, diamond, triangle, triangle-down)
+    provide redundant encoding beyond color
+  - 'Text outline technique (textOutline: 3px PAGE_BG) ensures annotation labels are
+    readable against both light and dark backgrounds in both renders'
+  - 'Full spec coverage: circle, principal stresses σ₁/σ₂, max shear τmax, stress
+    points A/B, diameter line, center C, angle arc 2θp — all labeled with numeric
+    values'
+  - Separate CDN HTML + inline-script HTML correctly handles both site delivery and
+    headless Chrome screenshot; PIL pinning ensures 2400×2400 canvas
+  - 'Theme-adaptive chrome fully implemented: PAGE_BG, INK, INK_SOFT, GRID all respond
+    to ANYPLOT_THEME — both renders pass readability checks'
   weaknesses:
-  - LineSeries import path from .options.series.area is technically correct but non-obvious
-  - Minor annotation proximity near the center area (C label and 2θp arc region)
-  image_description: The plot displays a Mohr's Circle for a 2D stress state (σx=80
-    MPa, σy=−30 MPa, τxy=40 MPa) rendered in Highcharts on a white background using
-    a square 3600×3600 canvas. A smooth blue circle (#306998) is centered at (25,
-    0) with a radius of ~68 MPa, appearing as a true circle due to equal aspect ratio
-    handling. Two red circular markers label stress points A (80, 40) in the upper-right
-    quadrant and B (−30, −40) in the lower-left, connected by a gray dashed diameter
-    line. Teal diamond markers on the horizontal axis mark principal stresses σ₁ =
-    93.0 MPa (right) and σ₂ = −43.0 MPa (left). Purple triangle markers (up/down)
-    indicate τmax = 68.0 MPa at the top and τmin = −68.0 MPa at the bottom. A small
-    dark circle marks center C (25.0, 0) with its label offset below. An orange arc
-    near the center shows the angle 2θp = 36.0° with label positioned clearly in open
-    space. Very subtle grid lines (6% opacity) and dashed reference lines pass through
-    the center both horizontally and vertically. Axis spines are removed. The x-axis
-    is labeled "Normal Stress σ (MPa)" ranging from about −70 to 120, and the y-axis
-    "Shear Stress τ (MPa)" from −95 to 95. The title "mohr-circle · highcharts · pyplots.ai"
-    appears in bold dark text at top with a gray subtitle showing the input stress
-    state. All annotations have white text outlines for readability. The square canvas
-    eliminates the horizontal whitespace from the previous landscape version, and
-    the circle fills the plot area well with balanced margins.
+  - 'DE-02: Dashed reference lines through both horizontal and vertical center are
+    functional but add visual density — a single horizontal dashed line through τ=0
+    is typically sufficient for Mohr''s Circle; the vertical center line adds clutter
+    without aiding interpretation'
+  - 'DE-01/DE-03: The 2θp arc label (''2θp = 36.0°'') sits inside a busy region near
+    the center — a short leader line from the arc to a label positioned outside the
+    circle interior would improve readability and reduce visual crowding in the middle
+    of the plot'
+  - 'LM-02: The Highcharts Annotations module is used well for labels, but plotBands
+    (fill between σ₂ and σ₁ on the x-axis to highlight the normal stress range) or
+    a custom SVG element for the arc would further leverage Highcharts-distinctive
+    capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "mohr-circle · python · highcharts · anyplot.ai" in bold dark ink, clearly readable. Subtitle "σx = 80 MPa, σy = -30 MPa, τxy = 40 MPa" in lighter INK_SOFT. Axis titles "Normal Stress σ (MPa)" (x) and "Shear Stress τ (MPa)" (y) in dark ink at 56px. Tick labels in dark gray INK_SOFT at 44px. All chrome text is dark on the off-white background — fully readable.
+      Data: Main Mohr's Circle in brand green #009E73 (6px stroke), visually dominant. Stress points A (80, 40) and B (-30, -40) as filled red circles. Principal stresses σ₁ = 93.0 MPa and σ₂ = -43.0 MPa as blue diamonds on the horizontal axis. τmax = 68.0 MPa (top) and τmin = -68.0 MPa (bottom) as lavender triangles. Center C (25.0, 0) as small black dot. Dashed diameter line (gray) connecting A to B. Ochre angle arc for 2θp = 36.0°. All annotation labels colored to match their respective data series, with text outlines for readability.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title and axis labels in light #F0EFE8 ink against the dark background — fully readable. Subtitle in lighter #B8B7B0. Tick labels in #B8B7B0 — readable. Grid lines subtle and light. Center dot renders as white circle (correct: uses INK which is theme-adaptive).
+      Data: All data colors identical to light render — brand green circle, red stress points, blue diamonds, lavender triangles, ochre arc. The Imprint palette data colors are invariant across themes. Annotation labels with text outlines remain readable against the dark background. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,42 +66,55 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 56px, subtitle 38px, axis titles
-          38px, tick labels 30px, annotations 28-34px'
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, annotations 40px). Well-proportioned in both renders at desktop and
+          mobile widths.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor proximity near center area but no actual text collision. All
-          text fully readable
+        comment: No significant text overlap. Annotation labels are positioned offset
+          from their anchor points and remain readable. Axis tick labels and annotation
+          labels are at different vertical positions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers well-sized (radius 10-16), distinct shapes clearly distinguishable
+        comment: Circle at 6px stroke, markers at radius 16-18 — all clearly visible.
+          Angle arc at 5px. All data elements well-sized for the 2400x2400 canvas.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Colorblind-safe: red vs teal (not green), marker shapes also differ'
+        comment: Imprint palette used; marker shapes provide redundant encoding beyond
+          color. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 canvas perfectly suits circular visualization with
-          balanced margins
+        comment: 2400x2400 square canvas correct for Mohr's Circle equal aspect ratio.
+          Circle fills the plot area appropriately. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units and Greek symbols
+        comment: 'X-axis: ''Normal Stress σ (MPa)'', Y-axis: ''Shear Stress τ (MPa)''
+          — both match spec exactly with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/main element (circle) uses #009E73 brand green. Remaining
+          colors are from Imprint palette with semantic justification. Backgrounds:
+          #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -97,22 +122,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: semantic color palette, custom typography, text outlines,
-          marker shape hierarchy'
+        comment: 'Strong design: semantic color assignments, multiple marker shapes
+          for redundant encoding, text outlines for dual-theme readability, legend
+          replaced by direct annotations. Clearly above library defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, 6% opacity grid, ticks hidden, dashed reference lines,
-          generous whitespace
+        comment: Spines removed, grid subtle, generous margins. Dashed reference lines
+          and angle arc add some visual density. Good refinement but not every detail
+          polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding and marker shapes create visual hierarchy, angle arc
-          draws attention, subtitle provides context
+        comment: Visual hierarchy guides from input (red stress points) through construction
+          (green circle, dashed diameter) to results (blue principal stresses, lavender
+          shear). Color coding creates emphasis on different stress components.
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +150,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle on sigma vs tau plane
+        comment: Correct Mohr's Circle with equal aspect ratio.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: circle, principal stresses, max shear,
-          stress points A/B, 2theta_p angle, equal aspect ratio'
+        comment: Circle, σ₁/σ₂ principal stresses, τmax, stress points A/B, 2θp angle
+          arc, center C, dashed reference lines — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=normal stress, Y=shear stress. All values mathematically correct
+        comment: Correct σ on x-axis, τ on y-axis. Circle center at (25, 0), radius
+          ≈ 68. All calculations verified.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in exact format. Legend correctly disabled with inline annotations
+        comment: 'Title: ''mohr-circle · python · highcharts · anyplot.ai''. Legend
+          disabled, replaced by direct annotations.'
     data_quality:
       score: 15
       max: 15
@@ -151,20 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows tension and compression, positive shear, non-trivial rotation
-          angle
+        comment: 'All aspects of Mohr''s Circle shown: circle, principal stresses,
+          max shear, input stress points, angle of principal planes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stress values for structural member under combined loading
+        comment: Structural steel under combined loading — realistic, neutral engineering
+          context. σx=80 MPa, σy=-30 MPa, τxy=40 MPa are plausible values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in MPa typical for structural steel analysis
+        comment: Stress values in MPa appropriate for steel. Circle fills the plot
+          area well with good padding.
     code_quality:
       score: 10
       max: 10
@@ -174,31 +206,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean flat structure, no functions or classes
+        comment: 'Linear structure: imports → tokens → data → calculations → chart
+          setup → series → annotations → export.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with fixed stress values
+        comment: Fully deterministic — hardcoded stress state, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib, numpy,
+          highcharts_core, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with color constants and clear comments
+        comment: Appropriate complexity. No fake UI elements. Clear variable naming.
+          Comment on LineSeries import location is helpful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium, uses current highcharts_core API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Highcharts
+          API used.
     library_mastery:
       score: 7
       max: 10
@@ -208,15 +244,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Typed Series classes, Annotation.from_dict(), proper Chart(container=)
-          and add_series pattern
+        comment: Correct Chart(container='container') pattern, proper series types,
+          plotLines on axes, series-level marker customization. Good idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Highcharts Annotations API with axis-anchored points and textOutline,
-          plotLines, multiple marker symbols
+        comment: Annotations module with draggable='', textOutline styling, plotLines
+          for reference lines, multiple marker symbol types (diamond, triangle, triangle-down)
+          — all Highcharts-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -229,5 +266,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
