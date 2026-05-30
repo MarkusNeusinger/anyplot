@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-30
@@ -113,7 +113,7 @@ for px, py, label in ((peak1_x, peak1_y, "Fast Responses"), (peak2_x, peak2_y, "
             x=px,
             y=py,
             text=label,
-            text_font_size="26pt",
+            text_font_size="34pt",
             text_color=INK,
             text_font_style="bold",
             text_align="center",
@@ -167,7 +167,7 @@ p.ygrid.grid_line_width = 1
 # Background and border
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Save interactive HTML (required catalog artifact)
 output_file(f"plot-{THEME}.html")
