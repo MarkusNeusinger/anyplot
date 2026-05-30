@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -57,9 +57,13 @@ gap = 0.06  # arrow gap from level lines
 
 # Energy level lines
 for n, energy, y in zip(n_values, energies, y_pos, strict=True):
-    ax.plot([left, right], [y, y], color=LEVEL_COLOR, linewidth=2.5, solid_capstyle="round", zorder=3)
+    lw = 3.5 if n == 1 else 2.5  # bolder ground state anchors the diagram
+    ax.plot([left, right], [y, y], color=LEVEL_COLOR, linewidth=lw, solid_capstyle="round", zorder=3)
     ax.text(right + 0.02, y, f"n = {n}", fontsize=8, va="center", ha="left", color=LEVEL_COLOR, fontweight="medium")
-    ax.text(left - 0.02, y, f"{energy:.2f} eV", fontsize=8, va="center", ha="right", color=INK_MUTED)
+    # Upper levels crowd together: smaller font + stagger n=5 left for visual separation
+    label_fs = 7 if n >= 4 else 8
+    label_x = (left - 0.05) if n == 5 else (left - 0.02)
+    ax.text(label_x, y, f"{energy:.2f} eV", fontsize=label_fs, va="center", ha="right", color=INK_MUTED)
 
 # Ionization limit (dashed, theme-adaptive)
 ax.plot([left, right], [ion_y, ion_y], color=INK_SOFT, linewidth=1.5, linestyle="--", zorder=2)
@@ -99,11 +103,11 @@ ax.text(
     fontstyle="italic",
 )
 ax.text(
-    0.76,
-    (y_of[3] + y_of[4]) / 2,
+    0.77,
+    (y_of[2] + y_of[3]) / 2,
     "Balmer series\n(Visible)",
     fontsize=8,
-    ha="center",
+    ha="left",
     va="center",
     color="#2ABCCD",
     fontstyle="italic",
