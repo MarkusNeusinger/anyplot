@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: density-basic
 created: '2025-12-23T10:03:24Z'
-updated: '2026-05-30T03:37:56Z'
+updated: '2026-05-30T03:48:15Z'
 generated_by: claude-sonnet
 workflow_run: 26673154922
 issue: 912
@@ -12,42 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders fully readable with correct
-    chrome tokens'
-  - 'Complete spec compliance: density curve, transparent fill, rug plot, and bandwidth
-    adjustment all implemented'
-  - 'Excellent code quality: seed set, clean imports, KISS structure, correct output
-    filenames'
-  - 'Realistic trimodal marathon data: neutral, real-world domain with interesting
-    distribution structure'
-  - Interactive tooltips via layer_tooltips() showcase a distinctive letsplot capability
-  - Custom y-axis scale with x10 notation shows attention to density-plot conventions
+  - Excellent spec compliance — density curve with fill, rug plot, and bandwidth tuning
+    all present
+  - Trimodal marathon finish-time data tells a clear story with labeled sub-populations
+    and reference lines
+  - 'Perfect code quality: seed set, clean imports, KISS structure, theme-adaptive
+    chrome throughout'
+  - Correctly uses layer_tooltips() — a letsplot-distinctive feature not available
+    in plotnine
+  - Both theme renders pass with identical data colors and correct chrome tokens (INK/INK_SOFT/PAGE_BG)
   weaknesses:
-  - Full panel border on all 4 sides instead of L-shaped frame — add panel_border=element_blank()
-    to anyplot_theme to remove top and right border lines
-  - No visual hierarchy or storytelling for the trimodal distribution — annotate the
-    ~200, ~240, ~300-minute peaks with runner category labels (Elite, Main pack, Casual)
-    to create a focal point
-  - Rug ticks are very subtle at alpha=0.30 and size=0.4 — increase to size=0.6 and
-    alpha=0.40 for better individual-observation visibility
+  - Annotation text (geom_text size=3.5) renders slightly small on the 3200×1800 canvas
+    — consider size=4.5 to improve mobile readability
+  - Design excellence ceiling at ~65/100 — annotations and reference lines are good
+    but the plot reads as a well-configured default rather than publication-quality;
+    removing top/right axis lines explicitly and increasing label weight would lift
+    DE-01
+  - 'LM-02 only partially exploits letsplot interactive layer: tooltips are configured
+    but no custom aes or formatting layers are added to the tooltip'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface
-      Chrome: Title "density-basic · python · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Finish Time (minutes)" and "Density (×10⁻³)" in dark ink. Tick labels in INK_SOFT (#4A4A44) — all readable. Horizontal grid lines subtle and visible. Full rectangular panel border visible (all 4 sides).
-      Data: Density curve in brand green #009E73 with alpha=0.35 fill and solid outline. Rug ticks in semi-transparent brand green along x-axis bottom. Custom y-axis scale showing 2–10 (×10⁻³).
-      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white.
+      Chrome: Title "density-basic · python · letsplot · anyplot.ai" rendered in dark INK color at top-left, clearly readable. X-axis label "Finish Time (minutes)" and Y-axis label "Density (×10⁻³)" in dark INK at appropriate size. Tick labels in INK_SOFT on both axes, fully readable. Horizontal grid lines are very subtle (size=0.3). No tick marks (removed via axis_ticks=element_blank()).
+      Data: Smooth Gaussian KDE density curve in brand green #009E73 with semi-transparent fill (alpha=0.35) and solid outline. Rug plot at the bottom showing individual observations as short vertical ticks in #009E73 (alpha=0.40). Three vertical dashed reference lines in INK_SOFT at x=200, 240, 300. Three text annotations: "Elite ~3:20" (left shoulder), "Main Pack ~4:00" (at peak), "Casual ~5:00" (right tail) — all in INK dark color, legible but somewhat compact.
+      Legibility verdict: PASS — all title, axis labels, tick labels, and annotations are readable against the light background. No "light-on-light" failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title and all axis labels flip to light off-white text — fully readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — readable. Grid lines visible as lighter horizontal stripes. Full rectangular panel border visible. No dark-on-dark failures observed.
-      Data: Density curve fill (#009E73 at alpha=0.35) appears slightly darker against near-black due to alpha compositing; solid outline remains clearly brand green — data colors identical to light render as required.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures, chrome tokens correctly applied.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title and axis labels rendered in light #F0EFE8 (INK token) — clearly readable against the dark background. Tick labels in #B8B7B0 (INK_SOFT token) — readable. Grid lines are subtle light-colored horizontal lines. No dark-on-dark failures observed.
+      Data: Density curve and rug plot in identical brand green #009E73 — matches light render exactly. Reference lines in INK_SOFT (light grey on dark bg). Annotations in INK (light) color — visible and readable.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements use correct theme-adaptive tokens and are clearly readable against the near-black background. Data colors are identical between light and dark renders.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,51 +55,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10). Both
-          themes fully readable. Minor: title on small side proportionally but within
-          range.'
+        comment: 'All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16,
+          geom_text=3.5mm). All text readable in both themes. Minor deduction: geom_text
+          annotation size=3.5 renders slightly compact at 3200×1800; size=4.5 would
+          improve mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No overlapping elements. Annotations at peaks are well-positioned
+          with vjust=0 and 15% upper y-axis expansion providing clearance.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Density curve clear and prominent. Rug ticks visible but very subtle
-          at alpha=0.30, size=0.4.
+        comment: Density curve clearly visible with brand green fill and outline.
+          Rug plot shows individual observations. Dashed reference lines subtle but
+          visible. All elements appropriately sized for 500 observations.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in brand green #009E73, CVD-safe by design.'
+        comment: 'Single series in #009E73 with good contrast against both backgrounds.
+          CVD-safe — shape of density encodes information, not color alone.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800 correct. Good proportions. Minor: full panel border
-          (all 4 spines) instead of L-shaped frame.'
+        comment: Good canvas utilization. Plot fills 75%+ of canvas. Balanced margins.
+          No content cut off. Rug plot nicely positioned at bottom of panel.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Finish Time (minutes) and Density (x10^-3) are descriptive with units.
-          Title format exact.
+        comment: 'X: ''Finish Time (minutes)'' — descriptive with units. Y: ''Density
+          (×10⁻³)'' — descriptive with scaled unit notation.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Light bg #FAF8F1, dark bg #1A1A17. Chrome
-          tokens flip correctly in both renders.'
+        comment: 'Single series uses #009E73 (Imprint position 1) in both renders.
+          Background #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive chrome via INK/INK_SOFT
+          tokens throughout. No pure white/black. Data colors identical between themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -107,23 +112,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above plain default: theme tokens applied, brand green with well-chosen
-          alpha, rug plot, custom axis scale. Interesting trimodal data. Not publication-ready:
-          no visual hierarchy.'
+        comment: 'Clearly above library defaults: custom Imprint palette, theme-adaptive
+          chrome, alpha-transparent fill, subtle grid. Not quite publication-ready
+          — lacks typographic weight variation and stronger visual polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Positive: axis ticks blanked, y-only grid. Negative: full panel
-          border on all 4 sides — panel_border=element_blank() missing.'
+        passed: true
+        comment: 'Good refinement: y-axis-only grid (x-grid blanked), tick marks removed,
+          panel border removed, theme_minimal base. Whitespace generous. Not every
+          detail polished — axis lines could be more explicitly styled.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Trimodal marathon distribution has story potential but not realized.
-          No annotations, no peak labels, no visual emphasis on sub-populations.
+        passed: true
+        comment: 'Good storytelling: trimodal marathon distribution clearly labels
+          three runner sub-populations (Elite, Main Pack, Casual) via annotations
+          and vertical reference lines. Viewer immediately grasps the three groups.
+          Could be stronger with size or color differentiation among peaks.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,51 +141,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_density() is correct KDE implementation.
+        comment: Correct KDE density plot using geom_density() with Gaussian kernel.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth curve, transparent fill, rug plot via geom_segment, bandwidth
-          adjustment (adjust=0.85) all present.
+        comment: 'All spec features: smooth KDE curve, filled area with transparency
+          (alpha=0.35), rug plot for individual observations, bandwidth control (adjust=0.85,
+          kernel=''gaussian'', trim=True).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=finish time, Y=density. All 500 observations represented.
+        comment: 'X: continuous finish time values, Y: density. All 500 observations
+          visible through curve and rug.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'density-basic · python · letsplot · anyplot.ai'.
-          Single-series, no legend needed.
+        comment: 'Title: ''density-basic · python · letsplot · anyplot.ai'' — correct
+          format. No legend needed for single series.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Density curve, fill, rug plot, bandwidth all present. Minor: trimodal
-          character somewhat blended — secondary peaks not sharply distinct.'
+        comment: 'Shows all KDE aspects: trimodal shape (skewness, modality), right-skewed
+          tail, individual observations via rug. Three distinct sub-populations with
+          different standard deviations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Marathon finish times: real-world, neutral, scientifically plausible.'
+        comment: Marathon finish times — real, compelling, neutral sports analytics
+          scenario. Trimodal distribution maps to elite/main-pack/casual runner populations.
+          No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 140-400 minute range factually correct for marathon. Trimodal components
-          at 200/240/300 min are plausible.
+        comment: Elite ~3:20 (200 min), Main Pack ~4:00 (240 min), Casual ~5:00 (300
+          min) — factually accurate marathon finish-time ranges. Clipped to [140,
+          400] min — realistic bounds.
     code_quality:
       score: 10
       max: 10
@@ -187,32 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> theme -> plot -> save. No functions or
-          classes.'
+        comment: 'Clean linear structure: docstring → imports → theme tokens → data
+          → annotations → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random generation.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used. No dead imports.
+        comment: All 22 imports are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic, appropriate complexity. No over-engineering.
+        comment: Clean, idiomatic ggplot layering. layer_tooltips() is real letsplot
+          functionality, not fake interactivity. Appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current letsplot API.
+        comment: Saves plot-{THEME}.png (scale=4 → 3200×1800) and plot-{THEME}.html.
+          Current letsplot 4.10.1 API.
     library_mastery:
       score: 7
       max: 10
@@ -222,25 +238,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Clean ggplot + geom_density + geom_segment + scales + theme layering.
-          layer_tooltips() idiomatic. Minor: panel_border not removed in custom theme.'
+        comment: 'Solid idiomatic letsplot usage: grammar of graphics, multiple geom
+          layers, scale_*_continuous with breaks, theme() layering on theme_minimal(),
+          ggsize + ggsave(scale=4) canonical export pattern.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() interactive density tooltip, HTML export, kernel
-          and adjust parameters are letsplot-specific density controls.
-  verdict: REJECTED
+        comment: Uses layer_tooltips() — letsplot-specific feature not available in
+          plotnine or ggplot2 with equivalent syntax. geom_density kernel/adjust/trim
+          parameters also letsplot-idiomatic. Could leverage more interactive features
+          (custom tooltip format, hover layer).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
