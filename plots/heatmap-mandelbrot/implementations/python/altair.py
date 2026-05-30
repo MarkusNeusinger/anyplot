@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -109,13 +109,13 @@ exterior = (
     )
 )
 
-# Square canvas (2400×2400) - canonical for heatmaps; inner view width=420, height=420
+# Square canvas (2400×2400) - canonical for heatmaps; inner view 395×395 + 20px padding
 chart = (
     (interior + exterior)
     .interactive()
     .properties(
-        width=420,
-        height=420,
+        width=395,
+        height=395,
         background=PAGE_BG,
         title=alt.Title(
             title,
@@ -126,7 +126,7 @@ chart = (
             anchor="start",
             offset=12,
         ),
-        padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
+        padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
@@ -138,7 +138,7 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
     .configure_title(color=INK)
 )
 
