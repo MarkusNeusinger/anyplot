@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:16:17Z'
-updated: '2026-05-30T13:03:43Z'
+updated: '2026-05-30T13:21:33Z'
 generated_by: claude-sonnet
 workflow_run: 26684053093
 issue: 4430
@@ -12,48 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Semantic Imprint palette mapping (green=positive, muted=neutral, ochre=cautionary,
-    red=negative) — excellent use of the semantic-exception rule
-  - Per-link opacity differentiation (stable=0.7, changing=0.15) implements the spec's
-    visualization intent elegantly
-  - Custom HTML legend correctly explains both category colors and the opacity narrative
-    key (stable vs. changed opinion)
-  - Deterministic employee satisfaction survey data with a believable positive-trend
-    arc across four quarters
-  - Title fontsize correctly scaled via the linear formula for the longer-than-67-char
-    title string
-  - 'Perfect theme adaptation: correct backgrounds (#FAF8F1 light / #1A1A17 dark),
-    correct text token assignments, identical data palette in both renders'
-  - Clean KISS code structure with local/CDN fallback for JS loading
+  - 'Excellent semantic color mapping for 5-level Likert scale: Strongly Agree→#009E73
+    (brand green), Agree→#99B314 (lime, positive family), Neutral→INK_MUTED (muted
+    anchor), Disagree→#BD8233 (ochre, cautionary), Strongly Disagree→#AE3030 (matte
+    red, negative) — creates a natural visual gradient from positive to negative that
+    aids interpretation immediately'
+  - Per-link RGBA opacity encoding (stable flows=0.7, opinion-change flows=0.28) directly
+    implements the spec requirement to visually distinguish stable respondents from
+    changers — this is both idiomatic Highcharts and a sophisticated design decision
+  - Narrative annotation box with specific statistic ('48% → 53% Q1→Q4') and branded
+    green border (#009E73) creates a clear focal point and tells the data story explicitly
+  - 'Both themes correctly implemented — all chrome tokens (INK, INK_SOFT, PAGE_BG,
+    ELEVATED_BG) are theme-adaptive, data colors identical across themes, backgrounds
+    correct (#FAF8F1 light, #1A1A17 dark)'
+  - Local cache + CDN fallback pattern for JS modules (highcharts.js + sankey.js +
+    annotations.js) is a robust production pattern
+  - Georgia serif font for title and wave headers adds editorial polish above library
+    defaults
+  - Node totals shown in node labels (e.g. 'Strongly Agree (180)') directly fulfils
+    spec requirement
   weaknesses:
-  - 'Faint cross-category flows (alpha=0.15) become nearly invisible in the dark render
-    against #1A1A17 — increase minimum alpha to 0.25–0.30 to maintain the stable/changing
-    distinction across both themes'
-  - Wave column annotation headers (y=250 inside the green Strongly Agree band) overlap
-    or crowd the adjacent node labels for Q2 and Q3 columns — reposition to above
-    the chart area (y≈65) or increase marginTop to create dedicated header space
-  - Node data labels at 22px are slightly small for thumbnail/mobile readability —
-    consider 26–28px
-  - 'No narrative focal point: the key insight (positive sentiment grows Q1→Q4) is
-    not visually emphasized — consider a brief annotation or highlighted net-change
-    stat to guide the viewer'
-  - 'LM-02: Could exploit more Highcharts-specific capabilities (e.g., plotOptions.series.states
-    for flow emphasis, gradient link fills via built-in color gradient API)'
+  - Node dataLabels font size 26px is significantly below the recommended 44px for
+    highcharts at 3200×1800 canvas. At mobile scale (~400px wide), node labels scale
+    to ~3px and are completely unreadable. Increase to at least 36-40px.
+  - Custom HTML legend font-size is 22px, below recommended 44px. At mobile scale,
+    legend becomes ~2.75px — effectively invisible. Increase to at least 36px.
+  - Wave header annotations (y=165 in SVG) create visual crowding at the top of the
+    Q1 column where 'Q1 2024' text overlaps or closely crowds the top-most 'Strongly
+    Agree (180)' node label. Consider increasing marginTop further (to ~320px) and
+    adjusting annotation y to ~185 to give more separation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Employee Training Satisfaction · alluvial-opinion-flow · python · highcharts · anyplot.ai" in bold dark INK (#1A1A17) — fully readable. Subtitle in INK_SOFT — readable. Wave headers Q1–Q4 2024 in bold dark serif — readable. Node labels (e.g., "Strongly Agree (180)") in dark text — readable.
-      Data: Five opinion-category bands: Strongly Agree #009E73 (brand green), Agree #99B314 (lime), Neutral theme-adaptive muted grey, Disagree #BD8233 (ochre), Strongly Disagree #AE3030 (matte red). First series is #009E73. Stable flows at alpha=0.7 (semi-opaque), cross-category flows at alpha=0.15 (faint). Custom HTML legend at bottom with ELEVATED_BG box.
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "Employee Training Satisfaction · alluvial-opinion-flow · python · highcharts · anyplot.ai" in bold Georgia serif, dark #1A1A17 ink, readable. Subtitle in smaller dark-soft text, readable. Wave column headers (Q1 2024–Q4 2024) in bold serif, readable. Node labels ("Strongly Agree (180)", "Agree (250)", etc.) visible but at 26px — smaller than recommended 44px.
+      Data: Five Likert categories using semantic Imprint color mapping — Strongly Agree=#009E73 (brand green), Agree=#99B314 (lime), Neutral=INK_MUTED (adaptive gray), Disagree=#BD8233 (ochre), Strongly Disagree=#AE3030 (matte red). Stable flows at 0.7 opacity; opinion-change flows at 0.28 opacity. Flows clearly visible and distinguishable. Narrative annotation box with #009E73 green border at right side. Custom HTML legend at bottom with 22px font — smaller than recommended 44px but legible at full canvas.
+      Legibility verdict: PASS at full canvas (3200×1800). FAIL at mobile scale (node labels ~3px, legend ~2.75px).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream INK (#F0EFE8) — clearly readable against dark background. Subtitle in INK_SOFT (#B8B7B0) — readable. Wave headers in light bold text — readable. Node labels in light text — readable. Legend text readable with ELEVATED_BG (#242420) box. No dark-on-dark failures.
-      Data: Colors identical to light render — all five opinion-category hues unchanged (green, lime, grey, ochre, red). Cross-category faint flows (alpha=0.15) are substantially harder to see against the near-black background than in the light render — approaching invisibility.
-      Legibility verdict: PASS with noted weakness — chrome text all readable, but faint change flows nearly invisible in dark theme (alpha=0.15 too low for dark surface)
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title and wave headers flip to light #F0EFE8 ink — readable against dark background. Node labels use dark-mode INK (#F0EFE8) with dark PAGE_BG text outline — readable. No dark-on-dark failures detected. Subtitle in INK_SOFT (#B8B7B0) — readable. HTML legend uses theme-adaptive INK color — readable.
+      Data: Colors identical to light render — Strongly Agree green, Agree lime, Neutral muted gray, Disagree ochre, Strongly Disagree matte red. Flow opacity differentiation preserved. Narrative annotation uses dark ELEVATED_BG (#242420) fill with #009E73 green border — readable.
+      Legibility verdict: PASS at full canvas. Same mobile-scale concern as light render (node labels and legend too small).
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,54 +63,60 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 50px scaled, subtitle 28px,
-          wave headers 34px, node labels 22px, legend 22px). Both themes readable.
-          Node labels at 22px slightly small for thumbnail scale.
+        comment: All font sizes explicitly set. Title scaled correctly for long string
+          (50px). Wave headers 34px, annotation 26px. Node dataLabels 26px and HTML
+          legend 22px are below recommended 44px; at mobile scale (~400px) these scale
+          to ~3px and become unreadable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding between wave annotation headers (y=250 inside green
-          band) and adjacent node labels at Q2/Q3 columns.
+        comment: Generally clean. Wave header annotation (y=165) creates minor visual
+          crowding with top node label 'Strongly Agree (180)' in Q1 column. Not a
+          severe overlap but noticeable.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Stable flows and node blocks clearly visible. Cross-category flows
-          (alpha=0.15) nearly invisible in dark render against #1A1A17.'
+        comment: Flows clearly visible. Opacity differentiation (0.7 stable, 0.28
+          changed) works well. All 5 node colors distinct and semantically meaningful.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette. Green-grey-ochre-red provides hue + position
-          dual encoding.
+        comment: Imprint palette, CVD-safe. Opacity redundant encoding for stable
+          vs. changing flows.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization. Four wave columns span full width.
-          Well-calibrated margins.
+        comment: 3200x1800 canvas, generous margins (L:180, R:440, T:285, B:145).
+          Larger right margin accommodates annotation box. Good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sankey chart has no axis labels by design. Category node labels with
-          counts and wave column headers are appropriate.
+        comment: Sankey chart uses node labels with counts, wave column headers, and
+          subtitle explaining the survey question — appropriate labeling for the chart
+          type.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Semantic exception correctly applied. Correct
-          backgrounds both themes. Data colors identical across renders.'
+        comment: 'Semantic Imprint palette exception: Strongly Agree=#009E73 (first/brand
+          green), Agree=#99B314 (lime, green family for positive), Neutral=INK_MUTED
+          (muted anchor for neutral), Disagree=#BD8233 (ochre, cautionary), Strongly
+          Disagree=#AE3030 (matte red, negative). Well-justified Likert-scale semantic
+          exception. Backgrounds correct. Theme chrome fully adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -118,25 +126,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with semantic color assignment, Georgia serif typography,
-          dual opacity technique. Falls short of publication-ready due to no narrative
-          focal point.
+        comment: Strong design above defaults. Semantic Likert color mapping demonstrates
+          genuine design thinking. Georgia serif typography adds editorial polish.
+          Annotation box with brand-green border (#009E73) integrates Imprint identity
+          into the narrative element. Above 'well-configured default' (4/8).
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean Sankey with no spines/grid. Custom HTML legend with elevated-background
-          box. Serif/sans-serif pairing. Wave headers inside flow band creates slight
-          visual noise.
+        comment: Per-link opacity refinement (stable vs. changing) is a deliberate
+          visual polish choice. Custom HTML legend replaces default Highcharts legend.
+          Generous margins. No traditional spines or grid (appropriate for Sankey).
+          Above default (2/6).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Opacity storytelling (stable vs. changing) and color scale tell the
-          sentiment story. No callout or annotation highlighting the Q1→Q4 positive
-          trend.
+        comment: Narrative annotation explicitly states the key finding (48%→53% positive
+          sentiment Q1→Q4) with precise numbers. Opacity hierarchy makes stable flows
+          visually prominent, letting the eye distinguish stability from change. Semantic
+          color gradient (green→red) guides interpretation without need for legend.
+          Above default (2/6).
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +158,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey diagram using Highcharts native sankey series.
+        comment: Correct alluvial/Sankey diagram using Highcharts Sankey series type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: consistent colors, proportional flows,
-          node labels with totals, stable/changing opacity distinction, chronological
-          ordering, transparency.'
+        comment: 'All spec features: consistent category colors across waves, flow
+          width proportional to respondent count, node labels with totals (e.g. ''Strongly
+          Agree (180)''), stable vs. changer distinction via opacity, narrative annotation
+          for net flows, waves arranged left-to-right chronologically, transparency
+          for overlapping flows.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Columns=waves, nodes=categories, link widths=respondent counts. All
-          data visible.
+        comment: 5 Likert categories × 4 quarterly waves. All 57 flow connections
+          correctly mapped. Node totals calculated correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches Descriptive·spec-id·language·library·anyplot.ai format.
-          Custom HTML legend labels all 5 categories with opacity key.
+        comment: 'Title: ''Employee Training Satisfaction · alluvial-opinion-flow
+          · python · highcharts · anyplot.ai'' — correct format with descriptive prefix.
+          Custom HTML legend shows all 5 categories with color swatches plus opacity
+          key.'
     data_quality:
       score: 15
       max: 15
@@ -178,22 +194,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 4 waves, 5 categories, stable flows, cross-category flows in
-          both directions, shifting sentiment over time.
+        comment: 'Shows all alluvial features: stable opinion flows (same category
+          diagonal), opinion changes (cross-category flows), four waves showing progression,
+          node totals per wave, net positive sentiment trend visible.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction survey on professional development program
-          expansion — genuine, neutral business scenario.
+        comment: Professional development program survey — neutral, realistic, comprehensible
+          business scenario. 895 employees tracked quarterly. No controversial or
+          sensitive content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 895 respondents, realistic flow proportions, believable Q1→Q4 positive
-          trend arc.
+        comment: ~895 employees, realistic Likert distribution (majority positive
+          to start, gradual positive shift). Realistic flow sizes and opinion change
+          patterns.
     code_quality:
       score: 10
       max: 10
@@ -203,63 +222,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: theme tokens → data → node/link construction → chart
-          config → HTML → screenshot → PIL pin.'
+        comment: 'Linear structure: imports→tokens→data→node/link computation→chart
+          config→HTML→screenshot. No unnecessary classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic.
+        comment: Fully deterministic — all data is hardcoded, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib.Path,
+          highcharts_core, PIL.Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. Local/CDN fallback, RGBA loop, title scaling
-          formula all appropriate complexity.
+        comment: Elegant RGBA color computation from hex strings. Dictionary-based
+          semantic color mapping. Local cache + CDN fallback pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. PIL post-render
-          pinning in place.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Highcharts
+          API with Sankey and Annotations modules.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Highcharts Sankey API: correct nodes array with column/color/id/name,
+          links array with keys=[''from'',''to'',''weight''], per-link color via RGBA
+          in link data. Annotations module with point-based pixel coordinates. CDP
+          viewport override for exact canvas dimensions.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct sankey series with node/link arrays, column assignment, per-node
-          color, nodeFormat/pointFormat tooltips. chart.to_js_literal() idiom correct.
-          Annotation pixel-coordinate positioning is fragile.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Sankey series, per-link RGBA color, annotations module for wave headers.
-          Could leverage plotOptions.series.states or built-in gradient link API.
-  verdict: REJECTED
+        comment: Highcharts Sankey series type + Annotations module combination is
+          distinctly Highcharts. Per-link RGBA color strings in the Sankey link data
+          (opacity per-link) is idiomatic. Custom HTML legend injected alongside the
+          chart container in the page body.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - custom-legend
   - html-export
   - annotations
+  - hover-tooltips
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
