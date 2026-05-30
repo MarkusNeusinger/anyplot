@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-23
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
@@ -10,6 +12,18 @@ import matplotlib.path as mpath
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+
+# Imprint sequential cmap for continuous arc weights (single-polarity)
+imprint_seq = mcolors.LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data: Character interactions in a story chapter
 nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack"]
@@ -37,24 +51,23 @@ edges = [
 weights = [w for _, _, w in edges]
 weight_min, weight_max = min(weights), max(weights)
 
-# Weighted node degrees for size variation (data storytelling)
+# Weighted node degrees for size variation (hub characters are larger)
 node_degrees = [0] * n_nodes
 for s, e, w in edges:
     node_degrees[s] += w
     node_degrees[e] += w
 
-# Truncated Blues colormap — avoids near-white so weight-1 arcs stay clearly visible
-blues_raw = plt.cm.Blues(np.linspace(0.35, 0.95, 256))
-arc_cmap = mcolors.LinearSegmentedColormap.from_list("TruncBlues", blues_raw)
 norm = mcolors.Normalize(vmin=weight_min, vmax=weight_max)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 x_positions = np.linspace(0.06, 0.90, n_nodes)
 y_baseline = 0.08
 
 # Arcs via PathPatch with cubic Bézier curves (distinctive matplotlib feature)
+# Sort by weight so heavier arcs render on top
 for start, end, weight in sorted(edges, key=lambda e: e[2]):
     x_start = x_positions[start]
     x_end = x_positions[end]
@@ -74,8 +87,8 @@ for start, end, weight in sorted(edges, key=lambda e: e[2]):
     patch = mpatches.PathPatch(
         path,
         facecolor="none",
-        edgecolor=arc_cmap(norm(weight)),
-        linewidth=1.5 + weight * 1.8,
+        edgecolor=imprint_seq(norm(weight)),
+        linewidth=0.8 + weight * 1.0,
         alpha=0.8,
         capstyle="round",
     )
@@ -83,11 +96,11 @@ for start, end, weight in sorted(edges, key=lambda e: e[2]):
 
 # Node sizes proportional to weighted degree (reveals hub characters)
 max_degree = max(node_degrees)
-node_sizes = [300 + 350 * (d / max_degree) for d in node_degrees]
+node_sizes = [120 + 200 * (d / max_degree) for d in node_degrees]
 
-# Highlight protagonist Alice with distinct accent color
-node_colors = ["#FF6B35" if i == 0 else "#FFD43B" for i in range(n_nodes)]
-node_edge_colors = ["#B8441A" if i == 0 else "#306998" for i in range(n_nodes)]
+# Protagonist Alice in brand green; other characters in muted tone
+node_colors = [BRAND if i == 0 else INK_MUTED for i in range(n_nodes)]
+node_edge_colors = [INK if i == 0 else INK_SOFT for i in range(n_nodes)]
 
 ax.scatter(
     x_positions,
@@ -95,7 +108,7 @@ ax.scatter(
     s=node_sizes,
     c=node_colors,
     edgecolors=node_edge_colors,
-    linewidths=2.5,
+    linewidths=1.5,
     zorder=5,
 )
 
@@ -107,53 +120,50 @@ for i, (x, name) in enumerate(zip(x_positions, nodes, strict=True)):
         name,
         ha="center",
         va="top",
-        fontsize=16,
+        fontsize=8,
         fontweight="heavy" if i == 0 else "bold",
-        color="#306998",
+        color=INK if i == 0 else INK_SOFT,
     )
 
-# Colorbar for connection strength
-sm = plt.cm.ScalarMappable(cmap=arc_cmap, norm=norm)
+# Colorbar for connection strength (Imprint sequential cmap)
+sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
 cbar = fig.colorbar(sm, ax=ax, shrink=0.4, aspect=15, pad=0.02)
-cbar.set_label("Connection Strength", fontsize=16)
+cbar.set_label("Connection Strength", fontsize=8, color=INK)
 cbar.set_ticks([1, 2, 3])
-cbar.ax.tick_params(labelsize=16)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+plt.setp(cbar.ax.yaxis.get_ticklabels(), color=INK_SOFT)
 
-# Subtle baseline
+# Subtle baseline spanning the node range
 ax.plot(
     [x_positions[0] - 0.02, x_positions[-1] + 0.02],
     [y_baseline, y_baseline],
-    color="#306998",
+    color=INK,
     linewidth=0.8,
-    alpha=0.2,
+    alpha=0.15,
     zorder=1,
 )
 
-# Layout
 ax.set_xlim(-0.02, 0.98)
 ax.set_ylim(-0.06, 0.68)
 ax.axis("off")
 
-# Title with narrative subtitle
-ax.set_title(
-    "Character Interactions \u00b7 arc-basic \u00b7 matplotlib \u00b7 pyplots.ai",
-    fontsize=24,
-    fontweight="medium",
-    pad=36,
-)
+# Title — 44 chars, below 67-char baseline so no scaling needed
+title = "arc-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=20)
 
 ax.text(
     0.5,
     1.01,
-    "Node size reflects connection activity \u00b7 Alice (orange) is the central character",
+    "Node size reflects connection activity · Alice (green) is the central character",
     ha="center",
     va="bottom",
-    fontsize=13,
-    color="#888888",
+    fontsize=8,
+    color=INK_MUTED,
     fontstyle="italic",
     transform=ax.transAxes,
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.tight_layout(pad=1.0)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
