@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -264,7 +264,7 @@ plot = (
     + geom_label(
         changes_df,
         aes(x="x", y="y", label="label", color="category"),
-        size=2.6,
+        size=3.3,
         fontweight="bold",
         va="center",
         ha="center",
@@ -277,7 +277,7 @@ plot = (
     + scale_color_manual(values=cat_colors)
     + guides(fill=guide_legend(override_aes={"alpha": 1}), color=None)
     + labs(title=title, subtitle=subtitle, x="", y="")
-    + coord_cartesian(xlim=(-0.14, 1.14), ylim=(0.0, 0.98))
+    + coord_cartesian(xlim=(-0.14, 1.08), ylim=(0.0, 0.98))
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -294,7 +294,7 @@ plot = (
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=9, weight="bold", color=INK),
         legend_position="right",
-        plot_margin=0.02,
+        plot_margin=0.05,
     )
 )
 
