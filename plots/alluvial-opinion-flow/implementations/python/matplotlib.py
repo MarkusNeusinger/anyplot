@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: matplotlib | Python 3.14
-Quality: pending | Updated: 2026-05-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-30
 """
 
 import os
