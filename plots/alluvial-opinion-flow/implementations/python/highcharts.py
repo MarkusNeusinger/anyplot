@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -127,7 +127,7 @@ for source, target, weight in flows:
     is_stable = source_cat == target_cat
     hex_col = CATEGORY_COLORS[source_cat]
     r, g, b = int(hex_col[1:3], 16), int(hex_col[3:5], 16), int(hex_col[5:7], 16)
-    alpha = 0.7 if is_stable else 0.15
+    alpha = 0.7 if is_stable else 0.28
     links_data.append({"from": source, "to": target, "weight": weight, "color": f"rgba({r},{g},{b},{alpha})"})
 
 # Title with length-scaled fontsize (baseline 66px for ~67-char title)
@@ -145,7 +145,7 @@ chart.options.chart = {
     "backgroundColor": PAGE_BG,
     "marginLeft": 180,
     "marginRight": 440,
-    "marginTop": 195,
+    "marginTop": 285,
     "marginBottom": 145,
 }
 
@@ -176,7 +176,7 @@ series_config = {
         "crop": False,
         "overflow": "allow",
         "style": {
-            "fontSize": "22px",
+            "fontSize": "26px",
             "fontWeight": "bold",
             "color": INK,
             "textOutline": f"4px {PAGE_BG}",
@@ -192,15 +192,20 @@ series_config = {
 
 chart.options.series = [series_config]
 
-# Wave column header annotations — positioned above top of chart area
+# Wave column header annotations — positioned in the dedicated top margin area
+# marginTop=285 gives ~285px above the chart plot area for column headers (y≈165)
 # Inner width: 3200 - 180 - 440 = 2580; columns spaced at ~0, ~860, ~1720, ~2580
-# Absolute x = marginLeft + column_offset; y positions near top of inner area
 wave_x_positions = [220, 1050, 1880, 2690]
+
+# Narrative focal point: Positive sentiment (Strongly Agree + Agree) grew Q1→Q4
+# Q1 positive: 430/895 ≈ 48%  →  Q4 positive: 475/900 ≈ 53%
+narrative_text = "Positive sentiment (Agree+Strongly Agree)<br/>grew from <b>48% → 53%</b> Q1→Q4"
+
 chart.options.annotations = [
     {
         "labels": [
             {
-                "point": {"x": wave_x_positions[i], "y": 250},
+                "point": {"x": wave_x_positions[i], "y": 165},
                 "text": wave,
                 "backgroundColor": "transparent",
                 "borderWidth": 0,
@@ -209,7 +214,22 @@ chart.options.annotations = [
             for i, wave in enumerate(waves)
         ],
         "labelOptions": {"useHTML": True},
-    }
+    },
+    {
+        "labels": [
+            {
+                "point": {"x": 2850, "y": 800},
+                "text": narrative_text,
+                "backgroundColor": ELEVATED_BG,
+                "borderColor": "#009E73",
+                "borderWidth": 3,
+                "borderRadius": 8,
+                "padding": 14,
+                "style": {"fontSize": "26px", "color": INK, "fontFamily": "Georgia, serif", "textOutline": "none"},
+            }
+        ],
+        "labelOptions": {"useHTML": True, "crop": False},
+    },
 ]
 
 chart.options.legend = {"enabled": False}
