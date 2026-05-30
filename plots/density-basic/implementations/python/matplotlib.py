@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-30
@@ -14,6 +14,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from scipy import stats
+from scipy.signal import argrelextrema
 
 
 # Theme tokens
@@ -90,6 +91,32 @@ ax.spines["bottom"].set_color(INK_SOFT)
 # Axis limits — bottom offset accommodates rug plot ticks below zero
 ax.set_xlim(x_range[0], x_range[-1])
 ax.set_ylim(bottom=-0.0020)
+
+# Suppress the negative y-axis tick label (rug offset lives there, not real density)
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: "" if v < 0 else f"{v:.4g}"))
+
+# Locate the two KDE peaks and annotate them
+peak_idxs = argrelextrema(density, np.greater, order=25)[0]
+if len(peak_idxs) >= 2:
+    p1_idx, p2_idx = peak_idxs[0], peak_idxs[1]
+else:
+    # Fallback: split range at midpoint and take each half's argmax
+    mid = len(x_range) // 2
+    p1_idx = np.argmax(density[:mid])
+    p2_idx = mid + np.argmax(density[mid:])
+
+p1_x, p1_y = x_range[p1_idx], density[p1_idx]
+p2_x, p2_y = x_range[p2_idx], density[p2_idx]
+
+annotation_kw = {
+    "fontsize": 8,
+    "color": INK_SOFT,
+    "bbox": {"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.88, "boxstyle": "round,pad=0.3"},
+    "arrowprops": {"arrowstyle": "->", "color": INK_MUTED, "lw": 1.0},
+    "ha": "center",
+}
+ax.annotate(f"Cache hit\n~{p1_x:.0f} ms", xy=(p1_x, p1_y), xytext=(p1_x - 15, p1_y * 0.60), **annotation_kw)
+ax.annotate(f"DB query\n~{p2_x:.0f} ms", xy=(p2_x, p2_y), xytext=(p2_x + 22, p2_y * 0.70), **annotation_kw)
 
 plt.tight_layout()
 
