@@ -1,61 +1,45 @@
 library: matplotlib
+language: python
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:17Z'
-updated: '2026-02-24T21:09:22Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457529084
-issue: 0
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-30T05:43:55Z'
+generated_by: claude-sonnet
+workflow_run: 26675524736
+issue: 812
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  - rolling-window
-  styling:
-  - grid-styling
-  - alpha-blending
 review:
   strengths:
-  - 'All four issues from Attempt 1 fully addressed: colorblind-safe blue/orange palette,
-    Price (USD) label, SMA + annotation for storytelling'
-  - Strong visual refinement with custom spines, subtle grid, warm background, and
-    polished legend
-  - Perfect spec compliance with all required features plus meaningful extras (SMA,
-    annotation)
-  - Clean, well-structured code with vectorized operations and proper reproducibility
-  - Good data storytelling through SMA trend line and largest-drop annotation creating
-    visual hierarchy
+  - Two-panel gridspec layout (price + volume) with height_ratios is the canonical
+    financial chart structure in matplotlib — demonstrates library mastery
+  - 'Full theme-adaptive chrome: all six tokens correctly applied to every non-data
+    element; dark render is flawless with no dark-on-dark failures'
+  - 'Semantic color exception correctly documented and applied: finance profit/loss
+    → Imprint green (#009E73) / matte red (#AE3030)'
+  - Proportional minimum body height (min_body = range × 0.004) prevents doji candles
+    from becoming invisible — elegant edge-case handling
+  - 'Realistic financial data: business-day calendar, volume correlated with intraday
+    range, random-walk price series'
   weaknesses:
-  - Some candle bodies near series end are very thin vertically, almost indistinguishable
-    from wicks
-  - Annotation text Largest drop $-2.54 has slightly awkward formatting (dollar sign
-    before negative)
-  - SMA line could use slightly more distinctive styling to stand out from the gray
-    spine colors
-  image_description: The plot displays a candlestick chart titled "candlestick-basic
-    · matplotlib · pyplots.ai" showing 30 trading days of stock price data from early
-    January to mid-February 2024. Blue (#1976d2) candlesticks represent bullish days
-    (Close ≥ Open) and orange (#e65100) candlesticks represent bearish days (Close
-    < Open). The y-axis shows "Price (USD)" with dollar formatting ($130–$170) and
-    the x-axis shows "Date" with weekly Monday labels rotated 45°. A dark gray 5-day
-    SMA line overlays the candlesticks, tracing the trend from ~$150 up to ~$162 then
-    declining to ~$135. An orange annotation below a mid-chart candle reads "Largest
-    drop $-2.54" with a thin connecting line. The legend in the upper right identifies
-    Bullish, Bearish, and 5-day SMA. Top and right spines are removed; left and bottom
-    spines are thin and gray. A subtle y-axis grid (alpha=0.15) aids price reading.
-    The background is a warm off-white (#fafafa). Candle bodies vary in height with
-    thin wicks extending above and below. Overall layout is clean with good canvas
-    utilization.
+  - Volume panel Y-axis label "Volume" at fontsize=9 vs. main panel "Price (USD)"
+    at fontsize=10 creates a minor inter-panel imbalance — unify to 10pt for consistency
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "candlestick-basic · python · matplotlib · anyplot.ai" in dark ink at top; Y-axis "Price (USD)" and volume panel "Volume" in dark INK; X-axis "Date" in dark INK; tick labels in INK_SOFT (#4A4A44) — all clearly readable against light background
+      Data: Bullish candles in Imprint brand green (#009E73); bearish candles in matte red (#AE3030); wicks thinner than bodies; dashed gray SMA line; red annotation arrow to largest drop; volume bars color-coded matching candle direction
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and axis labels shift to near-white (#F0EFE8); tick labels to light gray (#B8B7B0); legend frame to dark elevated (#242420); spines/grid lighten — all clearly readable against dark background; no dark-on-dark failures observed
+      Data: Imprint colors identical to light render — green bullish (#009E73) and red bearish (#AE3030) unchanged; brand green clearly visible on dark surface; annotation text in matte red readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,47 +47,55 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, legend 16pt, annotation 13pt'
+        comment: 'All text explicitly sized and readable in both themes; minor inter-panel
+          imbalance: volume Y-label 9pt vs. main panel 10pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45° and spaced by week, legend and annotation
-          positioned without collisions
+        comment: No text-text or text-data collisions; legend clear of candles; annotation
+          well-offset below candle bodies
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Candle bodies visible with width=0.6, wicks at linewidth=1.5. Some
-          bodies thin vertically for small price movements
+        comment: 30 candles at appropriate density; wicks thinner than bodies; SMA
+          dashed line distinct; volume bars at alpha=0.7
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange palette is fully colorblind-safe with good contrast against
-          off-white background
+        comment: Finance semantic exception correctly applied; green/red for bullish/bearish
+          is documented Imprint exception
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 figure with tight_layout, plot fills ~65% of canvas, balanced
-          margins
+        comment: 3200x1800 px canvas confirmed; gridspec 3:1 height ratio well-proportioned;
+          canvas gate passed; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price (USD) are descriptive with currency unit
+        comment: Price (USD) with units; Date; Volume with M-suffix formatter; title
+          format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'COLOR_UP=#009E73 (Imprint pos.1), COLOR_DOWN=#AE3030 (Imprint pos.5
+          semantic anchor); backgrounds #FAF8F1/#1A1A17; all chrome tokens adaptive'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -111,22 +103,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue/orange palette, warm off-white background, styled spines,
-          fontweight medium title, dollar formatting, refined legend
+        comment: Two-panel financial layout, dollar-formatted y-axis, volume in millions,
+          custom mixed legend handles, arrow annotation — clear intentional hierarchy
+          above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed/styled, subtle grid alpha=0.15, set_axisbelow, generous
-          padding, minor tick locators
+        comment: Top/right spines removed; subtle y-only grid alpha=0.15; spine linewidth
+          0.6; minor tick suppression; rotated date labels; subplots_adjust whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 5-day SMA provides trend context, largest drop annotation creates
-          focal point, clear visual hierarchy
+        comment: Two-panel (price+volume) tells complete financial story; 5-day SMA
+          reveals peak-and-decline trend; annotation draws attention to key risk event
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with OHLC bodies and wicks
+        comment: Correct candlestick chart; wicks via vlines, bodies via bar — canonical
+          matplotlib approach
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color coding, thin wicks, date formatting, subtle grid - all present
+        comment: Green/red color coding; wicks thinner than bodies; date axis with
+          weekly formatter; subtle grid; 30-day range within 20-100 spec window
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x-axis, prices on y-axis, all data visible
+        comment: Date on X, price on Y, correct OHLC mapping; volume on secondary
+          panel; all 30 periods visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend accurately labels Bullish, Bearish,
-          and 5-day SMA
+        comment: candlestick-basic · python · matplotlib · anyplot.ai; legend labels
+          match semantic meaning
     data_quality:
       score: 15
       max: 15
@@ -165,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish candles, varying body sizes, different wick
-          lengths, uptrend and downtrend
+        comment: All OHLC aspects; color-coded direction; wicks; volume subplot; SMA
+          overlay; doji/minimum body handling — comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock prices ~$150 with 2% daily volatility, business day
-          range, neutral financial context
+        comment: $150 starting price on business-day calendar; 2% daily return std;
+          volume correlated with intraday range; neutral stock
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices in $130-170 range realistic for a stock, sensible daily movements
+        comment: Price range $128-$167 plausible; volume 0.7-1.7M shares; intraday
+          range 1-3% — all realistic equity parameters
     code_quality:
       score: 10
       max: 10
@@ -189,35 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save flow, no functions or classes
+        comment: No functions or classes; flat top-level code; logical section grouping
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All six imports used
+        comment: All 8 imports used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized numpy operations, clean DataFrame construction, appropriate
-          complexity
+        comment: Vectorized operations; min_body proportional scaling; no fake UI;
+          clean numpy/pandas idioms
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight, no deprecated
-          API
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400); no bbox_inches='tight';
+          current matplotlib 3.x API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -225,12 +222,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistent ax-level API, good use of mdates, mticker, mpatches submodules
+        comment: 'ax.vlines() for wicks, ax.bar() for bodies, fig.add_gridspec() with
+          height_ratios, sharex= for linked axes, mdates.date2num() — all idiomatic;
+          minor: plt.setp() is older style'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Matplotlib-specific date locators/formatters, manual candlestick
-          via vlines+bar with zorder, patches for legend
+        comment: mdates module (WeekdayLocator, DateFormatter, date2num), mticker
+          custom formatters, mpatches for legend handles, gridspec height_ratios,
+          sharex multi-panel — distinctive matplotlib features well applied
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - time-series
+  - rolling-window
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
