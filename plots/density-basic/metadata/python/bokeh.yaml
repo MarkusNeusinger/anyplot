@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: density-basic
 created: '2025-12-23T10:03:19Z'
-updated: '2026-05-30T03:28:47Z'
+updated: '2026-05-30T03:36:23Z'
 generated_by: claude-sonnet
 workflow_run: 26672932308
 issue: 912
@@ -12,107 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Excellent Bokeh idiom usage: ColumnDataSource, HoverTool with vline mode, BoxAnnotation
-    for modal region shading, Span for dashed reference lines, NumeralTickFormatter
-    for y-axis — all distinctly Bokeh features'
-  - 'Strong bimodal storytelling: two BoxAnnotation bands, dashed peak reference lines,
-    and bold peak labels guide the viewer to the key insight about web service response
-    time distribution'
-  - 'Complete spec compliance: smooth KDE curve via manual Silverman bandwidth, 18%
-    alpha area fill, rug plot with individual observations, bimodal distribution with
-    appropriate 300/100 sample split'
-  - 'Full theme-adaptive chrome: all INK/INK_SOFT tokens correctly threaded through
-    title, axis labels, tick labels, grid, and annotation text — dark render is clean
-    with no dark-on-dark failures'
-  - 'Proper Bokeh output pipeline: output_file + save for interactive HTML, Selenium
-    + CDP EmulationOverride for precise 3200×1800 screenshot, PIL normalization guard
-    against ±1-2px rounding'
+  - Brand green (#009E73) used correctly as single series — first-series rule satisfied
+    in both renders
+  - 'All three Bokeh-specific models used idiomatically: BoxAnnotation for modal region
+    shading, Span for peak reference lines, HoverTool in vline mode'
+  - Bimodal distribution data tells a clear story — fast vs slower web-service response
+    times are labeled, highlighted, and visually differentiated
+  - Rug plot at y=0 elegantly shows raw observations without cluttering the KDE curve
+  - 'Theme-adaptive chrome fully wired: title, axis labels, tick labels, grid, and
+    background all flip correctly between light (#FAF8F1) and dark (#1A1A17)'
+  - Manual Silverman bandwidth implementation is mathematically correct and transparent
+  - Canvas exactly 3200x1800 with proper min_border reservations — no clipping of
+    any text element
   weaknesses:
-  - Peak annotation labels ("Fast Responses", "Slower Responses") are set to 26pt
-    — at 400px mobile width this scales to ~4px source height, unreadable on mobile.
-    Increase text_font_size in both Label() calls from "26pt" to "34pt" to match tick
-    label sizing
-  - p.outline_line_color = INK_SOFT keeps a full rectangular border around the plot
-    area; the style guide calls for removing top and right spines (L-shaped frame).
-    Change p.outline_line_color = INK_SOFT to p.outline_line_color = None to achieve
-    the intended minimal-chrome aesthetic
+  - 'CQ-04: Inline `from PIL import Image as _Image` at the bottom of the file is
+    non-standard Python style — hoist to top-level imports'
+  - 'DE-01: Box annotations (fill_alpha=0.07) become nearly invisible on the dark
+    background — consider boosting dark-mode alpha slightly (0.10) for the box fill
+    or using ELEVATED_BG instead of BRAND for the box color in dark mode'
+  - 'DE-02: Significant whitespace on the right side of the x-axis (x=300–410 region)
+    could be tightened — consider setting x_range to trim blank tail'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "density-basic · python · bokeh · anyplot.ai" in bold dark (#1A1A17) text, spans ~53% of plot width — well-proportioned. X-axis label "Response Time (ms)" and Y-axis label "Density" in dark ink, clearly readable. Tick labels (0, 100, 200, 300, 400 on x; 0.0000–0.0090 on y) in INK_SOFT dark gray, readable. Peak annotation labels "Fast Responses" and "Slower Responses" in bold dark ink, positioned above respective peaks — readable at full resolution but small (~26pt).
-      Data: Bimodal density curve in brand green #009E73, line_width=5. Area fill under curve in same green at fill_alpha=0.18 — provides depth without overwhelming. Two BoxAnnotation bands in very subtle green (fill_alpha=0.07) highlight the modal regions. Two dashed vertical Span lines mark peak x-positions. Rug plot of 400 observations at bottom as short vertical segments in green at 38% alpha.
-      Notable: Full rectangular border outline visible around plot area (not L-shaped frame). Grid lines are Y-only, subtle at 15% alpha.
-      Legibility verdict: PASS — all primary text (title, axis labels, tick labels) fully readable. Peak annotation labels are secondary and readable at full resolution; they would fail at 400px mobile width.
+      Background: Warm off-white (#FAF8F1) — correct for light theme.
+      Chrome: Title "density-basic · python · bokeh · anyplot.ai" in dark ink (#1A1A17), ~60% plot width, fully readable. X-axis label "Response Time (ms)" and Y-axis label "Density" in dark ink, proportional. Tick labels in INK_SOFT (#4A4A44), readable at all sizes. Y-axis formatted as 0.0000 / 0.0020 / 0.0040 / 0.0060 / 0.0080.
+      Data: KDE curve in brand green (#009E73), line_width=5, clearly visible. Filled area under curve in same green at alpha=0.18, giving a soft wash effect. Two BoxAnnotation regions (left=peak±70, green fill at alpha=0.07) highlight each modal zone as subtle cream-green rectangles. Two vertical dashed Spans mark peak locations. Peak labels "Fast Responses" (above primary, ~150 ms) and "Slower Responses" (beside secondary, ~280 ms) in dark bold text. Rug plot at y≈−0.00055 shows 400 individual observations as short green vertical segments.
+      Legibility verdict: PASS — all text crisp and readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light near-white (#F0EFE8) text — clearly readable against dark background. Axis labels in same light ink, readable. Tick labels in INK_SOFT light gray (#B8B7B0), clearly visible. Peak annotation labels "Fast Responses" and "Slower Responses" in light INK color — readable, no dark-on-dark failure.
-      Data: Density curve and area fill in identical brand green #009E73 — data colors are unchanged from light render (only chrome flipped). Rug plot in same green. BoxAnnotation shading and Span dashed lines all visible against dark background. Grid lines subtle at 15% alpha white.
-      Notable: Same full rectangular border outline as light render. No dark-on-dark failures detected.
-      Legibility verdict: PASS — all elements readable. Theme-adaptive chrome correctly applied throughout. No text is "dark on dark".
+      Background: Near-black (#1A1A17) — correct for dark theme.
+      Chrome: Title, axis labels, and tick labels all render in light-colored ink (INK=#F0EFE8 / INK_SOFT=#B8B7B0). All elements are clearly readable against the dark background. No dark-on-dark failures observed. Grid lines are subtle horizontal bands (INK at alpha=0.15 = light lines on dark bg, as expected).
+      Data: KDE curve and fill remain identical brand green (#009E73) — data colors are exactly the same as the light render. Box annotations appear as slightly lighter green-tinted rectangles at alpha=0.07 — subtle but visible. Dashed vertical Spans visible at both peak positions. Peak annotation labels in light INK (#F0EFE8), readable. Rug plot visible at bottom.
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures. The BoxAnnotation regions are very subtle in dark mode (fill_alpha=0.07 on near-black) but not a legibility issue.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'Primary text (title 50pt, axis labels 42pt, tick labels 34pt) explicitly
-          set and readable at full resolution and mobile. Deduction: peak annotation
-          labels at 26pt will render ~4px at 400px mobile width — below readable threshold
-          for secondary storytelling elements'
+        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
+          labels 34pt, annotations 34pt). Proportions well-balanced. Both themes readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between any elements — curve, fill, rug, annotations,
-          and axis text all have clear separation
+        comment: No overlapping text or data elements. Peak labels positioned cleanly
+          above/beside respective modes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density curve (line_width=5), area fill (alpha=0.18), rug plot (alpha=0.38),
-          dashed reference lines, and box annotations all clearly visible in both
-          themes
+        comment: KDE line width=5 prominent. Fill alpha=0.18 visible without competing.
+          Rug at alpha=0.38 for 400 points — appropriate density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series brand green #009E73 — CVD-safe, adequate contrast
-          on both light and dark backgrounds'
+        comment: Single green series with sufficient luminance contrast on both backgrounds.
+          CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). min_border settings ensure no clipping.
-          Good use of canvas space with generous margins around plot area
+        comment: Canvas gate passed. Min_border values correctly reserve space. Plot
+          fills ~60-70% of canvas. No edge clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title in correct format. X: ''Response Time (ms)'' with unit, Y:
-          ''Density'' — descriptive and appropriate'
+        comment: 'X: ''Response Time (ms)'' with units; Y: ''Density''. Title in correct
+          spec format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses brand green #009E73 (first Imprint position).
-          Light background #FAF8F1, dark background #1A1A17. All chrome tokens correctly
-          theme-adaptive. Data colors identical across both renders'
+        comment: 'First (only) series is #009E73. Background #FAF8F1 light / #1A1A17
+          dark. All chrome tokens theme-adaptive. No forbidden palette used.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,27 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: BoxAnnotation modal highlighting, Span reference
-          lines, peak labels add intentional design hierarchy. But the full rectangular
-          border (outline_line_color=INK_SOFT) instead of L-shaped frame reduces polish
-          to between ''default'' and ''clearly above defaults'''
+        comment: 'Clearly above defaults: BoxAnnotation region highlights, Span reference
+          lines, labeled peaks, and rug plot all show design intent. Not yet publication-ready
+          (FiveThirtyEight-level) but strong.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only grid at 15% alpha is a good refinement above default (2).
-          However, the full rectangular border outline is a clear miss — style guide
-          calls for removing top/right spines
+        comment: 'Y-axis-only grid at alpha=0.15. outline_line_color=None removes
+          frame box. Generous whitespace. Minor: right-side blank space (x=300-410)
+          could be trimmed.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Strong storytelling: bimodal web-service response times clearly
-          communicate two distinct populations. BoxAnnotations + dashed peaks + peak
-          labels create clear visual hierarchy. Above default (2) but not exceptional
-          level 6'
+        comment: 'Clear narrative: bimodal web-service response times. Peaks labeled
+          and highlighted. Rug plot adds observational context. Visual hierarchy guides
+          viewer to the two modes.'
     spec_compliance:
       score: 15
       max: 15
@@ -150,29 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE density plot with smooth probability density curve
+        comment: KDE density curve — correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth curve (area=1), fill under curve with transparency, rug plot
-          with individual observations, Silverman's bandwidth rule — all spec requirements
-          met
+        comment: Smooth KDE curve, fill under curve, rug plot, appropriate Silverman
+          bandwidth — all spec features present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Response Time (ms), Y: Density — correct axes, all 400 observations
-          represented'
+        comment: 'X: continuous response time values; Y: probability density. All
+          400 observations represented.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'density-basic · python · bokeh · anyplot.ai' in correct format.
-          Single series — no legend needed or present
+        comment: Title is exactly 'density-basic · python · bokeh · anyplot.ai'. No
+          legend needed (single series).
     data_quality:
       score: 15
       max: 15
@@ -182,25 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution shows skewness and multimodality. Rug plot shows
-          raw observation density. Silverman bandwidth balances detail and noise.
-          All key density plot aspects demonstrated
+        comment: Shows bimodality, smooth KDE curve, fill, rug plot — all density
+          plot features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web service response times — neutral, realistic, technology context.
-          Bimodal pattern (fast cache hits vs slow DB queries) is domain-plausible
+        comment: Web service response times with bimodal distribution — real, neutral,
+          business-technology scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 0-420ms with two modes at ~150ms and ~280ms — realistic
-          for a web service with mixed cache/DB operations
+        comment: Fast peak ~150ms (σ=30), slow peak ~280ms (σ=40), n=400 — all realistic
+          for web service latency.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -208,35 +194,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Data → KDE → Figure → Glyphs → Screenshot structure.
-          No functions or classes
+        comment: 'Linear flow: imports → data → KDE → plot → save. No unnecessary
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. PIL imported inline at point of use (clean
-          pattern for conditional normalization)
+        comment: All top-level imports are used. Selenium and time are needed for
+          the screenshot flow.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity. No fake UI elements. Manual KDE is legitimately
-          needed (Bokeh has no built-in KDE). Loop for two Span annotations is clean
+        passed: false
+        comment: 'Minor: `from PIL import Image as _Image` is an inline import at
+          the bottom — should be a top-level import. Otherwise clean and Pythonic.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (PNG static) and plot-{THEME}.html (interactive).
-          Current Bokeh 3.x API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh 3.9 API
+          used throughout.
     library_mastery:
       score: 9
       max: 10
@@ -246,30 +232,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource for all glyphs (enables HoverTool). add_layout()
-          for BoxAnnotation and Span (idiomatic Bokeh annotation pattern). NumeralTickFormatter.
-          Proper output_file + save flow. CDP EmulationOverride for exact viewport
+        comment: ColumnDataSource for all glyphs, output_file+save for HTML, Selenium
+          CDP override for exact canvas size — all Bokeh-idiomatic patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with mode='vline' and line_policy='nearest' for interactive
-          curve inspection (distinctly Bokeh). BoxAnnotation for modal bands (Bokeh-specific
-          model, not available in matplotlib/seaborn). Span for reference lines. These
-          features would not translate directly to a static library
-  verdict: REJECTED
+        comment: 'BoxAnnotation, Span, and HoverTool with vline mode are genuinely
+          Bokeh-distinctive. The layout model (add_layout) and ColumnDataSource pattern
+          are Bokeh-specific. Minor point off: varea is straightforward and similar
+          constructs exist in other libraries.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - kde
   styling:
