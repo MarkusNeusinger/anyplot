@@ -1,55 +1,55 @@
 library: plotnine
+language: python
 specification_id: density-basic
 created: '2025-12-23T10:00:30Z'
-updated: '2026-02-23T23:00:23Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457535942
-issue: 0
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-basic/plotnine/plot.png
-preview_html: null
+updated: '2026-05-30T03:31:47Z'
+generated_by: claude-sonnet
+workflow_run: 26673022366
+issue: 912
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
 review:
   strengths:
-  - 'Excellent data storytelling improvement: annotated bimodal peaks with reference
-    lines clearly guide the viewer'
-  - Perfect spec compliance with all required features (density curve, fill, rug plot)
-  - Perfect data quality with a realistic bimodal test score scenario
-  - Clean, idiomatic plotnine code with proper font sizing and reproducibility
-  - Good visual refinement with subtle grid, removed spines, and tightened canvas
+  - 'Excellent layered density visualization: geom_area (fill) + geom_line (outline)
+    for the same KDE stat — classic plotnine grammar-of-graphics pattern executed
+    cleanly'
+  - Bimodal distribution with annotated vertical reference lines tells a clear, immediate
+    story about two student subgroups
+  - Rug plot adds data-density context without cluttering the visualization
+  - 'Fully theme-adaptive chrome: INK, INK_SOFT, INK_MUTED all switch correctly for
+    dark render — annotation text reads light on dark background'
+  - 'Correct Imprint palette (brand green #009E73) as single series, correct background
+    tokens (#FAF8F1 / #1A1A17)'
+  - Title fontsize scaled via the 67/n formula to prevent overflow
+  - 'Clean KISS code: imports → data → plot → save, reproducible seed, no functions/classes'
+  - Idiomatic after_stat('density') usage and stat='density' in geoms — correct plotnine
+    approach to KDE
   weaknesses:
-  - Vertical reference lines could be slightly more visible (currently quite faint
-    at alpha=0.5 + dashed)
-  - Color palette is harmonious but relatively simple — a more distinctive treatment
-    could push DE-01 higher
-  - Library mastery could be elevated with more plotnine-specific features
-  image_description: 'The plot displays a smooth density curve (KDE) of test scores
-    on a clean minimal background. The x-axis is labeled "Test Score (points)" ranging
-    from 45 to ~100, and the y-axis is labeled "Probability Density" ranging from
-    0.00 to ~0.04. The title reads "density-basic · plotnine · pyplots.ai" in large
-    text at the top. The density curve is filled with a semi-transparent steel blue
-    (#306998, alpha=0.45) and outlined with a darker navy stroke (#1a3d5c, size=1.8).
-    The distribution is clearly bimodal with a primary peak around 72 and a secondary
-    peak around 88. Two dashed vertical reference lines in muted grey-blue mark each
-    mode. Text annotations label the peaks: "Main Group (μ ≈ 72)" in dark navy near
-    the primary peak and "High Achievers (μ ≈ 88)" in warm brown near the secondary
-    peak. A rug plot along the bottom x-axis shows individual observations as small
-    brown/tan vertical marks (alpha=0.4). The background uses theme_minimal with only
-    very subtle horizontal y-axis gridlines (alpha=0.2). No x-axis gridlines or minor
-    gridlines are present. The layout is well-proportioned on a 16:9 canvas with balanced
-    whitespace.'
+  - Annotation text (size=3.5 mm ≈ 10pt) is slightly small — at 400px mobile width
+    the 'Main Group' and 'High Achievers' labels risk being hard to read; consider
+    increasing to size=4.0-4.5
+  - 'DE-01 could be stronger: fill alpha=0.3 creates a pleasing layered look but the
+    overall composition is still one step below publication-ready; a slightly thicker
+    density line (size=2.2) or subtle annotation connectors could lift it further'
+  - 'LM-02: the after_stat() and geom_rug are distinctive plotnine features, but no
+    use of scales or facets that are uniquely expressive in the plotnine grammar'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct brand surface, not pure white.
+      Chrome: Title "density-basic · python · plotnine · anyplot.ai" centered at top in dark ink, clear and well-sized (~12pt). Y-axis label "Probability Density" and X-axis label "Test Score (points)" in dark ink at 10pt — both readable with units. Tick labels (0.00–0.04 on Y, 45–95 on X) in dark-gray INK_SOFT at 8pt — readable. Subtle horizontal grid lines (y-axis only, ~15% opacity). No panel border; L-shaped axis line in INK_SOFT.
+      Data: Brand green #009E73 density curve with translucent area fill (alpha=0.3) and solid 1.8-size outline showing a bimodal distribution (peaks near x=72 and x=88). Dashed vertical reference lines at x=72 and x=88 in INK_SOFT. Text annotations "Main Group (μ ≈ 72)" and "High Achievers (μ ≈ 88)" in dark ink — slightly small but readable at full resolution. Rug plot at bottom showing individual observations in INK_MUTED.
+      Legibility verdict: PASS — all elements readable against the light background. Annotation text is small (size=3.5 mm) but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark brand surface, not pure black.
+      Chrome: Title in near-white (#F0EFE8), clearly readable. Y-axis and X-axis labels in light text — readable. Tick labels in light gray (INK_SOFT adapts to #B8B7B0) — readable, no dark-on-dark failure. Subtle horizontal grid lines visible against dark surface. L-shaped axis line in #B8B7B0.
+      Data: Same brand green #009E73 for the density curve and fill — identical to light render (correct: only chrome flips). The translucent fill reads as darker green on the near-black background, which is expected and visually coherent. Annotation text uses INK (#F0EFE8 in dark) — light-colored and readable. Dashed reference lines in #B8B7B0, readable. Rug plot in INK_MUTED (#A8A79F) — visible.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures detected. Data colors are identical to light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,47 +57,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          base=14, annotations=11. All readable.'
+        comment: All font sizes explicitly set; axis labels and title well-proportioned.
+          Annotation text (size=3.5mm) is slightly small for mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Annotations positioned above curve peaks. Rug
-          does not interfere.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Density curve and rug clearly visible. Vertical reference lines quite
-          subtle at alpha=0.5 + dashed.
+        comment: Density curve clearly visible in both themes; rug plot, reference
+          lines, and fill all appropriately visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Single-series Python Blue. Navy and brown annotation colors well-distinguished.
-          No colorblind concerns.
+        comment: 'Single series in #009E73 (CVD-safe); reference elements use neutral
+          grays with sufficient contrast.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions on 16:9. xlim tightened to (45, 102). Balanced margins.
+        comment: Plot fills 3200x1800 canvas well; balanced margins; good use of space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Test Score (points) with units. Y: Probability Density. Title
-          in correct format.'
+        comment: 'Y: ''Probability Density'', X: ''Test Score (points)'' — descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73 (Imprint position 1). Backgrounds #FAF8F1
+          / #1A1A17. All chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,22 +111,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Cohesive palette with Python Blue fill, navy outline, brown rug and
-          annotations. Two-tone annotation colors. Above defaults but not publication-level.
+        comment: 'Above default: layered geom_area+geom_line, bimodal emphasis, annotations,
+          rug plot. Intentional design hierarchy. Not yet FiveThirtyEight-quality
+          but clearly polished.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal, x-grid removed, subtle y-grid at alpha=0.2, y-axis
-          starts at zero. Good whitespace.
+        comment: 'Good refinement: y-axis-only grid, no panel border, L-shaped axis
+          line, minimal chrome. Above library defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Bimodal peaks annotated with labels and reference lines. Viewer immediately
-          sees two groups. Two-tone colors reinforce narrative.
+        comment: 'Clear story: bimodal test score distribution with labeled subgroup
+          peaks guides viewer directly to the insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density/KDE plot using geom_area + geom_line with stat=density.
+        comment: Correct KDE/density plot with smooth curve and area fill.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density curve, fill with transparency, rug plot, appropriate bandwidth
-          — all present.
+        comment: Smooth KDE curve, transparent fill, rug plot (optional but included),
+          appropriate bandwidth.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps continuous test scores, Y shows probability density. All data
+        comment: X=scores (continuous variable), Y=probability density. All 200 observations
           visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in exact format. No legend needed for single-series.
+        comment: Title is 'density-basic · python · plotnine · anyplot.ai' (exact
+          format). Single series — no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -160,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution shows skewness and multimodality. 200 observations.
-          Rug shows individual points.
+        comment: Bimodal distribution showcases KDE's strength in revealing distribution
+          shapes; 200 points in meaningful range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores are neutral educational context. Bimodal split is pedagogically
-          realistic.
+        comment: Test scores (0-100) with main group and high achievers — realistic,
+          neutral educational scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 0-100, clipped. Realistic means (72, 88) and standard deviations
-          (10, 5).
+        comment: μ=72 (main group) and μ=88 (high achievers) with σ=10/5 — plausible
+          exam score distributions.
     code_quality:
       score: 10
       max: 10
@@ -185,47 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save. No functions or classes.
+        comment: 'Linear: imports → path fix → data → plot → save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All plotnine imports are used; numpy/pandas used; os/sys for path
+          management.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean plotnine chaining. Appropriate complexity. No fake UI.
+        comment: Clean, Pythonic. Title fontsize formula is a useful adaptive pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Current plotnine API with after_stat.
+        comment: Saves as plot-{THEME}.png with correct dpi/width/height parameters.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good grammar of graphics: after_stat, layered geoms, annotate, theme
-          overrides, scale expand.'
+        comment: 'Expertly uses grammar of graphics: stat=''density'', after_stat(),
+          geom_area+geom_line layering, geom_rug, coord_cartesian, scale_*_continuous.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: after_stat('density') and geom_rug are distinctive ggplot2-family
-          features. Grammar layering is idiomatic.
+        comment: after_stat('density') is plotnine/ggplot2-specific; geom_rug is a
+          plotnine-native layer. Layered geom composition is characteristic of the
+          grammar. No unique scales or facets.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
