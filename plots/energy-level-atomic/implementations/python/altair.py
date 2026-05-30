@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: altair | Python 3.14
-Quality: pending | Created: 2026-05-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-30
 """
 
 import os
