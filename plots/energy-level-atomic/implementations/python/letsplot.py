@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -131,8 +131,12 @@ head_df = pd.DataFrame(
 alpha_arrows = arrow_df[arrow_df["is_alpha"]].copy()
 alpha_arrows["y_mid"] = (alpha_arrows["y_from"] + alpha_arrows["y_to"]) / 2
 alpha_arrows["x_label"] = alpha_arrows["x"] + 0.025
+# Nudge Paschen α-annotation right to clear the Balmer/Paschen crossing zone near n=3
+alpha_arrows.loc[alpha_arrows["series"] == "Paschen", "x_label"] = (
+    alpha_arrows.loc[alpha_arrows["series"] == "Paschen", "x"] + 0.15
+)
 
-# Manual legend on the right side
+# Manual legend on the right side — anchored near upper energy levels to fill sparse area
 legend_labels = ["Lyman (UV)", "Balmer (Visible)", "Paschen (IR)"]
 legend_colors = [lyman_color, balmer_color, paschen_color]
 legend_df = pd.DataFrame(
@@ -140,7 +144,7 @@ legend_df = pd.DataFrame(
         "x_seg": [0.68] * 3,
         "xend_seg": [0.74] * 3,
         "x_text": [0.755] * 3,
-        "y": [-1.2, -1.7, -2.2],
+        "y": [-0.35, -0.70, -1.05],
         "label": legend_labels,
         "color": legend_colors,
     }
