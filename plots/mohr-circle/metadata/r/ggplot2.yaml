@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: mohr-circle
+created: '2026-05-30T09:28:36Z'
+updated: '2026-05-30T09:47:50Z'
+generated_by: claude-sonnet
+workflow_run: 26680048546
+issue: 4432
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Complete spec fidelity: all Mohr''s circle elements present (circle, sigma1/sigma2,
+    tau_max, A/B points, 2theta_p arc, reference lines, grid)'
+  - 'Semantically consistent color-coding: annotation label color always matches its
+    corresponding marker'
+  - Differentiated marker shapes (diamond/triangle/circle) make element types unambiguous
+    at a glance
+  - Correct square 2400x2400 canvas for a symmetric diagram requiring coord_fixed
+  - Both light and dark themes render cleanly with proper chrome token propagation
+    — no dark-on-dark failures
+  - Fully deterministic analytical computation; minimal but correct imports
+  weaknesses:
+  - 2theta_p arc label at size=3.0mm is the smallest text element; slightly undersized
+    for mobile readability — increase to size=3.5 for consistency with other annotation
+    labels (size=3.8mm)
+  - 'Annotation crowding near the circle edges: sigma2 label at left, sigma1 label
+    at right, tau_max near top — if axis range contracts (e.g., stress state with
+    smaller radius), these labels may collide with the circle path; consider adding
+    a small directional offset buffer'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "mohr-circle · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), fully readable. Axis labels "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" in INK at 10pt, clearly visible. Tick labels in INK_SOFT at 8pt, readable. Subtle grid lines via adjustcolor alpha.
+      Data: Brand green circle (#009E73, linewidth=1.5) is the dominant element. Principal stresses σ1=94 and σ2=-34 marked with green diamond shapes. τmax=64 shown with ochre (#BD8233) up/down triangles at top/bottom. Point A in blue (#4467A3, filled circle), Point B in matte red (#AE3030, filled circle). Center as open circle. Dashed center reference lines, dotted diameter A-to-B line. Arc showing 2θp=38.7° with small gray label.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title, axis labels, tick labels all rendered in near-white (INK = #F0EFE8 in dark mode). Tick labels in INK_SOFT (#B8B7B0). All text clearly legible against the dark background. No dark-on-dark failures detected. The 2θp arc label uses INK_SOFT (#B8B7B0) which reads well on the near-black surface.
+      Data: All data colors identical to light render — brand green circle, blue point A, red point B, ochre τmax triangles, green σ1/σ2 diamonds. Annotation label colors (blue, red, ochre, INK) all remain readable on dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Axis labels (10pt), tick labels (8pt), annotation labels (3.8mm)
+          readable in both themes. 2theta_p arc label at 3.0mm slightly small for
+          mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No actual overlaps but annotation density is moderately tight near
+          circle edges. Minor crowding risk.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers clearly visible. Diamond/triangle/circle shapes unambiguous.
+          Circle path linewidth=1.5 is prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette. Red and green used for semantically distinct
+          elements, never as sole comparative signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 correct for symmetric circular diagram. coord_fixed
+          ensures true circle. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units. Title follows mandated format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Circle uses brand green #009E73. Imprint positions 3, 4, 5 used
+          for A, tau_max, B. Backgrounds #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default 4. Systematically color-coded annotations, differentiated
+          marker shapes, coherent visual language. Deliberately crafted but not transcendent.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default 2. Dashed/dotted/solid linetype differentiation, alpha-reduced
+          grid, low-linewidth panel border, fine-grained chrome attention.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default 2. Color-coded elements guide viewer through stress
+          analysis: circle→principal stresses→stress points→max shear→rotation angle.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Mohr's circle correctly on normal stress vs shear stress axes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Circle with correct center/radius, sigma1/sigma2 at intersections,
+          tau_max top/bottom, A/B stress points, 2theta_p arc, equal aspect ratio,
+          reference lines, grid — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Normal stress on X, shear stress on Y. All data within axis range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''mohr-circle · r · ggplot2 · anyplot.ai''. No legend needed;
+          elements annotated directly.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All structural elements of a complete Mohr's circle diagram shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: sigma_x=80, sigma_y=-20, tau_xy=40 MPa — plausible combined axial/shear
+          loading for structural steel. Neutral engineering context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MPa values in typical service loading range for structural steel.
+          Principal stresses -34 to +94 MPa are physically sensible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical computation. No seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Readable, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device
+          correctly.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent use of ggplot2 layered grammar: geom_path for circle,
+          annotate() for points/text, coord_fixed(ratio=1), theme_minimal base with
+          explicit overrides.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Shape system (21/23/24/25) for semantic differentiation, coord_fixed
+          for geometric fidelity, clip='off' for edge annotations. Solid but not reaching
+          exceptionally distinctive territory.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
