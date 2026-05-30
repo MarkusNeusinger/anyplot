@@ -1,0 +1,269 @@
+library: ggplot2
+language: r
+specification_id: alluvial-opinion-flow
+created: '2026-05-30T12:56:09Z'
+updated: '2026-05-30T13:15:33Z'
+generated_by: claude-sonnet
+workflow_run: 26684136882
+issue: 4430
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct and visually polished alluvial diagram built entirely in ggplot2 grammar
+    without external alluvial packages
+  - 'Excellent semantic color mapping: Strongly Agree→green (#009E73), Strongly Disagree→red
+    (#AE3030), with full Imprint palette compliance and justified semantic exception'
+  - Clean opacity-based stable/changer distinction (alpha=0.52 vs 0.20) fulfills the
+    key spec differentiator visually
+  - 'Full spec compliance: counts at all 3 waves, dated wave headers, flow widths
+    proportional to respondent counts, polarization trend quantified in subtitle'
+  - Both themes fully correct — data colors identical across light/dark, chrome properly
+    flips, no dark-on-dark failures detected
+  - coord_cartesian(clip='off') properly handles category labels extending beyond
+    the plot panel without clipping
+  weaknesses:
+  - Wave 2 count labels at size=2.8mm (≈7.9pt) are slightly below the size=3.0 used
+    for other category labels — bump to size=3.0 for consistency
+  - Design excellence could reach higher with a visual focal point emphasizing the
+    polarization story — e.g., slightly thicker node border or annotation on the growing
+    extreme categories (Strongly Disagree grew most)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed correct, not pure white
+      Chrome: Title "alluvial-opinion-flow · r · ggplot2 · anyplot.ai" in INK_SOFT (#4A4A44), centered, ~65% plot width. Subtitle in INK_MUTED, readable. Wave headers ("Wave 1 (January)", "Wave 2 (April)", "Wave 3 (July)") in bold INK (#1A1A17), clearly readable.
+      Data: Five stacked nodes per wave: Strongly Disagree (matte red #AE3030, top), Disagree (lavender #C475FD), Neutral (ochre #BD8233), Agree (blue #4467A3), Strongly Agree (green #009E73, bottom). Bezier ribbons connect nodes — stable respondents at alpha=0.52, changers at alpha=0.20. Category labels with counts on left (Wave 1) and right (Wave 3); count labels inside Wave 2 nodes. First series (Strongly Agree) is #009E73 as required.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed correct, not pure black
+      Chrome: Title and wave headers in light cream (#F0EFE8/INK for dark), clearly readable against dark background. Subtitle in INK_MUTED (#A8A79F), readable. Wave 2 count labels in #A8A79F (INK_MUTED dark), readable. Category labels retain their Imprint palette colors, all readable against the dark surface. No dark-on-dark failures detected.
+      Data: Colors identical to light render — matte red, lavender, ochre, blue, and brand green nodes unchanged. Only chrome flipped as required.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, wave headers, category labels
+          all readable in both themes. Wave 2 count labels at size=2.8mm (≈7.9pt)
+          slightly below optimum.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collision. Category labels well-spaced on each side; node
+          counts sit cleanly inside rectangles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All nodes and ribbons clearly visible. Stable ribbons (alpha=0.52)
+          and changer ribbons (alpha=0.20) both visible and meaningfully distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; opacity differential adds redundant
+          encoding for stable vs. changers beyond hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas passes dimension gate (3200x1800). 100pt side margins accommodate
+          outer category labels without clipping. Title at ~65% width.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. Wave column headers with month names serve
+          as clear column descriptors. Subtitle provides quantitative context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception properly applied: Strongly Agree→#009E73, Strongly
+          Disagree→#AE3030, all others use Imprint palette members. Light bg #FAF8F1,
+          dark bg #1A1A17. Data colors identical across renders; chrome theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured defaults: semantic color mapping adds interpretive
+          meaning, bezier ribbon curves are visually sophisticated, opacity-based
+          stable/changer distinction creates intentional hierarchy. Not quite at publication-polished
+          level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void() excellent choice for alluvial. Node borders in PAGE_BG
+          create clean separation. Generous 100pt side margins. Opacity levels thoughtfully
+          chosen.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly quantifies polarization trend. Semantic colors
+          (green=positive, red=negative) guide interpretation. Stable vs. changer
+          distinction actively tells the stability/polarization story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/Sankey-style diagram with bezier ribbon flows, stacked
+          category nodes, and multi-wave layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: consistent colors per category, flow
+          width proportional to respondent count, total counts at all waves, opacity
+          differentiation for stable vs. changers, polarization trend highlighted,
+          chronological wave arrangement, transparency for overlapping flows.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Waves ordered left-to-right chronologically; node heights proportional
+          to category totals; ribbon widths proportional to transition counts.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'alluvial-opinion-flow · r · ggplot2 · anyplot.ai'.
+          No separate legend needed — categories directly labeled on nodes, correct
+          approach for alluvial diagrams.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: stable respondents, cross-category changers,
+          polarization trend, counts at every wave, three-wave temporal span.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Climate policy opinion survey with 500 respondents tracked quarterly
+          is realistic and neutral. Polarization story is a well-documented real-world
+          phenomenon.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 total respondents, realistic transition matrices with high diagonal
+          stability and plausible smaller cross-category flows. Wave totals consistent
+          with matrix math.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (stack_pos, flow_segs, bezier_ribbon, make_ribbons)
+          add necessary complexity for custom alluvial implementation. Functions are
+          clean and focused, but deviates from strict KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI elements. Bezier computation mathematically correct and
+          well-structured. Stable/changer split approach is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using ragg::agg_png device. Modern ggplot2
+          API (linewidth= not deprecated size=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Well-executed layered grammar: geom_polygon for ribbons, geom_rect
+          for nodes, geom_text for labels, scale_fill_manual/scale_color_manual with
+          named vectors, coord_cartesian(clip=''off'') for outside-bounds labels,
+          theme_void() appropriately used.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses ggplot2-specific patterns: named vector in scale_fill_manual
+          (category→color lookup), coord_cartesian(clip=''off'') for labels outside
+          plot panel, theme_void() as ideal base for flow diagrams. Custom bezier
+          computation within ggplot2 data layer is distinctive.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
