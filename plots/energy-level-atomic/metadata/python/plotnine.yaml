@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:49:01Z'
-updated: '2026-05-30T07:30:02Z'
+updated: '2026-05-30T07:39:43Z'
 generated_by: claude-sonnet
 workflow_run: 26677748128
 issue: 4434
@@ -12,42 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-le
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Physically accurate hydrogen atom data (En = -13.6/n² eV) with correct spectral
-    line wavelengths (Ly-α 122 nm, Hα 656 nm)
-  - Clever nonlinear visual transform (sign(E)·sqrt(|E|)) that addresses the spec
-    recommendation for spreading converging upper levels
-  - 'Semantic spectral color mapping: UV→lavender (#C475FD), Visible→matte red (#AE3030)
-    — both Imprint palette members with justified spectroscopic conventions'
-  - 'Excellent spec compliance: partial-width level lines, wavelength-labeled arrows,
-    ionization reference line, Lyman+Balmer grouping all present'
-  - Theme tokens correctly threaded through all chrome elements; dark render fully
-    functional with no dark-on-dark failures for primary text
+  - Nonlinear sqrt visual transform correctly implements the spec's suggestion for
+    crowded upper levels, spreading n=5/6 while compressing the large n=1→n=2 gap
+  - Semantic spectral color mapping (UV→lavender, visible→matte red) is domain-appropriate
+    and uses only Imprint palette colors
+  - 'Theme adaptation is thorough: BALMER_LABEL_COLOR switches to INK_SOFT in dark
+    mode to maintain contrast against the dark Balmer band'
+  - All 6 required spec features implemented (partial-width lines, quantum labels,
+    directional arrows, spectral color coding, ionization reference, nonlinear scale)
+  - Shaded series bands provide redundant encoding that helps colorblind readers distinguish
+    the two spectral series
+  - 'Perfect code quality: deterministic, clean imports, idiomatic plotnine patterns
+    with arrow=arrow() in geom_segment'
   weaknesses:
-  - 'Balmer transition wavelength labels (Hα 656 nm, Hβ 486 nm, Hγ 434 nm) rendered
-    in matte red (#AE3030) against dark Balmer band (#3C1A1A) — contrast ratio ~2.7:1,
-    too low for comfortable reading in dark render. Fix by nudging labels outside
-    the band or using THEME-conditional color (INK_SOFT #B8B7B0 in dark theme)'
-  - 'Brand green #009E73 absent from both series — semantic exception for spectral
-    physics is valid, but palette compliance would improve if a third structural element
-    (e.g. ionization limit line or ground state level) uses #009E73'
-  - n=5 and n=6 energy levels are very close on the transformed scale; connector lines
-    are slightly cramped — increase label_y nudge for n=5 from 0.05 to 0.08 and n=6
-    from 0.12 to 0.20
+  - Transition wavelength labels (Ly-α 122 nm, Hα 656 nm, etc.) at size=2.8mm are
+    borderline small; consider raising to 3.2–3.5mm for better mobile readability
+    at 400px scaled width
+  - 'First categorical series (Lyman UV) uses Imprint position 2 (#C475FD) rather
+    than brand green position 1 (#009E73); brand green is used for the structural
+    ionization limit instead — semantic exception is justified but deviates from the
+    ''first series = #009E73'' rule'
+  - Upper energy levels (n=4, n=5, n=6) are tightly packed even after the sqrt transform;
+    connector lines help, but the label area is slightly crowded
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Bold title "energy-level-atomic · python · plotnine · anyplot.ai" in near-black ink, clearly readable. Subtitle in secondary ink, readable. Y-axis label "Energy (eV)" and tick labels (-13.6, -3.4, -1.51, -0.85, 0) all readable in INK_SOFT. X-axis correctly omitted.
-      Data: Six horizontal energy level lines in dark gray (INK_SOFT #4A4A44) spanning partial width. Lavender arrows (#C475FD, Imprint pos 2) for Lyman series; matte red arrows (#AE3030, Imprint pos 5) for Balmer series. Data colors are distinct and visible. Light lavender and light pink background bands group each series.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "energy-level-atomic · python · plotnine · anyplot.ai" bold dark (#1A1A17) — readable; subtitle at 7pt readable; Y-axis label "Energy (eV)" at 10pt readable; Y-axis tick labels (-13.6, -3.4, -1.51, -0.85, 0) at 8pt readable; right-side energy labels at 3mm readable; series group labels "Lyman Series (UV)" and "Balmer Series (Visible)" at 3.5mm readable; ionization limit label readable; wavelength labels on arrows at 2.8mm borderline small but readable at full resolution
+      Data: Lyman arrows in lavender (#C475FD, Imprint pos 2), Balmer arrows in matte red (#AE3030, Imprint pos 5); ionization dashed line in brand green (#009E73); shaded bands (light purple for Lyman, light pinkish-red for Balmer); gray level lines; endpoint dots; all data elements clearly visible
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and subtitle in light cream (#F0EFE8), clearly readable. Y-axis label and tick labels in INK_SOFT (#B8B7B0), readable. Energy level lines shift to light gray — correct theme adaptation.
-      Data: Lavender (#C475FD) and matte red (#AE3030) arrows identical to light render — correct. Dark Balmer band shifts to #3C1A1A (dark brownish-red); Lyman band to #2A1A40 (dark purple). Lavender transition labels readable against dark purple band. Balmer wavelength labels (Hα, Hβ, Hγ) in matte red (#AE3030) against dark Balmer band (#3C1A1A) — contrast ~2.7:1, barely readable.
-      Legibility verdict: PARTIAL FAIL — Balmer wavelength labels have insufficient contrast in dark theme against the dark Balmer band background
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light (#F0EFE8) — readable; Y-axis label and tick labels in INK_SOFT (#B8B7B0) — readable; right-side energy labels in #F0EFE8 — readable; Balmer wavelength labels correctly switch to INK_SOFT (#B8B7B0) for contrast against dark band; ionization label in brand green readable; series group labels readable; NO dark-on-dark failures detected
+      Data: Colors identical to light render — Lyman arrows lavender, Balmer arrows matte red, ionization green; bands are dark indigo (#2A1A40) and dark brownish-red (#3C1A1A); level lines appear as light gray, well-contrasted
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 26
@@ -58,76 +59,74 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; Balmer transition labels in dark theme
-          have ~2.7:1 contrast against dark Balmer band — technically visible but
-          low
+        comment: Title/axis/ticks readable in both themes; wavelength labels at 2.8mm
+          are borderline small for mobile
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: n=5/n=6 levels very close on nonlinear scale; connector lines mitigate
-          but region is slightly cramped
+        comment: Minor crowding in upper levels (n=4/5/6); connector lines and label
+          nudging mitigate most collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Level lines, endpoint dots, and transition arrows all clearly visible
-          and appropriately sized
+        comment: All structural elements clearly visible in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 2 and 5 are CVD-safe; lavender vs. matte-red distinguishable
-          under all CVD types
+        comment: Imprint palette CVD-safe; shaded bands provide redundant series encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct; effective use of x range for diagram; nothing
-          clipped
+        comment: 3200x1800 confirmed; good whitespace, no overflow, title within acceptable
+          width range
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Energy (eV) with units; x-axis correctly omitted;
-          title format correct
+        comment: Y-axis Energy (eV) with units; X-axis correctly suppressed; title
+          in exact required format
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Imprint palette positions 2 and 5 used with spectral semantic justification;
-          backgrounds correct; but #009E73 absent from all series'
+        comment: Backgrounds correct; all colors from Imprint palette; but first categorical
+          series (Lyman) uses position 2 (#C475FD) not brand green; semantic exception
+          for spectral data is justified but deviates from first-series rule
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic defaults: semantic spectral color mapping, nonlinear
-          scale transform, background band grouping; not publication-ready'
+        comment: Nonlinear transform, semantic color mapping, shaded bands, connector
+          lines — significantly above default baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal, x-axis hidden, subtle y-grid (alpha=0.12), shaded
-          bands for grouping; moderate refinement
+        comment: theme_minimal, X-axis suppressed, subtle Y-grid at alpha=0.12, endpoint
+          dots add polish
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Downward arrows convey emission; band groupings create focal regions;
-          subtitle names both series; functional storytelling
+        comment: Shaded bands group series visually; nonlinear scale aids level discrimination;
+          wavelength labels provide quantitative spectral info
     spec_compliance:
       score: 15
       max: 15
@@ -137,30 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with partial-width horizontal lines
-          and transition arrows
+        comment: Correct energy level diagram with horizontal lines, directional arrows,
+          and labeled transitions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial-width lines, quantum labels with eV, downward emission arrows,
-          wavelength labels, Lyman+Balmer grouping, ionization reference line, nonlinear
-          scale
+        comment: Partial-width lines, quantum labels, emission arrows, spectral color
+          coding, ionization reference, nonlinear scale — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy axis increases upward with correct eV values; all 6 levels
-          and 6 transitions correctly positioned
+        comment: Y-axis increases upward with correct eV scale; downward arrows for
+          emission; both Lyman and Balmer series shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title energy-level-atomic · python · plotnine · anyplot.ai; inline
-          series labels replace legend
+        comment: Title exactly matches required format; series labels serve as inline
+          legend with series-matched colors
     data_quality:
       score: 15
       max: 15
@@ -170,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both Lyman and Balmer series; 6 levels; 6 named transitions with
-          wavelengths; ionization limit
+        comment: 6 levels, 2 spectral series with 3 transitions each, wavelength labels,
+          ionization limit, nonlinear scale
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hydrogen atom En=-13.6/n² eV; standard atomic physics; neutral scientific
-          context
+        comment: Physically accurate hydrogen energy levels (En=-13.6/n² eV); correct
+          UV and visible wavelengths; neutral scientific topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct eV values; wavelengths correct (Ly-α 122nm, Hα
-          656nm)
+        comment: Energy range -13.6 to 0 eV correct for hydrogen; sqrt transform sensibly
+          applied
     code_quality:
       score: 10
       max: 10
@@ -195,31 +193,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: constants → data → dataframes → plot layers → save'
+        comment: No functions or classes; clean top-level sequential structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic physics formula data
+        comment: All values computed deterministically from En=-13.6/n² formula; no
+          random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extras
+        comment: All 19 plotnine imports plus os/numpy/pandas are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; well-organized layered build
+        comment: Well-organized sections; DataFrames per layer; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with ANYPLOT_THEME env var
+        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5
     library_mastery:
       score: 7
       max: 10
@@ -229,16 +228,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic plotnine grammar; ggplot()+geom_*() layers; aes() mappings;
-          scale_color_manual; coord_cartesian; annotate()
+        comment: Grammar-of-graphics layering, aes() mapping, scale_color_manual(),
+          scale_fill_identity(), annotate(), coord_cartesian() — strong idiomatic
+          patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: arrow() in geom_segment; scale_fill_identity; multiple layered geoms;
-          geom_rect for bands
-  verdict: REJECTED
+        comment: arrow=arrow() in geom_segment is distinctly ggplot2/plotnine; scale_fill_identity()
+          for hex fills; good but more plotnine-specific features could be used
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -247,6 +247,7 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
