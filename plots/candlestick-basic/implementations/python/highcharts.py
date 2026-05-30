@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-24
+Library: highcharts | Python 3.13
+Quality: pending | Updated: 2026-05-30
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,13 +13,29 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.spline import SplineSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - 30 trading days of simulated stock prices
-np.random.seed(42)
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
+# Semantic exception: finance up=green / down=red per Imprint palette
+BULL_COLOR = "#009E73"  # Imprint position 1 — bullish / gain
+BEAR_COLOR = "#AE3030"  # Imprint position 5 — bearish / loss (semantic anchor)
+SMA_COLOR = "#4467A3"  # Imprint position 3 — moving average overlay
+
+# Data — 30 trading days of simulated stock prices
+np.random.seed(42)
 start_price = 150.0
 n_days = 30
 
@@ -45,7 +62,7 @@ for i in range(n_days):
 
 opens = [round(o, 2) for o in opens]
 
-# Generate dates (trading days, skip weekends)
+# Trading dates — skip weekends
 start_date = datetime(2024, 10, 1)
 dates = []
 current_date = start_date
@@ -54,15 +71,15 @@ while len(dates) < n_days:
         dates.append(current_date)
     current_date += timedelta(days=1)
 
-# Format data for Highcharts: [timestamp, open, high, low, close]
+# Format as [timestamp_ms, open, high, low, close]
 ohlc_data = []
 timestamps = []
 for i in range(n_days):
-    timestamp = int(dates[i].timestamp() * 1000)
-    timestamps.append(timestamp)
-    ohlc_data.append([timestamp, opens[i], highs[i], lows[i], closes[i]])
+    ts = int(dates[i].timestamp() * 1000)
+    timestamps.append(ts)
+    ohlc_data.append([ts, opens[i], highs[i], lows[i], closes[i]])
 
-# Compute 5-day simple moving average for storytelling overlay
+# 5-day simple moving average
 sma_period = 5
 sma_data = []
 for i in range(n_days):
@@ -70,173 +87,196 @@ for i in range(n_days):
         avg = np.mean(closes[i - sma_period + 1 : i + 1])
         sma_data.append([timestamps[i], round(float(avg), 2)])
 
-# Find the trough point (lowest close) for visual emphasis
+# Trough plotBand for analytical focus
 min_close_idx = int(np.argmin(closes))
-trough_timestamp = timestamps[min_close_idx]
 trough_price = closes[min_close_idx]
 
-# Chart options
-chart_options = {
-    "chart": {
-        "type": "candlestick",
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#FAFBFC",
-        "marginBottom": 200,
-        "marginLeft": 240,
-        "marginRight": 100,
-        "marginTop": 160,
-        "style": {"fontFamily": "'Segoe UI', Arial, sans-serif"},
-    },
-    "title": {
-        "text": "Stock Price Movement \u00b7 candlestick-basic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "64px", "fontWeight": "600", "color": "#1a1a2e", "letterSpacing": "0.5px"},
-        "y": 65,
-    },
-    "subtitle": {
-        "text": "30 trading days with 5-day moving average \u2014 Oct\u2013Nov 2024",
-        "style": {"fontSize": "38px", "color": "#666680", "fontWeight": "300"},
-        "y": 115,
-    },
-    "xAxis": {
-        "type": "datetime",
-        "title": {"text": "Date", "style": {"fontSize": "44px", "color": "#444460", "fontWeight": "500"}, "margin": 25},
-        "labels": {"style": {"fontSize": "34px", "color": "#666680"}, "format": "{value:%b %d}", "y": 40, "step": 2},
-        "gridLineWidth": 0,
-        "lineWidth": 0,
-        "tickWidth": 0,
-        "crosshair": {"width": 2, "color": "rgba(100, 100, 120, 0.3)", "dashStyle": "Dash"},
-    },
-    "yAxis": {
-        "title": {
-            "text": "Price (USD)",
-            "style": {"fontSize": "44px", "color": "#444460", "fontWeight": "500"},
-            "margin": 25,
-        },
-        "labels": {"style": {"fontSize": "34px", "color": "#666680"}, "format": "${value:.0f}", "x": -15},
-        "gridLineWidth": 1,
-        "gridLineColor": "rgba(100, 100, 120, 0.12)",
-        "gridLineDashStyle": "Dot",
-        "lineWidth": 0,
-        "opposite": False,
-        "tickWidth": 0,
-        "tickInterval": 2,
-        "plotBands": [
-            {
-                "from": trough_price - 0.5,
-                "to": trough_price + 0.5,
-                "color": "rgba(230, 126, 34, 0.08)",
-                "label": {
-                    "text": f"Trough: ${trough_price:.2f}",
-                    "align": "right",
-                    "x": -20,
-                    "style": {"fontSize": "28px", "color": "#D35400", "fontStyle": "italic", "fontWeight": "500"},
-                },
-            }
-        ],
-    },
-    "legend": {
-        "enabled": True,
-        "align": "right",
-        "verticalAlign": "top",
-        "layout": "horizontal",
-        "x": -60,
-        "y": 60,
-        "floating": True,
-        "itemStyle": {"fontSize": "30px", "fontWeight": "400", "color": "#444460"},
-        "symbolWidth": 40,
-        "symbolRadius": 0,
-    },
-    "tooltip": {
-        "split": False,
-        "style": {"fontSize": "28px"},
-        "headerFormat": "<b>{point.x:%b %d, %Y}</b><br/>",
-        "shared": True,
-        "backgroundColor": "rgba(255, 255, 255, 0.96)",
-        "borderColor": "#ccc",
-        "borderRadius": 8,
-        "shadow": True,
-    },
-    "plotOptions": {
-        "candlestick": {
-            "color": "#E67E22",
-            "upColor": "#306998",
-            "lineColor": "#D35400",
-            "upLineColor": "#1A3A5C",
-            "lineWidth": 4,
-            "pointWidth": 70,
-            "tooltip": {
-                "pointFormat": "Open: ${point.open:.2f}<br/>"
-                + "High: ${point.high:.2f}<br/>"
-                + "Low: ${point.low:.2f}<br/>"
-                + "Close: ${point.close:.2f}"
-            },
-        },
-        "line": {"tooltip": {"pointFormat": "SMA(5): <b>${point.y:.2f}</b>"}},
-    },
-    "rangeSelector": {"enabled": False},
-    "navigator": {"enabled": False},
-    "scrollbar": {"enabled": False},
-    "credits": {"enabled": False},
-    "series": [
-        {"type": "candlestick", "name": "OHLC", "data": ohlc_data, "zIndex": 1},
+# Title fontsize: 75 chars > 67 baseline → round(66 × 67/75) = 59px (floor 44px)
+title = "Stock Price Movement · candlestick-basic · python · highcharts · anyplot.ai"
+title_fontsize = f"{max(44, round(66 * 67 / len(title)))}px"
+
+# Build chart using highcharts_core Python API
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
+
+chart.options.chart = {
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 160,
+    "marginLeft": 220,
+    "marginRight": 80,
+    "marginTop": 140,
+    "style": {"fontFamily": "'Segoe UI', Arial, sans-serif"},
+}
+
+chart.options.title = {"text": title, "style": {"fontSize": title_fontsize, "fontWeight": "600", "color": INK}, "y": 55}
+
+chart.options.x_axis = {
+    "type": "datetime",
+    "title": {"text": "Date", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "format": "{value:%b %d}", "step": 2, "y": 36},
+    "gridLineWidth": 0,
+    "lineWidth": 1,
+    "lineColor": INK_SOFT,
+    "tickWidth": 0,
+}
+
+chart.options.y_axis = {
+    "title": {"text": "Price (USD)", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "format": "${value:.0f}", "x": -12},
+    "gridLineWidth": 1,
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
+    "lineWidth": 0,
+    "tickWidth": 0,
+    "tickInterval": 2,
+    "plotBands": [
         {
-            "type": "line",
-            "name": "5-day SMA",
-            "data": sma_data,
-            "color": "#8E44AD",
-            "lineWidth": 5,
-            "marker": {"enabled": False},
-            "dashStyle": "ShortDash",
-            "zIndex": 2,
-            "enableMouseTracking": True,
-        },
+            "from": trough_price - 0.4,
+            "to": trough_price + 0.4,
+            "color": "rgba(174,48,48,0.07)",
+            "label": {
+                "text": f"Trough → ${trough_price:.2f}",
+                "align": "right",
+                "x": -12,
+                "style": {"fontSize": "32px", "color": BEAR_COLOR, "fontStyle": "italic"},
+            },
+        }
     ],
 }
 
-# Download Highstock JS (includes candlestick support)
-highstock_url = "https://code.highcharts.com/stock/highstock.js"
+chart.options.legend = {
+    "enabled": True,
+    "align": "right",
+    "verticalAlign": "top",
+    "layout": "horizontal",
+    "x": -50,
+    "y": 50,
+    "floating": True,
+    "itemStyle": {"fontSize": "36px", "fontWeight": "400", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "symbolWidth": 36,
+    "symbolRadius": 0,
+}
+
+chart.options.tooltip = {
+    "split": False,
+    "shared": True,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "style": {"fontSize": "32px", "color": INK},
+    "headerFormat": "<b>{point.x:%b %d, %Y}</b><br/>",
+}
+
+# SMA overlay via SplineSeries — native highcharts_core Python API
+sma_series = SplineSeries()
+sma_series.name = "5-day SMA"
+sma_series.data = sma_data
+sma_series.color = SMA_COLOR
+chart.options.series = [sma_series]
+
+# Serialize base options via Python API, then inject Highstock-specific options
+opts = chart.options.to_dict()
+
+# Subtitle: not natively captured by highcharts_core.to_dict() for Highstock
+opts["subtitle"] = {
+    "text": "30 trading days with 5-day moving average — Oct–Nov 2024",
+    "style": {"fontSize": "36px", "color": INK_SOFT, "fontWeight": "300"},
+    "y": 105,
+}
+
+# plotOptions.candlestick: not in highcharts_core (Highstock-only series type)
+opts["plotOptions"] = {
+    "candlestick": {
+        "color": BEAR_COLOR,
+        "upColor": BULL_COLOR,
+        "lineColor": BEAR_COLOR,
+        "upLineColor": BULL_COLOR,
+        "lineWidth": 3,
+        "pointWidth": 55,
+        "tooltip": {
+            "pointFormat": (
+                "Open: ${point.open:.2f}<br/>"
+                "High: ${point.high:.2f}<br/>"
+                "Low: ${point.low:.2f}<br/>"
+                "Close: ${point.close:.2f}"
+            )
+        },
+    },
+    "spline": {
+        "lineWidth": 4,
+        "marker": {"enabled": False},
+        "dashStyle": "ShortDash",
+        "tooltip": {"pointFormat": "SMA(5): <b>${point.y:.2f}</b>"},
+    },
+}
+
+# Prepend candlestick OHLC series; SMA spline already in opts from Python API
+opts["series"] = [{"type": "candlestick", "name": "OHLC", "data": ohlc_data, "zIndex": 1}] + opts.get("series", [])
+
+# Highstock navigator/range-selector are not needed for a static 30-day view
+opts["rangeSelector"] = {"enabled": False}
+opts["navigator"] = {"enabled": False}
+opts["scrollbar"] = {"enabled": False}
+opts["credits"] = {"enabled": False}
+
+opts_json = json.dumps(opts)
+js_str = (
+    f"document.addEventListener('DOMContentLoaded', function() {{\n"
+    f"  Highcharts.stockChart('container', {opts_json});\n"
+    f"}});"
+)
+
+# Download Highstock JS (candlestick is a Highstock-only series type)
+highstock_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highstock.js"
 with urllib.request.urlopen(highstock_url, timeout=30) as response:
     highstock_js = response.read().decode("utf-8")
 
-chart_options_json = json.dumps(chart_options)
-
-# Render
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highstock_js}</script>
 </head>
-<body style="margin:0; background-color: #FAFBFC;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {{
-            Highcharts.stockChart('container', {chart_options_json});
-        }});
-    </script>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
+    <script>{js_str}</script>
 </body>
 </html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Screenshot
+# Selenium screenshot — CDP override forces exact 3200×1800 viewport
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# PIL normalization — guarantees exact 3200×1800 if CDP rounding drifts
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (3200, 1800):
+    norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    norm.paste(img, ((3200 - img.size[0]) // 2, (1800 - img.size[1]) // 2))
+    norm.save(f"plot-{THEME}.png")
