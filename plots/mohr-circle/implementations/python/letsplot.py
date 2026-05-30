@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -26,6 +26,8 @@ from lets_plot import (
     ggsize,
     labs,
     layer_tooltips,
+    scale_color_manual,
+    scale_shape_manual,
     theme,
     theme_minimal,
 )
@@ -46,6 +48,11 @@ C_CIRCLE = "#4467A3"  # blue — structural circle outline
 C_INPUT = "#AE3030"  # matte red — applied input stress points (semantic: danger/input)
 C_PRINCIPAL = "#009E73"  # brand green — principal stress results (primary outcome)
 C_SHEAR = "#BD8233"  # ochre — shear stress components
+
+# Category constants for legend
+CAT_INPUT = "Input Point"
+CAT_PRINCIPAL = "Principal Stress"
+CAT_SHEAR = "Max Shear"
 
 # Data — steel column under combined axial and bending load
 sigma_x = 80.0  # MPa, axial + bending normal stress
@@ -69,6 +76,7 @@ df_input = pd.DataFrame(
     {
         "sigma": [sigma_x, sigma_y],
         "tau": [tau_xy, -tau_xy],
+        "category": [CAT_INPUT, CAT_INPUT],
         "label": [f"A (σx={sigma_x:.0f}, τxy={tau_xy:.0f})", f"B (σy={sigma_y:.0f}, −τxy={-tau_xy:.0f})"],
         "detail": [
             f"Normal: {sigma_x:.0f} MPa | Shear: {tau_xy:.0f} MPa",
@@ -82,6 +90,7 @@ df_principal = pd.DataFrame(
     {
         "sigma": [sigma_1, sigma_2],
         "tau": [0.0, 0.0],
+        "category": [CAT_PRINCIPAL, CAT_PRINCIPAL],
         "label": [f"σ₁ = {sigma_1:.1f}", f"σ₂ = {sigma_2:.1f}"],
         "detail": [f"Max principal: {sigma_1:.1f} MPa", f"Min principal: {sigma_2:.1f} MPa"],
     }
@@ -92,12 +101,16 @@ df_shear = pd.DataFrame(
     {
         "sigma": [center, center],
         "tau": [tau_max, -tau_max],
+        "category": [CAT_SHEAR, CAT_SHEAR],
         "label": [f"τmax = {tau_max:.1f}", f"−τmax = {tau_max:.1f}"],
         "detail": [f"Max shear: {tau_max:.1f} MPa", f"Min shear: {-tau_max:.1f} MPa"],
     }
 )
 
-# Center point
+# Combined points for legend-mapped layer (Input, Principal, Max Shear)
+df_legend_points = pd.concat([df_input, df_principal, df_shear], ignore_index=True)
+
+# Center point (separate layer — different size, no legend entry needed)
 df_center = pd.DataFrame(
     {
         "sigma": [center],
@@ -118,6 +131,9 @@ arc_r = radius * 0.35
 arc_t = np.linspace(0, np.radians(2 * theta_p), 50)
 df_arc = pd.DataFrame({"sigma": center + arc_r * np.cos(arc_t), "tau": arc_r * np.sin(arc_t)})
 
+# Theme-adaptive circle fill alpha — slightly stronger on dark for interior visibility
+circle_fill_alpha = 0.12 if THEME == "dark" else 0.07
+
 # Title
 title = "mohr-circle · python · letsplot · anyplot.ai"
 
@@ -127,41 +143,25 @@ plot = (
     # Reference lines through center
     + geom_line(data=df_hline, mapping=aes(x="sigma", y="tau"), color=INK_MUTED, size=0.6, linetype="dashed")
     + geom_line(data=df_vline, mapping=aes(x="sigma", y="tau"), color=INK_MUTED, size=0.6, linetype="dashed")
-    # Circle fill (subtle) then solid outline
-    + geom_polygon(data=df_circle, mapping=aes(x="sigma", y="tau"), fill=C_CIRCLE, color=C_CIRCLE, alpha=0.07, size=0)
+    # Circle fill (subtle, theme-adaptive) then solid outline
+    + geom_polygon(
+        data=df_circle, mapping=aes(x="sigma", y="tau"), fill=C_CIRCLE, color=C_CIRCLE, alpha=circle_fill_alpha, size=0
+    )
     + geom_path(data=df_circle, mapping=aes(x="sigma", y="tau"), color=C_CIRCLE, size=2.0, alpha=0.9)
     # Diameter line A–B
     + geom_line(data=df_diameter, mapping=aes(x="sigma", y="tau"), color=INK_MUTED, size=0.8, linetype="dashed")
     # Principal plane angle arc
     + geom_path(data=df_arc, mapping=aes(x="sigma", y="tau"), color=C_SHEAR, size=1.5)
-    # Input stress points (filled circle)
+    # Stress points with mapped color + shape — drives the built-in legend panel
     + geom_point(
-        data=df_input,
-        mapping=aes(x="sigma", y="tau"),
-        color=C_INPUT,
+        data=df_legend_points,
+        mapping=aes(x="sigma", y="tau", color="category", shape="category"),
         size=7,
-        shape=16,
         tooltips=layer_tooltips().line("@label").line("@detail"),
     )
-    # Principal stress points (filled diamond)
-    + geom_point(
-        data=df_principal,
-        mapping=aes(x="sigma", y="tau"),
-        color=C_PRINCIPAL,
-        size=7,
-        shape=18,
-        tooltips=layer_tooltips().line("@label").line("@detail"),
-    )
-    # Max shear stress points (filled triangle)
-    + geom_point(
-        data=df_shear,
-        mapping=aes(x="sigma", y="tau"),
-        color=C_SHEAR,
-        size=7,
-        shape=17,
-        tooltips=layer_tooltips().line("@label").line("@detail"),
-    )
-    # Center marker (X cross)
+    + scale_color_manual(values={CAT_INPUT: C_INPUT, CAT_PRINCIPAL: C_PRINCIPAL, CAT_SHEAR: C_SHEAR}, name="")
+    + scale_shape_manual(values={CAT_INPUT: 16, CAT_PRINCIPAL: 18, CAT_SHEAR: 17}, name="")
+    # Center marker (X cross — fixed aesthetics, separate layer)
     + geom_point(
         data=df_center,
         mapping=aes(x="sigma", y="tau"),
@@ -170,7 +170,7 @@ plot = (
         shape=4,
         tooltips=layer_tooltips().line("@label").line("@detail"),
     )
-    # Point A label — nudged right and up to separate from tau_max region
+    # Point A label — nudged right and up
     + geom_text(
         data=df_input.iloc[[0]],
         mapping=aes(x="sigma", y="tau", label="label"),
@@ -190,7 +190,7 @@ plot = (
         nudge_x=-radius * 0.05,
         nudge_y=-radius * 0.14,
     )
-    # Principal stress labels
+    # σ₁ label — below the point
     + geom_text(
         data=df_principal.iloc[[0]],
         mapping=aes(x="sigma", y="tau", label="label"),
@@ -199,15 +199,16 @@ plot = (
         hjust=0.5,
         nudge_y=-radius * 0.14,
     )
+    # σ₂ label — nudged upward (above x-axis) to clear the B label in the lower-left
     + geom_text(
         data=df_principal.iloc[[1]],
         mapping=aes(x="sigma", y="tau", label="label"),
         color=C_PRINCIPAL,
         size=5,
         hjust=0.5,
-        nudge_y=-radius * 0.14,
+        nudge_y=radius * 0.18,
     )
-    # Tau_max label — nudged right, above the top marker
+    # τmax label — nudged right, above the top marker
     + geom_text(
         data=df_shear.iloc[[0]],
         mapping=aes(x="sigma", y="tau", label="label"),
@@ -217,7 +218,7 @@ plot = (
         nudge_x=radius * 0.12,
         nudge_y=radius * 0.07,
     )
-    # -Tau_max label
+    # −τmax label
     + geom_text(
         data=df_shear.iloc[[1]],
         mapping=aes(x="sigma", y="tau", label="label"),
