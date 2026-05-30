@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: plotly 6.5.2 | Python 3.14.3
-Quality: 95/100 | Updated: 2026-05-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-30
 """
 
 import os
