@@ -1,14 +1,47 @@
-""" pyplots.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-23
+Library: seaborn | Python 3.13
+Quality: pending | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap for 5 arc weight levels (weak=light, strong=dark)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+palette = [imprint_seq(v) for v in [0.1, 0.3, 0.5, 0.7, 0.9]]
+
+# Apply seaborn theme with theme-adaptive chrome
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data: Character interactions in a story (12 characters)
 nodes = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack", "Kate", "Leo"]
@@ -59,13 +92,9 @@ strength_names = {1: "1 · Weak", 2: "2 · Light", 3: "3 · Moderate", 4: "4 · 
 cat_order = [strength_names[k] for k in sorted(strength_names)]
 arc_df["strength"] = pd.Categorical(arc_df["weight"].map(strength_names), categories=cat_order, ordered=True)
 
-# Theme
-sns.set_theme(style="white", context="talk", font_scale=1.1)
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Viridis palette (reversed so stronger connections = darker/more prominent)
-viridis = sns.color_palette("viridis", as_cmap=True)
-palette = [viridis(v) for v in [0.82, 0.66, 0.48, 0.30, 0.12]]
+# Canvas — exactly 3200×1800 px (landscape 16:9)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Draw arcs via seaborn lineplot (hue=color by strength, size=thickness by weight)
 sns.lineplot(
@@ -77,67 +106,65 @@ sns.lineplot(
     units="edge_id",
     estimator=None,
     palette=palette,
-    sizes=(2.0, 6.0),
-    alpha=0.7,
+    sizes=(1.5, 5.0),
+    alpha=0.75,
     ax=ax,
     sort=False,
 )
 
 # Keep only color legend entries (remove redundant size entries)
-handles, labels = ax.get_legend_handles_labels()
+handles, labels_list = ax.get_legend_handles_labels()
 cat_set = set(cat_order)
-filtered = [(h, lab) for h, lab in zip(handles, labels, strict=True) if lab in cat_set]
+filtered = [(h, lab) for h, lab in zip(handles, labels_list, strict=True) if lab in cat_set]
 ax.legend(
     [h for h, _ in filtered],
     [lab for _, lab in filtered],
     title="Interaction Strength",
-    title_fontsize=20,
-    fontsize=16,
+    title_fontsize=8,
+    fontsize=8,
     loc="upper right",
     frameon=True,
-    fancybox=True,
+    fancybox=False,
     framealpha=0.9,
-    edgecolor="#cccccc",
+    edgecolor=INK_SOFT,
 )
 
-# Draw nodes with seaborn scatterplot
+# Draw nodes — Imprint blue (#4467A3) as structural anchors
 node_df = pd.DataFrame({"x": x_positions, "y": np.zeros(n_nodes)})
 sns.scatterplot(
-    data=node_df, x="x", y="y", s=600, color="#306998", zorder=5, ax=ax, legend=False, edgecolor="white", linewidth=1.5
+    data=node_df, x="x", y="y", s=300, color="#4467A3", zorder=5, ax=ax, legend=False, edgecolor=PAGE_BG, linewidth=1.5
 )
 
 # Node labels below the baseline
 for i, name in enumerate(nodes):
-    ax.text(x_positions[i], -0.22, name, ha="center", va="top", fontsize=16, fontweight="medium", color="#306998")
+    ax.text(x_positions[i], -0.22, name, ha="center", va="top", fontsize=8, fontweight="medium", color=INK)
 
-# Storytelling: highlight the contrast between arc distance and weight
-# The tallest arc (Alice–Leo) is the weakest connection
+# Annotations: contrast between arc distance and weight
 ax.annotate(
     "Weakest link, longest reach",
     xy=(5.5, 4.2),
-    fontsize=13,
+    fontsize=8,
     fontstyle="italic",
-    color="#555555",
+    color=INK_MUTED,
     ha="center",
     xytext=(2.0, 4.9),
-    arrowprops={"arrowstyle": "->", "color": "#888888", "lw": 1.0},
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.0},
 )
-# Three strongest bonds are all between nearest neighbors
 ax.annotate(
     "Strongest local bonds",
     xy=(3.5, 0.42),
-    fontsize=13,
+    fontsize=8,
     fontstyle="italic",
-    color="#555555",
+    color=INK_MUTED,
     ha="center",
     xytext=(6.0, 2.0),
-    arrowprops={"arrowstyle": "->", "color": "#888888", "lw": 1.0},
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.0},
 )
 
 # Axis styling
 ax.set_xlim(-0.8, n_nodes - 0.2)
 ax.set_ylim(-0.45, 5.6)
-ax.set_title("arc-basic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+ax.set_title("arc-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
 ax.set_xlabel("")
 ax.set_ylabel("")
 sns.despine(ax=ax, left=True, bottom=True)
@@ -145,7 +172,6 @@ ax.set_xticks([])
 ax.set_yticks([])
 
 # Subtle horizontal baseline
-ax.axhline(y=0, color="#306998", linewidth=2, alpha=0.3, zorder=1)
+ax.axhline(y=0, color=INK_SOFT, linewidth=1.5, alpha=0.3, zorder=1)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
