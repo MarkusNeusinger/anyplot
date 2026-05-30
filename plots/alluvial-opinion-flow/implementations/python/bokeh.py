@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -173,7 +173,7 @@ p = figure(
     height=1800,
     title="alluvial-opinion-flow · python · bokeh · anyplot.ai",
     x_range=(-2.2, 7.0),
-    y_range=(-80, max_y + 110),
+    y_range=(-110, max_y + 110),
     tools="",
     toolbar_location=None,
     min_border_bottom=80,
@@ -474,7 +474,7 @@ for w_idx in range(len(waves)):
 for w_idx, wave in enumerate(waves):
     label = Label(
         x=x_positions[w_idx],
-        y=-20,
+        y=-25,
         text=wave,
         text_font_size="24pt",
         text_align="center",
@@ -489,7 +489,7 @@ legend_items = [LegendItem(label=op, renderers=[legend_renderers[op]]) for op in
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="20pt",
+    label_text_font_size="34pt",
     label_text_color=INK_SOFT,
     glyph_width=36,
     glyph_height=36,
@@ -509,9 +509,9 @@ p.add_layout(legend, "right")
 # Opacity encoding note
 opacity_note = Label(
     x=2.25,
-    y=-50,
+    y=-60,
     text="Solid flows = stable opinion  ·  Faded flows = opinion changed  ·  Bold flows = largest net shifts",
-    text_font_size="16pt",
+    text_font_size="20pt",
     text_align="center",
     text_color=INK_MUTED,
 )
@@ -520,9 +520,9 @@ p.add_layout(opacity_note)
 # Data storytelling: annotate key polarization trend
 trend_annotation = Label(
     x=2.25,
-    y=-68,
+    y=-90,
     text="▲ Polarization trend: Strongly Agree grew +53%  ·  Neutral shrank −8%  ·  Strongly Disagree grew +29%",
-    text_font_size="16pt",
+    text_font_size="20pt",
     text_align="center",
     text_color="#AE3030",
     text_font_style="bold",
