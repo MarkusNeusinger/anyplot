@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
-Library: plotly | Python 3.14
-Quality: 90/100 | Updated: 2026-05-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-30
 """
 
 import os
