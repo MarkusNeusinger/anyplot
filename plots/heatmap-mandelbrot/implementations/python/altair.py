@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-30
+Quality: 81/100 | Updated: 2026-05-30
 """
 
 import os
