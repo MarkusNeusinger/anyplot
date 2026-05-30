@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-30
@@ -17,6 +17,8 @@ from lets_plot import (
     element_text,
     geom_density,
     geom_segment,
+    geom_text,
+    geom_vline,
     ggplot,
     ggsize,
     labs,
@@ -54,6 +56,15 @@ df = pd.DataFrame({"time": finish_minutes})
 # Rug data: individual observations as small vertical ticks at the x-axis
 rug_df = pd.DataFrame({"x": finish_minutes, "y0": 0.0, "y1": 0.0003})
 
+# Peak annotation data for the three runner sub-populations
+peaks_df = pd.DataFrame(
+    {
+        "x": [200, 240, 300],
+        "y": [0.0065, 0.0110, 0.0030],
+        "label": ["Elite\n~3:20", "Main Pack\n~4:00", "Casual\n~5:00"],
+    }
+)
+
 # Title
 title = "density-basic · python · letsplot · anyplot.ai"
 
@@ -61,6 +72,7 @@ title = "density-basic · python · letsplot · anyplot.ai"
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major_x=element_blank(),
     panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
     panel_grid_minor=element_blank(),
@@ -74,6 +86,7 @@ anyplot_theme = theme(
 # Plot
 plot = (
     ggplot(df, aes(x="time"))
+    + geom_vline(data=peaks_df, mapping=aes(xintercept="x"), color=INK_SOFT, linetype="dashed", size=0.5, alpha=0.6)
     + geom_density(
         fill=BRAND,
         color=BRAND,
@@ -84,7 +97,8 @@ plot = (
         trim=True,
         tooltips=layer_tooltips().line("density|@..density.."),
     )
-    + geom_segment(data=rug_df, mapping=aes(x="x", y="y0", xend="x", yend="y1"), color=BRAND, alpha=0.30, size=0.4)
+    + geom_segment(data=rug_df, mapping=aes(x="x", y="y0", xend="x", yend="y1"), color=BRAND, alpha=0.40, size=0.6)
+    + geom_text(data=peaks_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=3.5, vjust=0, hjust=0.5)
     + labs(x="Finish Time (minutes)", y="Density (×10⁻³)", title=title)
     + scale_x_continuous(breaks=list(range(150, 401, 50)))
     + scale_y_continuous(
