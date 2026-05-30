@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-30
 """
 
 import os
@@ -73,7 +72,7 @@ fig.add_trace(
         x=sat_scores,
         y=np.zeros(len(sat_scores)),
         mode="markers",
-        marker={"symbol": "line-ns", "size": 10, "color": BRAND, "opacity": 0.4, "line": {"width": 1}},
+        marker={"symbol": "line-ns", "size": 10, "color": INK_SOFT, "opacity": 0.5, "line": {"width": 1}},
         name="Observations",
         hovertemplate="Score: %{x:.0f}<extra></extra>",
     )
@@ -97,9 +96,8 @@ for label, px, py, ax, ay in [
         ax=ax,
         ay=ay,
         bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
         borderpad=4,
-        borderwidth=1,
+        borderwidth=0,
     )
 
 fig.update_layout(
@@ -134,17 +132,7 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    showlegend=True,
-    legend={
-        "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.97,
-        "y": 0.95,
-        "xanchor": "right",
-        "yanchor": "top",
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
-    },
+    showlegend=False,
     hovermode="x",
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
