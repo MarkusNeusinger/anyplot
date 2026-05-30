@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:17:35Z'
-updated: '2026-05-29T23:47:59Z'
+updated: '2026-05-30T00:04:03Z'
 generated_by: claude-sonnet
 workflow_run: 26665705205
 issue: 992
@@ -12,102 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Greedy closest-to-center packing algorithm is deterministic, correct, and produces
-    a visually tight cluster with zero circle overlap
-  - Clever use of fig.canvas.draw() + ax.transData.transform() to convert data-unit
-    radii to scatter marker sizes in points-squared — pixel-accurate circles at any
-    zoom level
-  - 'Full Imprint palette compliance: Technology=#009E73 first, Finance=#C475FD, Healthcare=#4467A3,
-    Retail=#BD8233 in canonical order; theme-adaptive chrome via all required tokens;
-    identical data colors across light/dark renders'
-  - Size-adaptive in-bubble label system (name + dollar value for large bubbles, name-only
-    or abbreviated for small) avoids clutter without hiding information
-  - Square 2400x2400 canvas is the correct format choice for a symmetric packed-bubble
-    layout; subplots_adjust reserves clean margins for title and legend
+  - Custom greedy circle-packing algorithm produces a clean, non-overlapping layout
+    with circles tightly grouped around the center
+  - Adaptive label sizing (5–10pt based on bubble radius) is a well-thought-out design
+    decision — large bubbles show name + value, small ones show name only
+  - Accent rings (thick edge) on sector leaders create a clear focal point and guide
+    the viewer's eye to dominant companies per sector
+  - 'Correct Imprint palette with Technology (green #009E73) as first series; all
+    four sector colors are properly mapped in canonical order'
+  - Both light (#FAF8F1) and dark (#1A1A17) themes render cleanly with fully adaptive
+    chrome tokens — no dark-on-dark or light-on-light failures
+  - Square canvas (2400×2400) is the right choice for a symmetric packed bubble chart
+  - Code is deterministic (no random generation), clean, and follows KISS structure
+    throughout
   weaknesses:
-  - 'Missing `python` language token in title. Fix: change title string to ''Market
-    Capitalization by Sector\nbubble-packed · python · seaborn · anyplot.ai'' — currently
-    reads ''bubble-packed · seaborn · anyplot.ai'' which omits the required language
-    identifier.'
-  - DE-01 limited by absent storytelling focal point. Add a subtle visual accent to
-    the largest bubble per sector (e.g. thicker edgecolor ring linewidth=2.5 vs baseline
-    0.5 for the top company in each sector) to guide the viewer's eye to the dominant
-    insight.
-  - 'LM-02: seaborn''s role is narrow — sns.scatterplot does little that ax.scatter
-    wouldn''t; the packing algorithm and label placement are pure matplotlib. Consider
-    using sns.move_legend() for legend positioning or sns.despine() idioms to demonstrate
-    more seaborn-specific patterns.'
+  - Very small bubbles (Goldman Sachs, Pfizer, Target, Costco) display at 5pt fontsize
+    — barely readable at full resolution and essentially invisible when the image
+    is scaled to mobile width (~400px). Either omit labels for bubbles below a minimum
+    radius threshold or increase the minimum font size to 6–7pt.
+  - 'LM-02 low: seaborn contributes sns.scatterplot, sns.set_theme, and sns.move_legend,
+    but the core bubble-packing algorithm is all custom numpy/matplotlib. The library''s
+    distinctive value is limited to styling and legend management.'
+  - 'DE-01 moderate: the accent-ring design is a nice touch, but overall the aesthetic
+    is ''well-configured'' rather than publication-ready — could benefit from a size
+    legend (mapping bubble radius to market cap value) or a brief subtitle annotation
+    to strengthen storytelling.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Two-line title "Market Capitalization by Sector / bubble-packed · seaborn · anyplot.ai" in dark INK (#1A1A17), fontsize=12, clearly readable. Four-column legend ("Sector") at bottom with elevated-background frame (#FFFDF6), INK-SOFT edge, and INK_SOFT label text — all readable. No axis labels or tick marks (ax.axis("off") appropriate for packed-bubble chart).
-      Data: 17 circles sized by market-cap value (radius=sqrt(value)*4). Technology circles in brand green #009E73 (Apple, Microsoft, Google, NVIDIA, Meta). Finance circles in lavender #C475FD (JPMorgan, Visa, Mastercard, Goldman Sachs). Healthcare circles in blue #4467A3 (UnitedHealth, J&J, Merck, Pfizer). Retail circles in ochre #BD8233 (Amazon, Walmart, Costco, Target). White bold text labels inside circles, size-adaptive (10/8/6/5pt by radius). Larger circles show company name + dollar value; smaller show name only or abbreviated name. Alpha=0.90, thin INK edge (linewidth=0.5).
-      Legibility verdict: PASS — all title/legend/label text clearly readable; smallest labels (5pt, ~28 source-px) are borderline at 400px mobile scale but acceptable given tiny circle size.
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white.
+      Chrome: Two-line title "Market Capitalization by Sector / bubble-packed · python · seaborn · anyplot.ai" in dark ink, fully readable. No axes (axis off — appropriate). Legend at bottom shows 4 sectors in 4-column horizontal layout with dark text on elevated background, readable.
+      Data: 17 company bubbles packed in a circular cluster. Technology (green #009E73): Apple, Microsoft, Google, NVIDIA, Meta. Finance (lavender #C475FD): JPMorgan, Visa, Mastercard, Goldman S. Healthcare (blue #4467A3): UnitedHealth, J&J, Merck, Pfizer. Retail (ochre #BD8233): Amazon, Walmart, Costco, Target. Accent rings (thick INK-colored edge) mark sector leaders: Apple, Visa, UnitedHealth, Amazon. White text labels + dollar values inside larger bubbles; name-only in smaller bubbles; very small bubbles (Pfizer, Goldman S., Target, Costco) have 5pt text that is borderline readable at full resolution.
+      Legibility verdict: PASS (all major labels readable; tiny 5pt labels on smallest bubbles are borderline but visible at 2400×2400)
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title text renders in light cream (#F0EFE8 INK token for dark mode) — clearly readable, no dark-on-dark failure. Legend "Sector" title in light INK, legend labels in INK_SOFT (#B8B7B0) — readable on elevated dark legend box (#242420). INK_SOFT edge on legend frame visible.
-      Data: All 17 circle colors are identical to the light render — Technology #009E73, Finance #C475FD, Healthcare #4467A3, Retail #BD8233. Only chrome (background, title, legend) flips between themes. White in-bubble labels unchanged and readable on Imprint palette hues. Brand green #009E73 clearly visible against dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all text uses correct theme-adaptive tokens; both renders fully theme-correct.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title text appears in light cream (#F0EFE8), clearly readable against the near-black background. Legend "Sector" title and category labels are in #B8B7B0 (INK_SOFT dark), readable. No dark-on-dark failures observed.
+      Data: Data colors are IDENTICAL to the light render — same green, lavender, blue, and ochre bubbles in the same positions. White text labels inside bubbles remain readable on the colored bubbles in both themes. Accent rings appear in cream/light color (INK in dark theme = #F0EFE8), still clearly visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, legend=8/9, bubble labels=5-10
-          scaled by radius). Readable at canvas size in both themes. Minor: smallest
-          5pt labels barely mobile-readable but acceptable for tiny bubbles.'
+        comment: Font sizes explicitly set throughout; large/medium bubble labels
+          are well-sized, but minimum 5pt on the smallest bubbles is borderline for
+          mobile readability
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Greedy packing guarantees zero circle-circle overlap. All text confined
-          inside its circle.
+        comment: Greedy packing algorithm prevents all circle overlap; no label collision
+          observed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 17 bubbles clearly visible. Sizes span a meaningful range. Imprint
-          palette provides strong contrast against both backgrounds.
+        comment: All 17 bubbles clearly visible with distinct colors; accent rings
+          add visual hierarchy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. White text on Imprint hues passes contrast
-          for larger bubbles. No red-green-only encoding.
+        comment: Four distinct Imprint hue families; CVD-safe palette selection
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for symmetric packed layout. Bubble cluster
-          fills ~70% of canvas. Canvas gate passed.
+        comment: Square 2400x2400 canvas; bubble cluster fills canvas well; legend
+          fits within frame; subplots_adjust reserves proper margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ax.axis('off') correct for packed bubble chart. Descriptive two-line
-          title communicates subject clearly.
+        comment: No axes needed; descriptive first-line title 'Market Capitalization
+          by Sector' provides full context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Technology #009E73 first, Finance #C475FD, Healthcare #4467A3, Retail
-          #BD8233 — canonical Imprint order. Background #FAF8F1/#1A1A17. All chrome
-          theme-adaptive. Data colors identical across renders.'
+        comment: 'Technology (first) = #009E73; Finance=#C475FD; Healthcare=#4467A3;
+          Retail=#BD8233; both backgrounds correct; chrome fully adaptive'
     design_excellence:
       score: 13
       max: 20
@@ -117,28 +115,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: intentional Imprint palette sector mapping,
-          white in-bubble labels with size-adaptive sizing, no axis chrome. Short
-          of FiveThirtyEight level — no accent technique to emphasize the dominant
-          story.'
+        comment: Accent rings on sector leaders and adaptive label sizing show genuine
+          design thought; above 'well-configured default' but not yet publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: ax.axis('off') cleanly removes all axes/spines/grid. Legend styled
-          with elevated background, INK edge, adaptive text colors. Thin INK edge
-          on bubbles provides subtle definition.
+        comment: Axis fully off for a clean canvas; edge highlighting on all bubbles;
+          alpha=0.90; elevated legend frame; generous margins — good refinement above
+          defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Natural size hierarchy highlights Apple/Microsoft/Amazon as dominant.
-          Sector color-coding supports the market-cap narrative. Descriptive title
-          reinforces the story. No single focal point is explicitly guided.
+        comment: Accent rings guide the eye to dominant companies per sector; size
+          immediately encodes value; color groups sectors; labels with dollar amounts
+          add context
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,32 +142,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct packed bubble chart: circles sized by value, greedy packing,
-          no meaningful x/y position.'
+        comment: Correct packed bubble chart with physics-based (greedy) packing algorithm
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Circle packing, size by area (radius=sqrt(value)), labels inside
-          circles, color encodes sector, optional grouping all present.
+        comment: Area-scaled bubbles, packing without overlap, labels inside circles,
+          color encoding by group
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value -> circle area; sector -> Imprint palette color. All 17 circles
-          visible.
+        comment: No positional axes (correct for packed bubble); all 17 items displayed;
+          size correctly encodes value
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing 'python' language token. Has 'bubble-packed · seaborn
-          · anyplot.ai' but should be 'bubble-packed · python · seaborn · anyplot.ai'.
-          Legend labels correctly match sectors.
+        passed: true
+        comment: 'Two-line title: ''Market Capitalization by Sector\nbubble-packed
+          · python · seaborn · anyplot.ai'' — correct format; sector legend labels
+          match data'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -179,23 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all packed-bubble features: wide range of sizes, 4-sector
-          grouping, in-bubble labels with conditional value display, clean packing.'
+        comment: Shows full range of bubble sizes, 4 color groups, labels with values,
+          accent highlights — all aspects of packed bubble chart covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real company names in recognisable sectors. Neutral business/investment
-          context. No sensitive topics.
+        comment: Tech company market cap by sector — real-world business scenario,
+          neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Within-sector orderings correct. Absolute magnitudes ~15x smaller
-          than real-world values (Apple $180B vs ~$3T actual). Acceptable for synthetic
-          demo data per spec, but inter-sector relative magnitudes slightly skewed.
+        comment: Values in billions USD; relative magnitudes (Apple 180B > Microsoft
+          160B > Amazon 140B) are reasonable
     code_quality:
       score: 10
       max: 10
@@ -205,66 +199,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> data -> packing loop -> plot -> save. No
-          functions or classes.'
+        comment: 'No functions or classes; clean sequential: data definition → packing
+          algorithm → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully hardcoded; packing algorithm deterministic. No random
-          seed needed.
+        comment: Fully deterministic — no random generation; packing algorithm is
+          deterministic given sorted input
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports used: os, mpatches, plt, np, pd, sns.'
+        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. fig.canvas.draw() + transform math for pixel-accurate
-          marker sizes is clever and correct. No over-engineering, no fake functionality.
+        comment: Custom packing loop is verbose but necessary for this chart type;
+          no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. bbox_inches left at default (None). Current
-          seaborn 0.14 API used correctly.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; dpi=400 correct
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.scatterplot() with hue/size/sizes/hue_order/palette is idiomatic
-          seaborn. sns.set_theme() with RC params is the recommended theming path.
-          Packing and labels are necessarily matplotlib since seaborn has no packed-bubble
-          primitive.
+        comment: Uses sns.scatterplot with hue/size/palette dict, sns.set_theme with
+          full RC dict, sns.move_legend — idiomatic where seaborn applies; bubble
+          packing requires custom numpy code
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Seaborn's auto-scaled sizes=(min,max) with categorical hue_order+palette
-          dict is seaborn-specific. However, the actual packed-bubble behaviour, marker-size
-          math, and legend construction all bypass seaborn.
-  verdict: REJECTED
+        comment: sns.move_legend and sns.set_theme style system are seaborn-specific,
+          but the core visualization algorithm is pure matplotlib/numpy — seaborn's
+          distinctive value is limited to theming and legend management
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
   patterns:
   - explicit-figure
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - minimal-chrome
