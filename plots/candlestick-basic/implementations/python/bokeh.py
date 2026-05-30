@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-30
@@ -18,7 +18,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Label, NumeralTickFormatter, Range1d, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -27,6 +27,7 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens — Imprint palette, theme-adaptive chrome
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
@@ -111,6 +112,7 @@ bull_bars = p.vbar(
     fill_color=COLOR_BULL,
     line_color=COLOR_BULL,
     line_width=1,
+    legend_label="Bullish",
 )
 bear_bars = p.vbar(
     x="date",
@@ -118,9 +120,10 @@ bear_bars = p.vbar(
     bottom="close",
     width=candle_width,
     source=source_bearish,
-    fill_color=COLOR_BEAR,
+    fill_color=PAGE_BG,  # hollow body — CVD-safe: solid=bullish, hollow=bearish
     line_color=COLOR_BEAR,
-    line_width=1,
+    line_width=2,
+    legend_label="Bearish",
 )
 
 # Hover tooltips — Bokeh interactive feature
@@ -136,6 +139,27 @@ hover = HoverTool(
     mode="vline",
 )
 p.add_tools(hover)
+
+# Reversal annotation — mark the Jan 22 trend-change pivot for active storytelling
+reversal_ts = int(pd.Timestamp("2024-01-22").timestamp() * 1000)
+p.add_layout(
+    Span(
+        location=reversal_ts, dimension="height", line_color=INK_SOFT, line_dash="dashed", line_width=2, line_alpha=0.6
+    )
+)
+p.add_layout(
+    Label(
+        x=reversal_ts,
+        y=df["high"].max() * 0.99,
+        x_units="data",
+        y_units="data",
+        text="  Trend Reversal",
+        text_color=INK_SOFT,
+        text_font_size="28pt",
+        text_baseline="top",
+        text_align="left",
+    )
+)
 
 # Typography — 3200×1800 sizing (title 65 chars → full 50pt)
 p.title.text_font_size = "50pt"
@@ -171,6 +195,16 @@ p.yaxis.minor_tick_line_color = None
 # Background — Imprint warm surface
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
+
+# Legend — bull/bear guide for viewers unfamiliar with candlestick conventions
+p.legend.location = "top_left"
+p.legend.label_text_font_size = "28pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.margin = 20
+p.legend.padding = 16
+p.legend.spacing = 10
 
 # Save HTML (interactive with hover tooltips)
 output_file(f"plot-{THEME}.html")
