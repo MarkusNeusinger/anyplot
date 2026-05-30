@@ -1,15 +1,252 @@
 library: pygal
+language: python
 specification_id: density-basic
 created: '2025-12-23T10:02:37Z'
-updated: '2026-02-23T23:14:31Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457535852
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-30T03:39:09Z'
+generated_by: claude-sonnet
+workflow_run: 26673064947
+issue: 912
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/density-basic/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/pygal/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Correct Imprint palette throughout: first series is #009E73 (brand green), second
+    is lavender, rug ticks in blue — canonical order followed exactly'
+  - 'Theme-adaptive chrome works correctly in both renders: backgrounds flip #FAF8F1
+    ↔ #1A1A17, text flips dark ↔ light via foreground/foreground_strong tokens'
+  - 'All spec requirements fulfilled: smooth KDE curve computed via Scott''s rule
+    bandwidth, filled areas with 60% opacity transparency, rug plot showing individual
+    observations'
+  - 'Strong data storytelling: bimodal distribution is clearly visible through the
+    layered density curves (combined + secondary lower-scoring group), narrative is
+    immediately readable'
+  - 'Perfect code quality: flat script, np.random.seed(42) for reproducibility, all
+    imports used, clean structure'
+  - CSS overrides effectively remove x- and y-axis spines, keep y-grid subtle (opacity
+    0.15), no x-grid — above-default visual refinement
+  - Both PNG and HTML exports saved as required for pygal (interactive library)
+  weaknesses:
+  - label_font_size=44 matches major_label_font_size=44 — axis titles and tick labels
+    are the same size, collapsing the typographic hierarchy. Style guide recommends
+    label_font_size=56 for pygal on 3200×1800 canvas so axis titles are visibly larger
+    than tick labels.
+  - Rug plot stroke_style width=0.8 is very thin for a 3200px canvas. Individual ticks
+    merge in the dense region (50–80 score range) and will become near-invisible at
+    mobile/thumbnail widths (~400px). Recommend increasing to stroke width 2–3 for
+    the rug series.
+  - DE-01 and LM-02 are moderate — the implementation does not use any notably distinctive
+    pygal feature beyond XY fill and CSS overrides. No interactive hover tooltips
+    (a key pygal differentiator) are leveraged in any meaningful chart-layer way.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "density-basic · python · pygal · anyplot.ai" is bold, right-aligned, readable at ~50% canvas width. Y-axis label "Density" is rotated on the left and legible. X-axis label "Test Score (points)" clearly visible below the axis. Tick labels on both axes are readable at 44px.
+      Data: First series is brand green (#009E73) — filled KDE curve for the combined distribution, prominent and correctly coloured. Second series is lavender (#C475FD) — filled KDE curve highlighting the lower-scoring bimodal component. Third series is blue (#4467A3) — thin rug ticks at y≈0 showing 100 sampled individual observations. Fill opacity ~60% creates good layering.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels flip to light text (near-white) on the dark surface via pygal's foreground/foreground_strong tokens. Tick labels and legend text are rendered in the muted light tone. No dark-on-dark failure observed — all text is clearly readable against the near-black background.
+      Data: Data colors are identical to the light render — green first series, lavender second, blue rug ticks — confirming only chrome flipped.
+      Legibility verdict: PASS — all text is clearly readable against the dark background. No "dark-on-dark" issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All text readable in both renders. Minor deduction: label_font_size=44
+          collapses axis-title vs tick-label hierarchy (style guide recommends 56
+          for axis titles).'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text collisions. Dense rug ticks (100 points) merge slightly
+          in 50-80 range but are still readable as a distribution indicator.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main and secondary density curves clearly visible with 60% opacity
+          fill. Rug ticks at stroke width 0.8 are functional at full resolution but
+          thin for thumbnail/mobile.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Green and lavender are perceptually
+          distinct under deuteranopia/protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed (gate passed). Title spans ~50% width
+          — lower end but acceptable. Right-aligned title is pygal default. No clipping
+          or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct. X: ''Test Score (points)'' with units. Y:
+          ''Density'' appropriate for KDE.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, third #4467A3 — canonical
+          Imprint order. Backgrounds #FAF8F1/#1A1A17 correct. Chrome flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic: custom Imprint palette, intentional fill opacity
+          layering, bimodal storytelling with two curves, CSS spine removal. Not exceptional
+          — no emphasis annotations or refined focal-point hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed via CSS, y-grid at 15% opacity, x-grid off, legend
+          at bottom, stroke styles customised. Clear refinement above pygal defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Bimodal narrative clear: combined distribution vs lower-scoring
+          group labelled and differentiated. Rug plot adds a third data layer. Focal
+          point is the dominant green peak.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density/KDE plot with smooth filled curves using pygal XY.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth curve, fill with transparency, rug plot for individual observations,
+          Scott's rule bandwidth — all spec requirements met.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: test scores, Y: probability density. Full data range displayed.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'density-basic · python · pygal · anyplot.ai' is correct. Legend
+          labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: KDE curve, filled area, bimodal structure, rug plot — full feature
+          coverage for a density plot.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Test scores for two student groups (main 76±8, lower 52±5) — plausible,
+          neutral, real-world scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score range 30–105 appropriate for academic test scores. 270 total
+          observations reasonable for KDE.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: sys, os, numpy, pygal, Style — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, appropriate complexity. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY with fill=True, show_dots=False, CSS overrides, x/y formatters,
+          legend_at_bottom — idiomatic pygal patterns used well.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML interactive export, CSS inline overrides, value formatters.
+          Pygal's interactive hover (a key differentiator) is not leveraged for data
+          exploration.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,208 +257,4 @@ impl_tags:
   dataprep:
   - kde
   styling:
-  - minimal-chrome
   - alpha-blending
-  - grid-styling
-review:
-  strengths:
-  - Excellent data storytelling with bimodal distribution and orange overlay highlighting
-    the secondary group
-  - Clean professional design with CSS spine removal, subtle grid, and custom typography
-  - Full spec compliance including optional rug plot with appropriate KDE bandwidth
-    (Scott's rule)
-  - Colorblind-safe blue/orange palette with good contrast
-  - All font sizes explicitly set and well-calibrated for 4800x2700 canvas
-  weaknesses:
-  - Rug plot lines too thick (4.5px stroke) for 270 observations, causing visual merging
-    in dense regions
-  image_description: The plot displays a bimodal density (KDE) curve of test scores
-    on a clean white background. The main distribution ("Test score distribution")
-    is rendered as a large blue (#306998) filled area peaking around 75 points with
-    density ~0.033. A secondary orange/brown (#c47a3a) filled area ("Lower-scoring
-    group") overlaps, peaking around 50-52 points with density ~0.015. A rug plot
-    ("Individual scores") in dark blue (#1a3d5c) runs along the bottom, showing vertical
-    tick marks for each of the 270 observations. The marks are dense in the 65-85
-    range, forming a near-solid band. X-axis is labeled "Test Score (points)" ranging
-    ~25-105, Y-axis is labeled "Density" with values from 0 to ~0.034. The title "density-basic
-    · pygal · pyplots.ai" appears at top center in bold. Legend is at the bottom with
-    three entries. Axis spines are removed, with only subtle horizontal grid lines
-    visible. The overall aesthetic is clean and professional.
-  criteria_checklist:
-    visual_quality:
-      score: 27
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: All font sizes explicitly set (title=72, labels=44, major_labels=40,
-          legend=36, values=28), all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text collisions; labels, title, legend well-separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: false
-        comment: Density curves excellent with good opacity. Rug plot uses 4.5px stroke
-          for 270 observations causing lines to merge in dense region
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue/orange palette is colorblind-safe with strong contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: false
-        comment: Plot fills ~60-70% of canvas, balanced margins. Minor dead space
-          at top right
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Test Score (points) with units, Density appropriate for probability
-          density
-    design_excellence:
-      score: 16
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: Custom palette (Python Blue + warm orange), custom font family, CSS
-          spine removal, explicit font weights. Strong design above defaults
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Spines fully removed via CSS, subtle horizontal grid, x-guides hidden,
-          clean background, deliberate font weights
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Bimodal data with orange overlay on blue combined distribution creates
-          clear visual narrative. Two-group structure immediately apparent
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct density/KDE plot using XY chart with filled area
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Smooth KDE curve, fill with transparency, rug plot, appropriate bandwidth
-          (Scott's rule)
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X-axis scores, Y-axis density values, full range covered
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Correct title format, descriptive legend labels
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Bimodal distribution demonstrates skewness and modality. Two groups
-          + rug plot show all density plot features
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Test scores is a realistic, neutral educational context with plausible
-          two-group structure
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Scores ~25-100, means at 76 and 52, SDs of 8 and 5. Very realistic
-          for educational data
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: Imports, Data, KDE, Chart, Save. No functions/classes'
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used (numpy, pygal, Style)
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean, appropriate complexity. Manual KDE necessary since pygal lacks
-          built-in KDE
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png, uses current pygal API
-    library_mastery:
-      score: 7
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good idiomatic pygal: XY chart, Style customization, CSS injection,
-          per-series stroke_style, value_formatters'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: CSS injection system (inline SVG CSS overrides) is distinctive pygal
-          feature. Also uses per-series stroke_style and dual output
-  verdict: APPROVED
