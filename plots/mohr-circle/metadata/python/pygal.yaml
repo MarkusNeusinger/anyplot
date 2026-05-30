@@ -1,52 +1,53 @@
 library: pygal
+language: python
 specification_id: mohr-circle
 created: '2026-02-27T22:09:05Z'
-updated: '2026-02-27T22:46:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22505483037
+updated: '2026-05-30T09:25:32Z'
+generated_by: claude-sonnet
+workflow_run: 26679931196
 issue: 4432
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/pygal/plot.html
-quality_score: 85
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent data quality with realistic engineering context (steel beam stress state)
-    and complete feature coverage of all Mohr's Circle components
-  - Perfect spec compliance — all required features present including true circular
-    appearance via square canvas
-  - Clean deterministic code following KISS structure with well-organized series additions
-  - Custom colorblind-safe palette with intentional color hierarchy differentiating
-    circle, stress points, principal stresses, max shear, and angle arc
-  - Good use of pygal-specific features (allow_interruptions, stroke_style, value
-    formatters, js=[])
+  - Perfect spec compliance — all six Mohr circle elements implemented and correctly
+    computed
+  - 'Correct semantic use of INK_MUTED anchor for reference lines, preserving #009E73
+    for the first data series (Mohr''s Circle)'
+  - Square canvas ensures the circle is a true circle — thoughtful format choice
+  - Theme-adaptive chrome works correctly in both light and dark renders; no dark-on-dark
+    failures
+  - Realistic and physically plausible engineering stress state (concrete column,
+    σx=110 MPa, σy=-10 MPa, τxy=30 MPa)
+  - Flat clean code structure with no unnecessary abstractions
   weaknesses:
-  - Design Excellence limited by pygal's styling capabilities (no spine control, limited
-    grid customization)
-  - The 2θp angle arc, while improved, remains relatively small compared to the overall
-    circle
-  - Legend text at bottom is functional but slightly small relative to other text
-    elements
-  image_description: The plot displays Mohr's Circle for stress analysis rendered
-    on a square white canvas (3600x3600 px). The title "mohr-circle · pygal · pyplots.ai"
-    appears centered at the top in dark text. The x-axis is labeled "Normal Stress
-    σ (MPa)" and the y-axis "Shear Stress τ (MPa)", with tick values formatted with
-    "MPa" units (e.g., "-60 MPa", "80 MPa"). A large blue (#1B6692) circle is drawn
-    centered at approximately σ=25 MPa, spanning from about -43 to 93 MPa horizontally.
-    Two light gray dashed reference lines cross through the center — one horizontal
-    along the σ-axis and one vertical at σ=25 MPa. Two orange (#D4761C) dots connected
-    by a dashed orange line represent stress points A(80, 40) and B(-30, -40). Two
-    teal/green (#0E7C6B) dots on the horizontal axis mark principal stresses σ₁=93.0
-    and σ₂=-43.0 MPa. Two dark purple (#4A3D8F) dots at the top and bottom of the
-    circle mark τ_max = ±68.0 MPa. A small reddish (#B5342B) arc near the center shows
-    the 2θp = 36.0° angle with a bold stroke. The legend at the bottom displays 6
-    series in 3 columns with descriptive labels including computed stress values.
-    The circle appears as a true circle thanks to the square canvas and matched axis
-    ranges. Overall layout is clean and professional with good canvas utilization.
+  - The 2θp arc in matte red (#AE3030) is small in angular extent and relatively low-brightness
+    on dark background — despite thick stroke (width=12), it could be more prominent;
+    consider increasing arc_r to 0.55–0.60 × radius and stroke width to 14–16
+  - Legend at bottom is compact; at mobile scale the legend text (44px) may become
+    tight
+  - Design excellence is limited by pygal constraints; spines cannot be removed and
+    grid customization is limited
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "mohr-circle · python · pygal · anyplot.ai" in dark ink, clearly readable. X-axis label "Normal Stress σ (MPa)" and Y-axis label "Shear Stress τ (MPa)" both clearly readable. Tick labels on both axes legible at rendered size.
+      Data: Mohr's Circle in #009E73 (brand green) — first data series correct. Dashed reference axes in INK_MUTED (muted semantic anchor). Stress points A/B in #C475FD (lavender). Principal stresses in #4467A3 (blue). Max shear in #BD8233 (ochre). 2θp arc in #AE3030 (matte red).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title, axis labels, and tick labels all render in light cream text (#F0EFE8 range). No dark-on-dark failures observed. Legend text at bottom is readable in light color against dark background.
+      Data: Colors identical to light render — brand green circle, lavender points, blue points, ochre points, matte-red arc. Brand green #009E73 is clearly visible on dark surface. The 2θp arc in matte red is visible via thick stroke (width=12) despite lower-brightness red on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,44 +55,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set in custom Style (title=48, label=34,
-          major_label=30, legend=26). All text readable, legend slightly small.
+        comment: Font sizes explicitly set (title=66, label=56, major=44, legend=44);
+          all text readable in both themes; minor concern at mobile scale for legend
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend in 3 columns without collision.
+        comment: No collisions between text, markers, reference lines, or legend items
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Circle outline visible (width=5), data points well-sized (16-18).
-          2θp arc improved with width=8 and radius*0.45.
+        comment: Circle and markers are prominent; 2θp arc in matte red (#AE3030)
+          is borderline on dark background — thick stroke (width=12) compensates but
+          it is small
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette (CVD-optimized); no red-green sole signal; positional
+          redundancy distinguishes series
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Custom colorblind-safe palette: gray, blue, orange, teal, purple,
-          red. No red-green confusion.'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square canvas ensures true circular appearance. Good utilization
-          with balanced 20 MPa padding. Legend consumes some bottom space.
+        comment: Square canvas (2400x2400) ensures true circle; balanced margins;
+          no overflow; legend fully within frame
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes labeled with units: Normal Stress σ (MPa) and Shear Stress
-          τ (MPa). Value formatters append MPa.'
+        comment: Both axis labels include units (MPa); title matches mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data series (Mohr''s Circle) correctly uses #009E73; reference
+          axes use INK_MUTED (appropriate semantic anchor for structural lines); backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -99,22 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette with good harmony. Intentional typography
-          hierarchy. Above defaults but not publication-level.
+        comment: Intentional visual hierarchy with INK_MUTED for reference lines and
+          brand green for circle; professional look within pygal constraints
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dashed reference lines with custom dasharray. Subtle grid via foreground_subtle.
-          Clean white background. Pygal limits spine control.
+        comment: Dashed vs solid stroke contrast; variable stroke widths; theme-adaptive
+          chrome correctly applied; pygal limits spine removal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy through color and dot sizing. Legend labels include
-          computed values. No strong focal point beyond data display.
+        comment: 'Logical layered narrative: reference → circle → diameter → principal
+          stresses → max shear → 2θp arc guides the viewer through the engineering
+          concept'
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle on σ-τ plane using pygal XY chart.
+        comment: Correct Mohr's circle drawn as XY scatter with 200 circle points;
+          true circle via square canvas
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: circle, principal stresses, max shear, stress
-          points A/B, 2θp arc, equal aspect ratio, grid, reference lines.'
+        comment: Circle, principal stresses (σ1/σ2), max shear (top/bottom), stress
+          points A/B, 2θp arc, reference lines through center, grid — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = normal stress σ, Y-axis = shear stress τ. All points correctly
-          positioned.
+        comment: X=normal stress σ, Y=shear stress τ; all values correctly derived
+          (center=50, radius=67.1, σ1=117.1, σ2=-17.1)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels descriptive with computed
-          stress values.
+        comment: Title is 'mohr-circle · python · pygal · anyplot.ai'; legend labels
+          describe each series with numeric values
     data_quality:
       score: 15
       max: 15
@@ -155,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Mohr''s Circle aspects: circle, principal stresses, max
-          shear, stress points A/B, diameter line, 2θp angle.'
+        comment: 'All six spec elements rendered: circle outline, principal stresses,
+          max shear, A/B points with diameter, reference axes, 2θp angle arc'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel beam under combined loading with realistic MPa values. Neutral
-          engineering context.
+        comment: Concrete column under eccentric axial load + lateral shear; σx=110
+          MPa, σy=-10 MPa, τxy=30 MPa are plausible structural engineering values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30-93 MPa range realistic for structural steel analysis.
+        comment: σ1≈117.1 MPa, σ2≈-17.1 MPa, τmax≈67.1 MPa are physically meaningful
+          and correctly computed
     code_quality:
       score: 10
       max: 10
@@ -179,33 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → computations → style →
-          chart → series → save.'
+        comment: No functions or classes; flat linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with fixed stress values and analytical computations.
+        comment: Fully deterministic; no stochastic operations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Three imports (numpy, pygal, Style), all used.
+        comment: All imports (importlib.util, os, sys, numpy, pygal, Style) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. List comprehensions for points. Dict-based
-          labeled data. No over-engineering.
+        comment: Import guard is complex but necessary for pipeline isolation; remaining
+          code is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current pygal 3.1.0 API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -215,15 +226,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal XY, Style, series model, dict-based labeled data,
-          value formatters.
+        comment: Correct pygal.XY; Style object for theming; per-series stroke/dots_size/stroke_style;
+          allow_interruptions=True for broken reference lines; range/xrange for axis
+          bounds; value formatters
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses allow_interruptions, stroke_style with dasharray, js=[], value
-          formatters, truncate_legend, dual render output.
+        comment: HTML export (pygal interactive), custom label tooltips on data points,
+          dasharray stroke patterns, multi-column bottom legend, value formatters
+          — good but not maximal pygal showcase
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -232,5 +245,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
