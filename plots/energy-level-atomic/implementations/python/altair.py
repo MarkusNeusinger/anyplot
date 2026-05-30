@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -37,19 +37,20 @@ ionization_df = pd.DataFrame([{"energy": 0.0, "x_start": 1.5, "x_end": 9.0, "lab
 all_labels_df = pd.concat([level_df, ionization_df], ignore_index=True)
 
 # Spectral series transitions (emission: upper → lower)
+# label_dx: alternating offsets for Paschen labels to prevent crowding at converging levels
 transition_data = [
     # Lyman series (UV) — transitions to n=1
-    (2, 1, "Lyman (UV)", 2.5),
-    (3, 1, "Lyman (UV)", 3.1),
-    (4, 1, "Lyman (UV)", 3.7),
+    (2, 1, "Lyman (UV)", 2.5, 10),
+    (3, 1, "Lyman (UV)", 3.1, 10),
+    (4, 1, "Lyman (UV)", 3.7, 10),
     # Balmer series (Visible) — transitions to n=2
-    (3, 2, "Balmer (Visible)", 4.8),
-    (4, 2, "Balmer (Visible)", 5.4),
-    (5, 2, "Balmer (Visible)", 6.0),
-    # Paschen series (IR) — transitions to n=3
-    (4, 3, "Paschen (IR)", 6.8),
-    (5, 3, "Paschen (IR)", 7.2),
-    (6, 3, "Paschen (IR)", 7.6),
+    (3, 2, "Balmer (Visible)", 4.8, 10),
+    (4, 2, "Balmer (Visible)", 5.4, 10),
+    (5, 2, "Balmer (Visible)", 6.0, 10),
+    # Paschen series (IR) — wider x-spacing + graduated dx so labels fan out clearly
+    (4, 3, "Paschen (IR)", 6.3, -18),
+    (5, 3, "Paschen (IR)", 7.2, 10),
+    (6, 3, "Paschen (IR)", 7.9, 25),
 ]
 
 arrow_df = pd.DataFrame(
@@ -62,12 +63,13 @@ arrow_df = pd.DataFrame(
             "series": s,
             "transition": f"n={up} → n={lo}",
             "wl_label": f"{1e9 / (R_H * (1 / lo**2 - 1 / up**2)):.0f} nm",
+            "label_dx": dx,
         }
-        for up, lo, s, x in transition_data
+        for up, lo, s, x, dx in transition_data
     ]
 )
 
-head_df = pd.DataFrame([{"x": x, "y": levels[lo], "series": s} for up, lo, s, x in transition_data])
+head_df = pd.DataFrame([{"x": x, "y": levels[lo], "series": s} for up, lo, s, x, dx in transition_data])
 
 series_order = ["Lyman (UV)", "Balmer (Visible)", "Paschen (IR)"]
 # Imprint palette positions 1–3: green (#009E73), lavender (#C475FD), blue (#4467A3)
@@ -85,10 +87,10 @@ y_axis = alt.Axis(
     gridOpacity=0.12,
 )
 
-# Layer 1: Energy level lines
+# Layer 1: Energy level lines — use INK_SOFT + thin stroke so colored arrows read as primary story
 energy_lines = (
     alt.Chart(level_df)
-    .mark_rule(strokeWidth=2.5, color=INK)
+    .mark_rule(strokeWidth=1.5, color=INK_SOFT)
     .encode(
         x=alt.X("x_start:Q", scale=alt.Scale(domain=[0, 11.5]), axis=None),
         x2="x_end:Q",
@@ -111,10 +113,10 @@ level_labels = (
     .encode(x="x_end:Q", y="energy:Q", text="label:N")
 )
 
-# Layer 4: Transition arrow shafts — colored by spectral series (Imprint palette)
+# Layer 4: Transition arrow shafts — thicker than level lines to assert visual priority
 arrow_shafts = (
     alt.Chart(arrow_df)
-    .mark_rule(strokeWidth=2.5, opacity=0.9)
+    .mark_rule(strokeWidth=3.0, opacity=0.9)
     .encode(
         x="x:Q",
         y="y_upper:Q",
@@ -139,16 +141,33 @@ arrowheads = (
     )
 )
 
-# Layer 6: Wavelength annotations along arrows
-wl_labels = (
-    alt.Chart(arrow_df)
+# Layer 6: Wavelength annotations — three sub-layers with distinct dx so each
+# Paschen label fans out to a different horizontal position, preventing overlap
+_wl_left = arrow_df[arrow_df["label_dx"] == -18]
+_wl_mid = arrow_df[arrow_df["label_dx"] == 10]
+_wl_right = arrow_df[arrow_df["label_dx"] == 25]
+
+wl_labels_left = (
+    alt.Chart(_wl_left)
+    .mark_text(fontSize=8, angle=90, dx=-18, color=INK_MUTED, fontStyle="italic")
+    .encode(x="x:Q", y="y_mid:Q", text="wl_label:N")
+)
+wl_labels_mid = (
+    alt.Chart(_wl_mid)
     .mark_text(fontSize=8, angle=90, dx=10, color=INK_MUTED, fontStyle="italic")
+    .encode(x="x:Q", y="y_mid:Q", text="wl_label:N")
+)
+wl_labels_right = (
+    alt.Chart(_wl_right)
+    .mark_text(fontSize=8, angle=90, dx=25, color=INK_MUTED, fontStyle="italic")
     .encode(x="x:Q", y="y_mid:Q", text="wl_label:N")
 )
 
 # Combine all layers
 chart = (
-    alt.layer(energy_lines, ion_line, level_labels, arrow_shafts, arrowheads, wl_labels)
+    alt.layer(
+        energy_lines, ion_line, level_labels, arrow_shafts, arrowheads, wl_labels_left, wl_labels_mid, wl_labels_right
+    )
     .properties(
         width=620,
         height=320,
@@ -164,6 +183,7 @@ chart = (
         ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_title(color=INK)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.12, labelColor=INK_SOFT, titleColor=INK
     )
