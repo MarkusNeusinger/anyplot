@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:15:04Z'
-updated: '2026-05-30T12:55:12Z'
+updated: '2026-05-30T13:03:39Z'
 generated_by: claude-sonnet
 workflow_run: 26683970872
 issue: 4430
@@ -12,42 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Semantic Imprint palette mapping (positive=green, neutral=muted-gray, negative=red)
-    is principled and visually cohesive for a Likert opinion scale
-  - Three-level alpha differentiation (stable=0.55, dominant-change=0.40, minor-change=0.22)
-    encodes opinion stability as a visual dimension
-  - 'Full spec compliance: flow width proportionality, node totals, stable/changer
-    distinction, net-flow highlighting, and transparent overlapping flows all implemented
-    correctly'
-  - 'Expert idiomatic plotnine usage: geom_ribbon + cubic interpolation creates smooth
-    S-curves; scale_alpha_identity() enables per-ribbon opacity without extra geom
-    layers'
-  - Deterministic data with internally consistent 1,000-respondent totals per wave;
-    polarization narrative is coherent and compelling
+  - Correct alluvial/Sankey structure with smooth cubic-interpolated ribbon flows
+    using geom_ribbon, fully matching the spec's plot type
+  - Semantic Imprint palette mapping (green=strongly agree, blue=agree, muted-gray=neutral,
+    ochre=disagree, red=strongly disagree) is semantically meaningful and CVD-safe
+  - Alpha differentiation between stable flows (0.55) and transitioning flows (0.22-0.40)
+    with dominant-direction highlighting is a sophisticated storytelling device
+  - Delta change labels (+19, +35, +55, +31, etc.) with ELEVATED_BG fill clearly highlight
+    significant wave-over-wave category shifts
+  - Fully theme-adaptive chrome — title, subtitle, wave headers, category labels,
+    legend all flip correctly between light (#FAF8F1) and dark (#1A1A17) surfaces
+  - 'All spec requirements implemented: proportional flow widths, node count labels,
+    stable-vs-changer opacity, net-flow highlighting, left-to-right wave order'
+  - Clean plotnine grammar using scale_alpha_identity, guide_legend(override_aes),
+    coord_cartesian, and multiple composed geom layers idiomatically
   weaknesses:
-  - Delta change labels at size=2.6mm are too small to be effective storytelling anchors
-    — increase to 3.2-3.5mm and add bold weight for better legibility at mobile widths
-  - Legend sits isolated from the main diagram with a noticeable whitespace gap on
-    the right; adjust legend_position or xlim to better integrate it with the diagram
-  - plot_margin=0.02 is very tight; increasing to 0.04-0.06 would give the diagram
-    more breathing room, especially for the title and subtitle
-  - Data story on polarization is present but muted due to small delta labels; make
-    them more prominent to strengthen the narrative emphasis on Neutral's erosion
+  - 'Neutral category uses fixed hex #6B6A63 (light-theme muted token) regardless
+    of theme — in dark mode this warm-gray on near-black (#1A1A17) yields marginal
+    contrast (~3:1) for the node fills; the white node border (color=''white'') partially
+    compensates but the Neutral flow ribbons at alpha=0.22-0.55 are nearly invisible
+    against the dark background'
+  - Count labels inside nodes (geom_text size=3.0 mm ≈ 8.5pt) and category labels
+    on flanks (annotate size=3.2 mm ≈ 9pt) are at the lower edge of legibility when
+    the 3200px canvas is displayed at mobile width (~400px)
+  - Transitioning flows at alpha=0.22 are very faint in the dark render, making individual
+    cross-category movements hard to follow visually; consider raising the minimum
+    transitioning alpha to 0.30
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "alluvial-opinion-flow · python · plotnine · anyplot.ai" bold centered in dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT (#4A4A44), readable. Wave column headers (Wave 1-4) in dark bold. Category labels (Strongly Agree through Strongly Disagree) in dark ink on both left and right sides — readable. Legend title and text in dark tokens. No axis ticks/labels (appropriate for diagram type).
-      Data: Node rectangles use Imprint palette — Strongly Agree=#009E73 (brand green, first series) ✓, Agree=#4467A3 (blue), Neutral=#6B6A63 (muted/warm gray semantic anchor), Disagree=#BD8233 (ochre), Strongly Disagree=#AE3030 (matte red). White bold count labels inside nodes. Flow ribbons in matching colors with alpha 0.22-0.55. Delta change labels in category colors on elevated background.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Bold title "alluvial-opinion-flow · python · plotnine · anyplot.ai" in dark ink (#1A1A17), centered and fully readable. Subtitle in INK_SOFT gray, readable. Wave headers (Wave 1–4) in dark bold above each column. Category labels ("Strongly Agree" through "Strongly Disagree") flanking left of Wave 1 and right of Wave 4 in dark ink — small (size 3.2 mm) but legible at full resolution.
+      Data: Five colored node rectangles per wave column — green (Strongly Agree), blue (Agree), warm gray (Neutral), ochre (Disagree), matte red (Strongly Disagree). Flow ribbons connect nodes with cubic smoothstep curves; stable flows at alpha=0.55 are clearly visible, transitioning flows at alpha=0.22–0.40 are subtle but distinguishable. White count labels centered in each node. Delta labels (+19, +35, +55, etc.) with elevated-bg fill mark significant shifts. Legend on right with correct Imprint colors at full opacity.
+      Legibility verdict: PASS — all text readable; no light-on-light issues; first series is #009E73.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subtitle use INK token (#F0EFE8 light cream on dark) — readable. Wave column headers and category labels on both sides use INK token (light-colored) — readable. Legend title and text use light adaptive tokens. No dark-on-dark failures detected. Legend background uses ELEVATED_BG (#242420) — subtly distinct from page background.
-      Data: All five Imprint palette colors are identical to the light render — Strongly Agree=#009E73 ✓, Agree=#4467A3, Neutral=#6B6A63, Disagree=#BD8233, Strongly Disagree=#AE3030. Flow ribbon colors unchanged; only chrome flips. Delta change labels visible with category-colored text on elevated-dark fill.
-      Legibility verdict: PASS — all text readable against dark background; brand green #009E73 clearly visible; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title, subtitle, wave headers, and category labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark surface. Legend background correctly uses #242420 (ELEVATED_BG dark), legend text in INK_SOFT light. No dark-on-dark text failures observed.
+      Data: Data colors are identical to the light render (all five Imprint positions unchanged). However, the Neutral node (#6B6A63 warm-gray on #1A1A17) has marginal contrast (~3:1) — the node fills are distinguishable primarily due to white borders; the flow ribbons for Neutral at low alpha are nearly invisible in the dark render. All other categories (green, blue, ochre, red) remain clearly visible with good contrast.
+      Legibility verdict: PASS overall — all chrome text readable with no dark-on-dark failures. Minor concern: Neutral node fills and their flow ribbons have reduced visibility in dark mode due to using a fixed light-theme muted hex rather than a theme-adaptive value.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -58,50 +63,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; delta labels (2.6mm) and node counts (3.0mm)
-          at edge of legibility at mobile widths
+        comment: Title/subtitle/wave headers/category labels all readable in both
+          themes. Count labels inside nodes (3.0mm) and category flanking labels (3.2mm)
+          are small but legible at full resolution; marginally small at mobile 400px
+          scale.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions in either render
+        comment: No significant text overlaps. Delta labels use ELEVATED_BG fill to
+          lift above ribbons. Minor visual density in the central flow region is expected
+          for an alluvial chart.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Flow ribbons and nodes clearly visible; very small flows near min_flow
-          threshold may be barely perceptible
+        comment: Nodes clearly visible; stable flows (alpha=0.55) prominent; transitioning
+          flows (alpha=0.22) are quite faint, especially Neutral flows in dark render.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; alpha differentiation aids separation
+        comment: Imprint palette with semantic mapping; CVD-safe across all 5 categories;
+          no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; legend sits somewhat isolated with whitespace gap
-          on right
+        comment: 3200x1800 landscape canvas. Layout proportions excellent. All elements
+          fit within canvas. No clipping detected. Wave columns evenly spaced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for traditional axes; wave headers and category labels serve
-          descriptive roles correctly
+        comment: Title correctly formatted. Subtitle provides context. No traditional
+          axis labels needed for alluvial chart — correctly hidden.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Strongly Agree=#009E73 first series; semantic Imprint exception valid;
-          backgrounds correct; chrome adapts correctly in both renders
+        comment: 'First series #009E73. Semantic Imprint palette mapping. Backgrounds
+          #FAF8F1/#1A1A17. Data colors identical in both renders. Neutral uses fixed
+          #6B6A63 (semantically appropriate muted-gray for ''neutral'' opinion).'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -109,22 +120,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: semantic color scale, triple-alpha differentiation,
-          column bands, bilateral labels. Not quite publication-ready'
+        comment: Well above default (4). Custom semantic palette, column band backgrounds
+          for framing, alpha differentiation between stable/transitioning flows, delta
+          change labels, category labels on both flanks — genuinely sophisticated
+          design choices.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: no grid, no ticks, subtle column bands, white node borders.
-          Legend box weight and tight margins hold it back'
+        comment: Above default (2). All spines/grid/axes removed. Legend styled with
+          ELEVATED_BG. Subtle column band overlays add structure. White node borders
+          add definition.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Story present via subtitle + delta labels + color scale; delta labels
-          too small to serve as primary emphasis
+        comment: Strong storytelling. Subtitle explicitly states 'Neutral erodes as
+          views shift toward extremes.' Delta labels quantify change. Alpha hierarchy
+          visually separates stable respondents from movers. Color semantics (green=positive,
+          red=negative) reinforce narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -134,30 +150,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey diagram with 4 waves and 5 opinion categories
+        comment: Correct alluvial/Sankey-style diagram with proportional flow ribbons.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: flow width proportional, node totals shown, stable/changer
-          distinction, net-flow highlighting, transparency'
+        comment: 'All spec features: consistent colors per category, proportional
+          flow widths, node count labels, stable-vs-changer opacity differentiation,
+          net-flow highlighting via dominant-direction alpha, left-to-right wave order,
+          transparency for overlapping flows.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves left-to-right; node heights and flow widths proportional to
-          counts
+        comment: 4 waves x 5 categories; flow widths proportional to transition counts;
+          wave positions correctly ordered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend lists all 5 categories with correct
-          colors
+        comment: 'Title: ''alluvial-opinion-flow · python · plotnine · anyplot.ai''
+          — exact format. Legend: ''Opinion'' with 5 correct category entries.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -165,22 +183,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot aspects shown: 4 waves, stable/cross flows, polarization
-          trend, delta labels, proportional nodes'
+        comment: 'All alluvial chart aspects shown: nodes, flows, wave headers, category
+          labels, stable/changing flow distinction, delta annotations.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible longitudinal survey with 1,000 respondents; generic Likert
-          categories without stated survey topic makes it slightly abstract
+        comment: Political opinion survey tracking 1000 respondents across 4 quarterly
+          waves. Realistic transition matrices showing gradual polarization. Neutral
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Exactly 1,000 respondents per wave; transition matrices internally
-          consistent; Neutral erosion realistic
+        comment: 1000 respondents per wave, realistic transition proportions, 4 waves
+          × 5 categories — within spec range.
     code_quality:
       score: 10
       max: 10
@@ -190,64 +209,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → layout → plot → save; no functions
-          or classes'
+        comment: Flat procedural code, no functions or classes, clearly sectioned.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded transition matrices
+        comment: Hardcoded deterministic transition matrices — fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: All imports used; only necessary libraries imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for alluvial diagram; manual layout inherent
-          to chart type; cleanly organized
+        comment: Appropriate complexity for an alluvial chart. No fake UI. Clean section
+          comments.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with ANYPLOT_THEME env var
+        comment: Saves as plot-{THEME}.png at correct dimensions. Current API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use: geom_ribbon for flow curves, scale_alpha_identity()
-          for per-row alpha, guide_legend override_aes, full grammar-of-graphics layering'
+        comment: 'Strong idiomatic plotnine: grammar of graphics layers, scale_alpha_identity,
+          guide_legend(override_aes), coord_cartesian, theme() with element tokens
+          — idiomatic ggplot-style composition.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_alpha_identity() for per-ribbon opacity control, geom_ribbon
-          as smooth flow interpolator, grammar layering for complex custom diagram
-  verdict: REJECTED
+        comment: Uses geom_ribbon for smooth flow curves, scale_alpha_identity for
+          per-row alpha control, coord_cartesian for precise layout, multiple composed
+          geom layers — distinctive plotnine capabilities leveraged well.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - minimal-chrome
+  - edge-highlighting
