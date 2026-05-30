@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-24
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
@@ -12,7 +14,19 @@ import numpy as np
 import pandas as pd
 
 
-# Data - Generate realistic stock price data for 30 trading days
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic exception: finance profit/loss → green/red
+COLOR_UP = "#009E73"  # Imprint position 1 (brand green) — bullish / gain
+COLOR_DOWN = "#AE3030"  # Imprint position 5 (matte red) — bearish / loss
+
+# Data
 np.random.seed(42)
 n_days = 30
 dates = pd.bdate_range(start="2024-01-02", periods=n_days)
@@ -30,20 +44,28 @@ high_prices = np.maximum(open_prices, close_prices) + np.random.uniform(0, 0.5, 
 
 df = pd.DataFrame({"date": dates, "open": open_prices, "high": high_prices, "low": low_prices, "close": close_prices})
 
-# Compute 5-day simple moving average for trend context
+# Volume data — correlated with daily price range (higher volatility → more trading)
+daily_range_pct = (df["high"] - df["low"]) / price_series
+df["volume"] = (1_000_000 * (1 + daily_range_pct * 10) * np.random.uniform(0.7, 1.3, n_days)).astype(int)
+
+# 5-day simple moving average for trend context
 df["sma5"] = df["close"].rolling(window=5).mean()
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
-fig.patch.set_facecolor("#fafafa")
-ax.set_facecolor("#fafafa")
+# Pre-compute price range for proportional minimum body height
+y_min_data, y_max_data = df["low"].min(), df["high"].max()
+min_body = (y_max_data - y_min_data) * 0.004  # scales with axis range; avoids invisible doji bodies
+
+# Plot with gridspec: main candlestick panel (75%) + volume panel (25%)
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+gs = fig.add_gridspec(2, 1, height_ratios=[3, 1], hspace=0.05)
+ax = fig.add_subplot(gs[0])
+ax_vol = fig.add_subplot(gs[1], sharex=ax)
+
+ax.set_facecolor(PAGE_BG)
+ax_vol.set_facecolor(PAGE_BG)
 
 bullish = df["close"] >= df["open"]
-
-# Colorblind-safe palette: blue for bullish, orange for bearish
-color_up = "#1976d2"
-color_down = "#e65100"
-colors = np.where(bullish, color_up, color_down)
+colors = np.where(bullish, COLOR_UP, COLOR_DOWN)
 date_nums = mdates.date2num(df["date"])
 width = 0.6
 
@@ -53,81 +75,97 @@ ax.vlines(date_nums, df["low"], df["high"], colors=colors, linewidth=1.5, zorder
 # Bodies — bars for open-close range (in front of wicks)
 body_bottoms = np.where(bullish, df["open"], df["close"])
 body_heights = np.abs(df["close"] - df["open"])
-body_heights = np.where(body_heights < 0.01, 0.01, body_heights)
+body_heights = np.where(body_heights < min_body, min_body, body_heights)
 ax.bar(
     date_nums, body_heights, bottom=body_bottoms, width=width, color=colors, edgecolor=colors, linewidth=0.8, zorder=2
 )
 
-# 5-day moving average line for trend storytelling
+# 5-day SMA — dashed to distinguish from structural chrome
 sma_mask = df["sma5"].notna()
-ax.plot(
-    date_nums[sma_mask],
-    df["sma5"][sma_mask],
-    color="#37474f",
-    linewidth=2.0,
-    linestyle="-",
-    alpha=0.7,
-    zorder=3,
-    label="5-day SMA",
-)
+ax.plot(date_nums[sma_mask], df["sma5"][sma_mask], color=INK_MUTED, linewidth=2.0, linestyle="--", alpha=0.9, zorder=3)
 
-# Highlight the largest single-day price drop for narrative emphasis
+# Annotate largest single-day price drop
 daily_change = df["close"] - df["open"]
 biggest_drop_idx = daily_change.idxmin()
+drop_val = daily_change[biggest_drop_idx]
 ax.annotate(
-    f"Largest drop\n${daily_change[biggest_drop_idx]:.2f}",
+    f"Largest drop\n-${abs(drop_val):.2f}",
     xy=(date_nums[biggest_drop_idx], df["low"].iloc[biggest_drop_idx]),
-    xytext=(0, -32),
+    xytext=(0, -28),
     textcoords="offset points",
-    fontsize=13,
+    fontsize=8,
     fontweight="medium",
-    color=color_down,
+    color=COLOR_DOWN,
     ha="center",
     va="top",
-    arrowprops={"arrowstyle": "-", "color": color_down, "lw": 1.2},
+    arrowprops={"arrowstyle": "->", "color": COLOR_DOWN, "lw": 1.2},
     zorder=4,
 )
 
-# Date formatting
-ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
-ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-ax.xaxis.set_minor_locator(mdates.DayLocator())
+# Volume bars in lower panel — color-coded to match candle direction
+ax_vol.bar(date_nums, df["volume"], width=width, color=colors, alpha=0.7, zorder=2)
 
-# Style
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price (USD)", fontsize=20)
-ax.set_title("candlestick-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
-ax.tick_params(axis="x", rotation=45)
+# Date formatting on lower panel (x-axis labels hidden on upper via sharex)
+ax_vol.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
+ax_vol.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+ax_vol.tick_params(which="minor", length=0)  # suppress daily minor tick clutter
+ax_vol.tick_params(axis="x", rotation=45, labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax_vol.tick_params(axis="y", labelsize=7, colors=INK_SOFT, labelcolor=INK_SOFT)
+plt.setp(ax.get_xticklabels(), visible=False)
+
+# Style — main panel
+title = "candlestick-basic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+
+ax.set_ylabel("Price (USD)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(which="minor", length=0)  # suppress daily minor tick clutter
+
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_linewidth(0.6)
-ax.spines["left"].set_color("#999999")
+ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_linewidth(0.6)
-ax.spines["bottom"].set_color("#999999")
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Y-axis dollar formatting
 ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("$%.0f"))
-
-# Subtle y-axis grid for reading price levels
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color="#888888")
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 
-# Legend
+# Style — volume panel
+ax_vol.set_ylabel("Volume", fontsize=9, color=INK)
+ax_vol.set_xlabel("Date", fontsize=10, color=INK)
+ax_vol.spines["top"].set_visible(False)
+ax_vol.spines["right"].set_visible(False)
+ax_vol.spines["left"].set_linewidth(0.6)
+ax_vol.spines["left"].set_color(INK_SOFT)
+ax_vol.spines["bottom"].set_linewidth(0.6)
+ax_vol.spines["bottom"].set_color(INK_SOFT)
+ax_vol.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x / 1e6:.1f}M"))
+ax_vol.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
+ax_vol.set_axisbelow(True)
+
+# Legend on main panel
 legend_handles = [
-    mpatches.Patch(color=color_up, label="Bullish (Close \u2265 Open)"),
-    mpatches.Patch(color=color_down, label="Bearish (Close < Open)"),
-    plt.Line2D([0], [0], color="#37474f", linewidth=2.0, alpha=0.7, label="5-day SMA"),
+    mpatches.Patch(color=COLOR_UP, label="Bullish (Close ≥ Open)"),
+    mpatches.Patch(color=COLOR_DOWN, label="Bearish (Close < Open)"),
+    plt.Line2D([0], [0], color=INK_MUTED, linewidth=2.0, linestyle="--", alpha=0.9, label="5-day SMA"),
 ]
-ax.legend(handles=legend_handles, fontsize=16, loc="upper right", framealpha=0.9, edgecolor="none", facecolor="#fafafa")
+leg = ax.legend(
+    handles=legend_handles, fontsize=8, loc="upper right", framealpha=0.9, edgecolor=INK_SOFT, facecolor=ELEVATED_BG
+)
+for t in leg.get_texts():
+    t.set_color(INK_SOFT)
 
 # Axis limits with padding
-y_min, y_max = df["low"].min(), df["high"].max()
-y_pad = (y_max - y_min) * 0.12
-ax.set_ylim(y_min - y_pad, y_max + y_pad)
+y_pad = (y_max_data - y_min_data) * 0.18
+ax.set_ylim(y_min_data - y_pad, y_max_data + y_pad)
 x_min = mdates.date2num(df["date"].min())
 x_max = mdates.date2num(df["date"].max())
 ax.set_xlim(x_min - 1, x_max + 1)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.10, right=0.97, top=0.92, bottom=0.22)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

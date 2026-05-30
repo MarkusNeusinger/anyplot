@@ -1,17 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-02-24
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-30
 """
 
+import os
 import re
+import sys
 from datetime import datetime, timedelta
+
+
+# This file is named 'pygal.py'; remove its own directory from sys.path so
+# 'import pygal' resolves to the installed package rather than this script itself.
+_self_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _self_dir]
 
 import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# --- Theme tokens (Imprint palette + theme-adaptive chrome) ---
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Finance semantic: bullish=green (Imprint pos 1), bearish=matte-red (Imprint pos 5)
+BULL = "#009E73"
+BEAR = "#AE3030"
+PEAK_CLR = "#C475FD"  # Imprint pos 2
+LOW_CLR = "#4467A3"  # Imprint pos 3
+MA_CLR = INK_MUTED  # theme-adaptive reference line
 
 # --- Data: 30 trading days of OHLC stock prices ---
 np.random.seed(42)
@@ -62,34 +83,37 @@ for candle in ohlc_data:
         bear_wicks.extend(wick)
         bear_bodies.extend(body)
 
-# --- Style: fully colorblind-safe palette ---
-BULL, BEAR = "#2271B3", "#D66B27"
-PEAK_CLR, LOW_CLR = "#7B4FA0", "#2A7B7B"  # Purple & teal (colorblind-safe)
-MA_CLR = "#555555"
+# CVD redundant encoding: positional markers at wick extremes signal direction
+# (top-of-wick dot = bullish / bottom-of-wick dot = bearish, independent of color)
+bull_direction_pts = [(c["day"], c["high"]) for c in ohlc_data if c["close"] >= c["open"]]
+bear_direction_pts = [(c["day"], c["low"]) for c in ohlc_data if c["close"] < c["open"]]
+
 date_map = {i + 1: dates[i] for i in range(n_days)}
 
+# --- Style: Imprint palette + theme-adaptive chrome ---
+# 9 colors indexed by series add order (0–8 incl. hidden CVD marker series 7–8)
 custom_style = Style(
-    background="white",
-    plot_background="#f4f4f0",
-    foreground="#2a2a2a",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#dedede",
-    colors=(BULL, BEAR, MA_CLR, BULL, BEAR, PEAK_CLR, LOW_CLR),
-    title_font_size=72,
-    label_font_size=44,
-    major_label_font_size=40,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BULL, BEAR, MA_CLR, BULL, BEAR, PEAK_CLR, LOW_CLR, BULL, BEAR),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=34,
+    value_font_size=36,
 )
 
-# --- Chart configuration ---
-WICK_W, BODY_W, MA_W = 20, 76, 6
+# --- Chart: 3200×1800 landscape canvas ---
+WICK_W, BODY_W, MA_W = 13, 51, 4
 
 chart = pygal.XY(
     style=custom_style,
-    width=4800,
-    height=2700,
-    title="candlestick-basic \u00b7 pygal \u00b7 pyplots.ai",
+    width=3200,
+    height=1800,
+    title="candlestick-basic · python · pygal · anyplot.ai",
     x_title="Date",
     y_title="Price ($)",
     show_dots=False,
@@ -98,9 +122,11 @@ chart = pygal.XY(
     allow_interruptions=True,
     range=(min(d["low"] for d in ohlc_data) - 2, max(d["high"] for d in ohlc_data) + 3),
     xrange=(0, n_days + 1),
-    legend_box_size=30,
-    margin=40,
-    spacing=25,
+    legend_box_size=22,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=5,
+    margin=36,
+    spacing=20,
     tooltip_border_radius=8,
     truncate_legend=-1,
     value_formatter=lambda x: f"${x:.2f}",
@@ -109,26 +135,32 @@ chart = pygal.XY(
 chart.x_labels = [1, 5, 10, 15, 20, 25, 30]
 chart.x_value_formatter = lambda x: date_map[int(round(x))].strftime("%b %d") if int(round(x)) in date_map else ""
 
-# Series 0-1: Wicks (background, hidden from legend)
+# Series 0: bull wicks (hidden from legend)
 chart.add(None, bull_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
+# Series 1: bear wicks (hidden from legend)
 chart.add(None, bear_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
-
-# Series 2: Moving average trend line
+# Series 2: moving average trend line
 chart.add("5-Day MA", ma_points, stroke=True, show_dots=False, stroke_style={"width": MA_W, "linecap": "round"})
-
-# Series 3-4: Candlestick bodies (foreground)
+# Series 3: bullish candle bodies
 chart.add("Bullish (Up)", bull_bodies, stroke=True, show_dots=False, stroke_style={"width": BODY_W, "linecap": "butt"})
+# Series 4: bearish candle bodies
 chart.add(
     "Bearish (Down)", bear_bodies, stroke=True, show_dots=False, stroke_style={"width": BODY_W, "linecap": "butt"}
 )
+# Series 5: peak accent marker
+chart.add(f"Peak ${peak['high']:.2f}", [(peak["day"], peak["high"])], stroke=False, show_dots=True, dots_size=12)
+# Series 6: trough accent marker
+chart.add(f"Low ${trough['low']:.2f}", [(trough["day"], trough["low"])], stroke=False, show_dots=True, dots_size=12)
+# Series 7: CVD direction markers — top of bullish wicks (hidden from legend)
+chart.add(None, bull_direction_pts, stroke=False, show_dots=True, dots_size=7)
+# Series 8: CVD direction markers — bottom of bearish wicks (hidden from legend)
+chart.add(None, bear_direction_pts, stroke=False, show_dots=True, dots_size=7)
 
-# Series 5-6: Price extreme markers (colorblind-safe purple & teal)
-chart.add(f"Peak ${peak['high']:.2f}", [(peak["day"], peak["high"])], stroke=False, show_dots=True, dots_size=16)
-chart.add(f"Low ${trough['low']:.2f}", [(trough["day"], trough["low"])], stroke=False, show_dots=True, dots_size=16)
-
-# --- Render: inline stroke styles for cairosvg compatibility ---
-# cairosvg ignores CSS class-based stroke properties; inline them on every path per series
+# --- Render: SVG post-processing for cairosvg and visual refinement ---
+# cairosvg ignores CSS class-based stroke properties; inline them directly on each series group
 svg = chart.render(is_unicode=True)
+
+# 1. Inline stroke widths for cairosvg compatibility
 series_strokes = {
     0: (WICK_W, "butt"),
     1: (WICK_W, "butt"),
@@ -146,6 +178,30 @@ for sid, (width, cap) in series_strokes.items():
         flags=re.DOTALL,
     )
 
-cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png")
-with open("plot.html", "w") as f:
+# 2. Grid lines: override dashed default with solid lines
+svg = re.sub(r"stroke-dasharray\s*:\s*[\d.,\s]+", "stroke-dasharray:none", svg)
+
+# 3. L-spine border: replace full-frame rect with left + bottom lines only
+m = re.search(r'<g\b[^>]*class="plot"[^>]*>\s*(<rect\b[^>]*/?>)', svg)
+if m:
+    rect_tag = m.group(1)
+    rx = re.search(r'\bx="([^"]+)"', rect_tag)
+    ry = re.search(r'\by="([^"]+)"', rect_tag)
+    rw = re.search(r'\bwidth="([^"]+)"', rect_tag)
+    rh = re.search(r'\bheight="([^"]+)"', rect_tag)
+    if rx and ry and rw and rh:
+        x, y, w, h = float(rx.group(1)), float(ry.group(1)), float(rw.group(1)), float(rh.group(1))
+        no_stroke = re.sub(r'\bstroke="[^"]*"', 'stroke="none"', rect_tag)
+        if "stroke=" not in rect_tag:
+            no_stroke = rect_tag[:-2] + ' stroke="none"/>' if rect_tag.endswith("/>") else rect_tag
+        l_spine = (
+            f'<line x1="{x:.1f}" y1="{y:.1f}" x2="{x:.1f}" y2="{y + h:.1f}" '
+            f'stroke="{INK_MUTED}" stroke-width="1.5"/>'
+            f'<line x1="{x:.1f}" y1="{y + h:.1f}" x2="{x + w:.1f}" y2="{y + h:.1f}" '
+            f'stroke="{INK_MUTED}" stroke-width="1.5"/>'
+        )
+        svg = svg.replace(rect_tag, no_stroke + l_spine, 1)
+
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(chart.render(is_unicode=True))
