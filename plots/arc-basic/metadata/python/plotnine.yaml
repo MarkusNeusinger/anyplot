@@ -1,127 +1,146 @@
 library: plotnine
+language: python
 specification_id: arc-basic
 created: '2025-12-23T08:49:49Z'
-updated: '2026-02-23T22:06:39Z'
-generated_by: claude-opus-4-6
-workflow_run: 20455963275
-issue: 0
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/arc-basic/plotnine/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - colorbar
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
-  - custom-colormap
-  - alpha-blending
+updated: '2026-05-30T01:08:54Z'
+generated_by: claude-sonnet
+workflow_run: 26669623848
+issue: 991
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Cohesive navy blue monochromatic design with professional typography hierarchy
-  - Perfect spec compliance with all required features implemented correctly
-  - Excellent data choice with character interactions showing varied weights and connection
-    distances
-  - Clean grammar-of-graphics code structure with expert plotnine layering
-  - Effective visual encoding with arc thickness, color, and alpha reinforcing weight
+  - Correct arc diagram layout with nodes on a horizontal baseline and arcs curving
+    above — arc height proportional to node distance as specified
+  - 'Imprint palette used correctly: sequential gradient from #009E73 (brand green)
+    to #4467A3 (blue) for arc weight encoding — matches imprint_seq pattern'
+  - 'Theme-adaptive chrome fully implemented: INK, INK_SOFT, INK_MUTED, PAGE_BG, ELEVATED_BG
+    all switch correctly between light and dark'
+  - Degree-proportional node sizing adds meaningful visual encoding beyond the spec
+    minimum
+  - Weight-based alpha (0.72–0.92) and thickness (1.45–2.35) create clear visual hierarchy
+    among connections
+  - Callout annotation highlights the longest-range arc (Alice–Jack) providing data
+    storytelling
+  - Clean theme_void with no unnecessary elements — spines, grid, and axes all removed
+    appropriately for this plot type
+  - 'Title format correct: ''Character Interactions · arc-basic · python · plotnine
+    · anyplot.ai'' with descriptive prefix'
+  - Deterministic data — no random seed needed since edge list is hardcoded
+  - geom_path with group aesthetic plus scale_size_identity/scale_alpha_identity is
+    idiomatic plotnine for multi-path arc rendering
   weaknesses:
-  - Legend somewhat isolated from main plot area on far right
-  - Weaker/shorter arcs (weight=1) could be slightly more prominent
-  - Node labels at size=16 could be slightly larger
-  image_description: The plot displays a basic arc diagram with 10 character names
-    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged along
-    a horizontal baseline on a clean white background. Curved arcs connect pairs of
-    characters above the line, with arc height proportional to the distance between
-    connected nodes. The arcs use a monochromatic navy blue color scheme — darker,
-    thicker arcs represent stronger interactions (weight 3, e.g., Alice-Bob, Carol-David)
-    while lighter, thinner arcs represent weaker ones (weight 1, e.g., Carol-Eve).
-    Nodes appear as white circles with dark navy blue borders. A color gradient legend
-    on the right shows "Interaction Strength" from Weak (light blue) to Strong (dark
-    navy). The title "Character Interactions · arc-basic · plotnine · pyplots.ai"
-    is centered at the top in bold navy, with a subtitle "Narrative connections in
-    Chapter 1 — arc thickness and color encode interaction strength." An italicized
-    gray annotation reads "Stronger connections shown with darker, thicker arcs."
-    The longest arc spans from Alice to Jack across the entire width.
+  - Callout annotation (geom_text size=3.5 mm ≈ 10pt) renders at ~7px at 400px mobile
+    width — below the readability floor; increase to size=4.5–5 mm
+  - Legend text (element_text size=7pt) renders at ~5px at mobile width — increase
+    to size=8pt to match the style-guide minimum
+  - Subtitle (element_text size=8pt) renders at ~6px at mobile width — marginal; could
+    be bumped to 9pt for safety
+  - Design excellence is functional rather than distinctive — upper canvas area above
+    the large Alice–Jack arc is empty; consider a subtle secondary annotation or tightening
+    ylim to reduce wasted whitespace
+  - 'LM-02: the implementation does not fully exploit plotnine-specific features beyond
+    geom_path/group and identity scales — could showcase annotate_lolli, stat_*, or
+    other plotnine-distinctive geoms if applicable'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "Character Interactions · arc-basic · python · plotnine · anyplot.ai" in dark bold ink, clearly readable. Subtitle in dark-secondary ink, readable. Node labels (Alice–Jack) in bold dark ink below baseline. Callout annotation "Alice-Jack: longest-range arc" in INK_SOFT at arc apex — very small (size=3.5 mm) but visible at full resolution.
+      Data: 15 arcs rendered as geom_path curves above horizontal baseline. Arc color gradient from brand green (#009E73, weak weight=1) to blue (#4467A3, strong weight=3) — imprint_seq applied correctly. Arc thickness and alpha increase with weight. Circular nodes sized by degree. Colorbar legend "Interaction Strength" with Strong/Medium/Weak labeled at break positions.
+      Legibility verdict: PASS at full resolution. MARGINAL at mobile (callout=~7px, legend text=~5px at 400px wide)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: All text flips to light ink (#F0EFE8 / #B8B7B0). Title, subtitle, node labels all clearly readable against dark background. No dark-on-dark failures observed. Legend text and title render in appropriate light ink. Callout annotation more visible in dark mode than light.
+      Data: Arc colors are identical to light render — brand green (#009E73) for weak, blue (#4467A3) for strong — Imprint palette data colors are theme-invariant as required. Node fill flips to PAGE_BG (#1A1A17) correctly. Legend background uses ELEVATED_BG (#242420).
+      Legibility verdict: PASS — no dark-on-dark issues; all chrome elements correctly theme-adapted.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, subtitle 16pt, labels
-          size=16, legend 14/12pt). All readable. Node labels slightly below 20pt
-          guideline.
+        comment: Title (12pt), node labels (5mm≈14pt), subtitle (8pt) readable at
+          full resolution. Callout annotation (3.5mm≈10pt) and legend text (7pt) fall
+          below mobile readability floor at 400px width (~7px and ~5px respectively).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Node labels evenly spaced, arcs don't obscure any
-          text.
+        comment: No text-text or text-data overlaps. Node labels spaced cleanly below
+          baseline.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Arcs well-differentiated by thickness and alpha. Weaker arcs slightly
-          thin but visible.
+        comment: All arcs clearly visible with appropriate alpha (0.72–0.92). Nodes
+          visible with degree-proportional sizing. Arc gradient clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential gradient (green→blue) is CVD-safe. No red-green
+          confusion.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Monochromatic blue gradient is colorblind-safe with good contrast
-          on white.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout (~60% utilization). Legend somewhat isolated on far right.
+        comment: Canvas 3200×1800 correct. Legend well-positioned at right. No overflow
+          or clipping. coord_cartesian provides clean margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with proper format. No axis labels needed with
-          theme_void.
+        comment: Descriptive subtitle explains arc encoding. theme_void appropriately
+          omits axis labels for network diagram. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Arc gradient uses #009E73 (brand green, Imprint pos 1) → #4467A3
+          (blue, Imprint pos 3) — correct imprint_seq. Backgrounds: #FAF8F1 light
+          / #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive navy blue scheme, intentional typography hierarchy, white-stroke
-          nodes, custom gradient. Clearly above defaults.
+        comment: 'Above default: Imprint gradient encoding, degree-proportional node
+          sizing, weight-based alpha+thickness, callout annotation. Clean and intentional
+          but not visually distinctive.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: theme_void perfectly removes chrome. Subtle baseline, generous whitespace,
-          styled legend.
+        comment: theme_void cleanly removes all chrome. Alpha blending creates depth.
+          Whitespace generous.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Visual hierarchy through arc color/thickness guides viewer. Long-range
-          arcs create visual drama. Annotation provides context.
+        comment: Three simultaneous encodings (height, thickness, color) create hierarchy.
+          Callout highlights longest-range arc as focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes along horizontal line, curved arcs above.'
+        comment: 'Correct arc diagram: nodes on horizontal line, arcs above, height
+          proportional to node distance.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: proportional arc height, semi-transparency,
-          readable labels, color/thickness by weight.'
+        comment: 'All spec features: semi-transparent arcs, readable node labels,
+          color coding by weight, arc height encodes distance.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 10 nodes correctly positioned, 15 edges correctly mapped, weights
-          properly encoded.
+        comment: 'X: node positions, arc height: distance, color+thickness: weight/strength.
+          Correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec-id · library · pyplots.ai format. Legend labels
-          Weak/Medium/Strong match data.
+        comment: Title 'Character Interactions · arc-basic · python · plotnine · anyplot.ai'
+          matches required format with optional descriptive prefix. Legend correctly
+          labeled.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +183,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows short-range and long-range arcs, multiple weights (1-3), varied
-          connectivity patterns.
+        comment: 'Demonstrates all arc diagram aspects: ordering, short/long-range
+          connections, varying weights, annotation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Character interactions in a story chapter — realistic literary analysis
-          with neutral names.
+        comment: Character interactions in a novel chapter — realistic, neutral, domain-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes (within spec range), 15 edges, weights 1-3 — sensible and
-          readable.
+        comment: 10 nodes (within 10-50 spec range), 15 edges, weights 1-3. Sensible
+          values.
     code_quality:
       score: 10
       max: 10
@@ -187,13 +207,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save. No functions or classes.
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded nodes, edges, positions.
+        comment: Data fully deterministic — hardcoded edge list, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -205,30 +225,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity.
+        comment: Clean code, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Current plotnine API.
+        comment: Saves as plot-{THEME}.png. Current plotnine 0.15.4 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert grammar-of-graphics usage: ggplot() + geom layering, aes(),
-          scale_color_gradient, guide_colorbar, scale_*_identity, coord_cartesian,
-          theme_void.'
+        comment: 'Correct grammar of graphics: multiple geom layers, proper aes mappings,
+          coord_cartesian for limits, guide_colorbar for legend customization. Idiomatic
+          plotnine.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine-distinctive features (identity scales, guide_colorbar,
-          grammar layering) but core arc rendering is manual.
+        comment: geom_path with group aesthetic for multi-path arcs is idiomatic.
+          scale_size_identity + scale_alpha_identity for pre-computed aesthetics is
+          a nice plotnine-specific technique. Continuous scale with discrete breaks
+          for colorbar legend is moderately advanced.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - custom-colormap
