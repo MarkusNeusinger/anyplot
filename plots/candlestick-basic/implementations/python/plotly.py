@@ -1,49 +1,57 @@
-""" pyplots.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: plotly 6.5.2 | Python 3.14.3
-Quality: 95/100 | Updated: 2026-02-24
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-30
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data - 30 trading days of simulated stock prices
+# Theme tokens (Imprint palette chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint semantic colors: finance gain→green, loss→red
+BULL_COLOR = "#009E73"  # Imprint position 1
+BEAR_COLOR = "#AE3030"  # Imprint position 5
+
+# Data — 30 trading days of ACME Corp simulated prices
 np.random.seed(42)
 dates = pd.date_range(start="2024-01-02", periods=30, freq="B")
 
-# Generate realistic price movement starting at $150 (rally, pullback, recovery)
 price = 150.0
-drift = [0.4] * 8 + [-0.5] * 12 + [0.35] * 10
+drift = [0.4] * 8 + [-0.5] * 12 + [0.6] * 10  # rally, pullback, stronger recovery
 opens, highs, lows, closes = [], [], [], []
 
 for i in range(30):
     open_price = price
     change = np.random.randn() * 2.5 + drift[i]
     close_price = open_price + change
-
     high_price = max(open_price, close_price) + abs(np.random.randn()) * 1.8
     low_price = min(open_price, close_price) - abs(np.random.randn()) * 1.8
-
     opens.append(open_price)
     highs.append(high_price)
     lows.append(low_price)
     closes.append(close_price)
-
     price = close_price
 
-df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
-
-# Identify rally peak and pullback low for annotations
+df = pd.DataFrame({"date": dates.strftime("%Y-%m-%d"), "open": opens, "high": highs, "low": lows, "close": closes})
 peak_idx = df["high"].idxmax()
 low_idx = df["low"].idxmin()
 
-# Colorblind-safe palette: blue for bullish, warm red-orange for bearish
-BULL_COLOR = "#306998"
-BEAR_COLOR = "#C0392B"
+# Title with length-scaled fontsize (default 16px at 67 chars)
+title_text = "ACME Corp Daily Prices · candlestick-basic · python · plotly · anyplot.ai"
+title_fs = max(round(16 * 67 / len(title_text)), 11)
 
-# Create candlestick chart
+# Candlestick trace
 fig = go.Figure(
     data=[
         go.Candlestick(
@@ -66,7 +74,8 @@ fig = go.Figure(
     ]
 )
 
-# Annotations for data storytelling - mark the rally peak and pullback low
+# Key price annotations
+ann_font = {"size": 10, "color": INK, "family": "Arial"}
 fig.add_annotation(
     x=df.loc[peak_idx, "date"],
     y=df.loc[peak_idx, "high"],
@@ -74,16 +83,15 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowwidth=1.5,
-    arrowcolor="#555",
+    arrowcolor=INK_SOFT,
     ax=40,
     ay=-45,
-    font={"size": 15, "color": "#333", "family": "Arial"},
-    bgcolor="rgba(255,255,255,0.85)",
-    bordercolor="#999",
+    font=ann_font,
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=5,
 )
-
 fig.add_annotation(
     x=df.loc[low_idx, "date"],
     y=df.loc[low_idx, "low"],
@@ -91,91 +99,85 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowwidth=1.5,
-    arrowcolor="#555",
+    arrowcolor=INK_SOFT,
     ax=-40,
     ay=50,
-    font={"size": 15, "color": "#333", "family": "Arial"},
-    bgcolor="rgba(255,255,255,0.85)",
-    bordercolor="#999",
+    font=ann_font,
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=5,
 )
 
-# Subtle shaded regions to delineate market phases
+# Market phase shaded regions
+phase_font = {"size": 10, "color": INK_SOFT, "family": "Arial"}
+date_strs = df["date"].tolist()
 fig.add_vrect(
-    x0=dates[0],
-    x1=dates[7],
+    x0=date_strs[0],
+    x1=date_strs[7],
     fillcolor=BULL_COLOR,
-    opacity=0.04,
+    opacity=0.05,
     line_width=0,
     annotation_text="Rally",
     annotation_position="top left",
-    annotation_font={"size": 13, "color": "#888", "family": "Arial"},
+    annotation_font=phase_font,
 )
 fig.add_vrect(
-    x0=dates[8],
-    x1=dates[19],
+    x0=date_strs[8],
+    x1=date_strs[19],
     fillcolor=BEAR_COLOR,
-    opacity=0.04,
+    opacity=0.05,
     line_width=0,
     annotation_text="Pullback",
     annotation_position="top left",
-    annotation_font={"size": 13, "color": "#888", "family": "Arial"},
+    annotation_font=phase_font,
 )
 fig.add_vrect(
-    x0=dates[20],
-    x1=dates[29],
+    x0=date_strs[20],
+    x1=date_strs[29],
     fillcolor=BULL_COLOR,
-    opacity=0.04,
+    opacity=0.05,
     line_width=0,
     annotation_text="Recovery",
     annotation_position="top left",
-    annotation_font={"size": 13, "color": "#888", "family": "Arial"},
+    annotation_font=phase_font,
 )
 
-# Layout
 fig.update_layout(
+    autosize=False,
+    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"family": "Arial", "color": INK},
     title={
-        "text": (
-            "<b>ACME Corp Daily Prices</b>"
-            "<br><span style='color:#777;font-size:15px;font-weight:normal'>"
-            "candlestick-basic · plotly · pyplots.ai</span>"
-        ),
-        "font": {"size": 28, "color": "#222", "family": "Arial"},
+        "text": title_text,
+        "font": {"size": title_fs, "color": INK, "family": "Arial"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.95,
     },
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22, "color": "#444", "family": "Arial"}},
-        "tickfont": {"size": 18, "color": "#555", "family": "Arial"},
+        "title": {"text": "Date", "font": {"size": 12, "color": INK, "family": "Arial"}},
+        "tickfont": {"size": 10, "color": INK_SOFT, "family": "Arial"},
         "tickformat": "%b %d",
         "rangeslider": {"visible": False},
         "rangebreaks": [{"bounds": ["sat", "mon"]}],
         "showgrid": False,
-        "linecolor": "#ccc",
-        "linewidth": 1,
+        "showline": False,
+        "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Price (USD)", "font": {"size": 22, "color": "#444", "family": "Arial"}},
-        "tickfont": {"size": 18, "color": "#555", "family": "Arial"},
+        "title": {"text": "Price (USD)", "font": {"size": 12, "color": INK, "family": "Arial"}},
+        "tickfont": {"size": 10, "color": INK_SOFT, "family": "Arial"},
         "tickprefix": "$",
-        "gridcolor": "rgba(180, 180, 180, 0.2)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
-        "linecolor": "#ccc",
-        "linewidth": 1,
+        "showline": False,
     },
-    template="plotly_white",
-    plot_bgcolor="#FAFAFA",
-    paper_bgcolor="white",
-    margin={"l": 90, "r": 50, "t": 110, "b": 80},
-    hoverlabel={"bgcolor": "white", "font_size": 14, "bordercolor": "#ccc"},
-    font={"family": "Arial"},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 10, "bordercolor": INK_SOFT},
 )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save — 3200×1800 landscape (width=800 × scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
