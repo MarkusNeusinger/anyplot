@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -106,7 +106,7 @@ chart.options.chart = {
     "marginBottom": 160,
     "marginLeft": 220,
     "marginRight": 80,
-    "marginTop": 140,
+    "marginTop": 110,
     "style": {"fontFamily": "'Segoe UI', Arial, sans-serif"},
 }
 
@@ -138,8 +138,8 @@ chart.options.y_axis = {
             "color": "rgba(174,48,48,0.07)",
             "label": {
                 "text": f"Trough → ${trough_price:.2f}",
-                "align": "right",
-                "x": -12,
+                "align": "left",
+                "x": 12,
                 "style": {"fontSize": "32px", "color": BEAR_COLOR, "fontStyle": "italic"},
             },
         }
@@ -154,7 +154,7 @@ chart.options.legend = {
     "x": -50,
     "y": 50,
     "floating": True,
-    "itemStyle": {"fontSize": "36px", "fontWeight": "400", "color": INK_SOFT},
+    "itemStyle": {"fontSize": "44px", "fontWeight": "400", "color": INK_SOFT},
     "backgroundColor": ELEVATED_BG,
     "borderColor": INK_SOFT,
     "borderWidth": 1,
