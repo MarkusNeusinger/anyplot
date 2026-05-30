@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-05-30
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-30
 """
 
 import os
