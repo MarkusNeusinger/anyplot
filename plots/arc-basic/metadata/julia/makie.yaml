@@ -1,0 +1,270 @@
+library: makie
+language: julia
+specification_id: arc-basic
+created: '2026-05-30T01:10:45Z'
+updated: '2026-05-30T01:30:33Z'
+generated_by: claude-sonnet
+workflow_run: 26669886644
+issue: 991
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Correct arc diagram: nodes on horizontal baseline, semi-circular arcs with height
+    proportional to inter-node distance'
+  - 'Dual encoding: arc linewidth and alpha both vary with edge weight, creating intuitive
+    visual hierarchy'
+  - Color coding separates within-group (brand green) from cross-group (lavender)
+    connections using Imprint palette positions 1-2
+  - 'Fully theme-adaptive chrome: PAGE_BG, INK, INK_SOFT all flip correctly — warm
+    off-white light / warm near-black dark, both readable'
+  - All spines removed, no grid, clean baseline — minimal chrome done right
+  - Realistic research-collaboration scenario with 3 groups, 12 nodes, 17 weighted
+    edges — neutral and plausible
+  - 'Perfect code quality: KISS structure, deterministic data, clean imports, correct
+    save API'
+  - Makie-idiomatic typed legend with LineElement and MarkerElement entries, colsize!
+    layout management
+  weaknesses:
+  - Legend column (fig[1,2]) renders at only 20% of canvas width — at px_per_unit=2
+    the column is ~640px wide, which is adequate, but the compact legend with framevisible=false
+    may appear faint or hard to spot at glance; consider increasing labelsize to 13-14
+    and titlesize to 15 for better legend legibility
+  - Lower canvas area below node labels (~15-18% of height) is unused empty space
+    — tighten ylims lower bound from -0.65 to -0.50 to reclaim vertical space
+  - 'The cross-group arcs (ACCENT lavender #C475FD) rendered at alpha 0.40-0.50 on
+    cream background are barely distinguishable from the within-group green arcs visually
+    — the lavender hue washes out significantly at low alpha; slightly increasing
+    cross-group alpha to 0.55-0.65 would improve type differentiation'
+  - 'DE-01/DE-03: design is clean but could add more storytelling punch — e.g. a subtle
+    group-bracket annotation or a thin shaded region below groups A/B/C to make the
+    three clusters more immediately legible without reading the legend'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
+      Chrome: Title "arc-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly legible at top-center. No axis tick labels (correctly suppressed for arc diagram). Node labels (Alice through Leo) in INK_SOFT (#4A4A44) below baseline — readable. Horizontal baseline in INK_SOFT.
+      Data: 17 arcs rendered in Imprint brand green (#009E73) for within-group connections and lavender (#C475FD) for cross-group connections. Opacity and linewidth both scale with edge weight (0.40-0.80 alpha, 1.5-3.5px linewidth). Node markers in brand green with PAGE_BG stroke. The Alice-to-Leo long-range arc sweeps prominently across the upper half. Three within-group clusters are visually apparent from the density of short arcs. Legend column on right appears compact/faint at display scale.
+      Legibility verdict: PASS — all chrome readable against warm off-white background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly visible. Node labels in INK_SOFT (#B8B7B0) — readable against near-black background. Baseline in light INK_SOFT. No dark-on-dark failures detected.
+      Data: Arc colors identical to light render — brand green within-group and lavender cross-group arcs, same weight-encoded opacity and linewidth. Data colors have not flipped between themes. Node markers in brand green with near-black stroke.
+      Legibility verdict: PASS — all chrome adapts correctly to dark surface, no dark-on-dark failures, brand green remains clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set (titlesize=20, node labels fontsize=13,
+          legend 12-13). Readable in both themes. Minor: node labels slightly small
+          at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 node labels evenly spaced, no collisions. Title does not overlap
+          data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Weight-5 within-group arcs prominently visible. Weight-1 cross-group
+          arcs (alpha=0.40, lw=1.5) intentionally de-emphasized but still distinguishable.
+          Node markers markersize=16 appropriate for 12 nodes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green and lavender have sufficient luminance difference. CVD-safe
+          Imprint palette. Redundant linewidth encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Arc diagram utilizes canvas well horizontally. Lower ~15% below node
+          labels is empty dead space. Legend column compact but present.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Arc diagrams have no conventional axis labels. Title arc-basic ·
+          julia · makie · anyplot.ai is correct and well-sized.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 brand green. Second category #C475FD Imprint
+          position 2. Backgrounds #FAF8F1 / #1A1A17. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: Imprint palette, weight-encoded opacity+linewidth,
+          clean layout. Not yet publication-ready — no group-level structural cues
+          or annotation layer.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, weight-varying alpha, node dots with
+          background-color stroke. Clean baseline. Very refined for the plot type.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color + weight encoding creates clear hierarchy. Three within-group
+          clusters emerge visually. Long-range Alice-Leo arc prominent. Story readable
+          but no explicit group annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct arc diagram: nodes on horizontal baseline, semi-circular
+          arcs above, height proportional to inter-node distance.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent arcs, node labels, color coding by edge type, weight
+          encoding — all spec features implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 12 nodes along baseline, all 17 edges rendered as arcs. Correct
+          spatial layout.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title arc-basic · julia · makie · anyplot.ai matches spec format.
+          Legend with LineElement/MarkerElement entries correctly labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows short-range and long-range connections, within-group and cross-group
+          edges, varying edge weights, 3-group structure — all arc diagram features
+          covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Research collaboration network with named researchers and co-authorship
+          links — neutral, real-world plausible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 nodes and 17 edges appropriate for readability. 3 balanced groups
+          of 4. Edge weights 1-5 reasonable.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: tokens → data → figure → arcs → baseline
+          → nodes → labels → legend → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all edges and node names are hardcoded constants.
+          No randomness needed.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for manual arc computation. Clean, no fake
+          UI, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2. Uses size= (modern Makie
+          0.21+ API, not deprecated resolution=).
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct use of Figure/Axis/plot primitives, Legend with typed elements,
+          colsize! layout. Arc geometry is manual parametric math rather than any
+          Makie graph recipe.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Typed LineElement/MarkerElement legend entries, (color, alpha) tuple
+          syntax, colsize!(fig.layout, Relative(...)) layout management — all Makie-specific
+          patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
