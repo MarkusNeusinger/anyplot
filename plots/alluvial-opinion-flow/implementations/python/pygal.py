@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-30
@@ -182,7 +182,7 @@ chart = pygal.StackedBar(
     width=3200,
     height=1800,
     style=custom_style,
-    title="alluvial-opinion-flow · pygal · anyplot.ai",
+    title="alluvial-opinion-flow · python · pygal · anyplot.ai",
     x_title="Renewable Energy Policy Survey · 1,000 Respondents Tracked Quarterly",
     show_legend=True,
     legend_at_bottom=True,
@@ -255,7 +255,7 @@ for g in root.iter(f"{SVG}g"):
         bar_idx += 1
 
 # Narrow bars to alluvial node columns with theme-adaptive separator strokes
-NODE_WIDTH = 100
+NODE_WIDTH = 130
 for _si, _bi, _x, _y, _w, _h, cx, rect in bar_info:
     new_x = cx - NODE_WIDTH / 2
     rect.set("x", f"{new_x:.2f}")
@@ -401,7 +401,7 @@ if plot_group is not None:
 label_group = ET.SubElement(root, f"{SVG}g")
 label_group.set("id", "flow-labels")
 for mid_x, mid_y, count, src_idx in flow_label_positions:
-    pill_w, pill_h = 64, 30
+    pill_w, pill_h = 80, 38
     pill = ET.SubElement(label_group, f"{SVG}rect")
     pill.set("x", f"{mid_x - pill_w / 2:.1f}")
     pill.set("y", f"{mid_y - pill_h / 2:.1f}")
@@ -418,7 +418,7 @@ for mid_x, mid_y, count, src_idx in flow_label_positions:
     label.set("x", f"{mid_x:.1f}")
     label.set("y", f"{mid_y + 8:.1f}")
     label.set("text-anchor", "middle")
-    label.set("font-size", "26")
+    label.set("font-size", "34")
     label.set("font-weight", "bold")
     label.set("font-family", "'DejaVu Sans', 'Segoe UI', sans-serif")
     label.set("fill", cat_colors[src_idx])
@@ -448,7 +448,7 @@ html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>alluvial-opinion-flow · pygal · anyplot.ai</title>
+    <title>alluvial-opinion-flow · python · pygal · anyplot.ai</title>
     <style>
         body {{ margin: 0; padding: 20px; background: {PAGE_BG}; font-family: sans-serif; }}
         .container {{ max-width: 100%; margin: 0 auto; }}
