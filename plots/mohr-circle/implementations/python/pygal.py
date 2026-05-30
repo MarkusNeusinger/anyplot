@@ -1,18 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-02-27
+Quality: 85/100 | Updated: 2026-05-30
 """
 
+import importlib.util
+import os
+import sys
+
 import numpy as np
-import pygal
-from pygal.style import Style
 
 
-# Data - 2D stress state for a steel beam under combined loading
-sigma_x = 80  # Normal stress in x-direction (MPa)
-sigma_y = -30  # Normal stress in y-direction (MPa)
-tau_xy = 40  # Shear stress on xy-plane (MPa)
+# Ensure we import the installed pygal package, not this file
+pygal_spec = importlib.util.find_spec("pygal")
+if pygal_spec and pygal_spec.origin != __file__:
+    import pygal
+    from pygal.style import Style
+else:
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+    sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
+    try:
+        import pygal
+        from pygal.style import Style
+    finally:
+        sys.path.insert(0, _script_dir)
+
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Data — concrete column under eccentric axial load + lateral shear
+# Differentiated stress state from sibling implementations
+sigma_x = 110  # Normal stress in x-direction (MPa) — axial + bending
+sigma_y = -10  # Normal stress in y-direction (MPa) — transverse compression
+tau_xy = 30  # Shear stress on xy-plane (MPa) — lateral force
 
 # Mohr's Circle parameters
 center = (sigma_x + sigma_y) / 2
@@ -26,23 +52,23 @@ theta_p2 = np.degrees(np.arctan2(tau_xy, (sigma_x - sigma_y) / 2))
 theta = np.linspace(0, 2 * np.pi, 200)
 circle_pts = [(float(center + radius * np.cos(t)), float(radius * np.sin(t))) for t in theta]
 
-# Reference stress points
+# Reference stress points on the circle
 point_a = (float(sigma_x), float(tau_xy))
 point_b = (float(sigma_y), float(-tau_xy))
 
-# 2θp angle arc (large radius for clear visibility)
-arc_r = radius * 0.45
-arc_angles = np.linspace(0, np.radians(theta_p2), 40)
+# 2θp angle arc — larger radius fraction for clear visibility against the circle
+arc_r = radius * 0.58
+arc_angles = np.linspace(0, np.radians(theta_p2), 50)
 arc_pts = [(float(center + arc_r * np.cos(a)), float(arc_r * np.sin(a))) for a in arc_angles]
 
-# Axis ranges - tight around circle with balanced padding
-padding = 20
-y_min = -(radius + padding)
-y_max = radius + padding
+# Axis ranges — tight around circle with balanced padding
+padding = 18
 x_min = float(sigma_2 - padding)
 x_max = float(sigma_1 + padding)
+y_min = -(radius + padding)
+y_max = radius + padding
 
-# Reference lines through center (combined into one series)
+# Reference lines through center (horizontal σ-axis + vertical at center)
 ref_lines = [
     (float(x_min), 0.0),
     (float(x_max), 0.0),
@@ -51,37 +77,40 @@ ref_lines = [
     (float(center), float(y_max)),
 ]
 
-# Refined colorblind-safe palette with strong contrast
+# colors[0] = INK_MUTED for structural reference lines (neutral anchor, theme-adaptive)
+# colors[1:] = Imprint palette, so Mohr's Circle = #009E73 (brand green, first categorical)
+custom_colors = (INK_MUTED,) + IMPRINT_PALETTE[:5]
+
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#2B2B2B",
-    foreground_strong="#1A1A1A",
-    foreground_subtle="#D8D8D8",
-    colors=("#B0B0B0", "#1B6692", "#D4761C", "#0E7C6B", "#4A3D8F", "#B5342B"),
-    title_font_size=48,
-    label_font_size=34,
-    major_label_font_size=30,
-    legend_font_size=26,
-    value_font_size=22,
-    tooltip_font_size=22,
-    stroke_width=3,
-    opacity=0.92,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=custom_colors,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    tooltip_font_size=30,
+    stroke_width=2.5,
+    opacity=0.95,
     opacity_hover=1.0,
 )
 
-# Square canvas (3600×3600) for guaranteed equal aspect ratio — circle appears as true circle
+# Square canvas — equal aspect ratio ensures the circle appears as a true circle
 chart = pygal.XY(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="mohr-circle · pygal · pyplots.ai",
+    title="mohr-circle · python · pygal · anyplot.ai",
     x_title="Normal Stress σ (MPa)",
     y_title="Shear Stress τ (MPa)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
-    dots_size=6,
+    dots_size=5,
     stroke=True,
     show_x_guides=True,
     show_y_guides=True,
@@ -94,41 +123,41 @@ chart = pygal.XY(
     js=[],
 )
 
-# Reference lines through center (plotted first, behind data)
+# Reference lines through center (neutral structural layer — drawn behind data)
 chart.add(
-    f"Reference axes (σ={center:.0f} MPa)",
+    f"Reference axes (σ_c = {center:.0f} MPa)",
     ref_lines,
     stroke=True,
     dots_size=0,
-    stroke_style={"width": 2, "dasharray": "12, 6"},
+    stroke_style={"width": 2, "dasharray": "10, 6"},
     show_dots=False,
     allow_interruptions=True,
 )
 
-# Mohr's Circle outline
+# Mohr's Circle outline — first categorical series → brand green #009E73
 chart.add("Mohr's Circle", circle_pts, stroke=True, dots_size=0, stroke_style={"width": 5}, fill=False)
 
 # Stress points A and B with diameter line
 chart.add(
     f"A({sigma_x}, {tau_xy})  B({sigma_y}, {int(-tau_xy)})",
     [
-        {"value": point_a, "label": f"A: σx={sigma_x}, τxy={tau_xy} MPa"},
-        {"value": point_b, "label": f"B: σy={sigma_y}, τxy={int(-tau_xy)} MPa"},
+        {"value": point_a, "label": f"A: σx = {sigma_x} MPa, τxy = {tau_xy} MPa"},
+        {"value": point_b, "label": f"B: σy = {sigma_y} MPa, τxy = {int(-tau_xy)} MPa"},
     ],
     stroke=True,
-    dots_size=16,
-    stroke_style={"width": 3, "dasharray": "10, 5"},
+    dots_size=14,
+    stroke_style={"width": 3, "dasharray": "8, 5"},
 )
 
 # Principal stresses on horizontal axis
 chart.add(
-    f"σ₁={sigma_1:.1f}, σ₂={sigma_2:.1f} MPa",
+    f"σ₁ = {sigma_1:.1f}, σ₂ = {sigma_2:.1f} MPa",
     [
-        {"value": (float(sigma_1), 0.0), "label": f"σ₁ = {sigma_1:.1f} MPa (max normal)"},
-        {"value": (float(sigma_2), 0.0), "label": f"σ₂ = {sigma_2:.1f} MPa (min normal)"},
+        {"value": (float(sigma_1), 0.0), "label": f"σ₁ = {sigma_1:.1f} MPa (max principal)"},
+        {"value": (float(sigma_2), 0.0), "label": f"σ₂ = {sigma_2:.1f} MPa (min principal)"},
     ],
     stroke=False,
-    dots_size=18,
+    dots_size=16,
 )
 
 # Max shear stress at top and bottom of circle
@@ -139,12 +168,13 @@ chart.add(
         {"value": (float(center), float(-tau_max)), "label": f"τ_max = −{tau_max:.1f} MPa"},
     ],
     stroke=False,
-    dots_size=18,
+    dots_size=16,
 )
 
-# 2θp angle arc with bold stroke for clear visibility
-chart.add(f"2θp = {theta_p2:.1f}°", arc_pts, stroke=True, dots_size=0, stroke_style={"width": 8})
+# 2θp angle arc — bold stroke, larger radius for strong visibility
+chart.add(f"2θp = {theta_p2:.1f}°", arc_pts, stroke=True, dots_size=0, stroke_style={"width": 9})
 
-# Save
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Save — theme-suffixed filenames required by pipeline
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
