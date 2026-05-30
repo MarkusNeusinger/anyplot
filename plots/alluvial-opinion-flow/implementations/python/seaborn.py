@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -52,8 +52,13 @@ category_colors = {
     "Strongly Oppose": "#AE3030",
 }
 
-# Desaturated variants for changing flows (seaborn-native desaturation)
-changer_colors = {cat: sns.desaturate(col, 0.5) for cat, col in category_colors.items()}
+# Desaturated variants for changing flows (seaborn-native desaturation — lower ratio = more muted)
+changer_colors = {cat: sns.desaturate(col, 0.35) for cat, col in category_colors.items()}
+
+# Label colors — lighter red for Strongly Oppose on dark surface to improve contrast
+label_colors = dict(category_colors)
+if THEME == "dark":
+    label_colors["Strongly Oppose"] = "#E06060"
 
 # Counts per category at each wave (row=category, col=wave; total=1000 per wave)
 # Gradual drift: skeptics convert as AI diagnostics prove effective across trials
@@ -191,15 +196,17 @@ for wave_idx, wave in enumerate(waves):
 
         count_val = counts[cat_idx, wave_idx]
         if wave_idx == 0:
+            # Single-line for short nodes (≤ 8% of total) to prevent crowding
+            label_text = f"{category} (n={count_val})" if height <= 8 else f"{category}\n(n={count_val})"
             ax.text(
                 x - bar_width / 2 - 0.15,
                 (y_bottom + y_top) / 2,
-                f"{category}\n(n={count_val})",
+                label_text,
                 ha="right",
                 va="center",
                 fontsize=6.5,
                 fontweight="bold",
-                color=category_colors[category],
+                color=label_colors[category],
             )
         elif wave_idx == n_waves - 1:
             ax.text(
@@ -210,7 +217,7 @@ for wave_idx, wave in enumerate(waves):
                 va="center",
                 fontsize=6.5,
                 fontweight="bold",
-                color=category_colors[category],
+                color=label_colors[category],
             )
         elif height > 9:
             ax.text(
@@ -278,7 +285,7 @@ for flow_idx, flow_dict in enumerate(flows):
             Path.CLOSEPOLY,
         ]
         is_stable = source_cat == target_cat
-        alpha = 0.58 if is_stable else 0.35
+        alpha = 0.58 if is_stable else 0.25
         color = category_colors[source_cat] if is_stable else changer_colors[source_cat]
         ax.add_patch(
             mpatches.PathPatch(Path(verts, codes), facecolor=color, edgecolor=color, linewidth=0.3, alpha=alpha)
