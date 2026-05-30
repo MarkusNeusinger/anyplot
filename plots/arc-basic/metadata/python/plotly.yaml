@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: arc-basic
 created: '2025-12-23T08:49:38Z'
-updated: '2026-05-30T01:00:58Z'
+updated: '2026-05-30T01:09:52Z'
 generated_by: claude-sonnet
 workflow_run: 26669462570
 issue: 991
@@ -12,46 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Custom arc construction from scratch using parametric parabolas — genuinely creative
-    use of go.Scatter for a chart type not natively in Plotly
-  - Interactive filter buttons (updatemenus) cleanly toggle between all/strong/medium/weak
-    arcs — a distinctively Plotly feature
-  - 'Multiple redundant encodings: arc height (distance), color (strength), line width
-    (strength), alpha (density management) — well-thought-out visual design'
-  - 'Perfect spec compliance: all required features (nodes, edges, weights, height
-    proportional to distance, semi-transparency, readable labels, color coding) are
-    implemented'
-  - Theme adaptation is thorough — backgrounds, text tokens, legend, annotation, and
-    button colors all flip correctly between light and dark
+  - Correct arc diagram with parabolic curves whose height scales with node distance,
+    faithfully matching the spec.
+  - Imprint palette positions 1→3 used in canonical order with appropriate transparency
+    per tier; both renders fully theme-adapted.
+  - '`updatemenus` filter buttons (All / Strong / Medium / Weak) showcase Plotly''s
+    interactive capability distinctively.'
+  - '''Longest range'' annotation provides immediate visual storytelling without clutter.'
+  - Redundant encoding (color + line width) makes arc tiers distinguishable without
+    relying on hue alone.
   weaknesses:
-  - 'Palette order violation: arc colors use Imprint positions 1, 6, 3 (green, cyan,
-    blue) instead of canonical 1, 2, 3 (green, lavender, blue). Fix: change arc_styles[2]
-    color from rgba(42, 188, 205, 0.82) (#2ABCCD, cyan) to rgba(196, 117, 253, 0.82)
-    (#C475FD, Imprint position 2 lavender) to restore canonical ordering.'
-  - The All button active state in dark mode renders with Plotly default bright-white
-    highlight, which is visually jarring against dark chrome — manage button active
-    state appearance for dark theme.
-  - Design sophistication falls just below the 90-point threshold — slightly more
-    polished typographic hierarchy (bold title, lighter subtitle) would push past
-    it.
+  - Subtitle at font-size:11px (44px rendered) is the smallest text element; slightly
+    at risk on mobile at ~400px width — consider bumping to 12–13px.
+  - 'DE-01 could be stronger: arc strength tier differentiation relies on subtle width
+    increments (3.5/4.5/6.0) that are visually similar at a glance — widening the
+    range to ~2/5/8 would make Weak vs Strong immediately scannable.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "Character Interactions · arc-basic · python · plotly · anyplot.ai" centered at top in dark INK (#1A1A17), clearly readable. Muted subtitle in INK_MUTED below. Node labels (Alice through Jack) in dark INK at bottom of baseline. Legend text in INK_SOFT. Annotation "longest range" in INK_MUTED. Filter button labels in INK.
-      Data: Arcs in three Imprint palette colors — green #009E73 (weak, weight 1), cyan #2ABCCD (medium, weight 2), blue #4467A3 (strong, weight 3) — with semi-transparency (0.65/0.82/0.95 alpha) and increasing line widths (3.5/4.5/6.0). Node circles with ELEVATED_BG fill and INK border. Horizontal baseline in INK_SOFT.
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "Character Interactions · arc-basic · python · plotly · anyplot.ai" centered in dark ink, fully readable. Subtitle "Story narrative · 10 characters · 12 connections" in INK_MUTED at 11px — readable at desktop. Node labels (Alice through Jack) in 14px dark ink along the baseline — all readable. Filter buttons (All/Strong/Medium/Weak) in top-left with ink borders. Legend "Connection Strength" top-right with elevated #FFFDF6 fill. "longest range" annotation with arrow in INK_MUTED.
+      Data: Brand green rgba(0,158,115,0.65) for Weak arcs (Imprint pos 1), lavender rgba(196,117,253,0.82) for Medium (pos 2), blue rgba(68,103,163,0.95) for Strong (pos 3). Node circles with #FFFDF6 elevated fill and ink border. Horizontal baseline in INK_SOFT.
+      Legibility verdict: PASS — all text clearly readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, not pure black
-      Chrome: Title and subtitle appear in light-colored text (#F0EFE8 / INK for dark theme), clearly readable against dark surface. Node labels appear in light INK. Legend box uses ELEVATED_BG (#242420) with light-colored text. Annotation "longest range" is visible. Filter button text is readable. The active "All" button shows a brighter/lighter background (Plotly default active state) which is slightly jarring but does not obscure any text or cause dark-on-dark failure.
-      Data: Arc colors are identical to light render — same green, cyan, and blue hues with same opacity and width values. Node circles visible with light-colored text labels. First series (weak/green) is still #009E73 — reads well on dark surface.
-      Legibility verdict: PASS — all text elements readable against warm near-black background; no dark-on-dark failures detected; brand green #009E73 clearly visible
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title and subtitle text in light cream #F0EFE8 — fully readable. Node labels in #F0EFE8 — readable. Filter buttons with #242420 elevated fill and #B8B7B0 borders — visible. Legend in #242420 elevated fill with #B8B7B0 border. "longest range" annotation text in #A8A79F (INK_MUTED dark) — readable. No dark-on-dark failures observed.
+      Data: Arc colors identical to light render — brand green, lavender, blue — Imprint data colors constant across themes as required.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,49 +52,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; readable in both themes; minor: node
-          labels at 14px slightly small at mobile 400px scale'
+        comment: All font sizes explicitly set; subtitle at 11px marginally small
+          on mobile
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No harmful overlap; arc-on-arc overlap is intentional design
+        comment: No text collisions anywhere in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arc widths 3.5/4.5/6.0 at scale=4 clearly visible; node markers size=20
-          prominent
+        comment: Arcs and node markers clearly visible with appropriate sizing and
+          alpha
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette colors with line-thickness redundant encoding
+        comment: Redundant encoding via line width; CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas; correct margins; bottom ~15% empty below node labels,
-          normal for arc diagram
+        comment: 3200x1800 canvas, well-utilized margins, no crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with prefix; axes intentionally hidden; subtitle
-          provides data context
+        comment: No axis labels appropriate for arc diagram; title descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correct #009E73; backgrounds theme-correct; but arc
-          colors use Imprint positions 1,6,3 instead of canonical 1,2,3 (cyan #2ABCCD
-          used instead of lavender #C475FD at position 2)'
+        passed: true
+        comment: 'Imprint positions 1-3 in canonical order; backgrounds #FAF8F1/#1A1A17;
+          chrome fully theme-adapted'
     design_excellence:
       score: 13
       max: 20
@@ -111,22 +101,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clearly above defaults: custom arc construction, multiple encoding
-          channels, interactive controls, subtitle; not yet at full publication quality'
+        comment: 'Above default: thoughtful opacity/width per tier, elevated nodes,
+          interactive buttons, subtitle context'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes hidden, no grid, subtle baseline, clean hollow nodes, themed
-          legend border; good refinement
+        comment: 'Clean: all axes hidden, no grid, elevated node fills, theme-adaptive
+          all elements'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arc height encodes distance; color+thickness encode strength; longest-range
-          annotation; interactive filter enables exploration
+        comment: Longest-range annotation + interactive filter buttons enable story
+          exploration
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct arc diagram with horizontal nodes and parabolic arcs; height
-          proportional to distance
+        comment: 'Correct arc diagram: nodes on horizontal line, arcs above, height
+          proportional to distance'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: nodes, edges, weights, height~distance,
-          semi-transparency, labels, color coding'
+        comment: 'All features present: nodes, weighted edges, proportional arc height,
+          semi-transparency, labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x-positions encode node order; y-positions encode arc height; all
-          10 nodes and 12 edges represented
+        comment: All 10 nodes and 12 edges correctly rendered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Character Interactions · arc-basic · python · plotly · anyplot.ai'
-          with correct descriptive prefix; legend labels match encoding
+        comment: Title follows {Descriptive} · arc-basic · python · plotly · anyplot.ai
+          format; legend correct
     data_quality:
       score: 15
       max: 15
@@ -168,22 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all arc diagram aspects: varying heights, three strength levels,
-          clustered and sparse connections, distinguished long-range arc'
+        comment: Full range of distances and all three weight tiers shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Character interactions in story narrative (fictional characters,
-          neutral domain)
+        comment: Story narrative with character interactions — real, neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes (within spec 10-50 range); 12 edges; weight values 1-3 produce
-          visually distinguishable encodings
+        comment: 10 nodes within spec range, 12 connections with balanced variety
     code_quality:
       score: 10
       max: 10
@@ -193,65 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: tokens -> data -> figure -> traces -> layout ->
-          save; no functions or classes'
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random elements
+        comment: Data hardcoded, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only sys, os, numpy, plotly.graph_objects; all used
+        comment: All imports used, none extraneous
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration over edges; arc style dict; dummy traces for legend
-          is idiomatic; updatemenus is real interactivity
+        comment: Clean Pythonic code, elegant updatemenus logic, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; autosize=False with
-          explicit width=800 height=450 scale=4
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Plotly: go.Scatter for arcs and nodes, add_shape for baseline,
-          add_annotation for callout, updatemenus for filter, hovertemplate+customdata,
-          write_image+write_html'
+        comment: Correct go.Scatter, add_shape, add_annotation, hovertemplate, customdata
+          usage
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: updatemenus button-based trace visibility toggling (distinctively
-          Plotly); rich hovertemplate with customdata; full interactive HTML output
-  verdict: REJECTED
+        comment: updatemenus with dynamic trace visibility toggling is genuinely Plotly-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
+  - interactive-filtering
   patterns:
   - iteration-over-groups
-  - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
