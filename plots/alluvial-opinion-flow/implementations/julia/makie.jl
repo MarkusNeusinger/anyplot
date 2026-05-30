@@ -111,7 +111,9 @@ for pair in 1:(N_WAVES - 1)
             dst_used[pair][dst] += v
             push!(flow_polys,  bezier_strip(x0r, s_lo, s_hi, x1l, d_lo, d_hi))
             c = CAT_COLORS[src]
-            push!(flow_colors, (RGBf(Float32(red(c)), Float32(green(c)), Float32(blue(c))), 0.32f0))
+            # stable respondents (same category) get higher opacity to stand out from changers
+            alpha = src == dst ? 0.65f0 : 0.27f0
+            push!(flow_colors, (RGBf(Float32(red(c)), Float32(green(c)), Float32(blue(c))), alpha))
         end
     end
 end
@@ -160,7 +162,7 @@ for w in 1:N_WAVES
         text!(ax, WAVE_XS[w], (yl + yh) / 2;
               text     = string(wave_counts[w][cat]),
               align    = (:center, :center),
-              fontsize = 12,
+              fontsize = 10,
               color    = colorant"#FFFDF6",
               font     = :bold,
         )
@@ -197,7 +199,33 @@ for (i, cat) in enumerate(categories)
     )
 end
 
-xlims!(ax, 0.3, 7.7)
+# Net change annotations (Wave 1 → Wave 3) — reveals polarization trend
+net_changes = w3 .- w1
+annotation_x = WAVE_XS[3] + NODE_W / 2 + 0.08
+text!(ax, annotation_x, y_max + 80;
+      text  = "W1→W3",
+      align = (:left, :center),
+      fontsize = 9,
+      color    = INK_SOFT,
+      font     = :bold,
+)
+for cat in 1:N_CATS
+    yl = all_y_lo[3][cat]
+    yh = all_y_hi[3][cat]
+    delta = net_changes[cat]
+    delta_str = delta >= 0 ? "+$(delta)" : "$(delta)"
+    # green for growth, red for decline, muted for no change
+    delta_color = delta > 0 ? colorant"#009E73" : (delta < 0 ? colorant"#AE3030" : INK_SOFT)
+    text!(ax, annotation_x, (yl + yh) / 2;
+          text     = delta_str,
+          align    = (:left, :center),
+          fontsize = 11,
+          color    = delta_color,
+          font     = :bold,
+    )
+end
+
+xlims!(ax, 0.3, 8.0)
 ylims!(ax, -60, y_max + 150)
 
 save(joinpath(@__DIR__, "plot-$(THEME).png"), fig; px_per_unit = 2)
