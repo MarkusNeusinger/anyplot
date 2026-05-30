@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-30
@@ -107,8 +107,9 @@ chart.options.y_axis = {
             "label": {
                 "text": "Excited states → Continuum",
                 "align": "right",
+                "verticalAlign": "top",
                 "x": -10,
-                "y": 30,
+                "y": 10,
                 "style": {"fontSize": "34px", "color": INK_SOFT, "fontStyle": "italic"},
             },
         },
@@ -122,8 +123,7 @@ chart.options.legend = {
     "verticalAlign": "bottom",
     "itemStyle": {"fontSize": "44px", "fontWeight": "500", "color": INK_SOFT},
     "backgroundColor": ELEVATED_BG,
-    "borderColor": INK_SOFT,
-    "borderWidth": 1,
+    "borderWidth": 0,
     "symbolWidth": 60,
     "symbolHeight": 6,
     "itemMarginBottom": 10,
