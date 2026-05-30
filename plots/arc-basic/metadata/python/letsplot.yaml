@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: arc-basic
 created: '2025-12-23T08:49:14Z'
-updated: '2026-05-30T01:09:40Z'
+updated: '2026-05-30T01:19:17Z'
 generated_by: claude-sonnet
 workflow_run: 26669781475
 issue: 991
@@ -15,40 +15,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 quality_score: 87
 review:
   strengths:
-  - Correct arc diagram geometry with distance-proportional arc heights
-  - Triple encoding of connection strength via color + line thickness + opacity
-  - Node size encodes total connection weight — multi-channel encoding
-  - Correct Imprint palette in canonical order across both light and dark renders
-  - Theme-adaptive chrome correctly implemented throughout
-  - Excellent literary character network data scenario with 10 nodes and 15 edges
-  - letsplot layer_tooltips() used for interactive HTML output
-  - Clean KISS code structure with all imports used
+  - 'Perfect Imprint palette compliance: Weak=green (pos 1), Moderate=lavender (pos
+    2), Strong=blue (pos 3), nodes=ochre (pos 4) — semantic and canonical order'
+  - 'Theme adaptation fully correct: INK/INK_SOFT tokens thread through all text elements
+    in both renders with no dark-on-dark failures'
+  - 'Multi-encoding design: weight encoded via color + line thickness + transparency
+    simultaneously'
+  - Alice hub-highlighting with brand green ring is a thoughtful storytelling touch
+  - '''longest range'' italic annotation adds direct viewer guidance to the spanning
+    arc'
+  - Arc height proportional to node distance correctly implemented via parametric
+    sin curves
+  - layer_tooltips() provides letsplot-native interactivity (connection name + strength
+    on hover)
+  - Perfect spec compliance and data quality scores (30/30 combined)
   weaknesses:
-  - scale_size_identity() is added twice in the plot chain (after geom_path and again
-    after geom_point) — remove the duplicate
-  - 'Bottom margin is tight: ylim lower bound at -0.09 leaves less than ~9% of canvas
-    height below node labels — increase to -0.12 for comfortable breathing room'
-  - 'DE-01 could reach 6+: add a visual focal point — a slightly larger border or
-    contrasting ring on Alice (most-connected node) or a text annotation on the tallest
-    arc (Alice-Jack) to highlight the strongest long-range connection'
-  - 'DE-03 storytelling: the subtitle mentions node size encodes strength but no visual
-    emphasis singles out Alice as the hub character — a subtle highlight or a direct
-    label would lift this'
+  - Bottom margin slightly tight — node labels at y=0.022 with vjust=1 leave limited
+    padding before ylim=-0.12; extend ylim lower bound from -0.12 to ~-0.16 for breathing
+    room
+  - Adjacent node labels could benefit from slight size reduction (geom_text size=9
+    to size=8) to reduce crowding risk for longer names like Carol, David, Grace,
+    Henry in the middle cluster
+  - 'DE-01 headroom: arc diagram could benefit from a subtle emphasis (thicker stroke
+    or glow) on the Alice-Jack longest-range arc to reinforce the ''longest range''
+    annotation story'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "arc-basic · python · letsplot · anyplot.ai" in bold dark ink, clearly readable. Subtitle "Character interactions in a story chapter — node size reflects connection strength" in INK_SOFT gray, readable. No axis text (intentionally removed for arc diagram). Custom legend in upper-left with "Connection Strength" title and three entries (Strong/Moderate/Weak) — all text dark and readable.
-      Data: 10 ochre/gold (#BD8233) node circles along bottom baseline, labeled Alice through Jack in bold dark text. Arcs in three Imprint colors: green (#009E73 = Weak), lavender (#C475FD = Moderate), blue (#4467A3 = Strong). Arc thickness encodes weight. Semi-transparent arcs (alpha 0.70/0.82/0.95). Long-range arcs (Alice-Jack, Alice-Henry) tower above mid-range connections.
-      Legibility verdict: PASS — all title, subtitle, node labels, and legend text clearly readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "arc-basic · python · letsplot · anyplot.ai" bold dark ink, readable. Subtitle in INK_SOFT. Manual legend "Connection Strength" with Strong/Moderate/Weak line samples. Node labels (Alice through Jack) in bold ink below baseline. "longest range" italic annotation above apex of largest arc. All text readable against light background.
+      Data: Arcs in #009E73 (Weak/green), #C475FD (Moderate/lavender), #4467A3 (Strong/blue) with weight-scaled thickness. Ochre (#BD8233) nodes; Alice node has additional brand green (#009E73) ring. Node sizes vary by total connection weight.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and subtitle in light (#F0EFE8) ink — clearly readable. Legend "Connection Strength" title and entries use light INK/INK_SOFT colors — readable. Node labels rendered in white/light text directly against the dark background — no dark-on-dark failure.
-      Data: Arc data colors are identical to light render — green (#009E73), lavender (#C475FD), blue (#4467A3). Ochre nodes (#BD8233) visible with white stroke rings. Only chrome elements (text, background) have flipped to dark-theme values.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text readable against near-black background.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light (#F0EFE8) text — clearly readable. Subtitle, legend text, node name labels all in INK_SOFT (#B8B7B0). "longest range" annotation visible in light italic. No dark-on-dark failures observed — all labels clearly legible against the near-black surface.
+      Data: Arc colors identical to light render (#009E73, #C475FD, #4467A3) — only chrome flipped. Ochre nodes and brand green Alice ring both remain visible on dark background. Brand green #009E73 reads well on #1A1A17.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -56,54 +61,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16pt, subtitle=13pt, node labels=9mm,
-          legend=7-8mm). All text readable in both themes. Minor: subtitle at 13pt
-          feels slightly large relative to the long-form title.'
+        comment: 'Title (size=16), subtitle (size=13), legend, node labels, and annotation
+          all readable in both themes. Minor: node name labels slightly tight across
+          10-node spread but no overlap or clipping.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps — node labels evenly spaced, arcs above baseline,
-          legend clear of data.
+        comment: All text and arc elements distinct. Minor crowding between adjacent
+          middle node labels but no actual overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arcs clearly visible with varying thickness (3.1/4.4/5.7 units) and
-          appropriate semi-transparency. Nodes prominent ochre circles. All elements
-          optimally sized.
+        comment: Three arc weight levels clearly distinguished by color AND thickness.
+          Nodes prominent. Alice green highlight visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette (green/lavender/blue) with shape (thickness/alpha)
-          as redundant encoding. No red-green sole distinction.
+        comment: Imprint palette is CVD-safe. No red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Good canvas utilization — legend fills otherwise-empty upper-left.
-          Minor: ylim lower bound at -0.09 leaves tight bottom margin (~9% of canvas
-          height below node labels).'
+        comment: Canvas 3200x1800 correct. Title and legend well-placed. Bottom margin
+          slightly tight for node labels but nothing clips.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels intentionally suppressed (correct for arc diagrams).
-          Subtitle provides context. Title correctly formatted.
+        comment: Title matches mandated format. Subtitle provides informative context.
+          Axis chrome correctly suppressed for arc diagram.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint canonical order: Weak=#009E73 (pos 1), Moderate=#C475FD
-          (pos 2), Strong=#4467A3 (pos 3), Nodes=#BD8233 (pos 4). Light bg #FAF8F1,
-          dark bg #1A1A17. Data colors identical across themes. Chrome correctly theme-adaptive.'
+        comment: 'Weak=#009E73 (pos 1), Moderate=#C475FD (pos 2), Strong=#4467A3 (pos
+          3), nodes=#BD8233 (pos 4). Backgrounds #FAF8F1/#1A1A17 correct. Both renders
+          theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -113,26 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured defaults: multi-channel encoding (color+size+alpha),
-          manually constructed legend, node size variation by connection weight. Not
-          yet at strong-design tier — no focal-point emphasis on hub character.'
+        comment: Above default 4. Semantic color-to-weight mapping intentional. Alice
+          highlighted as hub. Manual legend avoids default styling. Arc transparency
+          varies by weight. Coherent visual logic.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All spines and axes removed. No grid. Custom theme background. Clean
-          composition. Slight deduction for tight bottom margin creating cramped feel
-          around node labels.
+        comment: Above default 2. All axes/ticks/spines removed (appropriate for arc
+          genre). Clean background. No unnecessary chrome.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arc height encodes distance visually, weight-encoded arcs show long-range
-          vs short-range structure, node size guides eye to most-connected character
-          (Alice). Subtitle explains encoding. Could strengthen by highlighting Alice
-          as hub.
+        comment: Above default 2. Arc height encodes distance, thickness encodes weight,
+          node size encodes total strength, Alice highlighted as hub, 'longest range'
+          annotation guides viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct arc diagram — nodes on horizontal baseline, arcs above, height
-          proportional to node distance.
+        comment: 'Correct arc diagram: nodes on horizontal line, arcs curving above,
+          height proportional to node distance.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: arc height proportional to distance, semi-transparent
-          arcs, readable node labels, color coding by weight.'
+        comment: Nodes, edges, weights (arc thickness + color), semi-transparent arcs,
+          node labels, color coding by type/weight all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes correctly ordered along horizontal axis. Edges correctly mapped
-          as arcs. Weights correctly encoded.
+        comment: 10 character nodes evenly spaced, 15 edges as arcs, arc heights correctly
+          scale with distance between connected nodes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'arc-basic · python · letsplot · anyplot.ai' correct. Legend
-          'Connection Strength' with Weak/Moderate/Strong entries matches weight encoding.
+          labels Strong/Moderate/Weak with weight values.
     data_quality:
       score: 15
       max: 15
@@ -174,24 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all arc diagram features: all 3 weight levels, short-range
-          and long-range arcs, overlapping connections, varying node connectivity.'
+        comment: Demonstrates nodes, edges, three weight levels, distance-proportional
+          arc heights, hub node highlighting, long-range vs short-range connections.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Literary character network with named characters (Alice-Jack) and
-          dialogue exchange weights — plausible and neutral scenario.
+        comment: Character interactions in a story chapter — neutral, plausible, no
+          controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes (within spec range 10-50), 15 edges, weight 1-3 — all sensible
-          values.
+        comment: 10 nodes (within 10-50 typical), 15 edges, three weight levels —
+          well-calibrated for readability.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -199,14 +199,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme tokens → data → arc/node DataFrames → plot
-          layers → save.'
+        comment: No functions or classes. Clean top-level sequential script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random generation.
+        comment: Fully deterministic hardcoded data. No random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -215,18 +214,17 @@ review:
         comment: All imported symbols are used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Clean and readable overall, but scale_size_identity() is added twice
-          (after geom_path and after geom_point) — the second call overwrites the
-          first. Minor copy-paste artifact.
+        comment: Manual arc path construction via parametric sin curve is correct
+          approach. No fake UI. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API throughout.
+        comment: ggsave with plot-{THEME}.png (scale=4) and plot-{THEME}.html correct.
     library_mastery:
       score: 7
       max: 10
@@ -236,30 +234,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot grammar with aes mappings, scale_*_identity pattern
-          for pre-encoded data, element_blank/element_rect/element_text theme functions,
-          layer_tooltips for interactive HTML.
+        comment: geom_path for arcs, geom_point for nodes, geom_segment for baseline/legend,
+          geom_text for labels, scale_*_identity for pre-mapped aesthetics — all idiomatic
+          letsplot grammar.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with .title() and .line() chaining is a letsplot-specific
-          interactive tooltip API. HTML export alongside PNG. scale_*_identity pattern.
-          Could leverage more letsplot-exclusive capabilities.
-  verdict: REJECTED
+        comment: layer_tooltips() leverages letsplot-specific interactive tooltip
+          system. HTML export via ggsave. Above default.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
