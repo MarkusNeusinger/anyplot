@@ -1,0 +1,269 @@
+library: makie
+language: julia
+specification_id: candlestick-basic
+created: '2026-05-30T05:50:20Z'
+updated: '2026-05-30T06:09:53Z'
+generated_by: claude-sonnet
+workflow_run: 26675929784
+issue: 812
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent semantic Imprint palette usage: brand green (#009E73) for bullish and
+    matte red (#AE3030) for bearish — correct semantic anchors with real-world finance
+    convention'
+  - 'CVD-aware design: thin strokes on candle body outlines provide redundant encoding
+    beyond color alone for deuteranopia robustness'
+  - 'Complete Makie theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    correctly wired to both renders'
+  - Clean KISS code structure with weekend-aware trading date generation and realistic
+    OHLC price simulation
+  - Well-proportioned 87%/13% column split keeps the legend compact without wasting
+    chart space
+  - SMA-10 overlay adds trend narrative context and creates a meaningful focal point
+    for data storytelling
+  weaknesses:
+  - 'SMA trend line (cyan #2ABCCD, linewidth=2.0) is not clearly visible in either
+    render — the line runs through candle body regions where close prices naturally
+    sit, causing it to be obscured; increase linewidth to 3.0+ and consider drawing
+    it with a slightly higher visual weight or ensuring it renders fully above candle
+    bodies'
+  - The SMA (10) legend entry (LineElement) is the 3rd item but barely distinguishable
+    at display scale — verify all three legend entries are clearly visible and not
+    truncated
+  - x-axis tick label size (xticklabelsize=11) is slightly smaller than y-axis tick
+    labels (yticklabelsize=12), creating a minor asymmetry — standardize to 12 for
+    both
+  - 'Design storytelling could be elevated: consider adding a subtle horizontal reference
+    line or shaded zone at the price mean/pivot to give the chart a clear focal insight
+    beyond the raw OHLC display'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "candlestick-basic · julia · makie · anyplot.ai" in dark ink, clearly readable at top center (~55% width). Y-axis label "Price (USD)" and x-axis label "Date (2024)" in dark ink — readable. Y-tick labels (185, 180, 175, 170) and x-tick labels (Jun 3, Jun 14, Jun 28, Jul 12, Jul 26) in softer dark ink (#4A4A44) — all readable. Legend shows "Bullish (↑)" and "Bearish (↓)" entries clearly.
+      Data: Bullish candles in brand green (#009E73) and bearish candles in matte red (#AE3030). Thin wicks (rangebars!) extend above/below bodies. 40 candlesticks clearly rendered with good proportions. SMA-10 trend line (cyan #2ABCCD) appears to be present in code but is not clearly visible in the render — likely obscured by candle bodies since close prices sit inside them. Subtle horizontal y-grid lines at 0.15 opacity.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels in light ink — readable. Tick labels in softer light (#B8B7B0) — readable. Legend labels in light ink — readable. Grid lines subtly visible. No dark-on-dark failures detected.
+      Data: Bullish candles identical green (#009E73) and bearish candles identical matte red (#AE3030) — data colors are identical to light render, only chrome flipped. The green and red candles remain highly visible against the dark background. SMA-10 line same visibility concern as light render.
+      Legibility verdict: PASS — all text readable against dark background, theme adaptation correct throughout
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; xticklabelsize=11 slightly smaller than
+          yticklabelsize=12 (minor asymmetry). Both themes fully readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render. Tick labels, candles, and
+          legend are all well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Candlestick bodies and wicks clearly visible and well-proportioned.
+          SMA-10 trend line (cyan) appears to be drawn but is not clearly distinguishable
+          from candle bodies in the render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red for bullish/bearish is the industry convention and matches
+          spec. Thin stroke (0.5) on candle bodies provides CVD redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed. 87%/13% column split is well-balanced.
+          Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Price (USD)'' with units. X-axis: ''Date (2024)'' descriptive.
+          Title follows correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bull=#009E73 (Imprint position 1, semantic finance), Bear=#AE3030
+          (Imprint position 5, semantic loss anchor), SMA=#2ABCCD (Imprint position
+          6). Background #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured-default: semantic color choices with documented
+          rationale, CVD-aware strokes, SMA overlay. Not quite FiveThirtyEight-level
+          — lacks a distinctive visual treatment.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Well refined: top/right spines removed, tick marks hidden, Y-only
+          subtle grid at 0.15 opacity, legend frame hidden. Many details polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: SMA-10 overlay adds trend narrative. Color coding creates immediate
+          bullish/bearish visual hierarchy. Price arc (downtrend to partial recovery)
+          tells a story. No annotation or focal-point emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct candlestick chart with OHLC structure: bodies for open-close
+          range, wicks for high-low range, color-coded bullish/bearish.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Date formatting on x-axis, price on y-axis, green/red color scheme,
+          wicks thinner than body, subtle y-grid, 40 data points (within 20-100 range).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: dates (Jun 3 to Jul 26), Y: price (USD), all data visible within
+          axis bounds.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''candlestick-basic · julia · makie · anyplot.ai'' — correct
+          format. Legend: Bullish (↑), Bearish (↓), SMA (10) per code.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both bullish and bearish candles present. Variety of body sizes and
+          wick lengths. Small and large bodies visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech stock OHLC, realistic ~$182 starting price, actual trading dates
+          June-July 2024 with weekends filtered.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range $169-$188, ~1.5-2% daily volatility realistic for tech
+          stocks, 40 trading days ≈ 8 weeks appropriate window.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → constants → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Makie, Colors, Random, Dates, Statistics — all actively
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia/Makie code. Appropriate complexity for candlestick
+          with SMA overlay.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie 0.22+ API replacing resolution=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: rangebars! for wicks, poly! with Rect2f for bodies, PolyElement/LineElement
+          for custom legend — above-baseline idiomatic Makie usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: rangebars! (Makie-specific), Rect2f geometry construction, colsize!
+          layout control, PolyElement/LineElement legend composition — several Makie-distinctive
+          primitives leveraged.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - edge-highlighting
+  - alpha-blending
