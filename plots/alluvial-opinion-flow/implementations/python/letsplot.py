@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-03
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-30
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_rect,
     geom_ribbon,
@@ -29,16 +32,33 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
-# Survey data: 1000 respondents tracked across 4 quarterly waves
+# Theme tokens — Imprint palette chrome, theme-adaptive
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic mapping for sentiment categories
+# positive → green, leaning positive → blue, neutral → muted, negative → red
+category_colors = {
+    "Strongly Agree": "#009E73",  # Imprint pos 1: brand green
+    "Agree": "#4467A3",  # Imprint pos 3: blue
+    "Neutral": "#7A7A72",  # fixed mid-gray, consistent across both themes
+    "Disagree": "#BD8233",  # Imprint pos 4: ochre
+    "Strongly Disagree": "#AE3030",  # Imprint pos 5: matte red
+}
+
+# Survey data: 1000 respondents tracked across 4 quarterly waves (climate policy)
 np.random.seed(42)
 
 waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
 categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
 
-# Initial distribution at Q1 (1000 total respondents)
 initial_counts = {"Strongly Agree": 120, "Agree": 250, "Neutral": 280, "Disagree": 220, "Strongly Disagree": 130}
 
-# Flows between waves - showing gradual polarization (neutral shrinks, extremes grow)
+# Flows Q1 → Q2
 flows_q1_q2 = [
     ("Strongly Agree", "Strongly Agree", 110),
     ("Strongly Agree", "Agree", 8),
@@ -61,6 +81,7 @@ flows_q1_q2 = [
     ("Strongly Disagree", "Strongly Disagree", 115),
 ]
 
+# Flows Q2 → Q3
 flows_q2_q3 = [
     ("Strongly Agree", "Strongly Agree", 135),
     ("Strongly Agree", "Agree", 10),
@@ -82,22 +103,23 @@ flows_q2_q3 = [
     ("Strongly Disagree", "Strongly Disagree", 143),
 ]
 
+# Flows Q3 → Q4 (balanced: each category outflow equals its Q3 total 173/255/160/231/181)
 flows_q3_q4 = [
     ("Strongly Agree", "Strongly Agree", 165),
     ("Strongly Agree", "Agree", 8),
     ("Agree", "Strongly Agree", 35),
-    ("Agree", "Agree", 198),
+    ("Agree", "Agree", 203),  # +5 vs original to balance Agree outflow (255 total)
     ("Agree", "Neutral", 12),
     ("Agree", "Disagree", 5),
     ("Neutral", "Strongly Agree", 5),
-    ("Neutral", "Agree", 28),
+    ("Neutral", "Agree", 23),  # -5 vs original to balance Neutral outflow (160 total)
     ("Neutral", "Neutral", 100),
     ("Neutral", "Disagree", 25),
     ("Neutral", "Strongly Disagree", 7),
     ("Disagree", "Agree", 4),
     ("Disagree", "Neutral", 8),
     ("Disagree", "Disagree", 185),
-    ("Disagree", "Strongly Disagree", 33),
+    ("Disagree", "Strongly Disagree", 34),  # +1 to balance Disagree outflow (231 total)
     ("Strongly Disagree", "Neutral", 2),
     ("Strongly Disagree", "Disagree", 5),
     ("Strongly Disagree", "Strongly Disagree", 174),
@@ -105,7 +127,7 @@ flows_q3_q4 = [
 
 all_flows = [flows_q1_q2, flows_q2_q3, flows_q3_q4]
 
-# Calculate totals at each wave
+# Calculate wave totals
 wave_totals = [initial_counts.copy()]
 for wave_flows in all_flows:
     totals = dict.fromkeys(categories, 0)
@@ -119,16 +141,7 @@ node_width = 0.025
 node_gap = 0.015
 total_respondents = sum(initial_counts.values())
 
-# Colors per opinion category - cohesive palette anchored on Python Blue
-category_colors = {
-    "Strongly Agree": "#306998",
-    "Agree": "#5B9BD5",
-    "Neutral": "#9CA3AF",
-    "Disagree": "#E8915A",
-    "Strongly Disagree": "#C0392B",
-}
-
-# Calculate node positions at each wave
+# Node positions per wave
 node_positions = []
 for wave_idx, totals in enumerate(wave_totals):
     positions = {}
@@ -139,7 +152,7 @@ for wave_idx, totals in enumerate(wave_totals):
         y_offset += height + node_gap
     node_positions.append(positions)
 
-# Build flow ribbons using geom_ribbon (x, ymin, ymax) instead of manual polygon vertices
+# Flow ribbons via smooth hermite interpolation
 ribbon_data = []
 n_points = 40
 
@@ -172,7 +185,6 @@ for wave_idx, wave_flows in enumerate(all_flows):
             ease = t * t * (3 - 2 * t)
             ymin_val = src_y0 + ease * (tgt_y0 - src_y0)
             ymax_val = src_y1 + ease * (tgt_y1 - src_y1)
-
             ribbon_data.append(
                 {
                     "x": x,
@@ -191,7 +203,7 @@ df_ribbons = pd.DataFrame(ribbon_data)
 df_stable = df_ribbons[df_ribbons["stability"] == "stable"]
 df_changed = df_ribbons[df_ribbons["stability"] == "changed"]
 
-# Build node rectangles with metadata for tooltips
+# Node rectangles
 node_rects = []
 for wave_idx, positions in enumerate(node_positions):
     for cat in categories:
@@ -210,14 +222,12 @@ for wave_idx, positions in enumerate(node_positions):
 
 df_nodes = pd.DataFrame(node_rects)
 
-# Build labels
+# Labels
 label_rows = []
 
-# Wave headers
 for i, wave in enumerate(waves):
     label_rows.append({"x": x_positions[i], "y": 0.97, "label": wave, "type": "header"})
 
-# Category labels and counts on left side of first wave
 for cat in categories:
     pos = node_positions[0][cat]
     count = initial_counts[cat]
@@ -230,17 +240,11 @@ for cat in categories:
         }
     )
 
-# Category labels with counts and net change on right side of last wave
 for cat in categories:
     pos = node_positions[3][cat]
     count = wave_totals[3][cat]
     change = count - initial_counts[cat]
-    if change > 0:
-        change_str = f", +{change}"
-    elif change < 0:
-        change_str = f", {change}"
-    else:
-        change_str = ""
+    change_str = f", +{change}" if change > 0 else (f", {change}" if change < 0 else "")
     label_rows.append(
         {
             "x": x_positions[3] + node_width + 0.015,
@@ -250,7 +254,6 @@ for cat in categories:
         }
     )
 
-# Count labels inside nodes for middle waves
 for wave_idx in [1, 2]:
     for cat in categories:
         pos = node_positions[wave_idx][cat]
@@ -268,14 +271,20 @@ for wave_idx in [1, 2]:
 
 df_labels = pd.DataFrame(label_rows)
 
-# Assemble plot with geom_ribbon for flows and layer_tooltips for interactivity
+# Title with length-scaled fontsize (default 16px for scale-based libs)
+title = "alluvial-opinion-flow · python · letsplot · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_size = max(11, round(16 * ratio))
+
+# Plot
 plot = (
     ggplot()
     + geom_ribbon(
         aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="category"),
         data=df_changed,
-        alpha=0.35,
-        color="white",
+        alpha=0.45,
+        color=PAGE_BG,
         size=0.05,
         tooltips=layer_tooltips().line("@from_cat -> @to_cat").line("@count respondents (changed)"),
     )
@@ -283,38 +292,53 @@ plot = (
         aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="category"),
         data=df_stable,
         alpha=0.6,
-        color="white",
+        color=PAGE_BG,
         size=0.05,
         tooltips=layer_tooltips().line("@from_cat (stable)").line("@count respondents"),
     )
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"),
         data=df_nodes,
-        color="#2A2A2A",
+        color=INK,
         size=0.8,
         tooltips=layer_tooltips().line("@category").line("Wave: @wave").line("Count: @count"),
     )
     + geom_text(
-        aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "header"], size=17, fontface="bold"
+        aes(x="x", y="y", label="label"),
+        data=df_labels[df_labels["type"] == "header"],
+        size=5.5,
+        fontface="bold",
+        color=INK,
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "left_label"], size=13, hjust=1)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "right_label"], size=13, hjust=0)
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=df_labels[df_labels["type"] == "left_label"],
+        size=3.6,
+        hjust=1,
+        color=INK_SOFT,
+    )
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=df_labels[df_labels["type"] == "right_label"],
+        size=3.6,
+        hjust=0,
+        color=INK_SOFT,
+    )
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["type"] == "node_count"],
-        size=11,
+        size=4.0,
         color="white",
         fontface="bold",
     )
     + scale_fill_manual(values=category_colors)
-    + labs(
-        title="alluvial-opinion-flow \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Polarization trend: Neutral shrinks 280\u2192122 as extreme positions grow",
-    )
+    + labs(title=title, subtitle="Survey trend: neutral stance declines 280→122 as opinions polarize")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=26, face="bold"),
-        plot_subtitle=element_text(size=16, color="#555555"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=title_size, face="bold", color=INK),
+        plot_subtitle=element_text(size=12, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -323,9 +347,9 @@ plot = (
     )
     + scale_x_continuous(limits=[-0.08, 1.08])
     + scale_y_continuous(limits=[-0.02, 1.04])
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
