@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:11:28Z'
-updated: '2026-05-30T12:56:51Z'
+updated: '2026-05-30T13:06:23Z'
 generated_by: claude-sonnet
 workflow_run: 26684096229
 issue: 4430
@@ -12,50 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Semantic Imprint palette mapping: Strongly Agree→green, Agree→blue, Neutral→muted,
-    Disagree→ochre, Strongly Disagree→red — intuitive, well-justified sentiment scale
-    coloring'
-  - Differential opacity distinguishes stable respondents (alpha=0.6) from changers
-    (alpha=0.35) — directly satisfies spec requirement with minimal visual noise
-  - 'Strong data storytelling: subtitle encodes the key insight, right-side change
-    indicators (+85, -158, etc.) make net flows immediately readable'
-  - Smooth hermite s-curve interpolation for ribbon flows looks professional; manual
-    layout arithmetic for proportional node heights
-  - 'Full spec compliance — all alluvial requirements met: proportional flow widths,
-    per-wave node counts, chronological ordering, transparency for overlapping flows'
-  - Native letsplot layer_tooltips() used for interactive HTML output — idiomatic
-    library feature, not simulated
+  - Semantically-driven Imprint palette assignment (green=agree, red=disagree) creates
+    immediate interpretive clarity without a legend
+  - Alpha differentiation (stable=0.6, changed=0.45) adds a meaningful second visual
+    dimension distinguishing flow types
+  - Subtitle explicitly states the polarization insight; right-side net-change labels
+    (+85, -158, -12) quantify the story
+  - Smooth Hermite/smoothstep interpolation produces clean, professional-looking ribbon
+    curves
+  - All text elements use theme-adaptive tokens — both renders pass the readability
+    check
+  - Idiomatic layer_tooltips() usage per geom layer with contextual field formatting
+  - Internally balanced flow matrices (outflows = inflows per wave) with correct totals
   weaknesses:
-  - '"Neutral" category uses the adaptive INK_MUTED token (#6B6A63 light / #A8A79F
-    dark), causing the neutral band to appear different in the two renders. The design
-    system allows this for semantic muted anchors, but it means the same category
-    has a different visual identity per theme — consider a fixed Imprint-adjacent
-    gray that reads well on both surfaces'
-  - Left-side category labels are vertically tight; for the middle three categories
-    (Agree, Neutral, Disagree) the label stacking is close and could collide if nodes
-    were slightly smaller — the layout currently works but has little vertical slack
-  - 'In the dark render, the thin cross-category changed-flow ribbons (alpha=0.35
-    on the dark #1A1A17 background) are faint enough to be near-invisible for small
-    flows like Strongly Agree→Neutral; increased alpha (0.45–0.50) would improve dark-mode
-    readability without cluttering the light render'
+  - 'Neutral category uses custom hex #7A7A72 (fixed, theme-invariant) instead of
+    the muted semantic anchor (#6B6A63 light / #A8A79F dark). Replace with the theme-adaptive
+    INK_MUTED token already defined in the file.'
+  - 'No explicit net-flow highlighting: spec requires highlighting net flows to reveal
+    polarization trends. Consider adding annotation or thicker ribbons for dominant
+    cross-category flows (e.g., Neutral→Strongly Agree, Neutral→Strongly Disagree).'
+  - Side category labels at size=3.6 mm are slightly small relative to wave headers
+    (5.5 mm). A slight increase to 4.0–4.2 mm would improve mobile readability.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "alluvial-opinion-flow · python · letsplot · anyplot.ai" bold dark (#1A1A17), fully readable. Subtitle in INK_SOFT, readable. Wave headers Q1–Q4 2025 in bold dark ink. Left/right category labels in INK_SOFT — all clearly legible against the cream background.
-      Data: Four waves with 5 colored node bands per wave. Strongly Agree (green #009E73) at bottom, Agree (blue #4467A3), Neutral (medium gray #6B6A63), Disagree (ochre #BD8233), Strongly Disagree (matte red #AE3030) at top. Stable flows at alpha=0.6, changed flows at alpha=0.35. White count labels inside Q2/Q3 nodes.
-      Legibility verdict: PASS — all text readable, no light-on-light failure.
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
+      Chrome: Title "alluvial-opinion-flow · python · letsplot · anyplot.ai" at 16pt in dark INK (#1A1A17) — clearly readable. Subtitle "Survey trend: neutral stance declines 280→122 as opinions polarize" in INK_SOFT (#4A4A44) — readable. Wave headers (Q1–Q4 2025) in bold dark ink — readable. Left/right category labels in INK_SOFT at size=3.6 mm — readable but small. White node count labels inside colored bars — readable.
+      Data: Five categories — green (#009E73 Strongly Agree), blue (#4467A3 Agree), mid-gray (#7A7A72 Neutral), ochre (#BD8233 Disagree), matte-red (#AE3030 Strongly Disagree). Stable flows at alpha=0.60, changed flows at alpha=0.45. First series is correctly #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title and subtitle in light #F0EFE8 text — clearly readable. Wave headers bold light. Left/right category labels in INK_SOFT (#B8B7B0) — all legible. No dark-on-dark failures observed.
-      Data: Colors are identical to light render for the 4 Imprint palette hues (green, blue, ochre, red). Neutral band uses adaptive INK_MUTED (#A8A79F in dark mode) — lighter gray compared to light render's #6B6A63, so the neutral band changes visual weight slightly between themes. Changed flows (alpha=0.35) on dark bg are fainter than in light render; very small flows approach near-invisible.
-      Legibility verdict: PASS — all chrome text readable, brand green visible. Minor: thin changed-flow ribbons are faint in dark mode at alpha=0.35.
+      Background: Near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and subtitle render in light off-white/cream (INK=#F0EFE8 in dark mode) — clearly readable. Wave column headers in light text — readable. Category labels on both sides in INK_SOFT (#B8B7B0 in dark mode) — readable. No dark-on-dark failures detected. White node count labels remain clearly visible inside colored bars.
+      Data: All five category colors identical to light render — green, blue, gray, ochre, red. Colors are theme-invariant as required (only chrome flips). Flows and nodes are clearly distinguishable from the near-black background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,51 +58,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; category labels are small but proportional
-          to node heights
+        comment: All font sizes explicitly set — wave headers 5.5mm, category labels
+          3.6mm, node counts 4.0mm, title 16pt. Readable in both themes, minor deduction
+          for small side labels.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor: left-side labels are vertically tight for middle categories
-          but no actual overlap observed'
+        comment: No text overlap in either render. Category labels, wave headers,
+          and node counts cleanly separated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All flows visible; thin changed-flow ribbons slightly faint on dark
-          background at alpha=0.35
+        comment: Node bars prominently colored. Ribbons at alpha 0.45-0.60 clearly
+          distinguishable. White count labels readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with semantic mapping; no red-green sole distinction
+        comment: Imprint palette with sentiment-semantic assignment. CVD-safe palette.
+          Green/red polarity provides good luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; canvas gate passed; title margin is slightly
-          tight at top but no clipping
+        comment: 3200x1800 canvas (800x450 x scale=4). Plot fills canvas well with
+          balanced margins. No canvas gate failure.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for alluvial; title + subtitle + wave headers
-          serve as effective orientation
+        comment: No traditional axis labels needed. Wave headers and category labels
+          serve as axes. Title and subtitle are descriptive.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73; semantic palette mapping valid; Neutral
-          uses muted anchor (theme-adaptive by design)'
+        passed: false
+        comment: 'First series #009E73 correct. Agree/#4467A3, Disagree/#BD8233, Strongly
+          Disagree/#AE3030 all correct Imprint members. Neutral uses custom #7A7A72
+          instead of theme-adaptive muted anchor. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -115,24 +113,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Semantic color mapping, differential opacity, direct labeling with
-          change indicators — above default
+        comment: Hand-crafted from geom_ribbon/geom_rect/geom_text primitives. Semantic
+          color mapping. Alpha distinction for stable vs changed flows. Clearly above
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes, no grid, no legend; minimal chrome; dark node borders provide
-          clean data definition
+        comment: All axis elements blanked, no grid, minimal theme, clean whitespace.
+          Goes beyond minimal customization but not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtitle encodes key insight; change indicators tell the net-flow
-          story; polarization trend visually evident
+        comment: Subtitle explicitly names the insight. Semantic colors make polarization
+          trend self-evident. Net-change labels quantify the story. Good visual hierarchy.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -140,54 +139,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey diagram with geom_ribbon flows and geom_rect
-          nodes
+        comment: Correct alluvial/Sankey-style diagram with proportional flow ribbons
+          across 4 time waves.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec requirements met: proportional widths, node counts, stable/changed
-          distinction, net flow indicators, chronological order'
+        comment: 'Consistent colors, proportional flows, count labels, stable/changer
+          distinction via opacity, chronological ordering all present. Missing: explicit
+          net-flow highlighting.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 4 quarterly waves, 5 opinion categories, 1000 respondents, correct
-          flow proportionality
+        comment: Waves correctly mapped left-to-right Q1→Q4. Flow widths scale linearly
+          with respondent count. All categories visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; no legend needed — direct labeling
-          with category names
+        comment: Title 'alluvial-opinion-flow · python · letsplot · anyplot.ai' matches
+          required format. No legend needed (categories directly labeled).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full coverage of alluvial features; stable vs changed distinction;
-          polarization trend clearly shown
+        comment: 'Shows all core alluvial features: multi-wave tracking, directional
+          flows, stable vs. changing respondents, category-level totals, net change
+          summary.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Climate policy survey — realistic, neutral, plausible 1000-respondent
-          longitudinal study
+        comment: Climate policy opinion survey with 1000 respondents across 4 quarterly
+          waves is exactly the scenario described in the spec. Neutral scientific
+          framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts correct and consistent across waves; realistic polarization
-          shift pattern
+        comment: 1000 respondents with realistic Likert distribution. Internally balanced
+          flow matrices. Polarization trend is plausible real-world phenomenon.
     code_quality:
       score: 10
       max: 10
@@ -197,51 +199,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear script; complexity justified by alluvial
-          geometry
+        comment: Imports → data → layout computation → ribbons → labels → plot → save.
+          No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set. Data is effectively deterministic (hardcoded
+          flows).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All 18 lets_plot symbols used. os, numpy, pandas all used. No unused
+          imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Hermite interpolation clean; no fake UI
+        comment: Appropriate complexity for custom alluvial. Smooth Hermite interpolation
+          is clean and well-named. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; scale=4 with ggsize(800,450)
-          = 3200x1800
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct letsplot
+          4.10.1 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct ggplot grammar; proper aes() mappings; scale_fill_manual;
-          theme composition
+        comment: Full ggplot grammar with layer_tooltips() for per-layer interactive
+          tooltips, ggsave with scale=4. Expertly idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() native interactive HTML tooltips; ggsave with scale
-          parameter for both PNG and HTML
+        comment: layer_tooltips().line() is lets-plot specific API. HTML export alongside
+          PNG is distinctive. Core alluvial construction uses geom primitives available
+          in ggplot2/plotnine too.
   verdict: APPROVED
 impl_tags:
   dependencies: []
