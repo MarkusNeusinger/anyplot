@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -44,6 +44,7 @@ circle_tau = radius * np.sin(theta)
 
 # Shared arrow style
 arrow_kw = {"arrowstyle": "-|>", "mutation_scale": 12, "lw": 1.2}
+stroke_fx = [patheffects.withStroke(linewidth=2.5, foreground=PAGE_BG), patheffects.Normal()]
 
 # Plot — square canvas for equal-aspect Mohr's circle (2400×2400 px)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
@@ -71,7 +72,7 @@ ax.plot([sigma_x, sigma_y], [tau_xy, -tau_xy], color=CLR_INPUT, linewidth=1.5, l
 
 # Stress points A(σx, τxy) and B(σy, −τxy)
 ax.scatter([sigma_x, sigma_y], [tau_xy, -tau_xy], color=CLR_INPUT, s=120, edgecolors=PAGE_BG, linewidth=1.2, zorder=5)
-ax.annotate(
+a_txt = ax.annotate(
     f"A ({sigma_x}, {tau_xy})",
     xy=(sigma_x, tau_xy),
     xytext=(sigma_x + 10, tau_xy + 14),
@@ -80,7 +81,8 @@ ax.annotate(
     fontweight="bold",
     arrowprops={**arrow_kw, "color": CLR_INPUT},
 )
-ax.annotate(
+a_txt.set_path_effects(stroke_fx)
+b_txt = ax.annotate(
     f"B ({sigma_y}, {-tau_xy})",
     xy=(sigma_y, -tau_xy),
     xytext=(sigma_y - 10, -tau_xy - 14),
@@ -90,28 +92,41 @@ ax.annotate(
     ha="right",
     arrowprops={**arrow_kw, "color": CLR_INPUT},
 )
+b_txt.set_path_effects(stroke_fx)
 
 # Principal stresses σ₁ and σ₂ (diamond markers for derived quantities)
-ax.scatter(
-    [sigma_1, sigma_2], [0, 0], color=CLR_DERIVED, s=140, edgecolors=PAGE_BG, linewidth=1.2, zorder=5, marker="D"
-)
-ax.annotate(
+ax.scatter([sigma_2], [0], color=CLR_DERIVED, s=140, edgecolors=PAGE_BG, linewidth=1.2, zorder=5, marker="D")
+# σ₁ is the critical engineering result — emphasized with a larger marker
+ax.scatter([sigma_1], [0], color=CLR_DERIVED, s=200, edgecolors=PAGE_BG, linewidth=1.5, zorder=6, marker="D")
+sigma1_txt = ax.annotate(
     f"σ₁ = {sigma_1:.1f} MPa",
     xy=(sigma_1, 0),
-    xytext=(sigma_1 + 4, -14),
-    fontsize=10,
+    xytext=(sigma_1, -30),
+    fontsize=11,
     color=CLR_DERIVED,
     fontweight="bold",
+    ha="center",
+    arrowprops={**arrow_kw, "color": CLR_DERIVED},
+    bbox={
+        "boxstyle": "round,pad=0.3",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": CLR_DERIVED,
+        "alpha": 0.7,
+        "linewidth": 1.2,
+    },
 )
-ax.annotate(
+sigma1_txt.set_path_effects(stroke_fx)
+sigma2_txt = ax.annotate(
     f"σ₂ = {sigma_2:.1f} MPa",
     xy=(sigma_2, 0),
-    xytext=(sigma_2 - 4, 10),
+    xytext=(sigma_2, 22),
     fontsize=10,
     color=CLR_DERIVED,
     fontweight="bold",
-    ha="right",
+    ha="center",
+    arrowprops={**arrow_kw, "color": CLR_DERIVED},
 )
+sigma2_txt.set_path_effects(stroke_fx)
 
 # Maximum shear stress τ_max at top and bottom — text moved left to clear upper-right region
 ax.scatter(
@@ -124,7 +139,7 @@ ax.scatter(
     zorder=5,
     marker="D",
 )
-ax.annotate(
+tmax_txt = ax.annotate(
     f"τ_max = {tau_max:.1f} MPa",
     xy=(center, tau_max),
     xytext=(center - 38, tau_max + 12),
@@ -133,7 +148,8 @@ ax.annotate(
     fontweight="bold",
     arrowprops={**arrow_kw, "color": CLR_DERIVED},
 )
-ax.annotate(
+tmax_txt.set_path_effects(stroke_fx)
+tmin_txt = ax.annotate(
     f"−τ_max = −{tau_max:.1f} MPa",
     xy=(center, -tau_max),
     xytext=(center - 38, -tau_max - 12),
@@ -142,6 +158,7 @@ ax.annotate(
     fontweight="bold",
     arrowprops={**arrow_kw, "color": CLR_DERIVED},
 )
+tmin_txt.set_path_effects(stroke_fx)
 
 # Principal angle 2θp arc
 arc_radius = radius * 0.35
@@ -170,7 +187,7 @@ ax.annotate(
 
 # Angle label — lower-right to avoid crowding with τ_max labels in the upper region
 arc_mid = np.radians(theta_2p / 2)
-ax.annotate(
+arc_txt = ax.annotate(
     f"2θp = {theta_2p:.1f}°",
     xy=(center + arc_radius * np.cos(arc_mid), arc_radius * np.sin(arc_mid)),
     xytext=(center + arc_radius * 2.8, arc_radius * 0.4),
@@ -179,6 +196,7 @@ ax.annotate(
     fontweight="bold",
     arrowprops={**arrow_kw, "color": CLR_GEOM},
 )
+arc_txt.set_path_effects(stroke_fx)
 
 # Center marker with theme-adaptive path effect for readability
 ax.plot(center, 0, marker="+", color=CLR_GEOM, markersize=14, markeredgewidth=2.0, zorder=5)
@@ -191,7 +209,7 @@ center_txt = ax.annotate(
     ha="right",
     fontweight="bold",
 )
-center_txt.set_path_effects([patheffects.withStroke(linewidth=2.5, foreground=PAGE_BG), patheffects.Normal()])
+center_txt.set_path_effects(stroke_fx)
 
 # Style — theme-adaptive chrome
 title = "mohr-circle · python · matplotlib · anyplot.ai"
