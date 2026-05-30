@@ -1,51 +1,59 @@
 library: altair
+language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:50:29Z'
-updated: '2026-02-27T21:59:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22502879486
+updated: '2026-05-30T07:42:15Z'
+generated_by: claude-sonnet
+workflow_run: 26677705300
 issue: 4434
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/altair/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Scientifically accurate data using real hydrogen atom energy levels and Rydberg
-    formula for wavelengths
-  - Excellent use of symlog scale to handle the wide energy range while keeping converging
-    upper levels distinguishable
-  - Strong visual design with colorblind-safe Okabe-Ito palette, consistent typography,
-    and refined grid/layout
-  - Complete spec compliance with all required features including ionization limit,
-    nonlinear scale, and three spectral series
-  - Clean, elegant code structure with deterministic physics-based data generation
+  - Physically accurate hydrogen atom data (E_n = −13.6/n² eV, Rydberg-formula wavelengths)
+    — all 9 transitions factually correct
+  - 'Expert Altair layer composition: 8 distinct layers using mark_rule with x/x2
+    and y/y2 spanning, mark_point with triangle-down arrowheads — genuinely idiomatic
+    Vega-Lite'
+  - Scientifically motivated symlog scale (constant=1) compresses the large n=1→n=2
+    gap while expanding the convergent upper levels — chart communicates energy quantisation
+    structure
+  - 'Intentional visual hierarchy: thin INK_SOFT level lines recede behind thick (strokeWidth=3)
+    coloured arrow shafts — viewer''s eye is drawn to transitions first'
+  - Staggered level endpoints (line_ends dict) and graduated dx offsets for Paschen
+    labels mitigate crowding in the symlog-compressed upper region
+  - 'Full Imprint palette compliance (Lyman #009E73, Balmer #C475FD, Paschen #4467A3),
+    correct backgrounds, and clean theme-adaptive chrome in both renders'
   weaknesses:
-  - Wavelength annotation font size (12pt) is small relative to other text, slightly
-    reducing readability
-  - Y-axis tick labels (14pt) fall slightly below the 16pt ideal threshold
-  image_description: 'The plot displays a hydrogen atom energy level diagram on a
-    light gray (#fafbfc) background. Six horizontal dark lines represent energy levels
-    from n=1 (−13.60 eV) at the bottom to n=6 (−0.38 eV) near the top, with a dashed
-    ionization limit line at 0.00 eV labeled "n = ∞". Bold quantum number labels (n
-    = 1 through n = ∞) appear at the right end of each level line, with staggered
-    endpoints for clarity at converging upper levels. Nine vertical downward-pointing
-    transition arrows are color-coded into three spectral series: Lyman (UV) in steel
-    blue (#306998) targeting n=1, Balmer (Visible) in amber/gold (#E69F00) targeting
-    n=2, and Paschen (IR) in pink (#CC79A7) targeting n=3. Each arrow has a filled
-    triangular arrowhead pointing down (emission direction) and a rotated 90° italic
-    wavelength annotation (e.g., 122 nm, 656 nm, 1875 nm). The y-axis shows "Energy
-    (eV)" using a symlog scale with custom tick values at each energy level (-13.60,
-    -3.40, -1.51, -0.85, -0.54, -0.38, 0.00). A legend titled "Spectral Series" appears
-    in the upper right corner. The title reads "energy-level-atomic · altair · pyplots.ai"
-    with subtitle "Hydrogen atom emission lines · energy levels: −13.6/n² eV". The
-    grid is extremely subtle (8% opacity). The x-axis is hidden. Overall the chart
-    has a clean, professional appearance with consistent dark text color and well-chosen
-    colorblind-safe palette.'
+  - 'Crowding in n=3–6 region: wavelength labels (8pt, rotated 90°) and level labels
+    (n=3–n=6) are tightly packed due to symlog compression — increase wavelength label
+    fontSize from 8 to 9-10pt and widen dx spread for the Paschen labels'
+  - Wavelength label fontSize=8 with 90° rotation is borderline legible at full 3200×1800
+    resolution — the tertiary annotation tier should be at least 9pt for comfortable
+    reading
+  - Some unbalanced empty canvas space at the top (above legend, above the ionization
+    limit line) — slightly expanding the y domain upper bound or reducing top padding
+    would make better use of the canvas
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface for light theme.
+      Chrome: Title "energy-level-atomic · python · altair · anyplot.ai" bold, dark, centred — fully readable. Subtitle in INK_SOFT below title — readable. Y-axis label "Energy (eV)" vertical, readable. Y-axis tick labels (−13.60, −3.40, −1.51, −0.85, −0.54, 0.00) in INK_SOFT — readable. Legend "Spectral Series" in upper right with ELEVATED_BG fill — all entries visible.
+      Data: Lyman arrows in #009E73 (green), Balmer in #C475FD (lavender), Paschen in #4467A3 (blue). Horizontal energy level lines in INK_SOFT (thin). Dashed ionization limit at 0.00 eV. Wavelength labels rotated 90°, italic, 8pt — small but legible as tertiary annotations. Quantum number labels (n=1 through n=∞) in INK bold.
+      Legibility verdict: PASS — all primary and secondary text clearly readable; tertiary wavelength labels (8pt rotated) are borderline but acceptable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface for dark theme.
+      Chrome: Title in #F0EFE8 (INK dark token) — clearly readable on dark surface. Subtitle in #B8B7B0 (INK_SOFT dark) — readable. Y-axis label and tick labels in INK_SOFT dark (#B8B7B0) — fully visible. Level labels (n=1 through n=∞) in INK dark — clearly readable. Legend has #242420 (ELEVATED_BG dark) fill with #B8B7B0 borders and label text — all entries visible. No dark-on-dark failures.
+      Data: Lyman #009E73, Balmer #C475FD, Paschen #4467A3 — identical to light render; only chrome flipped. Energy level lines now render as light-gray horizontals (INK_SOFT dark = #B8B7B0) — appropriate contrast on dark background. Wavelength labels in #A8A79F (INK_MUTED dark) — visible as tertiary annotations.
+      Legibility verdict: PASS — all text readable against the warm-black background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -53,45 +61,53 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Most font sizes explicitly set (title 28pt, axis title 22pt, level
-          labels 18pt, legend 16-18pt), but y-axis tick labels at 14pt and wavelength
-          annotations at 12pt fall below ideal thresholds
+        comment: Most text explicitly sized with good hierarchy; wavelength labels
+          at fontSize=8 rotated 90° are borderline as tertiary annotations
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: true
+        comment: Moderate crowding in n=3-6 region where symlog scale compresses levels;
+          staggered dx offsets mitigate but some tightness remains
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor congestion around Paschen series wavelength labels due to close
-          vertical spacing of upper levels; all text remains readable
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Energy lines and arrow shafts at strokeWidth=3, arrowheads size=350,
-          all perfectly adapted
+        comment: Arrow shafts (strokeWidth=3), arrowheads (size=200), and level lines
+          all clearly visible; intentional hierarchy between element types
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe Okabe-Ito palette with excellent contrast on light
-          background
+        comment: Imprint palette CVD-safe, three series distinctly distinguishable
+          without hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good vertical coverage of energy range; some unused horizontal space
-          on the left
+        comment: Good overall layout; some unbalanced empty canvas space at the top
+          above legend and ionization line
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Energy (eV) with units on y-axis
+        comment: Energy (eV) with units; x-axis correctly hidden (no semantic meaning
+          in energy level diagram)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Lyman #009E73 (first series), Balmer #C475FD, Paschen #4467A3 —
+          canonical Imprint order; backgrounds #FAF8F1/#1A1A17; theme chrome flips
+          correctly'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -99,22 +115,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Custom colorblind-safe palette, consistent #2C3E50 typography, italic
-          wavelength annotations, informative subtitle with physics formula'
+        comment: 'Strong design: intentional visual hierarchy (thin gray level lines
+          vs thick coloured arrows), symlog scale choice, staggered level endpoints,
+          graduated dx annotations'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Grid opacity 0.08, view stroke removed, custom background, x-axis
-          hidden, staggered endpoints, custom tick values
+        comment: configure_view strokeWidth=0 removes frame; gridOpacity=0.12 extremely
+          subtle; INK_MUTED italic for wavelength labels; good typography hierarchy
+          across three tiers
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three spectral series create clear visual hierarchy; directional
-          arrows convey emission physics; symlog scale aids interpretation
+        comment: Three-series grouping (UV/Visible/IR) tells clear spectral story;
+          visual hierarchy guides viewer to transitions over levels; subtitle reinforces
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with horizontal level lines and vertical
-          transition arrows
+        comment: 'Correct energy level diagram: horizontal lines at energy positions,
+          vertical arrows for transitions, quantum labels'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: partial-width lines, labels, emission
-          arrows, color-coding, ionization limit, nonlinear scale'
+        comment: 'All features present: partial-width lines, quantum labels, downward
+          emission arrows, series-coloured arrows, wavelength labels, ionization reference
+          (dashed at 0.00 eV)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy values from E_n = -13.6/n², wavelengths from Rydberg formula
+        comment: Energy axis increases upward with symlog scale; all 6 levels + 9
+          transitions visible; correct x-axis hidden
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, Spectral Series legend with matching labels
+        comment: Title exactly 'energy-level-atomic · python · altair · anyplot.ai';
+          legend 'Spectral Series' with correct series names
     data_quality:
       score: 15
       max: 15
@@ -154,21 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six energy levels, three spectral series with nine transitions, ionization
-          limit
+        comment: 'All aspects shown: 6 levels, 3 spectral series, 9 transitions, wavelength
+          annotations, ionization limit, symlog scale for convergent levels'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom physics with correct Rydberg constant, neutral
-          science domain
+        comment: Real hydrogen atom physics; Rydberg formula for wavelengths; correct
+          spectral series names (Lyman UV, Balmer Visible, Paschen IR)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct physical values matching known hydrogen spectrum
+        comment: E_n = -13.6/n² eV correct; Lyman ~97-122 nm, Balmer ~434-656 nm,
+          Paschen ~1094-1875 nm all factually accurate
     code_quality:
       score: 10
       max: 10
@@ -178,33 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: Imports, Data, Layers, Combine, Save'
+        comment: No functions or classes; flat imports → data → plot → save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; data computed from physics formulae
+        comment: Deterministic physics formulas; no random data, no seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: os, altair, pandas, PIL.Image — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with good list comprehensions
+        comment: Three-subset wavelength label approach is idiomatic Altair workaround
+          for non-data-driven dx; clean and purposeful
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Altair 6.0 API
+        comment: Saves plot-{THEME}.png with PAD-only canvas resize and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -212,27 +236,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of alt.layer(), proper encoding types, mark_rule/mark_point/mark_text,
-          declarative configuration
+        comment: Expert alt.layer() composition; mark_rule with x/x2 and y/y2; Scale(type=symlog);
+          alt.Title with subtitle; configure_* chain — all idiomatic Altair/Vega-Lite
+          patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Tooltips, HTML export, layer composition, symlog scale — distinctly
-          Altair patterns but standard usage
+        comment: mark_rule with spanning (x/x2, y/y2), 8-layer composition, mark_point
+          with shape='triangle-down', symlog scale — features distinctive to Vega-Lite
+          declarative grammar
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
-  - minimal-chrome
+  - alpha-blending

@@ -1,118 +1,133 @@
 library: matplotlib
+language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:45:31Z'
-updated: '2026-02-27T21:02:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22502879587
+updated: '2026-05-30T07:26:24Z'
+generated_by: claude-sonnet
+workflow_run: 26677542396
 issue: 4434
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - 'Excellent data storytelling: sqrt-compressed scale elegantly solves the level-convergence
-    problem while custom tick labels preserve real energy values'
-  - Strong spatial organization separating Lyman (left) and Balmer (right) series
-    for immediate visual comprehension
-  - Physically accurate hydrogen atom data with correct formula and spectral wavelengths
-  - Cohesive color scheme with spectral-inspired Balmer colors and warm gold Lyman
-    arrows
-  - Clean, well-structured code with no unnecessary complexity
+  - Spectral-matched colors for Balmer transitions (H-α red, H-β cyan, H-γ lavender,
+    H-δ rose) are scientifically accurate and create clear visual differentiation
+  - Sqrt-compressed display axis elegantly spreads the converging upper energy levels
+    while preserving correct ordering
+  - All hydrogen atom energy values are factually correct (-13.6/n² eV)
+  - Both themes handled correctly — dark render shows light text on near-black background
+    with no dark-on-dark issues
+  - Perfect spec compliance with ionization reference line, quantum number labels,
+    and dual series (Lyman + Balmer)
   weaknesses:
-  - Minor crowding at upper energy levels (n=4, n=5, n=6) where labels are close together
-  - H-gamma and H-delta arrow colors (blue-violet and purple) are somewhat similar,
-    potentially challenging for some viewers
-  image_description: 'The plot displays a hydrogen atom energy level diagram with
-    six horizontal blue lines representing energy levels n=1 through n=6, positioned
-    vertically using a sqrt-compressed energy scale. Each level is labeled on the
-    right with its quantum number (n = 1 through n = 6) and on the left with its energy
-    value in eV (-13.60 to -0.38 eV). A dashed gray line at 0 eV marks the ionization
-    limit. Lyman series transitions are shown as downward gold/orange arrows on the
-    left side connecting upper levels to n=1, while Balmer series transitions appear
-    on the right side as color-coded downward arrows to n=2: red (H-alpha 656 nm),
-    cyan-blue (H-beta 486 nm), blue-violet (H-gamma 434 nm), and purple (H-delta 410
-    nm). Italic series labels identify each group. A legend in the lower right lists
-    all transition colors with wavelengths. The y-axis is labeled "Energy (eV)" with
-    custom tick values. Top, right, and bottom spines are removed; a subtle y-axis
-    grid is present. The title reads "energy-level-atomic · matplotlib · pyplots.ai".'
+  - 'Brand green (#009E73) is absent — energy level lines use Imprint blue (#4467A3)
+    instead; consider using #009E73 for the Lyman series arrows (UV) or another primary
+    data element to satisfy the first-series rule'
+  - Upper energy level labels (-0.38 eV, -0.54 eV, -0.85 eV for n=6, n=5, n=4) remain
+    crowded in the compressed region despite the stagger fix — consider smaller font
+    (6pt) or a leader-line approach for n=6 and n=5
+  - Balmer series label text (cyan italic) sits close to the n=4 level line area and
+    creates minor visual overlap with the H-γ/H-δ arrows in the upper-right zone
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "energy-level-atomic · python · matplotlib · anyplot.ai" in dark ink, fully visible. Y-axis label "Energy (eV)" in dark text at fontsize=10. Tick labels at 8pt in INK_SOFT (#4A4A44), all readable. "n = 1" through "n = 6" labels on right edge in Imprint blue, all visible. Energy value labels (-13.60 eV through -0.38 eV) on left in muted gray. "Ionization (0 eV)" label readable on right.
+      Data: Six horizontal energy level lines in Imprint blue (#4467A3) — n=1 bolder at ground state. Dashed ionization line in gray. Five Lyman series downward arrows in ochre (#BD8233), clearly visible spanning from upper levels to n=1. Four Balmer series arrows in spectral-matched colors (red H-α, cyan H-β, lavender H-γ, rose H-δ). Legend in lower right with elevated background.
+      Notable issues: Upper level labels (-0.38, -0.54, -0.85 eV) are crowded; stagger of n=5 partially helps. "Balmer series (Visible)" italic label sits close to n=4 area.
+      Legibility verdict: PASS — all text readable; crowding at upper levels is minor
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream text (#F0EFE8), clearly visible. Y-axis label light. Tick labels in light gray (#B8B7B0) — no dark-on-dark failures. "n = 1" through "n = 6" labels appear lighter blue against dark background, readable. Energy value labels in light muted gray, readable. "Ionization (0 eV)" label in light INK_SOFT — visible.
+      Data: Data colors are IDENTICAL to light render — same Imprint blue energy lines, same ochre Lyman arrows, same red/cyan/lavender/rose Balmer arrows. Legend box uses elevated dark background (#242420) with light text. Grid lines subtle at alpha=0.15.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome adapts correctly
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis label 20pt, ticks
-          16pt, level labels 16-18pt. All perfectly readable at full resolution.'
+        comment: All font sizes explicitly set; both themes readable. Minor crowding
+          at n=4-6 labels despite stagger fix.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Upper energy labels (-0.38/-0.54/-0.85 eV) remain crowded. Balmer
+          series label sits close to n=4 line area.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding at upper energy levels (n=4,5,6) where labels are
-          close together, but all text remains readable. Sqrt compression helps spread
-          them.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Energy level lines (linewidth=2.5) and transition arrows (linewidth=2.2)
-          are clearly visible with appropriately sized arrowheads.
+        comment: Level lines and arrows clearly visible. Uppermost Balmer arrows (H-γ,
+          H-δ) are short due to compression but still readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Good overall: red, blue, gold well-separated. H-gamma (blue-violet)
-          and H-delta (purple) are somewhat similar but spatially separated.'
+        comment: All colors from CVD-safe Imprint palette. Spectral series uses distinct
+          hue families.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with 16:9 figsize, balanced margins, legend near
-          data, tight_layout applied.
+        comment: Canvas gate passed (3200x1800). Good canvas utilization. No clipping.
+          Canvas file correctly not using bbox_inches=tight.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Energy (eV)' with units. X-axis correctly omitted. Title
-          in correct format.
+        comment: 'Y-axis: Energy (eV) with units. X-axis suppressed (appropriate).
+          Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'All colors from Imprint palette. Backgrounds correct. Chrome theme-adaptive.
+          But #009E73 (brand green) absent — first primary element uses #4467A3 (blue)
+          instead.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive color scheme with Python blue for levels, spectral colors
-          for Balmer, warm gold for Lyman. Medium-weight title, italic series labels.
-          Clearly above defaults.
+        comment: Spectral-matched colors for Balmer transitions are scientifically
+          thoughtful. Sqrt compression is elegant. Bolder ground state line adds hierarchy.
+          Clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed (top/right/bottom), subtle grid (alpha=0.15), rounded
-          line caps, generous whitespace, custom y-ticks mapping compressed axis to
-          real values.
+        comment: Top/right/bottom spines removed. Subtle grid at alpha=0.15. Italic
+          group labels. Clean legend with elevated frame. Some crowding detracts.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spatial separation of Lyman (left) and Balmer (right) series. Color
-          coding conveys wavelength. Sqrt compression spreads converging levels. Viewer
-          immediately grasps structure.
+        comment: Sqrt compression emphasizes the vast n=1-to-n=2 gap (key physics
+          story). Spectral colors connect diagram to visible spectrum. Dual series
+          distinction (UV Lyman vs visible Balmer) guides interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -122,30 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with horizontal lines and vertical transition
-          arrows.
+        comment: Correct energy level diagram with horizontal level lines and vertical
+          transition arrows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: partial-width lines, quantum labels, downward
-          emission arrows, color-coded by wavelength, grouped by series, nonlinear
-          scale, ionization line.'
+        comment: 'All features present: level lines, quantum labels, transition arrows,
+          spectral color coding, ionization reference line, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis = energy with sqrt-compressed display and real-value tick
-          labels. All 6 levels and 9 transitions visible.
+        comment: Energy axis correct (upward increasing, n=1 at bottom). All 6 levels
+          visible. Sqrt compression preserves ordering.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows all Balmer line identifiers with
-          wavelengths plus Lyman series.
+        comment: Title exactly 'energy-level-atomic · python · matplotlib · anyplot.ai'.
+          Legend labels match transition names with wavelengths.
     data_quality:
       score: 15
       max: 15
@@ -155,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 6 energy levels, 2 spectral series, 9 transitions, ionization
-          limit. Covers all key aspects.
+        comment: 'Covers all aspects: multiple levels, two spectral series, ionization
+          limit, color-coded transitions, energy values, quantum numbers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom energy levels using E_n = -13.6/n^2 eV. Correct
-          Balmer wavelengths. Authentic atomic physics context.
+        comment: Hydrogen atom energy levels — textbook physics, neutral educational
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically correct energy values and wavelengths for hydrogen atom.
+        comment: 'Exactly correct: -13.6/n² eV formula. All 6 level values factually
+          accurate.'
     code_quality:
       score: 10
       max: 10
@@ -179,32 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports -> Data -> Plot -> Save flow. No functions or classes.
+        comment: 'Clean linear structure: imports → tokens → data → plot → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from analytical formula.
+        comment: Fully deterministic — analytical formula, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only three imports, all used.
+        comment: 'Only used imports: os, matplotlib.patches, matplotlib.pyplot, numpy.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Good use of zip with strict=True, dictionary lookup
-          for y-positions.
+        comment: Clean Pythonic code. Sqrt compression logic well-motivated. No fake
+          UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'. No deprecated
+        comment: Saves as plot-{THEME}.png, no bbox_inches=tight, modern matplotlib
           API.
     library_mastery:
       score: 7
@@ -215,15 +231,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistently uses Axes methods, proper figure/axes pattern, custom
-          tick placement.
+        comment: Consistently uses ax. methods, custom ticks via set_yticks/set_yticklabels,
+          annotate with arrowprops, mpatches for legend. Good idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses matplotlib-specific annotate with custom arrowprops, mpatches.Patch
-          for hand-crafted legend, solid_capstyle on lines.
+        comment: Custom arrowprops with head_width/head_length, mpatches.Patch for
+          legend, nonlinear axis mapping via custom tick positions — some matplotlib-distinctive
+          usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -231,9 +248,12 @@ impl_tags:
   - annotations
   - custom-legend
   - manual-ticks
+  - patches
   patterns:
   - data-generation
+  - explicit-figure
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - grid-styling

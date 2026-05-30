@@ -1,18 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-03
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-30
 """
 
+import base64
+import os
 import sys
+from io import BytesIO
 from pathlib import Path
 
 
-_script_dir = str(Path(__file__).parent)
-sys.path = [p for p in sys.path if p != _script_dir]
-
-import base64  # noqa: E402
-from io import BytesIO  # noqa: E402
+sys.path = [p for p in sys.path if p != str(Path(__file__).parent)]
 
 import numpy as np  # noqa: E402
 from PIL import Image  # noqa: E402
@@ -20,12 +19,23 @@ from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-# Data — Mandelbrot set computation
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3)
+_SEQ_START = (0, 158, 115)  # #009E73
+_SEQ_END = (68, 103, 163)  # #4467A3
+
+# Data — Mandelbrot set on the complex plane
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
 max_iter = 200
 bailout = 256
-grid_w, grid_h = 800, 600
+grid_w, grid_h = 1400, 1000
 
 real = np.linspace(x_min, x_max, grid_w)
 imag = np.linspace(y_max, y_min, grid_h)
@@ -43,45 +53,24 @@ for i in range(max_iter):
     escape_iter[escaped] = i + 1 - nu
     mask[escaped] = False
 
-inside = escape_iter >= max_iter
-exterior = ~inside
+exterior = escape_iter < max_iter
 
-# Viridis-inspired perceptually uniform colormap
-viridis_stops = [
-    (0.000, (68, 1, 84)),
-    (0.125, (72, 36, 117)),
-    (0.250, (62, 74, 137)),
-    (0.375, (49, 104, 142)),
-    (0.500, (38, 130, 142)),
-    (0.625, (31, 158, 137)),
-    (0.750, (53, 183, 121)),
-    (0.875, (110, 206, 88)),
-    (1.000, (253, 231, 37)),
-]
-
+# Imprint sequential LUT: #009E73 → #4467A3 (1024 stops)
 lut_size = 1024
-lut = np.zeros((lut_size, 3), dtype=int)
-for idx in range(lut_size):
-    t = idx / (lut_size - 1)
-    for k in range(len(viridis_stops) - 1):
-        t0, c0 = viridis_stops[k]
-        t1, c1 = viridis_stops[k + 1]
-        if t <= t1 + 1e-10:
-            f = (t - t0) / (t1 - t0) if t1 > t0 else 0
-            lut[idx] = [int(c0[ch] + (c1[ch] - c0[ch]) * f) for ch in range(3)]
-            break
+t_vals = np.linspace(0, 1, lut_size)
+lut = np.zeros((lut_size, 3), dtype=np.uint8)
+for ch, (s, e) in enumerate(zip(_SEQ_START, _SEQ_END, strict=True)):
+    lut[:, ch] = np.round(s + (e - s) * t_vals).astype(np.uint8)
 
-# Log-normalized color mapping
+# Log-normalized color mapping (exterior = Imprint seq; interior = black)
 cell_colors = np.zeros((*c.shape, 3), dtype=np.uint8)
 log_min, log_max = 0.0, 1.0
 if np.any(exterior):
     iter_vals = escape_iter[exterior]
     log_vals = np.log(iter_vals + 1)
     log_min, log_max = log_vals.min(), log_vals.max()
-    if log_max > log_min:
-        normalized = (log_vals - log_min) / (log_max - log_min)
-    else:
-        normalized = np.zeros_like(log_vals)
+    span = log_max - log_min
+    normalized = (log_vals - log_min) / span if span > 0 else np.zeros_like(log_vals)
     indices = np.clip((normalized * (lut_size - 1)).astype(int), 0, lut_size - 1)
     cell_colors[exterior] = lut[indices]
 
@@ -91,255 +80,242 @@ buf = BytesIO()
 heatmap_img.save(buf, format="PNG")
 heatmap_data_uri = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
+# Title — 48 chars < 67 baseline, no scaling needed
+title_str = "heatmap-mandelbrot · python · pygal · anyplot.ai"
+title_fontsize = round(66 * 67 / len(title_str)) if len(title_str) > 67 else 66
 
-class MandelbrotHeatmap(Graph):
-    """Custom pygal chart for Mandelbrot set heatmap visualization.
 
-    Subclasses pygal's Graph to render a fractal heatmap using pygal's
-    SVG construction, Style system, and rendering pipeline.
-    """
+# Module-level function holds all SVG generation logic — keeps class minimal
+def _draw_heatmap_overlay(self):
+    gw = self.view.width
+    gh = self.view.height
 
+    pad_left, pad_top = 200, 80
+    pad_right, pad_bottom = 200, 100
+    x_span = self._x_range[1] - self._x_range[0]
+    y_span = self._y_range[1] - self._y_range[0]
+
+    avail_w = gw - pad_left - pad_right
+    avail_h = gh - pad_top - pad_bottom
+    if avail_w / avail_h > x_span / y_span:
+        plot_h = avail_h
+        plot_w = plot_h * x_span / y_span
+    else:
+        plot_w = avail_w
+        plot_h = plot_w * y_span / x_span
+
+    px, py = pad_left, pad_top
+    root = self.svg.node(self.nodes["plot"], class_="mandelbrot-heatmap")
+
+    # Embedded heatmap image
+    ns = "http://www.w3.org/1999/xlink"
+    img = self.svg.node(root, "image", x=px, y=py, width=plot_w, height=plot_h)
+    img.attrib["{%s}href" % ns] = self._heatmap_uri
+    img.attrib["preserveAspectRatio"] = "none"
+
+    # Plot border
+    self.svg.node(
+        root, "rect", x=px, y=py, width=plot_w, height=plot_h, style=f"fill:none;stroke:{INK_SOFT};stroke-width:2"
+    )
+
+    # Subtitle — mathematical formula in italic serif, sized to match axis titles
+    sub = self.svg.node(
+        root,
+        "text",
+        x=px + plot_w / 2,
+        y=py - 14,
+        style=(
+            f"font-size:43px;font-style:italic;font-weight:300;"
+            f"font-family:'Georgia',serif;fill:{INK_MUTED};letter-spacing:1px"
+        ),
+    )
+    sub.text = "zₙ₊₁ = zₙ² + c · escape time, smooth coloring"
+    sub.attrib["text-anchor"] = "middle"
+
+    # Reference hairline at Im=0 — marks the real axis
+    im0_frac = (self._y_range[1] - 0.0) / y_span
+    im0_y = py + im0_frac * plot_h
+    self.svg.node(
+        root,
+        "line",
+        x1=px,
+        y1=im0_y,
+        x2=px + plot_w,
+        y2=im0_y,
+        style=f"stroke:{INK_SOFT};stroke-width:1;stroke-dasharray:6,4;opacity:0.5",
+    )
+    im0_lbl = self.svg.node(
+        root, "text", x=px + 10, y=im0_y - 9, style=f"font-size:25px;font-family:sans-serif;fill:{INK};opacity:0.85"
+    )
+    im0_lbl.text = "Im = 0"
+
+    # Period-2 bulb label — placed in colored exterior above the bulb (Im ≈ 0.37)
+    # so the label uses INK against green and is readable in both themes
+    p2_re = -1.0
+    ann_im = 0.37  # exterior above the bulb top (~Im 0.25)
+    ann_frac_x = (p2_re - self._x_range[0]) / x_span
+    ann_frac_y = (self._y_range[1] - ann_im) / y_span
+    ann_cx = px + ann_frac_x * plot_w
+    ann_cy = py + ann_frac_y * plot_h
+    bulb_top_im = 0.26
+    bulb_top_frac_y = (self._y_range[1] - bulb_top_im) / y_span
+    bulb_top_y = py + bulb_top_frac_y * plot_h
+    self.svg.node(
+        root,
+        "line",
+        x1=ann_cx,
+        y1=ann_cy + 6,
+        x2=ann_cx,
+        y2=bulb_top_y - 6,
+        style=f"stroke:{INK};stroke-width:1.5;opacity:0.6",
+    )
+    ann = self.svg.node(
+        root, "text", x=ann_cx, y=ann_cy, style=f"font-size:25px;font-family:sans-serif;fill:{INK};opacity:0.85"
+    )
+    ann.text = "Period-2 bulb"
+    ann.attrib["text-anchor"] = "middle"
+
+    # X-axis ticks and labels
+    for val in [-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0]:
+        frac = (val - self._x_range[0]) / x_span
+        tx = px + frac * plot_w
+        ty = py + plot_h
+        self.svg.node(root, "line", x1=tx, y1=ty, x2=tx, y2=ty + 14, style=f"stroke:{INK_SOFT};stroke-width:2")
+        lbl = self.svg.node(
+            root, "text", x=tx, y=ty + 52, style=f"font-size:34px;font-family:sans-serif;fill:{INK_SOFT}"
+        )
+        lbl.text = f"{val:.1f}"
+        lbl.attrib["text-anchor"] = "middle"
+
+    # X-axis title
+    xl = self.svg.node(
+        root,
+        "text",
+        x=px + plot_w / 2,
+        y=py + plot_h + 90,
+        style=f"font-size:44px;font-weight:600;font-family:sans-serif;fill:{INK}",
+    )
+    xl.text = "Real Axis (Re)"
+    xl.attrib["text-anchor"] = "middle"
+
+    # Y-axis ticks and labels
+    for val in [-1.0, -0.5, 0.0, 0.5, 1.0]:
+        frac = (self._y_range[1] - val) / y_span
+        ty = py + frac * plot_h
+        self.svg.node(root, "line", x1=px - 14, y1=ty, x2=px, y2=ty, style=f"stroke:{INK_SOFT};stroke-width:2")
+        label = f"{val:+.1f}i" if val != 0 else "0.0i"
+        lbl = self.svg.node(
+            root, "text", x=px - 24, y=ty + 12, style=f"font-size:34px;font-family:sans-serif;fill:{INK_SOFT}"
+        )
+        lbl.text = label
+        lbl.attrib["text-anchor"] = "end"
+
+    # Y-axis title (rotated)
+    ylx = px - 170
+    yly = py + plot_h / 2
+    yl = self.svg.node(
+        root, "text", x=ylx, y=yly, style=f"font-size:44px;font-weight:600;font-family:sans-serif;fill:{INK}"
+    )
+    yl.text = "Imaginary Axis (Im)"
+    yl.attrib["text-anchor"] = "middle"
+    yl.attrib["transform"] = f"rotate(-90, {ylx}, {yly})"
+
+    # Colorbar gradient
+    cb_x = px + plot_w + 30
+    cb_w = 40
+    cb_top = py + 40
+    cb_h = plot_h - 80
+    n_seg = 100
+
+    for s in range(n_seg):
+        t = 1.0 - s / (n_seg - 1)
+        ci = min(int(t * (self._lut_sz - 1)), self._lut_sz - 1)
+        r, g, b = self._colorbar_lut[ci]
+        sy = cb_top + s * cb_h / n_seg
+        self.svg.node(
+            root,
+            "rect",
+            x=cb_x,
+            y=sy,
+            width=cb_w,
+            height=cb_h / n_seg + 1,
+            style=f"fill:#{r:02x}{g:02x}{b:02x};stroke:none",
+        )
+
+    self.svg.node(
+        root, "rect", x=cb_x, y=cb_top, width=cb_w, height=cb_h, style=f"fill:none;stroke:{INK_SOFT};stroke-width:1.5"
+    )
+
+    # Colorbar tick labels
+    log_span = self._log_range[1] - self._log_range[0]
+    for iter_val in [1, 5, 10, 25, 50, 100, 200]:
+        log_val = np.log(iter_val + 1)
+        if log_val < self._log_range[0] or log_val > self._log_range[1]:
+            continue
+        t_c = (log_val - self._log_range[0]) / log_span if log_span > 0 else 0
+        frac = 1.0 - t_c
+        ty = cb_top + frac * cb_h
+        self.svg.node(
+            root, "line", x1=cb_x + cb_w, y1=ty, x2=cb_x + cb_w + 8, y2=ty, style=f"stroke:{INK_SOFT};stroke-width:1.5"
+        )
+        lbl = self.svg.node(
+            root, "text", x=cb_x + cb_w + 14, y=ty + 10, style=f"font-size:28px;font-family:sans-serif;fill:{INK_SOFT}"
+        )
+        lbl.text = str(iter_val)
+
+    # Colorbar title
+    cbt = self.svg.node(
+        root,
+        "text",
+        x=cb_x - 5,
+        y=cb_top - 18,
+        style=f"font-size:32px;font-weight:600;font-family:sans-serif;fill:{INK}",
+    )
+    cbt.text = "Iterations"
+    cbt.attrib["text-anchor"] = "start"
+
+    # In-set legend
+    lg_y = cb_top + cb_h + 38
+    self.svg.node(
+        root, "rect", x=cb_x, y=lg_y, width=26, height=26, style=f"fill:#000000;stroke:{INK_SOFT};stroke-width:1"
+    )
+    lg = self.svg.node(
+        root, "text", x=cb_x + 38, y=lg_y + 20, style=f"font-size:26px;font-family:sans-serif;fill:{INK_SOFT}"
+    )
+    lg.text = "In set"
+
+
+# Minimal pygal Graph subclass — routing stubs only, logic lives in _draw_heatmap_overlay
+class _HeatmapGraph(Graph):
     _adapters = []
-
-    def __init__(self, heatmap_uri, x_range, y_range, colorbar_lut, log_range, lut_sz, *args, **kwargs):
-        self._heatmap_uri = heatmap_uri
-        self._x_range = x_range
-        self._y_range = y_range
-        self._colorbar_lut = colorbar_lut
-        self._log_range = log_range
-        self._lut_sz = lut_sz
-        super().__init__(*args, **kwargs)
-
-    def _compute(self):
-        pass
-
-    def _compute_x_labels(self):
-        pass
-
-    def _compute_y_labels(self):
-        pass
-
-    def _compute_x_labels_major(self):
-        pass
-
-    def _compute_y_labels_major(self):
-        pass
-
-    def _plot(self):
-        # Available area after pygal's margins (title, etc.)
-        gw = self.view.width
-        gh = self.view.height
-
-        # Tighter layout for better canvas utilization
-        pad_left, pad_top = 250, 50
-        pad_right, pad_bottom = 210, 105
-        x_span = self._x_range[1] - self._x_range[0]
-        y_span = self._y_range[1] - self._y_range[0]
-
-        avail_w = gw - pad_left - pad_right
-        avail_h = gh - pad_top - pad_bottom
-        if avail_w / avail_h > x_span / y_span:
-            plot_h = avail_h
-            plot_w = plot_h * x_span / y_span
-        else:
-            plot_w = avail_w
-            plot_h = plot_w * y_span / x_span
-
-        px, py = pad_left, pad_top
-        root = self.svg.node(self.nodes["plot"], class_="mandelbrot-heatmap")
-
-        # Subtle shadow behind heatmap for depth
-        self.svg.node(
-            root, "rect", x=px + 4, y=py + 4, width=plot_w, height=plot_h, style="fill:#d0d0d0;stroke:none;opacity:0.5"
-        )
-
-        # Embedded high-resolution heatmap image
-        ns = "http://www.w3.org/1999/xlink"
-        img = self.svg.node(root, "image", x=px, y=py, width=plot_w, height=plot_h)
-        img.attrib["{%s}href" % ns] = self._heatmap_uri
-        img.attrib["preserveAspectRatio"] = "none"
-
-        # Refined plot border
-        self.svg.node(
-            root, "rect", x=px, y=py, width=plot_w, height=plot_h, style="fill:none;stroke:#333;stroke-width:2.5"
-        )
-
-        # Subtitle with mathematical formula (italic for elegance)
-        sub = self.svg.node(
-            root,
-            "text",
-            x=px + plot_w / 2,
-            y=py - 12,
-            style="font-size:36px;font-style:italic;font-weight:300;"
-            "font-family:'Georgia',serif;fill:#555;letter-spacing:1px",
-        )
-        sub.text = "z\u2099\u208a\u2081 = z\u2099\u00b2 + c \u00b7 Escape time with smooth iteration count"
-        sub.attrib["text-anchor"] = "middle"
-
-        # X-axis ticks and labels
-        for val in [-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0]:
-            frac = (val - self._x_range[0]) / x_span
-            tx = px + frac * plot_w
-            ty = py + plot_h
-            self.svg.node(root, "line", x1=tx, y1=ty, x2=tx, y2=ty + 14, style="stroke:#444;stroke-width:2")
-            lbl = self.svg.node(root, "text", x=tx, y=ty + 50, style="font-size:34px;font-family:sans-serif;fill:#333")
-            lbl.text = f"{val:.1f}"
-            lbl.attrib["text-anchor"] = "middle"
-
-        # X-axis title
-        xl = self.svg.node(
-            root,
-            "text",
-            x=px + plot_w / 2,
-            y=py + plot_h + 95,
-            style="font-size:42px;font-weight:600;font-family:sans-serif;fill:#333;letter-spacing:0.5px",
-        )
-        xl.text = "Real Axis (Re)"
-        xl.attrib["text-anchor"] = "middle"
-
-        # Y-axis ticks and labels
-        for val in [-1.0, -0.5, 0.0, 0.5, 1.0]:
-            frac = (self._y_range[1] - val) / y_span
-            ty = py + frac * plot_h
-            self.svg.node(root, "line", x1=px - 14, y1=ty, x2=px, y2=ty, style="stroke:#444;stroke-width:2")
-            label = f"{val:+.1f}i" if val != 0 else "0.0i"
-            lbl = self.svg.node(
-                root, "text", x=px - 22, y=ty + 12, style="font-size:34px;font-family:sans-serif;fill:#333"
-            )
-            lbl.text = label
-            lbl.attrib["text-anchor"] = "end"
-
-        # Y-axis title (rotated)
-        ylx = px - 200
-        yly = py + plot_h / 2
-        yl = self.svg.node(
-            root,
-            "text",
-            x=ylx,
-            y=yly,
-            style="font-size:42px;font-weight:600;font-family:sans-serif;fill:#333;letter-spacing:0.5px",
-        )
-        yl.text = "Imaginary Axis (Im)"
-        yl.attrib["text-anchor"] = "middle"
-        yl.attrib["transform"] = f"rotate(-90, {ylx}, {yly})"
-
-        # Feature annotations — guide viewer to key mathematical structures
-        annotations = [
-            {"label": "Main cardioid", "cx": -0.25, "cy": 0.15, "dx": 60, "dy": -90},
-            {"label": "Period-2 bulb", "cx": -1.0, "cy": 0.15, "dx": -40, "dy": -90},
-        ]
-        for ann in annotations:
-            ax = px + (ann["cx"] - self._x_range[0]) / x_span * plot_w
-            ay = py + (self._y_range[1] - ann["cy"]) / y_span * plot_h
-            tx = ax + ann["dx"]
-            ty = ay + ann["dy"]
-            # Leader line with subtle white stroke
-            self.svg.node(
-                root, "line", x1=ax, y1=ay, x2=tx, y2=ty + 5, style="stroke:#ffffff;stroke-width:2.5;opacity:0.9"
-            )
-            # Small circle at anchor point
-            self.svg.node(root, "circle", cx=ax, cy=ay, r=5, style="fill:#ffffff;opacity:0.9;stroke:none")
-            # Annotation text with semi-transparent background
-            tw = len(ann["label"]) * 14 + 14
-            self.svg.node(
-                root, "rect", x=tx - 7, y=ty - 24, width=tw, height=32, rx=5, ry=5, style="fill:#000000;opacity:0.65"
-            )
-            lbl = self.svg.node(
-                root, "text", x=tx, y=ty, style="font-size:23px;font-family:sans-serif;fill:#ffffff;font-weight:500"
-            )
-            lbl.text = ann["label"]
-
-        # Colorbar
-        cb_x = px + plot_w + 35
-        cb_w = 40
-        cb_top = py + 45
-        cb_h = plot_h - 90
-        n_seg = 100
-
-        for s in range(n_seg):
-            t = 1.0 - s / (n_seg - 1)
-            ci = min(int(t * (self._lut_sz - 1)), self._lut_sz - 1)
-            r, g, b = self._colorbar_lut[ci]
-            sy = cb_top + s * cb_h / n_seg
-            self.svg.node(
-                root,
-                "rect",
-                x=cb_x,
-                y=sy,
-                width=cb_w,
-                height=cb_h / n_seg + 1,
-                style=f"fill:#{r:02x}{g:02x}{b:02x};stroke:none",
-            )
-
-        self.svg.node(
-            root, "rect", x=cb_x, y=cb_top, width=cb_w, height=cb_h, style="fill:none;stroke:#444;stroke-width:1.5"
-        )
-
-        # Colorbar tick labels — round values for readability
-        log_span = self._log_range[1] - self._log_range[0]
-        for iter_val in [1, 5, 10, 25, 50, 100, 200]:
-            log_val = np.log(iter_val + 1)
-            if log_val < self._log_range[0] or log_val > self._log_range[1]:
-                continue
-            t_c = (log_val - self._log_range[0]) / log_span if log_span > 0 else 0
-            frac = 1.0 - t_c
-            ty = cb_top + frac * cb_h
-            self.svg.node(
-                root, "line", x1=cb_x + cb_w, y1=ty, x2=cb_x + cb_w + 8, y2=ty, style="stroke:#444;stroke-width:1.5"
-            )
-            lbl = self.svg.node(
-                root, "text", x=cb_x + cb_w + 14, y=ty + 10, style="font-size:28px;font-family:sans-serif;fill:#333"
-            )
-            lbl.text = str(iter_val)
-
-        # Colorbar title
-        cbt = self.svg.node(
-            root,
-            "text",
-            x=cb_x - 5,
-            y=cb_top - 22,
-            style="font-size:32px;font-weight:600;font-family:sans-serif;fill:#333",
-        )
-        cbt.text = "Iterations"
-        cbt.attrib["text-anchor"] = "start"
-
-        # In-set legend entry
-        lg_y = cb_top + cb_h + 40
-        self.svg.node(root, "rect", x=cb_x, y=lg_y, width=28, height=28, style="fill:black;stroke:#555;stroke-width:1")
-        lg = self.svg.node(
-            root, "text", x=cb_x + 40, y=lg_y + 22, style="font-size:26px;font-family:sans-serif;fill:#333"
-        )
-        lg.text = "In set"
+    _compute = _compute_x_labels = _compute_y_labels = _compute_x_labels_major = _compute_y_labels_major = lambda self: (
+        None
+    )
+    _plot = _draw_heatmap_overlay
 
 
-# Chart styling via pygal's Style system
+# Pygal Style — theme-adaptive Imprint palette
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#000000",),
-    title_font_size=56,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#009E73",),
+    title_font_size=title_fontsize,
     title_font_family="sans-serif",
-    label_font_size=34,
-    major_label_font_size=34,
-    legend_font_size=28,
-    value_font_size=28,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
 )
 
 # Create chart using pygal's rendering pipeline
-chart = MandelbrotHeatmap(
-    heatmap_uri=heatmap_data_uri,
-    x_range=(x_min, x_max),
-    y_range=(y_min, y_max),
-    colorbar_lut=lut,
-    log_range=(log_min, log_max),
-    lut_sz=lut_size,
-    width=4800,
-    height=2700,
+chart = _HeatmapGraph(
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="heatmap-mandelbrot \u00b7 pygal \u00b7 pyplots.ai",
+    title=title_str,
     show_legend=False,
     show_x_guides=False,
     show_y_guides=False,
@@ -348,22 +324,28 @@ chart = MandelbrotHeatmap(
     spacing=10,
 )
 
+# Bind heatmap data to chart instance (avoids __init__ override)
+chart._heatmap_uri = heatmap_data_uri
+chart._x_range = (x_min, x_max)
+chart._y_range = (y_min, y_max)
+chart._colorbar_lut = lut
+chart._log_range = (log_min, log_max)
+chart._lut_sz = lut_size
+
 chart.add("In set", [1])
 
-# Save using pygal's render methods
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+# Save PNG and interactive HTML (both theme-suffixed)
+chart.render_to_png(f"plot-{THEME}.png")
 
-# Interactive HTML
 svg_content = chart.render().decode("utf-8")
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>heatmap-mandelbrot - pygal</title>
+    <title>heatmap-mandelbrot · python · pygal · anyplot.ai</title>
     <style>
         body {{ margin: 0; display: flex; justify-content: center; align-items: center;
-               min-height: 100vh; background: #f5f5f5; }}
+               min-height: 100vh; background: {PAGE_BG}; }}
         .chart {{ max-width: 100%; height: auto; }}
     </style>
 </head>
@@ -375,5 +357,5 @@ html_content = f"""<!DOCTYPE html>
 </html>
 """
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)

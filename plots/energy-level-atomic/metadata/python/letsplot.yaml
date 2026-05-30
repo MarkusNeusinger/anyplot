@@ -1,92 +1,106 @@
 library: letsplot
+language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:44:56Z'
-updated: '2026-02-27T21:24:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22502879613
+updated: '2026-05-30T07:46:40Z'
+generated_by: claude-sonnet
+workflow_run: 26677869184
 issue: 4434
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - 'Excellent physics accuracy: hydrogen energy levels and spectral wavelengths are
-    physically correct'
-  - Power transform (0.33 exponent) elegantly spreads converging upper levels for
-    readability
-  - 'Intentional visual hierarchy: Balmer series thicker to emphasize visible spectrum'
-  - Interactive tooltips on energy levels and transitions via layer_tooltips()
-  - Clean professional color scheme with teal/blue/red palette on white background
-  - Ionization continuum band and dashed limit line add scientific context
+  - 'Correct Imprint palette with brand green #009E73 for Lyman, lavender for Balmer,
+    blue for Paschen'
+  - Real hydrogen physics data with accurate E_n = -13.6/n² eV and spectroscopic wavelengths
+  - Power-transform Y scale elegantly spreads converging upper energy levels for legibility
+  - V-shape custom arrowheads and staggered arrows per series prevent overlap beautifully
+  - Balmer series rendered thicker to emphasise the visible-spectrum series — intentional
+    storytelling
+  - Ionization continuum band and dashed reference line add educational depth
+  - layer_tooltips() for interactive HTML output is a distinctive letsplot feature
+  - All chrome tokens theme-adaptive — both light and dark renders correct
   weaknesses:
-  - Upper energy levels (n=4, n=5, n=6) remain slightly cramped vertically
-  - Legend entries spread across a large vertical span, could be more compact
-  - Ionization continuum band occupies significant vertical space relative to its
-    information content
-  image_description: 'The plot shows a hydrogen atom energy level diagram with six
-    horizontal dark slate lines representing quantum states n=1 through n=6, positioned
-    vertically by a power-transformed energy scale. Energy values range from -13.60
-    eV (n=1, bottom) to -0.38 eV (n=6, near top). A dashed gray line at 0 eV marks
-    the ionization limit, with a subtle lavender-shaded band above representing the
-    ionization continuum. Downward transition arrows are color-coded by spectral series:
-    teal for Lyman (UV), blue for Balmer (Visible), and red/dark-red for Paschen (IR).
-    Balmer arrows are noticeably thicker, emphasizing the visible spectrum. V-shaped
-    arrowheads appear at the bottom of each arrow. Wavelength annotations in italic
-    (121.6 nm, 656.3 nm, 1875.1 nm) label the alpha transitions. A custom legend on
-    the right shows colored segments with labels "Lyman series (UV)", "Balmer series
-    (Visible)", and "Paschen series (IR)". The title reads "energy-level-atomic ·
-    letsplot · pyplots.ai" with subtitle "Hydrogen Atom Energy Levels & Spectral Series".
-    The y-axis is labeled "Energy (eV)" with tick marks at each energy level value.'
+  - Upper energy levels (n=4/n=5/n=6) are tightly packed — quantum-state labels and
+    energy-value labels on both sides slightly overlap in that cluster (VQ-02 deduction)
+  - Wavelength annotations at size=3.5 mm are borderline small for tertiary text but
+    acceptable at 3200×1800
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint surface, not pure white.
+      Chrome: Title "energy-level-atomic · python · letsplot · anyplot.ai" (size=16) centered at top — readable. Subtitle "Hydrogen Atom: Lyman, Balmer & Paschen Series" below — readable. Y-axis label "Energy (eV)" visible in dark ink. Tick labels (-13.6, -3.4, -1.51, -0.85, -0.54, -0.38, 0.0 eV) readable along Y-axis. No X-axis chrome (intentionally hidden for diagram type). Quantum-state labels n=1–n=6 on left of level lines. Energy value labels on right of level lines. Manual legend (Lyman UV / Balmer Visible / Paschen IR) in upper-right sparse area — readable.
+      Data: Horizontal black energy level lines spanning ~0.08–0.56 of X-axis. Lyman arrows in #009E73 (brand green), Balmer in #C475FD (lavender), Paschen in #4467A3 (blue). V-shaped arrowheads point downward (emission). Ionization dashed line at 0 eV. Subtle shaded continuum band above ionization. Wavelength annotations (121.6 nm, 656.3 nm, 1875.1 nm) in italic muted text on α-transitions.
+      Issue: Upper level cluster (n=4/n=5/n=6) causes slight label overlap — quantum state labels and energy value labels are tightly packed due to energy level convergence near ionization.
+      Legibility verdict: PASS (minor overlap at upper levels, main content fully readable)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title, subtitle, axis labels, tick labels all rendered in light text — fully readable against dark background. No dark-on-dark failure observed. INK and INK_SOFT tokens correctly switched for dark theme.
+      Data: All arrow colors identical to light render — #009E73 Lyman, #C475FD Balmer, #4467A3 Paschen. Energy level lines are white on dark background. Ionization band and dashed line visible. Legend entries with colored text readable.
+      Legibility verdict: PASS — all text readable against dark background, no chrome inversion failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, subtitle=18, axis_title=20,
-          axis_text=16, geom_text=16. All perfectly readable.'
+        comment: All font sizes explicitly set (title=16, axis=12, tick=10, labels=5/4,
+          annotations=3.5 mm). Readable at canvas resolution. Wavelength annotations
+          at size=3.5 are small but acceptable for tertiary info.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Upper levels (n=4, n=5, n=6) slightly tight despite power transform.
-          All text readable but spacing not ideal.
+        passed: false
+        comment: Upper energy level cluster (n=4/n=5/n=6) causes label overlap — quantum-state
+          labels and energy-value labels are tightly packed due to the converging
+          power-transform y-positions. Main lower levels are unaffected.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Energy level lines (size=2.0), arrows (1.4-2.2), arrowheads all clearly
-          visible. Good Balmer emphasis via thickness.
+        comment: All arrows, level lines, arrowheads, and legend entries well-sized
+          and clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three series use distinct hue families (green/lavender/blue). Imprint
+          palette is CVD-safe. No red-green sole-signal issues.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Teal/blue/red colorblind-safe palette with good contrast against
-          white background.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout overall. Legend and ionization band leave some space
-          underutilized on right and top.
+        comment: Canvas gate passed. Plot area well-utilized with energy levels on
+          left ~55% and legend+labels filling right. Balanced proportions at 3200x1800.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Energy (eV)' with units. X-axis appropriately hidden.
+        comment: Y-axis 'Energy (eV)' with units. X-axis intentionally blank for diagram
+          type. Title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Lyman=#009E73, Balmer=#C475FD, Paschen=#4467A3 — canonical
+          Imprint order. Backgrounds #FAF8F1/#1A1A17. All chrome theme-adaptive.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -94,22 +108,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom teal/blue/red palette, intentional Balmer
-          emphasis, dark slate primary, harmonious grays. Clearly above defaults.'
+        comment: 'Strong design: power-transform Y scale, staggered arrows, custom
+          V-arrowheads, Balmer thickness emphasis, wavelength annotations, ionization
+          band — clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-axis hidden, backgrounds blank, subtle grid, subtle y-axis line.
-          Most details polished.
+        comment: Y-only subtle grid, no X-axis elements, clean backgrounds, adaptive
+          chrome. Good refinement visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Balmer emphasis, wavelength annotations on alpha lines, series labeled
-          with EM region. Clear visual hierarchy.
+        comment: Balmer series thicker to highlight visible spectrum, power-transform
+          reveals convergence structure, wavelength labels give spectral context,
+          subtitle frames the narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -126,21 +142,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: partial-width lines, labels, emission
-          arrows, color-coded series, nonlinear scale, ionization limit.'
+        comment: Horizontal level lines, quantum labels, downward emission arrows,
+          color by spectral series, energy axis upward, ionization reference line
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy increases upward, actual eV values at transformed positions,
-          all levels and transitions visible.
+        comment: Y-axis = energy (eV) with power-transform, arrows from high to low
+          energy (emission), all 6 levels and 10 transitions shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Custom legend with correct series labels.
+        comment: Title is 'energy-level-atomic · python · letsplot · anyplot.ai'.
+          Manual legend with Lyman/Balmer/Paschen series labels.
     data_quality:
       score: 15
       max: 15
@@ -150,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 energy levels, 3 spectral series, 10 transitions with wavelengths,
-          ionization continuum.
+        comment: All three spectral series, 10 transitions, ionization limit, wavelength
+          annotations, convergence structure — comprehensive.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom physics with correct E_n = -13.6/n² values and
-          actual spectral wavelengths.
+        comment: Real hydrogen atom physics. Factually correct energy levels and spectroscopic
+          wavelengths.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All energy values and wavelengths match hydrogen atom exactly. Physically
-          correct.
+        comment: E_n = -13.6/n² eV formula correctly applied. Lyman alpha 121.6 nm,
+          Balmer alpha 656.3 nm, Paschen alpha 1875.1 nm — all physically correct.
     code_quality:
       score: 10
       max: 10
@@ -175,32 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from physics formula.
+        comment: Fully deterministic — hardcoded physics constants, no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imported names are used. Only os, pandas, and lets_plot components.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Manual arrowheads and legend necessary for
-          lets-plot API.
+        comment: Well-organized with logical grouping. Loop over series_cfg is clean.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct output
+          pattern.
     library_mastery:
       score: 7
       max: 10
@@ -210,28 +229,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics pattern with proper ggplot() + geom layers,
-          aes(), theme(), scale_color_identity().
+        comment: Good ggplot grammar usage with scale_color_identity(), layer_tooltips(),
+          theme customization. Correct scale=4 export pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with .line() chaining, geom_band() for ionization
-          continuum, HTML export alongside PNG.
+        comment: Uses layer_tooltips() for interactive hover info in HTML output —
+          a distinctive letsplot feature. HTML export alongside PNG is letsplot-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - annotations
   - layer-composition
-  - custom-legend
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
-  - grid-styling
+  - alpha-blending

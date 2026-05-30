@@ -1,23 +1,48 @@
-""" pyplots.ai
+""" anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-02-27
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 
-# Seaborn theming — sns.set_theme (modern comprehensive API)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Seaborn theme — theme-adaptive chrome
 sns.set_theme(
-    style="white", context="talk", font_scale=1.3, rc={"axes.facecolor": "#FAFBFC", "figure.facecolor": "#FFFFFF"}
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
 
-# Data — Hydrogen atom energy levels E_n = -13.6 / n² eV
+# Data — hydrogen atom energy levels E_n = -13.6 / n² eV
 energy_values = {"n=1": -13.60, "n=2": -3.40, "n=3": -1.51, "n=4": -0.85, "n=5": -0.54, "n=6": -0.38}
 
-# Visual y-positions (qualitative spacing so upper levels remain readable)
+# Nonlinear visual y-positions so upper converging levels remain readable
 visual_y = {"n=1": 0.0, "n=2": 3.5, "n=3": 5.5, "n=4": 7.0, "n=5": 8.2, "n=6": 9.2}
 ionization_y = 10.5
 
@@ -34,84 +59,96 @@ transition_data = [
     ("n=6", "n=3", "Paschen", 1094),
 ]
 
-# Build transition DataFrame for data-driven plotting
 transition_df = pd.DataFrame(transition_data, columns=["upper", "lower", "series", "wavelength_nm"])
 transition_df["y_top"] = transition_df["upper"].map(visual_y)
 transition_df["y_bot"] = transition_df["lower"].map(visual_y)
 
-# Colors — improved luminance contrast for deuteranopia accessibility
-# Lyman: bright warm purple (lighter), Balmer: dark blue, Paschen: warm red
+# Series colors from Imprint palette — CVD-safe canonical order
 series_names = ["Lyman", "Balmer", "Paschen"]
-series_palette = sns.color_palette(["#A855F7", "#306998", "#C0392B"])
-series_colors = dict(zip(series_names, series_palette, strict=True))
+series_colors = {
+    "Lyman": IMPRINT_PALETTE[0],  # #009E73 — Imprint position 1
+    "Balmer": IMPRINT_PALETTE[1],  # #C475FD — Imprint position 2
+    "Paschen": IMPRINT_PALETTE[2],  # #4467A3 — Imprint position 3
+}
 
-# Distinctive seaborn feature: sns.light_palette for subtle background tints
-series_bg = {name: sns.light_palette(color, n_colors=8)[1] for name, color in series_colors.items()}
+# Subtle background column tints — seaborn palette functions (light/dark adaptive)
+series_bg = {}
+for name, color in series_colors.items():
+    if THEME == "light":
+        series_bg[name] = sns.light_palette(color, n_colors=8)[1]
+    else:
+        series_bg[name] = sns.dark_palette(color, n_colors=8, reverse=True)[1]
 
-# X positions for each series column
-series_x_base = {"Lyman": 0.18, "Balmer": 0.42, "Paschen": 0.64}
-arrow_spacing = 0.048
+# X column positions; Paschen shifted right to give Balmer/Paschen headers breathing room
+series_x_base = {"Lyman": 0.18, "Balmer": 0.42, "Paschen": 0.70}
+col_spacing = {"Lyman": 0.048, "Balmer": 0.048, "Paschen": 0.060}
 
-# Compute x positions per series group in DataFrame
 for series in series_names:
     mask = transition_df["series"] == series
-    transition_df.loc[mask, "x_pos"] = [series_x_base[series] + i * arrow_spacing for i in range(mask.sum())]
+    sp = col_spacing[series]
+    transition_df.loc[mask, "x_pos"] = [series_x_base[series] + i * sp for i in range(mask.sum())]
 
-# Figure
-fig, ax = plt.subplots(figsize=(16, 9))
-line_xmin = 0.06
-line_xmax = 0.84
+# Figure — canvas: 3200 × 1800 px (16:9 landscape)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+# Reserve right margin for energy value labels (clip_on=False text extends here)
+fig.subplots_adjust(left=0.04, right=0.60, top=0.90, bottom=0.04)
 
-# Subtle background bands for series columns (seaborn light_palette tints)
-for series, x_base in series_x_base.items():
+line_xmin, line_xmax = 0.06, 0.84
+
+# Background column tints
+for series in series_names:
+    x_base = series_x_base[series]
+    sp = col_spacing[series]
     n_trans = (transition_df["series"] == series).sum()
     band_left = x_base - 0.028
-    band_right = x_base + (n_trans - 1) * arrow_spacing + 0.038
-    ax.axvspan(band_left, band_right, alpha=0.12, color=series_bg[series], zorder=0)
+    band_right = x_base + (n_trans - 1) * sp + 0.042
+    alpha = 0.12 if THEME == "light" else 0.10
+    ax.axvspan(band_left, band_right, alpha=alpha, color=series_bg[series], zorder=0)
 
-# Build DataFrame for energy level endpoints
+# Energy level lines via sns.lineplot (DataFrame-driven)
 level_rows = []
 for label, y_pos in visual_y.items():
-    level_rows.append({"x": line_xmin, "y": y_pos, "level": label})
-    level_rows.append({"x": line_xmax, "y": y_pos, "level": label})
+    level_rows += [{"x": line_xmin, "y": y_pos, "level": label}, {"x": line_xmax, "y": y_pos, "level": label}]
 level_df = pd.DataFrame(level_rows)
 
-# Draw each energy level as a horizontal line with sns.lineplot
-for label in visual_y:
-    subset = level_df[level_df["level"] == label]
-    sns.lineplot(data=subset, x="x", y="y", color="#2C3E50", linewidth=2.5, ax=ax, legend=False, zorder=3)
+sns.lineplot(
+    data=level_df, x="x", y="y", units="level", estimator=None, color=INK, linewidth=2.0, ax=ax, legend=False, zorder=3
+)
 
-# Mark level endpoints with sns.scatterplot
-sns.scatterplot(data=level_df, x="x", y="y", color="#2C3E50", s=50, zorder=4, ax=ax, legend=False, edgecolor="none")
+# Level endpoints via sns.scatterplot
+sns.scatterplot(data=level_df, x="x", y="y", color=INK, s=25, zorder=4, ax=ax, legend=False, edgecolor="none")
 
-# Energy value labels — 20pt for legibility at 4800×2700
+# Energy value labels — clip_on=False so text extends into right margin
 for label, y_pos in visual_y.items():
     energy = energy_values[label]
     ax.text(
-        line_xmax + 0.015,
+        line_xmax + 0.018,
         y_pos,
-        f"{label}   ({energy:.2f} eV)",
-        fontsize=20,
+        f"{label}  ({energy:.2f} eV)",
+        fontsize=9,
         va="center",
         ha="left",
-        color="#2C3E50",
+        color=INK,
         fontweight="medium",
+        clip_on=False,
     )
 
-# Ionization limit (dashed) — 20pt
-ax.hlines(ionization_y, line_xmin, line_xmax, colors="#888888", linewidth=2, linestyles="dashed", zorder=3)
+# Ionization limit (dashed reference line)
+ax.hlines(ionization_y, line_xmin, line_xmax, colors=INK_SOFT, linewidth=1.5, linestyles="dashed", zorder=3)
 ax.text(
-    line_xmax + 0.015,
+    line_xmax + 0.018,
     ionization_y,
     "Ionization  (0.00 eV)",
-    fontsize=20,
+    fontsize=9,
     va="center",
     ha="left",
-    color="#888888",
+    color=INK_SOFT,
     fontweight="medium",
+    clip_on=False,
 )
 
-# Draw transition arrows from DataFrame
+# Transition arrows (emission: downward)
 gap = 0.18
 for _, row in transition_df.iterrows():
     color = series_colors[row["series"]]
@@ -119,16 +156,15 @@ for _, row in transition_df.iterrows():
         "",
         xy=(row["x_pos"], row["y_bot"] + gap),
         xytext=(row["x_pos"], row["y_top"] - gap),
-        arrowprops={"arrowstyle": "->,head_width=0.35,head_length=0.22", "color": color, "linewidth": 2.2},
+        arrowprops={"arrowstyle": "->,head_width=0.28,head_length=0.18", "color": color, "linewidth": 1.8},
         zorder=2,
     )
-    # Wavelength label (rotated 90°) — 16pt
     mid_y = (row["y_top"] + row["y_bot"]) / 2
     ax.text(
-        row["x_pos"] + 0.014,
+        row["x_pos"] + 0.012,
         mid_y,
         f"{row['wavelength_nm']} nm",
-        fontsize=16,
+        fontsize=8,
         color=color,
         va="center",
         ha="left",
@@ -136,45 +172,43 @@ for _, row in transition_df.iterrows():
         alpha=0.9,
     )
 
-# Series labels at top — 20pt with spectral region subtitle for storytelling
+# Series labels and spectral region subtitles
 spectral_regions = {"Lyman": "ultraviolet", "Balmer": "visible", "Paschen": "infrared"}
-for series, x_base in series_x_base.items():
-    x_center = x_base + arrow_spacing
-    ax.text(
-        x_center,
-        ionization_y + 0.85,
-        f"{series} series",
-        fontsize=20,
-        fontweight="bold",
-        ha="center",
-        color=series_colors[series],
-    )
+for series in series_names:
+    x_base = series_x_base[series]
+    sp = col_spacing[series]
+    n_trans = (transition_df["series"] == series).sum()
+    x_center = x_base + sp * (n_trans - 1) / 2
+    color = series_colors[series]
+    ax.text(x_center, ionization_y + 0.82, f"{series} series", fontsize=8, fontweight="bold", ha="center", color=color)
     ax.text(
         x_center,
         ionization_y + 0.22,
         f"({spectral_regions[series]})",
-        fontsize=14,
+        fontsize=7,
         ha="center",
-        color=series_colors[series],
-        alpha=0.65,
+        color=color,
+        alpha=0.75,
         style="italic",
     )
 
-# Energy direction arrow on left
+# Energy direction arrow (left margin indicator)
 ax.annotate(
-    "", xy=(0.02, 10.8), xytext=(0.02, -0.3), arrowprops={"arrowstyle": "-|>", "color": "#999999", "linewidth": 1.5}
+    "", xy=(0.02, 10.8), xytext=(0.02, -0.3), arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "linewidth": 1.2}
 )
-ax.text(0.025, 5.25, "Energy", fontsize=20, rotation=90, va="center", ha="left", color="#999999")
+ax.text(0.027, 5.25, "Energy", fontsize=8.5, rotation=90, va="center", ha="left", color=INK_SOFT)
 
-# Axes cleanup with sns.despine
+# Axes cleanup
 ax.set_xlim(-0.01, 1.15)
 ax.set_ylim(-0.5, 12.2)
-ax.set_title("energy-level-atomic · seaborn · pyplots.ai", fontsize=26, fontweight="medium", pad=20)
+
+title = "energy-level-atomic · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", pad=10, color=INK)
 ax.set_xticks([])
 ax.set_yticks([])
 ax.set_xlabel("")
 ax.set_ylabel("")
 sns.despine(ax=ax, left=True, bottom=True)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches so canvas stays at exactly 3200 × 1800
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

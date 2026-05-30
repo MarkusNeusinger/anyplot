@@ -1,0 +1,270 @@
+library: ggplot2
+language: r
+specification_id: heatmap-mandelbrot
+created: '2026-05-30T11:06:13Z'
+updated: '2026-05-30T11:24:20Z'
+generated_by: claude-sonnet
+workflow_run: 26682048546
+issue: 4431
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Correct Mandelbrot iteration with vectorized shrinking-index optimization for
+    efficiency
+  - Smooth coloring formula (escape + 1 - log2(log2(|z|))) eliminates integer banding
+    at iteration boundaries
+  - sqrt(escape_smooth) normalization spreads boundary detail, revealing fractal structure
+  - 'Properly uses imprint_seq (green #009E73 → blue #4467A3) for continuous escape
+    data'
+  - coord_fixed(ratio=1) preserves mathematical proportions of the complex plane
+  - geom_raster with interpolate=TRUE is the optimal ggplot2 geom for pixel raster
+    data
+  - Fixed near-black interior (#050503) independent of theme — correctly representing
+    the bounded set
+  - Both light and dark themes fully functional with correct adaptive tokens
+  - Canvas size (2400×2400 square) is the right choice for a symmetric fractal
+  - Clean, linear code with no functions/classes and deterministic output
+  weaknesses:
+  - The exterior gradient is visually flat — most of the complex plane renders as
+    a nearly uniform green (#009E73) with only a narrow blue-tinted fringe near the
+    boundary. Consider using a cyclic or higher-contrast color mapping (e.g. mapping
+    escape_vis through a wider brightness range) to make more of the exterior variation
+    visible while staying within imprint_seq
+  - 'DE-01/DE-03: The visualization lacks visual drama beyond the inherent math structure.
+    A subtle circular/radial annotation marking known bulb boundaries, or a slightly
+    logarithmic escape mapping, could add design sophistication without violating
+    spec or palette rules'
+  - Legend colorbar is narrow (barwidth=0.7) and its 3-line title ('Escape\ncount\n(√)')
+    plus tick values '5' and '10' feel compressed — consider barwidth=1.0 and a shorter
+    legend title like 'Escape (√)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required — never pure white.
+      Chrome: Title "heatmap-mandelbrot · r · ggplot2 · anyplot.ai" in bold dark ink, spanning ~70% of canvas width; "Real axis" and "Imaginary axis" labels in dark ink at 10pt; tick labels (-2, -1, 0, 1 on x; -1.0, -0.5, 0.0, 0.5, 1.0 on y) in INK_SOFT at 8pt. All text clearly readable.
+      Data: The Mandelbrot set interior is rendered as near-black (#050503). The exterior is colored by smooth escape count using imprint_seq (green #009E73 → blue #4467A3). Most of the exterior region renders as near-uniform brand green with a subtle blue-tinged fringe visible near the fractal boundary. The characteristic cardioid, period-2 bulb, and smaller satellite bulbs are clearly visible. Colorbar on the right with tick values ~5 and ~10.
+      Legibility verdict: PASS — all text elements are fully readable against the off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required — never pure black.
+      Chrome: Title in light #F0EFE8, axis labels in light ink, tick labels in #B8B7B0 (INK_SOFT for dark theme). Legend box uses elevated dark background (#242420) with subtle border. All text clearly readable against dark background; no dark-on-dark failures observed.
+      Data: Identical data colors to light render — imprint_seq green→blue gradient unchanged; black Mandelbrot interior unchanged. Imprint palette data colors are theme-invariant as required.
+      Legibility verdict: PASS — all chrome elements flip correctly; text is light on dark in all cases.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title bold at 12pt, axis labels 10pt,
+          ticks 8pt, legend 8-10pt. All readable in both themes. Minor deduction:
+          narrow colorbar with 3-line legend title feels slightly compressed.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; legend box clear of plot area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Mandelbrot structure clearly visible; smooth coloring works; fractal
+          boundary intricate detail is visible. Minor deduction: exterior gradient
+          mostly flat green — limited color variation across the wide exterior region.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe; black interior provides strong
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400 canvas appropriate for symmetric fractal. coord_fixed
+          preserves mathematical proportions. Good margins. Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real axis and Imaginary axis are descriptive. Legend title 'Escape
+          count (√)' explains the mapped variable with the sqrt transform noted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_seq (low=#009E73, high=#4467A3) for continuous escape
+          data. Backgrounds #FAF8F1 light / #1A1A17 dark. All theme-adaptive chrome
+          tokens applied correctly in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured implementation with correct palette and clean layout.
+          The green-dominant exterior with black Mandelbrot set is mathematically
+          accurate but visually flat — limited aesthetic drama.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid completely removed (appropriate for raster), borders removed,
+          legend has subtle border (linewidth=0.3), adequate margins. Above default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: The black Mandelbrot interior creates a natural focal point against
+          the escape gradient. Slightly above default due to inherent visual hierarchy,
+          but no added storytelling or emphasis beyond the math.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mandelbrot set visualization using geom_raster.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth coloring via normalized iteration count ✓; points inside set
+          colored black ✓; full set including cardioid and period-2 bulb ✓; axes labeled
+          with real and imaginary coordinates ✓; grid resolution 800×572 (spec-compliant,
+          justified by mathematical aspect ratio) ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=real, y=imaginary, fill=escape_vis. coord_fixed preserves complex-plane
+          proportions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''heatmap-mandelbrot · r · ggplot2 · anyplot.ai'' — correct
+          format. Legend: ''Escape count (√)'' explains mapped variable.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows escape iteration counts with smooth coloring, sqrt normalization,
+          fixed dark interior, full complex plane view. Slight deduction: the exterior
+          gradient doesn''t fully exploit the available color range to show all escape-speed
+          variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mandelbrot set is a canonical mathematical object — real, comprehensible,
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard Mandelbrot view: real -2.5 to 1.0, imaginary -1.25 to 1.25,
+          MAX_ITER=200. All mathematically correct.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes; clean linear structure: tokens → params
+          → grid → iterate → smooth → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandelbrot is deterministic — no random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant vectorized iteration with shrinking active-index set (efficiency
+          improves as points escape). Smooth coloring formula and sqrt normalization
+          are appropriate and clearly commented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-%s.png using sprintf(). Uses ragg::agg_png device correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses geom_raster (optimal for pixel rasters, more efficient than
+          geom_tile), coord_fixed for aspect ratio, guide_colorbar customization,
+          and theme_minimal base with layered overrides — idiomatic ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_raster with interpolate=TRUE is ggplot2-specific and gives the
+          smooth pixel rendering; coord_fixed and the guide_colorbar API are grammar-of-graphics
+          distinctions. Uses some library-specific features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
