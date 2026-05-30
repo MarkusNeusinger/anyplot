@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: mohr-circle
 created: '2026-02-27T22:07:39Z'
-updated: '2026-05-30T09:23:51Z'
+updated: '2026-05-30T09:37:02Z'
 generated_by: claude-sonnet
 workflow_run: 26680009544
 issue: 4432
@@ -12,52 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — all required Mohr's circle elements (circle, principal
-    stresses, max shear, A/B points, angle arc, reference lines) are present and correctly
-    positioned
-  - Excellent Imprint palette semantic mapping — brand green for principal stresses
-    (primary outcome), matte red for input stress points (danger/input), blue for
-    the structural circle, ochre for shear components — all justified and well-reasoned
-  - Idiomatic letsplot usage including layer_tooltips for interactive HTML, geom_path
-    for the closed circle, geom_polygon for subtle fill, coord_fixed() for equal aspect
-    ratio
-  - Clean, deterministic, flat-script code with proper dual-theme chrome tokens throughout
-    all text and background elements
-  - Square canvas (2400×2400) appropriately chosen for the circular symmetric diagram;
-    canvas gate passed
-  - Redundant encoding — different point shapes (circle for A/B, diamond for principal,
-    triangle for shear, X for center) alongside color differentiates elements for
-    CVD accessibility
+  - 'Full spec compliance: all Mohr circle elements present (circle, principal stresses,
+    max shear, input points, angle arc, reference lines, center)'
+  - Semantic Imprint palette assignment with shape encoding — green for principal
+    stresses (outcome), red for input points, ochre for shear; distinct marker shapes
+    (circle/diamond/triangle) provide redundant CVD-safe encoding
+  - 'Perfect mathematical correctness: center, radius, sigma1/sigma2, tau_max, theta_p
+    all correctly computed'
+  - Theme-adaptive chrome properly implemented in both renders — all six token variables
+    (PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED) correctly applied
+  - letsplot-distinctive layer_tooltips() used for interactive hover; HTML export
+    alongside PNG
+  - Subtitle displays computed stress state values, adding an information layer beyond
+    the visual
+  - coord_fixed() ensures true circle geometry, correct for this engineering diagram
+    type
+  - Square canvas (2400x2400) appropriate choice for the symmetric Mohr circle composition
   weaknesses:
-  - Minor label crowding in the lower-left region — the σ₂ = −49.3 label (at tau=0,
-    left circle intersection) and the B (σy=−30, −τxy=−50) label are in proximity;
-    increasing nudge_y on σ₂ label or adjusting B label nudge would improve clarity
-  - Circle fill alpha=0.07 is applied uniformly to both themes — on the dark background
-    (#1A1A17) the fill is nearly invisible; consider theme-adaptive fill alpha (e.g.,
-    0.10 on dark vs 0.07 on light) to keep a subtle interior visual weight on both
-    surfaces
-  - 'Design Excellence could be elevated with a small legend panel or annotation box
-    summarising the color/shape encoding (e.g., a legend key listing: ● Input, ◆ Principal,
-    ▲ Shear Max) rather than relying solely on inline labels scattered across the
-    plot'
+  - 'VQ-07: First legend entry (Input Point) uses #AE3030 red, not brand green #009E73
+    — the semantic exception justification (input=danger/red, result=good/green) is
+    reasonable but the category labels do not literally match the canonical semantic
+    exceptions (Pass/Fail, Profit/Loss, Up/Down, Hot/Cold); partial compliance'
+  - 'VQ-02: Annotation density on left side of circle is high — B label (lower-left)
+    and sigma_2 label (nudged upward) are close; no clear overlap but crowded region'
+  - 'DE-01: Intentional design above defaults but not yet publication-ready — circle
+    fill uses fixed non-Imprint hex for the polygon, no explicit ink-stroke on muted
+    palette markers'
+  - 'DE-02: theme_minimal() base but axis_line is re-added — not fully L-frame; could
+    remove top/right axis lines completely for cleaner minimal look'
+  - 'LM-02: layer_tooltips and HTML export are good letsplot features, but the implementation
+    could leverage more distinctive letsplot capabilities (e.g. geom_livemap for coord
+    layers, or advanced tooltip formatting)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface.
-      Chrome: Title "mohr-circle · python · letsplot · anyplot.ai" in bold dark ink, clearly readable. Subtitle with stress state parameters in italic muted ink, legible. Y-axis "Shear Stress τ (MPa)" and X-axis "Normal Stress σ (MPa)" labels in dark ink, properly sized. Tick labels in muted dark ink, all readable. Grid lines subtle and dashed reference lines through center appropriately muted.
-      Data: Circle outline in Imprint blue (#4467A3) with very subtle blue fill (alpha=0.07). Stress points A and B as red filled circles (#AE3030). Principal stress σ1 (≈99.3 MPa) and σ2 (≈−49.3 MPa) as green diamonds (#009E73) on the horizontal axis. Max shear stress τmax (74.3 MPa) as ochre triangles (#BD8233) at top and bottom. Center marked with a grey X cross. Principal plane angle arc (2θp = 42.3°) in ochre. Labels for all key points visible and reasonably placed.
-      Legibility verdict: PASS — all text elements readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "mohr-circle · python · letsplot · anyplot.ai" in bold dark ink, fully readable. Italic subtitle with stress state summary (σx=80, σy=-30, τxy=50 MPa | σ1=99.3, σ2=-49.3, τmax=74.3 MPa) at smaller size — readable. Axis labels "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" in dark ink with units — clear. Tick labels in INK_SOFT dark gray — readable at canvas size. Legend on right with background frame, three entries: Input Point (red circle), Principal Stress (green diamond), Max Shear (orange triangle) — all legible.
+      Data: Blue circle (#4467A3) with subtle fill (alpha=0.07). Red circles (Input Points) at A(80, 50) and B(-30, -50). Green diamonds (Principal Stress) at σ1≈99.3 and σ2≈-49.3 on horizontal axis. Orange triangles (Max Shear) at top (25, 74.3) and bottom. Center marked with X cross. Dashed reference lines through center (horizontal and vertical). Dashed diameter line A–B. Orange arc showing 2θp=42.3°. Annotation labels adjacent to each point in matching colors.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title and subtitle text are light-coloured (#F0EFE8 / #B8B7B0), clearly readable against the dark background. Axis labels and tick labels render in light muted tones — no dark-on-dark failures detected. Grid lines are subtle but visible.
-      Data: Circle outline in Imprint blue (#4467A3), unchanged from light render. Circle fill (alpha=0.07 of blue) is nearly invisible on dark background but the outline remains prominent. Stress points A/B in red (#AE3030), principal stresses in green (#009E73), shear markers in ochre (#BD8233) — data colours are identical to the light render as required.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures; data colours consistent between themes.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle are in light off-white (F0EFE8 / INK token) — clearly readable against dark background. Axis labels light-colored — readable. Tick labels in INK_SOFT light gray (B8B7B0) — clearly visible. Legend text light-colored. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — blue circle outline (#4467A3), red input points (#AE3030), green principal stress diamonds (#009E73), orange max shear triangles (#BD8233). Circle fill slightly stronger alpha (0.12) on dark — good adaptation. All markers clearly distinguishable against dark background. Brand green #009E73 is clearly visible. Annotation text in matching series colors — readable.
+      Legibility verdict: PASS — all text readable against dark background; theme adaptation is correct throughout.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -65,56 +68,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes set for all text elements; all readable in both
-          themes. Minor density concern with annotation labels in the lower-left quadrant
-          but all legible.
+        comment: All font sizes explicitly set; title, subtitle, axis labels, tick
+          labels, and annotations all readable in both themes. Well-proportioned at
+          2400x2400 canvas.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally good label placement with nudge offsets. Slight crowding
-          between sigma2 label at left intersection and B label region, but no hard
-          overlaps.
+        comment: No clear overlaps but annotation density on left side (B label and
+          sigma_2 label) is crowded; labels are close.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data elements clearly visible. Circle outline prominent, marker
-          sizes appropriate for a scientific diagram, angle arc distinguishable.
+        comment: Circle outline size=2.0, points size=7, reference lines visible,
+          markers well-sized for this sparse diagram.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Redundant encoding via distinct marker
-          shapes (circle, diamond, triangle, X cross) alongside color.
+        comment: Imprint palette used; redundant shape encoding (circle/diamond/triangle)
+          ensures CVD-safe category discrimination.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400x2400) appropriate for circular symmetric diagram.
-          Canvas gate passed. Good proportions, nothing cut off.
+        comment: Square canvas 2400x2400 appropriate for symmetric Mohr circle; coord_fixed
+          ensures true circle; good balance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''mohr-circle · python · letsplot · anyplot.ai'' correct.
-          X-axis: ''Normal Stress σ (MPa)'', Y-axis: ''Shear Stress τ (MPa)'' — both
-          with units.'
+        comment: 'X: ''Normal Stress sigma (MPa)'', Y: ''Shear Stress tau (MPa)''
+          — descriptive with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Imprint palette used throughout with justified semantic assignments.
-          Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Data colours identical
-          between themes.'
+        passed: false
+        comment: 'First legend entry (Input Point) uses #AE3030 red — first series
+          is not brand green #009E73. Semantic exception (input=danger/red, result=good/green)
+          is applied but category labels do not explicitly match canonical semantic
+          exception patterns.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -122,25 +124,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color story (red=input, blue=structure, green=primary
-          output). Multiple marker shapes add redundant encoding. Subtitle provides
-          immediate results summary. Above default (4) with clear design intent.
+        comment: Intentional semantic color hierarchy, shape encoding, subtle circle
+          fill with theme-adaptive alpha. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines. Dashed reference/diameter lines vs
-          solid circle outline shows visual hierarchy. INK_MUTED for secondary elements
-          is intentional. Above default (2).
+        comment: theme_minimal base, major grid only, subtle grid lines. Axis lines
+          re-added — not fully L-frame. Good but not perfect refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color story guides viewer from input (red) through structure (blue)
-          to output (green). Angle arc creates focal point for principal plane. Subtitle
-          summarises key results. Above default (2).
+        comment: Green principal stresses are the visual focal point; angle arc explains
+          rotation; subtitle summarizes engineering results. Clear story about stress
+          transformation.
     spec_compliance:
       score: 15
       max: 15
@@ -150,30 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's circle implementation with circle, reference axes,
-          all required stress points.
+        comment: Correct Mohr's Circle with all required geometric elements.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: circle with correct center/radius, principal
-          stresses σ1/σ2, τmax at top/bottom, A/B stress points, 2θp angle annotation,
-          equal aspect ratio, grid and reference lines.'
+        comment: Circle, principal stresses, max shear, input points A/B, angle arc
+          2theta_p, equal aspect ratio, reference lines, grid — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Normal Stress σ, Y=Shear Stress τ. coord_fixed() ensures equal
-          aspect. Circle center and radius computed correctly.
+        comment: X=Normal Stress (sigma), Y=Shear Stress (tau) — correct. All data
+          points visible and correctly placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'mohr-circle · python · letsplot · anyplot.ai' matches required
-          format. Point labels serve as legends.
+        comment: 'Title: ''mohr-circle · python · letsplot · anyplot.ai'' — correct
+          format. Legend labels: Input Point, Principal Stress, Max Shear — clear
+          and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -183,23 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete feature coverage: circle, principal stresses, max shear,
-          input points, angle arc, center marker, reference lines.'
+        comment: 'Shows all Mohr circle aspects: input state, principal stresses,
+          max shear, angle of principal planes, reference geometry.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel column under combined axial and bending load — realistic, neutral
-          engineering scenario. Stress values (σx=80, σy=-30, τxy=50 MPa) are plausible
-          for steel structural members.
+        comment: Steel column under combined axial and bending load — realistic engineering
+          scenario, neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MPa scale appropriate for steel. Resulting σ1=99.3, σ2=-49.3, τmax=74.3
-          MPa are plausible.
+        comment: sigma_x=80, sigma_y=-30, tau_xy=50 MPa — plausible structural steel
+          values. Mixed tension/compression demonstrates range of cases.
     code_quality:
       score: 10
       max: 10
@@ -209,53 +207,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions or classes.
+        comment: 'Flat: imports -> constants -> geometry computation -> DataFrames
+          -> plot layers -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — fixed stress input values, no randomness.
+        comment: Fully deterministic — Mohr circle is computed from fixed stress values,
+          no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used in the implementation.
+        comment: All imports are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layered composition. layer_tooltips() is actual letsplot interactivity
-          (not fake UI). Appropriate complexity.
+        comment: Clean, well-organized with semantic color constants. Appropriate
+          complexity for this diagram type. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct API
-          usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper ggplot grammar with + composition. geom_path for circle (not
-          geom_line). coord_fixed() for equal aspect. theme_minimal() + custom element_*
-          overrides. Correct ggsize/ggsave pattern.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: layer_tooltips() for interactive HTML — distinctive letsplot capability
-          not available in most static libraries. HTML export alongside PNG. geom_polygon
-          for circle fill is creative. Good use of letsplot's strengths.
+        comment: Correct ggplot grammar, coord_fixed, scale_color/shape_manual, layer_tooltips,
+          ggsize+ggsave(scale=4) — good idiomatic letsplot usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() (letsplot-specific interactive tooltip system)
+          and HTML export. Some distinctive letsplot features leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -264,7 +261,8 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-30
+Quality: 87/100 | Updated: 2026-05-30
 """
 
 import os
