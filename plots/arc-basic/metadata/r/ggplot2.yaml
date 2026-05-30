@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: arc-basic
 created: '2026-05-30T01:00:00Z'
-updated: '2026-05-30T01:07:01Z'
+updated: '2026-05-30T01:16:17Z'
 generated_by: claude-sonnet
 workflow_run: 26669833157
 issue: 991
@@ -12,49 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance and data quality: all arc diagram features implemented
-    correctly with a rich literary dataset (Hamlet characters, 4 relationship types)'
-  - Correct Imprint palette positions 1-4 with fully theme-adaptive chrome in both
-    light and dark renders — no dark-on-dark failures
-  - Excellent choice of theme_void() for arc diagrams, avoiding unnecessary axis chrome
-  - Sophisticated rowwise() + list-column + unnest() tidyverse pattern for per-row
-    arc coordinate computation
-  - Semi-transparent arcs (alpha=0.60) handle visual overlap gracefully across 17
-    edges
-  - Custom node styling (shape=21 with PAGE_BG stroke) adapts correctly between light
-    and dark themes
+  - Clean semi-transparent arcs with alpha=0.60 that elegantly handle overlapping
+    connections in the dense Hamlet region
+  - Correct Imprint palette ordering (Family=green, Friendship=lavender, Political=blue,
+    Romantic=ochre) with identical data colors across both themes
+  - 'Theme-adaptive chrome correctly implemented — INK/INK_SOFT tokens applied to
+    all text, backgrounds switch cleanly between #FAF8F1 and #1A1A17'
+  - Idiomatic tidyverse arc generation using rowwise()/unnest() to compute semi-ellipse
+    points per edge — avoids a for-loop
+  - 'Perfect spec compliance: arc height proportional to node distance, node labels
+    rotated along baseline, color-coded by relationship type'
+  - 'Correct canvas: 3200x1800 px via width=8, height=4.5, dpi=400 with ragg::agg_png'
   weaknesses:
-  - coord_cartesian(ylim = c(-2.0, 2.8)) extends 1.5 units below the data (which only
-    reaches ~y=-0.5 at the bottom of rotated labels), leaving the bottom ~35% of the
-    canvas as empty space with the legend floating in isolation — reduce lower ylim
-    bound to ~-0.8 to eliminate the empty zone
-  - Node label size=2.5 (mm, ~7pt equivalent) is slightly small for the 3200x1800
-    canvas — increase to size=3.0 or 3.2 for better readability at mobile scale
-  - Helper function arc_points() breaks the flat KISS structure (Imports -> Data ->
-    Plot -> Save, no functions) — inline the ellipse computation directly into the
-    rowwise mutate call
-  - 'DE-01/DE-02 improvement opportunity: mapping linewidth to edge multiplicity or
-    node size to degree centrality would add a weight dimension and make Hamlet''s
-    hub role visually explicit, raising design sophistication'
+  - 'Design excellence is moderate (DE defaults apply): no focal point emphasis, no
+    weight-based arc thickness, no node-degree visual encoding — adding degree-proportional
+    node size would improve DE-01 and DE-03 significantly'
+  - Rotated labels on the left side (Hamlet through Gertrude) are close together at
+    40° rotation — minor crowding risk; increasing hjust or spacing slightly could
+    help
+  - Bottom plot margin is only margin(t=20,r=20,b=10,l=20) which is tight given rotated
+    labels extending below the baseline — increasing bottom margin to 20 would add
+    safety
+  - Node label size=3.0 (mm ≈ 8.5pt) is at the lower edge of mobile readability; size=3.5
+    would improve legibility at 400px mobile scale
+  - 'Right-side canvas imbalance: 12% right expansion vs 4% left creates asymmetric
+    whitespace; balancing to ~8% each side would improve visual centering'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface — confirmed, not pure white
-      Chrome: Bold centered title "arc-basic · r · ggplot2 · anyplot.ai" in near-black (#1A1A17), clearly readable. No axis labels (theme_void). Rotated node labels in secondary ink (#4A4A44). Legend at bottom with "Relationship" bold title in primary ink and category labels in secondary ink — all readable.
-      Data: 10 nodes as solid black circles on a horizontal baseline. 17 semi-elliptical arcs in 4 Imprint colors: Family=#009E73 (brand green), Friendship=#C475FD (lavender), Political=#4467A3 (blue), Romantic=#BD8233 (ochre). Arc heights scale with node distance. Alpha=0.60 creates a layered transparent effect.
-      Legibility verdict: PASS — all text readable; minor note: node labels (size=2.5mm) are on the small side
-      Layout note: Large empty space in bottom ~35% of canvas due to ylim lower bound of -2.0 when data only extends to ~-0.5
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
+      Chrome: Bold centered title "arc-basic · r · ggplot2 · anyplot.ai" in dark #1A1A17 ink, readable. Node labels rotated 40° in #4A4A44 (INK_SOFT), readable against the light background. Legend at bottom with "Relationship" heading in dark bold ink, 4 color entries clearly labeled. Horizontal baseline in INK_SOFT, subtle.
+      Data: 10 nodes (Hamlet characters) as filled dark circles on the baseline. 17 arcs in 4 Imprint colors — Family=#009E73 (brand green), Friendship=#C475FD (lavender), Political=#4467A3 (blue), Romantic=#BD8233 (ochre). Arcs are semi-transparent (alpha=0.60), height proportional to node distance. Arc density is highest near Hamlet (position 1) where 9 connections originate.
+      Legibility verdict: PASS — all text readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface — confirmed, not pure black
-      Chrome: Title in near-white (#F0EFE8), clearly readable against dark background. Node labels in secondary dark-theme ink (#B8B7B0), readable. Legend text in same secondary ink. No dark-on-dark failures detected.
-      Data: Arc colors identical to light render — green, lavender, blue, ochre arcs at same hue/alpha. Nodes switch to white-filled circles with dark-background stroke, adapting correctly.
-      Legibility verdict: PASS — all text readable in dark theme; brand green #009E73 visible against dark background
+      Background: Warm near-black #1A1A17 — correct surface color, not pure black.
+      Chrome: Title in light #F0EFE8 (INK token), clearly readable against dark background. Node labels in #B8B7B0 (INK_SOFT dark), readable — no dark-on-dark failure. Legend heading and labels in appropriate light tones. Horizontal baseline visible in muted tone.
+      Data: Arc colors are identical to the light render — Family=#009E73, Friendship=#C475FD, Political=#4467A3, Romantic=#BD8233. All four relationship types clearly distinguishable on the dark background. Node circles filled with INK (#F0EFE8 in dark mode) with PAGE_BG border, clearly visible.
+      Legibility verdict: PASS — all text readable against the warm near-black background. No dark-on-dark failures observed. Brand green #009E73 remains visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -62,78 +62,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title bold at 12pt, legend 8-9pt,
-          node labels size=2.5mm (~7pt) — readable but slightly small at canvas scale
+        comment: Title (12pt bold) and node labels (~8.5pt, 3.0mm) readable in both
+          themes. Slight mobile-scale concern at 3.0mm — 3.5mm would improve 400px
+          readability.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or element overlaps; rotated node labels are evenly spaced
-          and clear
+        comment: No text-on-text overlap observed. Minor crowding risk between rotated
+          labels (Hamlet/Horatio/Claudius) on left side but no actual collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Arcs at alpha=0.60, linewidth=0.85 clearly visible; filled circle
-          nodes distinguishable
+        comment: Arcs clearly visible with alpha=0.60. Dense left region (Hamlet)
+          shows some arc overlap but colors remain distinguishable. Nodes clearly
+          visible as filled circles.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 Imprint palette positions, all CVD-safe and hue-distinct
+        comment: 4 Imprint palette colors all CVD-safe per palette design. No red-green
+          sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: ylim=c(-2.0, 2.8) reserves 1.5 units below data (which extends to
-          only ~-0.5), leaving bottom ~35% of canvas empty; legend isolated at bottom
+        passed: true
+        comment: Good overall proportions. Bottom margin (10pt) is slightly tight
+          for rotated labels — clip=off compensates. Right-side 12% vs left 4% expansion
+          creates minor asymmetric whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Arc diagram correctly uses theme_void; title exact format; Relationship
-          legend title provides context
+        comment: Title follows exact required format. Arc diagram correctly uses no
+          axis labels (theme_void); node names serve as categorical axis.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Family=#009E73 (position 1), Friendship=#C475FD (pos 2), Political=#4467A3
-          (pos 3), Romantic=#BD8233 (pos 4). Backgrounds #FAF8F1/#1A1A17. All chrome
-          theme-adaptive.'
+        comment: 'First series Family=#009E73 (brand green). Canonical Imprint order
+          positions 1-4. Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical
+          across both themes.'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above generic default: theme_void, alpha transparency, relationship
-          color coding, custom node styling show intentional design; pulled back by
-          layout imbalance'
+        passed: false
+        comment: Default score — clean implementation but no node-degree sizing, no
+          weight-based arc thickness, no focal point emphasis. Relationship type coloring
+          shows thought but doesn't elevate above functional.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: theme_void correct for arc diagrams; elevated legend background;
-          careful node stroke — deducted for substantial empty canvas space below
-          nodes
+        passed: false
+        comment: 'Above default: theme_void() gives clean minimal chrome, semi-transparent
+          arcs are a refined choice, node circles with PAGE_BG border are well-defined.
+          Legend with ELEVATED_BG is nicely separated.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Hamlet dataset creates real narrative; color coding enables quick
-          relationship identification; Hamlet's centrality emerges visually from the
-          arc density at node 1
+        passed: false
+        comment: 'Above default: relationship type coloring tells a clear analytical
+          story about Hamlet''s connections. Arc height encoding of distance is correct
+          per spec. No additional emphasis or hierarchy beyond color.'
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes on horizontal baseline, curved semi-elliptical
-          arcs above, heights proportional to distance'
+        comment: 'Correct arc diagram: nodes along horizontal axis, semi-ellipse arcs
+          curving above.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Ordered nodes, labeled edges, arc height proportional to distance,
-          semi-transparent arcs, color coding by type, readable labels — all present
+        comment: Arc height proportional to node distance, semi-transparent arcs,
+          readable node labels, color-coded by relationship type.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 10 nodes correctly positioned; all 17 edges rendered; arcs curve
-          above baseline
+        comment: Nodes as ordered entities, edges as arcs, correct x-axis ordering.
+          Weights optional per spec — not used.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'arc-basic · r · ggplot2 · anyplot.ai'; legend correct
-          with all 4 relationship types
+        comment: 'Title: ''arc-basic · r · ggplot2 · anyplot.ai'' correct. Legend
+          shows all 4 relationship types.'
     data_quality:
       score: 15
       max: 15
@@ -175,57 +179,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all arc diagram features: short and long-range connections,
-          overlapping arcs, multiple edge types, varying heights, central hub'
+        comment: 10 nodes, 17 edges, 4 relationship categories. Arc height encoding,
+          semi-transparency, node markers — all spec features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hamlet characters — real, well-known, neutral literary domain; relationship
-          types are accurate and meaningful
+        comment: Hamlet character interactions — culturally neutral, narratively accurate,
+          real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes within spec 10-50 range; 17 edges appropriate density; proportions
-          correct
+        comment: 10 nodes within 10-50 spec range. 17 edges creates meaningful visual
+          density without overwhelming.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Defines arc_points() helper function violating flat KISS structure;
-          function is minimal and necessary but should be inlined
+        passed: true
+        comment: No functions or classes. Clean linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 libraries (ggplot2, dplyr, tibble, tidyr, ragg) actively used
+        comment: All 5 libraries (ggplot2, dplyr, tibble, tidyr, ragg) are actively
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic R; parametric arc math is minimal; no fake UI
+        comment: rowwise()/unnest() arc generation is elegant. tribble() for human-readable
+          edge table. Title size scaling formula is thoughtful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at 3200x1800
+        comment: Saves plot-{THEME}.png via ragg::agg_png. No bare plot.png.
     library_mastery:
       score: 7
       max: 10
@@ -235,19 +240,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Excellent tidyverse idiom: tribble(), rowwise()+list-column+unnest(),
-          expansion(), coord_cartesian() — very close to expert level'
+        comment: geom_path() with group aesthetic for arcs, scale_color_manual(),
+          coord_cartesian(clip='off'), theme_void() — all idiomatic ggplot2. expansion(mult=...)
+          for scale padding is modern API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Nested list-column pattern (pts=list(arc_points(x1,x2))) with unnest()
-          is distinctive ggplot2/tidyverse technique; heavy lifting is custom math
-          outside ggplot2
-  verdict: REJECTED
+        comment: rowwise()/mutate(pts=list(...))/unnest() is a distinctive R/tidyverse
+          idiom for vectorized arc computation. tribble() for readable edge data.
+          coord_cartesian(clip='off') is ggplot2-specific label overflow solution.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
   - layer-composition
   patterns:
