@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:24Z'
-updated: '2026-05-30T05:43:58Z'
+updated: '2026-05-30T05:53:22Z'
 generated_by: claude-sonnet
 workflow_run: 26675688954
 issue: 812
@@ -12,44 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Perfect Imprint palette usage with correct finance semantic exception (green=bullish,
-    red=bearish, blue=SMA)
-  - 'Full canvas compliance: 620x320 inner view x scale_factor=4.0 with PAD-only logic;
-    gate passed'
-  - Complete theme adaptation across all chrome tokens (background, text, axis, legend,
-    grid) for both light and dark renders
-  - SMA overlay with dashed line and inline italic label goes beyond spec, adds meaningful
-    data storytelling
-  - 'Full spec compliance: all OHLC features, correct data mapping, proper title format'
-  - resolve_scale(color='independent') correctly handles the mixed color encoding
-    sources in layer composition
+  - 'Correct semantic exception: #009E73 (brand green) for bullish and #AE3030 (matte
+    red) for bearish — matches finance convention and Imprint palette positions 1
+    and 5'
+  - 'Full spec compliance: OHLC bodies, wicks correctly thinner than bodies, color
+    coding, date formatting (%b %d), subtle y-only grid, and SMA overlay as bonus
+    analytical feature'
+  - 'Perfect code quality: reproducible seed (42), clean imports, KISS flat structure,
+    proper canvas PAD-only logic with no cropping'
+  - 'Idiomatic Altair: layer composition with alt.layer(), y2 encoding for open-close
+    and high-low ranges, resolve_scale(color=''independent''), proper encoding types
+    (T, Q, N), alt.value() for SMA color'
+  - Both themes render correctly with theme-adaptive chrome — title, axis labels,
+    tick labels, legend, and view background all use the correct tokens for light
+    (#FAF8F1) and dark (#1A1A17)
   weaknesses:
-  - '"5-day MA" inline label (positioned ~1/3 through SMA at Jan 16-17) overlaps with
-    nearby bearish candlestick bodies at the peak; move label to a less congested
-    area (e.g. sma_df.iloc[[2]] for early placement before candles are tall, or near
-    the tail)'
-  - Grid spans both axes; for a candlestick/bar-type chart, Y-axis-only grid (horizontal
-    lines only) is cleaner per style guide — configure X-axis with no grid lines
-  - No redundant encoding for CVD accessibility on green/red distinction — consider
-    adding a thin ink-color stroke to the candlestick bodies to help colorblind viewers
+  - The '5-day MA' annotation label at sma_df.iloc[[2]] (around Jan 09) sits very
+    close to or slightly overlaps the bearish candle body in that area — reposition
+    with dy=-18 or shift the label to a less congested index (e.g. iloc[[4]]) to avoid
+    the candle
+  - Design Excellence is functional but not visually striking — the chart is clean
+    and professional but lacks any accent or emphasis element that would create a
+    clear focal point (e.g. a reference line at the peak price, a shaded trend region,
+    or a subtle price-range annotation)
+  - Wick lines carry bullish/bearish color but have no redundant encoding — candle
+    bodies have ink stroke outline for CVD users but wicks are color-only; a dashed/solid
+    linestyle distinction or sticking to shape only is not easily added in Altair,
+    but this is a known limitation for the candlestick chart type
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "candlestick-basic · python · altair · anyplot.ai" bold centered, clearly readable in dark ink; subtitle in muted gray readable; axis labels "Date" (X) and "Price ($)" (Y) in dark ink; tick labels (Jan 01..Feb 09, 85..112) in INK_SOFT — all readable
-      Data: 30 candlesticks — bullish bodies in #009E73 (Imprint pos 1), bearish in #AE3030 (Imprint pos 5); wicks in matching colors, visibly thinner than bodies; dashed blue (#4467A3) SMA line with italic "5-day MA" inline label; legend shows Direction/Bullish/Bearish in styled frame
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "candlestick-basic · python · altair · anyplot.ai" in bold dark ink at top-center, clearly readable. Subtitle "30-day price action with 5-day moving average" in muted gray below — readable. Y-axis label "Price ($)" and X-axis label "Date" in dark ink — proportionate and readable. Tick labels ("Jan 01", "Jan 05", etc. on X; "85", "90", ..., "110" on Y) in INK_SOFT dark gray — clearly legible. Legend box (elevated fill) with "Direction" title and Bullish/Bearish entries — readable.
+      Data: 30 candlesticks with green (#009E73) bodies for bullish days and matte-red (#AE3030) bodies for bearish days. Wicks in matching colors, visibly thinner than bodies. Dashed blue (#4467A3) 5-day MA line overlaid. "5-day MA" italic bold label near Jan 09 — slightly close to a candle body in that area. Subtle horizontal grid lines at y-axis intervals.
+      Legibility verdict: PASS — all text is readable against the light background. Minor: "5-day MA" annotation label is near/overlapping a candle body around Jan 09.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subtitle in light cream text (#F0EFE8 / INK_MUTED), fully legible against dark background; axis labels and tick labels in light-on-dark tones — no dark-on-dark failures observed; legend text uses INK_SOFT dark token (#B8B7B0), readable
-      Data: Bullish green (#009E73) and bearish red (#AE3030) colors are identical to light render; SMA blue (#4467A3) identical; grid subtle against dark background; legend frame uses elevated dark background (#242420)
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light #F0EFE8 cream text — clearly visible against dark background. Subtitle in muted light gray — readable. Axis labels in light INK token — readable. Tick labels in INK_SOFT light token — readable. Legend with elevated dark fill (#242420) and light label text — legible. No dark-on-dark failures detected.
+      Data: Candlestick colors are identical to the light render — green (#009E73) bullish, matte-red (#AE3030) bearish, blue (#4467A3) MA line. All data colors match light render exactly (only chrome tokens flipped). Subtle horizontal grid lines visible.
+      Legibility verdict: PASS — all text is readable against the dark background. Theme-adaptive chrome correctly implemented throughout.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +64,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes well-chosen and readable at full resolution in both
-          themes; inline 5-day MA label is slightly small (fontSize=10) but acceptable
+        comment: 'All text readable in both themes. Title, subtitle, axis labels,
+          tick labels, legend all correctly themed. Minor: ''5-day MA'' annotation
+          at fontSize=10 is the smallest element, readable but slightly small.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'Minor overlap: 5-day MA inline label placed ~1/3 through SMA (around
-          Jan 16-17) partially overlaps nearby bearish candlestick bodies at the peak
-          area'
+        comment: 'Minor: ''5-day MA'' label near Jan 09 is positioned close to a candle
+          body (sma_df.iloc[[2]]); slight visual clash. All other elements clear.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candlestick bodies and wicks clearly sized for 30 data points; strokeWidth=1.5
-          wicks visibly thinner than size=12 bodies; SMA dashed line clear
+        comment: All 30 candlestick bodies clearly visible at size=12. Wicks at strokeWidth=1.5
+          clearly thinner than bodies. MA line at strokeWidth=2.0 dashed. All elements
+          prominent at 30-candle density.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Green/red CVD concern: finance semantic exception applied correctly
-          per Imprint palette rules and spec, but no redundant encoding to aid colorblind
-          viewers'
+        comment: Semantic exception for finance (green=bullish, red=bearish) is spec-mandated
+          and domain-conventional. Ink stroke on candle bodies (strokeWidth=0.7) provides
+          CVD redundancy via shape outline.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; 620x320 inner view with PAD-only logic correctly
-          targets 3200x1800; title fills ~60% of width; balanced layout; no overflow
+        comment: Canvas gate passed. Title at ~65% plot width, good proportions. No
+          clipping or overflow detected. Generous margins. Good balance of axis labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Date, Y: Price ($) with unit; correct mandatory title format'
+        comment: Title matches exact required format. Y-axis 'Price ($)' includes
+          units. X-axis 'Date' is appropriate for temporal data.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Bullish=#009E73 (Imprint pos 1), Bearish=#AE3030 (Imprint pos 5),
-          SMA=#4467A3 (Imprint pos 3); finance semantic exception correctly applied;
-          both backgrounds theme-correct
+        comment: 'Bullish: #009E73 (Imprint pos 1, brand green). Bearish: #AE3030
+          (Imprint pos 5, matte red — finance semantic exception). MA: #4467A3 (Imprint
+          pos 3, blue). Light bg #FAF8F1, dark bg #1A1A17. Both themes correct.'
     design_excellence:
       score: 11
       max: 20
@@ -112,25 +121,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: semantic finance color assignment, SMA overlay with
-          dashed style and italic inline label, subtitle adds context, legend frame
-          styled; professional financial chart appearance'
+        comment: Above default (4). Semantic color exception shows design intent.
+          Subtitle adds analytical context. SMA overlay with inline 'italic bold'
+          label. Ink stroke on candle bodies as a refined CVD touch. Professional
+          but not visually striking.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: configure_view strokeWidth=0 removes view box, gridOpacity=0.15 subtly
-          correct, legend fill/stroke themed; grid spans both axes when Y-only would
-          be cleaner for a bar/candlestick chart
+        comment: Above default (2). X-grid disabled (configure_axisX(grid=False)),
+          y-grid at 0.15 opacity — very subtle. View border removed (strokeWidth=0).
+          Clean axis styling. Some Altair chrome defaults still present.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: SMA trend line creates a clear peak-then-decline narrative; subtitle
-          explains context; semantic color coding communicates session distribution;
-          could emphasize trend peak/bottom more
+        comment: Above default (2). Clear bearish price trend narrative (upward Jan
+          01-10, then declining to Feb 09). SMA annotated directly on the line — guides
+          the viewer. Color coding creates immediate visual story of market direction.
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct candlestick implementation: mark_rule for wicks, mark_bar
-          for bodies'
+        comment: Correct candlestick chart with bodies (open-close via y/y2 encoding)
+          and wicks (high-low via mark_rule y/y2).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: OHLC data mapped, bullish/bearish color coding, wicks thinner than
-          bodies, date formatting, subtle grid
+        comment: Candle bodies, wicks thinner than bodies, bullish/bearish color coding,
+          date axis with %b %d formatting, subtle grid, 30 periods within spec range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, price on Y, all 30 periods visible, scale(zero=False)
-          correct
+        comment: X=date (T), Y=price range with zero=False scale. All 30 trading days
+          visible. Open/high/low/close correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is candlestick-basic · python · altair · anyplot.ai; legend
-          shows Direction/Bullish/Bearish
+        comment: 'Title: ''candlestick-basic · python · altair · anyplot.ai'' matches
+          format exactly. Legend: ''Direction'' with ''Bullish'' and ''Bearish'' labels.'
     data_quality:
       score: 15
       max: 15
@@ -172,22 +182,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All OHLC aspects shown; high/low wicks, open/close bodies, bullish/bearish
-          coloring, SMA overlay
+        comment: All OHLC aspects shown. Wicks correctly show high-low range beyond
+          bodies. Color distinguishes direction. SMA overlay shows analytical depth.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock starting at $100, realistic volatility via seeded random walk,
-          30 business days Jan 2024, neutral financial data
+        comment: 30 business days starting Jan 2024. Random walk with realistic volatility.
+          Price range $85-$110 plausible for mid-cap stock. Neutral/generic (no controversial
+          ticker).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 periods as specified; price range ~85-112 realistic; daily frequency
-          appropriate
+        comment: 30 periods within 20-100 spec range. $85-$110 price range realistic.
+          Volatility levels ($1-3 range/day) appropriate.
     code_quality:
       score: 10
       max: 10
@@ -197,51 +208,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; inline script; sys.path fix needed to avoid
-          naming conflict with file named altair.py
+        comment: Flat script, no functions or classes. Clean imperative structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, PIL, os, sys'
+        comment: os, sys, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; PAD-only canvas logic per library
-          guide
+        comment: sys.path manipulation is necessary and documented (avoids naming
+          conflict with altair.py). Otherwise clean and well-structured.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. PAD-only
+          canvas logic correct.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper type encodings (T/Q/N), alt.Title with subtitle, configure_view/axis/legend,
-          resolve_scale, layer composition — all idiomatic
+        comment: 'Highly idiomatic: proper T/Q/N encoding types, alt.layer() composition,
+          y2 encoding for ranges, alt.value() for SMA, resolve_scale(color=''independent''),
+          configure_axis/Legend/view chained correctly.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses alt.layer() for multi-mark composition, resolve_scale(color=independent),
-          alt.value() for fixed colors, tooltips with format strings, interactive()
+        comment: 'Good Altair-specific usage: y2 encoding for price ranges (distinctive
+          Altair pattern), resolve_scale across layers, interactive tooltips with
+          format strings, HTML export. Expected for OHLC but well-executed.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -258,3 +271,4 @@ impl_tags:
   - rolling-window
   styling:
   - alpha-blending
+  - edge-highlighting
