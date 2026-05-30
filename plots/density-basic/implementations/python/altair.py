@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -84,7 +84,7 @@ hover_dot = (
 # Peak annotation labels
 annotations = (
     alt.Chart(peaks)
-    .mark_text(fontSize=12, fontWeight="bold", color=INK, dy=-14)
+    .mark_text(fontSize=11, fontWeight="bold", color=INK, dy=-14)
     .encode(x="Test Score:Q", y="density:Q", text="label:N")
 )
 
@@ -119,7 +119,6 @@ chart = (
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.12,
-        gridDash=[4, 4],
         labelColor=INK_SOFT,
         labelFontSize=10,
         titleColor=INK,
