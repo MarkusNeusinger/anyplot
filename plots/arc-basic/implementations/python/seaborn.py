@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -106,7 +106,7 @@ sns.lineplot(
     units="edge_id",
     estimator=None,
     palette=palette,
-    sizes=(1.5, 5.0),
+    sizes=(2.0, 5.5),
     alpha=0.75,
     ax=ax,
     sort=False,
@@ -127,17 +127,35 @@ ax.legend(
     fancybox=False,
     framealpha=0.9,
     edgecolor=INK_SOFT,
+    borderpad=1.2,
 )
 
+# Degree-based node sizing — more-connected nodes appear larger for visual hierarchy
+degree = [0] * n_nodes
+for src, tgt, _ in edges:
+    degree[src] += 1
+    degree[tgt] += 1
+node_sizes = [120 + d * 75 for d in degree]
+
 # Draw nodes — Imprint blue (#4467A3) as structural anchors
-node_df = pd.DataFrame({"x": x_positions, "y": np.zeros(n_nodes)})
+node_df = pd.DataFrame({"x": x_positions, "y": np.zeros(n_nodes), "size": node_sizes})
 sns.scatterplot(
-    data=node_df, x="x", y="y", s=300, color="#4467A3", zorder=5, ax=ax, legend=False, edgecolor=PAGE_BG, linewidth=1.5
+    data=node_df,
+    x="x",
+    y="y",
+    size="size",
+    sizes=(min(node_sizes), max(node_sizes)),
+    color="#4467A3",
+    zorder=5,
+    ax=ax,
+    legend=False,
+    edgecolor=PAGE_BG,
+    linewidth=1.5,
 )
 
 # Node labels below the baseline
 for i, name in enumerate(nodes):
-    ax.text(x_positions[i], -0.22, name, ha="center", va="top", fontsize=8, fontweight="medium", color=INK)
+    ax.text(x_positions[i], -0.22, name, ha="center", va="top", fontsize=9, fontweight="medium", color=INK)
 
 # Annotations: contrast between arc distance and weight
 ax.annotate(
