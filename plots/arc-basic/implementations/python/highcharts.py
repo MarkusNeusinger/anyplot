@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -23,6 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+ANYPLOT_AMBER = "#DDCC77"  # semantic anchor: highlight / callout
 
 # Imprint palette — 8 hues, canonical order, theme-independent
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -54,19 +55,40 @@ for src, tgt, _ in edges:
     degree[src] += 1
     degree[tgt] += 1
 
-# Node config: Imprint palette position per character, degree-scaled radius
+# Map nodes to Imprint palette colors for per-link rgba computation
+node_color_map = {name: IMPRINT_PALETTE[i] for i, name in enumerate(nodes)}
+
+
+def hex_to_rgba(hex_color: str, alpha: float) -> str:
+    r = int(hex_color[1:3], 16)
+    g = int(hex_color[3:5], 16)
+    b = int(hex_color[5:7], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+# Node config: Imprint palette per character, degree-scaled radius
+# Henry (hub, 5 connections) gets a golden ring for editorial emphasis
 nodes_data = []
 for i, name in enumerate(nodes):
+    is_hub = name == "Henry"
     nodes_data.append(
         {
             "id": name,
             "color": IMPRINT_PALETTE[i],
-            "marker": {"radius": 35 + degree[name] * 8, "lineWidth": 4, "lineColor": PAGE_BG},
+            "marker": {
+                "radius": 35 + degree[name] * 8,
+                "lineWidth": 8 if is_hub else 4,
+                "lineColor": ANYPLOT_AMBER if is_hub else PAGE_BG,
+            },
         }
     )
 
-# Scale weights for arc visual thickness
-links_data = [{"from": src, "to": tgt, "weight": w * 7} for src, tgt, w in edges]
+# Per-link colors: weight >= 3 arcs opaque (primary connections),
+# weight <= 2 arcs muted (peripheral connections) — creates visual hierarchy
+links_data = []
+for src, tgt, w in edges:
+    alpha = 0.65 if w >= 3 else 0.22
+    links_data.append({"from": src, "to": tgt, "weight": w * 7, "color": hex_to_rgba(node_color_map[src], alpha)})
 
 # Title with dynamic fontsize scaling (67-char baseline for 3200×1800)
 title = "arc-basic · python · highcharts · anyplot.ai"
@@ -104,8 +126,7 @@ chart_options = {
             "data": links_data,
             "colorByPoint": True,
             "centeredLinks": True,
-            "linkColorMode": "from",
-            "linkOpacity": 0.5,
+            "linkOpacity": 1.0,
             "minLinkWidth": 3,
             "equalNodes": False,
             "nodeWidth": 55,
@@ -151,14 +172,28 @@ for name, (url, cache_path) in urls.items():
             except urllib.error.HTTPError:
                 time.sleep(3 * (attempt + 1))
 
-# Use JS formatter to show node names only (not link labels)
+# Node-only data labels; after chart creation add editorial annotation in bottom canvas space
 chart_init_js = f"""
 (function() {{
     var opts = {options_json};
     opts.series[0].dataLabels[0].formatter = function() {{
         return this.point.isNode ? this.point.name : '';
     }};
-    Highcharts.chart('container', opts);
+    var chart = Highcharts.chart('container', opts);
+
+    // Editorial callout: fill bottom canvas space and guide viewer to the hub insight
+    chart.renderer.text(
+        '★ Henry is the story’s hub — the only character connected to all four narrative groups',
+        1600,
+        1748
+    ).css({{
+        fontSize: '34px',
+        color: '{INK_SOFT}',
+        fontStyle: 'italic'
+    }}).attr({{
+        align: 'center',
+        zIndex: 5
+    }}).add();
 }})();
 """
 
