@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 87/100 | Created: 2026-02-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-30
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,90 +16,106 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+ANYPLOT_AMBER = "#DDCC77"  # semantic anchor: highlight / callout
+
+# Imprint palette — 8 hues, canonical order, theme-independent
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # Data: Character interactions in a story chapter
-nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack"]
+nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry"]
 
 # Edges: (source, target, weight) — dialogue exchange count
 edges = [
     ("Alice", "Bob", 5),
     ("Alice", "David", 3),
+    ("Alice", "Grace", 2),
     ("Bob", "Carol", 3),
+    ("Bob", "Frank", 3),
     ("Carol", "Eve", 2),
+    ("Carol", "David", 4),
     ("David", "Frank", 3),
     ("Eve", "Grace", 1),
+    ("Frank", "Henry", 3),
+    ("Grace", "Henry", 2),
     ("Alice", "Henry", 2),
-    ("Bob", "Frank", 3),
-    ("Carol", "David", 4),
-    ("Frank", "Iris", 1),
-    ("Grace", "Jack", 2),
-    ("Alice", "Jack", 1),
     ("David", "Henry", 3),
-    ("Henry", "Iris", 2),
-    ("Iris", "Jack", 3),
+    ("Eve", "Henry", 1),
 ]
 
-# Node connection counts for marker sizing
+# Node connection counts for degree-scaled marker sizing
 degree = dict.fromkeys(nodes, 0)
 for src, tgt, _ in edges:
     degree[src] += 1
     degree[tgt] += 1
 
-# Colorblind-safe palette — Python Blue anchor with complementary tones
-node_colors = {
-    "Alice": "#306998",
-    "Bob": "#E8A317",
-    "Carol": "#17BECF",
-    "David": "#9467BD",
-    "Eve": "#2CA02C",
-    "Frank": "#D4652F",
-    "Grace": "#8C564B",
-    "Henry": "#1F77B4",
-    "Iris": "#E377C2",
-    "Jack": "#5DA88A",
-}
+# Map nodes to Imprint palette colors for per-link rgba computation
+node_color_map = {name: IMPRINT_PALETTE[i] for i, name in enumerate(nodes)}
 
-# Node config with degree-scaled markers (3-4x default for 4800x2700)
+
+def hex_to_rgba(hex_color: str, alpha: float) -> str:
+    r = int(hex_color[1:3], 16)
+    g = int(hex_color[3:5], 16)
+    b = int(hex_color[5:7], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+# Node config: Imprint palette per character, degree-scaled radius
+# Henry (hub, 5 connections) gets a golden ring for editorial emphasis
 nodes_data = []
-for name in nodes:
+for i, name in enumerate(nodes):
+    is_hub = name == "Henry"
     nodes_data.append(
         {
             "id": name,
-            "color": node_colors[name],
-            "marker": {"radius": 95 + degree[name] * 14, "lineWidth": 5, "lineColor": "#ffffff"},
+            "color": IMPRINT_PALETTE[i],
+            "marker": {
+                "radius": 35 + degree[name] * 8,
+                "lineWidth": 8 if is_hub else 4,
+                "lineColor": ANYPLOT_AMBER if is_hub else PAGE_BG,
+            },
         }
     )
 
-# Scale weights up for visual node sizing (arc diagram sizes nodes by total weight flow)
-weight_scale = 14
-links_data = [{"from": src, "to": tgt, "weight": w * weight_scale} for src, tgt, w in edges]
+# Per-link colors: weight >= 3 arcs opaque (primary connections),
+# weight <= 2 arcs muted (peripheral connections) — creates visual hierarchy
+links_data = []
+for src, tgt, w in edges:
+    alpha = 0.65 if w >= 3 else 0.22
+    links_data.append({"from": src, "to": tgt, "weight": w * 7, "color": hex_to_rgba(node_color_map[src], alpha)})
 
-# Chart options (raw JS — highcharts_core doesn't support arcdiagram type)
+# Title with dynamic fontsize scaling (67-char baseline for 3200×1800)
+title = "arc-basic · python · highcharts · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = f"{max(44, round(66 * ratio))}px"
+
 chart_options = {
     "chart": {
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "marginTop": 150,
-        "marginBottom": 10,
-        "marginLeft": 200,
-        "marginRight": 200,
-        "spacingTop": 20,
-        "spacingBottom": 0,
+        "width": 3200,
+        "height": 1800,
+        "backgroundColor": PAGE_BG,
+        "marginTop": 130,
+        "marginBottom": 20,
+        "marginLeft": 120,
+        "marginRight": 120,
     },
-    "title": {
-        "text": "arc-basic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold", "color": "#333333"},
-        "margin": 30,
-    },
+    "title": {"text": title, "style": {"fontSize": title_fontsize, "fontWeight": "bold", "color": INK}, "margin": 20},
     "subtitle": {
-        "text": "Character interactions — Dialogue exchanges between characters in a story chapter",
-        "style": {"fontSize": "36px", "color": "#666666"},
+        "text": "Dialogue exchanges between characters in a story chapter",
+        "style": {"fontSize": "40px", "color": INK_SOFT},
     },
     "accessibility": {"enabled": False},
     "tooltip": {
-        "style": {"fontSize": "32px"},
-        "nodeFormat": "{point.name}: {point.sum} exchanges",
-        "pointFormat": "{point.fromNode.name} \u2192 {point.toNode.name}: {point.weight} exchanges",
+        "style": {"fontSize": "28px"},
+        "nodeFormat": "{point.name}: {point.sum} dialogue exchanges",
+        "pointFormat": "{point.fromNode.name} → {point.toNode.name}: {point.weight} exchanges",
     },
     "series": [
         {
@@ -109,25 +126,17 @@ chart_options = {
             "data": links_data,
             "colorByPoint": True,
             "centeredLinks": True,
-            "linkColorMode": "from",
-            "linkOpacity": 0.5,
-            "linkWeight": 18,
+            "linkOpacity": 1.0,
+            "minLinkWidth": 3,
             "equalNodes": False,
-            "nodeWidth": 110,
-            "minLinkWidth": 8,
-            "marker": {"radius": 110, "lineWidth": 5, "lineColor": "#ffffff"},
+            "nodeWidth": 55,
             "dataLabels": [
                 {
                     "enabled": True,
                     "rotation": 0,
-                    "y": 80,
+                    "y": 48,
                     "align": "center",
-                    "style": {
-                        "fontSize": "48px",
-                        "fontWeight": "bold",
-                        "textOutline": "3px #ffffff",
-                        "color": "#333333",
-                    },
+                    "style": {"fontSize": "44px", "fontWeight": "bold", "textOutline": f"3px {PAGE_BG}", "color": INK},
                 }
             ],
         }
@@ -138,7 +147,7 @@ chart_options = {
 
 options_json = json.dumps(chart_options)
 
-# Download Highcharts JS, sankey module (dependency), and arc-diagram module
+# Download Highcharts JS modules — arcdiagram requires sankey as a dependency
 cache_dir = Path("/tmp")
 urls = {
     "highcharts": ("https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts.js", cache_dir / "highcharts.js"),
@@ -162,76 +171,79 @@ for name, (url, cache_path) in urls.items():
                 break
             except urllib.error.HTTPError:
                 time.sleep(3 * (attempt + 1))
-highcharts_js = js_scripts["highcharts"]
-sankey_js = js_scripts["sankey"]
-arcdiagram_js = js_scripts["arcdiagram"]
 
-# Chart init JS: use formatter function to show only node names (no DOM manipulation)
+# Node-only data labels; after chart creation add editorial annotation in bottom canvas space
 chart_init_js = f"""
 (function() {{
     var opts = {options_json};
     opts.series[0].dataLabels[0].formatter = function() {{
         return this.point.isNode ? this.point.name : '';
     }};
-    Highcharts.chart('container', opts);
+    var chart = Highcharts.chart('container', opts);
+
+    // Editorial callout: fill bottom canvas space and guide viewer to the hub insight
+    chart.renderer.text(
+        '★ Henry is the story’s hub — the only character connected to all four narrative groups',
+        1600,
+        1748
+    ).css({{
+        fontSize: '34px',
+        color: '{INK_SOFT}',
+        fontStyle: 'italic'
+    }}).attr({{
+        align: 'center',
+        zIndex: 5
+    }}).add();
 }})();
 """
 
-# Build HTML with inline JS (no post-render DOM manipulation)
+# Build HTML with inline JS (CDN fails under file:// in headless Chrome)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script>{highcharts_js}</script>
-    <script>{sankey_js}</script>
-    <script>{arcdiagram_js}</script>
+    <script>{js_scripts["highcharts"]}</script>
+    <script>{js_scripts["sankey"]}</script>
+    <script>{js_scripts["arcdiagram"]}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{chart_init_js}</script>
 </body>
 </html>"""
 
-# Save interactive HTML version (CDN links for standalone use)
-standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/sankey.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/arc-diagram.js"></script>
-</head>
-<body style="margin:0; overflow:auto;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{chart_init_js}</script>
-</body>
-</html>"""
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(standalone_html)
-
-# Write temp HTML and take screenshot
+# Write temp HTML, take screenshot with CDP viewport override for exact dimensions
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot_raw.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Crop to exact 4800x2700 dimensions
-img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
-Path("plot_raw.png").unlink()
-
 Path(temp_path).unlink()
+
+# Normalize to exact 3200×1800 — guards against ±1–2 px rounding in headless Chrome
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
