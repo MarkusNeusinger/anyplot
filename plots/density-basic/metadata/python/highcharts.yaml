@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: density-basic
 created: '2025-12-23T10:02:51Z'
-updated: '2026-05-30T03:39:49Z'
+updated: '2026-05-30T03:49:20Z'
 generated_by: claude-sonnet
 workflow_run: 26673110034
 issue: 912
@@ -12,42 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Bimodal data (female/male heights) with Silverman bandwidth KDE tells a compelling
-    real-world story
-  - plotBands + plotLines for peak annotation are idiomatic Highcharts features, well-utilised
-  - Gradient fill (45% to 3% opacity) gives elegant visual depth without obscuring
-    the curve
-  - All theme tokens wired correctly — title, axis labels, tick labels, and legend
-    text all flip between INK (#1A1A17/#F0EFE8) and INK_SOFT (#4A4A44/#B8B7B0)
-  - Rug plot adds observation-level detail without cluttering the density curve
-  - Auto-scaled title fontsize ensures correct proportions; canvas gate passed (3200×1800)
+  - Correct Imprint palette (#009E73) used for the density series throughout both
+    themes
+  - Bimodal height data is compelling and realistic — clearly shows female/male distribution
+  - Silverman bandwidth implementation is correct and produces smooth KDE
+  - Peak plotLines with labels and plotBands together create effective visual storytelling
+  - Gradient fill (45% → 3% opacity) adds polish without distracting from the data
+    shape
+  - Rug plot adds raw data context at the base of the chart
+  - 'Full theme adaptation: title, axis labels, tick labels, legend all use INK/INK_SOFT
+    tokens'
+  - CDP viewport override + PIL safety-net ensures exact 3200×1800 canvas dimensions
+  - HTML artifacts correctly saved as plot-light.html / plot-dark.html
   weaknesses:
-  - Rug observations (radius=4, 30% opacity) are nearly invisible at thumbnail sizes
-    (~400px) — increase radius to 5-6 or opacity to 0.40-0.50 so individual marks
-    register when scaled down
-  - Legend is enabled for a single-series density + rug pair — the legend 'Density
-    / Observations' is useful context but the 'Observations' swatch (tiny dot) is
-    hard to parse; consider a small inline annotation or a clearer swatch symbol
-  - 'DE-02: Top/right spine removal is implicit (Highcharts default); explicitly setting
-    plotBorderWidth:0 and removing axis line on top/right would make refinement intent
-    explicit and prevent theme regressions'
+  - Peak highlight plotBands use rgba(0,158,115,0.06) opacity — nearly invisible in
+    dark render where the dark background absorbs the subtle tint; increase to at
+    least 0.10–0.12 in dark theme for comparable emphasis
+  - Peak annotation label fontSize (34px) is notably smaller than tick labels (44px);
+    bump to 38–40px so they read as intentional secondary labels rather than whisper
+    text
+  - Rug plot markers (radius 6, 42% opacity, ~167 points) form a dense smear at the
+    base; consider radius 5 with 35% opacity and subsampling every 4th point to reduce
+    visual crowding while maintaining representativeness
+  - DE-03 storytelling partially lost in dark mode because the band highlights disappear
+    — the dashed peak lines carry the annotation weight alone in dark theme
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct; no pure white.
-      Chrome: Title "density-basic · python · highcharts · anyplot.ai" in bold dark ink, ~70% of plot width — well-proportioned. Y-axis label "Density" and X-axis label "Height (cm)" in dark INK, clearly readable. Tick labels in INK_SOFT (#4A4A44) — fully legible.
-      Data: Bimodal KDE curve in brand green #009E73 with gradient fill (45% opacity at peak → 3% at baseline). Two dashed vertical lines at ~164 cm and ~177 cm with "Peak: 164 cm" / "Peak: 177 cm" labels in INK_SOFT. Subtle green shaded plotBands around each peak. Rug marks at baseline visible but faint (radius 4, 30% opacity).
-      Legend: Top-right, "Density" (green line swatch) and "Observations" (dot swatch) — borderless, readable.
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "density-basic · python · highcharts · anyplot.ai" in bold dark ink (~66px), clearly readable. X-axis label "Height (cm)" and Y-axis label "Density" in dark ink (~56px), well-proportioned. Tick labels in INK_SOFT (~44px), all readable. Peak annotation labels ("Peak: 164 cm", "Peak: 177 cm") in INK_SOFT at 34px — slightly small but legible. Legend top-right shows "Density" swatch (green line) and "Observations" swatch (dot) — readable.
+      Data: Smooth bimodal KDE curve in brand green #009E73 with gradient area fill (45% → 3% opacity) — excellent visual on cream surface. Two subtle green plotBands highlight the peak regions. Dashed plotLines mark peak centres. Rug dots at chart base (radius 6, 42% opacity) visible as a thin row of green dots.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct; no pure black.
-      Chrome: Title in light #F0EFE8 — clearly readable. Axis labels and peak annotation labels in #B8B7B0 (INK_SOFT dark) — legible against dark surface. No dark-on-dark text failures.
-      Data: Brand green #009E73 density curve and fill — identical hue to light render (only background flips). Fill appears slightly more saturated/solid on dark surface at mid-opacity, which is expected rgba behavior. Subtle grid lines in rgba(240,239,232,0.15) visible.
-      Legend: "Density" and "Observations" labels in light text — readable.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome tokens correctly theme-adapted.
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title in light INK (#F0EFE8), readable. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable against dark background. No dark-on-dark failures detected. Legend text in INK_SOFT light gray — visible.
+      Data: KDE area fill renders as a darker teal-green on the near-black background (expected RGBA blending); the #009E73 line outline remains identifiable as brand green. Data colors are identical to light render — only chrome adapts. Peak plotBands (rgba(0,158,115,0.06)) are nearly invisible on the dark background — the 6% opacity is absorbed by the dark surface. Rug dots visible as faint green dots at chart base.
+      Legibility verdict: PASS overall — all title/label/tick text readable. Minor: peak plotBands nearly invisible in dark mode (design element lost, not a legibility failure).
   criteria_checklist:
     visual_quality:
       score: 27
@@ -55,57 +58,58 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and peak annotations all readable
-          in both themes. Rug swatch in legend is very small but not a legibility
-          failure.
+        comment: Title (66px bold), axis labels (56px), tick labels (44px) all readable
+          in both themes. Peak annotation labels at 34px are notably smaller than
+          tick labels — functional but slightly whisper-level for a secondary label;
+          consider 38-40px.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Peak labels sit cleanly near the top of the dashed lines; legend
-          does not overlap data; no text collision.
+        comment: No overlap between text elements, no collision with data or plot
+          bands.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Density curve prominent; gradient fill clear. Rug observations at
-          radius=4 / 30% opacity are very faint at thumbnail scale — could be larger.
+        comment: KDE area + line excellent. Rug markers (radius 6, 42% opacity, ~167
+          points) form a dense band rather than individual visible ticks at the base;
+          acceptable but slightly crowded.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series brand green #009E73 — colorblind-safe. No red-green
-          sole encoding.'
+        comment: 'Single data series in brand green #009E73, CVD-safe. No red-green
+          sole-signal encoding.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed. Generous margins (160/180/80/120).
-          Title well-proportioned (~70% width). No overflow or clipping.
+        comment: Good margins (marginBottom:160, marginLeft:180). Title fills ~65%
+          width — expected for 47-char title at 66px. Nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: correct format. X: ''Height (cm)'' with units. Y: ''Density''
-          appropriate for KDE.'
+        comment: 'X: ''Height (cm)'' with units; Y: ''Density''; title in correct
+          format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Gradient fill derived from same
-          hue. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Imprint palette correctly
-          used.'
+        comment: 'First series #009E73. Background #FAF8F1 light / #1A1A17 dark. All
+          chrome tokens theme-adaptive. Correct.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -113,24 +117,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default: bimodal data with meaningful real-world story, auto-scaled
-          title fontsize, gradient fill, peak detection, plotBands highlight, rug
-          plot. Shows intentional design.'
+        comment: Gradient fill (45% → 3% opacity) adds polish. Bimodal distribution
+          is engaging. Peak plotBands + plotLines create layered emphasis. Above median;
+          not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid, borderless legend, generous margins, no top/right
-          spines. Clean presentation. Spine removal could be made more explicit.
+        comment: Y-axis grid only (subtle rgba 15%), transparent legend, clean axis
+          layout. Good baseline refinement above the default.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Bimodal narrative (female/male heights) with peak annotations creates
-          clear focal points. Dashed lines + shaded bands guide the viewer to key
-          features.
+        comment: Peak annotations guide viewer to the bimodal peaks. Rug plot adds
+          raw-data layer. However, band highlighting is lost in dark mode (near-invisible
+          at 6% opacity), weakening the story on that render.
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE density plot with area fill.
+        comment: Correct density/KDE plot as smooth area chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth density curve, fill with transparency, rug plot, Silverman
+        comment: Smooth KDE curve, gradient fill under curve, rug plot, Silverman
           bandwidth — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: height values (cm). Y: probability density. Full range shown
-          (~135–210 cm).'
+        comment: 'X: heights 135–205 cm; Y: density 0–0.036. Correct KDE output mapping.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''density-basic · python · highcharts · anyplot.ai'' — correct
-          format. Legend: ''Density'' and ''Observations'' appropriate.'
+        comment: Title 'density-basic · python · highcharts · anyplot.ai' — correct
+          format. Legend labels 'Density' / 'Observations' — appropriate for 2-series
+          chart.
     data_quality:
       score: 15
       max: 15
@@ -171,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full distribution coverage with bimodal shape, individual observations
-          (rug), bandwidth choice, peak identification.
+        comment: KDE curve, fill, rug plot, peak annotations — comprehensive density
+          plot features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Human height distribution (female 162cm ± 6, male 178cm ± 6) — statistically
-          plausible, domain-neutral, no controversy.
+        comment: Bimodal human height distribution (female ~162 cm / male ~178 cm)
+          — realistic, plausible, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 samples — ideal for KDE. Height range realistic. Density values
-          correct (area under curve ≈ 1).
+        comment: Heights 140–210 cm range, density 0–0.036 — correct KDE output scale,
+          500 samples appropriate.
     code_quality:
       score: 10
       max: 10
@@ -196,35 +200,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes.
+        comment: Linear script, no unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, highcharts_core, PIL, selenium, stdlib
-          modules.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, clean structure, appropriate complexity.
+        comment: Clean, appropriate complexity. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Highcharts
-          API.
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -232,15 +234,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct AreaSeries + ScatterSeries, container='container', HighchartsOptions,
-          chart.add_series(). Follows all library guide patterns.
+        comment: Proper HighchartsOptions API, AreaSeries + ScatterSeries for dual-series
+          chart, add_series() pattern, container='container' correct.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
         comment: plotBands for peak region highlighting, plotLines with labels for
-          peak markers, linearGradient for fill — all Highcharts-specific and well-applied.
+          peak markers, linearGradient fillColor — all Highcharts-distinctive features
+          used effectively.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -254,5 +257,5 @@ impl_tags:
   dataprep:
   - kde
   styling:
-  - alpha-blending
   - gradient-fill
+  - alpha-blending
