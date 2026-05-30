@@ -31,24 +31,29 @@ levels_df <- data.frame(
 # Emission transitions (downward arrows): y_start at upper level, y_end near lower level
 # Arrow stops 0.015 display-units above the lower level line so the head clears the line
 transitions_df <- data.frame(
-  n_upper = c(2, 3, 4,    3, 4,    4),
-  n_lower = c(1, 1, 1,    2, 2,    3),
-  series  = c(
+  n_upper  = c(2, 3, 4,    3, 4,    4, 5),
+  n_lower  = c(1, 1, 1,    2, 2,    3, 3),
+  series   = c(
     "Lyman (UV)", "Lyman (UV)", "Lyman (UV)",
     "Balmer (visible)", "Balmer (visible)",
-    "Paschen (IR)"
+    "Paschen (IR)", "Paschen (IR)"
   ),
-  x_pos = c(0.17, 0.25, 0.33,   0.47, 0.57,   0.74),
+  x_pos    = c(0.17, 0.25, 0.33,   0.47, 0.57,   0.71, 0.80),
+  wl_label = c("Lyα 122 nm", "", "", "Hα 656 nm", "", "Paα 1875 nm", ""),
   stringsAsFactors = FALSE
 )
 transitions_df$y_start <- -1.0 / transitions_df$n_upper
 transitions_df$y_end   <- -1.0 / transitions_df$n_lower + 0.015
+transitions_df$y_mid   <- (transitions_df$y_start + transitions_df$y_end) / 2
 
 series_colors <- c(
   "Lyman (UV)"       = IMPRINT_PALETTE[1],
   "Balmer (visible)" = IMPRINT_PALETTE[2],
   "Paschen (IR)"     = IMPRINT_PALETTE[3]
 )
+
+# Subset for wavelength annotations (only labeled transitions)
+wl_df <- transitions_df[transitions_df$wl_label != "", ]
 
 # Adaptive title size
 title_str  <- "Hydrogen Atom · energy-level-atomic · r · ggplot2 · anyplot.ai"
@@ -85,16 +90,22 @@ p <- ggplot() +
     linewidth   = 1.1,
     show.legend = FALSE
   ) +
+  # Wavelength annotations for representative transitions in each series
+  geom_text(
+    data = wl_df,
+    aes(x = x_pos + 0.018, y = y_mid, label = wl_label),
+    color = INK_SOFT, size = 2.4, hjust = 0, fontface = "italic"
+  ) +
   # Series labels below the n=1 level
   annotate("text", x = 0.25, y = -1.09, label = "Lyman (UV)",
            color = IMPRINT_PALETTE[1], size = 2.9, fontface = "bold") +
   annotate("text", x = 0.52, y = -1.09, label = "Balmer (visible)",
            color = IMPRINT_PALETTE[2], size = 2.9, fontface = "bold") +
-  annotate("text", x = 0.74, y = -1.09, label = "Paschen (IR)",
+  annotate("text", x = 0.755, y = -1.09, label = "Paschen (IR)",
            color = IMPRINT_PALETTE[3], size = 2.9, fontface = "bold") +
-  # Ionization label
+  # Ionization label (size increased to 3.0 for better mobile readability)
   annotate("text", x = 0.50, y = 0.032, label = "Ionization limit (0 eV)",
-           color = INK_SOFT, size = 2.6, hjust = 0.5) +
+           color = INK_SOFT, size = 3.0, hjust = 0.5) +
   scale_color_manual(values = series_colors) +
   scale_x_continuous(limits = c(-0.05, 1.20), expand = c(0, 0)) +
   scale_y_continuous(
