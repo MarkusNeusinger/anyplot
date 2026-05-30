@@ -29,29 +29,48 @@ IMPRINT_PALETTE <- c(
 )
 BRAND <- IMPRINT_PALETTE[1]
 
+# Raised fill alpha for dark theme so the fill silhouette reads clearly against near-black bg
+FILL_ALPHA <- if (THEME == "light") 0.22 else 0.35
+
 # Data — simulated plant seedling heights (mm) from two cultivars mixed in one batch,
 # producing a characteristic bimodal distribution (short- and tall-growing varieties)
 heights_short <- rnorm(420, mean = 38, sd = 6)
 heights_tall  <- rnorm(180, mean = 72, sd = 9)
 df <- data.frame(height = c(heights_short, heights_tall))
 
+# Compute KDE to get annotation positions at the two cultivar peaks
+dens_curve <- density(df$height, bw = "sj")
+y_offset   <- max(dens_curve$y) * 0.06
+ann_x      <- c(38, 72)
+ann_y      <- approx(dens_curve$x, dens_curve$y, xout = ann_x)$y + y_offset
+
 # Plot
 p <- ggplot(df, aes(x = height)) +
     geom_density(
         fill      = BRAND,
         color     = BRAND,
-        alpha     = 0.22,
+        alpha     = FILL_ALPHA,
         linewidth = 1.2,
         bw        = "sj"
     ) +
     geom_rug(
-        color  = BRAND,
-        alpha  = 0.12,
-        length = unit(0.018, "npc"),
+        color     = BRAND,
+        alpha     = 0.12,
+        length    = unit(0.018, "npc"),
         linewidth = 0.4
     ) +
+    annotate("text",
+        x          = ann_x,
+        y          = ann_y,
+        label      = c("Short-growing\n(n = 420)", "Tall-growing\n(n = 180)"),
+        color      = INK_SOFT,
+        size       = 2.8,
+        hjust      = 0.5,
+        vjust      = 0,
+        lineheight = 0.9
+    ) +
     scale_x_continuous(expand = expansion(mult = c(0.02, 0.02))) +
-    scale_y_continuous(expand = expansion(mult = c(0.0, 0.08))) +
+    scale_y_continuous(expand = expansion(mult = c(0.0, 0.18))) +
     labs(
         x     = "Seedling Height (mm)",
         y     = "Density",
@@ -59,19 +78,19 @@ p <- ggplot(df, aes(x = height)) +
     ) +
     theme_minimal(base_size = 8) +
     theme(
-        plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
-        panel.background = element_rect(fill = PAGE_BG, color = NA),
+        plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
+        panel.background   = element_rect(fill = PAGE_BG, color = NA),
         panel.grid.major.y = element_line(color = INK_SOFT, linewidth = 0.2),
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         panel.border       = element_blank(),
-        axis.title   = element_text(color = INK,      size = 10),
-        axis.text    = element_text(color = INK_SOFT, size = 8),
-        axis.line    = element_line(color = INK_SOFT, linewidth = 0.4),
-        axis.ticks   = element_line(color = INK_SOFT, linewidth = 0.3),
-        plot.title   = element_text(color = INK, size = 12, face = "bold",
-                                    margin = margin(b = 10)),
-        plot.margin  = margin(20, 25, 15, 15)
+        axis.title         = element_text(color = INK,      size = 10),
+        axis.text          = element_text(color = INK_SOFT, size = 8),
+        axis.line          = element_line(color = INK_SOFT, linewidth = 0.4),
+        axis.ticks         = element_line(color = INK_SOFT, linewidth = 0.3),
+        plot.title         = element_text(color = INK, size = 12, face = "bold",
+                                          margin = margin(b = 10)),
+        plot.margin        = margin(20, 25, 15, 15)
     )
 
 # Save
