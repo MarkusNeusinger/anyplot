@@ -1,87 +1,87 @@
-""" pyplots.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-02-23
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-30
 """
 
 import math
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Set seed for reproducibility
-np.random.seed(42)
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data: Character interactions in a story chapter
-nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack"]
+# Imprint categorical palette — arc weight encoding uses positions 1→3
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+NODE_FILL = "#DDCC77"  # Imprint amber — outside categorical pool
+
+# Data: word co-occurrences in a scientific corpus (10 nodes)
+np.random.seed(42)
+nodes = ["science", "data", "research", "study", "analysis", "result", "method", "evidence", "theory", "review"]
 n_nodes = len(nodes)
 
-# Edges: pairs of connected nodes with weights (source, target, weight)
+# Edges: (source_idx, target_idx, weight) — weight 1=rare, 2=moderate, 3=frequent
+# "review" (index 9) has just one connection — demonstrates a peripheral node
 edges = [
-    (0, 1, 3),  # Alice-Bob (strong connection)
-    (0, 3, 2),  # Alice-David
-    (1, 2, 2),  # Bob-Carol
-    (2, 4, 1),  # Carol-Eve
-    (3, 5, 2),  # David-Frank
-    (4, 6, 1),  # Eve-Grace
-    (0, 7, 1),  # Alice-Henry (long-range)
-    (1, 5, 2),  # Bob-Frank
-    (2, 3, 3),  # Carol-David (strong)
-    (5, 8, 1),  # Frank-Iris
-    (6, 9, 2),  # Grace-Jack
-    (0, 9, 1),  # Alice-Jack (longest range)
-    (3, 7, 2),  # David-Henry
-    (7, 8, 1),  # Henry-Iris
-    (8, 9, 2),  # Iris-Jack
+    (0, 2, 3),  # science–research (frequent)
+    (1, 4, 3),  # data–analysis (frequent)
+    (4, 5, 3),  # analysis–result (frequent)
+    (0, 4, 2),  # science–analysis (moderate)
+    (1, 5, 2),  # data–result (moderate)
+    (2, 6, 2),  # research–method (moderate)
+    (3, 6, 2),  # study–method (moderate)
+    (6, 7, 2),  # method–evidence (moderate)
+    (7, 8, 2),  # evidence–theory (moderate)
+    (2, 8, 1),  # research–theory (rare)
+    (3, 5, 1),  # study–result (rare)
+    (1, 8, 1),  # data–theory (rare)
+    (0, 9, 1),  # science–review (rare, long range — "review" has only this edge)
 ]
 
-# Node positions along x-axis (1 to 10 range)
-x_positions = np.linspace(1, 10, n_nodes)
+# Arc appearance — Imprint positions 1→3 in canonical order
+arc_colors = {3: IMPRINT_PALETTE[0], 2: IMPRINT_PALETTE[1], 1: IMPRINT_PALETTE[2]}
+arc_widths = {1: 5, 2: 14, 3: 26}
+weight_labels = {1: "Rare", 2: "Moderate", 3: "Frequent"}
+
+# Node positions along x-axis
+x_positions = np.linspace(1, 9, n_nodes)
 y_baseline = 0.5
 
-# Color palette: distinct hues for immediate weight differentiation (colorblind-safe)
-arc_colors = {1: "#93C5E8", 2: "#D4770B", 3: "#08306B"}
+# Colors tuple: 3 legend entries → 13 edge arcs → node outline → node fill
+colors = tuple([arc_colors[3], arc_colors[2], arc_colors[1]] + [arc_colors[w] for _, _, w in edges] + [INK, NODE_FILL])
 
-# Thickness: wide range for immediate visual distinction
-arc_widths = {1: 4, 2: 12, 3: 22}
+title = "Word Co-occurrences · arc-basic · python · pygal · anyplot.ai"
 
-# Weight labels for tooltip context
-weight_labels = {1: "Weak", 2: "Moderate", 3: "Strong"}
-
-# Build colors tuple: legend entries first, then edges, then nodes
-colors = tuple(
-    [arc_colors[3], arc_colors[2], arc_colors[1]]  # Legend (series 1-3)
-    + [arc_colors[w] for _, _, w in edges]  # Edges (series 4-18)
-    + ["#B8860B", "#FFD43B"]  # Node outline + fill
-)
-
-# Custom style — clean white background, no borders
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#08306B",
-    foreground_subtle="transparent",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=colors,
-    title_font_size=72,
-    label_font_size=40,
-    major_label_font_size=40,
-    legend_font_size=40,
-    value_font_size=32,
-    stroke_width=3,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
     opacity=0.85,
     opacity_hover=1.0,
 )
 
-# Create XY chart — fill=False prevents area filling under arcs
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     fill=False,
-    title="Character Interactions · arc-basic · pygal · pyplots.ai",
+    title=title,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
@@ -95,13 +95,14 @@ chart = pygal.XY(
     stroke=True,
     dots_size=0,
     stroke_style={"width": 6, "linecap": "round"},
-    range=(0, 4.6),
-    xrange=(0, 11),
+    range=(0, 4.2),
+    xrange=(0, 10),
     x_labels=[{"value": float(x_positions[i]), "label": nodes[i]} for i in range(n_nodes)],
     truncate_label=-1,
     css=[
-        "file://style.css",
-        "inline:.plot .background {fill: white; stroke: none !important;}",
+        "file://style.css",  # pygal's color/stroke template — must come first
+        "file://graph.css",  # title text-anchor:middle and layout rules
+        f"inline:.plot .background {{fill: {PAGE_BG}; stroke: none !important;}}",
         "inline:.axis .line {stroke: none !important;}",
         "inline:.axis .guides .line {stroke: none !important;}",
         "inline:.plot .axis {stroke: none !important;}",
@@ -112,46 +113,43 @@ chart = pygal.XY(
     js=[],
 )
 
-# Add weight legend entries first (series 1-3, visible in legend)
-for w_val, w_label in [(3, "Strong"), (2, "Moderate"), (1, "Weak")]:
+# Legend series (Frequent → Moderate → Rare, matching color assignment order)
+for w_val, w_label in [(3, "Frequent"), (2, "Moderate"), (1, "Rare")]:
     chart.add(
-        f"{w_label} connection",
+        f"{w_label} co-occurrence",
         [None],
         stroke=True,
         show_dots=False,
         stroke_style={"width": arc_widths[w_val], "linecap": "round"},
     )
 
-# Generate arc points for each edge
+# Arc generation — semi-circle above baseline, height ∝ node distance
 arc_resolution = 50
 
 for start_idx, end_idx, weight in edges:
     x_start = x_positions[start_idx]
     x_end = x_positions[end_idx]
-
-    # Arc center and radius
     x_center = (x_start + x_end) / 2
     arc_radius = abs(x_end - x_start) / 2
-
-    # Arc height proportional to node distance
     distance = abs(end_idx - start_idx)
     height_scale = 0.4 * distance
 
-    # Generate arc points (semi-circle above baseline)
-    arc_points = []
-    for i in range(arc_resolution + 1):
-        theta = math.pi * i / arc_resolution
-        x = x_center - arc_radius * math.cos(theta)
-        y = y_baseline + height_scale * math.sin(theta)
-        arc_points.append(
-            {"value": (x, y), "label": f"{nodes[start_idx]} ↔ {nodes[end_idx]} ({weight_labels[weight]})"}
-        )
+    arc_points = [
+        {
+            "value": (
+                x_center - arc_radius * math.cos(math.pi * i / arc_resolution),
+                y_baseline + height_scale * math.sin(math.pi * i / arc_resolution),
+            ),
+            "label": f"{nodes[start_idx]} ↔ {nodes[end_idx]} ({weight_labels[weight]})",
+        }
+        for i in range(arc_resolution + 1)
+    ]
 
     chart.add(
         "", arc_points, stroke=True, show_dots=False, stroke_style={"width": arc_widths[weight], "linecap": "round"}
     )
 
-# Add node outline ring (dark goldenrod border effect)
+# Node outline ring (INK color) + amber fill on top for crisp visibility on both themes
 node_points = [
     {
         "value": (float(x_positions[i]), y_baseline),
@@ -160,33 +158,10 @@ node_points = [
     for i in range(n_nodes)
 ]
 chart.add("", node_points, stroke=False, dots_size=42)
-
-# Add node fill on top (Python Yellow)
 chart.add("", node_points, stroke=False, dots_size=32)
 
-# Save outputs
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+# Save PNG and interactive HTML
+chart.render_to_png(f"plot-{THEME}.png")
 
-# Save HTML for interactive version with hover tooltips
-with open("plot.html", "w") as f:
-    f.write(
-        """<!DOCTYPE html>
-<html>
-<head>
-    <title>Character Interactions · arc-basic · pygal · pyplots.ai</title>
-    <style>
-        body { margin: 0; padding: 20px; background: #f5f5f5; font-family: sans-serif; }
-        .container { max-width: 100%; margin: 0 auto; }
-        object { width: 100%; height: auto; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <object type="image/svg+xml" data="plot.svg">
-            Arc diagram not supported
-        </object>
-    </div>
-</body>
-</html>"""
-    )
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
