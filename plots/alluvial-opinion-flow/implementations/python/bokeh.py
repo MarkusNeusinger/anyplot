@@ -1,25 +1,53 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-03
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-30
 """
 
+import io
+import os
+import sys
+
+
+# Prevent self-import: this file is named bokeh.py, so Python's path search would
+# find it before the installed bokeh package. Remove the script's own directory
+# from sys.path so imports resolve to the installed package.
+_own_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _own_dir]
+
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, TapTool
 from bokeh.plotting import figure
+from PIL import Image
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Imprint palette theme-adaptive chrome
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data: Remote work policy opinion survey — 1,000 employees across 4 quarterly waves
 # Story: Opinions gradually polarize as the debate matures
 waves = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"]
 opinions = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
+
+# Imprint palette with semantic exception: sentiment scale (positive→green, negative→red)
 colors = {
-    "Strongly Agree": "#306998",
-    "Agree": "#6BAED6",
-    "Neutral": "#C4B882",
-    "Disagree": "#E8915A",
-    "Strongly Disagree": "#8B2252",
+    "Strongly Agree": "#009E73",  # Imprint brand green — positive
+    "Agree": "#99B314",  # Imprint lime — lighter positive
+    "Neutral": INK_MUTED,  # Imprint muted — neutral (theme-adaptive)
+    "Disagree": "#BD8233",  # Imprint ochre — cautionary
+    "Strongly Disagree": "#AE3030",  # Imprint matte red — negative
 }
 
 # Flow transitions between consecutive waves (source, target, respondent_count)
@@ -116,53 +144,56 @@ for _w_idx, flows in enumerate(flows_data):
                 transition_nets[key] -= count
     net_flows.append(transition_nets)
 
-# Find the top net flow magnitude across all transitions for highlighting threshold
 all_net_magnitudes = []
 for nets in net_flows:
     all_net_magnitudes.extend(abs(v) for v in nets.values())
 net_highlight_threshold = sorted(all_net_magnitudes, reverse=True)[2] if len(all_net_magnitudes) > 2 else 0
 
-# Layout
+# Layout — reversed iteration so Strongly Agree is at top (intuitive positive-at-top convention)
 x_positions = [0, 1.5, 3.0, 4.5]
 node_width = 0.14
 gap = 18
+layout_order = list(reversed(opinions))  # bottom-to-top: SD, D, N, A, SA
 
-# Calculate node vertical positions
 node_positions = []
 for w_idx in range(len(waves)):
     positions = {}
     y_cursor = 0
-    for op in opinions:
+    for op in layout_order:
         height = node_totals[w_idx][op]
         positions[op] = {"y_start": y_cursor, "y_end": y_cursor + height}
         y_cursor += height + gap
     node_positions.append(positions)
 
-max_y = max(node_positions[w][opinions[-1]]["y_end"] for w in range(len(waves)))
+max_y = max(node_positions[w][op]["y_end"] for w in range(len(waves)) for op in opinions)
 
-# Create figure
+# Create figure — 3200×1800 landscape, toolbar disabled for correct PNG dimensions
 p = figure(
-    width=4800,
-    height=2700,
-    title="alluvial-opinion-flow · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title="alluvial-opinion-flow · python · bokeh · anyplot.ai",
     x_range=(-2.2, 7.0),
-    y_range=(-80, max_y + 100),
+    y_range=(-110, max_y + 110),
     tools="",
     toolbar_location=None,
+    min_border_bottom=80,
+    min_border_left=80,
+    min_border_top=110,
+    min_border_right=80,
 )
 
-# Style
-p.title.text_font_size = "32pt"
+# Style — theme-adaptive chrome
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "bold"
 p.title.align = "center"
-p.title.text_color = "#1a1a2e"
+p.title.text_color = INK
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.outline_line_color = None
-p.background_fill_color = "#FAFBFC"
-p.border_fill_color = "#FFFFFF"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
 # Subtle background panel behind alluvial area
 p.quad(
@@ -170,11 +201,11 @@ p.quad(
     right=x_positions[-1] + node_width + 0.3,
     top=max_y + 10,
     bottom=-8,
-    fill_color="#F4F5F7",
+    fill_color=ELEVATED_BG,
     fill_alpha=0.6,
-    line_color="#E0E2E8",
+    line_color=INK_SOFT,
     line_width=1.5,
-    line_alpha=0.5,
+    line_alpha=0.3,
 )
 
 # Subtitle
@@ -182,10 +213,10 @@ subtitle = Label(
     x=2.25,
     y=max_y + 72,
     text="Remote Work Policy Survey — 1,000 Employees Across 4 Quarters",
-    text_font_size="22pt",
+    text_font_size="20pt",
     text_align="center",
     text_baseline="top",
-    text_color="#6B7280",
+    text_color=INK_SOFT,
     text_font_style="italic",
 )
 p.add_layout(subtitle)
@@ -226,7 +257,6 @@ for w_idx, flows in enumerate(flows_data):
 
         is_stable = from_op == to_op
 
-        # Check if this flow is part of a large net shift
         is_net_highlight = False
         if not is_stable:
             key = tuple(sorted([from_op, to_op]))
@@ -237,7 +267,6 @@ for w_idx, flows in enumerate(flows_data):
         cx0 = x_start + (x_end - x_start) / 3
         cx1 = x_start + 2 * (x_end - x_start) / 3
 
-        # Top edge bezier
         x_curve = (
             (1 - t_param) ** 3 * x_start
             + 3 * (1 - t_param) ** 2 * t_param * cx0
@@ -267,7 +296,7 @@ for w_idx, flows in enumerate(flows_data):
             fill_alpha = 0.45
             line_w = 2.0
         else:
-            fill_alpha = 0.2
+            fill_alpha = 0.30  # raised from 0.2 for better visibility in PNG
             line_w = 0.5
 
         flow_xs_list.append(xs)
@@ -281,7 +310,7 @@ for w_idx, flows in enumerate(flows_data):
         flow_wave_labels.append(f"{waves[w_idx]} → {waves[w_idx + 1]}")
         flow_types.append("Stable" if is_stable else "Changed")
 
-# Sort: render changers first (behind), then stable on top
+# Render changers first (behind), then stable on top
 sort_order = sorted(range(len(flow_types)), key=lambda i: flow_types[i] == "Stable")
 
 flow_source = ColumnDataSource(
@@ -310,7 +339,7 @@ flow_renderer = p.patches(
     source=flow_source,
 )
 
-# Add HoverTool for flow ribbons
+# HoverTool for flow ribbons
 hover = HoverTool(
     renderers=[flow_renderer],
     tooltips=[
@@ -324,7 +353,7 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Add TapTool with selection glyph for interactive highlighting
+# TapTool with selection glyphs for interactive highlighting
 flow_renderer.selection_glyph = flow_renderer.glyph.clone()
 flow_renderer.selection_glyph.fill_alpha = 0.9
 flow_renderer.selection_glyph.line_alpha = 0.9
@@ -335,7 +364,7 @@ flow_renderer.nonselection_glyph.line_alpha = 0.1
 tap = TapTool(renderers=[flow_renderer])
 p.add_tools(tap)
 
-# Draw nodes using ColumnDataSource
+# Draw nodes
 node_left = []
 node_right = []
 node_top = []
@@ -380,7 +409,7 @@ p.quad(
     top="top",
     bottom="bottom",
     fill_color="color",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=2,
     source=node_source,
 )
@@ -417,7 +446,7 @@ for w_idx in range(len(waves)):
                     text_font_size="20pt",
                     text_baseline="middle",
                     text_align="right",
-                    text_color="#333333",
+                    text_color=INK,
                 )
                 p.add_layout(label)
             elif w_idx == len(waves) - 1:
@@ -427,7 +456,7 @@ for w_idx in range(len(waves)):
                     text=f"{op} ({int(height)})",
                     text_font_size="20pt",
                     text_baseline="middle",
-                    text_color="#333333",
+                    text_color=INK,
                 )
                 p.add_layout(label)
             else:
@@ -435,9 +464,9 @@ for w_idx in range(len(waves)):
                     x=x + node_width / 2 + 0.05,
                     y=y_mid,
                     text=str(int(height)),
-                    text_font_size="18pt",
+                    text_font_size="20pt",
                     text_baseline="middle",
-                    text_color="#555555",
+                    text_color=INK_SOFT,
                 )
                 p.add_layout(label)
 
@@ -445,63 +474,83 @@ for w_idx in range(len(waves)):
 for w_idx, wave in enumerate(waves):
     label = Label(
         x=x_positions[w_idx],
-        y=-20,
+        y=-25,
         text=wave,
         text_font_size="24pt",
         text_align="center",
         text_baseline="top",
-        text_color="#333333",
+        text_color=INK,
         text_font_style="bold",
     )
     p.add_layout(label)
 
-# Legend — positioned inside the plot, larger text
+# Legend
 legend_items = [LegendItem(label=op, renderers=[legend_renderers[op]]) for op in opinions]
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="20pt",
-    label_text_color="#333333",
+    label_text_font_size="34pt",
+    label_text_color=INK_SOFT,
     glyph_width=36,
     glyph_height=36,
     spacing=12,
     padding=20,
     background_fill_alpha=0.92,
-    background_fill_color="#FAFBFC",
-    border_line_color="#D1D5DB",
+    background_fill_color=ELEVATED_BG,
+    border_line_color=INK_SOFT,
     border_line_width=1.5,
     title="Opinion Categories",
     title_text_font_size="16pt",
-    title_text_color="#6B7280",
+    title_text_color=INK_MUTED,
     title_text_font_style="italic",
 )
 p.add_layout(legend, "right")
 
-# Opacity legend note
+# Opacity encoding note
 opacity_note = Label(
     x=2.25,
-    y=-50,
+    y=-60,
     text="Solid flows = stable opinion  ·  Faded flows = opinion changed  ·  Bold flows = largest net shifts",
-    text_font_size="18pt",
+    text_font_size="20pt",
     text_align="center",
-    text_color="#6B7280",
+    text_color=INK_MUTED,
 )
 p.add_layout(opacity_note)
 
 # Data storytelling: annotate key polarization trend
 trend_annotation = Label(
     x=2.25,
-    y=-68,
+    y=-90,
     text="▲ Polarization trend: Strongly Agree grew +53%  ·  Neutral shrank −8%  ·  Strongly Disagree grew +29%",
-    text_font_size="16pt",
+    text_font_size="20pt",
     text_align="center",
-    text_color="#8B2252",
+    text_color="#AE3030",
     text_font_style="bold",
 )
 p.add_layout(trend_annotation)
 
-# Save
-export_png(p, filename="plot.png")
-
-output_file("plot.html")
+# Save HTML artifact (interactive catalog output)
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot via headless Chrome — Chrome's viewport is ~139px shorter than
+# --window-size, so use H + 200 buffer then crop to exact canvas dimensions.
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H + 200}",
+    "--hide-scrollbars",
+    "--force-device-scale-factor=1",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H + 200)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+raw = driver.get_screenshot_as_png()
+driver.quit()
+Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")
