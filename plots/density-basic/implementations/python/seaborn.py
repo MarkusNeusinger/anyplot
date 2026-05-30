@@ -1,74 +1,116 @@
-""" pyplots.ai
+""" anyplot.ai
 density-basic: Basic Density Plot
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-02-23
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from scipy import stats
 
 
-# Data - bimodal distribution of test scores
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Imprint palette position 1 — always first series
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — bimodal API response latencies: cache hits (fast) vs. cache misses (slow)
 np.random.seed(42)
-test_scores = np.concatenate(
+latencies = np.concatenate(
     [
-        np.random.normal(68, 8, 280),  # Main group centered at 68
-        np.random.normal(90, 4, 120),  # High achievers group
+        np.random.normal(45, 12, 350),  # Cache hit: fast path ~45ms
+        np.random.normal(185, 40, 150),  # Cache miss: slow path ~185ms
     ]
 )
+latencies = np.clip(latencies, 5, 320)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Pre-compute KDE peaks for annotation placement
+kde_func = stats.gaussian_kde(latencies)
+x_fine = np.linspace(5, 310, 1000)
+y_fine = kde_func(x_fine)
 
-# KDE line first (for peak detection), then fill
-sns.kdeplot(data=test_scores, ax=ax, fill=False, color="#306998", linewidth=3, bw_adjust=0.9)
-line = ax.get_lines()[0]
-x_kde, y_kde = line.get_xdata(), line.get_ydata()
-ax.fill_between(x_kde, y_kde, alpha=0.5, color="#306998")
+peak1_mask = x_fine < 120
+peak1_x = x_fine[peak1_mask][np.argmax(y_fine[peak1_mask])]
+peak1_y = np.max(y_fine[peak1_mask])
 
-sns.rugplot(data=test_scores, ax=ax, color="#1a3a5c", alpha=0.5, height=0.05)
+peak2_mask = x_fine >= 120
+peak2_x = x_fine[peak2_mask][np.argmax(y_fine[peak2_mask])]
+peak2_y = np.max(y_fine[peak2_mask])
 
-# Annotate the two peaks to tell the bimodal story
-peak1_idx = np.argmax(y_kde[x_kde < 80])
-peak2_idx = len(y_kde[x_kde < 80]) + np.argmax(y_kde[x_kde >= 80])
+# Canvas: 3200 × 1800 px (16:9 landscape)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-px1, py1 = x_kde[peak1_idx], y_kde[peak1_idx]
+# KDE with native seaborn fill (idiomatic fill=True)
+sns.kdeplot(data=latencies, ax=ax, fill=True, alpha=0.35, color=BRAND, linewidth=2.5, bw_adjust=0.9)
+
+# Rug plot showing individual observations
+sns.rugplot(data=latencies, ax=ax, color=BRAND, alpha=0.3, height=0.04)
+
+# Peak annotations
 ax.annotate(
-    "Main group",
-    xy=(px1, py1),
-    xytext=(px1 - 14, py1 - 0.008),
-    fontsize=16,
+    "Cache hit",
+    xy=(peak1_x, peak1_y),
+    xytext=(peak1_x - 18, peak1_y * 0.65),
+    fontsize=8,
     fontweight="medium",
-    color="#1a3a5c",
-    arrowprops={"arrowstyle": "->", "color": "#1a3a5c", "lw": 1.5},
+    color=INK,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
     ha="center",
     va="top",
 )
-ax.axvline(px1, color="#306998", alpha=0.15, linestyle="--", linewidth=1.5)
-
-px2, py2 = x_kde[peak2_idx], y_kde[peak2_idx]
 ax.annotate(
-    "High achievers",
-    xy=(px2, py2),
-    xytext=(px2 + 12, py2 - 0.004),
-    fontsize=16,
+    "Cache miss",
+    xy=(peak2_x, peak2_y),
+    xytext=(peak2_x + 32, peak2_y + peak1_y * 0.18),
+    fontsize=8,
     fontweight="medium",
-    color="#1a3a5c",
-    arrowprops={"arrowstyle": "->", "color": "#1a3a5c", "lw": 1.5},
+    color=INK,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
     ha="center",
-    va="top",
+    va="bottom",
 )
-ax.axvline(px2, color="#306998", alpha=0.15, linestyle="--", linewidth=1.5)
 
 # Style
-ax.set_xlabel("Test Score (points)", fontsize=20)
-ax.set_ylabel("Density", fontsize=20)
-ax.set_title("density-basic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+title = "density-basic · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+
+ax.set_xlabel("Response Latency (ms)", fontsize=10, color=INK)
+ax.set_ylabel("Density", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+ax.set_xlim(left=0)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# No bbox_inches='tight' — preserves exact 3200×1800 canvas
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
