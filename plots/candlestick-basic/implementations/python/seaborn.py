@@ -1,8 +1,9 @@
-""" pyplots.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-02-24
+Library: seaborn | Python
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,29 +14,37 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
 
 
-# Seaborn theme and context
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — finance semantic exception: profit/up→green, loss/down→red
+BULLISH_COLOR = "#009E73"  # Imprint position 1 (brand green)
+BEARISH_COLOR = "#AE3030"  # Imprint position 5 (matte red)
+BB_COLOR = "#4467A3"  # Imprint position 3 (blue) — Bollinger Bands
+
 sns.set_theme(
-    style="whitegrid",
+    style="ticks",
     rc={
-        "axes.facecolor": "#f8f9fa",
-        "figure.facecolor": "white",
-        "grid.color": "#dee2e6",
-        "text.color": "#212529",
-        "axes.labelcolor": "#495057",
-        "xtick.color": "#495057",
-        "ytick.color": "#495057",
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.2)
 
-# Color palette via seaborn — blue/red scheme per spec, colorblind-safe
-candle_palette = sns.color_palette(["#306998", "#c0392b"])
-up_fill, down_fill = candle_palette[0], candle_palette[1]
-up_edge = sns.dark_palette(candle_palette[0], n_colors=4)[2]
-down_edge = sns.dark_palette(candle_palette[1], n_colors=4)[2]
-ma_palette = sns.color_palette(["#e67e22", "#8e44ad"])
-
-# Data — 30 trading days with rally then selloff pattern
+# Data — 30 trading days: rally phase then reversal/selloff
 np.random.seed(42)
 n_days = 30
 dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
@@ -65,88 +74,83 @@ df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "cl
 df["bullish"] = df["close"] >= df["open"]
 df["x"] = range(n_days)
 
-# Moving averages for trend storytelling
-df["5-Day MA"] = df["close"].rolling(window=5).mean()
-df["10-Day MA"] = df["close"].rolling(window=10).mean()
+# Bollinger Bands: 20-day SMA ± 2σ
+window = 20
+df["sma20"] = df["close"].rolling(window=window).mean()
+df["std20"] = df["close"].rolling(window=window).std()
+df["bb_upper"] = df["sma20"] + 2 * df["std20"]
+df["bb_lower"] = df["sma20"] - 2 * df["std20"]
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Canvas: 3200×1800 px (landscape 16:9)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Wicks
-wick_colors = [up_edge if b else down_edge for b in df["bullish"]]
-ax.vlines(df["x"], df["low"], df["high"], colors=wick_colors, linewidth=1.5)
+# Wicks (high-low range)
+wick_colors = [BULLISH_COLOR if b else BEARISH_COLOR for b in df["bullish"]]
+ax.vlines(df["x"], df["low"], df["high"], colors=wick_colors, linewidth=0.8, alpha=0.8)
 
-# Candle bodies via PatchCollection
+# Candle bodies (open-close range)
 body_width = 0.6
-rects, fcolors, ecolors = [], [], []
+rects, fcolors = [], []
 for _, row in df.iterrows():
-    bottom = min(row["open"], row["close"])
-    height = max(abs(row["close"] - row["open"]), 0.15)
-    if abs(row["close"] - row["open"]) < 0.15:
-        bottom = (row["open"] + row["close"]) / 2 - 0.075
-    rects.append(Rectangle((row["x"] - body_width / 2, bottom), body_width, height))
-    fcolors.append(up_fill if row["bullish"] else down_fill)
-    ecolors.append(up_edge if row["bullish"] else down_edge)
+    body_lo = min(row["open"], row["close"])
+    body_hi = max(row["open"], row["close"])
+    height = max(body_hi - body_lo, 0.15)
+    if body_hi - body_lo < 0.15:
+        body_lo = (row["open"] + row["close"]) / 2 - 0.075
+    rects.append(Rectangle((row["x"] - body_width / 2, body_lo), body_width, height))
+    fcolors.append(BULLISH_COLOR if row["bullish"] else BEARISH_COLOR)
 
-bodies = PatchCollection(rects, facecolors=fcolors, edgecolors=ecolors, linewidths=0.8)
+bodies = PatchCollection(rects, facecolors=fcolors, edgecolors=fcolors, linewidths=0.4, alpha=0.9)
 ax.add_collection(bodies)
 
-# Moving average overlays using seaborn lineplot
-ma_long = df[["x", "5-Day MA", "10-Day MA"]].melt(id_vars="x", var_name="Moving Average", value_name="Price").dropna()
+# Bollinger Bands overlay via seaborn lineplot
+bb_valid = df.dropna(subset=["sma20"])
+sns.lineplot(data=bb_valid, x="x", y="sma20", color=BB_COLOR, linewidth=1.8, ax=ax, legend=False)
 sns.lineplot(
-    data=ma_long,
-    x="x",
-    y="Price",
-    hue="Moving Average",
-    palette={"5-Day MA": ma_palette[0], "10-Day MA": ma_palette[1]},
-    linewidth=2.2,
-    alpha=0.85,
-    ax=ax,
-    legend=False,
+    data=bb_valid, x="x", y="bb_upper", color=BB_COLOR, linewidth=1.0, linestyle="--", alpha=0.65, ax=ax, legend=False
 )
-
-# Peak annotation for data storytelling
-peak_idx = df["close"].idxmax()
-peak_row = df.loc[peak_idx]
-ax.annotate(
-    f"Peak ${peak_row['close']:.0f}",
-    xy=(peak_row["x"], peak_row["high"]),
-    xytext=(peak_row["x"] + 3, peak_row["high"] + 2.0),
-    fontsize=12,
-    fontweight="bold",
-    color="#495057",
-    arrowprops={"arrowstyle": "->", "color": "#adb5bd", "lw": 1.5},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#dee2e6", "alpha": 0.9},
+sns.lineplot(
+    data=bb_valid, x="x", y="bb_lower", color=BB_COLOR, linewidth=1.0, linestyle="--", alpha=0.65, ax=ax, legend=False
 )
+ax.fill_between(bb_valid["x"], bb_valid["bb_lower"], bb_valid["bb_upper"], color=BB_COLOR, alpha=0.06)
 
-# X-axis date labels
-tick_idx = range(0, n_days, 5)
-ax.set_xticks(list(tick_idx))
-ax.set_xticklabels([dates[i].strftime("%b %d") for i in tick_idx])
+# X-axis date ticks
+tick_positions = list(range(0, n_days, 5))
+ax.set_xticks(tick_positions)
+ax.set_xticklabels([dates[i].strftime("%b %d") for i in tick_positions])
 
-# Style
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.set_title("candlestick-basic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16, length=0)
-sns.despine(ax=ax)
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax.set_xlabel("Date", fontsize=10)
+ax.set_ylabel("Price ($)", fontsize=10)
+ax.set_title("candlestick-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=12)
+ax.tick_params(axis="both", labelsize=8, length=0)
+
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.7, color=INK)
 ax.xaxis.grid(False)
 ax.set_axisbelow(True)
 
-# Combined legend
 legend_handles = [
-    Patch(facecolor=up_fill, edgecolor=up_edge, label="Bullish"),
-    Patch(facecolor=down_fill, edgecolor=down_edge, label="Bearish"),
-    Line2D([0], [0], color=ma_palette[0], linewidth=2.2, label="5-Day MA"),
-    Line2D([0], [0], color=ma_palette[1], linewidth=2.2, label="10-Day MA"),
+    Patch(facecolor=BULLISH_COLOR, edgecolor=BULLISH_COLOR, alpha=0.9, label="Bullish"),
+    Patch(facecolor=BEARISH_COLOR, edgecolor=BEARISH_COLOR, alpha=0.9, label="Bearish"),
+    Line2D([0], [0], color=BB_COLOR, linewidth=1.8, label="SMA 20"),
+    Line2D([0], [0], color=BB_COLOR, linewidth=1.0, linestyle="--", alpha=0.65, label="BB ±2σ"),
 ]
-ax.legend(handles=legend_handles, fontsize=14, loc="upper left", framealpha=0.9, edgecolor="#dee2e6")
+ax.legend(
+    handles=legend_handles,
+    fontsize=8,
+    loc="upper right",
+    framealpha=0.9,
+    edgecolor=INK_SOFT,
+    facecolor=ELEVATED_BG,
+    labelcolor=INK,
+)
 
-# Axis limits
 ax.set_xlim(-0.8, n_days - 0.2)
-y_pad = (df["high"].max() - df["low"].min()) * 0.08
-ax.set_ylim(df["low"].min() - y_pad, df["high"].max() + y_pad * 2.5)
+y_range = df["high"].max() - df["low"].min()
+y_pad = y_range * 0.06
+ax.set_ylim(df["low"].min() - y_pad, df["high"].max() + y_pad * 3.0)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
