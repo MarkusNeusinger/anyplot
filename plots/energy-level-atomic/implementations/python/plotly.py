@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-30
@@ -35,12 +35,12 @@ energies = {n: -13.6 / n**2 for n in quantum_numbers}
 # Transitions: (upper_n, lower_n, display_label, wavelength_nm)
 lyman_series = [(2, 1, "Ly-α<br>121.6 nm", 121.6), (3, 1, "Ly-β<br>102.6 nm", 102.6), (4, 1, "Ly-γ<br>97.2 nm", 97.2)]
 balmer_series = [
-    (3, 2, "Hα<br>656.3 nm", 656.3),
-    (4, 2, "Hβ<br>486.1 nm", 486.1),
-    (5, 2, "Hγ<br>434.0 nm", 434.0),
-    (6, 2, "Hδ<br>410.2 nm", 410.2),
+    (3, 2, "Hα 656.3nm", 656.3),
+    (4, 2, "Hβ 486.1nm", 486.1),
+    (5, 2, "Hγ 434.0nm", 434.0),
+    (6, 2, "Hδ 410.2nm", 410.2),
 ]
-paschen_series = [(4, 3, "Pa-α<br>1875 nm", 1875.1), (5, 3, "Pa-β<br>1282 nm", 1281.8)]
+paschen_series = [(4, 3, "Pa-α 1875nm", 1875.1), (5, 3, "Pa-β 1282nm", 1281.8)]
 
 fig = go.Figure()
 
@@ -72,7 +72,8 @@ fig.add_trace(
     )
 )
 
-# Quantum number labels — right side (well-separated levels)
+# Quantum number labels — right side
+# n=1, n=2, n=3 are well-separated; individual labels are clean
 for n in [1, 2, 3]:
     fig.add_annotation(
         x=line_right + 0.02,
@@ -84,18 +85,16 @@ for n in [1, 2, 3]:
         yanchor="middle",
     )
 
-# Upper level labels (n=4,5,6) shifted to avoid overlap near ionization limit
-for n, shift in [(4, -18), (5, 0), (6, 14)]:
-    fig.add_annotation(
-        x=line_right + 0.02,
-        y=energies[n],
-        text=f"<b>n = {n}</b>",
-        showarrow=False,
-        font={"size": 12, "color": INK_SOFT},
-        xanchor="left",
-        yanchor="middle",
-        yshift=shift,
-    )
+# n=4, 5, 6 converge tightly near 0 eV — single combined label above ionization limit
+fig.add_annotation(
+    x=line_right + 0.02,
+    y=0.45,
+    text="<b>n = 4, 5, 6</b>",
+    showarrow=False,
+    font={"size": 11, "color": INK_SOFT},
+    xanchor="left",
+    yanchor="bottom",
+)
 
 # Left-side energy values for well-separated levels
 for n in [1, 2, 3]:
@@ -151,9 +150,18 @@ for i, (n_up, n_low, label, _wl) in enumerate(lyman_series):
     )
 
 # --- Balmer Series (Visible) — center portion ---
+# Labels staggered vertically across the n=2–n=4 range and alternated left/right
+# to prevent crowding (all four transitions end at n=2, so midpoints cluster)
 balmer_x = [0.43, 0.49, 0.55, 0.61]
+balmer_label_configs = [
+    (-0.012, "right", -1.65),  # Hα: left of arrow, upper
+    (0.012, "left", -2.25),  # Hβ: right of arrow, upper-mid
+    (-0.012, "right", -2.80),  # Hγ: left of arrow, lower-mid
+    (0.012, "left", -3.15),  # Hδ: right of arrow, lower
+]
 for i, (n_up, n_low, label, _wl) in enumerate(balmer_series):
     e_up, e_low = energies[n_up], energies[n_low]
+    xoff, xanc, ylbl = balmer_label_configs[i]
     fig.add_annotation(
         x=balmer_x[i],
         y=e_low + 0.15,
@@ -171,18 +179,22 @@ for i, (n_up, n_low, label, _wl) in enumerate(balmer_series):
         text="",
     )
     fig.add_annotation(
-        x=balmer_x[i] + 0.015,
-        y=(e_up + e_low) / 2,
+        x=balmer_x[i] + xoff,
+        y=ylbl,
         text=label,
         showarrow=False,
         font={"size": 11, "color": balmer_colors[i]},
-        xanchor="left",
+        xanchor=xanc,
     )
 
 # --- Paschen Series (Infrared) — right portion ---
-# Labels placed at mid-gap between n=2 and n=3, spread apart to avoid crowding
+# Labels at transition midpoints, alternating sides to avoid overlap and the Balmer zone
 paschen_x = [0.73, 0.80]
-paschen_label_y = [-2.05, -2.65]
+# Pa-α: label to LEFT of its arrow; Pa-β: label to RIGHT (x>0.85, clear of Balmer zone)
+paschen_label_configs = [
+    (0.70, "right"),  # Pa-α: left of arrow at 0.73
+    (0.88, "right"),  # Pa-β: right side (x>0.85), ending before n-label zone
+]
 for i, (n_up, n_low, label, _wl) in enumerate(paschen_series):
     e_up, e_low = energies[n_up], energies[n_low]
     fig.add_annotation(
@@ -201,13 +213,14 @@ for i, (n_up, n_low, label, _wl) in enumerate(paschen_series):
         arrowcolor=paschen_colors[i],
         text="",
     )
+    lx, xanc = paschen_label_configs[i]
     fig.add_annotation(
-        x=paschen_x[i],
-        y=paschen_label_y[i],
+        x=lx,
+        y=(e_up + e_low) / 2,
         text=label,
         showarrow=False,
         font={"size": 11, "color": paschen_colors[i]},
-        xanchor="center",
+        xanchor=xanc,
     )
 
 # Invisible hover targets at transition midpoints for HTML interactivity
