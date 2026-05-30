@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-30
+Quality: 87/100 | Updated: 2026-05-30
 """
 
 import importlib.util
