@@ -1,102 +1,111 @@
 library: seaborn
+language: python
 specification_id: heatmap-mandelbrot
 created: '2026-03-03T13:45:46Z'
-updated: '2026-03-03T14:05:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22625546875
+updated: '2026-05-30T10:56:21Z'
+generated_by: claude-sonnet
+workflow_run: 26681739260
 issue: 4431
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Dramatic cohesive dark theme with custom facecolors and coordinated text colors
-    creates a visually striking fractal visualization
-  - Seaborn rocket palette produces dramatic dark-to-cream glow effect that naturally
-    highlights the fractal boundary
-  - robust=True intelligently focuses color mapping on the boundary region for maximum
-    visual detail
-  - Smooth coloring algorithm with high bailout (256) eliminates banding artifacts
-  - 'Multiple seaborn-distinctive features used idiomatically: rocket palette, robust
-    scaling, mask, theme/context management'
-  - All specification requirements met with values exceeding minimums (1000x714 grid,
-    200 iterations)
-  - Clean deterministic vectorized code with explicit font sizing throughout
+  - Correct smooth coloring via normalized iteration count (log2 log2 formula) with
+    high bailout=256 eliminating color banding
+  - 'Full Imprint colormap compliance — both #009E73 and #4467A3 used as endpoints,
+    reversal intentional to make boundary glow in brand green'
+  - Perfect theme-adaptive chrome in both renders — all text tokens correctly wired
+    through sns.set_theme and explicit cbar styling
+  - Full spec compliance including smooth coloring, interior as distinct near-black,
+    labeled complex-plane axes, and grid resolution exceeding minimums
+  - Clean deterministic code with proper canvas (3200×1800, no bbox_inches=tight)
+    and correct plt.savefig call
   weaknesses:
-  - Library Mastery could be pushed further — core fractal computation is numpy-heavy
-    and seaborn contribution is primarily rendering/styling
-  - Colorbar vertical label orientation is standard but could be more readable with
-    horizontal orientation
-  - Y-axis tick labels use %.2f while x-axis uses %.1f — minor formatting inconsistency
-  image_description: The plot displays a Mandelbrot set fractal visualization rendered
-    as a seaborn heatmap on a fully dark background. The figure background is a deep
-    navy-black (#060610) and the axes background is pure black (#000000). The fractal
-    boundary glows dramatically using seaborn's "rocket" palette — transitioning from
-    deep dark reds/maroons at low escape iterations, through vivid magenta/pink at
-    mid iterations, to bright cream/white at the highest escape iteration values near
-    the boundary. The main cardioid body (centered around -0.25+0i) and the prominent
-    period-2 bulb (centered around -1+0i) are solid black, representing interior points
-    that never escape. Smaller satellite bulbs are visible along the fractal boundary.
-    The boundary exhibits fine self-similar filaments radiating outward. The colorbar
-    on the right, labeled "Escape Iterations," shows a range of approximately 5 to
-    27 (using robust percentile-based scaling). The x-axis labeled "Real Axis" spans
-    -2.5 to 1.0, and the y-axis labeled "Imaginary Axis" spans 1.25 to -1.25. The
-    title reads "heatmap-mandelbrot · seaborn · pyplots.ai" in light gray text. All
-    text is clearly readable against the dark background with explicit font sizing.
-    The overall effect is a dramatic, glowing fractal visualization with strong visual
-    hierarchy.
+  - 'Colormap direction deviates from canonical imprint_seq definition (canonical:
+    green→blue, implementation: blue→green). While the comment explains the aesthetic
+    intent, repair should verify this reversal is intentional and document it clearly.'
+  - The vast exterior region renders as uniform flat blue (#4467A3), since vmax=40
+    clips anything escaping in <40 iterations to the same color. A logarithmic vmax
+    rescaling or capped at a lower value (e.g. vmax=25) would reveal more tonal variation
+    in the exterior.
+  - LM-02 could be strengthened — seaborn-distinctive features used (mask, cbar_kws)
+    are entry-level; could leverage xticklabels/yticklabels with fmt or additional
+    heatmap API args for more distinctive usage.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) figure background with near-black (#0A0A08) axes interior — correct.
+      Chrome: Title "heatmap-mandelbrot · python · seaborn · anyplot.ai" in dark ink, clearly readable. "Real Axis" and "Imaginary Axis" labels in dark ink at 10pt, readable. Tick labels (-2.5 to 1.0 on x, -1.2 to 1.2 on y) in INK_SOFT at 8pt, readable. Colorbar label "Escape Iterations" and tick numbers all readable in dark ink.
+      Data: Exterior (far-from-set) pixels appear in Imprint blue (#4467A3); the fractal boundary glows in brand green (#009E73). Interior (never-escaping) points colored near-black (#0A0A08), creating strong contrast. The characteristic cardioid and period-2 bulb are clearly visible with fine fractal boundary detail.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) figure background — correct.
+      Chrome: Title, axis labels, tick labels, and colorbar text all render in light ink (#F0EFE8 / #B8B7B0) against the dark background. No dark-on-dark failures observed — all text is readable.
+      Data: Exterior blue (#4467A3), boundary green (#009E73), and interior black (#0A0A08) are identical to the light render — only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar label 18pt, colorbar ticks 14pt. Light text colors provide excellent
-          contrast on dark background.'
+        comment: 'All text explicitly sized (title 12pt, labels 10pt, ticks 8pt) and
+          readable in both themes. Minor: colorbar ticks appear slightly small relative
+          to axis ticks but remain readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Custom tick positions (8 x-ticks, 6
-          y-ticks) well-spaced.
+        comment: No text overlaps with data or other elements. Colorbar properly spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Fractal boundary detail crisp and visible. Smooth coloring eliminates
-          banding. High bailout and max_iter provide excellent resolution.
+        comment: Fractal clearly visible with detailed boundary. Interior-exterior
+          contrast strong. Smooth coloring gradient visible at boundary.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Seaborn rocket palette is perceptually uniform and colorblind-safe.
-          Strong contrast between regions.
+        comment: Imprint blue/green contrast is CVD-safe. Black interior vs colored
+          exterior provides clear structural separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure at 4800x2700px. Plot fills canvas well. Colorbar compact
-          and well-integrated.
+        comment: Canvas gate passed (3200x1800). Good margins via subplots_adjust.
+          Colorbar proportions correct. Landscape format appropriate for the 1.4:1
+          complex-plane domain.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis and Imaginary Axis are descriptive. Units not applicable
-          for complex plane.
+        comment: Title matches required format. Axes labeled Real Axis and Imaginary
+          Axis with coordinate tick values. Colorbar labeled Escape Iterations.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential colormap used (both #009E73 and #4467A3 as endpoints).
+          Figure backgrounds correct (#FAF8F1 / #1A1A17). Both renders theme-correct.
+          Reversal from canonical order is intentional and documented.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,23 +113,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong intentional design: cohesive dark theme with custom RC params,
-          rocket palette creates dramatic glow, well-structured font hierarchy, custom
-          colorbar styling.'
+        comment: 'Custom Imprint colormap reversed to make boundary glow in brand
+          green — intentional design choice. Intentional visual hierarchy: black interior
+          / green boundary / blue exterior. Professional smooth coloring algorithm.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, no grid, generous padding, custom colorbar outline,
-          cohesive dark theme throughout.
+        comment: Spines removed (left and bottom via despine). No grid appropriate
+          for fractal. Colorbar refined (custom tick params, label color, outline
+          styling). Good margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: robust=True focuses color on boundary. Dark theme makes boundary
-          glow. Rocket palette creates natural focal point. Clear visual progression.
+        comment: 'Clear focal point: the glowing green boundary naturally draws attention
+          to the fractal structure. Three-layer visual hierarchy guides viewer through
+          interior/boundary/exterior relationships.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap visualization of Mandelbrot set using sns.heatmap().
+        comment: Correct use of sns.heatmap for Mandelbrot visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: smooth coloring, cardioid, period-2 bulb,
-          labeled axes, black interior, preserved aspect ratio.'
+        comment: Smooth coloring (log2 log2 formula), interior as near-black, full
+          cardioid+period-2 bulb visible, labeled axes, aspect ratio preserved.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct coordinate ranges matching spec defaults. Grid resolution
-          exceeds minimum.
+        comment: Real axis -2.5 to 1.0, imaginary axis -1.25 to 1.25, color encodes
+          escape iterations.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Colorbar labeled Escape Iterations with integer
-          formatting.
+        comment: Title matches required format exactly. Colorbar labeled Escape Iterations.
     data_quality:
       score: 15
       max: 15
@@ -161,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Mandelbrot aspects: cardioid, period-2 bulb, satellites,
-          filaments, smooth gradients.'
+        comment: Full Mandelbrot computation, smooth coloring, masked interior, 1000x714
+          grid (above minimum), max_iter=200 (above spec default).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic mathematical/scientific visualization. Educational and neutral.
+        comment: Deterministic mathematical visualization, neutral subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard coordinate ranges. High bailout eliminates artifacts. 200
-          iterations provides excellent detail.
+        comment: Domain matches spec defaults. Higher resolution and iteration count
+          than spec minimums.
     code_quality:
       score: 10
       max: 10
@@ -185,8 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, theme, computation, plot, save. No functions
-          or classes.'
+        comment: No functions or classes, clean sequential flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,20 +207,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All three imports used: matplotlib.pyplot, numpy, seaborn.'
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, seaborn, LinearSegmentedColormap.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized numpy computation with efficient boolean masking. Clean
-          variable names.
+        comment: Vectorized numpy computation, no fake UI elements, clean algorithm.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Uses current seaborn 0.13+ API.
+        comment: Saves as plot-{THEME}.png, no bbox_inches=tight, dpi=400.
     library_mastery:
       score: 7
       max: 10
@@ -221,16 +229,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic usage: sns.heatmap with mask, robust, cbar_kws; sns.set_theme;
-          sns.set_context; sns.despine. Multiple features in combination.'
+        comment: sns.heatmap with mask, sns.set_theme, sns.despine — idiomatic seaborn
+          patterns used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Seaborn-exclusive features: rocket palette, robust percentile scaling,
-          mask parameter, theme/context management. Distinctly seaborn but core computation
-          is numpy-heavy.'
+        comment: Uses seaborn mask parameter to hide interior, cbar_kws for colorbar
+          configuration. These are entry-level seaborn features; could leverage more
+          distinctive heatmap API capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -240,7 +248,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
-  - dark-theme
