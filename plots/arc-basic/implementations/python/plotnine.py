@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-30
@@ -69,6 +69,13 @@ edges = [
 x_positions = np.linspace(0, 1, n_nodes)
 y_baseline = 0.0
 
+# Node degree for proportional sizing (degree 2→6, 3→7.5, 4→9)
+node_degree = [0] * n_nodes
+for s, e, _ in edges:
+    node_degree[s] += 1
+    node_degree[e] += 1
+node_sizes = [3.0 + d * 1.5 for d in node_degree]
+
 n_points = 60
 theta = np.linspace(0, np.pi, n_points)
 arc_rows = []
@@ -98,8 +105,15 @@ for arc_id, (start, end, weight) in enumerate(edges):
 arc_df = pd.concat(arc_rows, ignore_index=True)
 
 baseline_df = pd.DataFrame({"x": [x_positions[0]], "xend": [x_positions[-1]], "y": [y_baseline], "yend": [y_baseline]})
-node_df = pd.DataFrame({"x": x_positions, "y": [y_baseline] * n_nodes})
+node_df = pd.DataFrame({"x": x_positions, "y": [y_baseline] * n_nodes, "size": node_sizes})
 label_df = pd.DataFrame({"x": x_positions, "y": [y_baseline - 0.035] * n_nodes, "name": nodes})
+
+# Callout annotation for Alice–Jack: the longest-range arc (nodes 0→9, height=0.72)
+alice_jack_apex_x = (x_positions[0] + x_positions[9]) / 2  # 0.5
+alice_jack_apex_y = 0.08 * abs(9 - 0)  # 0.72
+callout_df = pd.DataFrame(
+    {"x": [alice_jack_apex_x], "y": [alice_jack_apex_y + 0.04], "label": ["Alice–Jack: longest-range arc"]}
+)
 
 # Title: "Character Interactions · arc-basic · python · plotnine · anyplot.ai" = 67 chars, no scaling
 title = "Character Interactions · arc-basic · python · plotnine · anyplot.ai"
@@ -120,8 +134,9 @@ plot = (
     )
     + scale_size_identity()
     + scale_alpha_identity()
-    + geom_point(node_df, aes(x="x", y="y"), color=INK, size=7, stroke=1.2, fill=PAGE_BG)
-    + geom_text(label_df, aes(x="x", y="y", label="name"), size=10, color=INK, fontweight="bold", va="top")
+    + geom_point(node_df, aes(x="x", y="y", size="size"), color=INK, stroke=1.2, fill=PAGE_BG)
+    + geom_text(label_df, aes(x="x", y="y", label="name"), size=5, color=INK, fontweight="bold", va="top")
+    + geom_text(callout_df, aes(x="x", y="y", label="label"), size=3.5, color=INK_SOFT, ha="center")
     + coord_cartesian(xlim=(-0.06, 1.06), ylim=(-0.12, 0.82))
     + labs(
         title=title, subtitle="Narrative connections in Chapter 1 — arc thickness and color encode interaction strength"
