@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-30
 """
 
 import math
@@ -12,23 +11,20 @@ import pygal
 from pygal.style import Style
 
 
-# Theme tokens (see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint categorical palette — arc weight encoding uses positions 1→3
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
-NODE_FILL = "#DDCC77"  # Imprint amber — outside categorical pool
+NODE_FILL = "#DDCC77"
 
-# Data: word co-occurrences in a scientific corpus (10 nodes)
 np.random.seed(42)
 nodes = ["science", "data", "research", "study", "analysis", "result", "method", "evidence", "theory", "review"]
 n_nodes = len(nodes)
 
 # Edges: (source_idx, target_idx, weight) — weight 1=rare, 2=moderate, 3=frequent
-# "review" (index 9) has just one connection — demonstrates a peripheral node
+# "review" (index 9) has only one connection — demonstrates a peripheral node
 edges = [
     (0, 2, 3),  # science–research (frequent)
     (1, 4, 3),  # data–analysis (frequent)
@@ -42,20 +38,36 @@ edges = [
     (2, 8, 1),  # research–theory (rare)
     (3, 5, 1),  # study–result (rare)
     (1, 8, 1),  # data–theory (rare)
-    (0, 9, 1),  # science–review (rare, long range — "review" has only this edge)
+    (0, 9, 1),  # science–review (rare, long-range — "review" has only this edge)
 ]
 
-# Arc appearance — Imprint positions 1→3 in canonical order
 arc_colors = {3: IMPRINT_PALETTE[0], 2: IMPRINT_PALETTE[1], 1: IMPRINT_PALETTE[2]}
 arc_widths = {1: 5, 2: 14, 3: 26}
 weight_labels = {1: "Rare", 2: "Moderate", 3: "Frequent"}
 
-# Node positions along x-axis
 x_positions = np.linspace(1, 9, n_nodes)
 y_baseline = 0.5
 
-# Colors tuple: 3 legend entries → 13 edge arcs → node outline → node fill
-colors = tuple([arc_colors[3], arc_colors[2], arc_colors[1]] + [arc_colors[w] for _, _, w in edges] + [INK, NODE_FILL])
+# Degree-based node sizing: hub nodes larger, peripheral nodes visually smaller
+degrees = [0] * n_nodes
+for s, t, _ in edges:
+    degrees[s] += 1
+    degrees[t] += 1
+
+degree_levels = sorted(set(degrees))  # [1, 2, 3]
+degree_groups: dict[int, list[int]] = {}
+for i, d in enumerate(degrees):
+    degree_groups.setdefault(d, []).append(i)
+
+# (outline dots_size, fill dots_size) per degree — hub nodes clearly dominate visually
+node_sizes = {1: (30, 20), 2: (46, 34), 3: (62, 48)}
+
+# Colors: 3 legend + 13 arc edges + 2 series per degree level (outline, fill)
+node_colors: list[str] = []
+for _d in degree_levels:
+    node_colors.extend([INK, NODE_FILL])
+
+colors = tuple([arc_colors[3], arc_colors[2], arc_colors[1]] + [arc_colors[w] for _, _, w in edges] + node_colors)
 
 title = "Word Co-occurrences · arc-basic · python · pygal · anyplot.ai"
 
@@ -66,26 +78,26 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=colors,
-    title_font_size=66,
-    label_font_size=56,
-    major_label_font_size=44,
-    legend_font_size=44,
-    value_font_size=36,
+    title_font_size=54,
+    label_font_size=46,
+    major_label_font_size=36,
+    legend_font_size=36,
+    value_font_size=28,
     stroke_width=2.5,
     opacity=0.85,
     opacity_hover=1.0,
 )
 
 chart = pygal.XY(
-    width=3200,
-    height=1800,
+    width=2400,
+    height=2400,
     style=custom_style,
     fill=False,
     title=title,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
-    legend_box_size=30,
+    legend_box_size=26,
     x_title="",
     y_title="",
     show_x_guides=False,
@@ -94,14 +106,15 @@ chart = pygal.XY(
     show_y_labels=False,
     stroke=True,
     dots_size=0,
-    stroke_style={"width": 6, "linecap": "round"},
-    range=(0, 4.2),
+    stroke_style={"width": 5, "linecap": "round"},
+    range=(0, 5.0),
     xrange=(0, 10),
     x_labels=[{"value": float(x_positions[i]), "label": nodes[i]} for i in range(n_nodes)],
+    x_label_rotation=30,
     truncate_label=-1,
     css=[
-        "file://style.css",  # pygal's color/stroke template — must come first
-        "file://graph.css",  # title text-anchor:middle and layout rules
+        "file://style.css",
+        "file://graph.css",
         f"inline:.plot .background {{fill: {PAGE_BG}; stroke: none !important;}}",
         "inline:.axis .line {stroke: none !important;}",
         "inline:.axis .guides .line {stroke: none !important;}",
@@ -113,7 +126,7 @@ chart = pygal.XY(
     js=[],
 )
 
-# Legend series (Frequent → Moderate → Rare, matching color assignment order)
+# Legend entries (Frequent → Moderate → Rare, matching color assignment order)
 for w_val, w_label in [(3, "Frequent"), (2, "Moderate"), (1, "Rare")]:
     chart.add(
         f"{w_label} co-occurrence",
@@ -123,7 +136,7 @@ for w_val, w_label in [(3, "Frequent"), (2, "Moderate"), (1, "Rare")]:
         stroke_style={"width": arc_widths[w_val], "linecap": "round"},
     )
 
-# Arc generation — semi-circle above baseline, height ∝ node distance
+# Arc series: semi-circle above baseline, height ∝ node distance
 arc_resolution = 50
 
 for start_idx, end_idx, weight in edges:
@@ -140,27 +153,28 @@ for start_idx, end_idx, weight in edges:
                 x_center - arc_radius * math.cos(math.pi * i / arc_resolution),
                 y_baseline + height_scale * math.sin(math.pi * i / arc_resolution),
             ),
-            "label": f"{nodes[start_idx]} ↔ {nodes[end_idx]} ({weight_labels[weight]})",
+            "label": f"{nodes[start_idx]} ↔ {nodes[end_idx]} | {weight_labels[weight]} ({weight}/3)",
         }
         for i in range(arc_resolution + 1)
     ]
-
     chart.add(
         "", arc_points, stroke=True, show_dots=False, stroke_style={"width": arc_widths[weight], "linecap": "round"}
     )
 
-# Node outline ring (INK color) + amber fill on top for crisp visibility on both themes
-node_points = [
-    {
-        "value": (float(x_positions[i]), y_baseline),
-        "label": f"{nodes[i]} ({sum(1 for s, t, _ in edges if s == i or t == i)} connections)",
-    }
-    for i in range(n_nodes)
-]
-chart.add("", node_points, stroke=False, dots_size=42)
-chart.add("", node_points, stroke=False, dots_size=32)
+# Degree-based node series: hub nodes (degree 3) largest, peripheral (degree 1) smallest
+# Pygal tooltips in HTML expose per-node degree info — the library's interactive differentiator
+for d in degree_levels:
+    group_idx = degree_groups[d]
+    outline_sz, fill_sz = node_sizes[d]
+    conn_word = "connection" if d == 1 else "connections"
 
-# Save PNG and interactive HTML
+    node_pts = [
+        {"value": (float(x_positions[i]), y_baseline), "label": f"{nodes[i]} | {d} {conn_word}"} for i in group_idx
+    ]
+    chart.add("", node_pts, stroke=False, dots_size=outline_sz)
+    chart.add("", node_pts, stroke=False, dots_size=fill_sz)
+
+# Save PNG and interactive HTML (HTML exposes per-edge and per-node tooltips on hover)
 chart.render_to_png(f"plot-{THEME}.png")
 
 with open(f"plot-{THEME}.html", "wb") as f:
