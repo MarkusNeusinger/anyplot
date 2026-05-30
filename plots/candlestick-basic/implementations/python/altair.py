@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-30
@@ -80,10 +80,10 @@ wicks = (
     )
 )
 
-# Bodies: open-close bars
+# Bodies: open-close bars — thin ink stroke aids CVD accessibility (shape outline)
 bodies = (
     alt.Chart(df)
-    .mark_bar(size=12)
+    .mark_bar(size=12, stroke=INK, strokeWidth=0.7)
     .encode(
         x="date:T",
         y="open:Q",
@@ -109,8 +109,8 @@ sma_line = (
     .encode(x="date:T", y="sma5:Q", color=alt.value(SMA_COLOR))
 )
 
-# SMA inline label
-sma_mid = sma_df.iloc[[len(sma_df) // 3]]
+# SMA inline label — positioned early (before the peak) to avoid overlap with tall candles
+sma_mid = sma_df.iloc[[2]]
 sma_label = (
     alt.Chart(sma_mid)
     .mark_text(align="left", dy=-10, fontSize=10, fontWeight="bold", fontStyle="italic")
@@ -145,6 +145,7 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
+    .configure_axisX(grid=False)
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
