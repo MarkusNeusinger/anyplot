@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: altair 6.0.0 | Python 3.14.3
+Library: altair 6.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-30
 """
 
