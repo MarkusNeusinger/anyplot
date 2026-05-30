@@ -18,9 +18,9 @@ SEQ_LOW  <- "#009E73"  # Imprint position 1 — brand green (boundary region)
 SEQ_HIGH <- "#4467A3"  # Imprint position 3 — blue (far exterior)
 
 # Mandelbrot parameters
-MAX_ITER <- 100
-NX       <- 400
-NY       <- 286  # maintains 3.5 : 2.5 complex-plane aspect ratio
+MAX_ITER <- 200
+NX       <- 800
+NY       <- 572  # maintains 3.5 : 2.5 complex-plane aspect ratio
 
 x_seq <- seq(-2.5,  1.0,  length.out = NX)
 y_seq <- seq(-1.25, 1.25, length.out = NY)
@@ -74,7 +74,7 @@ p <- ggplot(df, aes(x = real, y = imag, fill = esc)) +
     scale_fill_gradient(
         low      = SEQ_LOW,
         high     = SEQ_HIGH,
-        na.value = INK,
+        na.value = "#050503",  # fixed dark interior independent of theme
         name     = "Escape\ncount\n(√)",
         guide    = guide_colorbar(
             title.position = "top",
@@ -91,7 +91,7 @@ p <- ggplot(df, aes(x = real, y = imag, fill = esc)) +
     theme_minimal(base_size = 8) +
     theme(
         plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
-        panel.background  = element_rect(fill = INK,         color = NA),
+        panel.background  = element_rect(fill = PAGE_BG,      color = NA),
         panel.grid.major  = element_blank(),
         panel.grid.minor  = element_blank(),
         panel.border      = element_blank(),
