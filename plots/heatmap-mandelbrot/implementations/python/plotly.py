@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-30
+Quality: 87/100 | Created: 2026-05-30
 """
 
 import os

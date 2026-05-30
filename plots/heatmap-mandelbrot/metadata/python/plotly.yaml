@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-mandelbrot
 created: '2026-05-30T10:53:20Z'
-updated: '2026-05-30T11:01:16Z'
+updated: '2026-05-30T11:18:23Z'
 generated_by: claude-sonnet
 workflow_run: 26681778538
 issue: 4431
@@ -12,143 +12,147 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Correct Mandelbrot set algorithm with smooth coloring (log-normalized iteration
-    count) that avoids discrete banding
-  - 'Uses imprint_seq colorscale (#009E73 → #4467A3) correctly for single-polarity
-    continuous data'
-  - Square 2400×2400 canvas is the right format for the symmetric complex-plane domain
-  - 'Both themes fully functional: warm off-white and near-black backgrounds applied
-    correctly, all chrome tokens threaded through'
-  - Near-black interior (#0D0D0A) clearly distinguishes the set interior from the
-    exterior as required by the spec
-  - Y-axis range expanded symmetrically to ±1.75 to match x-axis span of 3.5 — produces
-    true 1:1 aspect ratio on the square canvas
-  - All text sizes explicitly set following style-guide defaults (title=16px, axis=12px,
-    ticks=10px)
-  - Interactive hover with real/imaginary coordinate display and HTML export leverages
-    Plotly strengths
-  - Deterministic computation — no random seed needed; perfectly reproducible output
-  - 'Clean KISS structure: flat script, only used imports (os, numpy, plotly.graph_objects)'
+  - Smooth coloring algorithm with log2/gamma normalization (0.3) effectively distributes
+    color across the escape-time gradient
+  - Custom colorscale correctly uses imprint_seq (green→blue) with a sharp near-black
+    interior breakpoint at z=0.019→0.020
+  - Educational annotations (Period-2 bulb, Main cardioid) with well-styled arrows
+    guide viewers to key mathematical features
+  - Semantic colorbar tick labels (Interior / Mid / Boundary) add interpretive context
+    beyond raw escape counts
+  - 'Perfect theme-adaptive chrome: all text, axes, and colorbar use INK/INK_SOFT/INK_MUTED
+    tokens in both renders'
+  - Square canvas (2400×2400) is the correct format choice for the symmetric Mandelbrot
+    set
+  - Deterministic computation with no randomness ensures perfect reproducibility
+  - Interactive hovertemplate showing Re/Im coordinates exploits plotly's native interactivity
+    distinctively
   weaknesses:
-  - 'Exterior color variation is visually limited: the log normalization compresses
-    most escaped pixels toward the green end of the imprint_seq colorscale, making
-    the outer region appear nearly uniformly bright green with only a faint blue tinge
-    near the boundary. Consider a linear or square-root normalization on the smooth
-    values to better spread colors across the full green→blue range.'
-  - No colorbar (showscale=False) means the escape count scale is uninterpretable.
-    For a scientific/mathematical visualization, a thin colorbar (thickness=12, len=0.85)
-    would aid interpretation without cluttering the clean layout.
-  - 'Design Excellence is limited by the flat-looking exterior: with only two palette
-    stops (green and blue), the escape region lacks perceptual depth. The imprint_seq
-    is required, but adjusting the normalization strategy would reveal more color
-    variation across the exterior bands — improve DE-01 from well-configured-default
-    to above-average aesthetic.'
-  - Visual storytelling (DE-03) could be enhanced by adding a subtle annotation marking
-    the main cardioid boundary or the period-2 bulb (e.g., small text annotation at
-    (-1.25, 0) for the period-2 bulb center), making the mathematical structure more
-    accessible to non-expert viewers.
+  - The exterior region appears visually flat — most escaped pixels escape at low
+    iterations so their z_data clusters near 0.02 (green), leaving very little of
+    the blue end visible. The spec calls for 'smooth, perceptually uniform colormap'
+    but the current result reads as a black silhouette on a near-uniform teal background.
+    Consider a cyclic/repetitive normalization (e.g. np.sin(smooth_value * pi) re-mapped
+    to [0.02, 1.0]) to cycle through the green→blue gradient multiple times and reveal
+    more fractal structure in the exterior bands
+  - Annotation font size of 10px (40px rendered) is borderline for mobile readability
+    at the 400w srcset width — consider raising to 11–12px for both annotation text
+    and the colorbar title/tick labels
+  - The Period-2 bulb annotation arrow points to (-1.25, 0) but the text anchor is
+    positioned to the right, placing the label near the boundary between interior
+    and exterior — a slightly longer arrow (ax=70, ay=-55) would move the text comfortably
+    into the green exterior and away from the noisy boundary region
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "heatmap-mandelbrot · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. X-axis label "Real Axis" and Y-axis label "Imaginary Axis" in dark ink, readable. Tick labels in INK_SOFT (#4A4A44) on both axes, clearly legible.
-      Data: The Mandelbrot set body renders as near-black (#0D0D0A) against an imprint_seq exterior that transitions from bright brand green (#009E73) to a subtle blue-teal (#4467A3). The characteristic cardioid (right large body) and period-2 bulb (smaller sphere to the left of the cardioid) are both prominently displayed along with several satellite bulbs and fractal boundary detail. Most of the escape region appears uniformly bright green; the blue gradient is subtle and concentrated near the fractal boundary where escape counts are highest.
-      Legibility verdict: PASS — all text elements are clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "heatmap-mandelbrot · python · plotly · anyplot.ai" in dark INK text, clearly readable at the top. X-axis label "Real Axis" and Y-axis label "Imaginary Axis" both in dark INK, readable. Tick labels in INK_SOFT (medium-dark gray), readable. Colorbar title "Escape count" (rotated, right side) and tick labels "Interior / Mid / Boundary" in INK_SOFT, readable.
+      Data: The Mandelbrot set interior is near-black (#0D0D0A), clearly contrasting the exterior. The exterior region is predominantly teal-green (#009E73) — the imprint_seq colormap starting color — with very little blue (#4467A3) visible except in the narrow near-boundary band. The characteristic cardioid and period-2 bulb black shapes are clearly visible. Two arrows with annotations ("Period-2 bulb" pointing to x≈-1.25 and "Main cardioid" pointing to x≈-0.15, y≈0.65) are legible in INK_MUTED gray.
+      Legibility verdict: PASS — all text elements readable in this theme.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light cream (#F0EFE8), clearly readable against the dark background. Axis labels "Real Axis" and "Imaginary Axis" in light ink, readable. Tick labels in INK_SOFT (#B8B7B0) — light enough on the dark background, no dark-on-dark failures detected. No black text on dark background observed.
-      Data: Colors are identical to the light render — same near-black interior, same bright green (#009E73) to blue-teal exterior gradient. Only the page background and chrome (text, axis lines) have flipped to dark-mode values. Brand green #009E73 is vivid and clearly visible against the dark background.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures found.
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title, axis labels, and tick labels are all in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) — fully readable against the dark background. No dark-on-dark failures detected. Colorbar labels ("Boundary", "Mid", "Interior") in light INK_SOFT, readable. Annotation text ("Period-2 bulb", "Main cardioid") in light INK_MUTED (#A8A79F), readable.
+      Data: Data colors are identical to the light render — the Mandelbrot exterior is the same teal-green (#009E73) and near-black interior (#0D0D0A). The near-black interior on the warm-near-black background creates slightly less contrast than in the light render, but the Mandelbrot set boundary remains clearly defined against the teal exterior.
+      Legibility verdict: PASS — all text elements readable in this theme. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set per style-guide defaults (title=16px,
-          axis=12px, ticks=10px). All text readable in both themes at full resolution.
+        comment: 'All font sizes explicitly set: title 22px (scaled from 16 for 49-char
+          title), axis labels 12px, tick labels 10px, annotation text 10px. All readable
+          at full res in both themes. Annotation text (10px) is borderline for mobile
+          scaling to 400px.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlap anywhere in either render.
+        comment: No significant text-on-text overlaps. Annotation placement is mostly
+          clean but Period-2 bulb label sits close to the black interior boundary.
+          Arrow offsets (ax=55, ay=-45) place text near but still in the green exterior.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Fractal body and boundary detail are clearly visible. Minor deduction:
-          the escape region exterior appears nearly uniformly green due to log normalization
-          clustering most pixels near the green end of the colorscale — color variation
-          in the exterior is limited.'
+        comment: The Mandelbrot set interior and exterior are clearly distinguishable.
+          Annotations and colorbar are visible. The exterior color variation is limited
+          — most escaped pixels cluster near the green end of the colorscale, making
+          the exterior appear near-uniform teal. Fractal boundary structure remains
+          visible in the black interior.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe. Strong contrast between near-black interior
-          and green exterior.
+        comment: imprint_seq (green→blue) is CVD-safe. High contrast between near-black
+          interior and teal exterior. No red-green sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas. Good margins (l=80, r=40, t=80, b=70). Plot
-          fills canvas well. No clipping.
+        comment: Square canvas 2400x2400 (correct for symmetric Mandelbrot). Canvas
+          gate passed. Explicit margins (l=80, r=90, t=80, b=70). No overflow or clipping
+          detected. Good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Real Axis'' and ''Imaginary Axis'' are descriptive and appropriate
-          for complex plane coordinates.'
+        comment: 'Title: ''heatmap-mandelbrot · python · plotly · anyplot.ai'' — correct
+          format. X: ''Real Axis'', Y: ''Imaginary Axis'' — descriptive with mathematical
+          context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used correctly for single-polarity continuous data.
-          Backgrounds #FAF8F1 (light) and #1A1A17 (dark) are correct. All chrome tokens
-          are theme-adaptive.'
+        comment: 'Colorscale uses imprint_seq: #009E73 (brand green) at z=0.020 →
+          #4467A3 at z=1.0. Interior uses near-black (#0D0D0A). Plot backgrounds:
+          #FAF8F1 (light) and #1A1A17 (dark). All chrome tokens theme-adaptive. Data
+          colors identical across both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default level. The clean composition with black interior
-          on green exterior is visually striking, and smooth coloring adds sophistication.
-          However, the 2-stop imprint_seq palette makes the exterior look nearly monochromatic
-          (predominantly green), limiting perceptual depth. Matches a well-configured
-          library default.
+        passed: true
+        comment: Above default (4). Non-trivial smooth coloring algorithm with gamma=0.3
+          normalization, custom colorscale with semantic interior/exterior breakpoints,
+          educational annotations, semantic colorbar tick labels (Interior/Mid/Boundary).
+          Not quite 6 because the visual result, while technically sophisticated,
+          appears relatively flat due to the near-uniform green exterior.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Some visible refinement: colorbar hidden for clean look, axes styled
-          with theme-adaptive colors, subtle grid at 15% opacity. Above minimal defaults
-          but not exceptional.'
+        passed: true
+        comment: Above default (2). Explicit grid styling (GRID token at 0.15 opacity),
+          colorbar styled with INK_SOFT colors (not default black), explicit margin
+          parameters, clean square layout. Four spines appropriate for enclosed heatmap
+          grid type.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: The iconic Mandelbrot form with prominent cardioid and period-2 bulb
-          creates a natural focal point. The black/green contrast guides the eye.
-          However, no deliberate storytelling elements (annotations labeling key structures)
-          are added beyond what the algorithm produces.
+        passed: true
+        comment: Above default (2). Educational annotations pointing to the Period-2
+          bulb and Main cardioid guide viewers to the two defining structural features.
+          Semantic colorbar tick labels provide interpretive context. The escape-time
+          color story is communicated, even if the exterior gradient is subtle.
     spec_compliance:
       score: 15
       max: 15
@@ -158,32 +162,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Heatmap showing the Mandelbrot set — correct plot type for this
-          specification.
+        comment: 'Correct: go.Heatmap displaying Mandelbrot set escape times on the
+          complex plane.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth coloring via normalized iteration count ✓, near-black for
-          interior ✓, standard view with cardioid and period-2 bulb ✓, real/imaginary
-          axis labels ✓, resolution 1000×1000 (exceeds 800×600 minimum) ✓, mathematical
-          aspect ratio preserved ✓.
+        comment: 'All spec requirements met: smooth coloring via normalized iteration
+          count, gamma normalization avoids banding, full set including cardioid and
+          period-2 bulb, labeled axes with real/imaginary coordinates, interior colored
+          distinct near-black, aspect ratio preserves mathematical proportions.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=real axis (-2.5 to 1.0, per spec default), Y=imaginary axis (-1.75
-          to 1.75, expanded symmetrically to match x span for square canvas — reasonable
-          adaptation).
+        comment: x=real axis (-2.5 to 1.0), y=imaginary axis (-1.75 to 1.75). Y-range
+          expanded slightly from spec default (-1.25 to 1.25) to match x-extent (3.5
+          units each) for true square canvas — a correct design decision.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-mandelbrot · python · plotly · anyplot.ai' matches
-          required format exactly. No legend needed for this single-colorscale visualization.
+        comment: 'Title: ''heatmap-mandelbrot · python · plotly · anyplot.ai'' — exactly
+          correct format. Colorbar labels descriptively explain the color encoding.'
     data_quality:
       score: 15
       max: 15
@@ -193,24 +197,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of Mandelbrot visualization: main cardioid, period-2
-          bulb, satellite bulbs, fractal boundary detail, interior (set members),
-          exterior (escaped points), smooth coloring gradation.'
+        comment: 'Full feature coverage: interior (never-escaping points in near-black),
+          exterior gradient (escape-time coloring), smooth coloring with normalized
+          iterations, annotations for key topological features, colorbar with semantic
+          labels.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pure mathematics — the Mandelbrot set on the complex plane. Neutral,
-          non-controversial, scientifically canonical.
+        comment: Mandelbrot set is a real, well-defined mathematical object. Standard
+          x/y ranges for the canonical full view. Neutral educational content — no
+          controversial material.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'x: -2.5 to 1.0 (standard full view per spec), y: ±1.75 (correct
-          expansion for square aspect), max_iter=256 (excellent detail), resolution=1000
-          (exceeds minimum). All mathematically correct.'
+        comment: 'Standard full-view ranges: x∈[-2.5, 1.0], y∈[-1.75, 1.75]. max_iter=256
+          appropriate for this visualization. Resolution=1000 adequate for 2400×2400
+          canvas. All values factually correct.'
     code_quality:
       score: 10
       max: 10
@@ -220,35 +226,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → smooth coloring → plot →
-          save. No functions or classes.'
+        comment: 'Clean sequential structure: tokens → data computation → plot → save.
+          No classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic mathematical computation — no random seed needed.
+        comment: Mandelbrot computation is purely deterministic — no randomness, no
+          seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used.
+        comment: Only os, numpy, and plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Smooth coloring formula is mathematically correct and well-commented.
-          Log normalization is non-trivial but appropriate. Code complexity matches
-          the problem.
+        comment: Clean, readable code. The escaped-mask iteration approach is idiomatic
+          for numpy vectorized Mandelbrot. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. autosize=False
-          with explicit dimensions.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
+          explicit dimensions. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -258,25 +264,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Heatmap with proper x/y/z coordinate mapping, zmin/zmax for
-          colorscale anchoring, hovertemplate for custom tooltips. Idiomatic plotly
-          pattern.
+        comment: Above default (3). go.Heatmap with colorscale/zmin/zmax, hovertemplate
+          for interactive display, autosize=False with explicit dimensions per library
+          rules, colorbar configured through the trace dict.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Plotly-specific: interactive hover showing real/imaginary coordinates,
-          HTML export preserving full interactivity (pan/zoom/hover), write_html with
-          CDN. These are genuine Plotly differentiators.'
-  verdict: REJECTED
+        comment: 'Above default (1). Interactive hovertemplate showing ''Re: %{x:.3f},
+          Im: %{y:.3f}'' — unique to plotly. HTML export for interactive exploration
+          (write_html). Custom colorscale with semantic breakpoints exploiting plotly''s
+          flexible colorscale API.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - matrix-construction
   dataprep:
   - normalization
