@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: density-basic
 created: '2025-12-23T01:30:36Z'
-updated: '2026-05-30T03:20:26Z'
+updated: '2026-05-30T03:29:14Z'
 generated_by: claude-sonnet
 workflow_run: 26672888228
 issue: 912
@@ -12,114 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Both light and dark themes render correctly with fully adaptive chrome — backgrounds,
-    text, grid, and annotation boxes all flip properly.
-  - Bimodal SAT score data with annotated peaks provides genuine data storytelling
-    that explains the density plot's key capability.
-  - Rug plot layer adds statistical context without cluttering the chart; density-appropriate
-    opacity (0.4) is correct for 500 points.
-  - Complete interactive HTML export with spike crosshair and zoom — good demonstration
-    of Plotly's interactive strengths.
-  - 'Perfect spec compliance: KDE curve, filled area, rug plot, and appropriate bandwidth
-    all present.'
+  - Excellent bimodal SAT score data demonstrates density plot capabilities with realistic,
+    neutral context
+  - Both themes render correctly — all chrome tokens fully threaded through, zero
+    dark-on-dark failures
+  - Rug plot faithfully implements the spec optional feature showing individual observations
+  - Peak annotations add genuine storytelling — viewer immediately identifies the
+    two population groups
+  - Plotly-specific spike lines and HTML export leverage the library interactive strengths
   weaknesses:
-  - 'Legend is marginally redundant: with only 2 simple traces and annotations already
-    labeling the peaks, showlegend=False would reduce chrome noise — or drop the legend
-    box border at minimum.'
-  - Rug marks in dark render use color=BRAND at opacity=0.4 which produces low-contrast
-    dark-green ticks; consider using color=INK_SOFT for the rug in both themes so
-    observations are always visually distinct from the density fill.
-  - 'DE-02: The legend border frame (bordercolor=INK_SOFT) and annotation bordercolor=INK_SOFT
-    both add minor visual weight that slightly clutters an otherwise clean chart.'
+  - DE-01 could reach 8/8 with stronger typographic hierarchy — title could use heavier
+    font weight and more size contrast between annotation text and axis labels
+  - 'DE-02: Plotly axis lines could be hidden entirely (showline=False) for a more
+    minimal look — currently axis lines are styled but still present on all four sides'
+  - 'LM-02: Could leverage plotly.figure_factory.create_distplot or violin trace as
+    a more distinctively Plotly alternative to manual KDE computation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "density-basic · python · plotly · anyplot.ai" in dark ink, axis labels ("SAT Math Score (points)", "Density") and tick labels all in dark/soft ink; all clearly readable
-      Data: KDE curve in brand green #009E73 with semi-transparent mint fill; two annotation callout boxes pointing to bimodal peaks; rug marks at y=0 in muted green at 0.4 opacity
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "density-basic · python · plotly · anyplot.ai" in dark #1A1A17, centered. X-axis label "SAT Math Score (points)" and Y-axis label "Density" both in dark #1A1A17 at 12px. Tick labels in INK_SOFT #4A4A44 at 10px. All clearly readable against the light background.
+      Data: Brand green #009E73 KDE curve (line-width=2.5) with semi-transparent fill rgba(0,158,115,0.2). Bimodal distribution with primary peak ~550 pts and secondary peak ~667 pts. Two annotation callouts with green arrowheads and ELEVATED_BG #FFFDF6 boxes. Rug plot of 500 marks in INK_SOFT at y=0, opacity=0.5. Y-axis horizontal gridlines only, very subtle.
+      Legibility verdict: PASS — all text readable, no light-on-light failures, correct background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and axis text rendered in cream/light (#F0EFE8 / #B8B7B0); all readable — no dark-on-dark failures; annotation boxes use elevated dark background #242420 with light text
-      Data: Colors identical to light render — same #009E73 KDE curve; fill appears darker due to contrast but data colors unchanged; rug marks slightly low-contrast (green at 0.4 opacity on dark bg)
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels correctly converted to light #F0EFE8. Tick labels in #B8B7B0 (INK_SOFT dark variant). Gridlines use dark-theme GRID token (rgba(240,239,232,0.15)). Annotation boxes use ELEVATED_BG #242420 — subtly lighter than background, distinguishable. Annotation text is light #F0EFE8 on dark elevated background — readable.
+      Data: Data colors identical to light render — brand green #009E73 curve and fill unchanged across themes, as required. Rug plot marks in #B8B7B0 semi-transparent — visible but unobtrusive.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, correct background
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes; title=16px, axis=12px, ticks=10px.
-          Minor: annotation text at 10px is minimal but acceptable.'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10). Title
+          42 chars at ~65% canvas width. Balanced X/Y labels both at 12px. Readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements between annotations, legend, curve, or rug
-          marks.
+        comment: No text collisions. Annotation boxes in open space above curve. Rug
+          plot at y=0 does not intersect labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 500 observations at opacity=0.4 is appropriate density-aware handling.
+        comment: KDE curve clearly visible (line-width=2.5). Fill visible without
+          obscuring anything. Rug marks sized appropriately for 500 observations.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series Imprint green; colorblind-safe.
+        comment: 'Single series in CVD-safe brand green #009E73. Rug marks in muted
+          INK_SOFT.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 confirmed, autosize=False, explicit margins.
+        comment: 3200x1800 landscape, correct margins, good canvas utilization, no
+          overflow or cut-off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct mandated title format.
+        comment: 'X: SAT Math Score (points) with units; Y: Density — correct term.
+          Title format exact.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both themes correct.'
+        comment: 'First series #009E73 brand green. Light bg #FAF8F1, dark bg #1A1A17.
+          All chrome tokens theme-adapted correctly in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional bimodal data, peak annotations, semi-transparent fill,
-          rug layer. Above generic but not extraordinary.
+        comment: 'Clearly above library defaults: theme-adaptive Imprint palette,
+          clean minimal layout, semi-transparent area fill, annotation callouts with
+          styled arrows, no legend, y-only gridlines. Not FiveThirtyEight-level typographic
+          hierarchy.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Y-axis-only subtle grid, no top/right spines, proper margins. Deduct:
-          legend box adds unnecessary frame chrome.'
+        comment: Y-axis-only grid, x-axis gridlines off, custom axis line colors,
+          generous margins, no redundant legend. Axis lines styled but still present
+          on all sides.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal data with annotated peaks tells clear narrative; rug plot
-          reinforces data density.
+        comment: Bimodal SAT distribution clearly tells the story of two student populations.
+          Annotations name and locate both peaks. Rug plot shows raw observation density.
+          Visual hierarchy guides viewer to key insight.
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE density curve via scipy.stats.gaussian_kde.
+        comment: Correct KDE density plot with smooth probability density curve via
+          scipy.stats.gaussian_kde.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth density curve, fill with transparency, rug plot, appropriate
-          bandwidth all present.
+        comment: Smooth KDE curve, fill with transparency, rug plot, appropriate bandwidth
+          (Scott rule) — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = SAT scores, Y = density; full data range shown.
+        comment: 'X: continuous variable (SAT score); Y: density. Full data range
+          covered.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches density-basic · python · plotly · anyplot.ai exactly.
+        comment: 'Title: ''density-basic · python · plotly · anyplot.ai'' — exact
+          format. No legend (correctly omitted, showlegend=False).'
     data_quality:
       score: 15
       max: 15
@@ -158,21 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates distribution shape, bimodality, density estimation,
-          and observation overlay.
+        comment: 'Bimodal distribution showcases full KDE expressive power: multiple
+          modes, asymmetry, smoothing. Rug plot shows individual observations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SAT Math scores are neutral and realistic; bimodal distribution is
-          plausible.
+        comment: SAT Math scores with main group and high achievers — realistic, neutral,
+          comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 observations, scores clipped to [200,800], density values ~0-0.006.
+        comment: SAT Math range 200-800 (actual test scale). Subgroup parameters (μ=540,σ=60
+          and μ=680,σ=35) plausible.
     code_quality:
       score: 10
       max: 10
@@ -182,49 +192,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear flow.
+        comment: Imports → theme tokens → data → KDE → figure → save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os/sys (path fix + THEME), numpy, plotly.graph_objects,
+          scipy.stats.gaussian_kde.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI.
+        comment: Clean, readable. Peak detection logic concise and necessary for annotation
+          placement.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
+          explicit width/height. Current Plotly API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic go.Scatter with fill='tozeroy', fig.add_annotation with
-          arrows, hovertemplate, dual-format export.
+        comment: Expert use of go.Scatter with fill='tozeroy', proper hovertemplate,
+          autosize=False with explicit canvas control, structured layout dict.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: spikemode crosshair, per-trace hovertemplate, scrollZoom in HTML
-          config, CDN-hosted HTML export.
+        comment: Plotly-distinctive spike lines (showspikes, spikemode, spikethickness,
+          spikecolor, spikedash), hovermode='x', dual output (PNG + interactive HTML
+          with displayModeBar + scrollZoom).
   verdict: APPROVED
 impl_tags:
   dependencies:
