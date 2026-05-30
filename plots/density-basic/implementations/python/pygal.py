@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-30
@@ -60,7 +60,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     colors=IMPRINT_PALETTE,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -75,7 +75,7 @@ css_rules = [
     "file://style.css",
     f"inline:.plot .background {{fill: {PAGE_BG} !important; stroke: none !important; stroke-width: 0 !important;}}",
     f"inline:.graph > .background {{fill: {PAGE_BG} !important; stroke: none !important;}}",
-    f"inline:.axis .guides .line {{stroke: {INK_MUTED} !important; stroke-width: 0.8px; opacity: 0.3;}}",
+    f"inline:.axis .guides .line {{stroke: {INK_MUTED} !important; stroke-width: 0.8px; opacity: 0.15;}}",
     "inline:.axis.x > path.line {stroke: none !important; stroke-width: 0 !important;}",
     "inline:.axis.y > path.line {stroke: none !important; stroke-width: 0 !important;}",
     f"inline:.axis .guides text {{fill: {INK_MUTED} !important;}}",
@@ -119,10 +119,11 @@ chart.add("Test score distribution", xy_combined)
 xy_sec = [(float(x), float(y)) for x, y in zip(x_range, density_sec, strict=True)]
 chart.add("Lower-scoring group", xy_sec, stroke_style={"width": 3, "linecap": "round"}, fill=True)
 
-# Rug plot — thin strokes (0.8px) for 270 observations to prevent merging
-rug_height = max(density) * 0.10
+# Rug plot — subsample 100 representative observations so individual ticks stay distinguishable
+rug_sample = np.sort(np.random.choice(scores, size=100, replace=False))
+rug_height = max(density) * 0.12
 rug_data = []
-for xi in sorted(scores):
+for xi in rug_sample:
     rug_data.append((float(xi), 0.0))
     rug_data.append((float(xi), float(rug_height)))
     rug_data.append((float(xi), 0.0))
