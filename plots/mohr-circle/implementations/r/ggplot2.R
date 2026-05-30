@@ -70,8 +70,9 @@ label_s2    <- paste0(sigma_sym, "2=", round(sigma_2, 1))
 label_tmax  <- paste0(tau_sym, "max=", round(tau_max, 1))
 label_2tp   <- paste0("2", theta_sym, "p=", round(two_theta_p, 1), deg_sym)
 
-# Grid lines with alpha
-grid_color <- adjustcolor(INK, alpha.f = 0.12)
+# Grid lines with alpha (major and minor differentiated)
+grid_color       <- adjustcolor(INK, alpha.f = 0.08)
+grid_color_minor <- adjustcolor(INK, alpha.f = 0.05)
 
 p <- ggplot() +
   # Reference lines through center
@@ -84,53 +85,58 @@ p <- ggplot() +
   # Diameter line connecting A and B (passes through center C)
   annotate("segment",
            x = sigma_x, y = tau_xy, xend = sigma_y, yend = -tau_xy,
-           color = INK_MUTED, linewidth = 0.55, linetype = "dotted") +
+           color = INK_MUTED, linewidth = 0.8, linetype = "dotted") +
   # Mohr's circle (primary element — Imprint brand green)
   geom_path(data = circle_df, aes(x = x, y = y),
             color = IMPRINT_PALETTE[1], linewidth = 1.5) +
   # Arc showing angle 2θp
   geom_path(data = arc_df, aes(x = x, y = y),
             color = INK_SOFT, linewidth = 0.7) +
-  # Center point (cross marker)
+  # Center point (filled circle marker)
   annotate("point", x = center_x, y = 0,
-           color = INK, size = 2.5, shape = 3) +
+           color = INK, fill = PAGE_BG, size = 3.5, shape = 21, stroke = 0.8) +
   # Principal stress points sigma1, sigma2 (where circle meets sigma-axis)
   annotate("point", x = sigma_1, y = 0,
-           color = IMPRINT_PALETTE[1], size = 5.5, shape = 18) +
+           color = "white", fill = IMPRINT_PALETTE[1], size = 5.5, shape = 23,
+           stroke = 0.5) +
   annotate("point", x = sigma_2, y = 0,
-           color = IMPRINT_PALETTE[1], size = 5.5, shape = 18) +
+           color = "white", fill = IMPRINT_PALETTE[1], size = 5.5, shape = 23,
+           stroke = 0.5) +
   # Maximum shear stress points (top and bottom of circle)
   annotate("point", x = center_x, y = tau_max,
-           color = IMPRINT_PALETTE[4], size = 4.5, shape = 17) +
+           color = "white", fill = IMPRINT_PALETTE[4], size = 4.5, shape = 24,
+           stroke = 0.5) +
   annotate("point", x = center_x, y = -tau_max,
-           color = IMPRINT_PALETTE[4], size = 4.5, shape = 25,
-           fill = IMPRINT_PALETTE[4]) +
+           color = "white", fill = IMPRINT_PALETTE[4], size = 4.5, shape = 25,
+           stroke = 0.5) +
   # Stress point A (sigma_x, tau_xy) — upper right
   annotate("point", x = sigma_x, y = tau_xy,
-           color = IMPRINT_PALETTE[3], size = 5.0, shape = 16) +
+           color = "white", fill = IMPRINT_PALETTE[3], size = 5.0, shape = 21,
+           stroke = 0.5) +
   # Stress point B (sigma_y, -tau_xy) — lower left
   annotate("point", x = sigma_y, y = -tau_xy,
-           color = IMPRINT_PALETTE[5], size = 5.0, shape = 16) +
+           color = "white", fill = IMPRINT_PALETTE[5], size = 5.0, shape = 21,
+           stroke = 0.5) +
   # Label A: positioned to the left+above to stay within panel
   annotate("text", x = sigma_x - 3, y = tau_xy + 6,
            label = label_A,
-           color = IMPRINT_PALETTE[3], hjust = 1, vjust = 0, size = 3.3) +
+           color = IMPRINT_PALETTE[3], hjust = 1, vjust = 0, size = 3.8) +
   # Label B: positioned to the right+below to stay within panel
   annotate("text", x = sigma_y + 3, y = -tau_xy - 6,
            label = label_B,
-           color = IMPRINT_PALETTE[5], hjust = 0, vjust = 1, size = 3.3) +
+           color = IMPRINT_PALETTE[5], hjust = 0, vjust = 1, size = 3.8) +
   # Label sigma1: centered below intersection (outside lower arc)
   annotate("text", x = sigma_1, y = -9,
            label = label_s1,
-           color = INK, hjust = 0.5, vjust = 1, size = 3.3) +
+           color = INK, hjust = 0.5, vjust = 1, size = 3.8) +
   # Label sigma2: centered below intersection (outside lower arc)
   annotate("text", x = sigma_2, y = -9,
            label = label_s2,
-           color = INK, hjust = 0.5, vjust = 1, size = 3.3) +
+           color = INK, hjust = 0.5, vjust = 1, size = 3.8) +
   # Label tmax: to the left of top point (toward center)
   annotate("text", x = center_x - 3, y = tau_max + 4,
            label = label_tmax,
-           color = IMPRINT_PALETTE[4], hjust = 1, vjust = 0, size = 3.3) +
+           color = IMPRINT_PALETTE[4], hjust = 1, vjust = 0, size = 3.8) +
   # Label 2thetap angle: near midpoint of arc
   annotate("text", x = arc_label_x, y = arc_label_y,
            label = label_2tp,
@@ -145,13 +151,13 @@ p <- ggplot() +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = grid_color, linewidth = 0.3),
-    panel.grid.minor = element_line(color = grid_color, linewidth = 0.2),
-    panel.border     = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.4),
+    panel.grid.major = element_line(color = grid_color,       linewidth = 0.3),
+    panel.grid.minor = element_line(color = grid_color_minor, linewidth = 0.15),
+    panel.border     = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.25),
     axis.title       = element_text(color = INK,      size = 10),
     axis.text        = element_text(color = INK_SOFT, size = 8),
     plot.title       = element_text(color = INK,      size = 12, face = "plain"),
-    plot.margin      = margin(20, 50, 20, 30, "pt")
+    plot.margin      = margin(40, 50, 20, 30, "pt")
   )
 
 ggsave(
