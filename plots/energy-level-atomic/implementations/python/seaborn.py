@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-30
@@ -71,16 +71,16 @@ series_colors = {
     "Paschen": IMPRINT_PALETTE[2],  # #4467A3 — Imprint position 3
 }
 
-# Subtle background column tints — seaborn light_palette for light theme
+# Subtle background column tints — seaborn palette functions (light/dark adaptive)
 series_bg = {}
 for name, color in series_colors.items():
     if THEME == "light":
         series_bg[name] = sns.light_palette(color, n_colors=8)[1]
     else:
-        series_bg[name] = color
+        series_bg[name] = sns.dark_palette(color, n_colors=8, reverse=True)[1]
 
-# X column positions; Paschen uses wider spacing to reduce wavelength label crowding
-series_x_base = {"Lyman": 0.18, "Balmer": 0.42, "Paschen": 0.63}
+# X column positions; Paschen shifted right to give Balmer/Paschen headers breathing room
+series_x_base = {"Lyman": 0.18, "Balmer": 0.42, "Paschen": 0.70}
 col_spacing = {"Lyman": 0.048, "Balmer": 0.048, "Paschen": 0.060}
 
 for series in series_names:
@@ -112,9 +112,9 @@ for label, y_pos in visual_y.items():
     level_rows += [{"x": line_xmin, "y": y_pos, "level": label}, {"x": line_xmax, "y": y_pos, "level": label}]
 level_df = pd.DataFrame(level_rows)
 
-for label in visual_y:
-    subset = level_df[level_df["level"] == label]
-    sns.lineplot(data=subset, x="x", y="y", color=INK, linewidth=2.0, ax=ax, legend=False, zorder=3)
+sns.lineplot(
+    data=level_df, x="x", y="y", units="level", estimator=None, color=INK, linewidth=2.0, ax=ax, legend=False, zorder=3
+)
 
 # Level endpoints via sns.scatterplot
 sns.scatterplot(data=level_df, x="x", y="y", color=INK, s=25, zorder=4, ax=ax, legend=False, edgecolor="none")
@@ -164,7 +164,7 @@ for _, row in transition_df.iterrows():
         row["x_pos"] + 0.012,
         mid_y,
         f"{row['wavelength_nm']} nm",
-        fontsize=7,
+        fontsize=8,
         color=color,
         va="center",
         ha="left",
