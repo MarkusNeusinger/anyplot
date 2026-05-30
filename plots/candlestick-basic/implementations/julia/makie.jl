@@ -1,7 +1,7 @@
 # anyplot.ai
 # candlestick-basic: Basic Candlestick Chart
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-05-30
+# Quality: 89/100 | Created: 2026-05-30
 
 using CairoMakie
 using Makie
