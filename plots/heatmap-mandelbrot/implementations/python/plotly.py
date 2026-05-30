@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-30
@@ -16,6 +16,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 INSIDE_COLOR = "#0D0D0A"  # near-black for points inside the Mandelbrot set
 
@@ -42,21 +43,21 @@ for i in range(max_iter):
     escaped |= newly_escaped
 
 # Smooth coloring: remove discrete banding via normalized iteration count
-# Z now holds the first value exceeding |z|=2 for escaped pixels
 abs_z = np.abs(Z)
 log_z = np.log2(np.maximum(abs_z, 1.0 + 1e-10))
 log_log_z = np.log2(np.maximum(log_z, 1e-10))
 smooth = np.where(escaped, escape_count - log_log_z, -1.0)
 
-# Log-normalize escape counts to reveal color variation across the full exterior
-# Linear normalization compresses most pixels near green; log spreads them evenly
+# Power-law (gamma=0.3) normalization spreads colors across the full exterior
+# much better than log or sqrt — most escaped pixels have low iteration counts,
+# so a strong gamma pulls the green→blue gradient into the near-boundary bands
 s_min = smooth[escaped].min()
 s_max = smooth[escaped].max()
-log_norm = np.log(np.maximum(smooth - s_min + 1, 1e-10)) / np.log(s_max - s_min + 1)
-z_data = np.where(escaped, log_norm * 0.98 + 0.02, 0.0)
+linear_norm = (smooth - s_min) / (s_max - s_min)
+gamma_norm = np.power(np.maximum(linear_norm, 0.0), 0.3)
+z_data = np.where(escaped, gamma_norm * 0.98 + 0.02, 0.0)
 
 # Colorscale: inside set = near-black; escaped = Imprint sequential (green → blue)
-# imprint_seq encodes single-polarity escape iteration count
 colorscale = [[0.000, INSIDE_COLOR], [0.019, INSIDE_COLOR], [0.020, "#009E73"], [1.000, "#4467A3"]]
 
 # Plot
@@ -69,10 +70,21 @@ fig = go.Figure(
         x=real,
         y=imag,
         colorscale=colorscale,
-        showscale=False,
+        showscale=True,
         zmin=0.0,
         zmax=1.0,
         hovertemplate="Re: %{x:.3f}<br>Im: %{y:.3f}<extra></extra>",
+        colorbar=dict(
+            thickness=12,
+            len=0.85,
+            title=dict(text="Escape count", side="right", font=dict(size=10, color=INK_SOFT)),
+            tickfont=dict(size=9, color=INK_SOFT),
+            bgcolor=PAGE_BG,
+            outlinecolor=INK_SOFT,
+            outlinewidth=1,
+            tickvals=[0.0, 0.5, 1.0],
+            ticktext=["Interior", "Mid", "Boundary"],
+        ),
     )
 )
 
@@ -80,7 +92,7 @@ fig.update_layout(
     autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin=dict(l=80, r=40, t=80, b=70),
+    margin=dict(l=80, r=90, t=80, b=70),
     title=dict(text=title, font=dict(size=title_fontsize, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
         title=dict(text="Real Axis", font=dict(size=12, color=INK)),
@@ -98,6 +110,36 @@ fig.update_layout(
         zerolinecolor=INK_SOFT,
         zerolinewidth=1,
     ),
+    annotations=[
+        dict(
+            x=-1.25,
+            y=0.0,
+            text="Period-2 bulb",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=1.5,
+            arrowcolor=INK_MUTED,
+            font=dict(size=10, color=INK_MUTED),
+            ax=55,
+            ay=-45,
+            xanchor="left",
+        ),
+        dict(
+            x=-0.15,
+            y=0.65,
+            text="Main cardioid",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=1.5,
+            arrowcolor=INK_MUTED,
+            font=dict(size=10, color=INK_MUTED),
+            ax=60,
+            ay=-40,
+            xanchor="left",
+        ),
+    ],
 )
 
 # Save — square canvas: 2400×2400 via width=600, height=600, scale=4
