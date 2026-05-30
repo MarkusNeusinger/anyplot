@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-30
