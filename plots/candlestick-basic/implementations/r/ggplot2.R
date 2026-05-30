@@ -4,7 +4,6 @@
 #' Quality: 85/100 | Created: 2026-05-30
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -61,6 +60,10 @@ df$body_bottom <- pmin(df$open, df$close)
 df$xmin        <- df$x - 0.38
 df$xmax        <- df$x + 0.38
 
+# Closing price trend line (linear fit) for visual storytelling
+trend_fit <- lm(close ~ x, data = df)
+trend_y   <- fitted(trend_fit)
+
 # --- X-axis breaks -----------------------------------------------------------
 break_idx    <- seq(1, n, by = 5)
 break_labels <- format(trade_dates[break_idx], "%b %d")
@@ -71,6 +74,13 @@ p <- ggplot(df) +
     geom_segment(
         aes(x = x, xend = x, y = low, yend = high, color = direction),
         linewidth = 0.45, show.legend = FALSE
+    ) +
+    # Subtle trend overlay (closing prices)
+    geom_line(
+        data = data.frame(x = df$x, close = trend_y),
+        aes(x = x, y = close),
+        color = INK_SOFT, linewidth = 0.5, linetype = "dashed",
+        inherit.aes = FALSE, alpha = 0.55
     ) +
     # Open-close bodies
     geom_rect(
@@ -85,6 +95,7 @@ p <- ggplot(df) +
     scale_fill_manual(
         values = c("up" = BULL_COLOR, "down" = BEAR_COLOR),
         labels = c("up" = "Bullish", "down" = "Bearish"),
+        breaks = c("up", "down"),
         name   = NULL
     ) +
     scale_x_continuous(
