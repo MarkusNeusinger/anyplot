@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: arc-basic
 created: '2025-12-23T08:49:25Z'
-updated: '2026-05-30T00:49:41Z'
+updated: '2026-05-30T00:58:35Z'
 generated_by: claude-sonnet
 workflow_run: 26669407699
 issue: 991
@@ -12,101 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correct arc diagram layout: nodes arranged along horizontal axis with arcs curving
-    above, height proportional to node distance as specified'
-  - Sequential imprint_seq colormap (#009E73→#4467A3) used correctly for continuous
-    weight encoding — maps interaction strength 1–5 intuitively from green to blue
-  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, ELEVATED_BG all toggled correctly;
-    both renders are clean and fully readable'
-  - Two meaningful annotations with arrows highlight the key contrast between long-range
-    weak connections and strong local bonds — adds real data storytelling
-  - Arc semi-transparency (alpha=0.75) prevents clutter in the dense central cluster
-  - seaborn lineplot with units+estimator=None is the idiomatic approach for per-edge
-    line drawing; legend filtering removes the redundant size entries cleanly
-  - 'All spec requirements met: 12 nodes (within 10–50 range), 18 weighted edges,
-    color+size encoding of weight, semi-transparent overlapping arcs'
+  - Clever idiomatic use of sns.lineplot with units=edge_id and estimator=None to
+    draw individual arc segments as separate lines — a genuinely seaborn-native approach
+    to multi-arc rendering
+  - Degree-based node sizing creates visual hierarchy — high-degree characters (Alice,
+    Bob, Dave) render as larger dots, guiding the eye to the most-connected nodes
+  - Correct imprint_seq colormap (green→blue) for the ordered weight encoding, with
+    5 evenly spaced samples that produce a coherent sequential gradient
+  - Two well-placed annotations with arrow pointers ('Weakest link, longest reach'
+    and 'Strongest local bonds') tell a clear data story without cluttering the layout
+  - All spines, tick marks, and axis labels cleanly removed — minimal chrome is exactly
+    right for an arc diagram, and the subtle baseline (alpha=0.3) anchors the nodes
+    without adding noise
+  - 'Proper theme-adaptive tokens throughout: PAGE_BG, INK, INK_SOFT, ELEVATED_BG
+    all correctly flip between light/dark, producing readable text in both renders'
+  - Canvas exactly 3200×1800 px (figsize=(8,4.5), dpi=400) with no bbox_inches='tight',
+    fully compliant with the seaborn canvas rule
   weaknesses:
-  - 'VQ-01: Node labels (8pt) are borderline small for mobile (400 px) — consider
-    nudging to 9pt for improved readability at small viewport widths'
-  - 'VQ-03: Weight-1 arcs (linewidth~1.5) are thin and partially obscured behind heavier
-    arcs in the dense central cluster — a minimum effective width of 1.8–2.0 would
-    improve visibility for the weakest connections without diminishing the weight-encoding
-    contrast'
-  - 'DE-01: Design is clean and purposeful but lacks a standout visual element that
-    elevates it to highly sophisticated — e.g., a subtle radial glow on the two annotated
-    arcs or slightly varied node sizes by degree would increase visual hierarchy'
-  - 'DE-02: The legend box could use slightly more internal padding (borderpad) to
-    give the entries breathing room against the frame edge'
+  - The dense central cluster (Bob–Frank region) has heavy arc overlap; increasing
+    alpha slightly to 0.8 and/or adding a slight linewidth taper from center nodes
+    could improve individual arc traceability without breaking the overall aesthetic
+  - 'LM-02 could be stronger: the matplotlib ax.annotate and ax.text calls bypass
+    seaborn''s API entirely — consider sns.move_legend or other seaborn-native post-processing
+    to keep more operations within seaborn''s idiom'
+  - 'DE-01 is at 5/8 rather than 6/8: the design is clearly above defaults but lacks
+    one more distinguishing touch (e.g., a subtle node glow via a second scatter pass
+    with larger marker + low alpha, or a more refined typography hierarchy between
+    annotation text and node labels)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white, comfortable surface
-      Chrome: Title "arc-basic · python · seaborn · anyplot.ai" in dark ink (#1A1A17), fontsize 12pt, clearly readable at ~60% plot width. Node labels (Alice…Leo) in dark INK at 8pt below the baseline — all readable. Legend "Interaction Strength" with 5 entries at 8pt in a light ELEVATED_BG (#FFFDF6) box — clean and readable. Two italic annotations ("Weakest link, longest reach", "Strongest local bonds") in INK_MUTED with arrows — clearly legible.
-      Data: Arcs colored via imprint_seq from #009E73 (weight 1, thin) to #4467A3 (weight 5, thick), alpha=0.75 giving good transparency. Node circles in #4467A3 (Imprint blue) with PAGE_BG white edge for definition. Subtle horizontal baseline in INK_SOFT at alpha=0.3.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface, clearly not pure white.
+      Chrome: Title "arc-basic · python · seaborn · anyplot.ai" in dark ink (#1A1A17), fontsize=12, positioned at top center and fully legible. No axis labels (intentionally empty for arc diagram). Node labels (Alice through Leo) in dark ink at fontsize=9, readable below the baseline. Annotation text ("Weakest link, longest reach" / "Strongest local bonds") in muted ink, italic, fontsize=8, clearly readable. Legend box has elevated background (#FFFDF6), INK_SOFT border, 5 labeled strength entries — all legible.
+      Data: 12 blue (#4467A3) node circles along the horizontal baseline, with degree-based sizing (larger for high-degree nodes). 18 arcs drawn above the baseline via sns.lineplot with units=edge_id; arc color runs from teal-green (#009E73 region) at weight=1 through mid-blue to deep blue (#4467A3 region) at weight=5. Alpha=0.75 provides semi-transparency on overlapping arcs. Arc height scales with node distance. Two annotation arrows point to the long-range weak arc (Alice–Leo) and the dense short-range intense-weight region.
+      Legibility verdict: PASS — all text, labels, and annotations are clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black surface
-      Chrome: Title and node labels rendered in light ink (#F0EFE8) against dark background — fully readable. Legend text and entries are light-colored against #242420 elevated background — clear. Annotations in INK_MUTED (#A8A79F) are readable. No dark-on-dark failures detected anywhere.
-      Data: Arc colors are identical to light render — imprint_seq green-to-blue gradient at identical positions. Node circles retain #4467A3 color which reads as a mid-tone blue-purple on dark background. Baseline line in INK_SOFT. All data elements clearly distinguishable from the dark background.
-      Legibility verdict: PASS — all text readable, data colors identical to light render, theme adaptation correct
+      Background: Warm near-black #1A1A17 — correct dark surface, clearly not pure black.
+      Chrome: Title and node labels render in light ink (#F0EFE8), clearly visible against the dark background. Annotation text is in INK_MUTED (#A8A79F), readable. Legend box uses elevated dark background (#242420) with INK_SOFT (#B8B7B0) border — all entries readable. No dark-on-dark failure observed for any text element.
+      Data: Arc colors are visually identical to the light render — same green-to-blue gradient from imprint_seq. Node dots remain the same #4467A3 blue. The data palette is correctly theme-independent. The semi-transparent arcs read clearly against the dark background, perhaps even more distinctly than in the light render due to higher contrast with the near-black surface.
+      Legibility verdict: PASS — all text is light-colored and readable against the dark background; no dark-on-dark failure detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title 12pt, node labels 8pt, legend 8pt, annotations 8pt — all readable
-          in both themes. Minor: 8pt node labels borderline for 400px mobile.'
+        comment: 'All font sizes explicitly set: title 12pt, node labels 9pt, annotations
+          8pt, legend 8pt. All text readable in both light and dark themes at full
+          canvas and mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps data or other text. Annotations positioned in clear
-          areas with directional arrows.
+        comment: No text overlaps. Node labels are evenly spaced. Annotations are
+          placed in open space above the arc region. Arc overlap is inherent to the
+          visualization type and mitigated by alpha=0.75.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Arcs weight 2–5 clearly visible. Weight-1 arcs (linewidth~1.5) slightly
-          thin in dense central cluster.
+        comment: Arcs visible with appropriate thickness range (2.0–5.5). Node dots
+          clearly visible with degree-based sizing. Dense central cluster has some
+          arc overlap that makes individual connections harder to trace, but alpha
+          blending helps. -1 for dense-center readability.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is colorblind-safe. No red-green sole signal.
+        comment: imprint_seq (green→blue) is CVD-safe. Good luminance contrast between
+          arc colors and both backgrounds. Node dots (#4467A3) clearly distinct from
+          arcs.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas confirmed. Title ~60% width. Proportions balanced.
-          No overflow or clipping.
+        comment: 'Canvas gate passed. 3200×1800 px confirmed. Plot fills canvas well:
+          arcs occupy upper 80%, nodes and labels at bottom. Legend in upper-right
+          is well-positioned. No clipping or overflow.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is exactly 'arc-basic · python · seaborn · anyplot.ai'. No
-          axis labels appropriate for this chart type.
+        comment: No axis labels by design (arc diagram axes are structural, not semantic).
+          Title correctly formatted as 'arc-basic · python · seaborn · anyplot.ai'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used correctly for sequential weight encoding. Backgrounds
-          #FAF8F1 / #1A1A17 correct. Chrome fully theme-adaptive.'
+        comment: 'imprint_seq (green→blue) correctly used for the ordered weight encoding.
+          First color sampled at t=0.1 is near #009E73. Background is #FAF8F1 (light)
+          / #1A1A17 (dark). Data colors identical between themes. Chrome correctly
+          theme-adaptive in both renders.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -114,22 +125,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom sequential colormap, white-edged node markers, semi-transparent
-          arcs, meaningful annotations. Above defaults but no standout signature element.
+        comment: 'Clearly above generic defaults: degree-based node sizing, imprint_seq
+          color gradient, two storytelling annotations, clean axis-free layout, semi-transparent
+          arcs. Not yet FiveThirtyEight-level — lacks one more distinguishing touch
+          (e.g., node glow, more refined typography hierarchy).'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All spines removed, no grid (appropriate), subtle baseline line,
-          alpha blending on arcs. Clean and refined.
+        comment: All spines removed (sns.despine left=True, bottom=True), no tick
+          marks, no grid, subtle baseline at alpha=0.3. Clean minimal chrome. -1 for
+          no special whitespace or padding refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Two annotations highlight contrasting patterns (long-range weak vs.
-          local strong). Arc height encoding distance is intuitive. Clear visual narrative.
+        comment: 'Two annotations with arrow pointers create clear narrative: ''Weakest
+          link, longest reach'' points to Alice-Leo long-range weak arc; ''Strongest
+          local bonds'' points to dense center. Degree-based node sizing visually
+          identifies hubs. Color gradient encodes weight strength.'
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +155,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes on horizontal axis, curved arcs above.'
+        comment: 'Correct arc diagram: nodes arranged on horizontal line, curved arcs
+          above, height proportional to distance.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Arc height proportional to node distance, semi-transparent overlapping
-          arcs, readable node labels, color coding by weight — all present.
+        comment: 'All spec features present: nodes, arcs with height proportional
+          to distance, semi-transparent arcs (alpha=0.75), readable node labels, color
+          coding by weight.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions = node indices, Y = arc height (distance×0.4 scale),
-          color+size = edge weight. All 12 nodes and 18 edges shown.
+        comment: Nodes correctly placed at x_positions, arcs correctly drawn as semi-circles,
+          weights correctly encoded via color and line thickness.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'arc-basic · python · seaborn · anyplot.ai'. Legend
-          'Interaction Strength' with 5 ordered categories.
+        comment: Title 'arc-basic · python · seaborn · anyplot.ai' is exact required
+          format. Legend 'Interaction Strength' with 5 labeled strength levels (1·Weak
+          through 5·Intense).
     data_quality:
       score: 15
       max: 15
@@ -170,23 +189,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all arc diagram features: ordered nodes, distance-proportional
-          arc height, weight encoding (color+thickness), overlap transparency, long-range
-          vs short-range contrast.'
+        comment: 'Shows all aspects: short-range connections (adjacent nodes), long-range
+          connections (Alice-Leo spanning 11 positions), all 5 weight levels, dense
+          and sparse regions, variable node degrees.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Character interactions in a story — neutral, plausible, relatable
-          context matching spec's suggested example.
+        comment: Character interaction network from a story — clear, comprehensible,
+          neutral scenario. 12 named characters (Alice through Leo), plausible interaction
+          patterns.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 nodes (within 10–50 range), 18 edges, weights 1–5. Appropriately
-          sized for arc diagram demonstration.
+        comment: 12 nodes (within spec's 10-50 range), 18 edges, weights 1-5 all sensible.
+          Arc heights and positions correctly computed.
     code_quality:
       score: 10
       max: 10
@@ -196,34 +216,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean procedural top-to-bottom structure.
+        comment: 'Clean linear flow: imports → theme tokens → data → arc coordinates
+          → canvas → lineplot → legend → scatterplot → labels → annotations → styling
+          → save. No classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data is hardcoded, no randomness.
+        comment: All data is hardcoded — no random number generation. Fully deterministic
+          output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: All 6 imports (os, matplotlib.pyplot, numpy, pandas, seaborn, LinearSegmentedColormap)
-          are used.
+          are actually used in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI elements. Legend filtering logic
-          is clean and purposeful.
+        comment: Clean Pythonic code. Arc coordinate generation loop is concise. zip(...,
+          strict=True) is a nice touch. Legend filtering idiom is clean. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
-          API.
+          0.13 API used throughout.
     library_mastery:
       score: 7
       max: 10
@@ -233,29 +256,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.lineplot with units+estimator=None for per-unit lines, sns.scatterplot
-          for nodes, sns.despine, sns.set_theme — all idiomatic seaborn patterns.
+        comment: Idiomatic use of sns.lineplot with units=edge_id, estimator=None,
+          hue, and size for multi-arc rendering. sns.scatterplot for nodes. sns.despine
+          for spine removal. -1 because annotation/text calls go to matplotlib directly
+          rather than seaborn equivalents.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn's hue+size multi-encoding in lineplot with ordered categorical
-          hue, and custom legend handle filtering — seaborn-specific differentiators.
+        comment: The units=edge_id + estimator=None pattern in sns.lineplot is a seaborn-distinctive
+          technique for drawing multiple separate lines from a single long-form DataFrame
+          — not easily replicated the same way in matplotlib without explicit grouping.
+          Also uses seaborn's size encoding for line thickness variation.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
+  - minimal-chrome
   - edge-highlighting
