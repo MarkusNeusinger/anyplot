@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:12:31Z'
-updated: '2026-05-30T12:46:42Z'
+updated: '2026-05-30T12:57:11Z'
 generated_by: claude-sonnet
 workflow_run: 26683808510
 issue: 4430
@@ -15,43 +15,41 @@ preview_html_dark: null
 quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented (stable-vs-changer
-    distinction, proportional flows, per-wave node counts, net-change sidebar, chronological
-    layout, opacity for overlap)'
-  - 'Excellent semantic colour mapping using Imprint palette correctly: green=support,
-    red=oppose, grey/muted=neutral with appropriate semantic exception'
-  - sns.desaturate for changer flow colours is a clever seaborn-native design choice
-  - Dual-panel layout (alluvial + net-shift sidebar) communicates both flow pattern
-    and headline story simultaneously
-  - 'Fully theme-adaptive: both renders pass readability check with no dark-on-dark
-    or light-on-light failures'
-  - 'Perfect code quality: flat, deterministic, clean imports, correct canvas + save
-    API'
+  - Semantically correct Imprint palette mapping (positive→green, neutral→muted, negative→ochre→red)
+    applied consistently across all 5 opinion categories
+  - 'Dual-panel composition: alluvial main chart + net-shift sidebar provides clear
+    storytelling'
+  - Bezier flow bands with opacity differentiation (0.58 stable, 0.25 changers) elegantly
+    encodes transition stability
+  - 'Full spec compliance: all required features present including node counts, proportional
+    flows, chronological wave arrangement, and net change highlight'
+  - 'Perfect code quality: KISS structure, deterministic data, clean imports, no over-engineering'
   weaknesses:
-  - Left-side two-line labels for smallest node (Strongly Support n=80) are tightly
-    packed against adjacent labels — consider increasing vertical spacing or reducing
-    to single-line format for nodes shorter than ~8% of total height
-  - Matte-red (#AE3030) as label colour on dark surface is weakest contrast pair;
-    consider bumping to lighter red or using INK_SOFT for right-side n= label on that
-    category in dark mode
-  - Design Excellence ceiling limited by many overlapping cross-category changer flows
-    creating visual noise; reducing alpha on changer flows to 0.25 and lightening
-    desaturated colours further would reduce clutter
+  - Category labels at fontsize=6.5pt are marginal at mobile viewport widths (~400px)
+    — consider 7-8pt
+  - Middle-wave bar labels use color=PAGE_BG (#1A1A17 on dark theme) on dark-colored
+    bars like Strongly Oppose (#AE3030) — contrast is ~2.9:1 which is below WCAG 3:1
+    threshold for bold small text
+  - 'DE-01 not fully publication-ready: wave headers lack visual separation; design
+    is clean but plain compared to FiveThirtyEight-level polish'
+  - 'LM score limited: core alluvial is matplotlib PathPatch/Rectangle; seaborn contributes
+    sns.barplot sidebar, sns.desaturate, sns.despine — meaningful but not the dominant
+    technique'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "alluvial-opinion-flow · python · seaborn · anyplot.ai" in bold dark ink — readable. Wave headers Q1-Q4 2025 in bold dark ink — readable. Left-side category labels in their respective category colours (green, cyan, grey, ochre, red) — all readable on light background. Right-side n= labels in category colours — readable. Interior n= labels in near-black (PAGE_BG) on coloured bars — readable.
-      Data: Five category colours — Strongly Support (#009E73 green), Support (#2ABCCD cyan), Neutral (#6B6A63 muted grey), Oppose (#BD8233 ochre), Strongly Oppose (#AE3030 matte red). Stable flows at alpha=0.58 in category colours; changer flows at alpha=0.35 in desaturated category colours. Net-change sidebar uses seaborn barplot with matching category colours.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "alluvial-opinion-flow · python · seaborn · anyplot.ai" bold, dark, readable (~75% width, appropriate for title length). Wave headers Q1–Q4 2025 bold dark text above bars. Left-side category labels (6.5pt) readable at full canvas size but borderline small. Footnote in italic muted text at bottom, readable.
+      Data: 5-category alluvial with stacked bars and bezier flow bands. Colors: Strongly Support=brand green #009E73, Support=cyan #2ABCCD, Neutral=muted gray (INK_MUTED), Oppose=ochre #BD8233, Strongly Oppose=matte red #AE3030. Stable flows at alpha=0.58, changer flows at 0.25 — distinction clearly visible. Net shift sidebar on right with correct category colors.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in near-white (#F0EFE8) — readable. Wave headers in #F0EFE8 — readable. Left-side category labels in category colours (green, cyan, light-grey, ochre, red) — all readable on dark surface. Right-side n= labels in category colours — readable. Interior n= labels in near-black (#1A1A17) on coloured bars — readable against all five category colours. No dark-on-dark failures observed.
-      Data: Imprint data colours are identical to light render — green, cyan, grey, ochre, red. Chrome-only elements flip. Sidebar bars use same category colours, clearly visible on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title, wave headers, footnote all render in light cream/off-white text — clearly readable against dark background. Sidebar x-tick labels in INK_SOFT (#B8B7B0) — visible. Left-side category labels use category colors (Strongly Oppose uses adjusted #E06060 for better contrast on dark, Neutral uses #A8A79F muted).
+      Data: Colors identical to light render — brand green, cyan, muted gray, ochre, matte red all unchanged. Stable vs. changer opacity distinction preserved. Middle-wave bar labels use PAGE_BG (#1A1A17) on colored bars — readable for most bars but contrast on dark-red Strongly Oppose bars (~2.9:1) is slightly below WCAG 3:1.
+      Legibility verdict: PASS — all text readable; no dark-on-dark failure observed; minor concern on Strongly Oppose bar label contrast in dark mode
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,48 +57,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes. Matte-red labels on dark surface
-          have slightly lower contrast but remain legible.
+        comment: All font sizes explicitly set; readable in both themes at canvas
+          resolution; 6.5pt category labels are borderline at mobile viewport (~400px)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Left-side two-line labels tightly packed but no actual overlap in
-          either render.
+        comment: No overlapping elements; category labels, wave headers, node counts,
+          and flow bands all cleanly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All flow bands, nodes, and sidebar bars clearly visible. Stable-vs-changer
-          opacity distinction works well in both themes.
+        comment: Flow bands and bar nodes clearly visible; stable flow opacity 0.58
+          and changer opacity 0.25 well-calibrated for readability
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic Imprint palette with strong perceptual separation. CVD-safe.
+        comment: CVD-safe Imprint palette with semantic mapping; no red-green as sole
+          distinguishing signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, gate passed. Good margins; dual-panel proportions
-          well-balanced.
+        comment: Canvas gate passed (3200x1800); 5:1 gridspec ratio for alluvial vs
+          sidebar well-proportioned; margins adequate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. Wave headers and net-shift title are descriptive.
+        comment: Custom diagram type — no traditional axis labels needed; wave headers
+          provide column labels; footnote provides data context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first. Semantic exception correctly applied. Backgrounds
-          correct in both themes.
+        comment: 'Imprint palette with valid semantic exception (positive→green, neutral→muted,
+          negative→ochre/red); backgrounds #FAF8F1/#1A1A17 correct; data colors identical
+          across themes'
     design_excellence:
       score: 13
       max: 20
@@ -110,24 +111,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Custom semantic palette, dual-panel layout, and stable-vs-changer
-          opacity show clear design intent. Slight gap: typography hierarchy functional
-          but not exceptional.'
+        comment: Thoughtful semantic color scheme and dual-panel composition; above
+          configured-default level but not quite FiveThirtyEight-level polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All spines removed from alluvial panel; subtle grid on sidebar only;
-          clean backgrounds. Minor clutter from overlapping changer flows.
+        comment: All spines removed from main panel; subtle grid on sidebar; generous
+          whitespace; good refinement with room for improvement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Drift from skeptical to supportive is legible. Net-change sidebar
-          directly communicates headline story. Missing directional annotation or
-          callout.
+        comment: Net shift sidebar directly shows key finding; semantic color mapping
+          (positive=green, negative=red) guides the eye; stable/changer opacity distinction
+          is insightful
     spec_compliance:
       score: 15
       max: 15
@@ -137,55 +137,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey-style flow diagram with stacked nodes and
-          Bezier flow bands.
+        comment: Correct alluvial/Sankey-style diagram with bezier flow bands connecting
+          opinion categories across waves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: consistent colours, proportional
-          flows, n= totals, stable-vs-changer distinction, net flows, chronological
-          order, transparency.'
+        comment: 'All spec features present: consistent colors, proportional flows,
+          node labels, stable vs. changer distinction, net flow highlight, chronological
+          arrangement, transparency'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Wave columns correctly ordered Q1-Q4 2025; proportional node heights;
-          Bezier bands correctly connect categories.
+        comment: Waves left-to-right, categories correctly stacked, flow widths proportional
+          to respondent counts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is alluvial-opinion-flow · python · seaborn · anyplot.ai. Categories
-          labelled directly on diagram.
+        comment: Title 'alluvial-opinion-flow · python · seaborn · anyplot.ai' correct;
+          direct bar labels replace legend appropriately
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all required aspects: multi-wave alluvial, node counts, stable-vs-changer
-          distinction, net-change quantification.'
+        comment: 'Shows all alluvial features: 5 categories, 4 waves, stable vs. changing
+          flows, net change per category, gradual opinion drift'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: AI diagnostics policy survey, 1000 respondents, 4 quarterly waves
-          — realistic and politically neutral.
+        comment: AI-assisted diagnostics policy survey is neutral, technology-domain,
+          realistic scenario with plausible opinion shift as clinical evidence grows
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 respondents per wave, balanced shift (+250/-250), internally
-          consistent flow matrices.
+        comment: 1000 respondents, 4 quarterly waves, internally consistent flow transitions
+          summing to correct wave totals
     code_quality:
       score: 10
       max: 10
@@ -195,66 +195,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Linear Imports→Data→Plot→Save structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic.
+        comment: All data hardcoded deterministically; no random number generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All six imports are used.
+        comment: os, matplotlib.patches, matplotlib.pyplot, numpy, pandas, seaborn,
+          matplotlib.path — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom alluvial logic is clear and well-structured; no fake UI.
+        comment: Well-organized; appropriate complexity for alluvial diagram; sns.desaturate
+          usage is elegant; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, dpi=400, no bbox_inches, current API.
+        comment: Saves as plot-{THEME}.png; no deprecated API; bbox_inches correctly
+          omitted
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.set_theme with full rc dict; sns.despine; sns.barplot with hue+palette
-          (correct 0.14+ pattern); sns.desaturate for changer colours.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.desaturate used creatively for stable-vs-changer distinction.
-          Main visual mass is matplotlib-native (necessary — seaborn has no native
-          alluvial type).
+        comment: Uses sns.barplot with hue+palette, sns.despine, sns.set_theme with
+          rc params; core alluvial is matplotlib since seaborn has no native alluvial
+          support
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: sns.desaturate() for changer color variants is a genuine seaborn-specific
+          feature; sidebar uses idiomatic sns.barplot with hue; main chart is matplotlib-based
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - bezier-curves
   - patches
-  - subplots
   - annotations
   patterns:
-  - data-generation
-  - explicit-figure
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
+  - explicit-figure
   dataprep:
   - normalization
   styling:
   - alpha-blending
-  - edge-highlighting
   - minimal-chrome
