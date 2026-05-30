@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-30
@@ -26,16 +26,16 @@ balmer_transitions = [(3, 2, "Hα 656 nm"), (4, 2, "Hβ 486 nm"), (5, 2, "Hγ 43
 paschen_transitions = [(4, 3, "Pa-α 1875 nm"), (5, 3, "Pa-β 1282 nm"), (6, 3, "Pa-γ 1094 nm")]
 
 level_x_start = 1.0
-level_x_end = 9.2
+level_x_end = 9.0
 lyman_x_positions = [2.0, 2.7, 3.4]
 balmer_x_positions = [4.5, 5.2, 5.9, 6.6]
 paschen_x_positions = [7.5, 8.1, 8.7]
 
 # Colors: level lines → INK_MUTED (theme-adaptive), ionization → INK (theme-adaptive)
 # Transitions: Imprint palette with spectral semantic mapping
-#   Lyman UV (< 400 nm): lavender, rose, blue (violet/purple region)
-#   Balmer visible (400–700 nm): red, cyan, blue, violet (visible spectrum)
-#   Paschen IR (> 800 nm): ochre, amber, lime (warm region)
+#   Lyman UV (< 400 nm): lavender, rose, blue
+#   Balmer visible (400–700 nm): green (#009E73 brand anchor for focal H-alpha), cyan, blue, violet
+#   Paschen IR (> 800 nm): ochre, amber, lime
 all_colors = (
     INK_MUTED,
     INK_MUTED,
@@ -47,10 +47,10 @@ all_colors = (
     "#C475FD",
     "#954477",
     "#4467A3",  # Lyman: lavender, rose, blue
-    "#AE3030",
+    "#009E73",
     "#2ABCCD",
     "#4467A3",
-    "#C475FD",  # Balmer: red, cyan, blue, violet
+    "#C475FD",  # Balmer: green (H-alpha focal), cyan, blue, violet
     "#BD8233",
     "#DDCC77",
     "#99B314",  # Paschen: ochre, amber, lime
@@ -67,7 +67,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     colors=all_colors,
     title_font_size=title_fontsize,
-    label_font_size=56,
+    label_font_size=48,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -95,7 +95,7 @@ chart = pygal.XY(
     margin_bottom=200,
     margin_top=80,
     range=(0, 11),
-    xrange=(0, 10.0),
+    xrange=(0, 9.5),
     truncate_legend=-1,
     tooltip_border_radius=8,
     print_values=False,
@@ -135,10 +135,10 @@ chart.add(
     stroke_style={"width": 3, "dasharray": "18, 10"},
 )
 
-# Lyman series (UV transitions to n=1)
+# Lyman series (UV transitions to n=1) — emission downward: large dot at destination (n=1), small at origin
 lyman_widths = [9, 8, 7]
-lyman_lower_nodes = [18, 15, 12]
-lyman_upper_nodes = [9, 8, 7]
+lyman_lower_nodes = [22, 20, 18]  # destination (n=1, lower energy) — large
+lyman_upper_nodes = [5, 5, 5]  # origin (upper level) — small
 for i, (upper, lower, label) in enumerate(lyman_transitions):
     x = lyman_x_positions[i]
     chart.add(
@@ -150,10 +150,11 @@ for i, (upper, lower, label) in enumerate(lyman_transitions):
         stroke_style={"width": lyman_widths[i]},
     )
 
-# Balmer series (visible transitions to n=2) — Hα is the focal point
+# Balmer series (visible transitions to n=2) — emission downward: large dot at destination (n=2), small at origin
+# Hα is focal point: brand green, widest stroke, largest destination dot
 balmer_widths = [11, 9, 7, 6]
-balmer_lower_nodes = [20, 15, 12, 10]
-balmer_upper_nodes = [9, 8, 7, 6]
+balmer_lower_nodes = [28, 22, 18, 15]  # destination (n=2) — large; Hα biggest
+balmer_upper_nodes = [5, 5, 5, 5]  # origin (upper level) — small
 for i, (upper, lower, label) in enumerate(balmer_transitions):
     x = balmer_x_positions[i]
     chart.add(
@@ -165,10 +166,10 @@ for i, (upper, lower, label) in enumerate(balmer_transitions):
         stroke_style={"width": balmer_widths[i]},
     )
 
-# Paschen series (IR transitions to n=3)
+# Paschen series (IR transitions to n=3) — emission downward: large dot at destination (n=3), small at origin
 paschen_widths = [9, 7, 6]
-paschen_lower_nodes = [16, 13, 10]
-paschen_upper_nodes = [8, 7, 6]
+paschen_lower_nodes = [22, 18, 15]  # destination (n=3) — large
+paschen_upper_nodes = [5, 5, 5]  # origin (upper level) — small
 for i, (upper, lower, label) in enumerate(paschen_transitions):
     x = paschen_x_positions[i]
     chart.add(
