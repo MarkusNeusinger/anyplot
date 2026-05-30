@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-30
@@ -56,8 +56,8 @@ circle_pts = [(float(center + radius * np.cos(t)), float(radius * np.sin(t))) fo
 point_a = (float(sigma_x), float(tau_xy))
 point_b = (float(sigma_y), float(-tau_xy))
 
-# 2θp angle arc — larger radius fraction for clear visibility against the circle
-arc_r = radius * 0.58
+# 2θp angle arc — smaller radius keeps arc fully inside circle, improves dark-theme visibility
+arc_r = radius * 0.45
 arc_angles = np.linspace(0, np.radians(theta_p2), 50)
 arc_pts = [(float(center + arc_r * np.cos(a)), float(arc_r * np.sin(a))) for a in arc_angles]
 
@@ -109,7 +109,7 @@ chart = pygal.XY(
     y_title="Shear Stress τ (MPa)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
+    legend_at_bottom_columns=2,
     dots_size=5,
     stroke=True,
     show_x_guides=True,
@@ -117,7 +117,7 @@ chart = pygal.XY(
     truncate_legend=-1,
     range=(y_min, y_max),
     xrange=(x_min, x_max),
-    x_value_formatter=lambda x: f"{x:.0f} MPa",
+    x_value_formatter=lambda x: f"{x:.0f}",
     y_value_formatter=lambda y: f"{y:.0f} MPa",
     print_values=False,
     js=[],
@@ -125,7 +125,7 @@ chart = pygal.XY(
 
 # Reference lines through center (neutral structural layer — drawn behind data)
 chart.add(
-    f"Reference axes (σ_c = {center:.0f} MPa)",
+    "Reference axes",
     ref_lines,
     stroke=True,
     dots_size=0,
@@ -171,8 +171,8 @@ chart.add(
     dots_size=16,
 )
 
-# 2θp angle arc — bold stroke, larger radius for strong visibility
-chart.add(f"2θp = {theta_p2:.1f}°", arc_pts, stroke=True, dots_size=0, stroke_style={"width": 9})
+# 2θp angle arc — bold stroke, higher width for dark-theme contrast
+chart.add(f"2θp = {theta_p2:.1f}°", arc_pts, stroke=True, dots_size=0, stroke_style={"width": 12})
 
 # Save — theme-suffixed filenames required by pipeline
 chart.render_to_png(f"plot-{THEME}.png")
