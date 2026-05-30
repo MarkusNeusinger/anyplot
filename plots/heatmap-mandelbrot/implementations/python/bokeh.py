@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-30
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import BasicTicker, ColorBar, LogColorMapper, NumeralTickFormatter
+from bokeh.models import BasicTicker, ColorBar, LinearColorMapper, NumeralTickFormatter
 from bokeh.plotting import figure
 from PIL import Image
 from selenium import webdriver
@@ -71,7 +71,9 @@ for i in range(max_iter):
 iteration_count[~escaped] = np.nan
 
 valid = ~np.isnan(iteration_count)
-low_val = float(np.nanmin(iteration_count[valid])) if np.any(valid) else 0.0
+# Clip low to 5th percentile so the full palette spreads across the visible
+# gradient range instead of being compressed near the fast-escape floor.
+low_val = float(np.percentile(iteration_count[valid], 5)) if np.any(valid) else 0.0
 high_val = float(np.nanmax(iteration_count[valid])) if np.any(valid) else float(max_iter)
 
 # Title — 48 chars, within 67-char baseline, no fontsize scaling needed
@@ -95,9 +97,9 @@ p = figure(
     min_border_right=220,
 )
 
-# LogColorMapper emphasizes boundary detail — log scale spreads escape-count
-# gradient across the full Imprint sequential palette; interior (NaN) → black
-mapper = LogColorMapper(palette=ANYPLOT_SEQ256, low=max(low_val, 0.5), high=high_val, nan_color="#000000")
+# LinearColorMapper with 5th-percentile low clips the flat fast-escape floor,
+# spreading the gradient evenly across the visible range; interior (NaN) → black
+mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=low_val, high=high_val, nan_color="#000000")
 
 p.image(image=[iteration_count], x=x_min, y=y_min, dw=x_max - x_min, dh=y_max - y_min, color_mapper=mapper)
 
@@ -109,9 +111,9 @@ color_bar = ColorBar(
     label_standoff=20,
     width=55,
     title="Escape Iterations",
-    title_text_font_size="30pt",
+    title_text_font_size="34pt",
     title_text_color=INK,
-    major_label_text_font_size="30pt",
+    major_label_text_font_size="34pt",
     major_label_text_color=INK_SOFT,
     title_standoff=24,
     border_line_color=None,
