@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-30
@@ -42,7 +42,10 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — semantic spectral mapping (UV=lavender, visible=matte red)
 LYMAN_COLOR = "#C475FD"  # Imprint position 2 — lavender → UV spectral region
 BALMER_COLOR = "#AE3030"  # Imprint position 5 — matte red → visible light anchor
+IONIZATION_COLOR = "#009E73"  # Imprint position 1 — brand green for ionization limit
 SERIES_COLORS = {"Lyman (UV)": LYMAN_COLOR, "Balmer (Visible)": BALMER_COLOR}
+# Dark theme: Balmer labels over dark brownish-red band have ~2.7:1 contrast; use INK_SOFT instead
+BALMER_LABEL_COLOR = BALMER_COLOR if THEME == "light" else INK_SOFT
 
 # Data — Hydrogen atom energy levels (En = -13.6/n² eV)
 n_values = np.arange(1, 7)
@@ -59,7 +62,7 @@ levels = pd.DataFrame({"y": vis_e, "x_start": 0.15, "x_end": 0.78})
 endpoints = pd.DataFrame({"x": [0.15] * 6 + [0.78] * 6, "y": list(vis_e) * 2})
 
 # Right-side labels — slight vertical nudge for n=5,6 to prevent overlap
-label_y = list(vis_e[:4]) + [vis_e[4] + 0.05, vis_e[5] + 0.12]
+label_y = list(vis_e[:4]) + [vis_e[4] + 0.08, vis_e[5] + 0.20]
 labels_df = pd.DataFrame(
     {"y": label_y, "label": [f"n = {n}  ({e:.2f} eV)" for n, e in zip(n_values, energies, strict=True)], "x": 0.91}
 )
@@ -128,13 +131,15 @@ plot = (
     + geom_segment(data=levels, mapping=aes(x="x_start", xend="x_end", y="y", yend="y"), color=INK_SOFT, size=1.8)
     # Endpoint dots for level lines
     + geom_point(data=endpoints, mapping=aes(x="x", y="y"), color=INK_SOFT, size=2.5)
-    # Ionization limit (dashed reference line + label)
-    + annotate("segment", x=0.15, xend=0.78, y=ion_y, yend=ion_y, color=INK_MUTED, size=1.0, linetype="dashed")
-    + annotate("text", x=0.91, y=ion_label_y, label="Ionization\nlimit (0 eV)", size=3, ha="left", color=INK_MUTED)
+    # Ionization limit (dashed reference line + label) — brand green structural marker
+    + annotate("segment", x=0.15, xend=0.78, y=ion_y, yend=ion_y, color=IONIZATION_COLOR, size=1.2, linetype="dashed")
+    + annotate(
+        "text", x=0.91, y=ion_label_y, label="Ionization\nlimit (0 eV)", size=3, ha="left", color=IONIZATION_COLOR
+    )
     # Connector lines from level endpoints to spread labels
     + geom_segment(data=connectors, mapping=aes(x="x1", xend="x2", y="y1", yend="y2"), color=INK_MUTED, size=0.4)
     # Ionization connector
-    + annotate("segment", x=0.79, xend=0.89, y=ion_y, yend=ion_label_y, color=INK_MUTED, size=0.4)
+    + annotate("segment", x=0.79, xend=0.89, y=ion_y, yend=ion_label_y, color=IONIZATION_COLOR, size=0.4)
     # Level labels (right side, primary ink)
     + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=3, ha="left", color=INK)
     # Transition arrows (emission = downward, colored by series via scale_color_manual)
@@ -144,9 +149,20 @@ plot = (
         size=1.2,
         arrow=arrow(length=0.08, type="closed"),
     )
-    # Transition wavelength labels (series-matched color)
+    # Transition wavelength labels — split by series for theme-adaptive Balmer contrast
     + geom_text(
-        data=transitions, mapping=aes(x="x_pos", y="label_y", label="label", color="series"), size=2.8, nudge_x=-0.045
+        data=transitions[transitions["series"] == "Lyman (UV)"],
+        mapping=aes(x="x_pos", y="label_y", label="label"),
+        size=2.8,
+        nudge_x=-0.045,
+        color=LYMAN_COLOR,
+    )
+    + geom_text(
+        data=transitions[transitions["series"] == "Balmer (Visible)"],
+        mapping=aes(x="x_pos", y="label_y", label="label"),
+        size=2.8,
+        nudge_x=-0.045,
+        color=BALMER_LABEL_COLOR,
     )
     # Series group labels at the top (inline legend, series-matched color)
     + geom_text(data=series_labels, mapping=aes(x="x", y="y", label="label", color="series"), size=3.5)
