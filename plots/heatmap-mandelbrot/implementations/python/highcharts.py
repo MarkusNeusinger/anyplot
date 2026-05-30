@@ -1,19 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-Library: highcharts unknown | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-03
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-30
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Data - Mandelbrot set on the complex plane
 x_min, x_max = -2.5, 1.0
@@ -26,7 +36,7 @@ imag = np.linspace(y_min, y_max, ny)
 col_size = round((x_max - x_min) / nx * 1.01, 6)
 row_size = round((y_max - y_min) / ny * 1.01, 6)
 
-# Vectorized Mandelbrot iteration with smooth coloring
+# Vectorized Mandelbrot iteration with smooth coloring (log2-based normalized iteration count)
 c = real[np.newaxis, :] + 1j * imag[:, np.newaxis]
 z = np.zeros_like(c)
 smooth_iter = np.full((ny, nx), -1.0)
@@ -42,7 +52,7 @@ for i in range(max_iter):
         smooth_iter[escaped] = np.maximum(i + 1.0 - smooth, 0.0)
     mask &= ~escaped
 
-# Log-scale iteration counts for better color distribution across the boundary
+# Log-scale transformation for better color distribution across the fractal boundary
 exterior = smooth_iter >= 0
 smooth_iter[exterior] = np.log(smooth_iter[exterior] + 1)
 max_log = float(np.log(max_iter + 1))
@@ -56,85 +66,69 @@ heatmap_data = [
     for xi in range(nx)
 ]
 
-# Layout - preserve complex plane aspect ratio (3.5 : 2.5)
-chart_w, chart_h = 4800, 2700
-m_top, m_bottom, m_left = 120, 160, 220
-plot_h = chart_h - m_top - m_bottom
-data_ratio = (x_max - x_min) / (y_max - y_min)
-plot_w = int(plot_h * data_ratio)
-m_right = chart_w - plot_w - m_left
+# Canvas - 3200x1800 (landscape, natural for the 7:5 complex plane proportion)
+chart_w, chart_h = 3200, 1800
+title = "heatmap-mandelbrot · python · highcharts · anyplot.ai"
 
-# Chart configuration
 chart_options = {
     "chart": {
         "type": "heatmap",
         "width": chart_w,
         "height": chart_h,
-        "backgroundColor": "#0a0a1a",
-        "marginTop": m_top,
-        "marginBottom": m_bottom,
-        "marginLeft": m_left,
-        "marginRight": m_right,
+        "backgroundColor": PAGE_BG,
+        "marginTop": 80,
+        "marginBottom": 160,
+        "marginLeft": 160,
+        "marginRight": 240,
         "style": {"fontFamily": "'Segoe UI', Roboto, Arial, sans-serif"},
         "plotBorderWidth": 0,
     },
-    "title": {
-        "text": "heatmap-mandelbrot \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "48px", "fontWeight": "600", "color": "#e0e0f0"},
-        "y": 40,
-    },
+    "title": {"text": title, "style": {"fontSize": "66px", "fontWeight": "600", "color": INK}, "y": 52},
     "xAxis": {
-        "title": {"text": "Real Axis (Re)", "style": {"fontSize": "30px", "color": "#b0b0c8"}, "margin": 20},
-        "labels": {"style": {"fontSize": "24px", "color": "#8888a8"}},
+        "title": {"text": "Real Axis (Re)", "style": {"fontSize": "56px", "color": INK}, "margin": 16},
+        "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
         "min": x_min,
         "max": x_max,
         "startOnTick": False,
         "endOnTick": False,
         "tickInterval": 0.5,
-        "lineColor": "#333355",
-        "tickColor": "#333355",
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
         "gridLineWidth": 0,
     },
     "yAxis": {
-        "title": {"text": "Imaginary Axis (Im)", "style": {"fontSize": "30px", "color": "#b0b0c8"}, "margin": 30},
-        "labels": {"style": {"fontSize": "24px", "color": "#8888a8"}, "format": "{value}i"},
+        "title": {"text": "Imaginary Axis (Im)", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+        "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "format": "{value}i"},
         "min": y_min,
         "max": y_max,
         "startOnTick": False,
         "endOnTick": False,
         "tickInterval": 0.5,
-        "lineColor": "#333355",
-        "tickColor": "#333355",
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
         "gridLineWidth": 0,
     },
     "colorAxis": {
         "min": 0,
         "max": max_log,
-        "stops": [
-            [0, "#0d0887"],
-            [0.13, "#46039f"],
-            [0.25, "#7201a8"],
-            [0.38, "#9c179e"],
-            [0.50, "#bd3786"],
-            [0.63, "#d8576b"],
-            [0.75, "#ed7953"],
-            [0.88, "#fbae52"],
-            [1.0, "#f0f921"],
-        ],
+        "stops": [[0, "#009E73"], [1, "#4467A3"]],
         "tickPositions": [round(float(np.log(v + 1)), 2) for v in [0, 5, 10, 20, 50, 100]],
-        "labels": {"style": {"fontSize": "22px", "color": "#8888a8"}},
+        "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}},
     },
     "legend": {
-        "title": {"text": "Escape Iterations", "style": {"fontSize": "26px", "fontWeight": "600", "color": "#b0b0c8"}},
+        "title": {"text": "Escape Iterations", "style": {"fontSize": "40px", "fontWeight": "600", "color": INK}},
         "align": "right",
         "layout": "vertical",
         "verticalAlign": "middle",
         "symbolHeight": 1200,
-        "symbolWidth": 36,
-        "itemStyle": {"fontSize": "22px", "color": "#8888a8"},
-        "x": -80,
+        "symbolWidth": 28,
+        "itemStyle": {"fontSize": "36px", "color": INK_SOFT},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
+        "x": -10,
     },
-    "tooltip": {"style": {"fontSize": "24px"}, "useHTML": True},
+    "tooltip": {"style": {"fontSize": "36px"}, "useHTML": True},
     "credits": {"enabled": False},
     "series": [
         {
@@ -143,14 +137,14 @@ chart_options = {
             "data": heatmap_data,
             "colsize": col_size,
             "rowsize": row_size,
-            "nullColor": "#000000",
+            "nullColor": "#0a0a0a",
             "borderWidth": 0,
             "turboThreshold": 0,
         }
     ],
 }
 
-# Download Highcharts JS and heatmap module
+# Download Highcharts JS and heatmap module inline (required for headless Chrome)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
 heatmap_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/heatmap.js"
 
@@ -162,7 +156,6 @@ with urllib.request.urlopen(heatmap_url, timeout=30) as response:
 
 options_json = json.dumps(chart_options)
 
-# HTML with inline scripts and custom formatters
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -170,7 +163,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0; padding:0; overflow:hidden; background:#0a0a1a;">
+<body style="margin:0; padding:0; overflow:hidden; background:{PAGE_BG};">
     <div id="container" style="width:{chart_w}px; height:{chart_h}px;"></div>
     <script>
         var opts = {options_json};
@@ -192,30 +185,34 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take screenshot using headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.page_load_strategy = "eager"
 chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2840")
-chrome_options.add_argument("--force-device-scale-factor=1")
 chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(4800, 2840)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(15)
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
