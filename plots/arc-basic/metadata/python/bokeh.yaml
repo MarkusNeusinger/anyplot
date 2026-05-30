@@ -1,67 +1,58 @@
 library: bokeh
+language: python
 specification_id: arc-basic
 created: '2025-12-23T08:49:26Z'
-updated: '2026-02-23T21:47:09Z'
-generated_by: claude-opus-4-6
-workflow_run: 20455962917
-issue: 0
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/arc-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/arc-basic/bokeh/plot.html
+updated: '2026-05-30T00:59:30Z'
+generated_by: claude-sonnet
+workflow_run: 26669517118
+issue: 991
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-dark.html
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - hover-tooltips
-  - custom-legend
-  - annotations
-  - html-export
-  patterns:
-  - columndatasource
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
 review:
   strengths:
-  - Cohesive monochromatic blue palette with intentional color hierarchy (darker =
-    more connected)
-  - Data-driven node sizing (weighted degree) creates clear visual hierarchy with
-    Alice as focal point
-  - 'Effective use of Bokeh-specific features: HoverTool for arcs and nodes, native
-    bezier glyph, dual PNG/HTML output'
-  - 'Clean minimal chrome: no axes, no grid, subtle background tint, professional
-    appearance'
-  - 'Excellent data choice: character interactions in a story chapter is a canonical
-    arc diagram use case'
-  - Semi-transparent arcs allow overlapping connections to remain distinguishable
+  - Triple encoding on arc weight (color + line width + alpha) demonstrates thoughtful
+    design
+  - Node size encodes weighted degree, making hub character (Alice) immediately visible
+  - Imprint sequential palette applied correctly from brand green (#009E73) to blue
+    (#4467A3) for ordered weight dimension
+  - Both light and dark themes render correctly with proper chrome token adaptation
+  - Dual HTML+PNG output leverages bokeh interactive capabilities (HoverTool with
+    connection details)
+  - 'Full spec compliance: arc height proportional to node distance, semi-transparent
+    arcs, readable node labels'
+  - Clean KISS structure with fully deterministic data, all font sizes explicitly
+    set
+  - Bezier curves via p.bezier() and CDP setDeviceMetricsOverride for exact viewport
+    sizing show bokeh mastery
   weaknesses:
-  - Legend positioned in far upper-right corner appears slightly small and detached
-    from the main plot area
-  - Some Brief weight arcs are quite faint and may be hard to distinguish at smaller
-    viewing sizes
-  - Bottom portion of canvas has unused whitespace below the node labels
-  image_description: 'The plot displays a basic arc diagram with 8 character nodes
-    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry) arranged horizontally along
-    a baseline. Curved bezier arcs connect nodes above the baseline, with arc height
-    proportional to the distance between connected nodes. Three shades of blue encode
-    connection frequency: dark navy (#1A3F5C) for "Frequent" interactions, medium
-    blue (#306998) for "Moderate", and light blue (#93B5CF) for "Brief". Node sizes
-    vary by weighted degree — Alice is the largest and darkest node, clearly identifiable
-    as the hub character. A long-range arc from Alice to Henry is the tallest and
-    most prominent. A subtle off-white background (#F7F9FB) with no visible axes or
-    grid lines creates a clean look. The title "arc-basic · bokeh · pyplots.ai" appears
-    in dark blue at the upper left with an italic subtitle "Character Interaction
-    Frequency in Chapter 1" below. A three-item legend (Frequent, Moderate, Brief)
-    sits in the upper right corner.'
+  - Node labels (26pt) and legend text (30pt) are slightly below the recommended 34pt
+    for elements at 3200px canvas — increase to 34pt to ensure better readability
+    when scaled to mobile width
+  - 'DE-01: Design is above generic defaults but not yet publication-level — consider
+    adding a baseline axis line under nodes and more distinct node stroke contrast'
+  - 'LM-01: Creating a separate ColumnDataSource per arc is slightly non-idiomatic
+    — a single concatenated CDSwith nan-separated paths would be more efficient for
+    larger graphs'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white
+      Chrome: Title "arc-basic · python · bokeh · anyplot.ai" at top-left in large bold dark text, clearly readable; subtitle "Character Interaction Frequency · Chapter 1" centered in italic mid-weight text; node labels (Alice through Henry) below baseline in dark ink — all readable
+      Data: 8 nodes arranged along horizontal baseline with circular markers sized by weighted degree (Alice and Henry largest as hubs); 12 bezier arcs above the baseline colored via imprint_seq ramp: Brief = #009E73 (brand green), Moderate = #22838B (mid-point of ramp), Frequent = #4467A3 (blue); arc line width and alpha increase with weight (triple encoding); legend at top-right shows Frequent/Moderate/Brief with correct colors
+      Legibility verdict: PASS — all text clearly readable against light background, no dark-on-light contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, clearly not pure black
+      Chrome: Title in light (#F0EFE8) text clearly visible against dark background; subtitle in muted light text visible; node labels in light ink below baseline — all readable; legend background uses elevated dark (#242420) with light border and light label text
+      Data: Arc colors identical to light render — #009E73 (Brief), #22838B (Moderate), #4467A3 (Frequent); node markers same green-to-blue gradient; brand green #009E73 clearly visible against dark background
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text is light-colored against the near-black background; a very thin border appears at the canvas edges from Selenium capture but no content is clipped
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -69,67 +60,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 32pt, subtitle 22pt, labels
-          20pt, legend 20pt). Legend text in corner slightly small.
+        comment: All sizes explicitly set; title 50pt, subtitle 26pt, node labels
+          26pt, legend 30pt; all readable in both themes but node labels and legend
+          slightly below recommended 34pt
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or visual elements. Node labels well-spaced.
+        comment: 8 nodes evenly spaced, no label overlap; legend does not overlap
+          data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes and arcs visible. Brief-weight arcs somewhat faint but distinguishable.
-          Smallest nodes still visible.
+        comment: Arcs visible with line widths 6.5-11.5px and alpha 0.70-0.90; nodes
+          sized 28-56px by weighted degree
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-teal-blue ramp distinguishable; redundant encoding (width +
+          alpha) aids CVD users
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Monochromatic blue palette relies on luminance differences, fully
-          colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good horizontal utilization. Some wasted vertical space below baseline.
-          Legend slightly detached in corner.
+        comment: Arc diagram fills canvas well; arcs span full width; legend well-placed
+          at top-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format with descriptive subtitle. Node labels serve
-          as axis for this chart type.
+        comment: No traditional axes (correct for arc diagram); node labels serve
+          as identifiers; subtitle adds context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brief=#009E73, Moderate=#22838B (imprint_seq midpoint), Frequent=#4467A3;
+          sequential palette correct for ordinal weight data; backgrounds #FAF8F1/#1A1A17;
+          chrome adapts correctly in both themes'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom monochromatic blue palette, intentional hierarchy, data-driven
-          node sizing. Clearly above defaults.
+        comment: 'Above generic defaults: triple encoding (color+width+alpha) and
+          node-size-as-degree are intentional design choices; not yet FiveThirtyEight-level
+          polish'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes hidden, grid hidden, outline removed, subtle background tint.
-          Nearly perfect minimal chrome.
+        comment: No axes/grid (appropriate), alpha blending, node edge with page-color,
+          elevated legend background — good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: Alice as hub through size and color. Arc
-          properties encode weight. Subtitle provides narrative context.'
+        comment: Alice visually prominent as hub; Alice-Henry long-range Frequent
+          arc creates clear focal point; weight hierarchy guides eye
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct arc diagram with nodes along horizontal line and curved arcs
-          above.
+        comment: 'Correct arc diagram: nodes on horizontal line, bezier arcs above,
+          height proportional to distance'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: arcs proportional to distance, semi-transparent,
-          color-coded by weight.'
+        comment: Arc height proportional to distance, semi-transparent arcs, readable
+          node labels, color-coded by weight, thickness by weight
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions linearly spaced, arc heights correctly proportional to
-          node distance.
+        comment: Nodes correctly positioned, connections shown as arcs, weights map
+          to visual properties
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend with Frequent/Moderate/Brief labels
-          matches data.
+        comment: Title is 'arc-basic · python · bokeh · anyplot.ai'; legend shows
+          Frequent/Moderate/Brief with correct colors
     data_quality:
       score: 15
       max: 15
@@ -171,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows short/long range arcs, all weight levels, hub vs peripheral
-          nodes. 12 edges across 8 nodes.
+        comment: 8 nodes, 12 edges, mix of all weight levels, short and long range
+          connections, hub node (Alice)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Character interactions in a story chapter — real, comprehensible,
-          neutral scenario.
+        comment: Character interactions in a story chapter — realistic scenario with
+          real names and plausible frequency patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 nodes appropriate for readability. Weights 1-3 simple and clear.
-          12 edges show patterns without overcrowding.
+        comment: 8 characters appropriate for chapter; interaction frequencies and
+          hub-spoke pattern realistic for protagonist-driven narrative
     code_quality:
       score: 10
       max: 10
@@ -196,34 +198,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, figure, arcs, nodes, labels, legend,
-          save. No functions or classes.'
+        comment: 'Linear: imports → theme tokens → data → figure → arcs → nodes →
+          labels → legend → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data (hardcoded nodes and edges).
+        comment: 'Fully deterministic: hardcoded edges, np.linspace for positions,
+          no randomness'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting.'
+        comment: 'All imports used: os, time, pathlib, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, selenium, PIL'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with good use of dictionaries for weight-based
-          styling.
+        comment: Clean Pythonic code; HoverTool is native bokeh interactivity (not
+          fake); PIL normalization is documented workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and plot.html via save. Current
-          Bokeh 3.x API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly; no deprecated
+          API
     library_mastery:
       score: 8
       max: 10
@@ -233,13 +237,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Bokeh usage: ColumnDataSource, figure, bezier, scatter,
-          Label, Legend. Separate CDS per arc slightly suboptimal.'
+        comment: Uses p.bezier(), ColumnDataSource, HoverTool, Legend/LegendItem,
+          Label — idiomatic; separate CDS per arc is slightly non-idiomatic for larger
+          datasets
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool for arc and node tooltips, native bezier glyph, HTML export
-          — all distinctively Bokeh.
+        comment: p.bezier() for custom curves, dual HTML+PNG output, HoverTool with
+          connection details, Label glyph, CDP setDeviceMetricsOverride — genuinely
+          bokeh-distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - bezier-curves
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  - annotations
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
