@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-Library: letsplot | Python
-Imprint palette sequential colormap: brand-green → blue.
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-30
 """
 
 import os
