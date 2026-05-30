@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -45,7 +45,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 category_colors = {
     "Strongly Agree": "#009E73",  # Imprint pos 1: brand green
     "Agree": "#4467A3",  # Imprint pos 3: blue
-    "Neutral": INK_MUTED,  # semantic muted anchor
+    "Neutral": "#7A7A72",  # fixed mid-gray, consistent across both themes
     "Disagree": "#BD8233",  # Imprint pos 4: ochre
     "Strongly Disagree": "#AE3030",  # Imprint pos 5: matte red
 }
@@ -283,7 +283,7 @@ plot = (
     + geom_ribbon(
         aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="category"),
         data=df_changed,
-        alpha=0.35,
+        alpha=0.45,
         color=PAGE_BG,
         size=0.05,
         tooltips=layer_tooltips().line("@from_cat -> @to_cat").line("@count respondents (changed)"),
