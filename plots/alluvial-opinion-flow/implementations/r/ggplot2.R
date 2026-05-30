@@ -4,7 +4,6 @@
 #' Quality: 79/100 | Created: 2026-05-30
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -113,6 +112,7 @@ make_ribbons <- function(segs, x1, x2) {
         s   <- segs[i, ]
         rbn <- bezier_ribbon(x1, x2, s$y1_bot, s$y1_top, s$y2_bot, s$y2_top)
         rbn$from      <- s$from
+        rbn$is_stable <- s$from == s$to
         rbn$ribbon_id <- paste0(s$from, "_", s$to, "_x", x1)
         rbn
     }))
@@ -122,6 +122,10 @@ ribbons <- rbind(
     make_ribbons(segs12, wave_x[1], wave_x[2]),
     make_ribbons(segs23, wave_x[2], wave_x[3])
 )
+
+# Split stable (same category) vs. changer ribbons for distinct visual treatment
+ribbons_changers <- ribbons[!ribbons$is_stable, ]
+ribbons_stable   <- ribbons[ribbons$is_stable,  ]
 
 # Node rectangles for all 3 waves
 node_rects <- do.call(rbind, lapply(list(
@@ -178,16 +182,31 @@ w2_counts <- data.frame(
     hjust = 0.0
 )
 
+# Net change Wave 1 → Wave 3 for polarization subtitle
+w1_totals  <- setNames(pos1$total, pos1$category)
+w3_totals  <- setNames(pos3$total, pos3$category)
+
 # Title: scale fontsize for long title string
-title_str <- "alluvial-opinion-flow · r · ggplot2 · anyplot.ai"
-title_fs  <- max(8L, round(12L * 67L / nchar(title_str)))
+title_str    <- "alluvial-opinion-flow · r · ggplot2 · anyplot.ai"
+title_fs     <- max(8L, round(12L * 67L / nchar(title_str)))
+subtitle_str <- paste0(
+    "Polarization trend (Wave 1→3): Neutral −42  ·  ",
+    "Strongly Disagree +25  ·  shaded ribbons = stable respondents"
+)
 
 p <- ggplot() +
-    # Ribbons drawn behind nodes
+    # Changer ribbons (cross-category flows) drawn first at lower opacity
     geom_polygon(
-        data  = ribbons,
+        data  = ribbons_changers,
         aes(x = x, y = y, group = ribbon_id, fill = from),
-        alpha = 0.30,
+        alpha = 0.20,
+        color = NA
+    ) +
+    # Stable (same-category) ribbons emphasized with higher opacity
+    geom_polygon(
+        data  = ribbons_stable,
+        aes(x = x, y = y, group = ribbon_id, fill = from),
+        alpha = 0.52,
         color = NA
     ) +
     # Nodes
@@ -201,20 +220,20 @@ p <- ggplot() +
     geom_text(
         data     = cat_left,
         aes(x = x, y = y, label = label, hjust = hjust, color = category),
-        size     = 2.6,
+        size     = 3.0,
         lineheight = 0.85
     ) +
     geom_text(
         data     = cat_right,
         aes(x = x, y = y, label = label, hjust = hjust, color = category),
-        size     = 2.6,
+        size     = 3.0,
         lineheight = 0.85
     ) +
     # Wave 2 count labels
     geom_text(
         data  = w2_counts,
         aes(x = x, y = y, label = label, hjust = hjust),
-        size  = 2.4,
+        size  = 2.8,
         color = INK_MUTED
     ) +
     # Wave headers
@@ -228,7 +247,7 @@ p <- ggplot() +
     ) +
     scale_fill_manual(values  = IMPRINT_PALETTE, guide = "none") +
     scale_color_manual(values = IMPRINT_PALETTE, guide = "none") +
-    labs(title = title_str) +
+    labs(title = title_str, subtitle = subtitle_str) +
     theme_void() +
     theme(
         plot.background = element_rect(fill = PAGE_BG, color = NA),
@@ -236,7 +255,13 @@ p <- ggplot() +
             color  = INK_SOFT,
             size   = title_fs,
             hjust  = 0.5,
-            margin = margin(t = 14, b = 10)
+            margin = margin(t = 14, b = 4)
+        ),
+        plot.subtitle   = element_text(
+            color  = INK_MUTED,
+            size   = 7,
+            hjust  = 0.5,
+            margin = margin(b = 8)
         ),
         plot.margin = margin(t = 12, r = 100, b = 20, l = 100, unit = "pt")
     ) +
