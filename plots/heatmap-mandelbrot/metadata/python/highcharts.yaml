@@ -1,116 +1,146 @@
 library: highcharts
+language: python
 specification_id: heatmap-mandelbrot
 created: '2026-03-03T14:03:37Z'
-updated: '2026-03-03T14:38:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22625547007
+updated: '2026-05-30T11:08:33Z'
+generated_by: claude-sonnet
+workflow_run: 26681970032
 issue: 4431
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/highcharts/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent smooth coloring algorithm using log2-based normalized iteration count
-    plus log-scale transformation for superior boundary detail
-  - Beautiful dark theme with carefully coordinated Plasma-inspired color palette
-    and typography hierarchy
-  - Full spec compliance with all required features including correct aspect ratio,
-    labeled axes with mathematical notation, and black interior
-  - Interactive HTML export with informative tooltips showing complex number notation
-    and iteration counts
-  - Efficient vectorized NumPy computation handling 480K data points
+  - 'Correct imprint_seq gradient (#009E73 → #4467A3) applied to continuous escape-time
+    data — palette-compliant and visually effective'
+  - Log-scale transformation of smooth iteration counts produces well-distributed
+    colors across the fractal boundary without banding
+  - All font sizes explicitly set per style-guide defaults (66px title, 56px axis
+    labels, 44px tick labels, 36px colorbar labels)
+  - Both light and dark renders are fully theme-adaptive — background, text, tick
+    labels, legend box and border all flip correctly
+  - 'Interior set points colored #0a0a0a creating strong contrast against the gradient
+    exterior, clearly showing the cardioid and period-2 bulb'
+  - Custom JavaScript tooltip formatter displays complex plane coordinates (a + bi
+    notation) and human-readable iteration count via inverse log
+  - 'turboThreshold: 0 correctly disables the 1000-point limit, allowing the full
+    480,000-point heatmap dataset to render'
+  - Canonical complex-plane ranges [-2.5, 1.0] × [-1.25, 1.25] show the complete Mandelbrot
+    set per spec defaults
+  - PIL size normalization ensures exact 3200×1800 output even when Selenium rounding
+    produces 1-2 px drift
   weaknesses:
-  - Right margin slightly large relative to plot area, creating some spatial imbalance
-  - Color axis tick labels could be slightly larger for better readability
-  image_description: The plot displays the Mandelbrot set fractal on a dark navy (#0a0a1a)
-    background. The characteristic cardioid main body and period-2 bulb are rendered
-    in solid black at the center of the complex plane. Surrounding the set boundary
-    is a vivid Plasma-inspired color gradient progressing from deep blue/indigo (low
-    escape iterations) through purple, magenta, orange to bright yellow (high escape
-    iterations). The x-axis is labeled "Real Axis (Re)" ranging from -2.5 to 1.0 with
-    tick marks every 0.5. The y-axis is labeled "Imaginary Axis (Im)" ranging from
-    -1.0i to 1.0i with the "i" suffix on tick labels. A vertical color bar legend
-    titled "Escape Iterations" sits on the right side showing values 0, 5, 10, 20,
-    50, 100. The title reads "heatmap-mandelbrot · highcharts · pyplots.ai" at the
-    top. The fractal boundary shows beautiful smooth coloring with fine detail visible
-    at smaller bulbs, antenna filaments, and self-similar structures along the boundary.
-    The aspect ratio correctly preserves the mathematical proportions of the complex
-    plane.
+  - 'DE-01 moderate: design is correct but not exceptional — the colorAxis uses only
+    2 stops (green → blue) which produces a visually functional but flat gradient;
+    a 3-stop version adding a midpoint (e.g. [0, ''#009E73''], [0.5, ''#2A7D8E''],
+    [1, ''#4467A3'']) would add depth'
+  - 'DE-02 refinement opportunity: the axis spine lines (lineColor: INK_SOFT) are
+    visible but could be removed entirely for a cleaner frameless heatmap look — heatmaps
+    benefit from removing all 4 spines'
+  - 'LM-01 partial: implementation bypasses the highcharts_core Python SDK entirely
+    (uses raw dict/JSON), which works but misses the idiomatic Python API — the library
+    guide recommends using Chart and HighchartsOptions objects'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "heatmap-mandelbrot · python · highcharts · anyplot.ai" in dark ink (#1A1A17), clearly readable, spanning ~60% of canvas width. X-axis label "Real Axis (Re)" and Y-axis label "Imaginary Axis (Im)" in dark ink, balanced and legible. Tick labels on both axes (real: -2.5 to 1.0, imaginary: -1i to 1i) rendered in INK_SOFT dark gray — all readable against the off-white background.
+      Data: Green-to-blue gradient (imprint_seq: #009E73 → #4467A3) applied to escape iteration count. Far exterior (quick escape, low iterations) renders as uniform brand green. Fractal boundary region shows gradient transitioning to blue. Interior Mandelbrot set (non-escaping points) is rendered in near-black (#0a0a0a), clearly distinct from the exterior. Characteristic cardioid and period-2 bulb are clearly visible in black against the green background.
+      Legend: Vertical colorbar on right labeled "Escape Iterations" with values 0, 5, 10, 20, 50, 100. Elevated light background (#FFFDF6) with INK_SOFT border.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light/cream text (#F0EFE8), clearly visible against dark background. Axis labels and tick labels rendered in INK_SOFT light gray (#B8B7B0), readable against the near-black background. No dark-on-dark failures detected — all text elements flip correctly to light colors.
+      Data: Identical green-to-blue gradient as light render — data colors unchanged. The imprint_seq colors (#009E73 → #4467A3) are equally visible on the dark background. Interior near-black (#0a0a0a) blends into the dark background but this is expected behavior for the Mandelbrot set interior; the boundary and exterior gradient remain clearly visible.
+      Legend: Same vertical colorbar with dark elevated background (#242420) and light text labels — correctly theme-adaptive.
+      Legibility verdict: PASS — title, axis labels, and tick labels are all readable in light ink against the dark background. No dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 48px, axis titles 30px,
-          ticks 24px, legend 22-26px). All readable at full resolution. Color axis
-          labels slightly small.
+        comment: 'All font sizes explicitly set per style-guide: 66px title, 56px
+          axis labels, 44px tick labels, 36px colorbar labels, 40px legend title.
+          Well-proportioned in both renders.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Title, axes, ticks, and legend well-separated.
+        comment: No text overlaps with data or other text elements. Legend is properly
+          separated in right margin.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap pixels well-sized with calculated colsize/rowsize. Fractal
-          boundary detail excellent with smooth coloring.
+        comment: Heatmap cells clearly visible with smooth color gradient. Interior
+          black is distinct from exterior gradient. Full fractal boundary visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe. Interior black provides maximum
+          contrast against exterior gradient.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plasma-inspired colormap is perceptually uniform and colorblind-safe.
-          Black interior highly distinct.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills ~63% of canvas. Right margin (~25%) somewhat large for
-          color legend positioning.
+        comment: Canvas gate passed at 3200×1800. Plot fills canvas well. Margins
+          are generous and balanced (80/160/160/240).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (Re) and Imaginary Axis (Im) with mathematical notation.
-          Y-axis ticks include i suffix.
+        comment: Real Axis (Re) and Imaginary Axis (Im) are descriptive with mathematical
+          notation. Title is correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses imprint_seq (#009E73 → #4467A3) exactly. Backgrounds
+          #FAF8F1 light / #1A1A17 dark. Both renders fully theme-correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Dark theme with custom 9-stop Plasma-inspired palette, coordinated
-          typography hierarchy, subtle axis colors. Strong intentional design.
+        comment: Correct Imprint palette, log-scale transformation shows design intent,
+          clean font hierarchy. Above well-configured default but not exceptional
+          — single 2-stop gradient is functional but flat.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, plot border removed, subtle axis colors, coordinated
-          dark theme. Good refinement, minor room for polish.
+        comment: Grid disabled entirely (appropriate for heatmap), legend has elevated
+          styling with border, generous margins. Axis spine lines still visible —
+          could be removed for cleaner look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Mandelbrot set creates strong focal point. Log-scale transformation
-          enhances boundary detail. Color gradient guides viewer through escape-time
-          structure.
+        comment: Log scale creates informative color distribution revealing fractal
+          boundary structure. Strong interior/exterior contrast creates focal point
+          and guides viewer to the boundary complexity.
     spec_compliance:
       score: 15
       max: 15
@@ -120,28 +150,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap chart type for Mandelbrot set visualization.
+        comment: Correct heatmap visualization of Mandelbrot set on complex plane.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features met: smooth coloring, perceptually uniform colormap,
-          full set, labeled axes, black interior, correct aspect ratio.'
+        comment: Smooth coloring via log2 normalized iteration count, full set shown,
+          axes labeled, interior black, aspect ratio preserved.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real axis [-2.5, 1.0], imaginary [-1.25, 1.25], color maps to escape
-          iterations, 800x600 grid.
+        comment: X=real axis, Y=imaginary axis, color=escape iterations. Full range
+          [-2.5,1.0] × [-1.25,1.25] shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend titled Escape Iterations with meaningful
-          scale labels.
+        comment: Title is 'heatmap-mandelbrot · python · highcharts · anyplot.ai'.
+          Legend labeled 'Escape Iterations' with correct tick values.
     data_quality:
       score: 15
       max: 15
@@ -151,22 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete Mandelbrot set with cardioid, period-2 bulb, satellite bulbs,
-          antenna filaments, self-similar boundary structures.
+        comment: 'Shows all aspects: smooth exterior gradient, fractal boundary detail,
+          interior set, cardioid and period-2 bulb, colorbar with iteration scale.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real mathematical object computed from actual complex plane iteration.
-          Neutral, educational, scientifically accurate.
+        comment: Canonical Mandelbrot set — well-known mathematical object in complex
+          dynamics. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard full-set view, 100 max iterations, 800x600 grid matching
-          spec.
+        comment: Canonical ranges and resolution per spec defaults. max_iterations=100
+          and 800×600 grid are appropriate for detail level.
     code_quality:
       score: 10
       max: 10
@@ -176,37 +206,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, Data, Chart config, HTML, Screenshot.
-          No functions or classes.'
+        comment: 'Flat script: theme tokens → data computation → chart config → selenium
+          export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic Mandelbrot computation, no random data.
+        comment: Mandelbrot computation is fully deterministic — no randomness involved.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: json, tempfile, time, urllib.request, Path, numpy,
-          selenium.'
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib,
+          numpy, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Efficient vectorized NumPy computation, smart log-scale transformation,
-          clean layout calculations.
+        comment: Vectorized numpy Mandelbrot computation is clean and Pythonic. PIL
+          size normalization is correct safety net.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium, also exports interactive plot.html.
-          Current Highcharts API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly for both themes.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,20 +243,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Effective Highcharts heatmap API usage. Manual JSON approach pragmatic
-          for 480K data points. Leverages colorAxis, colsize/rowsize, formatters.
+        comment: Correct Highcharts heatmap configuration with colorAxis, turboThreshold=0,
+          colsize/rowsize. Follows library guide's inline-JS export pattern. Minor
+          deduction for not using highcharts_core Python SDK objects.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Heatmap module, colorAxis with custom stops, nullColor, turboThreshold:0,
-          JavaScript formatters for tooltips and axis labels.
+        comment: 'Uses Highcharts-specific features: colorAxis with stops, heatmap
+          series with colsize/rowsize for continuous grid, custom JS formatters via
+          Python string injection (tooltip showing complex notation, colorAxis labels
+          showing exp-transformed values).'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
+  - colorbar
   - html-export
   - hover-tooltips
   patterns:
@@ -236,5 +270,4 @@ impl_tags:
   dataprep:
   - normalization
   styling:
-  - dark-theme
   - custom-colormap
