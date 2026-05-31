@@ -331,7 +331,7 @@ const imprintDiv = IMPRINT.div.light.map((c, i, a) => [i / (a.length - 1), c]);`
 const MAX_WHEEL_CHROMA = 0.28; // clamp for radial position normalisation across palettes
 const WHEEL_RING_L = 0.72;     // fixed OKLCH lightness for the hue-ring disk
 
-type WheelDot = { hex: string; L: number; C: number; H: number };
+type WheelDot = { hex: string; L: number; C: number; H: number; name?: string };
 
 /** OKLCH (L 0..1, C, H°) → sRGB [r,g,b] 0..255, clamped to gamut.
  *  Björn Ottosson's OKLab→linear-sRGB matrices. Used to paint the wheel disk
@@ -393,7 +393,9 @@ function ChromaWheel({
 }) {
   const cx = size / 2;
   const cy = size / 2;
-  const outerR = (size / 2) - (compact ? 5 : 16); // leave room for the angle labels (full mode)
+  // The coloured disk runs to outerR; only a thin margin is left (just enough
+  // for the angle labels in full mode). No second border ring beyond it.
+  const outerR = (size / 2) - (compact ? 4 : 22);
   const dotR = Math.min(7.5, Math.max(3, size * 0.024)); // scale with size so the small wheel stays clean
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -459,10 +461,12 @@ function ChromaWheel({
           position: 'absolute', inset: 0,
           width: size, height: size,
           borderRadius: '50%',
-          boxShadow: 'inset 0 0 0 1px var(--rule)',
         }}
       />
       <Box component="svg" viewBox={`0 0 ${size} ${size}`} sx={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
+        {/* Crisp ring exactly at the coloured-disk edge — no outer moat / second rim */}
+        <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="var(--rule)" strokeWidth={1} />
+
         {/* Low-chroma corridor: shaded annulus + dashed edges */}
         <circle
           cx={cx} cy={cy} r={rMid}
@@ -481,12 +485,12 @@ function ChromaWheel({
           const y1 = cy - Math.sin(rad) * outerR;
           const x2 = cx + Math.cos(rad) * (outerR + 5);
           const y2 = cy - Math.sin(rad) * (outerR + 5);
-          const lx = cx + Math.cos(rad) * (outerR + 12);
-          const ly = cy - Math.sin(rad) * (outerR + 12);
+          const lx = cx + Math.cos(rad) * (outerR + 15);
+          const ly = cy - Math.sin(rad) * (outerR + 15);
           return (
             <g key={deg}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--ink-muted)" strokeWidth={1} />
-              <text x={lx} y={ly} fontSize={8} fill="var(--ink-muted)" textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: 'monospace' }}>
+              <text x={lx} y={ly} fontSize={11} fontWeight={600} fill="var(--ink-soft)" textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: 'monospace' }}>
                 {deg}°
               </text>
             </g>
@@ -508,17 +512,18 @@ function ChromaWheel({
         {/* Imprint dots — white halo + filled dot; slot 0 (brand) drawn as a star */}
         {imprintDots.map((d, i) => {
           const { x, y } = project(d.H, d.C);
+          const label = d.name ? `${d.name} · ${d.hex}` : d.hex;
           if (i === 0) {
             return (
-              <g key={i}>
-                <title>{d.hex}</title>
+              <g key={i} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.55))' }}>
+                <title>{`★ ${label}`}</title>
                 <polygon points={starPoints(x, y, dotR + 2.5, (dotR + 2.5) / 2.3)} fill={d.hex} stroke="var(--ink)" strokeWidth={1.5} strokeLinejoin="round" style={{ cursor: 'pointer' }} />
               </g>
             );
           }
           return (
-            <g key={i}>
-              <title>{d.hex}</title>
+            <g key={i} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.55))' }}>
+              <title>{label}</title>
               <circle cx={x} cy={y} r={dotR + 1} fill="var(--bg-page)" />
               <circle cx={x} cy={y} r={dotR} fill={d.hex} stroke="var(--bg-page)" strokeWidth={1} style={{ cursor: 'pointer' }} />
             </g>
@@ -744,7 +749,7 @@ export function PalettePage() {
   // we keep the canonical PALETTE order so the brand-green outline stays on
   // the same identity dot regardless of sort.
   const imprintDots: WheelDot[] = useMemo(
-    () => PALETTE.map(s => ({ hex: s.hex, L: s.L, C: s.C, H: s.H })),
+    () => PALETTE.map(s => ({ hex: s.hex, L: s.L, C: s.C, H: s.H, name: s.name })),
     []
   );
   const overlayDots: WheelDot[] | undefined = useMemo(
@@ -768,16 +773,19 @@ export function PalettePage() {
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>anyplot&apos;s imprint palette</em>} />
           <Box sx={{ ...proseColumnSx, mt: 3 }}>
-            {/* sm+: wheel on the left, lede on the right (row-reverse keeps the
-                lede first in the DOM, so on mobile it still reads text-then-wheel). */}
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row-reverse' }, gap: { xs: 2.5, sm: 4 }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'flex-end' }}>
-              <Box sx={textStyle}>
-                <strong>imprint</strong> is anyplot&apos;s categorical palette — 8 hues plus 3 semantic
-                anchors. low-chroma and warm-tinted for cream paper, validated against deuteranopia /
-                protanopia / tritanopia. built to let the data speak.
-              </Box>
-              {/* Compact wheel — a button that toggles the expanded comparison view */}
-              <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75, alignSelf: { xs: 'center', sm: 'auto' } }}>
+            {/* sm+: wheel on the left, content (lede + comparison) on the right.
+                When expanded the comparison panel fills the column beside the
+                wheel rather than floating below it, so the tall wheel is balanced. */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 2.5, sm: 4 },
+                alignItems: { xs: 'center', sm: wheelOpen ? 'flex-start' : 'center' },
+              }}
+            >
+              {/* Wheel column — the button toggles the expanded comparison view */}
+              <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75 }}>
                 <Box
                   component="button"
                   type="button"
@@ -792,7 +800,7 @@ export function PalettePage() {
                   }}
                 >
                   <ChromaWheel
-                    size={wheelOpen ? 260 : 128}
+                    size={wheelOpen ? 300 : 128}
                     compact={!wheelOpen}
                     imprintDots={imprintDots}
                     overlay={wheelOpen ? overlayDots : undefined}
@@ -802,57 +810,65 @@ export function PalettePage() {
                   {wheelOpen ? 'click to close' : 'compare ▸'}
                 </Box>
               </Box>
-            </Box>
 
-            {/* Expanded: comparison toggles + the wheel legend */}
-            <Collapse in={wheelOpen}>
-              <Box sx={{ mt: 2.5, borderTop: '1px solid var(--rule)', pt: 2.5 }}>
-                <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-                  where imprint sits in hue–chroma space — eight hues inside a narrow low-chroma band,
-                  spread evenly around the wheel. overlay another published categorical palette to compare:
+              {/* Content column — lede, then the comparison panel when expanded */}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={textStyle}>
+                  <strong>imprint</strong> is anyplot&apos;s categorical palette — 8 hues plus 3 semantic
+                  anchors. low-chroma and warm-tinted for cream paper, validated against deuteranopia /
+                  protanopia / tritanopia. built to let the data speak.
                 </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
-                  {COMPARISONS.map((c) => {
-                    const active = compareId === c.id;
-                    return (
-                      <Box
-                        key={c.id}
-                        component="button"
-                        type="button"
-                        onClick={() => setCompareId(active ? null : c.id)}
-                        sx={{
-                          background: active ? 'var(--bg-surface)' : 'none',
-                          border: `1px solid ${active ? colors.primary : 'var(--rule)'}`,
-                          borderRadius: 1,
-                          padding: '6px 10px',
-                          fontFamily: typography.mono,
-                          fontSize: '11px',
-                          color: active ? colors.primary : 'var(--ink-soft)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          '&:hover': { borderColor: colors.primary, color: colors.primary },
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', borderRadius: 0.5, overflow: 'hidden', boxShadow: '0 0 0 1px var(--rule)' }}>
-                          {c.hexes.map((d) => (
-                            <Box key={d.hex} sx={{ width: 8, height: 14, bgcolor: d.hex }} />
-                          ))}
-                        </Box>
-                        {c.name}
-                      </Box>
-                    );
-                  })}
-                </Box>
-                <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', mt: 1.75, lineHeight: 1.5 }}>
-                  hue counter-clockwise from 3 o&apos;clock · chroma = distance from centre · ★ = brand · shaded band = imprint&apos;s low-chroma corridor
-                  {compareId && (
-                    <Box component="span"> · rings = {COMPARISONS.find((c) => c.id === compareId)?.name}</Box>
-                  )}
-                </Box>
+
+                <Collapse in={wheelOpen}>
+                  <Box sx={{ mt: 2.5, borderTop: '1px solid var(--rule)', pt: 2.5 }}>
+                    <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.6 }}>
+                      where imprint sits in hue–chroma space — eight hues inside a narrow low-chroma band,
+                      spread evenly around the wheel. overlay another published categorical palette to compare:
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+                      {COMPARISONS.map((c) => {
+                        const active = compareId === c.id;
+                        return (
+                          <Box
+                            key={c.id}
+                            component="button"
+                            type="button"
+                            onClick={() => setCompareId(active ? null : c.id)}
+                            sx={{
+                              background: active ? 'var(--bg-surface)' : 'none',
+                              border: `1px solid ${active ? colors.primary : 'var(--rule)'}`,
+                              borderRadius: 1,
+                              padding: '6px 10px',
+                              fontFamily: typography.mono,
+                              fontSize: '11px',
+                              color: active ? colors.primary : 'var(--ink-soft)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              '&:hover': { borderColor: colors.primary, color: colors.primary },
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', borderRadius: 0.5, overflow: 'hidden', boxShadow: '0 0 0 1px var(--rule)' }}>
+                              {c.hexes.map((d) => (
+                                <Box key={d.hex} sx={{ width: 8, height: 14, bgcolor: d.hex }} />
+                              ))}
+                            </Box>
+                            {c.name}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                    <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', mt: 1.75, lineHeight: 1.5 }}>
+                      hue counter-clockwise from 3 o&apos;clock · chroma = distance from centre · ★ = brand · shaded band = imprint&apos;s low-chroma corridor
+                      {compareId && (
+                        <Box component="span"> · rings = {COMPARISONS.find((c) => c.id === compareId)?.name}</Box>
+                      )}
+                    </Box>
+                  </Box>
+                </Collapse>
               </Box>
-            </Collapse>
+            </Box>
           </Box>
         </Box>
 
