@@ -768,7 +768,9 @@ export function PalettePage() {
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>anyplot&apos;s imprint palette</em>} />
           <Box sx={{ ...proseColumnSx, mt: 3 }}>
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2.5, sm: 4 }, alignItems: { xs: 'flex-start', sm: 'center' } }}>
+            {/* sm+: wheel on the left, lede on the right (row-reverse keeps the
+                lede first in the DOM, so on mobile it still reads text-then-wheel). */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row-reverse' }, gap: { xs: 2.5, sm: 4 }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'flex-end' }}>
               <Box sx={textStyle}>
                 <strong>imprint</strong> is anyplot&apos;s categorical palette — 8 hues plus 3 semantic
                 anchors. low-chroma and warm-tinted for cream paper, validated against deuteranopia /

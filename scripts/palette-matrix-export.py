@@ -14,8 +14,9 @@ The /palette page (app/src/pages/PalettePage.tsx) shows per-hex *row minima*
 of these matrices (Swatch.minNorm / minCvd) but never the full pairwise grid.
 This script emits the complete ΔE (CAM02-UCS) matrices — normal vision, each of
 the three CVD simulations (Machado 2009, severity 100), and the worst-of-three
-roll-up — so the page can render the colour-distance matrix the same way the
-analysis HTML pages do, statically (no live colour-science in the browser).
+roll-up — so the page can render the colour-distance matrix statically from this
+shared data (no live colour-science in the browser). Only the ΔE values and the
+threshold cutoffs are shared; the frontend applies its own cell tints and legend.
 
 Colour set: the 8 categorical imprint hues + the amber anchor + the light-theme
 neutral ink (#1A1A17). Amber and neutral live OUTSIDE the categorical pool but
@@ -71,7 +72,8 @@ COLORS: list[tuple[str, str]] = [
 ]
 
 # Petroff (2021) 4-step CAM02-UCS distinguishability thresholds, kept in sync
-# with _palette_common.cell_class so the frontend colour-codes cells identically.
+# with _palette_common.cell_class so the same ΔE cutoffs drive both surfaces.
+# (The frontend applies its own tints/legend on top of these thresholds.)
 THRESHOLDS = [5.0, 10.0, 15.0]
 
 
