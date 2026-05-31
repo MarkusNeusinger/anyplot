@@ -1074,18 +1074,33 @@ export function PalettePage() {
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mt: 2 }}>
               {ANCHORS.map((a) => (
                 <Box key={a.key} sx={{ border: '1px solid var(--rule)', borderRadius: 2, overflow: 'hidden', backgroundColor: 'var(--bg-surface)' }}>
-                  {a.hexDark ? (
-                    <Box sx={{ height: 56, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                      <Box sx={{ bgcolor: a.hexLight, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pb: 0.5, color: '#F0EFE8', fontFamily: typography.mono, fontSize: '10px' }}>
-                        {a.hexLight}
-                      </Box>
-                      <Box sx={{ bgcolor: a.hexDark, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pb: 0.5, color: '#1A1A17', fontFamily: typography.mono, fontSize: '10px' }}>
-                        {a.hexDark}
-                      </Box>
-                    </Box>
-                  ) : (
-                    <Box sx={{ height: 56, bgcolor: a.hexLight }} />
-                  )}
+                  {/* One clickable swatch per hex (amber = 1, adaptive = light + dark);
+                      each shows its hex and copies it on click. */}
+                  <Box sx={{ height: 56, display: 'flex' }}>
+                    {(a.hexDark ? [a.hexLight, a.hexDark] : [a.hexLight]).map((hx) => {
+                      const copied = copiedHex === hx;
+                      return (
+                        <Box
+                          key={hx}
+                          component="button"
+                          type="button"
+                          aria-label={`Copy ${hx} (${a.key}) to clipboard`}
+                          onClick={() => copyHex(hx)}
+                          sx={{
+                            flex: 1, border: 'none', p: 0, pb: 0.75,
+                            bgcolor: hx, color: textOn(hx),
+                            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                            fontFamily: typography.mono, fontSize: '10px',
+                            cursor: 'pointer',
+                            transition: 'filter 0.15s',
+                            '&:hover': { filter: 'brightness(1.06)' },
+                          }}
+                        >
+                          {copied ? 'copied ✓' : hx}
+                        </Box>
+                      );
+                    })}
+                  </Box>
                   <Box sx={{ p: 1.5 }}>
                     <Box sx={{ fontFamily: typography.mono, fontSize: '11px', fontWeight: 600, color: 'var(--ink)', mb: 0.5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       {a.role}
