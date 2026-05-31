@@ -328,6 +328,21 @@ const imprintDiv = IMPRINT.div.light.map((c, i, a) => [i / (a.length - 1), c]);`
 // Inline sub-components
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Theme-adaptive tooltip. MUI's default tooltip is a fixed dark grey that
+// ignores the page's light/dark mode, so paint it from the design tokens —
+// they cascade from :root / [data-theme="dark"] on <html> into the portal.
+const tooltipSlotProps = {
+  tooltip: {
+    sx: {
+      bgcolor: 'var(--bg-elevated)',
+      color: 'var(--ink)',
+      border: '1px solid var(--rule)',
+      boxShadow: '0 6px 24px rgba(0, 0, 0, 0.18)',
+      maxWidth: 320,
+    },
+  },
+};
+
 const MAX_WHEEL_CHROMA = 0.28; // clamp for radial position normalisation across palettes
 const WHEEL_RING_L = 0.72;     // fixed OKLCH lightness for the hue-ring disk
 
@@ -574,7 +589,7 @@ function CodeBlock({ code }: { code: string }) {
       >
         {code}
       </Box>
-      <Tooltip title={copied ? 'copied' : 'copy'} placement="left">
+      <Tooltip title={copied ? 'copied' : 'copy'} placement="left" slotProps={tooltipSlotProps}>
         <IconButton
           size="small"
           onClick={handleCopy}
@@ -987,12 +1002,28 @@ export function PalettePage() {
                     >
                       <Tooltip
                         placement="top"
+                        slotProps={tooltipSlotProps}
                         title={
-                          <Box sx={{ fontFamily: typography.mono, fontSize: '11px', lineHeight: 1.7 }}>
-                            <Box>H {s.H.toFixed(0)}° · C {s.C.toFixed(2)}</Box>
-                            <Box>ΔE {s.minNorm.toFixed(1)} norm · {s.minCvd.toFixed(1)} cvd</Box>
-                            <Box>
-                              ☼ {s.wcagL.toFixed(1)}:1 cream · ☽ {s.wcagD.toFixed(1)}:1 dark
+                          <Box sx={{ fontFamily: typography.mono, fontSize: '11px', lineHeight: 1.5, py: 0.5 }}>
+                            <Box sx={{ fontWeight: 700, mb: 0.75 }}>{s.name} · {s.hex}</Box>
+                            <Box sx={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 1.5, rowGap: 0.75 }}>
+                              <Box sx={{ opacity: 0.6 }}>hue · chroma</Box>
+                              <Box>{s.H.toFixed(0)}° · {s.C.toFixed(2)} <Box component="span" sx={{ opacity: 0.6 }}>OKLCH</Box></Box>
+
+                              <Box sx={{ opacity: 0.6 }}>nearest ΔE</Box>
+                              <Box sx={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 1, rowGap: 0.25 }}>
+                                <Box>{s.minNorm.toFixed(1)}</Box><Box sx={{ opacity: 0.6 }}>normal vision</Box>
+                                <Box>{s.minCvd.toFixed(1)}</Box><Box sx={{ opacity: 0.6 }}>colour-blind</Box>
+                              </Box>
+
+                              <Box sx={{ opacity: 0.6 }}>contrast</Box>
+                              <Box sx={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 1, rowGap: 0.25 }}>
+                                <Box>{s.wcagL.toFixed(1)}:1</Box><Box sx={{ opacity: 0.6 }}>on cream</Box>
+                                <Box>{s.wcagD.toFixed(1)}:1</Box><Box sx={{ opacity: 0.6 }}>on dark</Box>
+                              </Box>
+                            </Box>
+                            <Box sx={{ opacity: 0.6, mt: 0.75 }}>
+                              higher ΔE = easier to tell apart
                             </Box>
                           </Box>
                         }
