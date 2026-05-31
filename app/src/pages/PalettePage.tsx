@@ -398,6 +398,7 @@ function ChromaWheel({
   const outerR = (size / 2) - (compact ? 4 : 22);
   const dotR = Math.min(7.5, Math.max(3, size * 0.024)); // scale with size so the small wheel stays clean
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const lastPaintRef = useRef<string>(''); // skip redundant repaints (StrictMode double-invoke / same-size re-render)
 
   // Project (hue°, chroma) → (x, y). Hue 0° at right (3 o'clock), increasing
   // counter-clockwise — matching the per-pixel disk painted below.
@@ -414,6 +415,10 @@ function ChromaWheel({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // The per-pixel disk is the same for a given (size, outerR); skip the
+    // O(n²) trig repaint when nothing that affects it changed.
+    const paintKey = `${size}|${outerR}`;
+    if (lastPaintRef.current === paintKey) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const px = Math.round(size * dpr);
     canvas.width = px;
@@ -443,6 +448,7 @@ function ChromaWheel({
       }
     }
     ctx.putImageData(img, 0, 0);
+    lastPaintRef.current = paintKey;
   }, [size, outerR, cx, cy]);
 
   // Chroma envelope — the band all imprint hues fall inside (low-chroma corridor).
@@ -797,6 +803,7 @@ export function PalettePage() {
                     cursor: 'pointer', lineHeight: 0, borderRadius: '50%',
                     transition: 'transform 0.15s',
                     '&:hover': { transform: 'scale(1.03)' },
+                    '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: '3px' },
                   }}
                 >
                   <ChromaWheel
@@ -978,53 +985,45 @@ export function PalettePage() {
                         '&:hover .v3-sw': { transform: 'scale(1.02)' },
                       }}
                     >
-                      <Box
-                        className="v3-sw"
-                        sx={{
-                          height: 92,
-                          bgcolor: s.hex,
-                          color: textOn(s.hex),
-                          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                          p: 1.25,
-                          fontFamily: typography.mono,
-                          borderRadius: 1,
-                          boxShadow: i === 0 ? `inset 0 0 0 2px var(--ink)` : 'inset 0 0 0 1px var(--rule)',
-                          transition: 'transform 0.15s',
-                        }}
+                      <Tooltip
+                        placement="top"
+                        title={
+                          <Box sx={{ fontFamily: typography.mono, fontSize: '11px', lineHeight: 1.7 }}>
+                            <Box>H {s.H.toFixed(0)}° · C {s.C.toFixed(2)}</Box>
+                            <Box>ΔE {s.minNorm.toFixed(1)} norm · {s.minCvd.toFixed(1)} cvd</Box>
+                            <Box>
+                              ☼ {s.wcagL.toFixed(1)}:1 cream · ☽ {s.wcagD.toFixed(1)}:1 dark
+                            </Box>
+                          </Box>
+                        }
                       >
-                        <Box sx={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Box>
-                        <Box sx={{ fontSize: '11px', opacity: 0.85 }}>{copied ? 'copied ✓' : s.hex}</Box>
-                      </Box>
+                        <Box
+                          className="v3-sw"
+                          sx={{
+                            height: 92,
+                            bgcolor: s.hex,
+                            color: textOn(s.hex),
+                            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                            p: 1.25,
+                            fontFamily: typography.mono,
+                            borderRadius: 1,
+                            boxShadow: i === 0 ? `inset 0 0 0 2px var(--ink)` : 'inset 0 0 0 1px var(--rule)',
+                            transition: 'transform 0.15s',
+                          }}
+                        >
+                          <Box sx={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Box>
+                          <Box sx={{ fontSize: '11px', opacity: 0.85 }}>{copied ? 'copied ✓' : s.hex}</Box>
+                        </Box>
+                      </Tooltip>
+                      {/* Only the slot + role stay under the swatch; H/C, ΔE and
+                          contrast moved into the swatch tooltip (and remain in
+                          full in the ΔE matrix + WCAG table below). */}
                       <Box sx={{
                         fontFamily: typography.mono, fontSize: '10px',
-                        mt: 1, lineHeight: 1.65, color: 'var(--ink-muted)',
+                        mt: 1, lineHeight: 1.65, color: 'var(--ink-soft)',
                       }}>
-                        <Box sx={{ color: 'var(--ink-soft)' }}>
-                          <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
-                          {' · '}{s.role}
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
-                          <Box component="span">H <Box component="span" sx={{ color: 'var(--ink)' }}>{s.H.toFixed(0)}°</Box></Box>
-                          <Box component="span">C <Box component="span" sx={{ color: 'var(--ink)' }}>{s.C.toFixed(2)}</Box></Box>
-                        </Box>
-                        <Tooltip title="min ΔE to any other slot — normal vision · worst of deuteranopia / protanopia / tritanopia">
-                          <Box sx={{ mt: 0.25, cursor: 'help' }}>
-                            ΔE <Box component="span" sx={{ color: 'var(--ink)' }}>{s.minNorm.toFixed(1)}</Box> norm
-                            {' · '}<Box component="span" sx={{ color: 'var(--ink)' }}>{s.minCvd.toFixed(1)}</Box> cvd
-                          </Box>
-                        </Tooltip>
-                        <Box sx={{ display: 'flex', gap: 1.5, mt: 0.25 }}>
-                          <Tooltip title="WCAG contrast on cream bg #FAF8F1 — graphical objects 3:1 minimum">
-                            <Box component="span" sx={{ color: s.wcagL >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
-                              ☼ {s.wcagL.toFixed(1)}:1
-                            </Box>
-                          </Tooltip>
-                          <Tooltip title="WCAG contrast on dark bg #121210">
-                            <Box component="span" sx={{ color: s.wcagD >= 3 ? '#007A59' : '#b62d2d', cursor: 'help' }}>
-                              ☽ {s.wcagD.toFixed(1)}:1
-                            </Box>
-                          </Tooltip>
-                        </Box>
+                        <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
+                        {' · '}{s.role}
                       </Box>
                     </Box>
                 );
