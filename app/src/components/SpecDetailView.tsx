@@ -16,6 +16,10 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 
 import type { Implementation } from '../types';
 import { API_URL } from '../constants';
@@ -23,6 +27,8 @@ import { colors, fontSize, typography } from '../theme';
 import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
 import { selectPreviewUrl, selectPreviewHtml } from '../utils/themedPreview';
 import { useTheme } from '../hooks/useLayoutContext';
+import { useQuickReaction } from '../hooks/useQuickReaction';
+import type { QuickReaction } from '../utils/feedback';
 
 const INITIAL_WIDTH = 1600;
 const INITIAL_HEIGHT = 900;
@@ -73,12 +79,28 @@ export function SpecDetailView({
   const animTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const prevLibRef = useRef(selectedLibrary);
 
-  // Reset zoom when library changes
+  // Quick 👍 / 👎 vote shown over the plot. Optimistically highlights the chosen
+  // thumb and posts a reaction-only feedback entry; a failed submit rolls back.
+  const submitReaction = useQuickReaction('plot_overlay');
+  const [vote, setVote] = useState<QuickReaction | null>(null);
+  const handleVote = useCallback(
+    (reaction: QuickReaction) => {
+      setVote(reaction);
+      void submitReaction(reaction).then((ok) => {
+        if (!ok) setVote((prev) => (prev === reaction ? null : prev));
+      });
+    },
+    [submitReaction],
+  );
+
+  // Reset zoom + vote when library changes — each implementation is voted on
+  // independently, so the highlight must not bleed across the carousel.
   useEffect(() => {
     if (prevLibRef.current !== selectedLibrary) {
       prevLibRef.current = selectedLibrary;
       setZoomed(false);
       setOrigin({ x: 50, y: 50 });
+      setVote(null);
     }
   }, [selectedLibrary]);
 
@@ -204,8 +226,65 @@ export function SpecDetailView({
       color: colors.primary,
     },
   } as const;
+  // Once a thumb is chosen it stays inked in the brand colour so the choice
+  // reads as committed, not merely hovered.
+  const overlayButtonActiveSx = {
+    ...overlayButtonSx,
+    color: colors.primary,
+    '&:hover': { ...overlayButtonSx['&:hover'], color: colors.primary },
+  } as const;
   const proxyUrl = (url: string) =>
     `${API_URL}/proxy/html?url=${encodeURIComponent(url)}&origin=${encodeURIComponent(window.location.origin)}`;
+
+  // 👍 / 👎 buttons live top-left over the plot — the first thing a visitor sees
+  // — so reacting takes a single, obvious click (the .report() flag moved into
+  // the right-hand action cluster). Shared between the preview and interactive
+  // surfaces so both behave identically.
+  const voteButtons = (
+    <>
+      <Tooltip title=".upvote()" disableFocusListener>
+        <IconButton
+          onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); handleVote('thumbs_up'); }}
+          aria-label="Thumbs up"
+          aria-pressed={vote === 'thumbs_up'}
+          sx={vote === 'thumbs_up' ? overlayButtonActiveSx : overlayButtonSx}
+          size="medium"
+        >
+          {vote === 'thumbs_up' ? <ThumbUpIcon fontSize="small" /> : <ThumbUpOutlinedIcon fontSize="small" />}
+        </IconButton>
+      </Tooltip>
+      <Tooltip title=".downvote()" disableFocusListener>
+        <IconButton
+          onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); handleVote('thumbs_down'); }}
+          aria-label="Thumbs down"
+          aria-pressed={vote === 'thumbs_down'}
+          sx={vote === 'thumbs_down' ? overlayButtonActiveSx : overlayButtonSx}
+          size="medium"
+        >
+          {vote === 'thumbs_down' ? <ThumbDownIcon fontSize="small" /> : <ThumbDownOutlinedIcon fontSize="small" />}
+        </IconButton>
+      </Tooltip>
+    </>
+  );
+
+  // Report flag, relocated from the top-left into the right-hand action cluster
+  // so the quick vote owns the prominent corner. Shared across both surfaces.
+  const reportButton = (
+    <Tooltip title=".report()" disableFocusListener>
+      <IconButton
+        component="a"
+        href={reportUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onReport(); }}
+        aria-label="Report issue"
+        sx={overlayButtonSx}
+        size="medium"
+      >
+        <FlagOutlinedIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  );
 
   return (
     <Box sx={{ maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
@@ -251,23 +330,11 @@ export function SpecDetailView({
           </Box>
 
           <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 0.5 }}>
-            <Tooltip title=".report()" disableFocusListener>
-              <IconButton
-                component="a"
-                href={reportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onReport}
-                aria-label="Report issue"
-                sx={overlayButtonSx}
-                size="medium"
-              >
-                <FlagOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {voteButtons}
           </Box>
 
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+            {reportButton}
             <Tooltip title=".preview()" disableFocusListener>
               <IconButton
                 onClick={() => {
@@ -378,26 +445,14 @@ export function SpecDetailView({
             onClick={(e) => e.stopPropagation()}
             sx={{ position: 'absolute', top: 8, left: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
           >
-            <Tooltip title=".report()" disableFocusListener>
-              <IconButton
-                component="a"
-                href={reportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onReport(); }}
-                aria-label="Report issue"
-                sx={overlayButtonSx}
-                size="medium"
-              >
-                <FlagOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {voteButtons}
           </Box>
 
           <Box
             onClick={(e) => e.stopPropagation()}
             sx={{ position: 'absolute', top: 8, right: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
           >
+            {reportButton}
             {currentImpl && (
               <Tooltip title=".copy()" disableFocusListener>
                 <IconButton
