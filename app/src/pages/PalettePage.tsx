@@ -217,12 +217,18 @@ const LANG_LABELS: Record<Lang, string> = {
 };
 
 export function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): string {
-  const values = oklch ? sortedPalette.map(s => s.oklch) : sortedPalette.map(s => s.hex);
-  const amberVal = oklch ? 'oklch(0.841 0.108 98.3)' : '#DDCC77';
-  const seqStart = oklch ? 'oklch(0.620 0.130 165.5)' : '#009E73';
-  const seqEnd   = oklch ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
-  const divStart = oklch ? 'oklch(0.503 0.163 25.2)' : '#AE3030';
-  const divEnd   = oklch ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
+  // CSS `oklch()` literals are only consumable where the runtime parses CSS
+  // colours (JS / CSS). matplotlib, ggplot2 and Makie can't read them, so those
+  // snippets stay hex (runnable) and surface the OKLCH coordinate as a trailing
+  // comment instead — toggling OKLCH then annotates rather than breaks the code.
+  const useLiteral = oklch && lang === 'js';
+  const colorVal = (s: Swatch) => (useLiteral ? s.oklch : s.hex);
+  const hueComment = (s: Swatch) => (oklch && lang !== 'js' ? `  # ${s.oklch}` : '');
+  const amberVal = useLiteral ? 'oklch(0.841 0.108 98.3)' : '#DDCC77';
+  const seqStart = useLiteral ? 'oklch(0.620 0.130 165.5)' : '#009E73';
+  const seqEnd   = useLiteral ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
+  const divStart = useLiteral ? 'oklch(0.503 0.163 25.2)' : '#AE3030';
+  const divEnd   = useLiteral ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
   // Theme-adaptive neutrals + diverging midpoints are kept as hex in both
   // modes — they are structural near-greys, and converting them to OKLCH adds
   // noise without helping anyone paste them.
@@ -233,7 +239,7 @@ export function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): st
 # imprint — anyplot's palette (https://anyplot.ai/palette)
 IMPRINT = SimpleNamespace(
     hues=[
-${values.map(v => `        "${v}"`).join(',\n')},
+${sortedPalette.map(s => `        "${s.hex}",${hueComment(s)}`).join('\n')}
     ],
     amber="${amberVal}",  # warning / caution
     neutral=SimpleNamespace(light="#1A1A17", dark="#F0EFE8"),
@@ -255,7 +261,7 @@ imprint_div = LinearSegmentedColormap.from_list("imprint_div", IMPRINT.div.light
       return `# imprint — anyplot's palette (https://anyplot.ai/palette)
 IMPRINT <- list(
   hues = c(
-${values.map(v => `    "${v}"`).join(',\n')}
+${sortedPalette.map((s, i, arr) => `    "${s.hex}"${i < arr.length - 1 ? ',' : ''}${hueComment(s)}`).join('\n')}
   ),
   amber = "${amberVal}",  # warning / caution
   neutral = list(light = "#1A1A17", dark = "#F0EFE8"),
@@ -278,14 +284,14 @@ scale_color_gradientn(colours = IMPRINT$div$light)  # diverging (light theme)`;
 # imprint — anyplot's palette (https://anyplot.ai/palette)
 const IMPRINT = (
     hues = [
-${values.map(v => oklch ? `        "${v}"` : `        colorant"${v}"`).join(',\n')},
+${sortedPalette.map(s => `        colorant"${s.hex}",${hueComment(s)}`).join('\n')}
     ],
-    amber = ${oklch ? `"${amberVal}"` : `colorant"${amberVal}"`},  # warning / caution
+    amber = colorant"${amberVal}",  # warning / caution
     neutral = (light = colorant"#1A1A17", dark = colorant"#F0EFE8"),
     muted   = (light = colorant"#6B6A63", dark = colorant"#A8A79F"),
-    seq = ${oklch ? `["${seqStart}", "${seqEnd}"]` : `[colorant"${seqStart}", colorant"${seqEnd}"]`},
-    div = (light = ${oklch ? `["${divStart}", "#FAF8F1", "${divEnd}"]` : `[colorant"${divStart}", colorant"#FAF8F1", colorant"${divEnd}"]`},
-           dark  = ${oklch ? `["${divStart}", "#1A1A17", "${divEnd}"]` : `[colorant"${divStart}", colorant"#1A1A17", colorant"${divEnd}"]`}),
+    seq = [colorant"${seqStart}", colorant"${seqEnd}"],
+    div = (light = [colorant"${divStart}", colorant"#FAF8F1", colorant"${divEnd}"],
+           dark  = [colorant"${divStart}", colorant"#1A1A17", colorant"${divEnd}"]),
 )
 
 color = IMPRINT.hues[1]  # first series is ALWAYS slot 0 (brand green)
@@ -298,7 +304,7 @@ imprint_div = cgrad(IMPRINT.div.light)  # .dark on dark bg`;
       return `// imprint — anyplot's palette (https://anyplot.ai/palette)
 const IMPRINT = {
   hues: [
-${values.map(v => `    "${v}"`).join(',\n')},
+${sortedPalette.map(s => `    "${colorVal(s)}",`).join('\n')}
   ],
   amber: "${amberVal}", // warning / caution
   neutral: { light: "#1A1A17", dark: "#F0EFE8" },
@@ -377,15 +383,18 @@ function ChromaWheel({
   size = 320,
   imprintDots,
   overlay,
+  compact = false,
 }: {
   size?: number;
   imprintDots: WheelDot[];
   overlay?: WheelDot[];
+  /** Compact preview: hide angle ticks/labels, scale dots down, use more disk. */
+  compact?: boolean;
 }) {
   const cx = size / 2;
   const cy = size / 2;
-  const outerR = (size / 2) - 16; // leave room for the angle labels
-  const dotR = 7.5;
+  const outerR = (size / 2) - (compact ? 5 : 16); // leave room for the angle labels (full mode)
+  const dotR = Math.min(7.5, Math.max(3, size * 0.024)); // scale with size so the small wheel stays clean
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Project (hue°, chroma) → (x, y). Hue 0° at right (3 o'clock), increasing
@@ -439,7 +448,7 @@ function ChromaWheel({
   const rInner = (Math.min(...cs) / MAX_WHEEL_CHROMA) * outerR;
   const rOuter = (Math.max(...cs) / MAX_WHEEL_CHROMA) * outerR;
   const rMid = (rInner + rOuter) / 2;
-  const ticks = [0, 90, 180, 270];
+  const ticks = compact ? [] : [0, 90, 180, 270];
 
   return (
     <Box sx={{ position: 'relative', width: size, height: size }}>
@@ -707,6 +716,8 @@ export function PalettePage() {
    *  two greens + two purples close together in the first 4 slots). */
   const [sort, setSort] = useState<'imprint' | 'cvd'>('imprint');
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
+  /** Hero wheel: collapsed = small preview; expanded = larger + comparison toggles. */
+  const [wheelOpen, setWheelOpen] = useState(false);
 
   const copyHex = (hex: string) => {
     void navigator.clipboard
@@ -752,16 +763,94 @@ export function PalettePage() {
       </Helmet>
 
       <Box sx={{ pb: 4 }}>
-        {/* 1. HERO — lede only. The hue–chroma wheel + palette comparison moved
-            into the history section so the page leads straight into the hues. */}
+        {/* 1. HERO — short lede + a compact hue–chroma wheel. Click the wheel to
+            enlarge it and reveal the palette-comparison toggles. */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>anyplot&apos;s imprint palette</em>} />
           <Box sx={{ ...proseColumnSx, mt: 3 }}>
-            <Box sx={textStyle}>
-              <strong>imprint</strong> is anyplot&apos;s categorical palette — 8 hues plus 3 semantic
-              anchors. low-chroma and warm-tinted for cream paper, validated against deuteranopia /
-              protanopia / tritanopia. built to let the data speak.
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2.5, sm: 4 }, alignItems: { xs: 'flex-start', sm: 'center' } }}>
+              <Box sx={textStyle}>
+                <strong>imprint</strong> is anyplot&apos;s categorical palette — 8 hues plus 3 semantic
+                anchors. low-chroma and warm-tinted for cream paper, validated against deuteranopia /
+                protanopia / tritanopia. built to let the data speak.
+              </Box>
+              {/* Compact wheel — a button that toggles the expanded comparison view */}
+              <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75, alignSelf: { xs: 'center', sm: 'auto' } }}>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => setWheelOpen((o) => !o)}
+                  aria-expanded={wheelOpen}
+                  aria-label={wheelOpen ? 'Collapse the hue–chroma wheel' : 'Expand the hue–chroma wheel to compare palettes'}
+                  sx={{
+                    background: 'none', border: 'none', p: 0, m: 0,
+                    cursor: 'pointer', lineHeight: 0, borderRadius: '50%',
+                    transition: 'transform 0.15s',
+                    '&:hover': { transform: 'scale(1.03)' },
+                  }}
+                >
+                  <ChromaWheel
+                    size={wheelOpen ? 260 : 128}
+                    compact={!wheelOpen}
+                    imprintDots={imprintDots}
+                    overlay={wheelOpen ? overlayDots : undefined}
+                  />
+                </Box>
+                <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: wheelOpen ? 'var(--ink-muted)' : colors.primary }}>
+                  {wheelOpen ? 'click to close' : 'compare ▸'}
+                </Box>
+              </Box>
             </Box>
+
+            {/* Expanded: comparison toggles + the wheel legend */}
+            <Collapse in={wheelOpen}>
+              <Box sx={{ mt: 2.5, borderTop: '1px solid var(--rule)', pt: 2.5 }}>
+                <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.6 }}>
+                  where imprint sits in hue–chroma space — eight hues inside a narrow low-chroma band,
+                  spread evenly around the wheel. overlay another published categorical palette to compare:
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+                  {COMPARISONS.map((c) => {
+                    const active = compareId === c.id;
+                    return (
+                      <Box
+                        key={c.id}
+                        component="button"
+                        type="button"
+                        onClick={() => setCompareId(active ? null : c.id)}
+                        sx={{
+                          background: active ? 'var(--bg-surface)' : 'none',
+                          border: `1px solid ${active ? colors.primary : 'var(--rule)'}`,
+                          borderRadius: 1,
+                          padding: '6px 10px',
+                          fontFamily: typography.mono,
+                          fontSize: '11px',
+                          color: active ? colors.primary : 'var(--ink-soft)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          '&:hover': { borderColor: colors.primary, color: colors.primary },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', borderRadius: 0.5, overflow: 'hidden', boxShadow: '0 0 0 1px var(--rule)' }}>
+                          {c.hexes.map((d) => (
+                            <Box key={d.hex} sx={{ width: 8, height: 14, bgcolor: d.hex }} />
+                          ))}
+                        </Box>
+                        {c.name}
+                      </Box>
+                    );
+                  })}
+                </Box>
+                <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', mt: 1.75, lineHeight: 1.5 }}>
+                  hue counter-clockwise from 3 o&apos;clock · chroma = distance from centre · ★ = brand · shaded band = imprint&apos;s low-chroma corridor
+                  {compareId && (
+                    <Box component="span"> · rings = {COMPARISONS.find((c) => c.id === compareId)?.name}</Box>
+                  )}
+                </Box>
+              </Box>
+            </Collapse>
           </Box>
         </Box>
 
@@ -1143,62 +1232,10 @@ export function PalettePage() {
         <Box component="section" sx={sectionSx}>
           <Box sx={proseColumnSx}>
             <CollapsibleSection title="palette history — how we got here">
-              {/* Hue–chroma wheel + comparison against other published palettes */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '340px 1fr' }, gap: 4, alignItems: 'center', mt: 1, mb: 4 }}>
-                <Box sx={{ justifySelf: 'center' }}>
-                  <ChromaWheel size={320} imprintDots={imprintDots} overlay={overlayDots} />
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', textAlign: 'center', mt: 1, lineHeight: 1.5, maxWidth: 320 }}>
-                    hue counter-clockwise from 3 o&apos;clock · chroma = distance from centre · ★ = brand · shaded band = imprint&apos;s low-chroma corridor
-                    {compareId && (
-                      <Box component="span" sx={{ display: 'block', mt: 0.5 }}>
-                        rings = {COMPARISONS.find(c => c.id === compareId)?.name}
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-                <Box>
-                  <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-                    where imprint sits in hue–chroma space. its eight hues stay inside a narrow low-chroma
-                    band — muted enough for warm paper, spread evenly around the wheel. compare against
-                    other published categorical palettes:
-                  </Box>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
-                    {COMPARISONS.map((c) => {
-                      const active = compareId === c.id;
-                      return (
-                        <Box
-                          key={c.id}
-                          component="button"
-                          type="button"
-                          onClick={() => setCompareId(active ? null : c.id)}
-                          sx={{
-                            background: active ? 'var(--bg-surface)' : 'none',
-                            border: `1px solid ${active ? colors.primary : 'var(--rule)'}`,
-                            borderRadius: 1,
-                            padding: '6px 10px',
-                            fontFamily: typography.mono,
-                            fontSize: '11px',
-                            color: active ? colors.primary : 'var(--ink-soft)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            '&:hover': { borderColor: colors.primary, color: colors.primary },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', borderRadius: 0.5, overflow: 'hidden', boxShadow: '0 0 0 1px var(--rule)' }}>
-                            {c.hexes.map((d) => (
-                              <Box key={d.hex} sx={{ width: 8, height: 14, bgcolor: d.hex }} />
-                            ))}
-                          </Box>
-                          {c.name}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Box>
+              <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.6, mb: 2.5 }}>
+                four versions, each fixing a concrete failure of the last. the interactive hue–chroma
+                wheel at the top of the page overlays any of these against imprint.
               </Box>
-
               <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', mb: 1.5 }}>
                 version timeline
               </Box>

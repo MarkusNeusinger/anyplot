@@ -41,4 +41,24 @@ describe('PalettePage snippet()', () => {
     expect(snippet('julia', false, PALETTE)).toContain('imprint_seq');
     expect(snippet('js', false, PALETTE)).toContain('IMPRINT.div');
   });
+
+  // Regression: CSS oklch() literals are only valid in JS/CSS. matplotlib /
+  // ggplot2 / Makie can't parse them, so in OKLCH mode those snippets must keep
+  // runnable hex values and surface the coordinate as a comment instead — only
+  // the JS snippet may emit a bare oklch() literal as an actual colour value.
+  it.each(['python', 'r', 'julia'] as Lang[])(
+    'keeps runnable hex (never a bare oklch() value) in OKLCH mode for %s',
+    (lang) => {
+      const code = snippet(lang, true, PALETTE);
+      expect(code).toContain('#009E73'); // brand-green hex is still the real value
+      expect(code).toContain('# oklch('); // coordinate shown as a comment
+      // no oklch() literal sitting as a quoted colour value
+      expect(code).not.toMatch(/"oklch\(/);
+    }
+  );
+
+  it('emits oklch() literals as values in the JS snippet when OKLCH is on', () => {
+    const code = snippet('js', true, PALETTE);
+    expect(code).toContain('"oklch(0.620 0.130 165.5)"'); // slot-0 brand as a CSS literal
+  });
 });
