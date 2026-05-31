@@ -46,8 +46,6 @@ const defaultProps = {
   onDownload: vi.fn(),
   onViewModeChange: vi.fn(),
   onTrackEvent: vi.fn(),
-  reportUrl: 'https://github.com/owner/repo/issues/new?template=report-plot-issue.yml',
-  onReport: vi.fn(),
 };
 
 describe('SpecDetailView', () => {
@@ -193,10 +191,10 @@ describe('SpecDetailView', () => {
     expect(screen.getByRole('button', { name: /thumbs down/i })).toBeInTheDocument();
   });
 
-  it('still renders the report-issue action (relocated to the right cluster)', () => {
+  it('does not render a report action over the plot (handled by the footer)', () => {
     render(<SpecDetailView {...defaultProps} />);
-    const report = screen.getByRole('link', { name: /report issue/i });
-    expect(report).toHaveAttribute('href', defaultProps.reportUrl);
+    expect(screen.queryByRole('link', { name: /report issue/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /report issue/i })).not.toBeInTheDocument();
   });
 
   it('submits a thumbs_up reaction and marks the button as pressed', async () => {

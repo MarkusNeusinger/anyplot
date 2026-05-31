@@ -15,7 +15,6 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
@@ -42,12 +41,10 @@ interface SpecDetailViewProps {
   codeCopied: string | null;
   downloadDone: string | null;
   viewMode: 'preview' | 'interactive';
-  reportUrl: string;
   onViewModeChange: (mode: 'preview' | 'interactive') => void;
   onImageLoad: () => void;
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
-  onReport: () => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
 }
 
@@ -60,12 +57,10 @@ export function SpecDetailView({
   codeCopied,
   downloadDone,
   viewMode,
-  reportUrl,
   onViewModeChange,
   onImageLoad,
   onCopyCode,
   onDownload,
-  onReport,
   onTrackEvent,
 }: SpecDetailViewProps) {
   const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
@@ -267,25 +262,6 @@ export function SpecDetailView({
     </>
   );
 
-  // Report flag, relocated from the top-left into the right-hand action cluster
-  // so the quick vote owns the prominent corner. Shared across both surfaces.
-  const reportButton = (
-    <Tooltip title=".report()" disableFocusListener>
-      <IconButton
-        component="a"
-        href={reportUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onReport(); }}
-        aria-label="Report issue"
-        sx={overlayButtonSx}
-        size="medium"
-      >
-        <FlagOutlinedIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
-
   return (
     <Box sx={{ maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
       {viewMode === 'interactive' && interactiveAvailable && previewHtml ? (
@@ -334,7 +310,6 @@ export function SpecDetailView({
           </Box>
 
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-            {reportButton}
             <Tooltip title=".preview()" disableFocusListener>
               <IconButton
                 onClick={() => {
@@ -452,7 +427,6 @@ export function SpecDetailView({
             onClick={(e) => e.stopPropagation()}
             sx={{ position: 'absolute', top: 8, right: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
           >
-            {reportButton}
             {currentImpl && (
               <Tooltip title=".copy()" disableFocusListener>
                 <IconButton
