@@ -1050,8 +1050,8 @@ export function PalettePage() {
                           contrast moved into the swatch tooltip (and remain in
                           full in the ΔE matrix + WCAG table below). */}
                       <Box sx={{
-                        fontFamily: typography.mono, fontSize: '10px',
-                        mt: 1, lineHeight: 1.65, color: 'var(--ink-soft)',
+                        fontFamily: typography.mono, fontSize: '11px',
+                        mt: 1, lineHeight: 1.6, color: 'var(--ink-soft)',
                       }}>
                         <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
                         {' · '}{s.role}
