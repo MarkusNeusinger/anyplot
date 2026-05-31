@@ -107,7 +107,7 @@ const SET2: CompPalette = {
 
 const ANYPLOT_PREV: CompPalette = {
   id: 'prev',
-  name: 'anyplot (previous)',
+  name: 'anyplot v1 (previous live)',
   hexes: [
     { hex: '#009E73', L: 0.620, C: 0.130, H: 165.5 },
     { hex: '#9418DB', L: 0.529, C: 0.259, H: 307.4 },
@@ -185,15 +185,15 @@ const HISTORY: HistoryEntry[] = [
   },
   {
     id: 'v2',
-    title: 'v2 — D1-8 (8-hex expansion)',
+    title: 'v2 — D1-8 (internal · never shipped)',
     hexes: ['#009E73', '#AE3030', '#C475FD', '#99B314', '#4467A3', '#2ABCCD', '#954477', '#BD8233'],
-    summary: 'The 8-hex muted set, chosen over a higher-chroma vivid-8. The vivid version\'s CVD-distance edge was marginal (n=4: 17.3 vs 15.2 ΔE) and below the ~10-ΔE discrimination floor at n=8 anyway, while the muted register reads editorial rather than dashboard. Its one weakness — a pure-CVD-greedy order that put two greens and two purples in the first four slots — was fixed by v3\'s hybrid sort.',
+    summary: 'A work-in-progress step on the way to v3 — never released; v1 stayed live throughout. This is where the 8-hex muted set was locked in, chosen over a higher-chroma vivid-8 whose CVD-distance edge was marginal (n=4: 17.3 vs 15.2 ΔE) and below the ~10-ΔE discrimination floor at n=8 anyway, while the muted register reads editorial rather than dashboard. The colours were right but the slot order was not — a pure-CVD-greedy sort put two greens and two purples in the first four slots. That ordering fix is exactly what v3 added, so v2 went straight to v3 without a live release.',
   },
   {
     id: 'v1',
     title: 'v1 — variant D ("balanced")',
     hexes: ['#009E73', '#9418DB', '#B71D27', '#16B8F3', '#99B314', '#D359A7', '#BA843E'],
-    summary: 'anyplot\'s first custom palette. 7 hues + adaptive neutral. Brand green inherited from Okabe-Ito; the rest from a Petroff-style max-min ΔE search in the muted-paper chroma envelope — separating red from tan and trading the near-yellow for olive-lime so nothing washes out on cream.',
+    summary: 'anyplot\'s first custom palette, and the last one shipped before v3 — v2 never went live, so this is what "anyplot v1 (previous live)" overlays on the wheel above. 7 hues + adaptive neutral. Brand green inherited from Okabe-Ito; the rest from a Petroff-style max-min ΔE search in the muted-paper chroma envelope — separating red from tan and trading the near-yellow for olive-lime so nothing washes out on cream.',
     href: 'https://arxiv.org/abs/2107.02270',
     hrefLabel: 'Petroff 2021 (arXiv)',
   },
