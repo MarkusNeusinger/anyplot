@@ -12,7 +12,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { SectionHeader } from '../components/SectionHeader';
 import { useAnalytics } from '../hooks';
-import { colors, typography, textStyle } from '../theme';
+import { colors, fontSize, typography, textStyle } from '../theme';
 import matrixData from '../data/paletteMatrices.json';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -273,7 +273,7 @@ ${sortedPalette.map((s, i, arr) => `    "${s.hex}"${i < arr.length - 1 ? ',' : '
   )
 )
 
-color <- IMPRINT$hues[1]  # first series is ALWAYS slot 0 (brand green)
+color <- IMPRINT$hues[1]  # first series = slot 0, brand green (R is 1-based: index 1)
 
 # continuous data — ggplot2 gradient scales
 scale_color_gradientn(colours = IMPRINT$seq)        # sequential
@@ -294,7 +294,7 @@ ${sortedPalette.map(s => `        colorant"${s.hex}",${hueComment(s)}`).join('\n
            dark  = [colorant"${divStart}", colorant"#1A1A17", colorant"${divEnd}"]),
 )
 
-color = IMPRINT.hues[1]  # first series is ALWAYS slot 0 (brand green)
+color = IMPRINT.hues[1]  # first series = slot 0, brand green (Julia is 1-based: index 1)
 
 # continuous data — Makie / ColorSchemes
 using ColorSchemes
@@ -432,9 +432,10 @@ function ChromaWheel({
     if (!canvas) return;
     // The per-pixel disk is the same for a given (size, outerR); skip the
     // O(n²) trig repaint when nothing that affects it changed.
-    const paintKey = `${size}|${outerR}`;
-    if (lastPaintRef.current === paintKey) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Key includes dpr so a zoom / display change repaints at the right resolution.
+    const paintKey = `${size}|${outerR}|${dpr}`;
+    if (lastPaintRef.current === paintKey) return;
     const px = Math.round(size * dpr);
     canvas.width = px;
     canvas.height = px;
@@ -855,6 +856,7 @@ export function PalettePage() {
                             key={c.id}
                             component="button"
                             type="button"
+                            aria-pressed={active}
                             onClick={() => setCompareId(active ? null : c.id)}
                             sx={{
                               background: active ? 'var(--bg-surface)' : 'none',
@@ -899,7 +901,7 @@ export function PalettePage() {
           <SectionHeader prompt="❯" title={<em>the 8 categorical hues</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mt: 1, mb: 2, flexWrap: 'wrap', gap: 1 }}>
-              <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
+              <Box sx={{ fontFamily: typography.mono, fontSize: fontSize.base, color: 'var(--ink-muted)' }}>
                 sort:
                 {(['imprint', 'cvd'] as const).map((s) => (
                   <Box
@@ -909,7 +911,7 @@ export function PalettePage() {
                     onClick={() => setSort(s)}
                     sx={{
                       background: 'none', border: 'none', padding: 0, ml: 1,
-                      fontFamily: typography.mono, fontSize: '11px',
+                      fontFamily: typography.mono, fontSize: fontSize.base,
                       color: sort === s ? colors.primary : 'var(--ink-soft)',
                       textDecoration: 'underline',
                       textDecorationColor: sort === s ? colors.primary : 'var(--rule)',
@@ -1050,7 +1052,7 @@ export function PalettePage() {
                           contrast moved into the swatch tooltip (and remain in
                           full in the ΔE matrix + WCAG table below). */}
                       <Box sx={{
-                        fontFamily: typography.mono, fontSize: '11px',
+                        fontFamily: typography.mono, fontSize: fontSize.base,
                         mt: 1, lineHeight: 1.6, color: 'var(--ink-soft)',
                       }}>
                         <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
