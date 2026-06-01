@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-01
@@ -97,6 +97,11 @@ q_order = df["question"].tolist()[::-1]
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Subtle alternating row banding — seaborn-idiomatic scanline separation
+for i in range(len(q_order)):
+    if i % 2 == 0:
+        ax.axhspan(i - 0.5, i + 0.5, facecolor=INK, alpha=0.03, zorder=0)
+
 bar_kw = {
     "y": "question",
     "order": q_order,
@@ -142,10 +147,28 @@ for _, row in df.iterrows():
                 f"{value}%",
                 ha="center",
                 va="center",
-                fontsize=7,
+                fontsize=8,
                 fontweight="medium",
                 color=text_color,
             )
+
+# Net agreement callout — colored score badge at right edge for each question
+for _, row in df.iterrows():
+    y_pos = q_order.index(row["question"])
+    net = int(row["net_agreement"])
+    sign = "+" if net > 0 else ""
+    color = COL_SA if net > 15 else COL_SD if net < 0 else INK_MUTED
+    ax.text(
+        88,
+        y_pos,
+        f"net {sign}{net}%",
+        ha="left",
+        va="center",
+        fontsize=7,
+        color=color,
+        alpha=0.8,
+        fontweight="bold" if abs(net) > 40 else "normal",
+    )
 
 # Style
 title = "Employee Engagement Survey · bar-diverging-likert · python · seaborn · anyplot.ai"
@@ -159,6 +182,7 @@ ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
 ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
 ax.axvline(0, color=INK, linewidth=0.8, zorder=3)
 ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{abs(int(x))}%"))
+ax.set_xlim(-70, 112)
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.yaxis.grid(False)
 ax.set_axisbelow(True)
