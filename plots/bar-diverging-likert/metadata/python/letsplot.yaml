@@ -1,96 +1,109 @@
 library: letsplot
+language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:07:14Z'
-updated: '2026-03-04T06:31:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22657236270
+updated: '2026-06-01T23:21:49Z'
+generated_by: claude-sonnet
+workflow_run: 26787403517
 issue: 4429
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/letsplot/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling with sorted data, highlight bands on best/worst items,
-    and net agreement annotations creating immediate visual narrative
-  - Custom diverging color palette with intentional warm orange choice for luminance
-    separation, and per-segment text colors
-  - 'Full spec compliance with all required features: centered neutral, diverging
-    layout, sorting, percentage labels, horizontal orientation'
-  - 'Leverages lets-plot distinctive features: layer_tooltips() for interactive hover
-    and dual PNG/HTML export'
-  - Clean, well-structured code with deterministic data and appropriate complexity
+  - 'Full spec compliance: all five Likert features (centered neutral, diverging color,
+    sorted by net, percentage labels, horizontal orientation) implemented correctly'
+  - Theme adaptation is complete and correct — every chrome element uses the right
+    token in both light and dark; no dark-on-dark failures
+  - 'Storytelling above average: highlight bands + net annotations create a clear
+    focal point without adding clutter'
+  - Palette uses semantically correct imprint_div anchors for the diverging dimension
+    (positive=blue, negative=red, neutral=muted)
+  - Code is clean, deterministic, and idiomatic letsplot throughout
+  - Native interactive tooltips via layer_tooltips() are a genuine lets-plot strength
+    properly exploited
   weaknesses:
-  - 'Red-orange distinction may be subtle under deuteranopia (VQ-04: 3/4)'
-  - In-bar text at size=12 and annotations at size=11 could be slightly larger for
-    enhanced readability on smaller screens
-  - Manual rectangle construction is necessary but verbose; future lets-plot versions
-    may offer higher-level diverging bar support
-  image_description: 'The plot displays a horizontal diverging stacked bar chart showing
-    8 employee engagement survey questions. Bars diverge from a central zero line
-    (marked by a dark vertical line). Negative responses extend left — Strongly Disagree
-    in dark red (#C0392B) and Disagree in warm orange (#D4763C). Positive responses
-    extend right — Agree in light blue (#7CB5D2) and Strongly Agree in dark blue (#306998).
-    Neutral responses in gray (#B0B0B0) are split across the midpoint. Questions are
-    sorted from bottom (lowest net agreement: "Communication is clear") to top (highest:
-    "My manager supports me"). Percentage labels appear inside bar segments ≥8%. The
-    top item has a light blue highlight band with "Net +66%" annotation in blue; the
-    bottom item has a light pink highlight band with "Net +2%" annotation in red.
-    Title reads "bar-diverging-likert · letsplot · pyplots.ai" with subtitle "Employee
-    engagement survey — sorted by net agreement". X-axis labeled "Percentage of Responses"
-    with symmetric percentage labels. Legend at bottom shows all 5 response categories.'
+  - Panel border frame visible around chart area (a thin box outlines the plot panel)
+    — remove via panel_border=element_blank() in the theme block for cleaner spine-free
+    look consistent with the style guide's L-shaped / no-spine recommendation
+  - Legend box has an explicit border (legend_background=element_rect(fill=ELEVATED_BG,
+    color=INK_SOFT)) — remove the color argument to eliminate the box frame, per the
+    decoration removal checklist
+  - Percentage label size=5 (geom_text) causes minor tightness in narrow bar segments
+    (e.g., 8% SD slice); consider reducing to size=4 or setting a slightly higher
+    threshold (>=10%) for displaying labels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Bold title "bar-diverging-likert · python · letsplot · anyplot.ai" in dark ink at 16pt; subtitle in muted ink at 13pt; x-axis label "Percentage of Responses" in dark ink at 12pt; y-axis question labels in soft ink at 10pt; x-axis tick labels (40%, 20%, 0%, 20%, 40%, 60%, 80%) in soft ink at 10pt — all readable against light background
+      Data: 8 horizontal diverging bar rows; 5 Likert segments per bar: bright red (#AE3030) for Strongly Disagree, brownish-red (interpolated) for Disagree, warm gray-neutral (INK_MUTED) for Neutral, dusty blue (interpolated) for Agree, deep blue (#4467A3) for Strongly Agree; white percentage labels inside segments >= 8%; light-blue highlight band on top row, light-pink band on bottom row; "Net +66%" in blue and "Net +2%" in red annotations visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in near-white #F0EFE8; subtitle in muted light; axis labels and tick labels in #B8B7B0; legend box uses elevated dark surface #242420 — all readable against dark background; no dark-on-dark text failures detected
+      Data: Identical Imprint-derived data colors to light render (red/brownish-red/gray/dusty-blue/deep-blue) — only chrome flips; highlight bands adapt to dark variants (dark navy for best, dark burgundy for worst); white percentage labels remain visible; net annotations visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, subtitle 18pt, axis labels
-          20pt, tick text 16pt, legend 16/18pt, in-bar labels 12pt bold. All perfectly
-          readable at 4800x2700.'
+        comment: All text legible in both themes; minor tightness in percentage labels
+          for narrow segments (e.g., 8% label in ~8% wide Strongly Disagree slice)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. Percentage labels only shown for segments >=8%.
-          Question labels well-spaced. Net annotations clear of bars.
+        comment: 'Slight crowding potential in center region for some rows (e.g.,
+          I have growth opportunities: 22% | 20% | 30% close together), but readable'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments clearly visible with appropriate height. All segments
-          distinguishable. Center line and highlight bands visible.
+        comment: All bar segments, labels, annotations, and reference line clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Red-to-blue diverging scheme is generally colorblind-safe. Warm orange
-          provides luminance separation from red. Red-orange distinction may be subtle
-          under deuteranopia.
+        comment: Diverging red/blue scheme is semantic (not red-green), imprint_div-derived,
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills good proportion of canvas. Balanced margins. Legend well-positioned
-          at bottom.
+        comment: Correct 3200x1800 canvas, good proportions, no overflow; canvas gate
+          passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format, informative subtitle, x-axis 'Percentage
-          of Responses' is descriptive.
+        comment: X-axis Percentage of Responses with % tick labels; y-axis shows clear
+          question labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Justified semantic exception: diverging imprint_div anchors (#AE3030
+          to INK_MUTED to #4467A3); backgrounds #FAF8F1 / #1A1A17; both renders theme-correct'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -98,25 +111,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette with intentional color choices. Per-segment
-          text colors. Professional hierarchy with title, subtitle, annotations. Above
-          configured defaults.
+        comment: 'Above default: custom interpolated diverging palette from imprint_div
+          anchors; highlight bands for best/worst rows; color-coded net annotations
+          add data-driven emphasis'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: theme_minimal removes spines, horizontal grid removed, minor grid
-          removed. Highlight bands add visual richness. Remaining vertical grid appropriate
-          for reading values.
+        passed: false
+        comment: theme_minimal() reduces chrome but panel border frame remains visible;
+          legend has explicit color border (color=INK_SOFT) — decoration removal checklist
+          recommends removing legend box frames
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Strong storytelling: sorted by net agreement, highlight bands on
-          best/worst items, net annotations create clear focal points. Subtitle explains
-          sorting.'
+        comment: 'Strong storytelling: sorted by net agreement, net annotations highlight
+          extremes, highlight bands draw eye to best/worst items, bidirectional layout
+          communicates agreement direction'
     spec_compliance:
       score: 15
       max: 15
@@ -126,29 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart for Likert scale data with horizontal
-          orientation.
+        comment: Correct diverging stacked bar chart for Likert scale
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: centered neutral, diverging color scheme,
-          sorted by net agreement, percentage labels, horizontal orientation.'
+        comment: Neutral centered at midpoint, diverging red-to-blue scheme, sorted
+          by net agreement, percentage labels in bars, horizontal orientation
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on y-axis, percentages on x-axis. Bars correctly diverge
-          from neutral midpoint. All data visible.
+        comment: X = percentage, Y = questions, all 8 questions shown, properly centered
+          on neutral midpoint
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend shows all 5 categories in correct
-          order with matching labels.
+        comment: Title bar-diverging-likert · python · letsplot · anyplot.ai correct;
+          legend shows all 5 Likert categories in order
     data_quality:
       score: 15
       max: 15
@@ -158,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 questions with excellent variation. Net agreement ranges from +2%
-          to +66%. All 5 Likert categories well-represented.
+        comment: All 5 Likert categories, 8 questions, percentage labels, net annotations,
+          highlight bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is real-world, neutral. Questions are
-          recognizable and plausible. No controversial content.
+        comment: Employee engagement survey is a canonical Likert use case; questions
+          are realistic and neutral; values are plausible (rows sum to ~100%)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All rows sum to 100%. Values realistic for survey data with plausible
-          distributions.
+        comment: 8 questions (within 5-20 spec range), percentages 0-100%, realistic
+          distribution values
     code_quality:
       score: 10
       max: 10
@@ -183,64 +195,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, processing, plot, save. No functions
-          or classes.'
+        comment: No functions or classes; linear, readable script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is deterministic (hardcoded values, no randomness).
+        comment: Fully deterministic (hardcoded data, no random elements)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and lets_plot imported, both used.
+        comment: Only os, pandas, and lets_plot — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for diverging bar construction. Clean text
-          color mapping. Well-structured segment loop.
+        comment: Appropriate complexity for diverging bar construction; real tooltips
+          via native layer_tooltips(), not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 for 4800x2700. Also saves plot.html.
-          Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fully idiomatic grammar-of-graphics: ggplot() + geom_rect() + geom_text()
+          + geom_vline() + scale_fill_manual() + scale_color_identity() + scale_y_continuous(breaks,labels)
+          + theme_minimal() + theme() + ggsize() + ggsave(scale=4)'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with layered geoms. Proper aes() mappings,
-          scale_fill_manual, theme customization. Manual rectangles necessary for
-          diverging Likert.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses layer_tooltips() for interactive hover (lets-plot specific).
-          HTML export alongside PNG leverages interactive capabilities.
+        comment: Uses lets-plot native layer_tooltips() for interactive HTML tooltips;
+          scale_color_identity() for variable-mapped text colors; multi-layer geom
+          composition; ggsize + ggsave(scale=4) lets-plot scaling idiom
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
+  - wide-to-long
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending

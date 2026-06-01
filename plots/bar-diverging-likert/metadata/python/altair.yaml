@@ -1,42 +1,68 @@
 library: altair
+language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:06:57Z'
-updated: '2026-03-04T06:12:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22657236123
+updated: '2026-06-01T23:29:34Z'
+generated_by: claude-sonnet
+workflow_run: 26787070426
 issue: 4429
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/altair/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance — all 5 required features implemented correctly (centering,
-    diverging colors, sorting, labels, horizontal)
-  - Professional custom diverging color scheme (orange to gray to Python Blue) with
-    proper contrast-aware label coloring
-  - Clean data storytelling through net-agreement sorting with realistic employee
-    survey context
-  - Subtle visual refinements (0.15 grid opacity, removed view border, white bar strokes)
+  - Correct diverging Likert chart with neutral category split evenly at the zero
+    midpoint, exactly as specified
+  - Questions sorted by net agreement creates an immediate ranking narrative — viewer
+    sees strongest and weakest items at a glance
+  - Thoughtful semantic diverging palette anchored at Imprint red (#AE3030) and blue
+    (#4467A3) with muted neutral gray
+  - In-bar percentage labels with appropriate threshold (≥10%) prevent overcrowding
+    of narrow segments
+  - White stroke on bars provides crisp visual separation between segments
+  - 'Full theme-adaptive chrome: background, title, axis labels, tick labels, legend
+    box, and zero-baseline line all switch correctly between light and dark'
+  - Zero baseline rule clearly marks the neutral midpoint
+  - Altair layer composition (bars + white labels + dark labels + zero-line) used
+    idiomatically
+  - x/x2 encoding for segment ranges is the canonical Altair approach for this chart
+    type
+  - All font sizes explicitly set with correctly scaled title font
+  - Canvas padded to exact 3200×1800 target using the PAD-only approach; no cropping
   weaknesses:
-  - In-bar percentage labels at 14pt are slightly small relative to other text elements
-  - Could push design excellence further with additional typographic refinements
-  image_description: 'The plot displays a horizontal diverging stacked bar chart titled
-    "bar-diverging-likert · altair · pyplots.ai". Ten employee engagement survey questions
-    are listed on the y-axis, sorted from lowest net agreement ("My compensation is
-    fair" at top) to highest ("I have the tools I need" at bottom). Bars diverge from
-    a central zero line, with negative responses extending left and positive responses
-    extending right. The neutral category is split evenly across the midpoint. Colors
-    follow a custom diverging scheme: dark orange for Strongly Disagree (#D95F02),
-    light orange for Disagree (#FDB863), gray for Neutral (#B0B0B0), light blue for
-    Agree (#92C5DE), and dark blue (Python Blue #306998) for Strongly Agree. White
-    percentage labels appear on dark-background segments (Strongly Disagree, Strongly
-    Agree) and dark labels on lighter segments, only shown where values are >=10%.
-    A thin vertical zero baseline is visible. The x-axis reads "Percentage (%)" with
-    values from -60 to 100. A horizontal legend at the bottom identifies all five
-    categories. White strokes separate bar segments cleanly. The subtle x-axis grid
-    (opacity 0.15) and no y-axis grid give the chart a refined appearance.'
+  - 'VQ-07 partial: intermediate diverging colors (#C87070 for Disagree, #7A93B8 for
+    Agree) are custom hex values interpolated between Imprint palette anchors but
+    are not themselves canonical Imprint palette members. Prefer using only Imprint
+    palette members and the muted anchor (#9C9B94 is close to the muted anchor #6B6A63/#A8A79F
+    but not exact either).'
+  - 'DE-01 moderate: design is thoughtful but not yet publication-ready — the chart
+    reads as a well-configured diverging bar chart. Could benefit from a slightly
+    bolder visual hierarchy (e.g. more prominent zero-line, slightly increased contrast
+    between the two extremes vs. the middle) to elevate from ''good implementation''
+    to ''striking data story''.'
+  - 'DE-02 good but not perfect: the legend border frame is still visible as a box
+    around the legend — removing the legend stroke or using a very subtle one would
+    add refinement.'
+  - 'LM-02 limited: the x/x2 range-bar encoding is Altair-idiomatic but the multi-layer
+    label approach (two separate mark_text layers for white vs dark labels) could
+    instead leverage Altair''s condition expressions to apply label colors conditionally
+    in a single layer.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the entire canvas — no pure white visible.
+      Chrome: Title "bar-diverging-likert · python · altair · anyplot.ai" in dark ink, well-centered at top, ~60% of canvas width. X-axis label "Percentage (%)" in dark secondary ink. Y-axis shows question text as tick labels — all clearly readable. Legend at bottom shows all 5 Likert categories in a horizontal row with square swatches.
+      Data: 10 horizontal diverging bars sorted by net agreement (bottom = most positive). Colors from left to right: dark matte red (#AE3030) for Strongly Disagree → lighter pink (#C87070) for Disagree → muted gray (#9C9B94) for Neutral → medium blue (#7A93B8) for Agree → deeper blue (#4467A3) for Strongly Agree. White strokes between segments. Percentage labels (bold) appear inside segments ≥10%, using white text on dark segments and dark ink on lighter segments. Zero baseline (vertical rule) clearly marks the center point.
+      Legibility verdict: PASS — all title, axis, tick, and in-bar labels are clearly readable against the warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the canvas — no pure black visible.
+      Chrome: Title and axis labels render in near-white (#F0EFE8), clearly readable against the dark background. Tick labels use light secondary ink (#B8B7B0). Legend box uses elevated dark fill (#242420) with a subtle border and light text for category labels.
+      Data: Bar colors are identical to the light render — same matte red, pink, gray, medium blue, and dark blue hues. The white bar strokes remain visible. Percentage labels in "dark" segments (Strongly Disagree/Strongly Agree) appear as white text; labels in "light" segments (Disagree/Neutral/Agree) adapt to near-white (#F0EFE8 = INK in dark mode), remaining legible on the medium-toned fill colors.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All text elements — title, axis labels, tick labels, in-bar percentages, and legend items — are clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -44,67 +70,85 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, axis title=22, axis labels=16-18,
-          legend=18). In-bar labels at 14pt slightly small.
+        comment: 'All font sizes explicitly set: title 16px (auto-scaled), axis title
+          12px, tick labels 10-11px, in-bar labels 13px bold. Both themes fully readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Labels only shown where segments >=10%.
+        comment: No overlapping text — threshold of ≥10% for labels prevents crowding
+          in narrow segments. Legend items well spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bar segments clearly visible with white stroke separation.
+        comment: All bar segments clearly visible. White stroke separates adjacent
+          segments. Colors are distinct across the diverging scale.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Orange-to-blue diverging scheme is colorblind-safe with good contrast.
+        comment: Diverging red-to-blue with muted neutral. White strokes add redundant
+          separation. Not relying on hue alone — order and position also encode the
+          Likert direction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well at 1400x800. Balanced margins, legend well-placed.
+        comment: Canvas gate passed. Chart fills the canvas well with balanced margins.
+          No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Percentage (%)' descriptive with units. Title follows spec
-          format.
+        comment: 'X-axis: ''Percentage (%)'' with unit. Y-axis: title=None is correct
+          (question labels serve as axis labels). Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Background #FAF8F1 light / #1A1A17 dark correct. Chrome fully theme-adaptive.
+          Semantic exception applies (red=negative, blue=positive). However, intermediate
+          colors #C87070 (Disagree) and #7A93B8 (Agree) are custom hex values not
+          in the canonical Imprint palette — anchors (#AE3030, #4467A3) are correct
+          but intermediates should use only palette members or semantic anchors.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom diverging palette, white bar strokes, intentional font hierarchy.
-          Clearly above defaults.
+        comment: 'Strong design: diverging palette with semantic color mapping, sorted
+          questions, in-bar labels, white segment strokes, subtle grid. Clearly above
+          defaults but not yet at publication-ready level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View border removed, subtle x-grid (0.15), y-grid disabled, white
-          bar strokes.
+        comment: Y-axis grid off, X-axis grid at 0.15 opacity, no chart frame (strokeWidth=0),
+          zero baseline rule. Legend box border visible — could be removed for cleaner
+          look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorting by net agreement creates clear visual hierarchy and immediate
-          insight.
+        comment: Sorting by net agreement creates clear ranking narrative. Diverging
+          color scheme immediately conveys sentiment polarity. Viewer sees compensation
+          and career advancement as the weakest areas at a glance.
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +158,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart for Likert scale data.
+        comment: Correct diverging stacked bar chart for Likert scale, horizontal
+          orientation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: centering, diverging colors, sorting, labels, horizontal
-          orientation.'
+        comment: Neutral split evenly at zero midpoint ✓, diverging color scheme red-to-blue
+          ✓, sorted by net agreement ✓, percentage labels inside segments where space
+          permits ✓, horizontal orientation ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on y-axis, percentages on x-axis, proper diverging positions.
+        comment: X-axis shows percentage with proper diverging scale from -60 to +90.
+          Y-axis shows all 10 questions. All 5 Likert categories mapped correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend correctly labels all 5 Likert categories.
+        comment: 'Title: ''bar-diverging-likert · python · altair · anyplot.ai'' —
+          correct format. Legend shows all 5 categories with exact Likert label text.'
     data_quality:
       score: 15
       max: 15
@@ -143,19 +191,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of distributions across 10 questions with good variation.
+        comment: 'Shows full range: strongly negative questions (compensation, career
+          advancement), mixed questions, and strongly positive questions (tools, culture).
+          Good variation across the spectrum.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey with authentic, neutral question items.
+        comment: Employee engagement survey — realistic, neutral, and professionally
+          relevant. 10 well-chosen survey items covering distinct engagement dimensions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages sum to ~100% per question with realistic distributions.
+        comment: Percentages sum to 100% for each question. Values are realistic for
+          corporate surveys — compensation scoring lowest, tools highest, which reflects
+          common real-world patterns.
     code_quality:
       score: 10
       max: 10
@@ -165,54 +218,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Processing -> Plot -> Save. No functions/classes.
+        comment: 'Linear flow: tokens → data → segment building → chart layers → compose
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic — hardcoded DataFrame, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used.
+        comment: os, altair, pandas, PIL.Image — all actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with smart contrast-aware label filtering.
+        comment: Well-structured, readable. Segment building loop is appropriate.
+          Title font scaling formula is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PAD-only strategy to
+          exact 3200×1800 canvas. Current Altair 6.1 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper declarative grammar, encoding types, layer composition, configure_*
-          styling. Pandas data prep is idiomatic for Altair.
+        comment: 'Exemplary Altair usage: x/x2 encoding for range bars, declarative
+          layer composition with + operator, sort in Y encoding, configure_* for global
+          theme, alt.Title/alt.Axis/alt.Legend with explicit parameters.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Tooltips, HTML export, layer composition of bars+text+rule. Could
-          leverage more Altair transforms.
+        comment: x/x2 range-bar encoding is distinctively Altair. Layer composition
+          for multi-mark charts is idiomatic. However, the two-layer label approach
+          (separate mark_text for white vs dark labels) could be more elegant using
+          Altair condition expressions in a single layer.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
@@ -222,4 +281,3 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling

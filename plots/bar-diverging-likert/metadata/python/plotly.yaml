@@ -1,49 +1,53 @@
 library: plotly
+language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:04:56Z'
-updated: '2026-03-04T06:20:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22657236141
+updated: '2026-06-01T23:26:55Z'
+generated_by: claude-sonnet
+workflow_run: 26786905188
 issue: 4429
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - 'All three issues from Attempt 1 resolved: dead code removed, text contrast fixed
-    with adaptive dark/white text colors, annotations added for storytelling'
-  - Perfect spec compliance with all five specification requirements implemented correctly
-  - Excellent data storytelling through sorting by net agreement and color-coded net
-    score annotations for extremes
-  - Professional diverging color palette with proper colorblind-safe red-to-blue scheme
-  - Clean, minimal code with smart label suppression for narrow segments
+  - 'Perfect spec implementation: neutral split, sorting, percentage labels with space
+    threshold, and diverging color scheme all correctly executed'
+  - Theme-adaptive per-segment text contrast logic ensures readability in both light
+    and dark renders
+  - Net-score annotations at extreme items create a clear focal point and guide the
+    viewer to the headline insight
+  - Subtitle delivers the key finding immediately
+  - All percentages sum to 100%; realistic, neutral employee survey scenario with
+    plausible distributions
   weaknesses:
-  - Design could be further elevated with a descriptive subtitle summarizing the key
-    survey insight
-  - Library mastery could be pushed with more Plotly-distinctive features (e.g., custom
-    buttons, rangeslider)
-  image_description: 'The plot displays a horizontal diverging stacked bar chart showing
-    employee engagement survey results for 10 questions. Bars diverge from a central
-    zero line with the neutral category split evenly across the midpoint. "Strongly
-    Disagree" (dark red, #C0392B) and "Disagree" (salmon, #E67E73) extend left; "Neutral"
-    (muted gray, #B0B0B0) straddles the center; "Agree" (medium blue, #5B9BD5) and
-    "Strongly Agree" (dark blue, #306998) extend right. Questions are sorted by net
-    agreement from bottom ("I see a clear career path", most negative) to top ("I
-    have the tools I need", most positive). Percentage labels appear inside bar segments
-    with smart suppression for narrow segments (<8% width). Text colors are properly
-    adapted: white on dark backgrounds (strongly disagree, strongly agree) and dark
-    (#2C2C2C) on lighter backgrounds (disagree, neutral, agree). Two color-coded annotations
-    highlight extremes: "+70 net" in blue at the top right and "-10 net" in red at
-    the bottom left. The title "bar-diverging-likert · plotly · pyplots.ai" is centered
-    and bold at top. X-axis shows "← Disagree | Agree →" with percentage ticks. A
-    dark zeroline (width 2) anchors the diverging point. A horizontal legend at the
-    bottom displays all five categories. Background is clean white with very subtle
-    gridlines (opacity 0.07).'
+  - 'DE-01 stops short of publication-ready (6/8): adding mild emphasis on the best/worst
+    question bar (e.g., slightly thicker border or bolder label) would push into 7-8
+    territory'
+  - 'DE-02 minor: legend borderwidth=1 is slightly heavy in light mode; reducing to
+    0.5 would refine further; no per-side grid control (top/right grid lines could
+    be disabled)'
+  - 'LM-02: hover tooltips could be richer (e.g., showing net score and rank in the
+    hovertemplate) to make the interactive HTML more distinctive'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Employee Engagement Survey · bar-diverging-likert · python · plotly · anyplot.ai" centered and readable. Subtitle visible below. Y-axis question labels (dark ink) readable. X-axis "Response (%)" label and tick labels all visible with dark ink.
+      Data: 10 horizontal diverging stacked bars. Colors: dark red (#AE3030, Strongly Disagree), light salmon (Disagree interpolated), charcoal/muted (Neutral, INK_MUTED), steel blue (Agree interpolated), deep blue (#4467A3, Strongly Agree). Percentage labels inside segments. Net annotations +70 net (blue) and -10 net (red) at extremes.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream ink — clearly readable. Subtitle visible. Y-axis question labels in light ink. X-axis labels and ticks in light ink (INK_SOFT #B8B7B0). Legend text light. All chrome correctly flipped to light-on-dark.
+      Data: Segment colors identical to light render — diverging red-to-blue scheme unchanged. Percentage labels inside segments remain readable with per-segment contrast logic (light text on dark segments, dark text on lighter segments). Net annotations visible.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All text readable against near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,42 +55,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis label 22pt, x-ticks
-          18pt, y-ticks 17pt, in-bar text 16pt, legend 16pt, annotations 14pt'
+        comment: 'All font sizes explicitly set: title scaled via 67/len(title) formula,
+          axis labels 12px, ticks 10px, segment labels 11px, annotations 11px. Both
+          renders well-proportioned.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Labels suppressed for narrow segments (<8%
-          width). Good bar spacing
+        comment: No overlapping text. bargap=0.25 spaces bars well. Labels suppressed
+          when segment width < 7%.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bar segments visible including small ones. White separator lines
-          aid distinction
+        comment: All bar segments clearly visible with white separator lines. Percentage
+          labels readable inside segments.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging palette anchored at Imprint red and blue. Per-segment text
+          contrast logic ensures readability. CVD-safe Imprint anchors.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Red-to-blue diverging palette is colorblind-safe with luminance redundancy
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good utilization (~65% canvas). Slight asymmetry due to data range
-          on positive side
+        comment: 3200x1800 canvas. autosize=False. automargin=True handles long Y-axis
+          labels. Balanced layout with legend below.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Directional axis label with percentage tick suffix provides clear
-          context
+        comment: X-axis Response (%) with ticksuffix. Y-axis question labels self-documenting.
+          Title correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception: imprint_div endpoints for Likert diverging scheme
+          (red=disagree, blue=agree is universal convention). Background FAF8F1/1A1A17
+          correct. Chrome tokens theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -96,22 +110,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette, Inter font family, adaptive text colors,
-          white bar separators. Approaching publication quality
+        comment: 'Strong design: custom diverging palette, per-segment text contrast,
+          colored net annotations, subtitle with insight. Above defaults but not publication-ready
+          level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle gridlines (0.07 opacity), emphasized
-          zeroline, white segment separators, generous spacing
+        comment: Spines removed (showline=False), subtle grid (rgba 0.15), styled
+          zero line (width=2), white segment separators (0.8px), legend with elevated
+          background and border.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorting by net agreement and color-coded annotations for extremes
-          create clear narrative. Could enhance with subtitle
+        comment: Questions sorted by net agreement. Net annotations at extremes create
+          focal points. Subtitle tells headline finding. Visual hierarchy from diverging
+          layout.
     spec_compliance:
       score: 15
       max: 15
@@ -121,29 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart with horizontal orientation and
-          centered neutral
+        comment: Diverging stacked horizontal bar chart with neutral split at midpoint.
+          Correct.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: centered neutral, diverging colors, sorting,
-          percentage labels, horizontal layout'
+        comment: Neutral split evenly, diverging color scheme, sorted by net agreement,
+          percentage labels with space threshold, horizontal orientation. All present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on y-axis, percentages on x-axis, all 5 Likert categories
-          properly positioned
+        comment: X=Response(%), Y=questions, zero line at center, all data correctly
+          mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and horizontal legend with all 5 categories
-          in proper order
+        comment: Title uses Descriptive · spec-id · python · plotly · anyplot.ai format.
+          Legend labels match categories.
     data_quality:
       score: 15
       max: 15
@@ -153,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full range: strongly positive, balanced, and negative-leaning items.
-          All 5 Likert categories have meaningful variation'
+        comment: Shows all 5 response categories with full variation across 10 questions
+          spanning from net +70 to net -10.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is a real, neutral business scenario with
-          professional question wording
+        comment: Employee engagement survey is realistic, neutral business scenario
+          with recognizable question types.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All rows sum to 100%. Realistic survey distributions with no extreme
-          values
+        comment: All rows sum to 100%. Distributions plausible for employee surveys
+          (tools/teamwork rated higher, career development lower).
     code_quality:
       score: 10
       max: 10
@@ -178,34 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports → Data → Calculations → Plot → Style
-          → Save'
+        comment: 'Flat script: tokens → data → computation → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully hardcoded data, no randomness. Deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and plotly.graph_objects, both used. Dead numpy import
-          removed
+        comment: os, sys, pandas, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean segment iteration, smart text display logic, no dead code or
-          over-engineering
+        comment: Clean, Pythonic. Per-segment text color dict and label-suppression
+          threshold concise and correct.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (4800x2700) and plot.html with CDN. Current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
     library_mastery:
       score: 7
       max: 10
@@ -215,15 +231,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Bar with overlay barmode and manual base positioning
-          for diverging bars
+        comment: go.Bar with base= and x=widths for diverging positioning is correct
+          Plotly idiom. customdata + hovertemplate correctly wired.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom hovertemplate, HTML export with CDN, plotly_white template.
-          Core technique is manually implemented
+        comment: hovertemplate with customdata provides per-segment interactive hover.
+          HTML export for interactivity. Plotly-specific and not trivially portable.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -236,4 +252,3 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
