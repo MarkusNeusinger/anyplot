@@ -1,0 +1,189 @@
+# anyplot.ai
+# bar-diverging-likert: Likert Scale Diverging Bar Chart
+# Library: Makie.jl | Julia 1.11
+# Quality: pending | Created: 2026-06-01
+
+using CairoMakie
+using Colors
+using Random
+
+Random.seed!(42)
+
+# Theme tokens
+const THEME       = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
+const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
+
+# Imprint palette — semantic mapping: positive→green, negative→red
+const COL_SA = colorant"#009E73"  # Strongly Agree: Imprint brand green (positive)
+const COL_A  = colorant"#4467A3"  # Agree: Imprint blue
+const COL_D  = colorant"#BD8233"  # Disagree: Imprint ochre
+const COL_SD = colorant"#AE3030"  # Strongly Disagree: Imprint matte red (negative)
+
+# Data — employee engagement survey (10 items, 5-point Likert scale)
+const questions_raw = [
+    "Work-Life Balance",
+    "Team Collaboration",
+    "Management Support",
+    "Career Development",
+    "Compensation & Benefits",
+    "Learning Opportunities",
+    "Job Security",
+    "Company Culture",
+    "Tools & Resources",
+    "Internal Communication",
+]
+
+# Rows: [SD, D, N, A, SA] as percentages (each row sums to 100)
+const resp_matrix = Float64[
+     5  12  18  42  23;
+     3   8  12  45  32;
+     8  15  20  38  19;
+    10  18  22  32  18;
+    12  20  25  28  15;
+     4  10  16  48  22;
+     6  11  19  40  24;
+     5   9  14  44  28;
+     9  16  21  35  19;
+     7  13  17  40  23;
+]
+
+n_q  = length(questions_raw)
+sd_v = resp_matrix[:, 1]
+d_v  = resp_matrix[:, 2]
+n_v  = resp_matrix[:, 3]
+a_v  = resp_matrix[:, 4]
+sa_v = resp_matrix[:, 5]
+
+# Sort ascending by net agreement (SA + A − SD − D): most negative at bottom
+net_score = sa_v .+ a_v .- sd_v .- d_v
+order     = sortperm(net_score)
+
+questions = questions_raw[order]
+sd = sd_v[order]; d = d_v[order]; n = n_v[order]
+a  = a_v[order];  sa = sa_v[order]
+
+y_pos  = collect(1.0:Float64(n_q))
+n_half = n ./ 2.0
+
+# Segment x-offsets — bars are contiguous around the neutral midpoint (x = 0)
+sd_off = -(sd .+ d .+ n_half)   # SD: leftmost
+d_off  = -(d .+ n_half)         # D: adjacent right of SD
+n_off  = -n_half                 # N: centered on 0 (full bar)
+a_off  =  n_half                 # A: adjacent right of neutral
+sa_off =  n_half .+ a            # SA: rightmost
+
+# Title with length-aware fontsize
+title_str = "bar-diverging-likert · julia · makie · anyplot.ai"
+title_fs  = length(title_str) > 67 ? round(Int, 20 * 67 / length(title_str)) : 20
+
+# Figure
+fig = Figure(
+    size            = (1600, 900),
+    fontsize        = 14,
+    backgroundcolor = PAGE_BG,
+)
+
+ax = Axis(
+    fig[1, 1];
+    title              = title_str,
+    titlesize          = title_fs,
+    titlecolor         = INK,
+    xlabel             = "← Disagree        Response Share (%)        Agree →",
+    xlabelcolor        = INK,
+    xlabelsize         = 13,
+    xticklabelcolor    = INK_SOFT,
+    xticklabelsize     = 11,
+    yticklabelcolor    = INK_SOFT,
+    yticklabelsize     = 12,
+    xtickcolor         = INK_SOFT,
+    ytickcolor         = :transparent,
+    backgroundcolor    = PAGE_BG,
+    topspinevisible    = false,
+    rightspinevisible  = false,
+    leftspinevisible   = false,
+    bottomspinecolor   = INK_SOFT,
+    xgridvisible       = true,
+    ygridvisible       = false,
+    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
+    yticks             = (y_pos, questions),
+)
+
+# Format x-axis ticks as absolute percentages
+ax.xtickformat = vs -> ["$(abs(round(Int, v)))%" for v in vs]
+
+bar_half = 0.37  # half of bar height in y-units (full width = 0.74)
+
+# Draw stacked horizontal bars as explicit rectangles for precise placement
+for i in 1:n_q
+    yi = y_pos[i]
+    y1 = yi - bar_half
+    y2 = yi + bar_half
+    bh = y2 - y1
+
+    for (x0, w, c) in [
+        (sd_off[i], sd[i], COL_SD),
+        (d_off[i],  d[i],  COL_D),
+        (n_off[i],  n[i],  INK_MUTED),
+        (a_off[i],  a[i],  COL_A),
+        (sa_off[i], sa[i], COL_SA),
+    ]
+        poly!(ax, Rect2f(x0, y1, w, bh);
+              color = c, strokecolor = c, strokewidth = 0.5)
+    end
+end
+
+# Center reference line
+vlines!(ax, [0.0]; color = INK_SOFT, linewidth = 2.0, linestyle = :solid)
+
+# Percentage labels inside segments where space permits (≥ 8%)
+label_fs = 10
+
+for i in 1:n_q
+    yi = y_pos[i]
+    for (x0, w, c, label_c) in [
+        (sd_off[i], sd[i], COL_SD, colorant"#FFFFFF"),
+        (d_off[i],  d[i],  COL_D,  colorant"#FFFFFF"),
+        (a_off[i],  a[i],  COL_A,  colorant"#FFFFFF"),
+        (sa_off[i], sa[i], COL_SA, colorant"#FFFFFF"),
+    ]
+        if w >= 8.0
+            text!(ax, x0 + w / 2, yi;
+                  text     = "$(round(Int, w))%",
+                  align    = (:center, :center),
+                  color    = label_c,
+                  fontsize = label_fs)
+        end
+    end
+end
+
+# Legend (horizontal, at bottom)
+legend_elements = [
+    PolyElement(color = COL_SD,   strokecolor = :transparent),
+    PolyElement(color = COL_D,    strokecolor = :transparent),
+    PolyElement(color = INK_MUTED, strokecolor = :transparent),
+    PolyElement(color = COL_A,    strokecolor = :transparent),
+    PolyElement(color = COL_SA,   strokecolor = :transparent),
+]
+legend_labels = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+
+Legend(
+    fig[2, 1],
+    legend_elements,
+    legend_labels;
+    orientation     = :horizontal,
+    framecolor      = INK_SOFT,
+    backgroundcolor = ELEVATED_BG,
+    labelcolor      = INK_SOFT,
+    labelsize       = 12,
+    patchsize       = (24, 14),
+    tellwidth       = false,
+    tellheight      = true,
+)
+
+rowsize!(fig.layout, 2, Fixed(60))
+
+save("plot-$(THEME).png", fig; px_per_unit = 2)
