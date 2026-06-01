@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-01
@@ -138,6 +138,9 @@ bar_height = 0.7
 long_df["ymin"] = long_df["y_pos"] - bar_height / 2
 long_df["ymax"] = long_df["y_pos"] + bar_height / 2
 long_df["label_x"] = (long_df["xmin"] + long_df["xmax"]) / 2
+# Shift neutral labels slightly right of center to avoid overlap with the x=0 reference vline
+neutral_mask = long_df["response_key"] == "neutral"
+long_df.loc[neutral_mask, "label_x"] = long_df.loc[neutral_mask, "xmin"] + long_df.loc[neutral_mask, "pct"] * 0.60
 long_df["label"] = long_df["pct"].apply(lambda v: f"{v}%" if v >= 10 else "")
 
 title = "bar-diverging-likert · python · plotnine · anyplot.ai"
@@ -153,9 +156,9 @@ plot = (
     + scale_fill_manual(values=fill_colors, breaks=response_order)
     + scale_color_manual(values=label_colors, breaks=response_order)
     + scale_y_continuous(breaks=list(range(len(question_order))), labels=question_order, limits=(-0.5, 10.2))
-    + scale_x_continuous(labels=lambda ticks: [f"{abs(int(v))}%" for v in ticks])
+    + scale_x_continuous(labels=lambda ticks: [f"{abs(int(v))}%" for v in ticks], expand=(0.02, 2))
     + annotate(
-        "text", x=0, y=9.9, label="← Disagree    Agree →", size=2.8, color=INK_MUTED, fontstyle="italic", ha="center"
+        "text", x=0, y=9.9, label="← Disagree    Agree →", size=3.5, color=INK_MUTED, fontstyle="italic", ha="center"
     )
     + labs(x="Percentage of Responses", y="", title=title, fill="Response")
     + guides(fill=guide_legend(nrow=1))
