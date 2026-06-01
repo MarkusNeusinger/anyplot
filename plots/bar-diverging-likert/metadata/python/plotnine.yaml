@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:05:46Z'
-updated: '2026-06-01T23:18:57Z'
+updated: '2026-06-01T23:29:59Z'
 generated_by: claude-sonnet
 workflow_run: 26787153455
 issue: 4429
@@ -12,122 +12,139 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Excellent spec compliance: diverging layout, center-neutral offset, sort by net
-    agreement, and in-bar percentage labels all implemented correctly'
-  - Sophisticated use of geom_rect with manually computed xmin/xmax for precise diverging
-    bar positioning — demonstrates advanced plotnine grammar mastery
-  - Full theme-adaptive styling with appropriate semantic colors (matte red for strongly
-    disagree, blue for strongly agree, muted neutral) built from Imprint palette anchors
-  - 'Clear data story: sorted questions make it immediately obvious which topics have
-    the lowest/highest agreement; Compensation & benefits visually stands out as the
-    only net-negative question'
-  - Code is clean, flat-script, fully deterministic, and all imports are used
+  - Correct diverging stacked bar chart with precise neutral-centering math (SD +
+    D + N/2 offset)
+  - 'Custom piecewise-interpolated diverging palette anchored on Imprint colors (#AE3030
+    → INK_MUTED → #4467A3) with theme-adaptive neutral midpoint'
+  - 'Contrast-aware in-bar label text colors: white on dark fills, near-black on mid-brightness
+    fills — correctly distinguishing both themes'
+  - Questions sorted by net agreement with 'Compensation & benefits' at bottom providing
+    natural narrative arc
+  - Direction annotation '← Disagree    Agree →' in italic adds helpful reader orientation
+    without visual clutter
+  - 'Perfect spec compliance: horizontal orientation, divergence from center, percentage
+    labels, sorted questions'
+  - 'Fully idiomatic plotnine grammar-of-graphics: geom_rect for manual bar positioning,
+    dual scale_fill_manual + scale_color_manual for fill+label color, guide_legend(nrow=1)
+    for compact horizontal legend'
+  - Clean code with wide-to-long melt, cumsum-based bar positioning, and no unnecessary
+    abstractions
   weaknesses:
-  - Some bar segment percentage labels (≥10% threshold) appear cramped in narrow segments
-    near the center line, particularly Neutral labels whose label_x lands on x=0 where
-    the reference vline runs — the overlapping vline and label hurt legibility slightly
-  - The directional annotation ← Disagree    Agree → is very small at size=2.8mm (≈8pt),
-    sitting at the minimal legibility threshold; increase to 3.5mm for better readability
-    when the chart is scaled to mobile widths
-  - Top question bars (Team collaboration, Workplace environment) extend close to
-    the right edge of the plot area leaving minimal breathing room; a small explicit
-    x-axis upper limit or added right margin would improve layout polish
+  - 'Design Excellence ceiling: DE-01 (6/8) and DE-03 (4/6) are good but leave room
+    — the chart is polished and functional but not yet exceptional. The sorting and
+    annotation are fine; adding a subtle callout or direct labelling of the net-agreement
+    delta on each row would push storytelling further.'
+  - Legend box frame (element_rect with color=INK_SOFT) is visible — style guide recommends
+    considering removal of legend box frames to reduce chrome; a frameless legend
+    or legend integrated into the annotation area would be cleaner.
+  - 'LM-02 (2/5): Implementation is correct idiomatic plotnine but lacks features
+    that are uniquely distinctive to plotnine versus ggplot2/R. Nothing here goes
+    beyond what standard geom_rect + theme_minimal would produce in ggplot2.'
+  - In-bar label for 'Neutral' is shifted right 60% (label_x = xmin + pct*0.60) to
+    avoid vline overlap — could still visually collide when segments are narrow; centering
+    at 50% with a small x-nudge of 1-2 units would be more robust.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — correct
-      Chrome: title "bar-diverging-likert · python · plotnine · anyplot.ai" in dark ink, centered, clearly readable; x-axis label "Percentage of Responses" in dark ink; y-axis question labels in INK_SOFT (dark gray), all readable; tick labels on x-axis in INK_SOFT; directional annotation "← Disagree    Agree →" very small but still legible
-      Data: 5 diverging segments per bar — Strongly Disagree in matte red (#AE3030), Disagree in interpolated brownish-red, Neutral in muted gray (INK_MUTED), Agree in steel blue, Strongly Agree in Imprint blue (#4467A3); white percentage labels in larger segments; center reference line in dark gray; legend at bottom in single row with elevated-bg frame
-      Legibility verdict: PASS — all primary text readable; annotation and narrow-segment labels are small but legible
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "bar-diverging-likert · python · plotnine · anyplot.ai" centered at top in dark ink — readable and appropriately sized (~70% width). Y-axis tick labels (question text) in INK_SOFT dark gray, readable. X-axis tick labels ("50%", "0%", "50%") and axis title "Percentage of Responses" clearly legible. Direction annotation "← Disagree    Agree →" in italic INK_MUTED near the top center. Legend at bottom in horizontal row with elevated-bg box frame.
+      Data: Five-segment diverging bars. Strongly Disagree = dark matte red (#ae3030), Disagree = medium pinkish-brown (#8d4d4a), Neutral = muted dark gray (#6b6a63), Agree = medium slate blue (#586983), Strongly Agree = Imprint blue (#4467a3). Center reference vline at x=0. Percentage labels (≥10%) inside bars in white or near-black depending on segment brightness. "Compensation & benefits" at bottom with dominant red segments clearly shows negative net agreement.
+      Legibility verdict: PASS — all text clearly readable against off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — correct
-      Chrome: title and axis label text switch to light ink (INK = #F0EFE8), clearly readable against dark surface; y-axis question labels in INK_SOFT (light gray), readable; tick labels in INK_SOFT; no dark-on-dark failures observed; center vline visible in light gray
-      Data: Boundary data colors (Strongly Disagree = #AE3030, Strongly Agree = #4467A3) are identical to light render; Neutral segment shifts to #A8A79F (light muted — theme-adaptive semantic anchor) as expected; Disagree and Agree interpolated colors appear consistent; white labels still readable in dark segments
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; theme correctly inverts chrome while data palette boundary anchors stay constant
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Title and all axis labels/ticks rendered in light ink (INK = #F0EFE8 / INK_SOFT = #B8B7B0) — visible against dark background. No dark-on-dark text failures observed. Legend box uses elevated dark fill (#242420) with light border.
+      Data: Same diverging structure. Colors shift at neutral: Strongly Disagree = same #ae3030 (red unchanged), Disagree = medium pinkish #ab6c68 (lighter than light mode due to lighter mid), Neutral = light gray #a8a79f (theme-adaptive mid), Agree = medium blue-gray #7687a1 (lighter than light mode), Strongly Agree = same #4467a3. Data bar endpoints (Strongly Disagree, Strongly Agree) are identical between themes; intermediate colors shift with the theme-adaptive midpoint. This is the expected imprint_div behavior.
+      Legibility verdict: PASS — all text readable. In-bar labels have adequate contrast (dark text on mid-brightness Agree/Disagree segments is ~4.2–4.7:1 contrast). No elements invisible or unreadable in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and question tick labels clearly readable in
-          both themes; bar labels (2.8mm) legible in segments ≥10%; directional annotation
-          at 2.8mm is at the minimal legibility threshold
+        comment: All text readable in both themes. In-bar labels at size=2.8mm borderline
+          at scale but legible. Neutral label shifted 60% right of segment start (vs
+          50% center) to avoid vline collision — minor but noted.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Some crowding of Neutral labels near x=0 where the center vline runs;
-          narrow segments (e.g. 10-13%) are tight but not fully overlapping
+        comment: No overlapping text or collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 5 response categories clearly visible and distinguishable; center
-          reference line prominent in both themes
+        comment: All bar segments clearly visible. Center vline prominent. Color differentiation
+          good across all segments.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scheme is CVD-safer than red-green; muted neutral
-          distinguishable from both poles
+        comment: Red-blue diverging with luminance differences. No red-green sole
+          signal. CVD-safe via brightness differentiation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 correct; bars for top questions extend close to right plot
-          edge leaving minimal breathing room; title proportion good
+        comment: Canvas gate passed (3200x1800). Title well-proportioned. Horizontal
+          layout suits long question text. Good whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Percentage of Responses'; title matches required
-          format; directional annotation aids orientation
+        comment: Title follows mandated format. X-axis labeled 'Percentage of Responses'
+          with % tick labels. Y-axis empty (correct — questions are tick labels).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Endpoints use exact Imprint anchors (#AE3030, #4467A3); neutral
-          uses INK_MUTED semantic anchor (theme-adaptive by design); backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: 'Imprint diverging palette: #AE3030 (matte-red semantic anchor) for
+          negative extreme, #4467A3 (Imprint blue) for positive extreme. Semantic
+          exception correctly applied — Likert sentiment maps red=disagree, blue=agree.
+          Theme-adaptive neutral midpoint consistent with imprint_div spec. Backgrounds
+          #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette from Imprint anchors; sorted data adds analytical
-          value; directional annotation shows design intent
+        comment: Custom piecewise diverging palette, contrast-aware label colors,
+          direction annotation in italic. Polished and intentional. Not quite exceptional
+          — could add a net-agreement delta label or more distinctive focal-point
+          emphasis.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis grid removed; subtle x-axis grid at 15% opacity; theme_minimal
-          base; legend with elevated background
+        comment: theme_minimal() with Y-grid suppressed, X-grid at alpha=0.15, L-shaped
+          frame. Legend box frame still visible (style guide suggests removal). Good
+          whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sort by net agreement makes ranking immediately readable; Compensation
-          & benefits visually stands apart as net-negative
+        comment: Sorted by net agreement for easy comparison. Direction annotation
+          guides reader. Center vline as focal point. Compensation & benefits narrative
+          at bottom is effective. Could go further with direct net-agreement labels
+          per row.
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +154,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart in horizontal orientation
+        comment: Correct diverging stacked bar chart. Horizontal orientation. Precise
+          neutral centering.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Centered on neutral (split evenly), diverging color scheme, sorted
-          by net agreement, percentage labels in segments ≥10%
+        comment: Diverging from neutral midpoint, diverging color scheme, sorted by
+          net agreement, percentage labels inside bars, horizontal orientation — all
+          implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=percentage, Y=questions, all 5 response categories mapped, 10 questions
+        comment: Questions on Y-axis, percentages on X-axis with diverging scale.
+          All 5 Likert categories shown. All 10 questions visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend shows all 5 categories in single
-          row at bottom
+        comment: Title 'bar-diverging-likert · python · plotnine · anyplot.ai' matches
+          mandated format. Legend labels correct (Strongly Disagree, Disagree, Neutral,
+          Agree, Strongly Agree).
     data_quality:
       score: 15
       max: 15
@@ -167,21 +188,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 Likert levels, 10 questions, net-negative question included,
-          full percentage labels
+        comment: All 5 Likert levels represented. 10 questions within spec range.
+          Includes a net-negative question (Compensation & benefits) to demonstrate
+          full divergence.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic employee engagement survey; all rows sum to 100%; neutral
-          data
+        comment: Employee engagement survey is a realistic and neutral real-world
+          application. All percentages sum to 100. Values are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic percentage distributions; good variation across questions
+        comment: Percentages 0-100 with realistic distributions. Range of agreement
+          levels across questions is realistic.
     code_quality:
       score: 10
       max: 10
@@ -191,34 +214,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no classes or functions
+        comment: No functions or classes. Linear procedural code. sys.path fix at
+          top is justified and minimal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Static data, fully deterministic. No random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine symbols imported are used
+        comment: All imports used. plotnine imports are correctly scoped to what's
+          needed.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Numpy-based palette interpolation avoids matplotlib conflict; clean
-          diverging position math
+        comment: 'Elegant data pipeline: melt → cumsum → diverging offset. No fake
+          UI. Appropriate complexity for a diverging chart.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dimensions
+        comment: Saves as plot-{THEME}.png. Current plotnine API used correctly.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -226,23 +251,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct plotnine grammar; geom_rect for manual bar positioning is
-          idiomatic for diverging charts; guide_legend(nrow=1) used correctly
+        comment: 'Idiomatic grammar of graphics: geom_rect for manual bar coords (correct
+          choice over geom_bar for diverging), aes() mappings, scale_fill_manual +
+          scale_color_manual for dual aesthetic, guide_legend(nrow=1). Solid plotnine
+          usage.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Creative use of geom_rect + manually computed xmin/xmax for precise
-          diverging positioning; dual scale_fill_manual/scale_color_manual for fill
-          and label colors simultaneously
+        passed: false
+        comment: Implementation is correct idiomatic plotnine but does not showcase
+          features distinctively unique to plotnine vs ggplot2/R. Could leverage facet_wrap
+          for small-multiples comparison, stat_summary, or plotnine-specific theme
+          extensions.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - manual-ticks
+  - layer-composition
   patterns:
   - wide-to-long
   dataprep:
