@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:05:35Z'
-updated: '2026-06-01T23:12:29Z'
+updated: '2026-06-01T23:21:25Z'
 generated_by: claude-sonnet
 workflow_run: 26786735910
 issue: 4429
@@ -12,97 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: diverging stacked bar chart correctly centered on neutral,
-    sorted by net agreement, percentage labels inside segments'
-  - Net agreement annotation column on the right adds immediate insight not required
-    by the spec
-  - All data rows sum to 100%; realistic employee engagement scenario with meaningful
-    variation across items
-  - Clean flat KISS code structure with all theme tokens correctly applied throughout
-  - subplots_adjust used correctly instead of bbox_inches=tight; canvas dimensions
-    are exact 3200x1800 px
-  - ax.annotate with mixed coordinate system (axes fraction + data) is a sophisticated
-    and idiomatic matplotlib technique
+  - Diverging stacked bar chart correctly centered on neutral split with all 5 Likert
+    categories rendered
+  - Sorted by net agreement (ascending) so highest-agreement items appear at chart
+    top — excellent design decision
+  - Net agreement column on the right with themed +/- coloring adds analytical value
+  - Percentage labels inside bar segments (≥7% threshold) provide quantitative precision
+    without clutter
+  - All spines removed, Y-tick marks hidden, subtle x-axis grid — clean visual refinement
+  - 'Theme-adaptive chrome throughout: INK/INK_SOFT/INK_MUTED tokens applied to all
+    text and chrome elements'
+  - 'Semantic color mapping (red=disagree, blue=agree) using Imprint palette endpoints
+    #AE3030 and #4467A3 is clearly intuitive'
+  - Mixed coordinate system annotations (xycoords axes fraction + data) for the net
+    column is idiomatic advanced matplotlib
   weaknesses:
-  - 'VQ-07: Intermediate Likert category colors (Disagree, Neutral, Agree) shift between
-    light and dark themes because the diverging colormap uses INK_MUTED as its theme-adaptive
-    midpoint. Fix: replace INK_MUTED midpoint with a fixed neutral hex (e.g. #888880)
-    so div_cmap(0.25) and div_cmap(0.75) produce identical colors in both themes;
-    also hardcode the Neutral category to a fixed gray rather than INK_MUTED.'
-  - 'DE-01: Intermediate bar colors (Disagree, Agree) are muddy blends that lack visual
-    crispness. After fixing the midpoint to a fixed neutral hex the blended colors
-    will be more predictable and cleaner.'
+  - 'VQ-07 partial: The neutral midpoint color #888880 is a custom hex not from the
+    Imprint palette. The correct imprint_div definition uses theme-adaptive PAGE_BG
+    as midpoint. For a Likert bar chart the neutral category should use the Imprint
+    muted anchor (#6B6A63 light / #A8A79F dark) rather than a custom gray — this keeps
+    all segment colors traceable to Imprint tokens while still appearing as a midpoint
+    neutral.'
+  - 'LM-01/LM-02: The mixed-coordinate annotation technique and custom FuncFormatter
+    are above defaults but stop short of exploiting the full power of the matplotlib
+    Axes API (e.g., no use of inset axes, no container-based bar label helpers available
+    in 3.9+, no explicit font family set). A minor polish opportunity.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface.
-      Chrome: Title "bar-diverging-likert · python · matplotlib · anyplot.ai" in dark INK at ~12pt — clearly readable. Y-axis question labels in INK_SOFT dark gray at 9pt — readable. X-axis signed-percentage ticks at 8pt — readable. X-axis label "Percentage of Responses" at 10pt — readable. Net annotation column on the right in blue/red — readable.
-      Data: Strongly Disagree (#AE3030 matte red), Disagree (brownish-dark blend from imprint_div at 0.25 with dark-gray midpoint), Neutral (#6B6A63 dark gray = INK_MUTED in light), Agree (muted blue-gray blend at 0.75), Strongly Agree (#4467A3 blue). Percentage labels in white inside colored segments, dark INK inside Neutral segments. Center line in INK_SOFT. Grid subtle at alpha=0.15.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "bar-diverging-likert · python · matplotlib · anyplot.ai" at top in dark text, fully readable. Y-axis question labels (e.g. "Resources are adequate", "Leadership inspires confidence") in INK_SOFT dark text, clear. X-axis label "Percentage of Responses" in INK dark text. X-axis tick labels (+/- % values) in INK_SOFT. All spines removed; subtle x-axis grid at alpha=0.15. Legend below chart with 5 category labels, no frame, INK_SOFT text.
+      Data: Red tones (#AE3030 and blended) for Strongly Disagree / Disagree; warm gray (#888880) for Neutral; blue tones (blended and #4467A3) for Agree / Strongly Agree. Percentage labels inside segments ≥7% width in white (non-neutral) or dark INK (neutral). Net agreement column on right in themed blue (+) or red (-). Data ordered from lowest to highest net agreement (Leadership −4 at bottom, Resources +72 at top).
+      Legibility verdict: PASS — all text readable, no overlap, no clipping.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark surface.
-      Chrome: Title and all labels flip to light colors (INK #F0EFE8, INK_SOFT #B8B7B0) — all readable. No dark-on-dark issues detected. Net column values in blue/red — readable against dark background.
-      Data: Strongly Disagree and Strongly Agree endpoint colors are identical to light render (#AE3030 and #4467A3). However, intermediate colors shift: Disagree goes from brownish-dark to pinkish-rose (div_cmap midpoint changes from #6B6A63 to #A8A79F); Neutral shifts from #6B6A63 to #A8A79F (lighter warm gray); Agree lightens noticeably. These are visible category color changes between themes — a VQ-07 partial compliance issue.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, but intermediate data category colors are not theme-stable.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in near-white (#F0EFE8) INK token, clearly visible against dark background. Y-axis question labels in #B8B7B0 INK_SOFT, readable. X-axis tick labels in INK_SOFT, readable. Legend labels in INK_SOFT. No dark-on-dark failures detected.
+      Data: Colors are identical to the light render — same red/gray/blue diverging scheme. Bar segment percentage labels: white (non-neutral) and #F0EFE8 INK (neutral on #888880 gray) — both readable. Net column values use same #4467A3/AE3030 as light render, identical data colors.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issue, chrome correctly flipped.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title scales with length formula;
-          y-axis 9pt, x-axis ticks 8pt, bar labels 7pt, legend 8pt; both themes readable
-          with good proportions
+        comment: 'All font sizes explicitly set: title 12pt (scaled), y-ticks 9pt,
+          x-label 10pt, x-ticks 8pt, legend 8pt, in-bar labels 7pt. Well-proportioned
+          in both themes. Minor: 7pt in-bar labels and net annotations are at the
+          edge of mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere; bar labels, question labels, net values,
-          and legend are all clear
+        comment: No overlapping text. Q-labels, % labels inside bars, tick labels,
+          legend, and net column are all properly spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized; percentage labels inside segments with smart 7%
-          threshold; center line and net annotations clearly visible
+        comment: All bar segments clearly visible with PAGE_BG edgecolor separation.
+          Colors are distinct and semantically appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-to-blue diverging is CVD-safer than red-green; adequate luminance
-          contrast; text labels provide redundant encoding
+        comment: Red-blue diverging scheme (not red-green). Percentage labels provide
+          redundant encoding. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 px; subplots_adjust balances margins; legend below
-          chart; no edge clipping
+        comment: subplots_adjust(left=0.30, right=0.90, top=0.92, bottom=0.16) provides
+          well-balanced margins. Chart fills canvas well. Legend below chart within
+          bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis Percentage of Responses is descriptive; title in correct format
+        comment: X-axis labeled 'Percentage of Responses', descriptive. Title in correct
+          format. Y-axis categories serve as self-describing labels.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Semantic exception for Likert polarity valid; endpoint colors are
-          Imprint members. Issue: diverging colormap uses theme-adaptive INK_MUTED
-          as midpoint, so Disagree, Neutral, Agree colors shift between light (brownish/dark
-          gray) and dark (pinkish/light gray) themes — data colors are not theme-stable'
+        comment: 'Partial: Imprint endpoints #AE3030 (slot 5, semantic red) and #4467A3
+          (slot 3, blue) used correctly with a valid sentiment semantic exception.
+          Chrome is fully theme-adaptive. Deduction: neutral midpoint #888880 is a
+          custom hex not from Imprint — should use the muted anchor (#6B6A63 light
+          / #A8A79F dark) or the Imprint PAGE_BG-adaptive midpoint.'
     design_excellence:
       score: 13
       max: 20
@@ -112,23 +121,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: custom diverging palette, net agreement
-          annotations, sorted questions, percentage labeling. Muddy intermediate bar
-          colors and no additional emphasis layer prevent higher score'
+        comment: 'Above well-configured defaults: sorted bars, net column with semantic
+          colors, frameless legend, semantic red/blue coding. Not quite ''strong design''
+          level — visual appearance is clean but utilitarian.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All spines removed; subtle grid at alpha=0.15; frameless legend;
-          bar edges use PAGE_BG for clean segment separation; generous margins
+        comment: All spines removed, y-tick marks hidden (length=0), subtle x-axis
+          grid (alpha=0.15), PAGE_BG edgecolor on bars. Good refinement, short of
+          'every detail polished'.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sort by net agreement creates ranking; net column provides instant
-          takeaway; single negative item stands out in red; clear visual hierarchy
+        comment: Sorting by net agreement creates a clear ranking story. Net column
+          quantifies the take-away. Red/blue semantic coding immediately signals positive/negative
+          direction. Viewer immediately reads 'Resources and Team collaboration excel;
+          Leadership and Compensation lag.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,30 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart; horizontal; neutral split evenly
-          at center; all 5 Likert categories present
+        comment: Correct diverging stacked bar chart, horizontal, with neutral category
+          split evenly at center.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center neutral point, diverging red-to-blue color scheme, sorted
-          by net agreement, percentage labels inside segments, horizontal bars — all
-          present
+        comment: 'All spec features present: diverging from center, neutral split,
+          diverging color scheme, sorted by net agreement, percentage labels inside
+          segments where space permits, horizontal orientation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on Y-axis; percentages on X-axis with +/- format; all 10
-          questions visible; all rows sum to 100%
+        comment: Questions on Y-axis, percentage responses on X-axis, all 5 categories
+          and all 10 questions correctly shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly bar-diverging-likert · python · matplotlib · anyplot.ai;
-          legend labels match Likert categories in correct order
+        comment: Title 'bar-diverging-likert · python · matplotlib · anyplot.ai' matches
+          required format exactly. Legend labels match the 5 Likert categories.
     data_quality:
       score: 15
       max: 15
@@ -171,23 +183,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full divergence range (net -4 to +72); mix of positive and negative
-          net items; all 5 categories visible and substantial; neutral split demonstrates
-          centering technique
+        comment: 10 questions covering varied aspects of employee engagement. Mix
+          of high-agreement items (+72 Resources), moderate (+38 Feedback), low (+6
+          Compensation), and one net-negative (-4 Leadership). Full range of diverging
+          chart features shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is canonical neutral business scenario;
-          10 realistic question wordings; no controversial content
+        comment: Employee engagement survey with 10 realistic workplace questions.
+          Neutral, non-controversial. Plausible and comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All rows verified to sum to exactly 100%; response distributions
-          are realistic for engagement survey with appropriate positive skew
+        comment: All 5-category percentages sum to 100% per row. Values are plausible
+          for real surveys. Range of agreement levels is realistic.
     code_quality:
       score: 10
       max: 10
@@ -197,57 +210,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flat script: theme tokens -> data -> position math -> plot
-          loop -> annotations -> legend -> save; no functions or classes'
+        comment: 'Linear flow: imports → tokens → palette → data → plot → labels/style
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hand-crafted constants; fully deterministic with no random
-          generation
+        comment: Data is fully deterministic (hardcoded arrays). No random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, matplotlib.ticker, numpy, pandas, LinearSegmentedColormap
-          — all used
+        comment: All 6 imports (os, matplotlib.pyplot, matplotlib.ticker, numpy, pandas,
+          matplotlib.colors) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; diverging start-position dict is elegant; annotation
-          loop is readable; no over-engineering
+        comment: Clean and Pythonic. Diverging bar position calculation is logical.
+          No over-engineering, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; uses ax methods
-          throughout; no deprecated API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight' (correct). No deprecated
+          API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct use of ax.barh, ax.axvline, ax.annotate with mixed xycoords,
-          mticker.FuncFormatter, mticker.MultipleLocator, annotation_clip=False; subplots_adjust
-          for layout
+        comment: Uses Axes methods (ax.barh, ax.axvline, ax.annotate), subplots_adjust,
+          get_legend_handles_labels(). Correct idiomatic usage; doesn't exploit the
+          full matplotlib high-level API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap.from_list for custom diverging cmap; ax.annotate
-          with mixed coordinate system (axes fraction + data); FuncFormatter for signed-percentage
-          tick labels
-  verdict: REJECTED
+        comment: Mixed coordinate system xycoords=('axes fraction', 'data') for net
+          column is a distinctive matplotlib technique. LinearSegmentedColormap.from_list
+          and mticker.FuncFormatter with lambda are library-specific. Clearly above
+          generic usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -259,7 +272,6 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
   - custom-colormap
   - grid-styling
+  - edge-highlighting
