@@ -1,14 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-04
+Library: altair | Python 3.13
+Quality: pending | Updated: 2026-06-01
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - Employee engagement survey (10 questions, 5-point Likert scale)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint diverging palette for Likert — anchored at position 5 (#AE3030) and 3 (#4467A3)
+# with interpolated intermediates; fixed across themes (only chrome adapts)
+LIKERT_COLORS = ["#AE3030", "#C87070", "#9C9B94", "#7A93B8", "#4467A3"]
+categories = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+
+# Data — Employee engagement survey, 10 questions on 5-point Likert scale
 data = pd.DataFrame(
     {
         "question": [
@@ -31,15 +46,12 @@ data = pd.DataFrame(
     }
 )
 
-# Sort by net agreement (agree + strongly agree - disagree - strongly disagree)
+# Sort by net agreement (agree + strongly agree − disagree − strongly disagree)
 data["net_agreement"] = data["Agree"] + data["Strongly Agree"] - data["Disagree"] - data["Strongly Disagree"]
 data = data.sort_values("net_agreement").reset_index(drop=True)
 question_order = data["question"].tolist()
 
-# Build diverging segments centered on neutral midpoint
-categories = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
-colors = ["#D95F02", "#FDB863", "#B0B0B0", "#92C5DE", "#306998"]
-
+# Build diverging segments — neutral split evenly across the zero midpoint
 rows = []
 for _, row in data.iterrows():
     half_neutral = row["Neutral"] / 2
@@ -70,18 +82,22 @@ for _, row in data.iterrows():
 
 segments_df = pd.DataFrame(rows)
 
+# Title — scale font size linearly if longer than the 67-char baseline
+title_str = "bar-diverging-likert · python · altair · anyplot.ai"
+title_fs = max(11, round(16 * 67 / len(title_str))) if len(title_str) > 67 else 16
+
 # Bars
 bars = (
     alt.Chart(segments_df)
     .mark_bar(stroke="white", strokeWidth=0.8)
     .encode(
-        x=alt.X("x_start:Q", title="Percentage (%)", axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
+        x=alt.X("x_start:Q", title="Percentage (%)", axis=alt.Axis(titleFontSize=12, labelFontSize=10)),
         x2="x_end:Q",
-        y=alt.Y("question:N", title=None, sort=question_order, axis=alt.Axis(labelFontSize=16, labelLimit=350)),
+        y=alt.Y("question:N", title=None, sort=question_order, axis=alt.Axis(labelFontSize=10, labelLimit=280)),
         color=alt.Color(
             "category:N",
-            scale=alt.Scale(domain=categories, range=colors),
-            legend=alt.Legend(title=None, labelFontSize=18, symbolSize=400, orient="bottom", direction="horizontal"),
+            scale=alt.Scale(domain=categories, range=LIKERT_COLORS),
+            legend=alt.Legend(title=None, labelFontSize=10, symbolSize=200, orient="bottom", direction="horizontal"),
         ),
         tooltip=[
             alt.Tooltip("question:N", title="Question"),
@@ -91,40 +107,57 @@ bars = (
     )
 )
 
-# Labels (white text on dark backgrounds: Strongly Disagree, Strongly Agree)
-dark_bg = segments_df[
+# In-bar labels — white text on dark segments (Strongly Disagree / Strongly Agree)
+dark_segs = segments_df[
     (segments_df["value"] >= 10) & segments_df["category"].isin(["Strongly Disagree", "Strongly Agree"])
 ]
 labels_white = (
-    alt.Chart(dark_bg)
-    .mark_text(fontSize=14, fontWeight="bold", color="white")
+    alt.Chart(dark_segs)
+    .mark_text(fontSize=12, fontWeight="bold", color="white")
     .encode(x="x_mid:Q", y=alt.Y("question:N", sort=question_order), text="label:N")
 )
 
-# Labels (dark text on light backgrounds: Disagree, Neutral, Agree)
-light_bg = segments_df[(segments_df["value"] >= 10) & segments_df["category"].isin(["Disagree", "Neutral", "Agree"])]
+# In-bar labels — dark text on light segments (Disagree / Neutral / Agree)
+light_segs = segments_df[(segments_df["value"] >= 10) & segments_df["category"].isin(["Disagree", "Neutral", "Agree"])]
 labels_dark = (
-    alt.Chart(light_bg)
-    .mark_text(fontSize=14, fontWeight="bold", color="#333333")
+    alt.Chart(light_segs)
+    .mark_text(fontSize=12, fontWeight="bold", color=INK)
     .encode(x="x_mid:Q", y=alt.Y("question:N", sort=question_order), text="label:N")
 )
 
 # Zero baseline
-zero_line = alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color="#333333", strokeWidth=1.5).encode(x="x:Q")
+zero_line = alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=INK_SOFT, strokeWidth=1.5).encode(x="x:Q")
 
-# Combine and style
+# Compose and apply theme-adaptive chrome
 chart = (
     (bars + labels_white + labels_dark + zero_line)
     .properties(
-        width=1400,
-        height=800,
-        title=alt.Title("bar-diverging-likert · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        width=580,
+        height=340,
+        background=PAGE_BG,
+        title=alt.Title(title_str, fontSize=title_fs, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axisX(gridOpacity=0.15)
-    .configure_axisY(grid=False)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_axisX(
+        gridOpacity=0.15, gridColor=INK, domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_axisY(grid=False, domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — PAD to exact 3200×1800; never crop
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
