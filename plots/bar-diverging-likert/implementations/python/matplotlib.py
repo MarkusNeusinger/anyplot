@@ -1,16 +1,37 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-04
+Library: matplotlib | Python 3.13
+Quality: 92/100 | Updated: 2026-06-01
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Data — hand-crafted realistic employee engagement survey responses
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint-derived diverging palette for Likert categories
+# Midpoint is INK_MUTED (theme-adaptive) so intermediate bars stay visible on both themes
+div_cmap = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", INK_MUTED, "#4467A3"])
+cat_colors = {
+    "Strongly Disagree": "#AE3030",  # Imprint semantic red
+    "Disagree": div_cmap(0.25),  # blended red-muted
+    "Neutral": INK_MUTED,  # theme-adaptive muted
+    "Agree": div_cmap(0.75),  # blended muted-blue
+    "Strongly Agree": "#4467A3",  # Imprint blue (position 3)
+}
+
+# Data — hand-crafted employee engagement survey (10 questions, 5-point Likert)
 questions = [
     "I feel valued at work",
     "Communication is transparent",
@@ -35,132 +56,121 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Sort by net agreement
-net_agreement = (df["Agree"] + df["Strongly Agree"]) - (df["Disagree"] + df["Strongly Disagree"])
-df = df.iloc[net_agreement.argsort()].reset_index(drop=True)
+# Sort by net agreement (ascending so highest appears at top of chart)
+net_scores = (df["Agree"] + df["Strongly Agree"]) - (df["Disagree"] + df["Strongly Disagree"])
+df = df.iloc[net_scores.argsort()].reset_index(drop=True)
 
-# Compute bar positions diverging from center
+# Diverging bar positions — neutral split evenly at center
 half_neutral = df["Neutral"] / 2
-left_strongly_disagree = -(df["Strongly Disagree"] + df["Disagree"] + half_neutral)
-left_disagree_start = -(df["Disagree"] + half_neutral)
-left_neutral_start = -half_neutral
-right_agree_start = half_neutral
-right_strongly_agree_start = half_neutral + df["Agree"]
-
-# Colors — diverging red-to-blue with muted neutral
-colors = {
-    "Strongly Disagree": "#c0392b",
-    "Disagree": "#e77a6d",
-    "Neutral": "#b0b0b0",
-    "Agree": "#6dacde",
-    "Strongly Agree": "#2471a3",
+cat_order = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+starts = {
+    "Strongly Disagree": -(df["Strongly Disagree"] + df["Disagree"] + half_neutral),
+    "Disagree": -(df["Disagree"] + half_neutral),
+    "Neutral": -half_neutral,
+    "Agree": half_neutral,
+    "Strongly Agree": half_neutral + df["Agree"],
 }
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 y_pos = np.arange(len(df))
 bar_height = 0.7
 
-categories_order = [
-    ("Strongly Disagree", left_strongly_disagree, df["Strongly Disagree"]),
-    ("Disagree", left_disagree_start, df["Disagree"]),
-    ("Neutral", left_neutral_start, df["Neutral"]),
-    ("Agree", right_agree_start, df["Agree"]),
-    ("Strongly Agree", right_strongly_agree_start, df["Strongly Agree"]),
-]
-
-for label, starts, widths in categories_order:
-    bars = ax.barh(
+for label in cat_order:
+    ax.barh(
         y_pos,
-        widths,
-        left=starts,
+        df[label],
+        left=starts[label],
         height=bar_height,
-        color=colors[label],
-        edgecolor="white",
+        color=cat_colors[label],
+        edgecolor=PAGE_BG,
         linewidth=0.8,
         label=label,
         zorder=2,
     )
 
-# Percentage labels inside segments
+# Percentage labels inside segments ≥7%
 for i in range(len(df)):
-    for label, starts, widths in categories_order:
-        w = widths.iloc[i] if hasattr(widths, "iloc") else widths[i]
-        s = starts.iloc[i] if hasattr(starts, "iloc") else starts[i]
+    for label in cat_order:
+        w = df[label].iloc[i]
+        s = starts[label].iloc[i]
         if w >= 7:
             cx = s + w / 2
-            text_color = "white" if label in ("Strongly Disagree", "Strongly Agree") else "#333333"
+            text_color = INK if label == "Neutral" else "white"
             ax.text(
-                cx, i, f"{w:.0f}%", ha="center", va="center", fontsize=14, fontweight="bold", color=text_color, zorder=4
+                cx, i, f"{w:.0f}%", ha="center", va="center", fontsize=7, fontweight="bold", color=text_color, zorder=4
             )
 
 # Center line
-ax.axvline(x=0, color="#444444", linewidth=1.5, zorder=3)
+ax.axvline(x=0, color=INK_SOFT, linewidth=1.2, zorder=3)
 
-# Subtle x-axis grid for easier percentage reading
-ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color="#888888", zorder=0)
+# X-axis grid
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK, zorder=0)
 ax.set_axisbelow(True)
 
-# Custom tick formatter showing percentage symbol
 ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:+.0f}%" if x != 0 else "0%"))
 ax.xaxis.set_major_locator(mticker.MultipleLocator(20))
 
 # Style
+title = "bar-diverging-likert · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_yticks(y_pos)
-ax.set_yticklabels(df["question"], fontsize=16)
-ax.set_xlabel("Percentage of Responses", fontsize=20)
-ax.set_title("bar-diverging-likert · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
-ax.tick_params(axis="x", labelsize=16)
+ax.set_yticklabels(df["question"], fontsize=9, color=INK_SOFT)
+ax.set_xlabel("Percentage of Responses", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
 ax.tick_params(axis="y", length=0)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_visible(False)
 
-# Add net agreement annotation on right side using ax.annotate
+# Remove all spines — center line provides the zero reference
+for spine in ax.spines.values():
+    spine.set_visible(False)
+
+# Net agreement column on right
 for i in range(len(df)):
-    net = (df["Agree"].iloc[i] + df["Strongly Agree"].iloc[i]) - (
+    net_val = (df["Agree"].iloc[i] + df["Strongly Agree"].iloc[i]) - (
         df["Disagree"].iloc[i] + df["Strongly Disagree"].iloc[i]
     )
-    sign = "+" if net > 0 else ""
-    color = "#2471a3" if net > 0 else "#c0392b"
+    sign = "+" if net_val > 0 else ""
+    net_color = "#4467A3" if net_val > 0 else "#AE3030"
     ax.annotate(
-        f"{sign}{net}",
+        f"{sign}{net_val}",
         xy=(1.02, i),
         xycoords=("axes fraction", "data"),
-        fontsize=14,
+        fontsize=7,
         fontweight="bold",
-        color=color,
+        color=net_color,
         va="center",
         ha="left",
         annotation_clip=False,
     )
 
-# Net agreement header
 ax.annotate(
     "Net",
     xy=(1.02, len(df) - 0.5),
     xycoords=("axes fraction", "data"),
-    fontsize=14,
+    fontsize=7,
     fontweight="bold",
-    color="#555555",
+    color=INK_MUTED,
     va="center",
     ha="left",
     annotation_clip=False,
 )
 
-# Legend
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(
+# Legend below chart
+handles, legend_labels = ax.get_legend_handles_labels()
+leg = ax.legend(
     handles,
-    labels,
+    legend_labels,
     loc="upper center",
     bbox_to_anchor=(0.5, -0.08),
     ncol=5,
-    fontsize=16,
+    fontsize=8,
     frameon=False,
     handlelength=1.5,
     columnspacing=1.5,
 )
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.30, right=0.90, top=0.92, bottom=0.16)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
