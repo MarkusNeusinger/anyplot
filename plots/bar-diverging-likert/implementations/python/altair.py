@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: altair | Python 3.13
-Quality: pending | Updated: 2026-06-01
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-01
 """
 
 import os
