@@ -1,5 +1,7 @@
-"""bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: bokeh | Python
+""" anyplot.ai
+bar-diverging-likert: Likert Scale Diverging Bar Chart
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-01
 """
 
 import os
