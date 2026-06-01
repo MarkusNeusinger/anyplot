@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:08:42Z'
-updated: '2026-06-01T23:24:25Z'
+updated: '2026-06-01T23:33:39Z'
 generated_by: claude-sonnet
 workflow_run: 26787237506
 issue: 4429
@@ -12,45 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Correct horizontal diverging stacked bar chart matching the spec exactly
-  - Questions sorted by net agreement creating clear narrative hierarchy
-  - Creative SVG post-processing for correct legend ordering (SD→D→N→A→SA)
-  - Threshold-based value labels (≥8%) avoid cluttering narrow bar segments
-  - Proper theme tokens applied throughout — warm off-white light / near-black dark
-    backgrounds
-  - All row percentages sum to 100%, realistic employee engagement context
-  - Self-import prevention pattern for pygal.py filename conflict handled cleanly
+  - 'Semantic Imprint palette usage: #AE3030 (red) for negative, #4467A3 (blue) for
+    positive, #6B6A63 (muted) for neutral — all from palette/anchors, matches spec''s
+    diverging color scheme requirement'
+  - Questions sorted ascending by net agreement, placing most positive at top — creates
+    a clear visual ranking narrative that tells the story at a glance
+  - Neutral response correctly split evenly (neutral/2 left, neutral/2 right) anchored
+    at the chart center per spec
+  - Conditional percentage labels (suppressed for segments < 8%) keep small bars clean
+    while preserving labels where useful
+  - SVG post-processing reorders legend to SD|D|N|A|SA (left-to-right intuitive order)
+    and removes residual guide lines — shows extra polish
+  - 'Both themes pass readability check: light text on dark background in dark render,
+    dark text on light background in light render. No dark-on-dark failures'
+  - 'Perfect spec compliance: all 5 Likert categories, horizontal orientation, diverging
+    design, sorted order, percentage labels — everything present'
+  - 'Full Data Quality: realistic employee engagement scenario with varied response
+    distributions (from mostly positive Team Collaboration to mostly negative Fair
+    Compensation)'
   weaknesses:
-  - 'Intermediate Disagree and Agree colors are interpolated using theme-adaptive
-    INK_MUTED as one endpoint, making those two data colors subtly different between
-    light and dark renders (violates the rule that Imprint data colors must be identical
-    in both themes). Fix: pin INK_MUTED to its light value (#6B6A63) for the interpolation
-    in both themes, then use the resulting fixed hex in CHART_COLORS regardless of
-    theme.'
-  - 'Disagree bars (muted brownish-pink) and Neutral bars (gray) are visually close
-    in saturation, reducing distinguishability. Fix: consider shifting the Disagree
-    interpolation endpoint to the full #AE3030 at t=0.35 (less blending) to create
-    more visual separation from the neutral gray.'
-  - 'legend_font_size=32 is below the recommended 44 for a 3200×1800 canvas — legend
-    text is slightly small. Fix: set legend_font_size=44.'
+  - 'Legend crowding: SVG x-position swap places ''Strongly Disagree'' (17 chars,
+    ~500px) into position 0 which was allocated for ''Neutral'' (7 chars) — the longer
+    label may visually overlap with the ''Disagree'' item at position 1. Consider
+    adjusting spacing or using a narrower font size for the legend when performing
+    the swap.'
+  - value_font_size=30 is below the recommended 36 in pygal.md — inside-bar percentage
+    labels are functional but slightly smaller than ideal; increase to 36-40 for better
+    readability
+  - 'DE-02 Visual Refinement could be improved: pygal''s default SVG frame/border
+    is still present around the chart — consider using custom_style border settings
+    or additional SVG post-processing to achieve a cleaner minimal chrome'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "Employee Engagement Survey · bar-diverging-likert · python · pygal · anyplot.ai" is clear dark text spanning ~80% of canvas width (expected for this long mandated title). Eight question labels on the left Y-axis are dark and fully readable. X-axis tick labels (60%…10%|10%…80%) and X-axis title "Response Percentage (%)" are dark and legible. Legend at bottom reads "Strongly Disagree | Disagree | Neutral | Agree | Strongly Agree" in dark text — readable, though slightly small (legend_font_size=32 below recommended 44).
-      Data: Diverging horizontal stacked bars centered on the neutral split-point. Strongly Disagree = matte red (#AE3030), Disagree = desaturated brownish-pink (lerp red→gray), Neutral = muted warm gray (INK_MUTED #6B6A63), Agree = muted steel gray-blue (lerp gray→#4467A3), Strongly Agree = Imprint blue (#4467A3). Value labels shown inside bars where ≥8% — readable at white-on-colored. Questions sorted ascending by net agreement (most positive at top: "Team collaboration is effective", most negative at bottom: "I receive fair compensation").
-      Legibility verdict: PASS — all chrome and data labels are readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Employee Engagement Survey · bar-diverging-likert · python · pygal · anyplot.ai" is readable at top. Question labels on Y-axis (left) are clear dark text. X-axis tick labels (60% 50% 40% ... 80%) are readable. X-axis title "Response Percentage (%)" is visible at bottom. Legend at bottom in SD|D|N|A|SA order — minor crowding between "Strongly Disagree" and "Disagree" labels due to SVG x-position swap.
+      Data: Dark red (#AE3030) for Strongly Disagree, muted rose for Disagree, gray (#6B6A63) for Neutral, muted blue for Agree, dark blue (#4467A3) for Strongly Agree. Percentage labels (e.g., 42%, 38%, 40%, 30%) clearly visible inside larger segments. Questions sorted ascending by net agreement: Team Collaboration (most positive, top) → Fair Compensation (most negative, bottom).
+      Legibility verdict: PASS — all text elements readable; minor legend crowding is cosmetic only.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, question labels, tick labels, X-axis title, and legend labels all render in off-white/light text. Fully legible against the dark background. No dark-on-dark failures observed. Legend color swatches remain visible.
-      Data: Bar hue endpoints (Strongly Disagree #AE3030 and Strongly Agree #4467A3) are visually identical to the light render. However, the intermediate Disagree and Agree colors are slightly different because they are interpolated using the theme-adaptive INK_MUTED (#A8A79F in dark vs #6B6A63 in light) as one endpoint — this causes a subtle shift in the middle two data-color shades between themes. Neutral bars also shift (INK_MUTED itself is theme-adaptive). This is a minor palette-consistency violation.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark issues found.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title visible with light-colored text. Question labels on Y-axis appear in light/cream text — clearly readable against dark background. X-axis tick labels and axis title readable. Legend text at bottom readable with same minor crowding as light render. No dark-on-dark failures detected — INK token correctly maps to #F0EFE8 for dark theme text.
+      Data: Colors are identical to the light render — dark red, muted rose, gray neutral, muted blue, dark blue (#4467A3). Diverging structure and percentage labels match light render exactly. Only chrome (background, text, grid) has flipped for dark theme.
+      Legibility verdict: PASS — all text readable on dark surface; data colors clearly distinguishable against near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -58,53 +67,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, question labels, axis labels all readable in both themes.
-          Legend font slightly small (32 vs recommended 44).
+        comment: All font sizes explicitly set (title=56, labels=56, major=44, legend=44,
+          values=30). Readable in both themes. value_font_size=30 slightly below recommended
+          36 — labels functional but small.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Value labels threshold (>=8%)
-          prevents clutter in narrow bars.
+        comment: 'Data bars have no overlap. Minor legend crowding: SVG x-position
+          swap places ''Strongly Disagree'' into position allocated for shorter ''Neutral'',
+          potentially overlapping with ''Disagree'' label.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All bars visible. Disagree (muted brownish-pink) and Neutral (gray)
-          are close in saturation, slightly reducing distinguishability.
+        comment: Bars clearly visible in both themes. Percentage labels functional
+          with conditional suppression for small segments (<8%). Slightly small value
+          labels at font_size=30.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'CVD-safe diverging palette using Imprint members (#AE3030 red, #4467A3
-          blue). Red-blue is a recognized safe diverging pair.'
+        comment: Diverging palette (red/blue) is CVD-safe. Different hue families
+          distinguishable even under deuteranopia. Gray neutral provides clear mid-point.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas. Canvas gate passed. Good proportions, no
-          overflow.
+        comment: Canvas 3200x1800 confirmed (gate passed). Good canvas utilization
+          — 8 questions fill the plot area well. Balanced margins. Legend at bottom
+          well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis title 'Response Percentage (%)' is descriptive with units.
-          Title includes spec-id and library identifiers.
+        comment: 'X-axis: ''Response Percentage (%)'' with unit. Y-axis: question
+          labels as categorical axis. Title follows required format.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Semantic exception
-          for diverging Likert is valid (red=negative, blue=positive). However, intermediate
-          Agree and Disagree colors are interpolated using theme-adaptive INK_MUTED,
-          making those data colors subtly different between light and dark themes
-          — minor palette-consistency violation.'
+        passed: true
+        comment: 'Semantic Imprint palette: #AE3030 (red anchor) for negative, #4467A3
+          (blue slot 3) for positive, #6B6A63 (muted anchor) for neutral. Valid semantic
+          exception for diverging Likert. Backgrounds correct: #FAF8F1 light, #1A1A17
+          dark. Both themes correct.'
     design_excellence:
       score: 13
       max: 20
@@ -114,23 +126,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom semantic diverging palette, sorted questions, value labels,
-          clean bottom legend. Above default 4.
+        comment: 'Strong design: thoughtful semantic color mapping (red=negative,
+          blue=positive), sorted questions for storytelling, explicit typography hierarchy,
+          above well-configured defaults but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Guides disabled, minimal chrome. Center zero-line visible. Above
-          default 2.
+        comment: 'Good refinement: no grid guides (show_x_guides=False, show_y_guides=False),
+          SVG guide-line removal, custom margin/spacing. Default frame/border still
+          present.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Ascending sort by net agreement creates clear narrative: most positive
-          at top, most negative at bottom. Diverging layout guides the eye. Above
-          default 2.'
+        comment: Questions sorted ascending by net agreement creates clear visual
+          ranking. Color coding reinforces positive/negative story. Viewer immediately
+          sees Team Collaboration (most positive) vs Fair Compensation (most negative).
     spec_compliance:
       score: 15
       max: 15
@@ -140,31 +154,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal diverging stacked bar chart (HorizontalStackedBar)
-          with neutral center split.
+        comment: 'Correct: HorizontalStackedBar with diverging values (negative left,
+          positive right) centered at neutral midpoint. Exactly matches Likert diverging
+          bar spec.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: center split on neutral, diverging colors
-          (red-to-blue), sorted by net agreement, percentage labels inside bars, horizontal
+        comment: 'All spec features: center on neutral (split evenly), diverging color
+          scheme, sorted by net agreement, percentage labels inside bars, horizontal
           orientation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows response percentages, Y-axis shows question labels,
-          all 8 questions mapped correctly.
+        comment: Questions on Y-axis, percentages on X-axis, neutral split correctly
+          at center, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'Employee Engagement Survey · bar-diverging-likert ·
-          python · pygal · anyplot.ai' is correct. Legend labels match response categories
-          in correct left-to-right order.
+        comment: 'Title: ''Employee Engagement Survey · bar-diverging-likert · python
+          · pygal · anyplot.ai'' matches required format. Legend correctly shows SD|D|N|A|SA
+          with hidden right-neutral.'
     data_quality:
       score: 15
       max: 15
@@ -174,23 +189,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 5 Likert response categories, diverging layout, neutral
-          center split, sorting, value labels — complete feature coverage.
+        comment: 'Shows all aspects: full range from mostly negative (fair compensation
+          22/30 disagree) to mostly positive (team collaboration 80% agree). All 5
+          Likert categories represented with varying distributions.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is a canonical, realistic, neutral use
-          case for Likert diverging charts.
+        comment: Employee engagement survey — real-world, comprehensible, neutral
+          business scenario. 8 realistic HR questions with plausible response patterns.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All 8 question rows sum to exactly 100%. Percentage values are realistic
-          for an engagement survey (ranging from strong positive to strong negative
-          sentiment).
+        comment: All response percentages sum to 100% per question. Values are realistic
+          for an engagement survey context.
     code_quality:
       score: 10
       max: 10
@@ -200,35 +215,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level code only. _lerp_hex helper is minimal and necessary for
-          the diverging color interpolation.
+        comment: Follows imports → data → plot → save. _lerp_hex is minimal helper
+          for color interpolation. Self-import workaround is necessary given filename
+          conflict.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded/deterministic. No random seed needed.
+        comment: Fully deterministic — hardcoded survey data, no random generation
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (importlib.util, os, re, sys, xml.etree.ElementTree,
-          cairosvg, pygal, pygal.style.Style) are actually used.
+        comment: 'All imports used: importlib.util/os/re/sys for self-import workaround,
+          xml.etree.ElementTree for SVG manipulation, cairosvg for PNG conversion,
+          pygal + Style for charting.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG post-processing for legend reorder is non-trivial but necessary
-          and clearly commented. Self-import prevention pattern is standard for pygal.
+        comment: Clean, appropriate complexity. SVG ElementTree manipulation is necessary
+          for legend reordering. No over-engineering, no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. cairosvg
-          used for PNG conversion.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (pygal is interactive).
+          Current pygal API used.
     library_mastery:
       score: 7
       max: 10
@@ -238,17 +256,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses HorizontalStackedBar, Style object for all theming, value_formatter
-          for abs() on negative values, legend_at_bottom_columns, print_values_position='center'.
-          Idiomatic pygal patterns throughout.
+        comment: 'Good idiomatic usage: HorizontalStackedBar, Style object for theming,
+          series addition, x_labels, legend_at_bottom configuration, value_formatter
+          for conditional labels.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG post-processing via ElementTree to reorder legend items by swapping
-          x-coordinates — a creative use of pygal's SVG output. Also uses None series
-          title to hide the right-half neutral from the legend.
+        comment: 'Distinctive: SVG post-processing via ElementTree to reorder legend
+          items (unique to pygal''s SVG-native output), cairosvg integration, HTML
+          interactive export alongside PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies:
