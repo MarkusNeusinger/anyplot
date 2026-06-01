@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-01
@@ -30,7 +30,7 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 # Intermediate shades interpolated toward the theme midpoint; neutral uses the muted anchor
 LIKERT_COLORS = {
     "strongly_disagree": "#AE3030",
-    "disagree": "#CC807D" if THEME == "light" else "#7A3535",
+    "disagree": "#CC807D" if THEME == "light" else "#B06060",
     "neutral": INK_MUTED,
     "agree": "#8DA1C2" if THEME == "light" else "#4A6898",
     "strongly_agree": "#4467A3",
@@ -179,12 +179,14 @@ fig.update_layout(
         "showgrid": True,
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
+        "showline": False,
         "range": [neg_sd.min() - 14, pos_sa.max() + 14],
     },
     yaxis={
         "tickfont": {"size": 10, "color": INK_SOFT, "family": FONT_FAMILY},
         "automargin": True,
         "linecolor": INK_SOFT,
+        "showline": False,
     },
     barmode="overlay",
     legend={
