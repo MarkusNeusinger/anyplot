@@ -1,111 +1,146 @@
 library: matplotlib
+language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:05:35Z'
-updated: '2026-03-04T06:18:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22657236150
+updated: '2026-06-01T23:21:25Z'
+generated_by: claude-sonnet
+workflow_run: 26786735910
 issue: 4429
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - All 5 spec requirements implemented comprehensively (center on neutral, diverging
-    colors, sorted by net agreement, percentage labels, horizontal bars)
-  - Net agreement annotations on the right add genuine analytical value beyond the
-    spec
-  - Clean professional diverging color scheme with muted neutral and white edge separators
-  - Excellent text legibility with all font sizes explicitly and appropriately set
-  - Data tells a clear story with sorting and the one negative net score creating
-    a focal point
+  - Diverging stacked bar chart correctly centered on neutral split with all 5 Likert
+    categories rendered
+  - Sorted by net agreement (ascending) so highest-agreement items appear at chart
+    top — excellent design decision
+  - Net agreement column on the right with themed +/- coloring adds analytical value
+  - Percentage labels inside bar segments (≥7% threshold) provide quantitative precision
+    without clutter
+  - All spines removed, Y-tick marks hidden, subtle x-axis grid — clean visual refinement
+  - 'Theme-adaptive chrome throughout: INK/INK_SOFT/INK_MUTED tokens applied to all
+    text and chrome elements'
+  - 'Semantic color mapping (red=disagree, blue=agree) using Imprint palette endpoints
+    #AE3030 and #4467A3 is clearly intuitive'
+  - Mixed coordinate system annotations (xycoords axes fraction + data) for the net
+    column is idiomatic advanced matplotlib
   weaknesses:
-  - Bottom x-axis spine still visible, breaking the otherwise minimal chrome aesthetic
-  - The hasattr check in the label loop is slightly inelegant since data always comes
-    from a DataFrame
-  image_description: 'The plot displays a horizontal diverging stacked bar chart showing
-    employee engagement survey results for 10 questions. Bars diverge from a central
-    zero line, with negative responses (Strongly Disagree in dark red #c0392b, Disagree
-    in salmon #e77a6d) extending left and positive responses (Agree in light blue
-    #6dacde, Strongly Agree in dark blue #2471a3) extending right. Neutral responses
-    are shown in muted gray (#b0b0b0), split evenly across the center. Questions are
-    sorted from highest net agreement ("Resources are adequate" at +72) to lowest
-    ("Leadership inspires confidence" at -4). Percentage labels appear inside segments
-    ≥7%, with white text on dark segments and dark text on lighter ones. A "Net" column
-    on the right shows net agreement scores color-coded blue (positive) or red (negative).
-    The x-axis uses ± percentage labels at 20% intervals. The legend at the bottom
-    shows all 5 categories. Top, right, and left spines are removed. A subtle x-axis
-    grid (alpha=0.15) aids readability.'
+  - 'VQ-07 partial: The neutral midpoint color #888880 is a custom hex not from the
+    Imprint palette. The correct imprint_div definition uses theme-adaptive PAGE_BG
+    as midpoint. For a Likert bar chart the neutral category should use the Imprint
+    muted anchor (#6B6A63 light / #A8A79F dark) rather than a custom gray — this keeps
+    all segment colors traceable to Imprint tokens while still appearing as a midpoint
+    neutral.'
+  - 'LM-01/LM-02: The mixed-coordinate annotation technique and custom FuncFormatter
+    are above defaults but stop short of exploiting the full power of the matplotlib
+    Axes API (e.g., no use of inset axes, no container-based bar label helpers available
+    in 3.9+, no explicit font family set). A minor polish opportunity.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "bar-diverging-likert · python · matplotlib · anyplot.ai" at top in dark text, fully readable. Y-axis question labels (e.g. "Resources are adequate", "Leadership inspires confidence") in INK_SOFT dark text, clear. X-axis label "Percentage of Responses" in INK dark text. X-axis tick labels (+/- % values) in INK_SOFT. All spines removed; subtle x-axis grid at alpha=0.15. Legend below chart with 5 category labels, no frame, INK_SOFT text.
+      Data: Red tones (#AE3030 and blended) for Strongly Disagree / Disagree; warm gray (#888880) for Neutral; blue tones (blended and #4467A3) for Agree / Strongly Agree. Percentage labels inside segments ≥7% width in white (non-neutral) or dark INK (neutral). Net agreement column on right in themed blue (+) or red (-). Data ordered from lowest to highest net agreement (Leadership −4 at bottom, Resources +72 at top).
+      Legibility verdict: PASS — all text readable, no overlap, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in near-white (#F0EFE8) INK token, clearly visible against dark background. Y-axis question labels in #B8B7B0 INK_SOFT, readable. X-axis tick labels in INK_SOFT, readable. Legend labels in INK_SOFT. No dark-on-dark failures detected.
+      Data: Colors are identical to the light render — same red/gray/blue diverging scheme. Bar segment percentage labels: white (non-neutral) and #F0EFE8 INK (neutral on #888880 gray) — both readable. Net column values use same #4467A3/AE3030 as light render, identical data colors.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issue, chrome correctly flipped.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, yticks 16pt,
-          xticks 16pt, legend 16pt, annotations 14pt'
+        comment: 'All font sizes explicitly set: title 12pt (scaled), y-ticks 9pt,
+          x-label 10pt, x-ticks 8pt, legend 8pt, in-bar labels 7pt. Well-proportioned
+          in both themes. Minor: 7pt in-bar labels and net annotations are at the
+          edge of mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; small segments (<7%) correctly omit labels
+        comment: No overlapping text. Q-labels, % labels inside bars, tick labels,
+          legend, and net column are all properly spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar height 0.7 well-proportioned for 10 items; white edgecolor separates
-          adjacent segments
+        comment: All bar segments clearly visible with PAGE_BG edgecolor separation.
+          Colors are distinct and semantically appropriate.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Red-to-blue diverging scheme is colorblind-safe with luminance differences
+        comment: Red-blue diverging scheme (not red-green). Percentage labels provide
+          redundant encoding. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized; margins balanced with question labels
-          and Net column
+        comment: subplots_adjust(left=0.30, right=0.90, top=0.92, bottom=0.16) provides
+          well-balanced margins. Chart fills canvas well. Legend below chart within
+          bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive xlabel with units shown via tick formatter
+        comment: X-axis labeled 'Percentage of Responses', descriptive. Title in correct
+          format. Y-axis categories serve as self-describing labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Partial: Imprint endpoints #AE3030 (slot 5, semantic red) and #4467A3
+          (slot 3, blue) used correctly with a valid sentiment semantic exception.
+          Chrome is fully theme-adaptive. Deduction: neutral midpoint #888880 is a
+          custom hex not from Imprint — should use the muted anchor (#6B6A63 light
+          / #A8A79F dark) or the Imprint PAGE_BG-adaptive midpoint.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom red-to-blue palette, white bar separators, bold net annotations,
-          professional typography
+        comment: 'Above well-configured defaults: sorted bars, net column with semantic
+          colors, frameless legend, semantic red/blue coding. Not quite ''strong design''
+          level — visual appearance is clean but utilitarian.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three spines removed, subtle grid, frameon=False legend, clean whitespace;
-          bottom spine still visible
+        comment: All spines removed, y-tick marks hidden (length=0), subtle x-axis
+          grid (alpha=0.15), PAGE_BG edgecolor on bars. Good refinement, short of
+          'every detail polished'.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorted by net agreement; color-coded net column; one negative score
-          creates focal point
+        comment: Sorting by net agreement creates a clear ranking story. Net column
+          quantifies the take-away. Red/blue semantic coding immediately signals positive/negative
+          direction. Viewer immediately reads 'Resources and Team collaboration excel;
+          Leadership and Compensation lag.'
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart with horizontal orientation
+        comment: Correct diverging stacked bar chart, horizontal, with neutral category
+          split evenly at center.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: center on neutral, diverging colors,
-          sorted, labels, horizontal'
+        comment: 'All spec features present: diverging from center, neutral split,
+          diverging color scheme, sorted by net agreement, percentage labels inside
+          segments where space permits, horizontal orientation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions Y-axis, percentages X-axis; negative left, positive right
+        comment: Questions on Y-axis, percentage responses on X-axis, all 5 categories
+          and all 10 questions correctly shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels match all 5 categories
+        comment: Title 'bar-diverging-likert · python · matplotlib · anyplot.ai' matches
+          required format exactly. Legend labels match the 5 Likert categories.
     data_quality:
       score: 15
       max: 15
@@ -144,21 +183,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 questions with diverse distributions; range from +72 to -4 net
-          agreement
+        comment: 10 questions covering varied aspects of employee engagement. Mix
+          of high-agreement items (+72 Resources), moderate (+38 Feedback), low (+6
+          Compensation), and one net-negative (-4 Leadership). Full range of diverging
+          chart features shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is common, neutral, real-world Likert
-          scale application
+        comment: Employee engagement survey with 10 realistic workplace questions.
+          Neutral, non-controversial. Plausible and comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All rows sum to 100%; values 2-48% realistic for survey data
+        comment: All 5-category percentages sum to 100% per row. Values are plausible
+          for real surveys. Range of agreement levels is realistic.
     code_quality:
       score: 10
       max: 10
@@ -168,57 +210,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, processing, plot, style, save'
+        comment: 'Linear flow: imports → tokens → palette → data → plot → labels/style
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hand-crafted deterministic data, no randomness
+        comment: Data is fully deterministic (hardcoded arrays). No random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 4 imports used: plt, mticker, np, pd'
+        comment: All 6 imports (os, matplotlib.pyplot, matplotlib.ticker, numpy, pandas,
+          matplotlib.colors) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean organization with categories_order tuple list; no fake UI
+        comment: Clean and Pythonic. Diverging bar position calculation is logical.
+          No over-engineering, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI; no deprecated API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight' (correct). No deprecated
+          API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Axes-level methods, ticker formatting, zorder layering
+        comment: Uses Axes methods (ax.barh, ax.axvline, ax.annotate), subplots_adjust,
+          get_legend_handles_labels(). Correct idiomatic usage; doesn't exploit the
+          full matplotlib high-level API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Mixed coordinate annotations, FuncFormatter, manual diverging bar
-          positioning
+        comment: Mixed coordinate system xycoords=('axes fraction', 'data') for net
+          column is a distinctive matplotlib technique. LinearSegmentedColormap.from_list
+          and mticker.FuncFormatter with lambda are library-specific. Clearly above
+          generic usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - custom-legend
   patterns:
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - edge-highlighting
+  - custom-colormap
   - grid-styling
+  - edge-highlighting
