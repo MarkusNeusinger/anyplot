@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-01
@@ -21,13 +21,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint-derived diverging palette for Likert categories
-# Midpoint is INK_MUTED (theme-adaptive) so intermediate bars stay visible on both themes
-div_cmap = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", INK_MUTED, "#4467A3"])
+# Midpoint is a fixed neutral hex so intermediate colors are theme-stable
+NEUTRAL_GRAY = "#888880"
+div_cmap = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", NEUTRAL_GRAY, "#4467A3"])
 cat_colors = {
     "Strongly Disagree": "#AE3030",  # Imprint semantic red
-    "Disagree": div_cmap(0.25),  # blended red-muted
-    "Neutral": INK_MUTED,  # theme-adaptive muted
-    "Agree": div_cmap(0.75),  # blended muted-blue
+    "Disagree": div_cmap(0.25),  # blended red-neutral
+    "Neutral": NEUTRAL_GRAY,  # fixed mid-gray (theme-stable)
+    "Agree": div_cmap(0.75),  # blended neutral-blue
     "Strongly Agree": "#4467A3",  # Imprint blue (position 3)
 }
 
