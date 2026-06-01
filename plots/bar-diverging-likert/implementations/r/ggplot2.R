@@ -21,7 +21,7 @@ INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
 # Diverging colors from Imprint palette: red (bad) -> muted (neutral) -> blue (good)
 # Semantic exception: negative sentiment = red (#AE3030), positive = blue (#4467A3)
-likert_palette <- colorRampPalette(c("#AE3030", INK_MUTED, "#4467A3"))(5)
+likert_palette <- colorRampPalette(c("#AE3030", "#6B6A63", "#4467A3"))(5)
 
 # --- Survey data: Employee Benefits Survey ---
 questions <- c(
