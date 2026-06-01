@@ -69,15 +69,14 @@ a  = a_v[order];  sa = sa_v[order]
 y_pos  = collect(1.0:Float64(n_q))
 n_half = n ./ 2.0
 
-# Segment x-offsets — bars are contiguous around the neutral midpoint (x = 0)
-sd_off = -(sd .+ d .+ n_half)   # SD: leftmost
-d_off  = -(d .+ n_half)         # D: adjacent right of SD
-n_off  = -n_half                 # N: centered on 0 (full bar)
-a_off  =  n_half                 # A: adjacent right of neutral
-sa_off =  n_half .+ a            # SA: rightmost
+# Segment x-offsets for percentage label placement
+sd_off = -(sd .+ d .+ n_half)
+d_off  = -(d .+ n_half)
+a_off  =  n_half
+sa_off =  n_half .+ a
 
 # Title with length-aware fontsize
-title_str = "bar-diverging-likert · julia · makie · anyplot.ai"
+title_str = "Employee Engagement Survey · bar-diverging-likert · julia · makie · anyplot.ai"
 title_fs  = length(title_str) > 67 ? round(Int, 20 * 67 / length(title_str)) : 20
 
 # Figure
@@ -112,70 +111,73 @@ ax = Axis(
     yticks             = (y_pos, questions),
 )
 
-# Format x-axis ticks as absolute percentages
 ax.xtickformat = vs -> ["$(abs(round(Int, v)))%" for v in vs]
 
-bar_half = 0.37  # half of bar height in y-units (full width = 0.74)
+# Stacked horizontal bars using barplot! with direction=:x — idiomatic Makie approach.
+# Left side: N/2 (innermost, stack=1), D (stack=2), SD (stack=3) — negative widths stack leftward.
+barplot!(ax,
+    vcat(y_pos, y_pos, y_pos),
+    vcat(-n_half, -d, -sd);
+    direction   = :x,
+    stack       = vcat(fill(1, n_q), fill(2, n_q), fill(3, n_q)),
+    color       = vcat(fill(INK_MUTED, n_q), fill(COL_D, n_q), fill(COL_SD, n_q)),
+    gap         = 0.26,
+    strokewidth = 0,
+)
 
-# Draw stacked horizontal bars as explicit rectangles for precise placement
-for i in 1:n_q
-    yi = y_pos[i]
-    y1 = yi - bar_half
-    y2 = yi + bar_half
-    bh = y2 - y1
-
-    for (x0, w, c) in [
-        (sd_off[i], sd[i], COL_SD),
-        (d_off[i],  d[i],  COL_D),
-        (n_off[i],  n[i],  INK_MUTED),
-        (a_off[i],  a[i],  COL_A),
-        (sa_off[i], sa[i], COL_SA),
-    ]
-        poly!(ax, Rect2f(x0, y1, w, bh);
-              color = c, strokecolor = c, strokewidth = 0.5)
-    end
-end
+# Right side: N/2 (innermost, stack=1), A (stack=2), SA (stack=3) — positive widths stack rightward.
+barplot!(ax,
+    vcat(y_pos, y_pos, y_pos),
+    vcat(n_half, a, sa);
+    direction   = :x,
+    stack       = vcat(fill(1, n_q), fill(2, n_q), fill(3, n_q)),
+    color       = vcat(fill(INK_MUTED, n_q), fill(COL_A, n_q), fill(COL_SA, n_q)),
+    gap         = 0.26,
+    strokewidth = 0,
+)
 
 # Center reference line
 vlines!(ax, [0.0]; color = INK_SOFT, linewidth = 2.0, linestyle = :solid)
 
-# Percentage labels inside segments where space permits (≥ 8%)
+# Percentage labels inside segments ≥ 8%
 label_fs = 10
 
 for i in 1:n_q
     yi = y_pos[i]
-    for (x0, w, c, label_c) in [
-        (sd_off[i], sd[i], COL_SD, colorant"#FFFFFF"),
-        (d_off[i],  d[i],  COL_D,  colorant"#FFFFFF"),
-        (a_off[i],  a[i],  COL_A,  colorant"#FFFFFF"),
-        (sa_off[i], sa[i], COL_SA, colorant"#FFFFFF"),
+    for (x0, w) in [
+        (sd_off[i], sd[i]),
+        (d_off[i],  d[i]),
+        (a_off[i],  a[i]),
+        (sa_off[i], sa[i]),
     ]
         if w >= 8.0
             text!(ax, x0 + w / 2, yi;
                   text     = "$(round(Int, w))%",
                   align    = (:center, :center),
-                  color    = label_c,
+                  color    = colorant"#FFFFFF",
                   fontsize = label_fs)
         end
     end
 end
 
-# Legend (horizontal, at bottom)
-legend_elements = [
-    PolyElement(color = COL_SD,   strokecolor = :transparent),
-    PolyElement(color = COL_D,    strokecolor = :transparent),
-    PolyElement(color = INK_MUTED, strokecolor = :transparent),
-    PolyElement(color = COL_A,    strokecolor = :transparent),
-    PolyElement(color = COL_SA,   strokecolor = :transparent),
-]
-legend_labels = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+# x-axis padding to avoid tight right/left margins
+max_right = maximum(n_half .+ a .+ sa)
+max_left  = maximum(sd .+ d .+ n_half)
+xlims!(ax, -(max_left + 8), max_right + 8)
 
+# Legend (horizontal, frameless)
 Legend(
     fig[2, 1],
-    legend_elements,
-    legend_labels;
+    [
+        PolyElement(color = COL_SD,    strokecolor = :transparent),
+        PolyElement(color = COL_D,     strokecolor = :transparent),
+        PolyElement(color = INK_MUTED, strokecolor = :transparent),
+        PolyElement(color = COL_A,     strokecolor = :transparent),
+        PolyElement(color = COL_SA,    strokecolor = :transparent),
+    ],
+    ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
     orientation     = :horizontal,
-    framecolor      = INK_SOFT,
+    framevisible    = false,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK_SOFT,
     labelsize       = 12,
