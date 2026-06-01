@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-01
@@ -91,9 +91,14 @@ bars = (
     alt.Chart(segments_df)
     .mark_bar(stroke="white", strokeWidth=0.8)
     .encode(
-        x=alt.X("x_start:Q", title="Percentage (%)", axis=alt.Axis(titleFontSize=12, labelFontSize=10)),
+        x=alt.X(
+            "x_start:Q",
+            title="Percentage (%)",
+            axis=alt.Axis(titleFontSize=12, labelFontSize=10),
+            scale=alt.Scale(domain=[-55, 90]),
+        ),
         x2="x_end:Q",
-        y=alt.Y("question:N", title=None, sort=question_order, axis=alt.Axis(labelFontSize=10, labelLimit=280)),
+        y=alt.Y("question:N", title=None, sort=question_order, axis=alt.Axis(labelFontSize=11, labelLimit=280)),
         color=alt.Color(
             "category:N",
             scale=alt.Scale(domain=categories, range=LIKERT_COLORS),
@@ -113,7 +118,7 @@ dark_segs = segments_df[
 ]
 labels_white = (
     alt.Chart(dark_segs)
-    .mark_text(fontSize=12, fontWeight="bold", color="white")
+    .mark_text(fontSize=13, fontWeight="bold", color="white")
     .encode(x="x_mid:Q", y=alt.Y("question:N", sort=question_order), text="label:N")
 )
 
@@ -121,7 +126,7 @@ labels_white = (
 light_segs = segments_df[(segments_df["value"] >= 10) & segments_df["category"].isin(["Disagree", "Neutral", "Agree"])]
 labels_dark = (
     alt.Chart(light_segs)
-    .mark_text(fontSize=12, fontWeight="bold", color=INK)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK)
     .encode(x="x_mid:Q", y=alt.Y("question:N", sort=question_order), text="label:N")
 )
 
