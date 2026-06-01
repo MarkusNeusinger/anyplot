@@ -1,15 +1,53 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-04
+Library: plotly | Python 3.13
+Quality: pending | Updated: 2026-06-01
 """
+
+import os
+import sys
+
+
+# Prevent self-import: remove this script's directory from sys.path so that
+# "import plotly" resolves to the installed package, not this file.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 
 import pandas as pd
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint diverging colors for Likert scale (sampled from imprint_div: #AE3030 → midpoint → #4467A3)
+# Intermediate shades interpolated toward the theme midpoint; neutral uses the muted anchor
+LIKERT_COLORS = {
+    "strongly_disagree": "#AE3030",
+    "disagree": "#CC807D" if THEME == "light" else "#7A3535",
+    "neutral": INK_MUTED,
+    "agree": "#8DA1C2" if THEME == "light" else "#4A6898",
+    "strongly_agree": "#4467A3",
+}
+
+# Text contrast inside bar segments
+TEXT_COLORS = {
+    "strongly_disagree": "#F0EFE8",
+    "disagree": INK if THEME == "light" else "#F0EFE8",
+    "neutral": "#F0EFE8" if THEME == "light" else "#1A1A17",
+    "agree": INK if THEME == "light" else "#F0EFE8",
+    "strongly_agree": "#F0EFE8",
+}
+
+FONT_FAMILY = "Inter, Helvetica Neue, Arial, sans-serif"
+
 # Data — employee engagement survey (10 questions, 5-point Likert scale)
-categories = ["strongly_disagree", "disagree", "neutral", "agree", "strongly_agree"]
 df = pd.DataFrame(
     {
         "question": [
@@ -32,11 +70,11 @@ df = pd.DataFrame(
     }
 )
 
-# Sort by net agreement
+# Sort by net agreement (positive minus negative)
 df["net_agreement"] = df["agree"] + df["strongly_agree"] - df["disagree"] - df["strongly_disagree"]
 df = df.sort_values("net_agreement").reset_index(drop=True)
 
-# Calculate diverging positions
+# Diverging positions — neutral split evenly across zero midpoint
 half_neutral = df["neutral"] / 2
 neg_sd = -(df["strongly_disagree"] + df["disagree"] + half_neutral)
 neg_d = -(df["disagree"] + half_neutral)
@@ -44,24 +82,6 @@ neg_n = -half_neutral
 pos_n = half_neutral
 pos_a = half_neutral + df["agree"]
 pos_sa = half_neutral + df["agree"] + df["strongly_agree"]
-
-# Colors — diverging red-to-blue with muted neutral
-colors = {
-    "strongly_disagree": "#C0392B",
-    "disagree": "#E67E73",
-    "neutral": "#B0B0B0",
-    "agree": "#5B9BD5",
-    "strongly_agree": "#306998",
-}
-
-# Text colors — dark on lighter backgrounds, white on darker backgrounds
-text_colors = {
-    "strongly_disagree": "white",
-    "disagree": "#2C2C2C",
-    "neutral": "#2C2C2C",
-    "agree": "#2C2C2C",
-    "strongly_agree": "white",
-}
 
 labels = {
     "strongly_disagree": "Strongly Disagree",
@@ -85,7 +105,7 @@ segments = [
 for key, starts, ends in segments:
     widths = ends - starts
     text_vals = df[key].astype(int).astype(str) + "%"
-    text_display = [t if abs(w) > 8 else "" for t, w in zip(text_vals, widths, strict=False)]
+    text_display = [t if abs(w) > 7 else "" for t, w in zip(text_vals, widths, strict=False)]
 
     fig.add_trace(
         go.Bar(
@@ -94,15 +114,16 @@ for key, starts, ends in segments:
             base=starts,
             orientation="h",
             name=labels[key],
-            marker={"color": colors[key], "line": {"color": "white", "width": 0.5}},
+            marker={"color": LIKERT_COLORS[key], "line": {"color": PAGE_BG, "width": 0.8}},
             text=text_display,
             textposition="inside",
-            textfont={"size": 16, "color": text_colors[key], "family": "Inter, Helvetica Neue, Arial, sans-serif"},
-            hovertemplate="%{y}<br>" + labels[key] + ": %{text}<extra></extra>",
+            textfont={"size": 11, "color": TEXT_COLORS[key], "family": FONT_FAMILY},
+            customdata=df[key],
+            hovertemplate="%{y}<br>" + labels[key] + ": %{customdata}%<extra></extra>",
         )
     )
 
-# Annotate best and worst items
+# Net score annotations for top and bottom items
 best_idx = df["net_agreement"].idxmax()
 worst_idx = df["net_agreement"].idxmin()
 best_net = df.loc[best_idx, "net_agreement"]
@@ -115,7 +136,7 @@ fig.add_annotation(
     y=df.loc[best_idx, "question"],
     text=f"<b>+{best_net}</b> net",
     showarrow=False,
-    font={"size": 14, "color": "#306998", "family": "Inter, Helvetica Neue, Arial, sans-serif"},
+    font={"size": 11, "color": "#4467A3", "family": FONT_FAMILY},
     xanchor="left",
 )
 fig.add_annotation(
@@ -123,49 +144,65 @@ fig.add_annotation(
     y=df.loc[worst_idx, "question"],
     text=f"<b>{worst_net}</b> net",
     showarrow=False,
-    font={"size": 14, "color": "#C0392B", "family": "Inter, Helvetica Neue, Arial, sans-serif"},
+    font={"size": 11, "color": "#AE3030", "family": FONT_FAMILY},
     xanchor="right",
 )
 
+# Title — 79 chars, scale down from default 16px
+title_text = "Employee Engagement Survey · bar-diverging-likert · python · plotly · anyplot.ai"
+title_n = len(title_text)
+title_size = round(16 * 67 / title_n) if title_n > 67 else 16
+
 # Style
-font_family = "Inter, Helvetica Neue, Arial, sans-serif"
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"family": FONT_FAMILY, "color": INK},
     title={
-        "text": "bar-diverging-likert · plotly · pyplots.ai",
-        "font": {"size": 28, "weight": "bold", "family": font_family},
+        "text": title_text,
+        "subtitle": {
+            "text": "Tools and teamwork rank highest; career development lags across the organization",
+            "font": {"size": 10, "color": INK_MUTED, "family": FONT_FAMILY},
+        },
+        "font": {"size": title_size, "family": FONT_FAMILY, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "← Disagree    |    Agree →", "font": {"size": 22, "family": font_family}},
-        "tickfont": {"size": 18, "family": font_family},
+        "title": {"text": "Response (%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT, "family": FONT_FAMILY},
         "ticksuffix": "%",
         "zeroline": True,
-        "zerolinecolor": "#333333",
+        "zerolinecolor": INK_SOFT,
         "zerolinewidth": 2,
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.07)",
-        "range": [neg_sd.min() - 12, pos_sa.max() + 12],
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "range": [neg_sd.min() - 14, pos_sa.max() + 14],
     },
-    yaxis={"tickfont": {"size": 17, "family": font_family}, "automargin": True},
+    yaxis={
+        "tickfont": {"size": 10, "color": INK_SOFT, "family": FONT_FAMILY},
+        "automargin": True,
+        "linecolor": INK_SOFT,
+    },
     barmode="overlay",
-    template="plotly_white",
     legend={
         "orientation": "h",
         "yanchor": "bottom",
-        "y": -0.18,
+        "y": -0.28,
         "xanchor": "center",
         "x": 0.5,
-        "font": {"size": 16, "family": font_family},
+        "font": {"size": 10, "family": FONT_FAMILY, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
         "traceorder": "normal",
     },
-    margin={"l": 20, "r": 40, "t": 80, "b": 100},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    margin={"l": 20, "r": 40, "t": 90, "b": 130},
     bargap=0.25,
-    font={"family": font_family},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
