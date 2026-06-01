@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-01
+Quality: 87/100 | Updated: 2026-06-01 (repair 1)
 """
 
 import importlib.util
@@ -44,11 +44,13 @@ def _lerp_hex(c0, c1, t):
 
 
 # Imprint palette diverging scale for 5 Likert responses
-# Endpoints: #AE3030 (matte red) ↔ INK_MUTED (neutral) ↔ #4467A3 (blue)
+# Use fixed light-value of INK_MUTED so intermediate colors are theme-invariant
+INK_MUTED_FIXED = "#6B6A63"
 STRONGLY_DISAGREE_C = "#AE3030"
-DISAGREE_C = _lerp_hex("#AE3030", INK_MUTED, 0.5)
-NEUTRAL_C = INK_MUTED
-AGREE_C = _lerp_hex(INK_MUTED, "#4467A3", 0.5)
+# t=0.35 (less blending) improves visual separation from the neutral gray
+DISAGREE_C = _lerp_hex("#AE3030", INK_MUTED_FIXED, 0.35)
+NEUTRAL_C = INK_MUTED_FIXED
+AGREE_C = _lerp_hex(INK_MUTED_FIXED, "#4467A3", 0.5)
 STRONGLY_AGREE_C = "#4467A3"
 
 # Colors in series-addition order: N_left, D, SD, N_right, A, SA
@@ -101,7 +103,7 @@ custom_style = Style(
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=32,
+    legend_font_size=44,
     value_font_size=30,
     stroke_width=2.5,
 )
