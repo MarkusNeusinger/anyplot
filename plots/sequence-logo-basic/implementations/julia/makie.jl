@@ -72,6 +72,11 @@ title_str  = "TATA-box Motif · sequence-logo-basic · julia · makie · anyplot
 n_chars    = length(title_str)
 title_size = max(12, round(Int, 20 * min(1.0, 67.0 / n_chars)))
 
+# Scaled-glyph font-size constants: axis height ≈ 70% of 900 pts canvas
+# Y-range = 2 bits → ~315 pts/bit; fill 80% of each bar's height with the letter
+const PTS_PER_BIT = 315.0
+const FILL_FACTOR = 0.80
+
 # Figure
 fig = Figure(
     size            = (1600, 900),
@@ -110,21 +115,29 @@ ax = Axis(
     limits             = (0.35, n_pos + 0.65, -0.05, 2.15),
 )
 
-# Sequence logo: stacked colored rectangles + letter labels
+# Subtle shaded band highlighting the TATA-box conserved core (positions 2–6)
+poly!(ax, Rect2f(1.5, 0.0, 5.0, 2.0);
+      color       = RGBAf(INK.r, INK.g, INK.b, 0.04),
+      strokewidth = 0.8,
+      strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.10))
+
+# Sequence logo: stacked colored rectangles + proportionally-scaled letter glyphs
 bar_w = 0.88
 
 for (pos, stacks) in enumerate(stack_data)
     for (letter, contrib, y_bot) in stacks
-        contrib < 0.02 && continue
+        contrib < 0.01 && continue
         poly!(ax, Rect2f(pos - bar_w / 2, y_bot, bar_w, contrib);
               color       = DNA_COLORS[letter],
               strokewidth = 0.4,
               strokecolor = PAGE_BG)
-        if contrib > 0.14
+        # Scaled-glyph rendering: fontsize grows with bar height
+        if contrib > 0.025
+            glyph_size = max(6, round(Int, contrib * PTS_PER_BIT * FILL_FACTOR))
             text!(ax, Float64(pos), y_bot + contrib / 2;
                   text     = letter,
                   color    = (:white, 0.92),
-                  fontsize = 16,
+                  fontsize = glyph_size,
                   align    = (:center, :center),
                   font     = :bold)
         end
