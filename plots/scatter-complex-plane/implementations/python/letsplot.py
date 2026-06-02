@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-02
@@ -136,7 +136,8 @@ anyplot_theme = theme(  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
     axis_title=element_text(size=12, color=INK),  # noqa: F405
     axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
-    axis_line=element_line(color=INK_SOFT),  # noqa: F405
+    axis_line=element_blank(),  # noqa: F405
+    panel_border=element_blank(),  # noqa: F405
     plot_title=element_text(size=14, color=INK, face="bold"),  # noqa: F405
     plot_subtitle=element_text(size=10, color=INK_SOFT, face="italic"),  # noqa: F405
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
@@ -198,25 +199,16 @@ plot = (
     + geom_text(  # noqa: F405
         data=df,
         mapping=aes(x="label_x", y="label_y", label="rect_form"),  # noqa: F405
-        size=3,
+        size=3.5,
         color=INK_SOFT,
-        nudge_y=-0.22,
-    )
-    # Polar form (r, θ) below rectangular form
-    + geom_text(  # noqa: F405
-        data=df,
-        mapping=aes(x="label_x", y="label_y", label="polar_form"),  # noqa: F405
-        size=2.8,
-        color=INK_MUTED,
-        fontface="italic",
-        nudge_y=-0.42,
+        nudge_y=-0.26,
     )
     + scale_color_manual(values=colors)  # noqa: F405
     + coord_fixed()  # noqa: F405
     + labs(  # noqa: F405
         x="Real Part",
         y="Imaginary Part",
-        title="scatter-complex-plane · letsplot · anyplot.ai",
+        title="scatter-complex-plane · python · letsplot · anyplot.ai",
         subtitle="5th roots of unity, arbitrary points, and complex addition on the Argand diagram",
         color="Category",
     )
