@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: tree-decision
 created: '2026-03-06T21:34:11Z'
-updated: '2026-06-02T16:07:56Z'
+updated: '2026-06-02T16:18:28Z'
 generated_by: claude-sonnet
 workflow_run: 26830646769
 issue: 4569
@@ -12,111 +12,146 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-deci
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Perfect Imprint palette application with semantic color assignments (green=decision,
-    lavender=chance, blue=terminal, red=pruned cross)
-  - Excellent use of altair hover-based conditional size encoding via alt.condition(hover,
-    ...)
-  - 'Strong data storytelling: optimal path background panel + faded pruned paths
-    + red cross immediately communicates the decision recommendation'
-  - Canvas exactly 3200x1800 with correct pad-only approach; both light and dark themes
-    fully correct
+  - 'Excellent data storytelling: optimal path highlighted with dashed background
+    rectangle + ''optimal path'' italic annotation, pruned branches at 40% opacity
+    with red ✕ marker — viewer immediately reads the decision'
+  - 'Full Imprint palette compliance: decision=green #009E73, chance=lavender #C475FD,
+    terminal=blue #4467A3, pruned cross=semantic red #AE3030; data colors identical
+    across both themes'
+  - 'Expert Altair layer composition: 17 layers (background rect, edges, nodes, labels,
+    legend) combined via alt.layer() with correct x/y scale sharing across all layers'
+  - 'Distinctive Altair features: alt.selection_point(on=''pointerover'') hover with
+    alt.condition() size expansion and rich tooltips — proper interactivity not faked'
+  - 'All spec requirements met: square/circle/triangle-right node shapes, pruned double-cross
+    + dashed+low-opacity edges, EMV rollback values at each non-terminal node, probability
+    labels summing to 1.0'
+  - 'Theme-adaptive chrome correctly implemented: INK/INK_SOFT/INK_MUTED tokens applied
+    to all text layers; both renders fully readable with correct background surfaces'
   weaknesses:
-  - 'Title is missing the language token: change "tree-decision · altair · anyplot.ai"
-    to "tree-decision · python · altair · anyplot.ai"'
-  - 'C2 EMV label is mathematically inconsistent: $95K does not match 0.40x180+0.35x90+0.25x20=108.5K.
-    Either correct the EMV label to $108K or adjust the C2 payoff values so they yield
-    $95K'
+  - 'VQ-05 minor: PIL padding from 620×320 inner view to 3200×1800 leaves ~360px warm
+    off-white border on left/right and ~260px top/bottom; chart content fills ~55%
+    of canvas area — acceptable but slightly under the 60-80% ideal for full canvas
+    utilization'
+  - 'VQ-01 minor: title fontsize=16 at scale=4 produces 64px source text which is
+    on the smaller end of the style-guide recommended ~67px for the mandated title
+    string — still readable but could be nudged to fontSize=17'
+  - 'DE-02: visual refinement limited to opacity/opacity-condition on pruned elements;
+    no subtle grid or whitespace polishing beyond what the Altair default provides
+    — DE-02 is good but not perfect'
+  - 'LM-02: x2/y2 rule marks and datum-level hover conditions are strong Altair features,
+    but the combination stops short of using Vega-Lite''s advanced signal expressions
+    or crossfilter patterns that would make this truly library-defining'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "tree-decision · altair · anyplot.ai" in bold dark INK, all readable; no traditional axis labels (tree diagram)
-      Data: Green square decision node (#009E73), lavender circle chance node (#C475FD), blue right-pointing triangle terminal nodes (#4467A3); active edges solid black; pruned edges dashed at 40% opacity; red semantic-red cross (#AE3030) marking pruned branch; EMV and payoff labels visible; probability labels on chance branches; optimal path dashed background box with italic label
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct, no pure white
+      Chrome: Title "tree-decision · python · altair · anyplot.ai" in dark ink at top-left, fully readable. No traditional axis labels (correct for diagram). All node labels (EMV values "$152K", "$108K", payoff values "$300K", "$120K", "$-40K", "$180K", "$90K", "$20K"), branch labels ("Invest Large", "Invest Small"), probability labels ("0.40", "0.35", "0.25") and legend text ("Decision Node", "Chance Node", "Terminal Node") are clearly readable in dark ink against the warm off-white background.
+      Data: Decision node (green square #009E73) at far left with "$152K" EMV above it. Two chance nodes (lavender circles #C475FD): active C1 at center-top with "$152K" EMV, pruned C2 at center-bottom with "$108K" EMV at 40% opacity. Six terminal nodes (blue right-pointing triangles #4467A3): three active (full opacity, "$300K", "$120K", "$-40K") and three pruned (40% opacity, "$180K", "$90K", "$20K"). Active edges are solid dark lines (strokeWidth=3.0); pruned edges are dashed light lines (strokeWidth=1.8, opacity=0.40). Red ✕ (#AE3030) marks the pruned branch midpoint. Dashed optimal-path background rectangle encloses the active path with "optimal path" italic annotation in top-right. Legend at bottom with correct shapes and colors.
+      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title and all text labels rendered in light #F0EFE8 / #B8B7B0 — fully readable; active edge lines are white/light; no dark-on-dark failures
-      Data: Data node colors identical to light render (green decision, lavender chance, blue terminals); pruned elements at 40% opacity; red cross visible; optimal path box visible
-      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct, no pure black
+      Chrome: Title in light (#F0EFE8-equivalent) ink, fully readable against dark surface. All node labels, payoff values, EMV values, branch labels, probability labels and legend text appear in theme-adapted light tones — no dark-on-dark failures observed. INK_SOFT and INK_MUTED tokens correctly lighten for secondary and tertiary text.
+      Data: All data colors are identical to the light render — decision node green #009E73, chance nodes lavender #C475FD, terminal nodes blue #4467A3, pruned cross red #AE3030. Optimal path background dashed rect uses elevated dark surface (#242420) which reads correctly as a subtle panel. The same opacity stratification (active=1.0, pruned=0.40) is preserved. Brand green #009E73 on the decision node remains clearly visible against the near-black background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, EMV/payoff=14, branch=12,
-          desc=11, legend=10); readable in both themes
+        comment: 'All font sizes explicitly set (title=16, emv/payoff=14, optimal
+          label=13, branch/prob=12, terminal desc=11, legend=10). Readable in both
+          themes. Minor: title fontsize=16 at scale=4 is 64px source, slightly under
+          the 67px default target for the mandated title.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, nodes, or branch lines
+        comment: No overlapping elements. Node labels positioned with dy offset, branch
+          labels at edge midpoints, probability labels at staggered midpoints — all
+          spatially separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizes appropriate; active at full opacity, pruned at 0.40
+        comment: Decision/chance nodes at size=900, terminal nodes at size=700 — all
+          clearly visible. Pruned elements at 40% opacity remain distinguishable.
+          Active edges at strokeWidth=3.0 prominent, pruned at 1.8 dashed subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe
+        comment: Imprint palette is CVD-safe. Shape redundant encoding (square/circle/triangle-right)
+          provides additional discrimination beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Chart fills ~60-70% of 3200x1800 canvas; canvas gate passed
+        comment: Canvas gate passed (3200x1800). PIL padding from 620x320 inner view
+          leaves ~360px horizontal and ~260px vertical margins — chart fills ~55%
+          of canvas area. Good balance but slightly under ideal 60-80%.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Tree diagram has no traditional axes; title is descriptive
+        comment: No traditional axes (correct for tree diagram). Title 'tree-decision
+          · python · altair · anyplot.ai' correct. Node labels, EMV values, and payoff
+          values serve as informative data labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Imprint palette: #009E73 decision, #C475FD chance, #4467A3
-          terminal, #AE3030 pruned cross; backgrounds #FAF8F1/#1A1A17; chrome fully
-          theme-adaptive'
+        comment: 'Decision nodes #009E73 (first series, correct). Chance nodes #C475FD
+          (position 2). Terminal nodes #4467A3 (position 3). Pruned cross #AE3030
+          (semantic red anchor, correct use). Backgrounds #FAF8F1/#1A1A17 correct.
+          Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color assignments, hover interactions,
-          optimal-path highlight box — not yet publication level'
+        comment: 'Strong design: intentional shape+color encoding for node types,
+          hover interaction with size expansion, optimal path background highlight,
+          semantic red for pruned marker, INK_MUTED differentiation for probability
+          labels vs main text. Clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes/grid (correct for tree), dashed pruned lines, opacity hierarchy
+        comment: 'Good refinement: axes hidden (correct for diagram), no grid, dashed
+          optimal path rectangle, edge thickness differentiation (3.0 active vs 1.8
+          pruned), consistent stroke borders on all nodes, INK_SOFT/INK_MUTED token
+          hierarchy.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Optimal path background panel + faded pruned paths + semantic red
-          cross create clear visual hierarchy
+        comment: 'Excellent storytelling: viewer immediately sees the optimal decision
+          (Invest Large, EMV=$152K > $108K). Optimal path highlighted with dashed
+          background + italic ''optimal path'' label. Pruned path visually suppressed
+          (40% opacity + dashed edges + red cross). Clear visual hierarchy guides
+          eye from root to optimal terminal.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,31 +159,37 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct tree structure: decision (square), chance (circle), terminal
-          (right-triangle), left-to-right'
+        comment: 'Correct decision tree with all three required node types: decision
+          (square), chance (circle), terminal (triangle-right). Left-to-right layout
+          as specified.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: node shapes, pruned marking, EMV at non-terminal nodes,
-          probabilities, distinct colors'
+        comment: 'All spec features present: node shapes correct, pruned branches
+          with cross+dashed+low-opacity, EMV values at non-terminal nodes, probability
+          labels on chance branches summing to 1.0, distinct colors for decision vs
+          chance nodes, branch labels show option names for decisions and probabilities
+          for chance branches.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Two-stage investment tree correctly structured; probabilities sum
-          to 1.0
+        comment: X encodes tree stage (left-right), Y encodes tree branches. Inverted
+          Y scale correctly positions tree. All 9 nodes and 8 edges rendered with
+          correct connections.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Legend correct; title missing language: ''tree-decision · altair
-          · anyplot.ai'' should be ''tree-decision · python · altair · anyplot.ai'''
+        passed: true
+        comment: Title 'tree-decision · python · altair · anyplot.ai' correct. Custom
+          legend at bottom with correct shape markers (square/circle/triangle-right)
+          and labels ('Decision Node', 'Chance Node', 'Terminal Node').
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -156,21 +197,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all tree-decision aspects: two-stage decisions, chance branching,
-          pruned paths, EMV rollback, positive and negative payoffs'
+        comment: 'Shows all aspects: all three node types, both optimal and pruned
+          branches, EMV rollback (0.40×300+0.35×120+0.25×(-40)=$152K verified correct),
+          probabilities summing to 1.0, both positive and negative payoffs ($300K
+          through $-40K).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world business investment scenario, neutral and credible
+        comment: 'Real-world two-stage investment decision: Large vs Small investment
+          under uncertain market demand (High/Moderate/Low). Neutral business scenario
+          with plausible monetary values.'
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: C2 EMV labeled $95K but 0.40x180+0.35x90+0.25x20=108.5K — internal
-          inconsistency between EMV label and shown probabilities/payoffs
+        passed: true
+        comment: 'EMV calculations verified: C1=0.40×300+0.35×120+0.25×(-40)=$152K
+          ✓; C2=0.40×180+0.35×90+0.25×20=$108.5K≈$108K ✓. Probabilities sum to 1.0.
+          Monetary values realistic for investment analysis (K=thousands).'
     code_quality:
       score: 10
       max: 10
@@ -180,31 +226,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure, no functions or classes
+        comment: 'Clear linear structure: imports → tokens → data → layers → combine
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Fully deterministic — all data hardcoded in DataFrames. No random
+          seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: 'All four imports used: os (ANYPLOT_THEME), altair (charts), pandas
+          (DataFrames), PIL.Image (canvas padding).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic altair code
+        comment: 'Well-structured Altair layer composition. The # noqa: E712 comments
+          are legitimate workarounds for Altair''s datum comparison API. No fake UI.
+          Appropriate complexity.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL pad-only block
+          correctly implemented. Altair 6.1.0 current API.
     library_mastery:
       score: 9
       max: 10
@@ -214,26 +266,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent: alt.layer(), alt.selection_point(), alt.condition(),
-          transform_filter(), alt.Tooltip() — all idiomatic high-level API'
+        comment: 'Expert Altair usage: alt.layer() for 17-layer composition, mark_rule(x2/y2)
+          for edge segments, transform_filter(alt.datum...) for conditional rendering,
+          alt.condition() for dynamic encoding, shared Scale instances across layers,
+          configure_view/configure_title for theme.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hover-driven conditional size encoding and selection-based interactivity
-          are distinctively altair-native patterns
-  verdict: REJECTED
+        comment: 'Strong Altair-distinctive usage: alt.selection_point(on=''pointerover'')
+          hover with alt.condition() for size expansion — interactive features only
+          possible in Altair/Vega-Lite, not static libraries. x2/y2 encodings for
+          rule marks as directed edges are Altair-specific patterns. Falls just short
+          of 5 as advanced Vega-Lite signal expressions or crossfilter patterns are
+          absent.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - hover-tooltips
-  - html-export
   - layer-composition
+  - hover-tooltips
   - custom-legend
+  - html-export
   patterns: []
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
