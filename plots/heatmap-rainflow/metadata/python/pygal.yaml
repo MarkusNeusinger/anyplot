@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:06:18Z'
-updated: '2026-06-02T10:00:49Z'
+updated: '2026-06-02T10:15:24Z'
 generated_by: claude-sonnet
 workflow_run: 26811822733
 issue: 4465
@@ -15,40 +15,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 quality_score: 88
 review:
   strengths:
-  - 'Deep pygal library mastery: custom Graph subclass with correct _plot() / _compute()
-    override'
-  - 'Correct Imprint sequential colormap (#009E73 to #4467A3) with manual lerp interpolation
-    and logarithmic normalization'
-  - Amber semantic anchor for peak cell glow is a polished, on-spec design touch
-  - 'Full spec compliance: all required features present (colorbar, units, zero-cell
-    treatment, amplitude-on-Y convention)'
-  - Realistic and physically plausible wind turbine fatigue spectrum data with proper
-    MPa units
-  - Both themes render correctly with full chrome adaptation (INK, INK_SOFT, INK_MUTED
-    tokens applied throughout)
-  - Smooth 120-segment gradient colorbar is a visual improvement over discrete color
-    steps
+  - Custom RainflowHeatmap class extending pygal's Graph base — the only correct approach
+    for a chart type not natively supported by pygal, demonstrating deep library knowledge
+  - Amber glow halo (#DDCC77) on the absolute peak cell creates a strong, tasteful
+    focal point that guides the viewer immediately to the most damage-relevant zone
+  - Smooth 120-segment gradient colorbar with log-scale ticks (0, 1, 10, 100, 1000)
+    accurately represents the wide cycle-count range and is visually polished
+  - Full theme-adaptive chrome throughout — PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED
+    all correctly token-driven for both light and dark renders
+  - 'Imprint sequential colormap (brand green #009E73 → blue #4467A3) correctly applied
+    as a continuous cmap, never the forbidden viridis/hot'
+  - Interactive HTML export via pygal's native SVG/JS rendering — leverages the library's
+    most distinctive feature
+  - 'Elevated panel background (#FFFDF6 / #242420) with subtle border frames the heatmap
+    grid tastefully without competing with the data'
+  - Zero-count bins rendered in PAGE_BG (visually distinct from the elevated panel
+    fill) satisfies the spec requirement cleanly
   weaknesses:
-  - 'Top-3 peak annotation pills overlap horizontally: all three peaks land in adjacent
-    cells of the same bottom row; the pill for 9629 and 9817 touch/overlap — add a
-    vertical offset or reduce pill width when adjacent cells are annotated'
-  - Peak annotation text is slightly small relative to cell size at smaller render
-    sizes — consider sizing the pill font to at least 30px minimum
-  - HTML export wraps pygal SVG but cells have no tooltip data attached, so interactive
-    output offers no hover information — attach cycle-count values as series data
-    so pygal native JS tooltips activate on hover
+  - The three top-peak annotation pills (9,629 / 9,817 / 8,790) all land in adjacent
+    cells at the bottom-left of the active zone. The row-stagger logic partially helps
+    but the pills remain visually congested — numbers are readable but the cluster
+    is noisy and slightly detracts from the amber-glow focal point
+  - 'VQ-02 dock: pill crowding constitutes minimal overlap at the bottom of the heatmap;
+    consider reducing annotations to top-1 or top-2, or replacing pill labels with
+    a separate legend entry listing peak cells'
+  - 'CQ-01 note: the RainflowHeatmap class is architecturally necessary for pygal,
+    but it moves the code away from the ideal KISS linear structure (Imports → Data
+    → Plot → Save)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white
-      Chrome: Title "heatmap-rainflow · python · pygal · anyplot.ai" in bold dark ink — fully readable. Subtitle in muted ink with letter-spacing — readable. Y-axis label "Stress Amplitude (MPa)" and X-axis label "Mean Stress (MPa)" in bold dark ink — both readable. Tick labels in INK_SOFT muted tone — readable. Colorbar "Cycle Count" label in bold ink — readable. Log tick labels (0, 1, 10, 100, 1,000) on colorbar — readable.
-      Data: Imprint sequential colormap #009E73 (teal, low counts) → #4467A3 (blue, high counts). Triangular mountain-shaped heatmap. Zero-count cells rendered in PAGE_BG (off-white), clearly distinct from colored cells. Amber (#DDCC77) glow halo on absolute peak cell (9,817). Three pill annotations at bottom row.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-rainflow · python · pygal · anyplot.ai" in dark ink at top, fully readable. Subtitle "Wind Turbine Blade Root — Variable Amplitude Fatigue Spectrum" in muted ink below title, readable. Y-axis label "Stress Amplitude (MPa)" rotated 90° left, bold dark ink, readable. X-axis label "Mean Stress (MPa)" bottom center, bold dark ink, readable. Tick labels every-other row (amplitude: 5, 15, 35, ... 195 MPa) and every-3rd column (mean: -42, 2, 48, 92, 138, 182, 228, 242 MPa) in INK_SOFT — readable. Colorbar "Cycle Count" title above; log-scale ticks (0, 1, 10, 100, 1,000) in INK_SOFT — all readable.
+      Data: Green (#009E73) at low cycle-count end of IMPRINT_SEQ colormap, transitioning through teal to blue (#4467A3) at high counts. Triangular distribution shape (high amplitude = few cycles; low amplitude + mean ≈ 100 MPa = many cycles). Amber glow halo (#DDCC77, opacity 0.7) around the absolute peak cell near amplitude 5 MPa / mean 100 MPa. Three pill annotations at bottom showing 9,629 / 9,817 / 8,790 — crowded but readable.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black
-      Chrome: Title and subtitle flip to light #F0EFE8 — clearly readable. Axis labels in light ink — readable. Tick labels in INK_SOFT light (#B8B7B0) — readable. Colorbar labels in light muted tone — readable. No dark-on-dark failures observed.
-      Data: Identical Imprint sequential colormap (#009E73 → #4467A3) — colors match light render exactly. Zero-count cells rendered in PAGE_BG (#1A1A17), blending with background but heatmap shape clearly visible from colored cells. Amber glow on peak cell remains visible.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light F0EFE8 ink — readable against dark background. Subtitle in muted A8A79F — readable. Axis labels in light ink — readable. Tick labels in B8B7B0 — readable. Colorbar ticks in B8B7B0 — readable. No dark-on-dark text failures observed.
+      Data: Colormap colors identical to light render — brand green #009E73 through teal to blue #4467A3, unchanged. Amber glow halo visible on peak cell. Pill annotations 9,629 / 9,817 / 8,790 readable. Zero-bin cells appear slightly darker than the elevated panel (#242420), maintaining visual distinction. Colorbar gradient identical to light render.
+      Legibility verdict: PASS — all text readable against the dark background; data colors identical to light render; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 27
@@ -59,72 +64,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor deduction for tightly-spaced
-          bottom-row peak annotations
+        comment: All font sizes explicitly set; title, axis labels, tick labels, and
+          colorbar ticks readable in both themes. Minor dock for crowded pill annotations
+          at bottom of heatmap slightly reducing text clarity in that zone.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: Top-3 peak annotation pills all in same bottom row — adjacent pills
-          touch/overlap horizontally
+        passed: true
+        comment: Top-3 peak annotation pills (9,629 / 9,817 / 8,790) cluster in adjacent
+          cells at bottom-left of active zone. Row-stagger logic reduces but doesn't
+          eliminate visual congestion. Numbers readable but area is noticeably noisy.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cells visible, color gradient effective, colorbar readable
+        comment: Heatmap cells well-sized for 20x20 grid on 2400x2400 canvas. Colormap
+          gradient clearly visible. Zero bins visually distinct. Amber glow halo visible
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap CVD-safe; amber semantic anchor used
-          correctly
+        comment: Imprint sequential colormap (green-to-blue) is CVD-safe per palette
+          design. Amber anchor (#DDCC77) has documented minimum delta-E ≥ 14.52 from
+          all categorical hexes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square correct; good margins; no overflow
+        comment: Square 2400x2400 canvas appropriate for symmetric heatmap. Good proportions,
+          generous margins, nothing clipped. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels with MPa units; colorbar labeled
+        comment: 'Y: ''Stress Amplitude (MPa)'', X: ''Mean Stress (MPa)'', colorbar:
+          ''Cycle Count'' — all descriptive with units. Subtitle adds real-world context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential (#009E73→#4467A3) correct for single-polarity
-          data; backgrounds correct; chrome adaptive
+        comment: 'IMPRINT_SEQ from #009E73 to #4467A3 used as sequential continuous
+          colormap — correct. Light bg #FAF8F1, dark bg #1A1A17 — correct. Both renders
+          theme-correct.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Amber glow on peak cell, elevated background panel, subtitle with
-          letter-spacing — above default
+        comment: 'Strong design clearly above library defaults: amber glow halo focal
+          point, elevated panel background, smooth gradient colorbar (120 segments),
+          pill annotations with stagger logic, theme-adaptive chrome. Not quite FiveThirtyEight-level
+          due to annotation congestion at bottom.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Smooth 120-segment gradient colorbar, elevated panel with rounded
-          corners, gap-spaced cells
+        comment: 'Good refinement: elevated panel with subtle border, 1.5% cell gap
+          (near-invisible), generous margins, explicit font hierarchy. Annotation
+          cluster slightly detracts from overall polish.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Amber focal point on peak, top-3 annotations, logarithmic colorbar
-          for dynamic range
+        comment: 'Good storytelling: amber glow guides viewer to absolute peak; log-scale
+          colorbar reveals dynamic range; subtitle gives real-world context; triangular
+          distribution shape communicates fatigue spectrum naturally. Annotation congestion
+          slightly confuses the focal point narrative.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +152,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap with amplitude on Y, mean on X
+        comment: Correct 2D heatmap for rainflow counting matrix.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar with log scale, axis labels with MPa units, Imprint seq
-          colormap, zero-bin treatment
+        comment: Sequential colormap, log-scale colorbar, axis labels with MPa units,
+          zero-count bins visually distinct, colorbar with cycle count values, tick
+          labels at bin centers — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 20x20 bins, high amplitude at top per fatigue convention, count as
-          color
+        comment: Amplitude on y-axis (flipped so high amplitude at top per fatigue
+          convention), mean on x-axis, color = cycle frequency — all correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; no categorical legend needed
+        comment: Title 'heatmap-rainflow · python · pygal · anyplot.ai' matches required
+          format. No categorical legend needed (single continuous colorbar). Colorbar
+          labeled 'Cycle Count'.
     data_quality:
       score: 15
       max: 15
@@ -164,22 +185,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 20x20 matrix, bimodal loading spectrum, log-scale distribution,
-          annotated peaks
+        comment: 20x20 bin matrix demonstrates bimodal cycle distribution (primary
+          + vibration component), wide range of cycle counts (0 to ~9,817), triangular
+          amplitude-mean envelope typical of real fatigue spectra, zero-count bins
+          in outer regions — all aspects of rainflow counting covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind turbine blade root fatigue — canonical real-world application,
-          MPa units, bimodal Gaussian physically plausible
+        comment: Wind turbine blade root fatigue loading — real-world neutral engineering
+          context. MPa units, realistic amplitude and mean stress ranges.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-200 MPa amplitude, -50 to 250 MPa mean, ~9800 max cycles — all
-          realistic for turbine blade spectrum
+        comment: Amplitude 0-200 MPa, mean -50 to 250 MPa — physically realistic for
+          wind turbine structural steel. Max ~9,817 cycles at low amplitude is realistic
+          for variable-amplitude loading.
     code_quality:
       score: 9
       max: 10
@@ -189,51 +213,57 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Custom Graph subclass justified for pygal heatmap; sys.path manipulation
-          adds minor smell
+        comment: RainflowHeatmap class technically deviates from ideal linear KISS
+          structure, though it is architecturally required by pygal for custom chart
+          types — no alternative approach exists.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports (math, os, sys, numpy, Graph, Style) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized SVG drawing code, no fake UI
+        comment: No fake UI elements. sys.path manipulation is a necessary workaround
+          for the pygal.py filename collision. Complexity is justified by the custom
+          chart type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html both saved correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. explicit_size=True
+          set.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct Graph subclass with _plot()/_compute() override; uses self.svg.node(),
-          self.view, self.nodes correctly
+        comment: Correctly extends pygal Graph base class for custom chart type. Uses
+          self.svg.node, self.view.x/y/width/height, Style object, chart.add(), render_to_png(),
+          render(is_unicode=True) — all idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: SVG-native cell rendering, gradient colorbar via SVG rects, HTML
-          export via render(is_unicode=True); one point withheld — no cell tooltip
-          data in interactive output
+        comment: Extends pygal's Graph architecture (pygal-specific); uses SVG node
+          manipulation system (pygal-specific); generates interactive HTML via pygal's
+          native SVG/JS rendering (pygal's most distinctive feature); sys.path workaround
+          shows deep library awareness.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -248,4 +278,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
+  - gradient-fill
