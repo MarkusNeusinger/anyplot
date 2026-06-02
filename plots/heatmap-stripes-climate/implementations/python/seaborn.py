@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -19,7 +19,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint diverging colormap — blue=cold, red=warm (reversed imprint_div for semantic clarity)
-midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
+# Use INK_MUTED (#A8A79F) as dark midpoint so near-zero stripes stay visible against dark bg
+midpoint = "#FAF8F1" if THEME == "light" else "#A8A79F"
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#4467A3", midpoint, "#AE3030"])
 
 # Data
@@ -63,18 +64,19 @@ sns.heatmap(
 
 # Style — pure stripe visualization: no axes, no labels, no gridlines per spec
 ax.set_axis_off()
-ax.set_position([0.01, 0.14, 0.98, 0.70])
+# 3:1 aspect ratio per spec: 0.98×3200=3136 px wide, 0.60×1800=1080 px tall → 2.9:1
+ax.set_position([0.01, 0.15, 0.98, 0.60])
 
 # Title
 title = "heatmap-stripes-climate · python · seaborn · anyplot.ai"
 n = len(title)
 ratio = 67 / n if n > 67 else 1.0
 title_fontsize = max(round(12 * ratio), 8)
-fig.text(0.5, 0.92, title, ha="center", va="center", fontsize=title_fontsize, fontweight="medium", color=INK)
+fig.text(0.5, 0.88, title, ha="center", va="center", fontsize=title_fontsize, fontweight="medium", color=INK)
 
-# Year markers
-fig.text(0.015, 0.06, str(years[0]), fontsize=8, color=INK_SOFT, ha="left")
-fig.text(0.985, 0.06, str(years[-1]), fontsize=8, color=INK_SOFT, ha="right")
+# Year markers — larger for readability, anchored below the stripe band
+fig.text(0.015, 0.07, str(years[0]), fontsize=10, color=INK_SOFT, ha="left")
+fig.text(0.985, 0.07, str(years[-1]), fontsize=10, color=INK_SOFT, ha="right")
 
 # Save — no bbox_inches='tight' to preserve exact 3200×1800 canvas
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
