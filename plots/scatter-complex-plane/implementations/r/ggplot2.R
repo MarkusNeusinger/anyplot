@@ -4,7 +4,6 @@
 #' Quality: 85/100 | Created: 2026-06-02
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # Theme tokens
@@ -34,22 +33,20 @@ angles <- 2 * pi * (0:(n - 1)) / n
 unity_real <- cos(angles)
 unity_imag <- sin(angles)
 
-# Rectangular form label: a + bi
-fmt_complex <- function(r, i) {
-    if (i >= 0) {
-        sprintf("%.2f + %.2fi", r, i)
-    } else {
-        sprintf("%.2f - %.2fi", r, abs(i))
-    }
-}
-
-unity_labels <- mapply(fmt_complex, unity_real, unity_imag)
+# Rectangular form labels: a + bi (inlined)
+unity_labels <- mapply(
+    function(r, i) if (i >= 0) sprintf("%.2f + %.2fi", r, i) else sprintf("%.2f - %.2fi", r, abs(i)),
+    unity_real, unity_imag
+)
 
 # Two arbitrary complex numbers outside the unit circle
 arb_real   <- c( 1.30,  -0.60)
 arb_imag   <- c( 0.70,  -1.40)
 arb_angles <- atan2(arb_imag, arb_real)
-arb_labels <- mapply(fmt_complex, arb_real, arb_imag)
+arb_labels <- mapply(
+    function(r, i) if (i >= 0) sprintf("%.2f + %.2fi", r, i) else sprintf("%.2f - %.2fi", r, abs(i)),
+    arb_real, arb_imag
+)
 
 # Combined data frame
 df <- data.frame(
@@ -68,6 +65,8 @@ df <- data.frame(
 nudge_scale <- 0.30
 df$nx <- cos(df$angle) * nudge_scale
 df$ny <- sin(df$angle) * nudge_scale
+# Per-point hjust: left-align rightward labels so text clears the arrowhead
+df$hjust <- ifelse(cos(df$angle) > 0.8, 0, ifelse(cos(df$angle) < -0.8, 1, 0.5))
 
 # Unit circle reference path
 theta_seq <- seq(0, 2 * pi, length.out = 300)
@@ -108,8 +107,8 @@ p <- ggplot() +
     # Labels: rectangular form (a + bi), nudged outward from origin
     geom_text(
         data = df,
-        aes(x = real + nx, y = imag + ny, label = label, color = category),
-        size        = 2.8,
+        aes(x = real + nx, y = imag + ny, label = label, color = category, hjust = hjust),
+        size        = 3.2,
         show.legend = FALSE
     ) +
     scale_color_manual(values = category_colors, name = NULL) +
@@ -124,7 +123,7 @@ p <- ggplot() +
         plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background  = element_rect(fill = PAGE_BG, color = NA),
         panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.3),
-        panel.grid.minor  = element_line(color = GRID_COLOR, linewidth = 0.2),
+        panel.grid.minor  = element_blank(),
         panel.border      = element_blank(),
         axis.title        = element_text(color = INK, size = 10),
         axis.text         = element_text(color = INK_SOFT, size = 8),
