@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -163,6 +163,25 @@ class RainflowHeatmap(Graph):
         top_peaks = {(i, j) for _, i, j in cell_values[:3]}
         peak_cell = (cell_values[0][1], cell_values[0][2]) if cell_values else None
 
+        # Stagger pill vertical positions to prevent overlap when peaks share a row
+        _row_peak_cols: dict = {}
+        for _pi, _pj in top_peaks:
+            _row_peak_cols.setdefault(_pi, []).append(_pj)
+        _pill_v_off: dict = {}
+        _sv = 45.0  # stagger amount in SVG px
+        for _ri, _cs in _row_peak_cols.items():
+            _sorted = sorted(_cs)
+            _n = len(_sorted)
+            if _n == 1:
+                _pill_v_off[(_ri, _sorted[0])] = 0.0
+            elif _n == 2:
+                _pill_v_off[(_ri, _sorted[0])] = -_sv
+                _pill_v_off[(_ri, _sorted[1])] = _sv
+            else:
+                _pill_v_off[(_ri, _sorted[0])] = -_sv
+                _pill_v_off[(_ri, _sorted[1])] = 0.0
+                _pill_v_off[(_ri, _sorted[2])] = _sv
+
         # Draw heatmap cells
         for i in range(nr):
             for j in range(nc):
@@ -192,17 +211,20 @@ class RainflowHeatmap(Graph):
 
                 # Annotate top 3 peaks with a background pill for legibility
                 if (i, j) in top_peaks:
+                    v_off = _pill_v_off.get((i, j), 0.0)
                     txt = f"{int(val):,}"
-                    sz = min(int(ch * 0.36), int(cw * 0.30), 26)
+                    sz = min(int(ch * 0.36), 30)
                     ink_color = "#ffffff" if norm > 0.45 else INK
 
                     pill_w = len(txt) * sz * 0.6 + 14
                     pill_h = sz + 10
+                    pill_cx = cx + cw / 2
+                    pill_cy = cy + ch / 2 + v_off
                     pill = self.svg.node(
                         g,
                         "rect",
-                        x=cx + cw / 2 - pill_w / 2,
-                        y=cy + ch / 2 - pill_h / 2,
+                        x=pill_cx - pill_w / 2,
+                        y=pill_cy - pill_h / 2,
                         width=pill_w,
                         height=pill_h,
                         rx=pill_h / 2,
@@ -211,7 +233,7 @@ class RainflowHeatmap(Graph):
                     pill.set("fill", "#000000" if norm > 0.45 else PAGE_BG)
                     pill.set("fill-opacity", "0.3" if norm > 0.45 else "0.75")
 
-                    svg_text(g, cx + cw / 2, cy + ch / 2 + sz * 0.35, txt, sz, fill=ink_color, bold=True)
+                    svg_text(g, pill_cx, pill_cy + sz * 0.35, txt, sz, fill=ink_color, bold=True)
 
         # Smooth gradient colorbar (120-segment approximation)
         cb_w = int(pw * 0.016)
