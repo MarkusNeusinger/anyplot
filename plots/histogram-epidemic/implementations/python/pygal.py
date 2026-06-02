@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-02
@@ -88,8 +88,8 @@ for i in range(90):
     suspect_series.append({"value": int(suspect[i]), "label": tip})
 
 # Title font size scaled for length (formula: round(66 * 67 / len(title)))
-title = "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic · pygal · pyplots.ai"
-title_font_size = round(66 * 67 / len(title))  # ~55 — prevents overflow at 3200 px
+title = "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic · python · pygal · anyplot.ai"
+title_font_size = round(66 * 67 / len(title))  # prevents overflow at 3200 px
 
 custom_style = Style(
     background=PAGE_BG,
@@ -117,12 +117,12 @@ chart = pygal.StackedBar(
     x_title="Date of Symptom Onset",
     y_title="New Cases (Daily)",
     show_y_guides=True,
-    show_x_guides=False,
+    show_x_guides=True,
     legend_at_bottom=True,
     legend_box_size=28,
     legend_at_bottom_columns=3,
     margin=60,
-    margin_bottom=260,
+    margin_bottom=140,
     margin_right=80,
     spacing=2,
     rounded_bars=3,
@@ -137,6 +137,8 @@ chart = pygal.StackedBar(
 
 chart.x_labels = date_labels
 chart.x_labels_major = major_labels
+# Vertical reference lines at intervention x-positions
+chart.x_guides = list(interventions.keys())
 
 chart.add("Confirmed", confirmed_series)
 chart.add("Probable", probable_series)
