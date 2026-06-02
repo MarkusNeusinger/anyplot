@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-02
+// Quality: pending | Updated: 2026-06-02
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -60,7 +60,7 @@ new Chart(canvas, {
         backgroundColor: t.palette[0] + "b3",  // Imprint brand green at 70% opacity
         borderColor: t.pageBg,
         borderWidth: 1.5,
-        pointRadius: 6,
+        pointRadius: 5,
       },
       {
         type: "line",
@@ -92,7 +92,7 @@ new Chart(canvas, {
         display: true,
         text: "Annual Rainfall vs Wheat Yield across 150 agricultural regions — dashed line shows positive correlation (r ≈ 0.7)",
         color: t.inkSoft,
-        font: { size: 18, style: "italic" },
+        font: { size: 16, style: "italic" },
         padding: { bottom: 16 },
       },
       legend: { display: false },
