@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-02
@@ -17,7 +17,7 @@ from plotnine import (
     ggplot,
     guides,
     labs,
-    scale_fill_gradientn,
+    scale_fill_gradient2,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -54,10 +54,7 @@ title_size = round(12 * (67 / n)) if n > 67 else 12
 plot = (
     ggplot(df, aes(x="year", y=after_stat("1"), fill="anomaly"))
     + geom_tile(aes(width=1, height=1))
-    + scale_fill_gradientn(
-        colors=["#08306b", "#2171b5", "#6baed6", "#deebf7", "#ffffff", "#fee0d2", "#fc9272", "#de2d26", "#67000d"],
-        limits=(-vmax, vmax),
-    )
+    + scale_fill_gradient2(low="#4467A3", mid=PAGE_BG, high="#AE3030", midpoint=0, limits=(-vmax, vmax))
     + scale_x_continuous(expand=(0, 0))
     + scale_y_continuous(expand=(0, 0))
     + guides(fill=False)
