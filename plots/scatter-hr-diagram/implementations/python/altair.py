@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-02
@@ -83,15 +83,16 @@ region_labels = pd.DataFrame(
 # Interactive selection: click legend to highlight spectral type
 selection = alt.selection_point(fields=["Spectral Type"], bind="legend")
 
-# Spectral type colors follow astrophysical convention (semantic exception to Imprint order).
-# A-type uses a more saturated blue (#88aaee) for better visibility on both backgrounds.
-# F uses amber-gold (#d4a020) distinct from G's bright yellow (#f0dc20) for better separation.
+# Spectral colors mapped to nearest Imprint palette members while preserving
+# hot-blue-to-cool-red astrophysical temperature sequence.
 SPECTRAL_DOMAIN = ["O", "B", "A", "F", "G", "K", "M"]
-SPECTRAL_RANGE = ["#2244bb", "#5588ee", "#88aaee", "#d4a020", "#f0dc20", "#ee7722", "#cc3311"]
+SPECTRAL_RANGE = ["#4467A3", "#2ABCCD", "#C475FD", "#DDCC77", "#99B314", "#BD8233", "#AE3030"]
+# Redundant shape encoding ensures CVD accessibility (deuteranopia/protanopia safe).
+SPECTRAL_SHAPES = ["circle", "diamond", "square", "triangle-up", "triangle-down", "cross", "triangle-left"]
 
 stars = (
     alt.Chart(df)
-    .mark_circle(strokeWidth=0)
+    .mark_point(strokeWidth=0, filled=True)
     .encode(
         x=alt.X(
             "Temperature (K):Q",
@@ -108,6 +109,12 @@ stars = (
         color=alt.Color(
             "Spectral Type:N",
             scale=alt.Scale(domain=SPECTRAL_DOMAIN, range=SPECTRAL_RANGE),
+            sort=SPECTRAL_DOMAIN,
+            legend=alt.Legend(title="Spectral Type", symbolSize=150, orient="right"),
+        ),
+        shape=alt.Shape(
+            "Spectral Type:N",
+            scale=alt.Scale(domain=SPECTRAL_DOMAIN, range=SPECTRAL_SHAPES),
             sort=SPECTRAL_DOMAIN,
             legend=alt.Legend(title="Spectral Type", symbolSize=150, orient="right"),
         ),
@@ -137,7 +144,7 @@ labels = (
     .encode(x="Temperature (K):Q", y="Luminosity (Solar):Q", text="text:N")
 )
 
-TITLE = "scatter-hr-diagram · altair · pyplots.ai"
+TITLE = "scatter-hr-diagram · python · altair · anyplot.ai"
 
 chart = (
     (stars + sun_point + sun_label + labels)
