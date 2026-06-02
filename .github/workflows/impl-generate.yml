@@ -649,11 +649,18 @@ jobs:
           fi
           echo "::notice::Library version: $LIBRARY = $LIBRARY_VERSION ($LANGUAGE runtime $LANGUAGE_VERSION, pipeline python $PYTHON_VERSION)"
 
-          # Interactive libraries additionally produce HTML previews (one per theme)
+          # Interactive libraries additionally produce HTML previews (one per theme).
+          # Python interactive libs are listed explicitly. JavaScript libs are
+          # interactive too (the browser render harness emits standalone
+          # plot-{light,dark}.html) — but gate on the files actually existing, so a
+          # lib/render that produced no HTML never points preview_html at a 404.
           HAS_HTML="false"
           case "$LIBRARY" in
             plotly|bokeh|altair|highcharts|pygal|letsplot) HAS_HTML="true" ;;
           esac
+          if [ "$LANGUAGE" = "javascript" ] && [ -f "$IMPL_DIR/plot-light.html" ] && [ -f "$IMPL_DIR/plot-dark.html" ]; then
+            HAS_HTML="true"
+          fi
 
           # Write metadata file using Python for proper YAML formatting
           # Pass all variables inline to avoid export/env issues
@@ -943,6 +950,13 @@ jobs:
               HTML_DARK="${BASE}/plot-dark.html"
               ;;
           esac
+          # JS libs are interactive too — link the HTML only when the render
+          # produced it (mirrors the existence gate used for preview_html).
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          if [ "$LANGUAGE" = "javascript" ] && [ -f "$IMPL_DIR/plot-light.html" ] && [ -f "$IMPL_DIR/plot-dark.html" ]; then
+            HTML_LIGHT="${BASE}/plot-light.html"
+            HTML_DARK="${BASE}/plot-dark.html"
+          fi
 
           BODY="## :art: ${LANGUAGE}/${LIBRARY} Preview
 
