@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:46:54Z'
-updated: '2026-06-02T18:03:09Z'
+updated: '2026-06-02T18:17:11Z'
 generated_by: claude-sonnet
 workflow_run: 26837321470
 issue: 4558
@@ -12,59 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Dual-encoded scatter (hue + shape) cleanly separates 7 spectral types from 4 stellar
-    populations, providing maximum information with no visual ambiguity
-  - KDE density contour overlay on the main sequence is a distinctively seaborn technique
-    that reveals the stellar population structure beyond what a scatter alone shows
-  - 'Astrophysical conventions fully implemented: reversed log x-axis, log luminosity
-    y-axis, secondary spectral-class axis, and Sun hexagon reference marker'
-  - Theme-adaptive chrome (backgrounds, text, spines, grid, legend boxes) works correctly
-    in both light and dark renders with zero dark-on-dark failures
-  - Path-effects halos on region and Sun annotation labels prevent overlap with data
-    markers even in dense areas
-  - Code is clean KISS structure with deterministic np.random.seed(42), explicit canvas
-    sizing (8×4.5 at dpi=400), and no bbox_inches='tight' drift
+  - Excellent spectral convention with documented semantic exception — all 7 spectral
+    type colors map to Imprint palette members (O→#4467A3 blue, B→#2ABCCD cyan, A→#F0EFE8
+    near-white, F→#99B314 lime, G→#DDCC77 amber, K→#BD8233 ochre, M→#AE3030 matte
+    red), matching astrophysical expectations.
+  - KDE density contours overlay via sns.kdeplot(log_scale=True) beautifully highlights
+    main sequence concentration — a seaborn-distinctive feature that other libraries
+    cannot replicate as elegantly.
+  - Secondary spectral class x-axis (ax.twiny()) with manual tick positions adds genuine
+    astrophysical context beyond the base spec requirement.
+  - 'Perfect spec compliance: reversed x-axis, log y-scale, 7 spectral types color-coded,
+    4 stellar regions labeled, Sun marked, secondary spectral class axis all present.'
+  - Robust theme adaptation — both renders fully readable with correct INK/INK_SOFT/INK_MUTED
+    tokens, PAGE_BG and ELEVATED_BG backgrounds, and path effects on annotations preventing
+    dark-on-dark or light-on-light failures.
+  - Dual encoding (hue + marker shape) correctly handles the 7-category challenge,
+    adding redundant shape encoding as recommended by the style guide for n≥5 series.
+  - Sun hexagon marker (s=280) at exact astrophysical coordinates (5778 K, 1 L☉) with
+    bold path-effect annotation is a polished reference anchor.
+  - figsize=(8,4.5) at dpi=400 → exactly 3200×1800 px; savefig without bbox_inches
+    — canvas preserved correctly.
   weaknesses:
-  - 'VQ-07 partial: Spectral type colors use fully custom hexes (#5B7FFF, #8EAAFF,
-    #C4D4FF, #E8E8D0, #E6C84B, #D98030, #C94420) rather than Imprint palette members.
-    The semantic exception is valid (astrophysical convention is extremely strong),
-    but the fix is to map spectral types to the closest Imprint members where possible
-    — O/B→#4467A3 (Imprint blue), M→#AE3030 (Imprint matte red), K→#BD8233 (Imprint
-    ochre), G→#DDCC77 (amber anchor for sun-yellow), F→#99B314 (Imprint lime for warm-white),
-    A→#F0EFE8 (INK dark-theme value, near-white) — then justify any remaining custom
-    hex in a code comment. The first categorical series must also be #009E73 or have
-    a documented exception.'
-  - 'VQ-01 minor: Legend text is 7pt and legend title is 8pt — both are below the
-    8pt/9pt recommendations from the style guide. At 400px mobile viewport these characters
-    drop to ~5 source pixels and become unreadable. Increase both: fontsize=8, title_fontsize=9.'
-  - 'VQ-05 tight margin: The secondary spectral-class x-axis (ax2) with its ''Spectral
-    Class'' label (labelpad=8) stacks above the main plot, pushing the figure title
-    very close to the top canvas edge. Add fig.subplots_adjust(top=0.86) to open up
-    breathing room between the title and the top border. This prevents any risk of
-    the title touching or slightly clipping the top edge.'
-  - 'DE-01 moderate: The overall composition is well-structured but not yet publication-ready.
-    Consider increasing the KDE contour linewidth to 1.0 (from 0.6) and the KDE alpha
-    to 0.45 (from 0.30) to make the main sequence structure more visually prominent.
-    Also consider making the Sun hexagon slightly larger (s=280 from s=220) so it
-    anchors the viewer''s eye more strongly — it is the intended focal point.'
+  - Region text labels (fontsize=8, italic) positioned inside data clusters — 'Red
+    Giants' at (3600, 600) overlaps diamond markers; path effects mitigate but don't
+    eliminate the visual conflict. Consider repositioning to cluster margins or adding
+    leader lines.
+  - Small italic region labels (fontsize=8) and rotated 'Main Sequence' diagonal label
+    may challenge readability at mobile width (~400 px thumbnail scale).
+  - Both-axis grid (x and y) at alpha=0.12 — style guide recommends y-axis-only grid
+    for scatter plots; the horizontal grid lines add minor noise for this log-scale
+    diagram.
+  - 'A-type color #F0EFE8 is the theme-adaptive INK anchor (used for text/chrome in
+    dark theme), not a dedicated categorical slot — a visually distinct Imprint color
+    would better separate A-type from chrome elements, though the spectral convention
+    justifies near-white here.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — clearly not pure white, correct anyplot surface.
-      Chrome: Title "scatter-hr-diagram · python · seaborn · anyplot.ai" at top in dark ink (#1A1A17), readable but very close to the canvas top edge due to the secondary spectral-class axis consuming vertical space below it. Secondary x-axis "Spectral Class" with O B A F G K M tick labels sits just below the title. X-axis label "Surface Temperature (K)" and Y-axis label "Luminosity (L☉)" both in 10pt dark ink, readable. Tick labels in 8pt muted dark ink (#4A4A44), readable. Two legends (Spectral Type lower-left, Region upper-right) have elevated backgrounds (#FFFDF6) with muted ink legend text (7pt — slightly small). All text is readable against the warm off-white background; no light-on-light failures.
-      Data: Scatter plot with 330 stars across 4 stellar populations (circles=Main Sequence, diamonds=Red Giants, squares=Supergiants, down-triangles=White Dwarfs). Spectral type colors run from blue (#5B7FFF O-type upper-left) through lighter blues (B), near-white (A, mid-diagonal), yellow (#E6C84B G-type near Sun), orange (#D98030 K-type), to deep red (#C94420 M-type lower-right). KDE contour overlay in Imprint blue (#4467A3) traces the main-sequence density. Sun hexagon in gold (#E6C84B) clearly marked at 5778K / 1 L☉ with "Sun" annotation using path_effects halo. Region labels ("Supergiants", "Red Giants", "White Dwarfs", "Main Sequence" rotated diagonal) use 8pt italic muted ink with halos, well-positioned in sparse zones.
-      Legibility verdict: PASS — all elements readable at full resolution; legend 7pt text is a minor mobile concern.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-hr-diagram · python · seaborn · anyplot.ai" in dark medium-weight text at ~60% plot width — readable. Secondary x-axis at top with "Spectral Class" label and O/B/A/F/G/K/M tick marks in INK_MUTED — readable. Y-axis "Luminosity (L☉)" and x-axis "Surface Temperature (K)" in INK at 10pt — readable. Tick labels at 8pt in INK_SOFT — readable. Region italic labels ("Supergiants", "Red Giants", "White Dwarfs", "Main Sequence" diagonal) at 8pt with path effects — readable but small. Two legend boxes (Spectral Type lower-left, Region upper-right) with elevated background and INK_SOFT frame — readable.
+      Data: 7 spectral types with Imprint palette members: O=blue circles, B=cyan circles, A=white circles (dark edges), F=lime circles, G=amber circles, K=ochre circles, M=red circles. Marker shapes encode regions: circles=Main Sequence, diamonds=Red Giants, squares=Supergiants, inverted triangles=White Dwarfs. KDE contours in Imprint blue (#4467A3) along main sequence diagonal at log scale. Sun hexagon in amber (#DDCC77) at (5778K, 1 L☉) with bold "Sun" annotation.
+      First series color: O-type uses #4467A3 (Imprint blue) — semantic exception for astrophysical spectral convention, documented in code.
+      Legibility verdict: PASS — all text elements readable against warm off-white background; path effects prevent overlap failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title text flips to light cream (#F0EFE8), clearly visible against near-black background. Secondary x-axis tick labels and "Spectral Class" label in lighter muted tone (#B8B7B0), readable. Axis labels and tick labels in appropriate light tones. Both legend boxes show elevated dark background (#242420) with light text — no dark-on-dark failures. Grid lines are subtle. Spines (left, bottom, top via secondary axis) in muted light color.
-      Data: Data colors are identical to the light render — spectral type blues/whites/yellows/reds unchanged (Imprint palette positions stay constant across themes as required). KDE contour in #4467A3 still visible against dark background. Sun hexagon in gold (#E6C84B) remains clearly visible — brand green #009E73 visibility is not a concern here since spectral exception colors are used, but the gold sun marker reads well on the dark surface.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures identified.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all axis labels in #F0EFE8 (INK dark) — clearly visible against dark background. Secondary axis "Spectral Class" label and tick marks in INK_MUTED (#A8A79F) — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Region italic labels with path effects against #1A1A17 background — readable. Legend boxes with ELEVATED_BG (#242420) background, INK_SOFT (#B8B7B0) frame and label text — readable.
+      Data: Colors are IDENTICAL to light render — O=blue, B=cyan, A=near-white (now visible against dark bg), F=lime, G=amber, K=ochre, M=red. Spectral colors are theme-independent Imprint palette members. KDE contours same Imprint blue. Sun hexagon same amber.
+      Dark-on-dark check: NO dark-on-dark failures detected. All text uses light INK tokens. No black text on near-black background.
+      Legibility verdict: PASS — all elements readable against warm near-black background; theme adaptation complete.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -72,89 +73,89 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (12pt title, 10pt axes, 8pt ticks,
-          7pt legend). Readable in both themes. Legend at 7pt is slightly below 8pt
-          recommendation — marginal mobile concern.
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
+          8pt, annotations 8pt). Readable at full size in both themes. Minor deduction
+          for density of small text (8pt italic region labels, secondary axis labels)
+          potentially challenging at 400px mobile width.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements. Path-effects halos on region labels and
-          Sun annotation prevent data/label conflicts.
+        comment: Region text labels positioned inside data clusters — 'Red Giants'
+          at (3600, 600) overlaps diamond markers. Path effects maintain readability
+          but overlap is present. All other elements clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 330 stars at s=80, alpha=0.65 — well-adapted to medium-high density.
-          Different marker shapes for all 4 regions. Sun hexagon prominent at s=220.
+        comment: 's=80, alpha=0.65 appropriate for ~250 points (100-300 range: s=50-100,
+          alpha=0.5-0.7). All spectral types visible with color+shape dual encoding.
+          A-type near-white markers visible via dark edge coloring.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant encoding via marker shapes (circle/diamond/square/triangle)
-          ensures CVD-safe region discrimination beyond color alone.
+        comment: Redundant hue+shape encoding handles 7-category CVD challenge. All
+          Imprint palette members with known CVD safety. No red-green sole-signal
+          issue.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (gate passed). Good layout overall. Title
-          is very close to top canvas edge due to secondary spectral-class axis and
-          label stacking above the plot area — add subplots_adjust(top=0.86) to open
-          breathing room.
+        comment: figsize=(8,4.5) dpi=400 = exactly 3200x1800. No canvas gate file.
+          fig.subplots_adjust(top=0.86) provides breathing room. Good canvas utilization.
+          No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Surface Temperature (K)'', Y: ''Luminosity (L☉)'' — descriptive
-          with units and Unicode. Secondary: ''Spectral Class''. All correct.'
+        comment: 'X-axis: ''Surface Temperature (K)'' with units. Y-axis: ''Luminosity
+          (L☉)'' with units. Secondary x-axis: ''Spectral Class''. All descriptive.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Semantic exception is clearly justified (astrophysical spectral
-          type convention is extremely strong, spec explicitly requires conventional
-          colors), but implementation uses fully custom hexes (#5B7FFF, #8EAAFF, etc.)
-          rather than mapping to the closest Imprint palette members. Chrome (backgrounds,
-          text, grid, legend boxes) is perfectly compliant in both themes. Partial
-          credit.'
+        passed: true
+        comment: 'Semantic exception applies: spectral type colors are strong real-world
+          conventions (blue=hot, red=cool). All 7 colors are Imprint palette members.
+          Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Chrome theme-correct
+          in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default (4): KDE contour overlay, hexagon Sun marker, dual
-          separated legends, secondary spectral-class axis all add sophistication.
-          Not yet at publication-ready (6+) — the main sequence could use stronger
-          visual prominence and the overall composition is functional rather than
-          striking.'
+        comment: 'Strong design: custom astrophysical spectral palette (documented
+          semantic exception), KDE overlay, secondary spectral axis, dual encoding,
+          path effects on annotations, separate dual legends. Clearly above configured
+          defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: spines removed (top/right), subtle grid (alpha=0.12), path-effects
-          halos on labels, edge colors on markers, elevated legend backgrounds. Solid
-          refinement above defaults.'
+        comment: Top/right spines removed, subtle grid (alpha=0.12, linewidth=0.5),
+          path effects on all annotation text, theme-adaptive marker edges, legend
+          frame alpha=0.85, fig.subplots_adjust for whitespace. Both-axis grid slightly
+          noisier than y-axis-only preference.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good: color gradient from blue (hot) to red (cool) tells the temperature
-          story, region labels guide the viewer to distinct stellar populations, Sun
-          as relatable reference anchor, KDE shows main sequence structure. Above
-          default (2) but not ''excellent'' (6) — the main sequence KDE could be bolder
-          to create a stronger focal point.'
+        comment: KDE contours emphasize main sequence concentration as the dominant
+          stellar population. Region labels guide narrative through HR diagram zones.
+          Sun as relatable reference anchor. Visual hierarchy present but not exceptional
+          — evolution tracks or emphasized main sequence band would elevate further.
     spec_compliance:
       score: 15
       max: 15
@@ -164,29 +165,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct HR diagram scatter plot with all required stellar populations.
+        comment: Correct scatter plot. Hertzsprung-Russell diagram with all required
+          stellar populations.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: X-axis reversed, Y-axis log scale, spectral type color coding, 4
-          region labels, Sun reference marker, secondary spectral class x-axis — all
-          present.
+          region labels (main sequence/red giants/supergiants/white dwarfs), Sun marked,
+          secondary spectral class x-axis (optional feature also implemented).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on reversed log X, luminosity on log Y, all data visible
-          in range.
+        comment: Temperature on inverted x-axis, luminosity on log y-axis, spectral
+          type as hue, region as marker shape. All correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-hr-diagram · python · seaborn · anyplot.ai' is correct
-          format. Two legends with correct labels for spectral type and region.
+        comment: 'Title: ''scatter-hr-diagram · python · seaborn · anyplot.ai'' —
+          matches required format exactly. Spectral Type legend with all 7 types,
+          Region legend with all 4 regions.'
     data_quality:
       score: 15
       max: 15
@@ -196,24 +199,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four stellar populations shown (250 main sequence, 35 red giants,
-          20 supergiants, 25 white dwarfs). Full spectral type range O through M represented.
-          KDE shows density structure.
+        comment: 'All 4 stellar populations represented: main sequence (250 stars
+          on L∝T^3.5 diagonal), red giants (35 stars at high L/low T), supergiants
+          (20 stars at extreme L), white dwarfs (25 stars at high T/low L). All 7
+          spectral types present.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Astrophysics HR diagram is a real, neutral scientific context. Synthetic
-          data based on real stellar physics (mass-luminosity relationship L∝T^3.5).
+        comment: Astrophysics is a neutral, educational scientific domain. Stellar
+          data is non-controversial and internationally recognized.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range 2000-40,000 K and luminosity range 1e-5 to 1e6
-          L☉ match the spec requirements and physical reality. Main sequence diagonal
-          follows the correct Stefan-Boltzmann slope.
+        comment: Temperature range 2000-40000 K covers all spectral types. Luminosity
+          1e-5 to 1e6 L☉ covers all stellar populations. Sun at exact (5778 K, 1 L☉).
+          Mass-luminosity relation L∝T^3.5 physically realistic.
     code_quality:
       score: 10
       max: 10
@@ -223,37 +227,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → tokens → data → plot → style → save. No
-          functions or classes.'
+        comment: 'No functions or classes. Procedural flow: imports → tokens → data
+          → plot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib.patheffects, matplotlib.pyplot, numpy, pandas,
-          seaborn, os, sys) are used.
+        comment: 'All 7 imports used: matplotlib.patheffects, plt, np, pd, sns, os,
+          sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized. The sys.path guard for sibling file shadowing
-          is a legitimate precaution. No over-engineering, no fake UI.
+        comment: No fake interactivity. Legend handle separation is complex but necessary
+          for dual-legend setup. Appropriate for this scientific plot.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches='tight'. Correct
-          output naming.
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          filename, no bbox_inches='tight'.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -261,18 +265,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with both hue and style encoding simultaneously
-          (7 hue + 4 style categories), sns.kdeplot with log_scale=True, sns.set_theme
-          with comprehensive RC params. Expert-level use of the dual-encoding pattern.
+        comment: sns.scatterplot with combined hue+style+palette+hue_order+markers
+          in one call — seaborn high-level API. sns.kdeplot with log_scale=True on
+          scatter overlay — idiomatic. sns.set_theme() with full rc dict — seaborn-recommended
+          theming approach.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: KDE density contour overlay on a scatter plot (sns.kdeplot over sns.scatterplot
-          with shared axes and log_scale) is distinctively seaborn — this pattern
-          is much more natural in seaborn than in matplotlib or other libraries.
-  verdict: REJECTED
+        comment: sns.kdeplot(log_scale=True) overlaid on scatter to visualize main
+          sequence density — genuinely seaborn-distinctive; other libraries require
+          manual KDE computation. Combined hue+style dual encoding in single scatterplot
+          call leverages seaborn's grammar-of-graphics API.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
