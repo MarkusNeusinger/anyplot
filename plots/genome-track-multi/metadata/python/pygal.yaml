@@ -1,100 +1,120 @@
 library: pygal
+language: python
 specification_id: genome-track-multi
 created: '2026-03-06T17:04:42Z'
-updated: '2026-03-06T17:55:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22773343254
+updated: '2026-06-02T08:31:23Z'
+generated_by: claude-sonnet
+workflow_run: 26806442031
 issue: 4422
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/pygal/plot.html
-quality_score: 89
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent composite SVG architecture that embeds multiple pygal sub-charts into
-    a cohesive multi-track view
-  - Realistic EGFR gene data with biologically plausible coverage depths, variant
-    quality scores, and regulatory elements
-  - Thoughtful design with Tol bright colorblind-safe palette, gradient accent line,
-    alternating track backgrounds, and colored accent strips
-  - Coverage annotation creates a storytelling focal point connecting read depth to
-    gene structure
-  - HTML export preserves pygal native interactive tooltips for all embedded charts
-  - Full spec compliance with all required track types and features
+  - 'Full spec compliance: all 4 track types (gene annotations, coverage area, variant
+    scatter, regulatory rectangles) implemented with strand direction chevrons, hermite-interpolated
+    coverage, and quality-encoded variant markers'
+  - Biologically accurate BRCA1 data with real hg38 exon coordinates adds authenticity
+    — coverage peaks correctly elevated at exon positions
+  - 'Sophisticated multi-track composite SVG: alternating track backgrounds, color
+    accent strips, gradient header decoration, and subtle dashed vertical grid lines
+    create professional genome-browser aesthetic'
+  - 'Creative pygal usage: hermite interpolation for smooth coverage curve, Histogram
+    chart type for regulatory interval bars, XY scatter for variants with transparency
+    — all via transparent pygal sub-charts composited into a single SVG'
+  - 'Perfect dual-theme adaptation: background #FAF8F1 / #1A1A17, all chrome tokens
+    correctly applied, data colors identical between light and dark renders'
+  - HTML output with interactive pygal tooltips provides bonus interactivity beyond
+    the static PNG requirement
   weaknesses:
-  - Variant markers (dots_size=10) are slightly small for only 12 data points — larger
-    markers would improve visibility
-  - The 18px annotation text is on the small side for a 4800x2700 canvas
-  - Gene track is entirely manual SVG rather than using a pygal chart type, reducing
-    library mastery score
-  - No y-axis labels or scale indicators for the variant track (quality score range
-    not shown)
-  image_description: 'The plot displays a multi-track genome browser view of the EGFR
-    gene region on chromosome 7 (55.086–55.280 Mb). Four horizontally stacked tracks
-    share a common genomic x-axis with position labels in Mb. Track 1 (Genes): Blue
-    exon rectangles connected by a thin horizontal intron line on a light gray background,
-    with chevron arrows indicating (+) strand direction and the gene name "EGFR" in
-    italic blue above the exons. Track 2 (Coverage): A filled area chart in light
-    cyan with a darker blue stroke showing read depth (0x–87x), with prominent peaks
-    at exon locations and a dashed annotation line pointing to "coverage peak at exon"
-    near the 3'' end. Track 3 (Variants): Pink/red circles for SNPs and purple circles
-    for indels scattered at genomic positions with y-axis encoding quality scores;
-    a compact legend distinguishes SNP vs Indel in the top-right. Track 4 (Regulatory):
-    Colored histogram bars — yellow for Promoter, green for Enhancer, salmon/orange
-    for CTCF — with type labels above each bar and a legend in the bottom-right. The
-    title reads "EGFR Gene Region (chr7) · genome-track-multi · pygal · pyplots.ai"
-    with a subtitle "Epidermal Growth Factor Receptor — 28 exons, ~194 kb" and a gradient
-    accent line beneath. Alternating gray/white track backgrounds with colored accent
-    strips on the left edge of each track. Dashed vertical coordinate guide lines
-    span all tracks.'
+  - 'Manually placed SVG text is too small for a 3200px canvas: track labels use font-size=25px,
+    x-axis ticks 19px, x-axis title 24px, regulatory element labels 17px, and legend
+    text 18-19px — all well below the recommended 44-56px. At the 400px mobile render,
+    tick labels and legend text are illegible (render to ~2-4px). Increase all manual
+    SVG text: track labels to 44-48px, x-axis ticks to 36-40px, x-axis title to 48-52px,
+    legend text to 36-40px, regulatory labels to 30-34px.'
+  - 'Partial red circle clipped at the right boundary of the Variants sub-chart: a
+    SNP marker appears cut off at x≈3120 (MARGIN_LEFT+PLOT_W) in both light and dark
+    renders. This is a viewBox/padding alignment issue. Fix by setting x_range=(-0.01,
+    1.01) on the variant chart to give dots at x=1.0 enough room, or by widening MARGIN_RIGHT
+    from 80 to 120px.'
+  - 'Tight bottom margin: ''Genomic Position (chr17)'' label is placed at y=1761 on
+    a 1800px canvas, leaving only 39px below it. Increase MARGIN_BOTTOM from 120 to
+    160px to prevent future overlap and give the bottom axis room to breathe.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "BRCA1 Gene Region (chr17) · genome-track-multi · python · pygal · anyplot.ai" bold and clearly visible at ~59px. Italic subtitle "Breast Cancer Susceptibility Gene 1 — 23 exons, ~83 kb" readable. Track labels (Genes, Coverage, Variants, Regulatory) visible at left in dark ink. X-axis tick labels ("41.16 Mb" ... "41.30 Mb") and axis title "Genomic Position (chr17)" visible but small. Coverage y-axis ticks (0x, 77x) very small. Variant legend (SNP/Indel) and regulatory legend (Promoter/Enhancer/CTCF) visible but small.
+      Data: Gene track shows blue (#4467A3) exon rectangles on intron line with left-pointing chevrons for minus strand; BRCA1 label in italic. Coverage track filled with brand green (#009E73) with darker green stroke — coverage peaks clearly elevated at exon positions. Variant scatter shows red (#AE3030) circles for SNPs and lavender (#C475FD) for indels with quality-score y-axis. Regulatory track shows ochre (#BD8233) Promoter bars, cyan (#2ABCCD) Enhancer bars, rose (#954477) CTCF bar. Partial red circle visible at right edge of Variants sub-chart (data-point clipping artifact). Alternating track backgrounds with color accent strips on left. Dashed vertical grid lines across all tracks.
+      Legibility verdict: PASS for full-size; FAIL at 400px mobile scale — tick labels (19px), legend text (18-19px), and regulatory labels (17px) render to ~2-3px at 400px width and are illegible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title and subtitle use light ink (#F0EFE8) — clearly readable against dark background. Track labels use INK_SOFT (#B8B7B0) token — correctly light-colored on dark background. X-axis ticks and axis title use light ink. Coverage ticks (0x, 77x) in light ink. Variant and regulatory legends in light ink. No dark-on-dark failures observed — all chrome correctly inverted.
+      Data: Data colors are identical to light render — brand green coverage, blue gene exons, red SNPs, lavender indels, ochre promoters, cyan enhancers, rose CTCF. Same partial red circle at right edge of Variants track. CTCF bar near right edge of Regulatory track is slightly tight but fully visible.
+      Legibility verdict: PASS for full-size; FAIL at 400px mobile scale — same small font sizes (17-25px manually placed SVG text) are illegible at mobile scale, identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 44px, track labels 28px, ticks
-          22px). 18px annotation text is legible but small.
+        passed: false
+        comment: Title (~59px) correctly sized; manually placed SVG text too small
+          — track labels 25px, x-axis ticks 19px, axis title 24px, regulatory labels
+          17px, legends 18-19px. Recommended 44-56px. At 400px mobile render tick/legend
+          text is illegible (~2-3px)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or elements. Track labels, axis labels, exon
-          rectangles, and legends cleanly separated.
+        comment: Regulatory element type labels crowd near each other in Regulatory
+          track but no actual overlap at full size. Clean layout overall
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Exons, coverage, regulatory bars clearly visible. Variant dots slightly
-          small for 12 data points.
+        comment: Coverage area, gene exons, and variant markers clearly visible. Indel
+          markers (3 points, small lavender squares) less prominent than SNPs
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Tol bright colorblind-safe palette. All colors distinguishable under
-          common color vision deficiencies.
+        comment: CVD-safe Imprint palette throughout; shape redundancy (circles vs
+          rectangles) for SNP vs Indel reduces color dependence
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4800x2700 canvas well utilized. Four tracks fill vertical space,
-          balanced margins.
+        comment: Canvas 3200x1800 correct. Tight bottom margin — Genomic Position
+          label at y=1761 on 1800px canvas leaves 39px. Partial red circle at right
+          edge of Variants sub-chart is a clipping artifact
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled Genomic Position (chr7) with Mb units. Coverage y-axis
-          shows depth labels.
+        comment: Track labels identify each data type; x-axis shows genomic position
+          in Mb with units; coverage shows 0x/77x depth ticks
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Coverage (first data series) = brand green #009E73; all colors from
+          Imprint palette with semantic assignments (red for SNPs, blue for reference
+          gene). Backgrounds #FAF8F1 light / #1A1A17 dark correct'
     design_excellence:
       score: 15
       max: 20
@@ -104,22 +124,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Tol bright palette, gradient accent line, alternating track backgrounds,
-          colored accent strips. Clearly above defaults.
+        comment: Gradient header line, alternating track backgrounds, per-track color
+          accent strips, strand direction chevrons, hermite smooth coverage — well
+          above default
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: No unnecessary chrome. Subtle dashed coordinate guides. Light track
-          separators. Clean whitespace.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Coverage peak annotation creates focal point. Aligned tracks enable
-          cross-track comparison. EGFR provides biological meaning.
+        comment: Transparent pygal sub-chart backgrounds integrate cleanly, subtle
+          dashed grid lines at 0.3 opacity, low-opacity track separators
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Coverage peaks visually align with exon positions creating a gene-expression
+          narrative; integrated multi-track view enables cross-track pattern reading;
+          biological subtitle adds context
     spec_compliance:
       score: 15
       max: 15
@@ -129,126 +151,129 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-track genome browser with 4 vertically stacked tracks sharing
-          genomic x-axis.
+        comment: 'Full multi-track genome browser: 4 parallel horizontal tracks with
+          shared x-axis'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: exon rectangles, intron lines, strand
-          chevrons, filled area coverage, variant markers with quality encoding, regulatory
-          colored rectangles, track labels, shared coordinates, background shading.'
+        comment: 'All spec features present: exon rectangles + intron line + strand
+          chevrons, filled area coverage, quality-encoded variant scatter, regulatory
+          rectangles with type labeling, track labels on left, consistent coordinates,
+          alternating track backgrounds'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Genomic position on x-axis, coverage depth on y-axis, variant quality
-          on y-axis, regulatory intervals correctly mapped.
+        comment: X-axis correctly maps to bp coordinates; coverage y-axis shows read
+          depth; variant y-axis shows quality score; regulatory shows element type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec-id format with descriptive prefix. Variant and
-          regulatory legends present with correct labels.
+        comment: Title 'BRCA1 Gene Region (chr17) · genome-track-multi · python ·
+          pygal · anyplot.ai' follows optional descriptive-prefix format correctly
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All 4 track types with full feature variety: 28 exons, SNPs and
-          indels, Promoter/Enhancer/CTCF regulatory elements.'
+        comment: All 4 track types, 2 variant sub-types (SNP+indel), 3 regulatory
+          sub-types (promoter/enhancer/CTCF), strand info. Missing UTR differentiation
+          in gene track (spec lists UTR as optional)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: EGFR gene on chr7 is a real oncogene. Realistic coverage depths,
-          variant quality scores, regulatory positions.
+        comment: Real BRCA1 gene on chr17 with accurate hg38 exon coordinates; biologically
+          plausible coverage depths (25x baseline, elevated at exons); realistic quality
+          scores
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 194kb region realistic for gene locus. 30-87x coverage realistic
-          for exome sequencing. Quality scores 55-97 plausible.
+        comment: 160 kb region spanning BRCA1 (~83 kb); 0-77x coverage depth realistic
+          for WGS/RNA-seq; quality scores 55-97 appropriate for variant calls
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Clear flow with one justified helper function for embedding 3 pygal
-          charts. Slightly deviates from pure flat structure.
+        comment: One helper function (embed_pygal_svg) justified for the composite
+          SVG approach; otherwise flat procedural code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random operations.
+        comment: np.random.seed(42) at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. importlib workaround for filename collision is
-          necessary.
+        comment: All imports used; importlib workaround is necessary given pygal.py
+          filename conflict
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized sections. Creative composite SVG approach. No fake
-          functionality.
+        comment: Appropriate complexity; no fake UI; SVG composition is valid approach
+          for multi-chart layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg. Also generates plot.html with interactive
-          tooltips.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses pygal.XY, pygal.Histogram, and Style class correctly. Gene track
-          is entirely manual SVG, bypassing pygal.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hermite interpolation, native tooltip system, Histogram for intervals,
-          HTML export with interactive tooltips.
-  verdict: REJECTED
+        comment: Good use of Style object, XY chart, Histogram, fill=True, stroke_style.
+          Composite SVG approach is creative but mixes pygal rendering with manual
+          SVG
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hermite interpolation for smooth coverage curves, Histogram for interval
+          bars, transparent backgrounds for sub-chart compositing, HTML output with
+          interactive tooltips
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - annotations
-  - custom-legend
-  - hover-tooltips
   - html-export
-  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
+  - rolling-window
   - normalization
   styling:
+  - alpha-blending
   - gradient-fill
-  - edge-highlighting
