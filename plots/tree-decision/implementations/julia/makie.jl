@@ -1,7 +1,7 @@
 # anyplot.ai
 # tree-decision: Decision Tree Visualization with Probabilities
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-06-02
+# Quality: 85/100 | Created: 2026-06-02
 
 using CairoMakie
 using Colors
