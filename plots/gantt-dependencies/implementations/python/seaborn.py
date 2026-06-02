@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: seaborn | Python 3.14
-Quality: 89/100 | Updated: 2026-06-02
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-02
 """
 
 import os
