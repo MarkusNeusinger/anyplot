@@ -1,88 +1,107 @@
 library: bokeh
+language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:42Z'
-updated: '2026-03-05T18:55:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22731096177
+updated: '2026-06-02T03:35:17Z'
+generated_by: claude-sonnet
+workflow_run: 26796257317
 issue: 4426
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Complete spec compliance with all required features (stacked bars, intervention
-    lines, secondary cumulative axis)
-  - Strong data storytelling with clear outbreak narrative arc (point-source peak,
-    secondary wave, decline)
-  - Expert idiomatic Bokeh usage (vbar_stack, HoverTool, Span annotations, extra_y_ranges)
-  - Professional typography with all font sizes explicitly configured
-  - Clean visual refinement (removed x-grid, subtle y-grid, clean axis lines, generous
-    margins)
+  - 'Complete spec implementation: all four required features (daily stacked bars,
+    case classification, intervention lines, cumulative secondary axis) present and
+    correct.'
+  - Excellent Imprint palette usage with semantically appropriate color assignment
+    — matte red (#AE3030) for 'source' event matches the error-anchor role, INK_SOFT
+    for 'intervention' correctly uses a neutral tone.
+  - Idiomatic Bokeh API usage throughout (vbar_stack, Span, extra_y_ranges, HoverTool)
+    with genuine interactive HTML artifact.
+  - Clean, reproducible code with correct min_border_* reservations preventing axis
+    label clipping.
+  - Both themes pass legibility — chrome fully adaptive, data colors identical across
+    renders.
   weaknesses:
-  - 'Color palette: green (#2CA02C) and coral (#D4726A) pair is suboptimal for deuteranopia/protanopia'
-  - Right portion of timeline (March-April) is very sparse, slightly wasting horizontal
-    space
-  image_description: 'The plot displays a stacked bar chart (epidemic curve) showing
-    daily new disease cases from mid-January 2024 to mid-April 2024. Bars are stacked
-    in three layers: Confirmed (dark blue, #306998), Probable (green, #2CA02C), and
-    Suspect (coral/pink, #D4726A). A sharp primary peak (~75 total daily cases) occurs
-    around late January, followed by a secondary propagated wave (~35-38 cases) in
-    mid-February, then a gradual decline to near-zero by April. Two dashed vertical
-    lines annotate key events: "Source Identified" (red, ~Jan 27) and "Intervention
-    Began" (teal, ~Feb 5). A dark gray cumulative cases line rises on the right y-axis,
-    reaching 1,126 total. The legend in the top-right shows all four elements. Title
-    reads "histogram-epidemic · bokeh · pyplots.ai". Background is white with subtle
-    y-axis gridlines only.'
+  - 'DE-03 storytelling could be strengthened: the chart lacks an annotation of the
+    peak case count or a label for the outbreak pattern type (e.g., ''Point-source
+    + propagated wave'' caption).'
+  - DE-01 is held from 8 by annotation labels (28pt bold) being slightly heavy relative
+    to the overall composition — reducing to 22pt would improve polish.
+  - 'LM-02 minor gap: the CDP viewport override is a technical workaround rather than
+    a Bokeh visualization feature; a BoxAnnotation or Band for the inter-wave period
+    would be a more Bokeh-native storytelling enhancement.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "histogram-epidemic · python · bokeh · anyplot.ai" in bold dark ink (~60% width). Left y-axis label "New Cases (per day)" and x-axis label "Date of Symptom Onset" in dark ink, italic. Right y-axis label "Cumulative Cases" rotated vertical, dark ink. Tick labels (Jan 15, Feb 01, Feb 15, etc.; 20/40/60/80 on left; 200/400/600/800/1000/1200 on right) in INK_SOFT. All text clearly readable against the light background.
+      Data: Stacked bars — Confirmed (#009E73 brand green, first series), Probable (#C475FD lavender), Suspect (#4467A3 blue). Primary wave peaks ~Jan 28 at ~75 cases; secondary wave peaks ~Feb 20 at ~39 cases. Two dashed vertical lines: red (#AE3030) for "Source Identified" (~Jan 27), gray (INK_SOFT) for "Intervention Began" (~Feb 05). Thin dark cumulative burden line on secondary y-axis, reaching 1,126 total.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Title in near-white (#F0EFE8), clearly readable. Axis labels in near-white, readable. Tick labels in #B8B7B0 (soft gray), readable. Legend box uses elevated dark fill #242420 with light text. "Intervention Began" annotation in #B8B7B0 is readable against dark background. No dark-on-dark failures detected.
+      Data: Confirmed (#009E73), Probable (#C475FD), Suspect (#4467A3) — identical colors to light render, only chrome flipped. Cumulative line now renders as light cream (#F0EFE8), clearly visible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 26pt, ticks 20pt,
-          legend 22pt, annotations 20pt). All clearly readable.
+        comment: All fonts explicitly set (50pt title, 42pt axis labels, 34pt ticks).
+          Well-proportioned, readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No major overlap. Source Identified annotation near peak bars but
-          readable. Legend well-placed.
+        comment: No text-on-text or text-on-data collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized at 0.8-day width, stacking clearly visible, cumulative
-          line distinct.
+        comment: Stacked bars, intervention lines, and cumulative line all clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
-        max: 4
-        passed: false
-        comment: Green (#2CA02C) and coral (#D4726A) pair suboptimal for deuteranopia/protanopia.
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Stacking provides additional disambiguation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions. Right tail (March-April) sparse, slightly wasting
-          horizontal space.
+        comment: Good proportions, balanced margins (min_border_* explicitly set),
+          no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Date of Symptom Onset, New Cases (per day),
-          Cumulative Cases.'
+        comment: New Cases (per day), Date of Symptom Onset, Cumulative Cases — all
+          descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Confirmed=#009E73, Probable=#C475FD, Suspect=#4467A3. Backgrounds
+          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -90,22 +109,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful color palette, intentional typography hierarchy, professional
-          appearance above defaults.
+        comment: 'Strong design above defaults: Imprint palette, explicit typography,
+          styled legend, semantic intervention colors. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-grid removed, y-grid subtle (alpha 0.15), outline removed, minor
-          ticks hidden, generous margins.
+        comment: Figure outline removed, x-grid hidden, y-grid subtle (15% alpha),
+          minor ticks suppressed, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strong narrative with point-source peak, secondary wave, intervention
-          markers, cumulative burden.
+        comment: Two-wave epidemic shape is clear focal point, intervention markers
+          contextualize response. No peak annotation reduces immediate narrative impact.
     spec_compliance:
       score: 15
       max: 15
@@ -115,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct epidemic curve as stacked histogram by date.
+        comment: Correct epi curve as stacked histogram with daily bins.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: daily bins, stacked by classification, annotated intervention
-          lines, secondary cumulative axis.'
+        comment: Daily bins, stacked case classification bars, annotated vertical
+          intervention lines, cumulative secondary y-axis — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = onset date, Y = case counts. Both axes show all data correctly.
+        comment: X=onset date, Y-left=new cases/day, Y-right=cumulative cases. All
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data categories with cumulative
-          total.
+        comment: Title matches required format exactly. Legend labels Confirmed/Probable/Suspect/Cumulative
+          are correct.
     data_quality:
       score: 15
       max: 15
@@ -145,21 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows point-source primary wave, propagated secondary wave, endemic
-          tail, three case classifications, cumulative burden.
+        comment: Demonstrates point-source primary wave, propagated secondary wave,
+          and endemic tail — all three canonical epi curve shapes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Foodborne illness outbreak — realistic, neutral epidemiological scenario.
+        comment: Foodborne illness outbreak with confirmed/probable/suspect classifications
+          — neutral, real-world epidemiological scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~75 daily cases, ~1,126 total over 90 days — plausible for local
-          foodborne outbreak.
+        comment: Peak ~75 cases/day, 90-day duration, 1,126 cumulative cases — consistent
+          with a moderate foodborne outbreak.
     code_quality:
       score: 10
       max: 10
@@ -169,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports → data → plot → save structure, no functions/classes.
+        comment: Imports → Data → Plot → Save, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -181,19 +202,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Gaussian curve data generation is elegant.
+        comment: Clean, Pythonic. sys.path fix is legitimate workaround. PIL resize
+          is reasonable safety net. HoverTool is genuine interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via export_png and plot.html. Current Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly via canonical
+          Selenium approach.
     library_mastery:
       score: 9
       max: 10
@@ -203,30 +226,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ColumnDataSource, vbar_stack, HoverTool, Span, Label,
-          Legend/LegendItem, extra_y_ranges.
+        comment: vbar_stack, ColumnDataSource, HoverTool mode=vline, Span, extra_y_ranges,
+          LinearAxis, LegendItem, NumeralTickFormatter — comprehensive idiomatic Bokeh
+          API.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: vbar_stack, HoverTool with vline mode, Span annotations, HTML export
-          — strong Bokeh-specific usage.
+        comment: 'vbar_stack (non-trivial to replicate elsewhere), HoverTool with
+          vline mode, Span overlay lines, dual y-axis via extra_y_ranges. Minor deduction:
+          CDP override is infrastructure, not a Bokeh viz feature.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
   - twin-axes
   - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   dataprep:
-  - cumulative-sum
   - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
   - edge-highlighting
