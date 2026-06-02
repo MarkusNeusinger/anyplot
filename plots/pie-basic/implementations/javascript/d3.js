@@ -1,12 +1,8 @@
 // anyplot.ai
 // pie-basic: Basic Pie Chart
-// Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-02
-//# anyplot-orientation: square
-// anyplot.ai
-// pie-basic: Basic Pie Chart
 // Library: d3 7.9.0 | JavaScript 22
 // Quality: pending | Created: 2026-06-02
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -61,11 +57,6 @@ const labelArc = d3
 // Slightly explode the largest slice for emphasis (per spec)
 const maxIdx = d3.maxIndex(data, (d) => d.value);
 const explodeR = 36;
-function offset(a) {
-  if (a.index !== maxIdx) return [0, 0];
-  const mid = (a.startAngle + a.endAngle) / 2 - Math.PI / 2;
-  return [Math.cos(mid) * explodeR, Math.sin(mid) * explodeR];
-}
 
 const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
 
@@ -75,8 +66,9 @@ g.selectAll("path.slice")
   .join("path")
   .attr("class", "slice")
   .attr("transform", (a) => {
-    const [ox, oy] = offset(a);
-    return `translate(${ox},${oy})`;
+    if (a.index !== maxIdx) return "translate(0,0)";
+    const mid = (a.startAngle + a.endAngle) / 2 - Math.PI / 2;
+    return `translate(${Math.cos(mid) * explodeR},${Math.sin(mid) * explodeR})`;
   })
   .attr("d", arc)
   .attr("fill", (a) => color(a.data.category))
@@ -84,14 +76,17 @@ g.selectAll("path.slice")
   .attr("stroke-width", 3);
 
 // --- Percentage labels inside slices -----------------------------------------
+// Leader slice (Netflix 30%) gets a larger/heavier label so the hierarchy
+// reinforces the explosion focal point.
 g.selectAll("text.pct")
   .data(arcs)
   .join("text")
   .attr("class", "pct")
   .attr("transform", (a) => {
-    const [ox, oy] = offset(a);
     const [lx, ly] = labelArc.centroid(a);
-    return `translate(${lx + ox},${ly + oy})`;
+    if (a.index !== maxIdx) return `translate(${lx},${ly})`;
+    const mid = (a.startAngle + a.endAngle) / 2 - Math.PI / 2;
+    return `translate(${lx + Math.cos(mid) * explodeR},${ly + Math.sin(mid) * explodeR})`;
   })
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "central")
@@ -99,8 +94,8 @@ g.selectAll("text.pct")
   // tanks contrast on the matte-red and blue slots. The Imprint cream reads
   // cleanly against every palette member in either theme.
   .attr("fill", "#FAF8F1")
-  .style("font-size", "30px")
-  .style("font-weight", "600")
+  .style("font-size", (a) => (a.index === maxIdx ? "44px" : "30px"))
+  .style("font-weight", (a) => (a.index === maxIdx ? "700" : "600"))
   .text((a) => `${Math.round((a.data.value / total) * 100)}%`);
 
 // --- Title -------------------------------------------------------------------
