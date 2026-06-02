@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: genome-track-multi
 created: '2026-03-06T17:03:13Z'
-updated: '2026-06-02T08:08:08Z'
+updated: '2026-06-02T08:20:16Z'
 generated_by: claude-sonnet
 workflow_run: 26806149434
 issue: 4422
@@ -12,132 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-tr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Shared x-range (linked panning) across 4 tracks is a distinctive, showcase-worthy
-    Bokeh feature
-  - 'Biologically accurate data: EGFR gene on chr7 with realistic exon positions,
-    coverage peaks over exons, GATK-scale variant quality scores'
-  - Semantic Imprint palette assignments are well-reasoned (promoter→red, coverage→brand-green,
-    exons→blue)
-  - 'Full spec compliance: all four required track types with correct visualisation
-    idioms (lollipop, area, exon blocks)'
-  - Perfect theme adaptation — both renders pass legibility checks with no dark-on-dark
-    or light-on-light failures
-  - 'Excellent code quality: reproducible, KISS structure, all Bokeh idioms used correctly'
+  - Shared x_range (Range1d) across all 4 figures enables synchronized genomic navigation
+    — a hallmark Bokeh feature used correctly
+  - Subtle exon-position shading (6% alpha) in coverage and variant panels creates
+    cross-track visual linkage to gene structure
+  - Biologically realistic EGFR locus data with exon-enriched coverage peaks, strand
+    direction arrows, and proper chr7:55Mb coordinates
+  - Redundant encoding in Variants track (SNP=circle, Indel=diamond) aids colorblind
+    accessibility
+  - Correct HoverTool integration with vline mode on coverage and point tooltips on
+    variants — legitimate interactive features for the HTML artifact
+  - 'Full Imprint palette compliance: brand green for primary data series, canonical
+    colors for exon/UTR/regulatory elements, correct theme-adaptive chrome in both
+    renders'
+  - NumeralTickFormatter for human-readable base-pair positions (55,100,000 format)
   weaknesses:
-  - 'Font sizes significantly below style-guide recommendations for a 3200-px canvas.
-    Title 36pt (rec. 50pt) renders at ~35% of canvas width, well under the 70-85%
-    target for this long mandated title. Y-axis labels 22pt (rec. 42pt), tick labels
-    18-20pt (rec. 34pt). Increase: title to 44-48pt, axis labels to 30-36pt, tick
-    labels to 24-28pt. Adjust min_border_* accordingly.'
-  - 'DE-03 storytelling is implicit: coverage-exon alignment story requires viewer
-    inference. Consider adding subtle vertical shading bands over exon positions in
-    the coverage and variant tracks (fill_alpha~0.06) to visually tie expression peaks
-    to gene structure.'
-  - No subtle track-background alternation (spec mentions subtle background shading
-    to visually separate adjacent tracks). Alternating ELEVATED_BG for even-numbered
-    tracks would improve visual rhythm.
+  - Axis label font sizes (32pt) and tick label font sizes (26pt) are below style-guide
+    recommendations (42pt / 34pt). At 3200x1800 this makes labels noticeably smaller
+    than intended — reduce further only if the multi-track layout truly forces it,
+    otherwise target the canonical sizes.
+  - 'Gene track is quite sparse visually (thin exon rectangles at a small height=380px
+    panel) — the intron backbone and strand arrows are somewhat hard to see in the
+    thumbnail. Minor: no structural fix needed but note for future repair if score
+    is marginal.'
+  - min_border_bottom=200 on the regulatory panel creates a noticeable amount of empty
+    canvas below the x-axis label in both renders — consider reducing to 120-140px.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "genome-track-multi · python · bokeh · anyplot.ai" in dark ink at 36pt — readable but small (~35% canvas width, under 70-85% target). Track labels "Genes", "Coverage", "Variants", "Regulatory" in INK_SOFT. Y-axis labels "Read Depth" and "Quality Score" in INK (22pt). X-axis label "Genomic Position (chr7)" in INK (26pt). Tick labels in INK_SOFT (18-20pt). All text readable against light background.
-      Data: Coverage area in #009E73 (brand green, first series). Exon blocks in #4467A3 (blue). SNP circles in #BD8233 (ochre). Indel diamonds in #C475FD (lavender). Promoter blocks in #AE3030 (red). Enhancer blocks in #2ABCCD (cyan). CTCF Binding in #954477 (rose). All Imprint palette colors.
-      Legibility verdict: PASS — all text clearly readable; proportional sizing slightly off (fonts smaller than recommended) but no readability failure.
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "genome-track-multi · python · bokeh · anyplot.ai" in dark ink, clearly readable. Track labels ("Genes", "Coverage", "Variants", "Regulatory") in INK_SOFT on left of each panel. Axis labels "Read Depth" and "Quality Score" readable. X-axis "Genomic Position (chr7)" at bottom. Tick labels visible.
+      Data: Gene track shows EGFR exon blocks in Imprint blue (#4467A3), UTR in cyan (#2ABCCD), strand direction triangles in INK_MUTED. Coverage track: filled area + line in brand green (#009E73). Variants: SNP lollipops in ochre (#BD8233) circle, Indel lollipops in lavender (#C475FD) diamond. Regulatory: Promoter=#AE3030, Enhancer=#2ABCCD, CTCF Binding=#954477. Subtle exon-position shading (6% alpha) overlaid on coverage and variant tracks creates visual linkage to gene structure.
+      Legibility verdict: PASS — all text readable; font sizes explicitly set (slightly below style-guide defaults but appropriate for multi-track layout).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title in light ink #F0EFE8 — clearly visible. Track labels in #B8B7B0. Axis labels and tick labels all in appropriate light/secondary colors. No dark-on-dark text failures observed on any track or panel.
-      Data: All data colors identical to light render — brand green coverage, ochre SNPs, lavender Indels, red/cyan/rose regulatory blocks. No hue shift between themes.
-      Legibility verdict: PASS — all text clearly readable against dark background; theme chrome correctly flipped; data colors preserved.
+      Background: Warm near-black (#1A1A17) — correct theme surface.
+      Chrome: Title and all axis labels render in light ink (#F0EFE8), clearly readable against dark background. Track labels, tick labels, and legend text all light-colored. No dark-on-dark issues.
+      Data: All Imprint palette colors identical to light render — brand green coverage, blue exons, ochre SNPs, lavender Indels, red/cyan/rose regulatory elements. Exon shading subtle and visible.
+      Legibility verdict: PASS — all text readable in dark theme; theme-adaptive chrome correctly applied throughout.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Font sizes explicitly set but proportionally small for 3200-px canvas.
-          Title 36pt (rec. 50pt) fills ~35% width vs 70-85% target. Axis labels 22pt
-          (rec. 42pt), ticks 18-20pt (rec. 34pt). Readable in both themes but proportional
-          balance off.
+        passed: true
+        comment: All sizes explicitly set; 32pt axis labels and 26pt tick labels are
+          below the 42pt/34pt style-guide defaults for bokeh but remain readable.
+          Appropriate trade-off for multi-track layout.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements across all four tracks.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements optimally sized: exon blocks visible, coverage fill+line
-          well-balanced, lollipop markers size=22-24 for 20 data points, regulatory
-          blocks prominent.'
+        comment: Coverage area, lollipop markers (size=22-24), exon blocks, and regulatory
+          rectangles are all clearly visible. Marker sizes well-matched to data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Imprint palette, CVD-safe. Marker edges (line_color=PAGE_BG)
-          add contrast.
+        comment: Imprint palette is CVD-safe. Redundant shape encoding (circle vs
+          diamond) in variant track adds extra accessibility.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Four panels sum to exactly 1800px height (380+525+460+420+15 spacing)
-          x 3200px. Perfect canvas utilization.
+        comment: Four tracks fill the 3200x1800 canvas well. Bottom padding (min_border_bottom=200)
+          is slightly generous but within acceptable range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Read Depth, Quality Score, Genomic Position (chr7) — all descriptive
-          with context. Title in correct mandated format.
+        comment: Read Depth, Quality Score, Genomic Position (chr7) — all descriptive.
+          Title correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Coverage uses #009E73 (brand green, first series). All colors from
-          Imprint palette with sensible semantic assignments. Backgrounds #FAF8F1/#1A1A17.
-          Theme chrome fully adaptive.'
+        comment: 'Brand green #009E73 for primary coverage series. All other series
+          use Imprint palette members. Light bg #FAF8F1, dark bg #1A1A17. Theme-adaptive
+          chrome correct in both renders.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clearly above defaults. Semantic Imprint color assignments show domain
-          expertise. Multi-track with linked x-range is sophisticated. Gene track
-          shows genomics knowledge (intron backbone, UTR, strand arrows). Not yet
-          publication-ready.
+        comment: 'Well above ''configured default'': cross-track exon shading, strand
+          direction arrows, color-coded track types, lollipop variant markers. Clear
+          genome-browser aesthetic.'
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (outline_line_color=None), dashed grid at 15% alpha,
+          exon shading at 6% alpha, proper track padding. One point off for bottom
+          padding slightly excessive.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: panel outlines removed, subtle dashed y-grid (15%
-          alpha) only on quantitative tracks, axes hidden where not applicable, appropriate
-          panel spacing.'
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Coverage peaks align with exons (biologically accurate), regulatory
-          elements contextualise. Coherent genomics story but no focal emphasis —
-          viewer must infer the coverage-at-exons connection rather than being guided
-          to it.
+        comment: Exon shading across coverage/variant panels creates visual narrative
+          connecting gene structure to functional data. EGFR cancer gene provides
+          biological context. Coverage peaks visually correlate with exons.
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-track genome browser with 4 stacked tracks sharing
-          chromosomal x-axis.
+        comment: 'Multi-track genome browser with 4 tracks: gene annotations, read
+          coverage, variants (lollipop), regulatory elements.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gene track (exons+introns+UTR+strand), coverage area plot, variant
-          lollipops with quality encoding, regulatory element blocks. All spec-required
-          track types present.
+        comment: 'Gene track: exon rectangles, intron line, UTR, strand arrows. Coverage:
+          filled area. Variants: lollipop with quality encoding. Regulatory: color-coded
+          rectangles. Track labels on left. Shared x-axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Genomic positions on shared x-axis; per-track y-axes appropriate
-          to data type.
+        comment: All tracks share genomic position on x-axis. Y-axes correctly represent
+          read depth, quality score, or categorical track.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'genome-track-multi · python · bokeh · anyplot.ai'.
-          Legends for SNP/Indel and Promoter/Enhancer/CTCF Binding correctly labelled.
+        comment: Title 'genome-track-multi · python · bokeh · anyplot.ai' correct.
+          Legends for SNP/Indel and Promoter/Enhancer/CTCF Binding present and correct.
     data_quality:
       score: 15
       max: 15
@@ -180,23 +177,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot-type aspects present: gene structure (exon/intron/UTR/strand),
-          read coverage, two variant classes with quality scores, three regulatory
+        comment: 'Shows all aspects: 26 EGFR exons, 5''/3'' UTR, strand direction,
+          variable coverage profile, SNP+Indel variants with quality scores, 3 regulatory
           element types.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: EGFR gene on chr7 is a real, widely-studied oncogene. Exon positions
-          biologically plausible. Neutral scientific domain.
+        comment: Real EGFR locus (chr7:55,086,000-55,212,000), known cancer gene,
+          biologically realistic coverage enrichment over exons, plausible variant
+          positions near splice sites.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coverage 0-65x typical for RNA-seq; variant quality scores 20-100
-          realistic for GATK-style PHRED scaling.
+        comment: Base-pair coordinates match actual EGFR genomic location. Coverage
+          0-70x plausible for sequencing. Quality scores 20-100 on standard Phred
+          scale.
     code_quality:
       score: 10
       max: 10
@@ -206,8 +205,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → 4 track figures → layout → save. No functions or
-          classes.
+        comment: 'Linear flat structure: imports → tokens → data → plot → save. No
+          unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,23 +218,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: numpy, bokeh modules, selenium, pathlib.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, domain-appropriate complexity. sys.path guard justified by
-          context.
+        comment: Well-organized with clear section comments. HoverTool tooltips are
+          legitimate interactive features. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html (interactive) + plot-{THEME}.png (screenshot
-          via Selenium).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for interactive
+          library. Current Bokeh API used.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -243,17 +242,18 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh: ColumnDataSource, Range1d linked across figures, column()
-          layout, HoverTool, NumeralTickFormatter, Label, varea. Idiomatic throughout.'
+        comment: ColumnDataSource throughout, shared Range1d for synchronized x-axis,
+          column() layout, NumeralTickFormatter, HoverTool with vline mode — expert-level
+          Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Shared x_range (linked panning across 4 tracks) is genuinely distinctive
-          Bokeh. HoverTool tooltips and HTML export add interactivity. Could further
-          leverage TapTool, custom JS callbacks, or BoxSelectTool.
-  verdict: REJECTED
+        comment: Shared x_range linking 4 figures enables synchronized genomic navigation
+          — hallmark Bokeh capability not easily replicated in static libraries. CDP
+          viewport override for exact pixel dimensions is Selenium/Bokeh-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -261,7 +261,7 @@ impl_tags:
   - hover-tooltips
   - html-export
   - annotations
-  - custom-legend
+  - subplots
   patterns:
   - data-generation
   - columndatasource
@@ -269,5 +269,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - minimal-chrome
