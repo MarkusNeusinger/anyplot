@@ -25,17 +25,24 @@ mean_centers <- seq(-40, 140, length.out = n_bins)
 
 df <- expand.grid(amp_mpa = amp_centers, mean_mpa = mean_centers) %>%
   mutate(
-    raw        = 3000 * exp(-amp_mpa / 30) * exp(-0.5 * ((mean_mpa - 60) / 50)^2),
-    count      = as.integer(pmax(0, round(raw + abs(rnorm(n(), 0, raw * 0.1 + 10))))),
+    # Steeper amplitude decay + tighter Gaussian → concentrated hot-spot with
+    # large zero-count regions at high amplitude and extreme mean values
+    raw        = 3000 * exp(-amp_mpa / 15) * exp(-0.5 * ((mean_mpa - 60) / 25)^2),
+    count      = as.integer(pmax(0, round(raw + abs(rnorm(n(), 0, raw * 0.1 + 5))))),
     count_plot = if_else(count <= 2L, NA_real_, as.double(count))
   ) %>%
   select(-raw)
+
+# Contour threshold at 25% of peak to outline the dominant fatigue cycle zone
+contour_at <- max(df$count, na.rm = TRUE) * 0.25
 
 # Plot
 title_str <- "heatmap-rainflow · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = mean_mpa, y = amp_mpa, fill = count_plot)) +
   geom_tile() +
+  geom_contour(aes(z = count), color = INK_SOFT, linewidth = 0.4,
+               breaks = contour_at, alpha = 0.7) +
   scale_fill_gradient(
     low            = "#009E73",
     high           = "#4467A3",
@@ -60,11 +67,12 @@ p <- ggplot(df, aes(x = mean_mpa, y = amp_mpa, fill = count_plot)) +
     plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG,     color = NA),
     panel.grid        = element_blank(),
-    panel.border      = element_rect(color = INK_SOFT,   fill = NA, linewidth = 0.5),
+    panel.border      = element_blank(),
+    axis.line         = element_line(color = INK_SOFT,   linewidth = 0.5),
     axis.title        = element_text(color = INK,        size = 10),
     axis.text         = element_text(color = INK_SOFT,   size = 8),
     plot.title        = element_text(color = INK,        size = 12, hjust = 0.5),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT,   size = 8),
     legend.title      = element_text(color = INK,        size = 10),
     plot.margin       = margin(20, 20, 20, 20)
