@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:46:59Z'
-updated: '2026-06-02T03:36:08Z'
+updated: '2026-06-02T03:46:03Z'
 generated_by: claude-sonnet
 workflow_run: 26796323575
 issue: 4426
@@ -12,44 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Perfect Imprint palette compliance: positions 1–4 in canonical order, semantic
-    right-axis coloring in ochre, theme-adaptive chrome covering all elements'
-  - 'Complete spec implementation: all required epidemiological features (stacked
-    bars, intervention events, cumulative line, daily bins) are present and correctly
-    mapped'
-  - Clean dual-axis pattern using resolve_scale(y=independent) — the correct Altair
-    approach, not a workaround
-  - 'Canvas padding logic precisely follows altair.md contract: pad-only, no cropping,
-    PAGE_BG fill, correct 3200×1800 target'
-  - Staggered event label y-positions show deliberate care to avoid bar interference
+  - Excellent Altair layer composition with proper dual-axis implementation using
+    resolve_scale(y="independent") — right-axis correctly colors both title and tick
+    labels in the cumulative ochre color
+  - 'Perfect Imprint palette compliance: Confirmed(#009E73 green), Probable(#C475FD
+    lavender), Suspect(#4467A3 blue), Cumulative(#BD8233 ochre) in canonical positions
+    1–4'
+  - 'Comprehensive spec implementation covering all required features: stacked bars
+    by classification, secondary cumulative line overlay, annotated intervention vertical
+    lines, peak annotation, and daily bins'
+  - Strong data storytelling — multi-wave epidemic curve with staggered annotation
+    labels, peak highlight, and cumulative burden overlay provide immediate epidemiological
+    insight
+  - Theme-adaptive chrome fully correct in both renders — light (#FAF8F1) and dark
+    (#1A1A17) backgrounds, INK/INK_SOFT/INK_MUTED tokens propagated through all chrome
+    elements
   weaknesses:
-  - Event labels and peak annotation use fontSize=9, which is small for mobile scale-down
-    (~400px). Increase to fontSize=10–11 to maintain readability at thumbnail size.
-  - 'Source identified label (y=90) and Peak: 85 cases annotation (y≈75, dy=-10) plus
-    the dashed rule at Feb 10 create a visually busy cluster near the first wave peak
-    — consider offsetting peak annotation dx to avoid proximity to the first dashed
-    line.'
-  - Top and right axis domain lines are still drawn — configure_view(strokeWidth=0)
-    removes the view border but not individual axis domains. Add domainWidth=0 to
-    configure_axis or set domain=False on axes for a clean L-frame.
+  - Annotation text labels (fontSize=11) are slightly small relative to the canvas
+    — at 3200×1800 with scale=4 they render at 44 source pixels; fontSize=12-13 would
+    improve readability especially when scaled to mobile
+  - Both X and Y gridlines are active; for a time-series histogram, Y-axis-only gridlines
+    would reduce visual noise (the 0.15 opacity mitigates this but Y-only would be
+    cleaner)
+  - configure_title(color=INK, anchor="start") at the end is redundant since the alt.Title()
+    object already sets these — minor code duplication
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "histogram-epidemic · python · altair · anyplot.ai" in dark ink at fontsize 16, subtitle in muted secondary color. Left Y-axis label "New Cases", right Y-axis label "Cumulative Cases" in ochre (#BD8233). X-axis label "Date of Symptom Onset". Weekly date tick labels on X-axis, numeric tick labels on both Y-axes. All text clearly readable against light background.
-      Data: Stacked bars — Confirmed (#009E73 brand green), Probable (#C475FD lavender), Suspect (#4467A3 blue). Cumulative line in ochre (#BD8233). Three dashed intervention rules. Event labels at staggered heights. Peak annotation in ochre.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "histogram-epidemic · python · altair · anyplot.ai" in bold dark ink occupying ~55% of canvas width at appropriate fontsize=16. Subtitle "Daily new cases by classification with cumulative total" in INK_SOFT below. Left Y-axis label "New Cases" and X-axis label "Date of Symptom Onset" are clearly readable in dark ink. Right Y-axis label "Cumulative Cases" correctly styled in ochre (#BD8233) to match the cumulative line. Tick labels at fontSize=10 are legible. Legend box in elevated background (#FFFDF6) with correct dark labels.
+      Data: Three stacked bar series — Confirmed (#009E73 green, position 1), Probable (#C475FD lavender, position 2), Suspect (#4467A3 blue, position 3). Three-wave epidemic pattern clearly visible. Cumulative line in #BD8233 (ochre, position 4) rising from bottom-left to top-right. Three dashed vertical intervention lines at Feb 10, Mar 01, Mar 20 with italic event labels staggered at y=90, 73, 56. Peak annotation "Peak: 85 cases" in orange-brown above the peak bars.
+      Legibility verdict: PASS — all text visible against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title and all chrome elements render in light ink (#F0EFE8). Axis labels, tick labels, subtitle all clearly visible against dark background. Legend box has elevated dark fill (#242420) with light border. No dark-on-dark failures detected.
-      Data: Categorical data colors (green/lavender/blue) are identical to light render — only chrome flips. Cumulative ochre line unchanged. Brand green #009E73 clearly visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title rendered in light ink (#F0EFE8), clearly readable against dark background. Subtitle in INK_SOFT (#B8B7B0). Axis labels and tick labels in light colors. Right Y-axis "Cumulative Cases" correctly colored in ochre. Legend box in elevated dark background (#242420) with light text labels. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — same green, lavender, blue bar stacks; same ochre cumulative line. Vertical dashed lines and event labels visible in INK_MUTED (#A8A79F). Peak annotation visible in ochre.
+      Legibility verdict: PASS — all text visible against warm near-black background, no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,77 +61,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis labels clearly sized. Event labels and peak annotation
-          at fontSize=9 are slightly small for mobile scale-down but readable at full
-          resolution.
+        comment: All font sizes explicitly set — title 16px, axis titles 12px, tick
+          labels 10px, annotations 11px, legend 10px. Well-proportioned. Annotation
+          labels at fontSize=11 (44 source px) are slightly small for full mobile
+          readability.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor visual crowding near first intervention line: dashed rule
-          at Feb 10 passes through peak annotation area and Source identified label
-          sits close above it.'
+        comment: No overlapping text. Staggered event labels (y=90, 73, 56) avoid
+          bar interference. Peak annotation and Source identified label are in distinct
+          positions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, cumulative line, rules, labels, and annotations clearly
-          visible in both renders.
+        comment: Stacked bars clearly visible with subtle PAGE_BG stroke separators.
+          Cumulative line at strokeWidth=2.5 is prominent. All elements well-sized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-3 for case types, position 4 for cumulative line.
-          CVD-safe and distinct.
+        comment: Imprint palette is CVD-safe by design. Good luminance contrast between
+          stacked series. Cumulative ochre line contrasts well against bars.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions, dual Y-axes with semantic coloring,
-          no overflow or clipping.
+        comment: Canvas gate passed. Plot fills appropriate canvas space with balanced
+          margins. Legend positioned top-right, not floating. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All axes descriptively labeled. Title in correct mandated format.
+        comment: Date of Symptom Onset, New Cases, Cumulative Cases — all descriptive.
+          No units needed for case counts.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Confirmed=#009E73, Probable=#C475FD, Suspect=#4467A3, cumulative=#BD8233.
-          Backgrounds correct for both themes.
+        comment: 'First series Confirmed = #009E73 (brand green). Multi-series uses
+          Imprint positions 1-4 in canonical order. Light #FAF8F1, dark #1A1A17 backgrounds.
+          Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: intentional palette, dual-axis design, semantic ochre
-          axis coloring, theme-adaptive bar strokes. Axis domain lines still visible.'
+        comment: Strong design clearly above defaults — custom Imprint palette, elevated
+          legend with corner radius and padding, italic event labels, subtitle, bar
+          separators via stroke, peak annotation in contrasting color. Not quite FiveThirtyEight-level
+          but polished.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: 'Above default: 15% grid opacity, bar strokeWidth=0.5 with PAGE_BG,
-          legend cornerRadius/padding. Could remove axis domain lines.'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default: three waves communicate outbreak propagation, intervention
-          events annotated with staggered labels, peak annotation, cumulative line
-          provides total burden context.'
+        comment: Grid at 0.15 opacity (subtle), domain line removed (domainWidth=0),
+          refined legend styling (cornerRadius, padding, elevated fill, stroke). Both
+          X and Y gridlines active — Y-only would be slightly cleaner for a time-series
+          histogram.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong storytelling — multi-wave epidemic structure immediately communicates
+          outbreak dynamics; intervention markers annotated at correct timeline positions;
+          peak annotation highlights maximum; cumulative overlay quantifies total
+          burden. Well above data-display default.
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time-binned stacked bar histogram (epidemic curve, daily
-          bins, 120-day outbreak).'
+        comment: Correct epidemic curve histogram with stacked bars by date of symptom
+          onset.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: stacked classification bars, 3 annotated intervention
-          lines, secondary Y-axis cumulative line, daily bins, date X-axis with weekly
-          ticks.'
+        comment: 'All spec features: stacked bars by classification (confirmed/probable/suspect),
+          annotated vertical intervention lines (3 events), secondary y-axis with
+          cumulative line overlay, daily bins for 120-day outbreak.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: onset_date→X, case_count→Y stacked, case_type→color, cumulative→right
-          Y-axis independent scale.
+        comment: 'X: onset_date (temporal), Y: case_count (quantitative), color: case_type
+          (nominal). All 120 days of data visible. Dual y-scales correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly. Legend labels match data categories.
+        comment: 'Title: ''histogram-epidemic · python · altair · anyplot.ai'' — correct
+          format. Legend ''Classification'' with Confirmed, Probable, Suspect labels
+          matches data.'
     data_quality:
       score: 15
       max: 15
@@ -169,23 +183,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec features covered: 3 classification types, 3 epidemic waves,
-          intervention timeline, cumulative burden, peak annotation.'
+        comment: 'Covers all epi curve aspects: multi-wave structure, case classification
+          stacking, intervention annotation, peak identification, cumulative burden
+          line.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Plausible COVID-19-like epidemic: peak ~85/day, ~3100 total over
-          120 days, realistic confirmed/probable/suspect breakdown, credible intervention
-          milestones.'
+        comment: Disease outbreak scenario with confirmed/probable/suspect classification,
+          intervention events (source identification, containment, vaccination campaign)
+          — realistic epidemiological narrative.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily case counts and cumulative totals realistic for a mid-scale
-          outbreak. Three declining waves match real epidemic patterns.
+        comment: 120-day outbreak with 85 daily case peak, ~3,200 cumulative cases,
+          three waves of decreasing magnitude — epidemiologically plausible proportions.
     code_quality:
       score: 10
       max: 10
@@ -195,13 +210,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear flow: imports → tokens → data → chart layers → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before stochastic data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,14 +229,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Declarative Altair pipeline cleanly organized; canvas padding follows
-          altair.md canonical pattern.
+        comment: Clean Altair layer composition, appropriate complexity for a multi-component
+          chart. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (pad-to-target) and plot-{THEME}.html.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL padding to exact
+          target dimensions per altair.md spec.
     library_mastery:
       score: 9
       max: 10
@@ -230,25 +247,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Full idiomatic Altair: layered chart composition, encoding channels,
-          alt.Scale/Axis/Title, configure_* cascade, transform_calculate, tooltips
-          on all layers.'
+        comment: Expert usage of alt.layer(), resolve_scale(y='independent'), alt.Title
+          with subtitle, transform_calculate for ordering, configure_* theming, alt.Scale
+          with explicit domain/range.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses resolve_scale(y=independent) for true dual-axis, alt.layer()
-          composition, transform_calculate for dynamic sort, subtitle via alt.Title,
-          HTML export. Loses 1pt for not leveraging Altair selection/condition for
-          visual emphasis.
+        comment: 'Uses Altair-distinctive features: resolve_scale for independent
+          dual axes, transform_calculate for computed fields, declarative tooltip
+          configuration, layer composition for complex multi-component chart. Missing
+          interactive selection/filtering which would be a uniquely Altair capability.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - twin-axes
   - layer-composition
+  - twin-axes
   - annotations
   - hover-tooltips
   - html-export
