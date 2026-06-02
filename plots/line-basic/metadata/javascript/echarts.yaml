@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: line-basic
+created: '2026-06-02T23:24:48Z'
+updated: '2026-06-02T23:45:24Z'
+generated_by: claude-opus
+workflow_run: 26853769837
+issue: 653
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Y-axis tightened to 1,500-3,500 - the attempt-1 wasted-space issue is fully resolved
+    and the trend now fills the canvas
+  - Line is now straight (no smooth) - matches the spec's 'straight lines' wording
+  - markLine at the average and markPoint at the latest reading add genuine storytelling
+    without breaking the minimal aesthetic
+  - Title exactly matches the mandated {spec-id} dot {language} dot {library} dot
+    anyplot.ai format
+  - Theme-adaptive chrome via t.ink/t.inkSoft/t.grid/t.pageBg tokens is wired through
+    every element; data color stays identical across themes
+  - Canvas renders exactly at 3200x1800; landscape gate passes
+  weaknesses:
+  - 'markPoint label is visually detached from its marker. position: ''left'' with
+    distance: 14 plus a long ''latest 3,130'' formatter pushes the label noticeably
+    to the left of the dot, so the annotation reads as floating in the chart interior
+    rather than anchored to the rightmost point. Switch label.position to ''top''
+    (with small distance) or use explicit position: [x, y] so the text sits tight
+    against the marker.'
+  - 'markPoint border matches the background (borderColor: t.pageBg) which makes the
+    dot itself low-contrast - especially in dark mode where the dark border merges
+    with the near-black canvas. Drop the border or swap it for a contrasting color
+    (e.g. t.ink) so the circle stays distinguishable on both surfaces.'
+  - 'DE-01 still feels close to echarts defaults - a small typographic step (lighter
+    weight on tick labels, fontWeight: 600 on title, or a thin separator under the
+    title) would lift the design polish.'
+  - LM-02 lightly used - could add markArea for a 'last 7 days' band, or visualMap
+    for a subtle value-based color ramp to showcase more ECharts surface area.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white surface ~#FAF8F1, exactly the page bg token
+      Chrome: title "line-basic · javascript · echarts · anyplot.ai" centered at top in dark ink; y-axis label "Daily Unique Visitors" (rotated, left); x-axis label "Date (2026)" (bottom); y-ticks 1,500/2,000/2,500/3,000/3,500 and x-ticks every ~14 days (01-01 through 03-26) in soft grey; subtle horizontal split lines only - all readable
+      Data: single brand-green #009E73 line ~3.5 px wide, straight segments (no smoothing), climbing from ~1,800 to ~3,130 with visible weekly oscillation; dashed mean line at 2,533 with right-side "mean 2,533" label; small green circle marks the latest point at the right edge with "latest 3,130" label positioned to its left
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black surface ~#1A1A17, exactly the page bg token
+      Chrome: title, axis labels, and ticks rendered in near-white/light grey - all legible; dim but visible horizontal grid lines; no dark-on-dark failures
+      Data: brand-green #009E73 line identical to light render (only chrome flipped); dashed mean line and "latest 3,130" annotation present in the same positions
+      Legibility verdict: PASS
+
+    Both renders: data colors are identical between light and dark - confirmed. Only chrome (background, text, grid colors) flips. Canvas measured at 3200x1800, landscape gate satisfied.
+
+    Observation noted in weaknesses: the markPoint label position ("left" with distance: 14) creates a visible gap between the "latest 3,130" text and the actual marker dot - the text reads as floating mid-chart rather than tightly anchored to the rightmost point. This is a design/storytelling concern, not a legibility failure.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable on both themes; mean and latest annotations legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Annotations stay clear of the data line and each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'markPoint circle uses borderColor: t.pageBg which blends into both
+          backgrounds, making the dot low-contrast (especially in dark mode)'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single CVD-safe brand green; chrome contrast OK
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800; y-axis tightened to 1,500-3,500 so trend
+          now fills vertical space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with explicit year and units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; both renders theme-correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean and on-brand but mostly default echarts feel - no typographic
+          hierarchy beyond title vs ticks
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks tastefully hidden, subtle splitLine grid, dashed mean
+          line is a nice refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Mean line + latest callout add storytelling, but position: ''left''
+          with distance: 14 on the markPoint label pushes the text noticeably to the
+          left of the marker - reads as floating in the chart interior rather than
+          tightly anchored to the rightmost point'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Basic line plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Single line, clear axis labels, subtle grid, no smoothing (matches
+          spec's 'straight lines' wording)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date -> X, daily unique visitors -> Y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; no legend needed (single series)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Trend + weekly seasonality + mean reference + latest callout cover
+          most of line-basic; could push further with e.g. period shading
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily unique visitors over Q1 - plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1,800-3,300 range realistic for a mid-size site
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Echarts global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic config object
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Snippet leaves PNG/HTML emission to the harness
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'animation: false, transparent bg, top-level color, splitLine/axisLine
+          tokens, finished ready signal, containLabel: true'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses markLine (mean) + markPoint (latest) - both ECharts-specific
+          annotation primitives. Could lift with visualMap or markArea
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome

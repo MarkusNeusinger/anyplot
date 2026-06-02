@@ -1,0 +1,278 @@
+library: chartjs
+language: javascript
+specification_id: line-basic
+created: '2026-06-02T23:19:39Z'
+updated: '2026-06-02T23:34:27Z'
+generated_by: claude-opus
+workflow_run: 26853573403
+issue: 653
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Brand green #009E73 used correctly as first (and only) series via t.palette[0],
+    identical across light and dark.'
+  - 'Focal-point storytelling: pointRadius/pointBorderWidth arrays enlarge markers
+    at the per-cycle summer peak and winter trough, giving the line a clear narrative
+    without annotations.'
+  - 'Subtle low-alpha fill (rgba(0,158,115,0.12)) below the line reinforces brand
+    color while staying readable against both #FAF8F1 and #1A1A17 backgrounds.'
+  - Theme tokens (t.ink / t.inkSoft / t.grid / t.pageBg) are threaded through to title,
+    axis titles, ticks, grid, and point borders — chrome flips correctly between themes
+    while data colors stay constant.
+  - 'L-shaped frame achieved by removing axis borders (border: { display: false })
+    and the x-axis grid (grid: { display: false }) — only the subtle y-axis grid remains,
+    matching the style-guide preference for line charts.'
+  - Deterministic LCG (seed = 42) reproduces noise across renders; 24 monthly points
+    span two full seasonal cycles, giving enough detail to read the trend without
+    clutter.
+  - Realistic, neutral context (Berlin monthly mean temperature) with plausible -2
+    to 23 C range; tick callback adds the C unit on the y-axis so the axis title doesn't
+    have to repeat it.
+  - 'animation: false and the canvas-mount contract are honored exactly per the chartjs
+    library prompt — no canvas sizing, no width/height overrides, no fetches.'
+  weaknesses:
+  - 'Axis-title fontsize asymmetry: y-axis title is set to 22pt while x-axis title
+    is 18pt. The y-axis title ''Mean monthly temperature, Berlin'' visually outweighs
+    the x-axis title ''Month'' — bring them to a matching size (e.g. both 18pt) so
+    the two axis titles read as a balanced pair.'
+  - 'Title weight is explicit ''normal''; the style guide calls for bold or medium
+    weight on titles to anchor the typographic hierarchy. Consider font: { size: 32,
+    weight: ''600'' } (or ''bold'') so the title sits clearly above axis titles in
+    the hierarchy.'
+  - 'LM-02 distinctive-features room to grow: per-point pointRadius/pointBorderWidth
+    arrays are already a Chart.js-distinctive technique, but a small touch like segment.borderColor
+    (to color the descending vs ascending segments) or a custom afterDraw plugin labeling
+    the peak/trough values would push library mastery higher without losing the minimalist
+    look.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white at #FAF8F1 (not pure white).
+      Chrome: title 'line-basic · javascript · chartjs · anyplot.ai' rendered in dark ink at the top center; x-axis title 'Month' (18pt) and y-axis title 'Mean monthly temperature, Berlin' (22pt) both rendered in dark ink; tick labels in medium-grey inkSoft (Jan '24 - Nov '25 along x; -5 C to 25 C in 5 C steps along y, with the C unit appended via a tick callback); subtle horizontal y-axis grid in the rule color; no x-axis grid; no axis borders. All chrome readable against the off-white background.
+      Data: single brand-green line (#009E73) with tension 0.3 tracing two full seasonal cycles (Jan '24 - Dec '25); subtle low-alpha green fill ('rgba(0,158,115,0.12)') below the line down to the y=0 origin; circular markers at every month in brand green with white-equivalent (pageBg-colored) borders; markers at the two summer peaks (Jul '24, Jul '25) and the two winter troughs (around Jan '25 and Dec '24) are visibly enlarged (radius 8 vs 5) with a thicker border.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black at #1A1A17 (not pure black).
+      Chrome: title rendered in light ink ('#F0EFE8') at the top; both axis titles in light ink; tick labels in light inkSoft; y-axis grid in the dark-theme rule color (light at low alpha); no x-axis grid; no borders. All chrome reads cleanly — no dark-on-dark failures, no near-black text on near-black background.
+      Data: identical brand-green line (#009E73) — colors are unchanged from the light render, only chrome has flipped; the subtle green fill below the line is still visible as a faint area against the warm near-black surface; marker borders use the dark theme pageBg (#1A1A17) so the brand-green dots read as filled disks with a thin dark halo, matching the light render structurally.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All fontsizes explicitly set (title 32, axis title 18/22, ticks 18);
+          readable in both renders at full size and on a 400 px mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tick labels auto-skip with 24 px padding; no collisions between title,
+          axis labels, ticks, or markers in either theme.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (24 points) gets prominent markers (radius 5 baseline,
+          8 at focal points) and a borderWidth of 3.5 — exactly the density-appropriate
+          sizing the style guide calls for.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green has good contrast on both #FAF8F1 and #1A1A17; single-series
+          chart, so no CVD pair worries.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Canvas exactly 3200x1800. Padding generous. Minor proportional issue:
+          y-axis title (22pt) is larger than x-axis title (18pt) without semantic
+          reason — the two axis titles should match.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is the mandated anyplot format; axis labels descriptive ('Month'
+          / 'Mean monthly temperature, Berlin'); tick callback adds C unit so the
+          y-axis carries units directly on the ticks.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (and only) series is brand green #009E73 via t.palette[0].
+          Backgrounds use t.pageBg (#FAF8F1 / #1A1A17). Both themes are correct —
+          chrome flips, data color is constant.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default polish: focal-point marker emphasis, subtle low-alpha
+          fill, removed axis borders, smooth tension. Stops short of standout — title
+          weight is ''normal'' rather than bold, and there is no labeled extreme value.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (border display false), y-grid only at low contrast,
+          generous layout padding. The fill is restrained and brand-coherent.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Enlarged markers at the per-cycle peak/trough create a clear focal
+          pattern; the two-year span makes the seasonal cycle the obvious story. Could
+          go further with direct value labels on the focal markers.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Native Chart.js line chart (type: ''line'') — correct chart type.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Single line ✓, clear x and y axis labels ✓, grid lines for readability
+          ✓, optional markers present ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = ordered months Jan '24 - Dec '25; y = mean monthly temperature
+          in C. All 24 data points are visible along the axis.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'line-basic · javascript · chartjs · anyplot.ai'. Legend
+          correctly omitted (single series).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows trend, seasonal cycle, and per-cycle extrema — covers the line-chart
+          use case well. Falls just short of full coverage because there is no callout/label
+          for the absolute peak.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Berlin monthly mean temperature is plausible, neutral, and one of
+          the spec's own example domains.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Roughly -2 C to 23 C — matches Berlin's actual annual range. Y-axis
+          ticks at 5 C steps are sensibly chosen.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Top-level script with one tiny inline LCG helper; no classes, no
+          unnecessary functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seed=42 LCG drives the noise; both light and dark renders
+          produce the same data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — uses only the harness globals (Chart, ANYPLOT_TOKENS)
+          per the chartjs library prompt.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear sections (data, focal points, mount, chart), no fake interactivity,
+          no DOM noise beyond the single canvas.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness owns output filenames (plot-light/dark .png/.html); the snippet
+          correctly does not call save. Uses current Chart.js 4.4 API (border.display,
+          scales.*.grid, tension).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic Chart.js: datasets array, plugins/scales options blocks,
+          tension for smooth curves, fill: ''origin'' for the area, tick callback
+          for units.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point pointRadius and pointBorderWidth arrays (rather than scalars)
+          is a Chart.js-distinctive technique used well for focal emphasis. Could
+          go further with segment styling or a custom afterDraw plugin.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
