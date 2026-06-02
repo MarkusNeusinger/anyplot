@@ -6,7 +6,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 150, right: 180, bottom: 60, left: 220 };
+const margin = { top: 170, right: 180, bottom: 60, left: 220 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -60,16 +60,41 @@ for (let i = 0; i < assets.length; i++) {
   }
 }
 
-// Cell rectangles
+// Per-cell text color picked by WCAG contrast ratio against the actual cell
+// fill — keeps annotation contrast uniform across light/dark themes. The
+// diverging midpoint flips with the theme, so a fixed |r| threshold would
+// under-serve saturated cells in one theme or the other.
+const relLum = (hex) => {
+  const c = d3.color(hex).rgb();
+  const f = (v) => {
+    const u = v / 255;
+    return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+};
+const contrast = (a, b) => {
+  const la = relLum(a);
+  const lb = relLum(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+};
+const textOn = (fill) =>
+  contrast(fill, t.ink) >= contrast(fill, t.pageBg) ? t.ink : t.pageBg;
+
+// Cell rectangles — diagonal gets a soft accent stroke so the eye lands on
+// the unit-correlation backbone first (DE-03 storytelling).
 g.selectAll("rect.cell").data(cells).join("rect")
   .attr("class", "cell")
   .attr("x", (d) => x(d.col))
   .attr("y", (d) => y(d.row))
   .attr("width", x.bandwidth())
   .attr("height", y.bandwidth())
-  .attr("fill", (d) => color(d.value));
+  .attr("fill", (d) => color(d.value))
+  .attr("stroke", (d) => (d.row === d.col ? t.ink : "none"))
+  .attr("stroke-width", (d) => (d.row === d.col ? 1.6 : 0));
 
-// Value annotations — switch to page-bg text on saturated cells for legibility
+// Value annotations — weight bumps to 700 on strong correlations so the
+// equity cluster and treasury anti-correlation block read as figures, not
+// uniform texture.
 g.selectAll("text.value").data(cells).join("text")
   .attr("class", "value")
   .attr("x", (d) => x(d.col) + x.bandwidth() / 2)
@@ -77,8 +102,8 @@ g.selectAll("text.value").data(cells).join("text")
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "central")
   .style("font-size", "22px")
-  .style("font-weight", "500")
-  .attr("fill", (d) => (Math.abs(d.value) > 0.55 ? t.pageBg : t.ink))
+  .style("font-weight", (d) => (Math.abs(d.value) > 0.5 ? 700 : 500))
+  .attr("fill", (d) => textOn(color(d.value)))
   .text((d) => d.value.toFixed(2));
 
 // Column labels — rotated above the matrix
