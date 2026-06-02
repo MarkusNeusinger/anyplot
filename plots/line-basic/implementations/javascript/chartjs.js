@@ -24,6 +24,20 @@ const temperatures = monthLabels.map((_, i) => {
   return +(seasonal + noise).toFixed(1);
 });
 
+// Focal-point storytelling: emphasise the per-cycle summer peak and winter trough
+const peakIdx = [0, 12].map((s) => {
+  const slice = temperatures.slice(s, s + 12);
+  return s + slice.indexOf(Math.max(...slice));
+});
+const troughIdx = [0, 12].map((s) => {
+  const slice = temperatures.slice(s, s + 12);
+  return s + slice.indexOf(Math.min(...slice));
+});
+const focal = new Set([...peakIdx, ...troughIdx]);
+
+// Subtle tinted fill below the line (low-alpha brand green works on both themes)
+const fillTint = "rgba(0, 158, 115, 0.12)";
+
 // Mount canvas into the harness container
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -36,15 +50,15 @@ new Chart(canvas, {
       label: "Mean temperature",
       data: temperatures,
       borderColor: t.palette[0],
-      backgroundColor: t.palette[0],
+      backgroundColor: fillTint,
       borderWidth: 3.5,
-      pointRadius: 5,
-      pointHoverRadius: 7,
+      pointRadius: temperatures.map((_, i) => (focal.has(i) ? 8 : 5)),
+      pointHoverRadius: temperatures.map((_, i) => (focal.has(i) ? 10 : 7)),
       pointBackgroundColor: t.palette[0],
       pointBorderColor: t.pageBg,
-      pointBorderWidth: 1.5,
-      tension: 0,
-      fill: false,
+      pointBorderWidth: temperatures.map((_, i) => (focal.has(i) ? 2.5 : 1.5)),
+      tension: 0.3,
+      fill: "origin",
     }],
   },
   options: {
@@ -72,12 +86,12 @@ new Chart(canvas, {
           autoSkipPadding: 24,
         },
         grid: { display: false },
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
           text: "Month",
           color: t.ink,
-          font: { size: 22 },
+          font: { size: 18 },
           padding: { top: 12 },
         },
       },
@@ -88,10 +102,10 @@ new Chart(canvas, {
           callback: (v) => `${v}°C`,
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
-          text: "Berlin mean temperature",
+          text: "Mean monthly temperature, Berlin",
           color: t.ink,
           font: { size: 22 },
           padding: { bottom: 12 },
