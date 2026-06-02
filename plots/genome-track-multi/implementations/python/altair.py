@@ -1,21 +1,43 @@
-""" pyplots.ai
+""" anyplot.ai
 genome-track-multi: Genome Track Viewer
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-06
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
+
+import os
+import sys
+
+
+# Prevent self-shadowing: this file is named altair.py, same as the library.
+# Python inserts the script's absolute directory into sys.path[0]; remove it
+# so that `import altair` finds the installed package, not this file.
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir and p not in ("", ".")]
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data: Genomic region on chr7 (~50kb window)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+PAGE_BG_RGB = (0xFA, 0xF8, 0xF1) if THEME == "light" else (0x1A, 0x1A, 0x17)
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — hybrid-v3 sort order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data: chr7 ~50 kb window around EGFR/VOPP1
 np.random.seed(42)
 chrom = "chr7"
 region_start = 55_140_000
 region_end = 55_190_000
 
-# Gene track data: two genes with exon/intron structure
 gene_bodies = pd.DataFrame(
     {
         "start": [55_142_000, 55_160_000],
@@ -55,7 +77,6 @@ exons = pd.DataFrame(
     }
 )
 
-# Coverage track data: simulated read depth
 coverage_positions = np.arange(region_start, region_end, 200)
 base_coverage = np.random.exponential(15, len(coverage_positions))
 for _, row in exons.iterrows():
@@ -63,7 +84,6 @@ for _, row in exons.iterrows():
     base_coverage[mask] += np.random.uniform(30, 60, mask.sum())
 coverage_df = pd.DataFrame({"position": coverage_positions, "depth": base_coverage})
 
-# Variant track data
 n_variants = 18
 variant_positions = np.sort(np.random.randint(region_start + 1000, region_end - 1000, n_variants))
 variant_df = pd.DataFrame(
@@ -74,7 +94,6 @@ variant_df = pd.DataFrame(
     }
 )
 
-# Regulatory track data
 regulatory_df = pd.DataFrame(
     {
         "start": [55_140_500, 55_143_800, 55_158_000, 55_169_500, 55_180_000],
@@ -84,14 +103,13 @@ regulatory_df = pd.DataFrame(
     }
 )
 
-# Shared x scale
 x_domain = [region_start, region_end]
+W = 620
 
-# Background shading data for alternating track bands
-bg_band = pd.DataFrame({"x": [region_start], "x2": [region_end]})
-bg_color = "#f0f4f8"
+# Background data for alternating track tints (Coverage = track 2, Regulatory = track 4)
+_even_bg_df = pd.DataFrame({"xs": [region_start], "xe": [region_end]})
 
-# Track 1: Gene annotations
+# Track 1: Genes — intron lines + exon rectangles + strand arrows + gene names
 intron_lines = (
     alt.Chart(gene_bodies)
     .mark_rule(strokeWidth=2)
@@ -99,7 +117,7 @@ intron_lines = (
         x=alt.X("start:Q", scale=alt.Scale(domain=x_domain), axis=None),
         x2="end:Q",
         y=alt.Y("y_pos:Q", scale=alt.Scale(domain=[-0.5, 1.5]), axis=None),
-        color=alt.value("#306998"),
+        color=alt.value(IMPRINT_PALETTE[2]),
     )
 )
 
@@ -107,89 +125,94 @@ exon_bars = (
     alt.Chart(exons)
     .mark_bar(height=20)
     .encode(
-        x=alt.X("start:Q", scale=alt.Scale(domain=x_domain)),
+        x=alt.X("start:Q", scale=alt.Scale(domain=x_domain), axis=None),
         x2="end:Q",
         y=alt.Y("y_pos:Q", scale=alt.Scale(domain=[-0.5, 1.5]), axis=None),
-        color=alt.value("#306998"),
+        color=alt.value(IMPRINT_PALETTE[2]),
         tooltip=[alt.Tooltip("gene:N", title="Gene")],
     )
 )
 
-gene_names = (
+gene_labels = (
     alt.Chart(gene_bodies)
-    .mark_text(fontSize=16, fontWeight="bold", align="left", dx=5, dy=-16)
+    .mark_text(fontSize=12, fontWeight="bold", align="left", dx=4, dy=-14)
     .encode(
-        x=alt.X("start:Q", scale=alt.Scale(domain=x_domain)),
+        x=alt.X("start:Q", scale=alt.Scale(domain=x_domain), axis=None),
         y=alt.Y("y_pos:Q", scale=alt.Scale(domain=[-0.5, 1.5]), axis=None),
         text=alt.Text("gene:N"),
-        color=alt.value("#1a1a1a"),
+        color=alt.value(INK),
     )
 )
 
-# Strand direction arrows along gene bodies using triangle marks
-strand_arrows_data = []
+strand_data = []
 for _, row in gene_bodies.iterrows():
-    n_arrows = 5
-    positions = np.linspace(row["start"] + 1000, row["end"] - 1000, n_arrows)
-    angle = 0 if row["strand"] == "+" else 180
-    for pos in positions:
-        strand_arrows_data.append({"position": pos, "y_pos": row["y_pos"], "angle": angle, "gene": row["gene"]})
-strand_arrows_df = pd.DataFrame(strand_arrows_data)
+    for pos in np.linspace(row["start"] + 1000, row["end"] - 1000, 5):
+        strand_data.append({"position": pos, "y_pos": row["y_pos"], "angle": 0 if row["strand"] == "+" else 180})
+strand_df = pd.DataFrame(strand_data)
 
 strand_marks = (
-    alt.Chart(strand_arrows_df)
-    .mark_point(shape="triangle-right", size=140, filled=True, opacity=0.7)
+    alt.Chart(strand_df)
+    .mark_point(shape="triangle-right", size=110, filled=True, opacity=0.75)
     .encode(
-        x=alt.X("position:Q", scale=alt.Scale(domain=x_domain)),
+        x=alt.X("position:Q", scale=alt.Scale(domain=x_domain), axis=None),
         y=alt.Y("y_pos:Q", scale=alt.Scale(domain=[-0.5, 1.5]), axis=None),
         angle=alt.Angle("angle:Q", scale=None),
-        color=alt.value("#4a86c8"),
+        color=alt.value(IMPRINT_PALETTE[5]),
     )
 )
 
-gene_bg = (
-    alt.Chart(bg_band)
-    .mark_rect(color=bg_color)
-    .encode(x=alt.X("x:Q", scale=alt.Scale(domain=x_domain), axis=None), x2="x2:Q")
-)
-gene_track = (gene_bg + intron_lines + exon_bars + gene_names + strand_marks).properties(
-    width=1600, height=100, title=alt.Title("Genes", anchor="start", fontSize=20, color="#555")
+gene_track = (intron_lines + exon_bars + gene_labels + strand_marks).properties(
+    width=W, height=58, title=alt.Title("Genes", anchor="start", fontSize=12, color=INK_MUTED)
 )
 
-# Track 2: Coverage (area plot)
+# Track 2: Coverage — alternating background + filled area with the brand-green primary series
+_cov_bg = (
+    alt.Chart(_even_bg_df)
+    .mark_rect(fill=ELEVATED_BG, opacity=1.0)
+    .encode(
+        x=alt.X("xs:Q", scale=alt.Scale(domain=x_domain), axis=None),
+        x2=alt.X2("xe:Q"),
+        y=alt.value(0),
+        y2=alt.value(80),
+    )
+)
 coverage_track = (
-    alt.Chart(coverage_df)
-    .mark_area(interpolate="monotone", opacity=0.5, line={"color": "#306998", "strokeWidth": 1.5})
+    _cov_bg
+    + alt.Chart(coverage_df)
+    .mark_area(interpolate="monotone", opacity=0.55, line={"color": IMPRINT_PALETTE[0], "strokeWidth": 1.5})
     .encode(
         x=alt.X("position:Q", scale=alt.Scale(domain=x_domain), axis=None),
-        y=alt.Y("depth:Q", axis=alt.Axis(title="Read Depth", labelFontSize=16, titleFontSize=20, grid=False)),
-        color=alt.value("#306998"),
+        y=alt.Y("depth:Q", axis=alt.Axis(title="Read Depth", tickCount=4, grid=False)),
+        color=alt.value(IMPRINT_PALETTE[0]),
         tooltip=[
             alt.Tooltip("position:Q", title="Position", format=","),
             alt.Tooltip("depth:Q", title="Depth", format=".1f"),
         ],
     )
-    .properties(width=1600, height=160, title=alt.Title("Coverage", anchor="start", fontSize=20, color="#555"))
-)
+).properties(width=W, height=80, title=alt.Title("Coverage", anchor="start", fontSize=12, color=INK_MUTED))
 
-# Track 3: Variants (circles with quality on y-axis)
-variant_color_scale = alt.Scale(domain=["SNP", "Indel"], range=["#E8590C", "#306998"])
-
-variant_bg = (
-    alt.Chart(bg_band)
-    .mark_rect(color=bg_color)
-    .encode(x=alt.X("x:Q", scale=alt.Scale(domain=x_domain), axis=None), x2="x2:Q")
-)
-variant_track_marks = (
+# Track 3: Variants — circles, quality on y-axis, legend bottom to save right-side space
+variant_track = (
     alt.Chart(variant_df)
-    .mark_circle(size=200)
+    .mark_circle(size=160, opacity=0.75)
     .encode(
         x=alt.X("position:Q", scale=alt.Scale(domain=x_domain), axis=None),
-        y=alt.Y("quality:Q", axis=alt.Axis(title="Quality", labelFontSize=16, titleFontSize=20, grid=False)),
+        y=alt.Y("quality:Q", axis=alt.Axis(title="Quality", tickCount=4, grid=False)),
         color=alt.Color(
             "variant_type:N",
-            scale=variant_color_scale,
-            legend=alt.Legend(title="Type", labelFontSize=16, titleFontSize=18),
+            scale=alt.Scale(domain=["SNP", "Indel"], range=[IMPRINT_PALETTE[0], IMPRINT_PALETTE[1]]),
+            legend=alt.Legend(
+                title="Variant",
+                orient="bottom-right",
+                direction="horizontal",
+                labelFontSize=9,
+                titleFontSize=9,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+                padding=4,
+            ),
         ),
         tooltip=[
             alt.Tooltip("position:Q", title="Position", format=","),
@@ -197,33 +220,49 @@ variant_track_marks = (
             alt.Tooltip("variant_type:N", title="Type"),
         ],
     )
-    .properties(width=1600, height=140, title=alt.Title("Variants", anchor="start", fontSize=20, color="#555"))
+    .properties(width=W, height=72, title=alt.Title("Variants", anchor="start", fontSize=12, color=INK_MUTED))
 )
-variant_track = variant_bg + variant_track_marks
 
-# Track 4: Regulatory elements
-reg_color_scale = alt.Scale(domain=["Promoter", "Enhancer"], range=["#7B2D8E", "#D4920B"])
-
+# Track 4: Regulatory — alternating background + taller bars, legend bottom-right
+_reg_bg = (
+    alt.Chart(_even_bg_df)
+    .mark_rect(fill=ELEVATED_BG, opacity=1.0)
+    .encode(
+        x=alt.X("xs:Q", scale=alt.Scale(domain=x_domain), axis=None),
+        x2=alt.X2("xe:Q"),
+        y=alt.value(0),
+        y2=alt.value(58),
+    )
+)
 regulatory_track = (
-    alt.Chart(regulatory_df)
-    .mark_bar(height=26, cornerRadius=3)
+    _reg_bg
+    + alt.Chart(regulatory_df)
+    .mark_bar(height=38, cornerRadius=4)
     .encode(
         x=alt.X(
             "start:Q",
             scale=alt.Scale(domain=x_domain),
             axis=alt.Axis(
-                title=f"Genomic Position ({chrom})",
-                labelFontSize=16,
-                titleFontSize=20,
-                labelExpr="format(datum.value, ',.0f')",
+                title=f"Genomic Position ({chrom})", labelExpr="format(datum.value, ',.0f')", tickCount=6, grid=False
             ),
         ),
         x2="end:Q",
         y=alt.Y("y_pos:Q", scale=alt.Scale(domain=[-0.5, 0.5]), axis=None),
         color=alt.Color(
             "element_type:N",
-            scale=reg_color_scale,
-            legend=alt.Legend(title="Element", labelFontSize=16, titleFontSize=18),
+            scale=alt.Scale(domain=["Promoter", "Enhancer"], range=[IMPRINT_PALETTE[4], IMPRINT_PALETTE[3]]),
+            legend=alt.Legend(
+                title="Regulatory",
+                orient="bottom-right",
+                direction="horizontal",
+                labelFontSize=9,
+                titleFontSize=9,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+                padding=4,
+            ),
         ),
         tooltip=[
             alt.Tooltip("element_type:N", title="Type"),
@@ -231,19 +270,45 @@ regulatory_track = (
             alt.Tooltip("end:Q", title="End", format=","),
         ],
     )
-    .properties(width=1600, height=80, title=alt.Title("Regulatory", anchor="start", fontSize=20, color="#555"))
-)
+).properties(width=W, height=58, title=alt.Title("Regulatory", anchor="start", fontSize=12, color=INK_MUTED))
 
-# Combine all tracks vertically
+# Combine tracks
+title_str = "genome-track-multi · python · altair · anyplot.ai"
+# len(title_str) = 49 < 67, default fontSize=16 is fine
+
 chart = (
-    alt.vconcat(gene_track, coverage_track, variant_track, regulatory_track, spacing=15)
+    alt.vconcat(gene_track, coverage_track, variant_track, regulatory_track, spacing=6)
     .resolve_scale(color="independent")
-    .properties(title=alt.Title("genome-track-multi · altair · pyplots.ai", fontSize=28, anchor="middle"))
-    .configure_axis(labelFontSize=16, titleFontSize=20)
-    .configure_view(strokeWidth=0, fill=None, stroke=None)
-    .configure_concat(spacing=8)
+    .properties(background=PAGE_BG, title=alt.Title(title_str, fontSize=16, anchor="middle", color=INK))
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_axis(
+        labelFontSize=10,
+        titleFontSize=12,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+    )
+    .configure_title(color=INK)
+    .configure_concat(spacing=6)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG and apply pad-only-to-target (landscape 3200×1800)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        "Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG_RGB)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")

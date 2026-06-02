@@ -1,48 +1,63 @@
 library: highcharts
+language: python
 specification_id: genome-track-multi
 created: '2026-03-06T17:05:56Z'
-updated: '2026-03-06T17:18:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22773343284
+updated: '2026-06-02T08:23:46Z'
+generated_by: claude-sonnet
+workflow_run: 26806540823
 issue: 4422
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent multi-track layout using Highcharts multiple yAxis with percentage positioning
-  - Biologically accurate TP53 locus data with realistic coordinates, variant IDs,
-    and coverage patterns
-  - 'Strong data storytelling: coverage peaks align with exon positions, creating
-    immediate biological insight'
-  - Cohesive color palette with clear visual hierarchy across all four tracks
-  - Plot bands connecting exon regions across tracks add a sophisticated cross-track
-    linking effect
-  - Lollipop markers with columnrange stems are an elegant variant representation
+  - Excellent multi-track genome browser with 4 correctly stacked tracks (genes, coverage,
+    variants, regulatory) all sharing a common x-axis
+  - 'Expert Highcharts multi-yAxis usage with mixed series types: arearange (exons/regulatory),
+    areaspline (coverage), scatter (labels/legends), columnrange (lollipop stems)'
+  - 'Correct Imprint palette application with biologically-informed semantic color
+    assignments: brand green for genes, blue for coverage, lavender for SNPs, matte
+    red for indels, cyan for enhancers, ochre for promoters'
+  - 'Full theme adaptation: all chrome (backgrounds, text, grid, separators) adapts
+    correctly between light (#FAF8F1) and dark (#1A1A17) renders; data colors identical
+    across both themes'
+  - 'Real scientific data: genuine TP53 locus (chr17, GRCh38), actual rs-number variant
+    IDs, biologically realistic coverage pattern with elevated reads at exons'
+  - 'Rich domain-specific detail: intron chevron patterns for strand direction, cross-track
+    exon plotBands for alignment shading, dashed separators between tracks via chart
+    load event, gradient fill for coverage, lollipop markers with PHRED-quality height
+    encoding'
   weaknesses:
-  - Bypasses highcharts_core Python API in favor of raw JavaScript (pragmatic but
-    less idiomatic)
-  - Slight excess bottom spacing (spacingBottom=180) wastes some canvas area
-  image_description: The plot displays a multi-track genome browser view of the TP53
-    locus on chromosome 17 (chr17:7,570,000-7,592,000) with four vertically stacked
-    tracks sharing a common x-axis in Mb format. The Genes track (top) shows dark
-    blue (#306998) exon rectangles connected by chevron-patterned intron lines, with
-    a "TP53 ◀" label indicating minus strand. The Coverage track renders as a blue
-    areaspline with a gradient fill from semi-transparent blue to near-white, with
-    peaks reaching ~90x at exon positions and a ~30-35x baseline. The Variants track
-    uses orange (#E67E22) circle lollipop markers for SNPs and purple (#8E44AD) diamond
-    lollipop markers for indels, with thin gray stems from baseline to quality score.
-    Inline colored labels identify SNP and Indel types. The Regulatory track (bottom)
-    shows teal (#2196A4) rectangles for enhancers and gold (#D4A017) rectangles for
-    promoters with inline legend labels. Subtle blue-tinted plot bands highlight exon
-    regions across all tracks. Dashed gray separator lines divide the tracks. The
-    title reads "TP53 Locus (chr17) · genome-track-multi · highcharts · pyplots.ai"
-    with a subtitle showing the coordinate range and genome assembly.
+  - Last x-axis tick label truncated to '7.592 …' at the right canvas edge — Highcharts
+    replaced 'Mb' with ellipsis because spacingRight=50 is too tight; increase spacingRight
+    to at least 100 (or clamp the xAxis max to a position where the last tick renders
+    cleanly)
+  - Intron chevron lines are 3px lineWidth — visually thin at full resolution and
+    may be hard to distinguish at smaller preview widths; increase to 4-5px for better
+    visibility
+  - Regulatory inline legend ('■ Enhancer' and '■ Promoter') both positioned at x
+    = region_start+400 in the left margin of the track — at y=0.28 and y=0.72 they
+    are readable but risk overlapping with the first enhancer rectangle; shifting
+    x to region_start+100 and stacking vertically would give more breathing room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title 'TP53 Locus (chr17) · genome-track-multi · python · highcharts · anyplot.ai' in dark (#1A1A17) text spans ~78% of canvas width — proportionate and readable. Subtitle 'chr17:7,570,000–7,592,000 (GRCh38)' clearly visible. Track labels 'Genes', 'Coverage', 'Variants', 'Regulatory' in bold, color-coded text (green, blue, dark, dark respectively) are all readable. X-axis title 'Genomic Position (chr17)' fully visible at bottom. Tick labels ('7.570 Mb', '7.572 Mb', etc.) readable except the last tick which shows '7.592 …' — ellipsis truncation due to tight spacingRight=50. Y-axis coverage ticks ('100x', '80x', etc.) and variant ticks ('125', '100', etc.) readable.
+      Data: Gene track shows green (#009E73) filled exon rectangles with intron chevron lines. Coverage track shows blue (#4467A3) areaspline with gradient fill. Variant track shows lavender (#C475FD) circle SNPs and matte-red (#AE3030) diamond indels as lollipop markers. Regulatory track shows cyan (#2ABCCD) enhancer and ochre (#BD8233) promoter rectangles. Subtle green cross-track exon plot bands unify the tracks vertically.
+      Legibility verdict: PASS — all text readable against light background. Minor ellipsis on last x-axis tick is a layout issue, not a legibility failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface. NOT pure black.
+      Chrome: Title in light (#F0EFE8) text — clearly readable. Track labels visible: 'Genes' in green (#009E73), 'Coverage' in blue (#4467A3), 'Variants' and 'Regulatory' in off-white INK (#F0EFE8). Axis tick labels ('7.570 Mb', etc.) in INK_SOFT (#B8B7B0) — readable light-on-dark. Coverage tick labels ('100x', '80x', etc.) and variant tick labels readable in light gray. X-axis title fully visible. NO dark-on-dark failures detected.
+      Data: Gene/coverage/variant/regulatory data colors are IDENTICAL to light render — brand green #009E73, blue #4467A3, lavender #C475FD, matte-red #AE3030, cyan #2ABCCD, ochre #BD8233. Coverage gradient adapts naturally on dark background. Same '7.592 …' truncation visible.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures. Brand green and all Imprint palette colors remain clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -50,43 +65,61 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 44px, subtitle 28px, axis titles
-          26px, labels 20-24px). All text clearly readable.
+        comment: All font sizes explicitly set with careful hierarchy (60px title,
+          40px track labels, 44px x-axis title, 34px tick labels, 28-36px data labels).
+          Readable in both themes. Minor deduction for last x-axis tick '7.592 ...'
+          truncation.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere. Clean spacing.
+        comment: Generally clean layout. Inline legends (SNP/Indel, Enhancer/Promoter)
+          positioned at left margin without overlap with data. Minor concern about
+          regulatory legend proximity to first enhancer region.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Exon rectangles, coverage area, variant markers (radius 14-16), regulatory
-          rectangles all clearly visible.
+        comment: Exon rectangles, coverage area, variant lollipops, and regulatory
+          rectangles all clearly visible. Intron chevron lines at 3px are functional
+          but thin at full resolution.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, orange, purple, teal, gold palette is colorblind-safe with
-          good contrast.
+        comment: Imprint palette applied correctly. SNP vs Indel uses both color (lavender
+          vs red) and shape (circle vs diamond) — good redundant encoding. Coverage
+          blue has adequate contrast on both surfaces.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Four tracks fill canvas well. Minor excess bottom spacing (spacingBottom=180).
+        comment: 'Canvas 3200x1800, gate passed. Four tracks fill canvas well. Main
+          issue: spacingRight=50 causes last x-axis tick ''7.592 Mb'' to be ellipsized
+          as ''7.592 ...''. Increase spacingRight to 100+.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Genomic Position (chr17)' with Mb units. Coverage
-          y-axis has 'x' suffix.
+        comment: X-axis title 'Genomic Position (chr17)' is descriptive with chromosome
+          context. Coverage y-axis ticks include 'x' unit suffix. Track labels serve
+          as y-axis titles.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (genes) = #009E73 brand green. All other series use
+          Imprint palette in semantically-appropriate assignments. Backgrounds #FAF8F1
+          light / #1A1A17 dark. Data colors identical across themes. Chrome fully
+          adaptive.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -94,22 +127,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cohesive blue-centric palette with warm accents. Gradient fills,
-          lollipop stems, plot bands, dashed separators. Professional genomics aesthetic.
+        comment: 'Strong design: domain-specific color semantics, intentional track
+          hierarchy, gradient coverage fill, intron chevron pattern, subtitle with
+          genomic coordinates. Clearly above library defaults. Not quite FiveThirtyEight/Nature
+          level.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed on gene/regulatory tracks. Subtle grid (rgba 0.06).
-          Dashed separators. Generous whitespace.
+        comment: 'High refinement: 15% opacity subtle grids, custom dashed separators
+          via chart load event, gradient fill (4%→55% opacity), per-track selective
+          grid display, 6% opacity cross-track exon bands. Tight right spacingRight
+          prevents perfection.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Coverage peaks at exon positions tell the biological story. Variant
-          quality as lollipop heights creates hierarchy. Plot bands link tracks.
+        comment: 'Good visual hierarchy: cross-track exon plot bands create clear
+          focal points, color-coded track labels guide reader to data types, strand
+          direction indicated (◀). Track ordering follows biological convention (gene→coverage→variants→regulatory).'
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +157,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-track genome browser with vertically stacked tracks sharing
-          x-axis.
+        comment: Correct multi-track genome browser with 4 stacked tracks sharing
+          a common x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gene track (exons, introns, strand), coverage area, variant lollipops,
-          regulatory rectangles, track labels.
+        comment: 'All spec features present: exon rectangles, intron chevrons, strand
+          indicator, filled area coverage, lollipop variant markers with quality height,
+          regulatory colored rectangles, track labels, shared genomic x-axis, background
+          shading.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis is genomic position. Each track maps data appropriately.
+        comment: X-axis = genomic position. Coverage y = read depth. Variants y =
+          PHRED quality. Gene and regulatory y = relative track height.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Inline legends for variants and regulatory
-          elements.
+        comment: Title 'TP53 Locus (chr17) · genome-track-multi · python · highcharts
+          · anyplot.ai' — correct format with descriptive prefix. Inline legends for
+          SNP/Indel and Enhancer/Promoter.
     data_quality:
       score: 15
       max: 15
@@ -150,22 +192,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All track types shown: 11 exons, coverage with peaks, SNPs and indels,
-          enhancers and promoters.'
+        comment: All track types shown. Gene track has both exons and introns. Variant
+          track has both SNPs and indels with quality variation. Regulatory has both
+          enhancers and promoters.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: TP53 is a real tumor suppressor gene. Realistic rs-number variant
-          IDs and genomic coordinates.
+        comment: Real TP53 locus on chr17, GRCh38 reference. Actual dbSNP rs-numbers.
+          Medically neutral genomics context (tumor suppressor gene study).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coverage 30-90x realistic for sequencing. Quality scores 55-99 are
-          plausible PHRED values.
+        comment: Correct GRCh38 TP53 coordinates (chr17:7,570,000-7,592,000). Realistic
+          coverage depth (30x base + 40x at exons). Plausible PHRED quality range
+          (55-99).
     code_quality:
       score: 10
       max: 10
@@ -175,65 +219,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, HTML, screenshot. No functions
-          or classes.'
+        comment: 'Linear structure: imports → theme tokens → data → JavaScript → HTML
+          → screenshot. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean approach with arearange for rectangles, areaspline for coverage,
-          columnrange for stems.
+        comment: Appropriate complexity for multi-track genome browser. Raw JS injection
+          justified and commented. No over-engineering or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium. Also saves plot.html.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Selenium/CDP
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Writes raw Highcharts JS instead of highcharts_core Python API. Pragmatic
-          but not idiomatic.
+        comment: 'Expert Highcharts usage: multi-yAxis stacking, mixed series types,
+          plotBands, chart load event, gradient linearGradient fill, connectNulls=false
+          for gap handling, CDP viewport override.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multiple yAxis with percentage positioning, arearange, areaspline
-          with gradients, columnrange, plotBands, renderer.path().
+        comment: Multi-yAxis track stacking, plotBands spanning shared x-axis, chart
+          load event for custom SVG separator lines, linearGradient fill for coverage
+          — all distinctly Highcharts. Not full 5 as the overall approach is also
+          achievable in other charting libraries.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - layer-composition
-  - annotations
-  - hover-tooltips
   - html-export
+  - hover-tooltips
+  - annotations
+  - multi-axis
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - gradient-fill
-  - grid-styling
-  - edge-highlighting
+  - alpha-blending
