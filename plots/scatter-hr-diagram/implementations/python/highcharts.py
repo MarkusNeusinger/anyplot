@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: highcharts unknown | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-07
+Library: highcharts | Python 3.14.3
+Quality: 93/100 | Updated: 2026-06-02
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,9 +14,18 @@ import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.scatter import ScatterSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Data — synthetic HR diagram stellar populations
 np.random.seed(42)
@@ -60,79 +70,70 @@ chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "scatter",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#0d1117",
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
-    "marginTop": 180,
-    "marginBottom": 300,
-    "marginLeft": 280,
-    "marginRight": 120,
+    "marginTop": 160,
+    "marginBottom": 240,
+    "marginLeft": 260,
+    "marginRight": 200,
 }
 
 chart.options.title = {
-    "text": "scatter-hr-diagram \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "60px", "fontWeight": "600", "color": "#e6edf3", "letterSpacing": "1px"},
-    "margin": 40,
+    "text": "scatter-hr-diagram · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "600", "color": INK, "letterSpacing": "0.5px"},
+    "margin": 20,
 }
 
 chart.options.subtitle = {
-    "text": "Hertzsprung\u2013Russell Diagram \u2014 Stellar Luminosity vs Surface Temperature",
-    "style": {"fontSize": "36px", "color": "#8b949e", "fontWeight": "400"},
+    "text": "Hertzsprung–Russell Diagram — Stellar Luminosity vs Surface Temperature",
+    "style": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "400"},
 }
 
-# Spectral class boundaries and label positions
-spectral_boundaries = [
-    {"value": 28000, "label": "O/B"},
-    {"value": 10000, "label": "B/A"},
-    {"value": 7500, "label": "A/F"},
-    {"value": 6000, "label": "F/G"},
-    {"value": 5200, "label": "G/K"},
-    {"value": 3700, "label": "K/M"},
-]
-
+# Spectral class boundary lines
 x_plot_lines = [
-    {"value": b["value"], "color": "rgba(139, 148, 158, 0.15)", "width": 2, "dashStyle": "Dash", "zIndex": 1}
-    for b in spectral_boundaries
+    {"value": v, "color": GRID, "width": 2, "dashStyle": "Dash", "zIndex": 1}
+    for v in [28000, 10000, 7500, 6000, 5200, 3700]
 ]
 
-# X-axis — reversed (hot on left, cool on right)
+# X-axis — reversed (hot on left, cool on right) per astrophysical convention
 chart.options.x_axis = {
     "title": {
         "text": "Surface Temperature (K)",
-        "style": {"fontSize": "40px", "color": "#c9d1d9", "fontWeight": "500"},
-        "margin": 40,
+        "style": {"fontSize": "56px", "color": INK, "fontWeight": "500"},
+        "margin": 25,
     },
-    "labels": {"style": {"fontSize": "32px", "color": "#8b949e"}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "reversed": True,
     "type": "logarithmic",
     "min": 2000,
     "max": 50000,
-    "tickPixelInterval": 350,
+    "tickPixelInterval": 320,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(139, 148, 158, 0.08)",
-    "lineColor": "rgba(139, 148, 158, 0.3)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
     "lineWidth": 1,
-    "tickColor": "rgba(139, 148, 158, 0.3)",
+    "tickColor": INK_SOFT,
     "plotLines": x_plot_lines,
 }
 
 # Y-axis — logarithmic luminosity
 chart.options.y_axis = {
     "title": {
-        "text": "Luminosity (L\u2609)",
-        "style": {"fontSize": "40px", "color": "#c9d1d9", "fontWeight": "500"},
-        "margin": 25,
+        "text": "Luminosity (L☉)",
+        "style": {"fontSize": "56px", "color": INK, "fontWeight": "500"},
+        "margin": 20,
     },
-    "labels": {"style": {"fontSize": "32px", "color": "#8b949e"}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "type": "logarithmic",
     "min": 0.0001,
     "max": 1000000,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(139, 148, 158, 0.08)",
-    "lineColor": "rgba(139, 148, 158, 0.3)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
     "lineWidth": 1,
-    "tickColor": "rgba(139, 148, 158, 0.3)",
+    "tickColor": INK_SOFT,
 }
 
 chart.options.legend = {
@@ -140,18 +141,18 @@ chart.options.legend = {
     "align": "right",
     "verticalAlign": "top",
     "layout": "vertical",
-    "x": -30,
-    "y": 100,
+    "x": -20,
+    "y": 80,
     "floating": True,
-    "backgroundColor": "rgba(13, 17, 23, 0.85)",
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 1,
-    "borderColor": "rgba(139, 148, 158, 0.3)",
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
-    "itemStyle": {"fontSize": "32px", "fontWeight": "400", "color": "#c9d1d9"},
-    "itemHoverStyle": {"color": "#e6edf3"},
-    "padding": 20,
-    "itemMarginBottom": 6,
-    "symbolRadius": 8,
+    "itemStyle": {"fontSize": "44px", "fontWeight": "400", "color": INK_SOFT},
+    "itemHoverStyle": {"color": INK},
+    "padding": 16,
+    "itemMarginBottom": 4,
+    "symbolRadius": 7,
 }
 
 chart.options.plot_options = {
@@ -160,10 +161,10 @@ chart.options.plot_options = {
             "radius": 8,
             "symbol": "circle",
             "lineWidth": 1,
-            "lineColor": "rgba(255, 255, 255, 0.3)",
+            "lineColor": "rgba(128,128,128,0.25)",
             "states": {"hover": {"radiusPlus": 3}},
         },
-        "opacity": 0.8,
+        "opacity": 0.85,
     }
 }
 
@@ -172,19 +173,19 @@ chart.options.credits = {"enabled": False}
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": (
-        '<span style="font-size:22px;color:{point.color}">\u25cf</span> '
-        '<span style="font-size:24px;color:#e6edf3">'
+        '<span style="font-size:20px;color:{point.color}">●</span> '
+        '<span style="font-size:22px">'
         "Temp: <b>{point.x:,.0f} K</b><br/>"
-        "Luminosity: <b>{point.y:.4f} L\u2609</b></span>"
+        "Luminosity: <b>{point.y:.4f} L☉</b></span>"
     ),
-    "backgroundColor": "rgba(22, 27, 34, 0.95)",
-    "borderColor": "#8b949e",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderRadius": 10,
     "borderWidth": 1,
-    "style": {"fontSize": "24px"},
+    "style": {"fontSize": "22px", "color": INK},
 }
 
-# Main sequence series by spectral type
+# Main sequence series — domain spectral colors per astrophysical convention
 for stype, data in stars_by_type.items():
     series = ScatterSeries()
     series.data = [[float(t), float(lum)] for t, lum in zip(data["temps"], data["lums"], strict=True)]
@@ -193,7 +194,7 @@ for stype, data in stars_by_type.items():
     series.z_index = 2
     chart.add_series(series)
 
-# Red giants
+# Red giants — larger markers, cool+luminous region
 rg_series = ScatterSeries()
 rg_series.data = [[float(t), float(lum)] for t, lum in zip(rg_temps, rg_lums, strict=True)]
 rg_series.name = "Red Giants"
@@ -203,7 +204,7 @@ rg_series.opacity = 0.85
 rg_series.z_index = 3
 chart.add_series(rg_series)
 
-# Supergiants
+# Supergiants — largest markers, highest luminosity
 sg_series = ScatterSeries()
 sg_series.data = [[float(t), float(lum)] for t, lum in zip(sg_temps, sg_lums, strict=True)]
 sg_series.name = "Supergiants"
@@ -211,39 +212,39 @@ sg_series.color = "#ffd700"
 sg_series.marker = {
     "radius": 16,
     "lineWidth": 2,
-    "lineColor": "rgba(255, 215, 0, 0.5)",
+    "lineColor": "rgba(255,215,0,0.5)",
     "states": {"hover": {"radiusPlus": 5}},
 }
 sg_series.z_index = 4
 chart.add_series(sg_series)
 
-# White dwarfs
+# White dwarfs — small markers, hot+dim region
 wd_series = ScatterSeries()
 wd_series.data = [[float(t), float(lum)] for t, lum in zip(wd_temps, wd_lums, strict=True)]
 wd_series.name = "White Dwarfs"
 wd_series.color = "#b0c4de"
-wd_series.marker = {"radius": 6, "lineColor": "rgba(255, 255, 255, 0.4)"}
+wd_series.marker = {"radius": 6, "lineColor": "rgba(128,128,128,0.4)"}
 wd_series.z_index = 2
 chart.add_series(wd_series)
 
-# Sun — distinct reference point
+# Sun — reference point; label shifted toward hotter side to avoid G-type cluster
 sun_series = ScatterSeries()
 sun_series.data = [[5778, 1.0]]
-sun_series.name = "Sun \u2609"
+sun_series.name = "Sun ☉"
 sun_series.color = "#ffee58"
 sun_series.marker = {
     "radius": 18,
     "symbol": "circle",
     "lineWidth": 3,
-    "lineColor": "#ffffff",
+    "lineColor": INK,
     "states": {"hover": {"radiusPlus": 5}},
 }
 sun_series.z_index = 5
 sun_series.data_labels = {
     "enabled": True,
-    "format": "Sun \u2609",
-    "style": {"fontSize": "32px", "color": "#ffee58", "textOutline": "2px #0d1117", "fontWeight": "600"},
-    "x": 25,
+    "format": "Sun ☉",
+    "style": {"fontSize": "36px", "color": "#ffee58", "textOutline": f"2px {PAGE_BG}", "fontWeight": "600"},
+    "x": -80,
     "y": -25,
 }
 chart.add_series(sun_series)
@@ -259,14 +260,21 @@ for p in highcharts_paths:
         highcharts_js = p.read_text(encoding="utf-8")
         break
 if highcharts_js is None:
-    highcharts_url = "https://code.highcharts.com/highcharts.js"
-    req = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0"})
+    req = urllib.request.Request(
+        "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js", headers={"User-Agent": "Mozilla/5.0"}
+    )
     with urllib.request.urlopen(req, timeout=30) as response:
         highcharts_js = response.read().decode("utf-8")
 
-# Region + spectral class labels via Highcharts renderer
-region_labels_js = """
-setTimeout(function() {
+# Region annotation colors — theme-adaptive: darker on light bg, lighter on dark bg
+main_seq_color = "rgba(50,90,180,0.65)" if THEME == "light" else "rgba(200,215,245,0.45)"
+rg_color = "rgba(200,50,25,0.65)" if THEME == "light" else "rgba(255,99,71,0.45)"
+sg_color = "rgba(160,120,0,0.65)" if THEME == "light" else "rgba(255,215,0,0.45)"
+wd_color = "rgba(80,110,160,0.65)" if THEME == "light" else "rgba(176,196,222,0.45)"
+
+# Region and spectral class labels via Highcharts renderer API
+region_labels_js = f"""
+setTimeout(function() {{
     var chart = Highcharts.charts[0];
     if (!chart) return;
     var r = chart.renderer;
@@ -274,24 +282,24 @@ setTimeout(function() {
     var yA = chart.yAxis[0];
 
     var labels = [
-        ['MAIN SEQUENCE', 8000, 8, 'rgba(200,215,245,0.45)', '36px'],
-        ['RED GIANTS', 3800, 3000, 'rgba(255,99,71,0.45)', '36px'],
-        ['SUPERGIANTS', 12000, 150000, 'rgba(255,215,0,0.45)', '36px'],
-        ['WHITE DWARFS', 18000, 0.0005, 'rgba(176,196,222,0.45)', '36px']
+        ['MAIN SEQUENCE', 8000, 8, '{main_seq_color}', '40px'],
+        ['RED GIANTS', 3800, 3000, '{rg_color}', '40px'],
+        ['SUPERGIANTS', 12000, 150000, '{sg_color}', '40px'],
+        ['WHITE DWARFS', 18000, 0.0005, '{wd_color}', '40px']
     ];
-    for (var i = 0; i < labels.length; i++) {
+    for (var i = 0; i < labels.length; i++) {{
         var l = labels[i];
         var px = xA.toPixels(l[1]);
         var py = yA.toPixels(l[2]);
-        r.text(l[0], px, py).css({
+        r.text(l[0], px, py).css({{
             color: l[3],
             fontSize: l[4],
             fontWeight: '600',
             letterSpacing: '3px'
-        }).add();
-    }
+        }}).add();
+    }}
 
-    // Spectral class letters along the top of the plot area
+    // Spectral class letters along the top of the plot area — domain stellar colors
     var spectralLabels = [
         ['O', 36000, '#4169e1'],
         ['B', 17000, '#7ec8e3'],
@@ -301,21 +309,21 @@ setTimeout(function() {
         ['K', 4400, '#ffb347'],
         ['M', 3000, '#e8684a']
     ];
-    var topY = chart.plotTop + 30;
-    for (var j = 0; j < spectralLabels.length; j++) {
+    var topY = chart.plotTop + 40;
+    for (var j = 0; j < spectralLabels.length; j++) {{
         var s = spectralLabels[j];
         var sx = xA.toPixels(s[1]);
-        r.text(s[0], sx, topY).css({
+        r.text(s[0], sx, topY).css({{
             color: s[2],
-            fontSize: '38px',
+            fontSize: '44px',
             fontWeight: '700',
             textAnchor: 'middle'
-        }).attr({zIndex: 6}).add();
-    }
-}, 500);
+        }}).attr({{zIndex: 6}}).add();
+    }}
+}}, 500);
 """
 
-# Generate HTML with inline scripts
+# Generate HTML with inline scripts (no CDN — headless Chrome can't load external URLs)
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -323,47 +331,45 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background:#0d1117;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
     <script>{region_labels_js}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and capture screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
 
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0; background:#0d1117;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-    <script>{region_labels_js}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
+# Normalize to exact 3200×1800 as safety net against ±1-2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
