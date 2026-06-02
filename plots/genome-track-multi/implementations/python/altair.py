@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -106,6 +106,9 @@ regulatory_df = pd.DataFrame(
 x_domain = [region_start, region_end]
 W = 620
 
+# Background data for alternating track tints (Coverage = track 2, Regulatory = track 4)
+_even_bg_df = pd.DataFrame({"xs": [region_start], "xe": [region_end]})
+
 # Track 1: Genes — intron lines + exon rectangles + strand arrows + gene names
 intron_lines = (
     alt.Chart(gene_bodies)
@@ -159,12 +162,23 @@ strand_marks = (
 )
 
 gene_track = (intron_lines + exon_bars + gene_labels + strand_marks).properties(
-    width=W, height=58, title=alt.Title("Genes", anchor="start", fontSize=11, color=INK_MUTED)
+    width=W, height=58, title=alt.Title("Genes", anchor="start", fontSize=12, color=INK_MUTED)
 )
 
-# Track 2: Coverage — filled area with the brand-green primary series
+# Track 2: Coverage — alternating background + filled area with the brand-green primary series
+_cov_bg = (
+    alt.Chart(_even_bg_df)
+    .mark_rect(fill=ELEVATED_BG, opacity=1.0)
+    .encode(
+        x=alt.X("xs:Q", scale=alt.Scale(domain=x_domain), axis=None),
+        x2=alt.X2("xe:Q"),
+        y=alt.value(0),
+        y2=alt.value(80),
+    )
+)
 coverage_track = (
-    alt.Chart(coverage_df)
+    _cov_bg
+    + alt.Chart(coverage_df)
     .mark_area(interpolate="monotone", opacity=0.55, line={"color": IMPRINT_PALETTE[0], "strokeWidth": 1.5})
     .encode(
         x=alt.X("position:Q", scale=alt.Scale(domain=x_domain), axis=None),
@@ -175,13 +189,12 @@ coverage_track = (
             alt.Tooltip("depth:Q", title="Depth", format=".1f"),
         ],
     )
-    .properties(width=W, height=80, title=alt.Title("Coverage", anchor="start", fontSize=11, color=INK_MUTED))
-)
+).properties(width=W, height=80, title=alt.Title("Coverage", anchor="start", fontSize=12, color=INK_MUTED))
 
 # Track 3: Variants — circles, quality on y-axis, legend bottom to save right-side space
 variant_track = (
     alt.Chart(variant_df)
-    .mark_circle(size=160, opacity=0.85)
+    .mark_circle(size=160, opacity=0.75)
     .encode(
         x=alt.X("position:Q", scale=alt.Scale(domain=x_domain), axis=None),
         y=alt.Y("quality:Q", axis=alt.Axis(title="Quality", tickCount=4, grid=False)),
@@ -207,12 +220,23 @@ variant_track = (
             alt.Tooltip("variant_type:N", title="Type"),
         ],
     )
-    .properties(width=W, height=72, title=alt.Title("Variants", anchor="start", fontSize=11, color=INK_MUTED))
+    .properties(width=W, height=72, title=alt.Title("Variants", anchor="start", fontSize=12, color=INK_MUTED))
 )
 
-# Track 4: Regulatory — taller bars, legend bottom-right to avoid wasted right space
+# Track 4: Regulatory — alternating background + taller bars, legend bottom-right
+_reg_bg = (
+    alt.Chart(_even_bg_df)
+    .mark_rect(fill=ELEVATED_BG, opacity=1.0)
+    .encode(
+        x=alt.X("xs:Q", scale=alt.Scale(domain=x_domain), axis=None),
+        x2=alt.X2("xe:Q"),
+        y=alt.value(0),
+        y2=alt.value(58),
+    )
+)
 regulatory_track = (
-    alt.Chart(regulatory_df)
+    _reg_bg
+    + alt.Chart(regulatory_df)
     .mark_bar(height=38, cornerRadius=4)
     .encode(
         x=alt.X(
@@ -246,8 +270,7 @@ regulatory_track = (
             alt.Tooltip("end:Q", title="End", format=","),
         ],
     )
-    .properties(width=W, height=58, title=alt.Title("Regulatory", anchor="start", fontSize=11, color=INK_MUTED))
-)
+).properties(width=W, height=58, title=alt.Title("Regulatory", anchor="start", fontSize=12, color=INK_MUTED))
 
 # Combine tracks
 title_str = "genome-track-multi · python · altair · anyplot.ai"
