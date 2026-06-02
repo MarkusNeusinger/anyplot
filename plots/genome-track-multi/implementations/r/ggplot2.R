@@ -4,8 +4,6 @@
 #' Quality: 89/100 | Created: 2026-06-02
 
 library(ggplot2)
-library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -202,7 +200,7 @@ p <- ggplot() +
     name   = "Variant",
     values = c(
       "SNP"   = IMPRINT_PALETTE[4],
-      "Indel" = IMPRINT_PALETTE[5]
+      "Indel" = IMPRINT_PALETTE[7]
     )
   ) +
 
@@ -232,7 +230,7 @@ p <- ggplot() +
                                       linewidth = 0.4),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_text(color = INK, size = 9),
-    legend.position    = "right",
+    legend.position    = "bottom",
     legend.key.size    = unit(0.4, "cm"),
     plot.margin        = margin(12, 12, 8, 8)
   )
