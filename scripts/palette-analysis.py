@@ -16,7 +16,7 @@ the current imprint palette were adopted). It is preserved as a historical
 artefact for reproducing the early ΔE numbers cited in the rationale docs.
 
 For the currently-shipping palette and the full design rationale see:
-  - docs/reference/palette-variants-v3/decision-rationale.md
+  - docs/reference/palette-variants/v3/decision-rationale.md
   - core/palette.py (named API, sequential + diverging cmaps)
   - docs/reference/style-guide.md §4.1
 
@@ -121,15 +121,15 @@ def render_page() -> str:
     <button class="theme-toggle">◐ dark</button>
 </header>
 <nav class="variant-nav">
-    <a href="palette-variants/index.html">grid</a>
-    <a href="palette-variants/compare.html">compare</a>
+    <a href="palette-variants/v0/index.html">grid</a>
+    <a href="palette-variants/v0/compare.html">compare</a>
     <a href="palette-analysis.html" class="current">★ baseline</a>
-    <a href="palette-variants/A-analogous.html">A · analogous</a>
-    <a href="palette-variants/B-triadic.html">B · triadic</a>
-    <a href="palette-variants/C-split-complementary.html">C · split-complementary</a>
-    <a href="palette-variants/D-balanced.html">D · balanced</a>
-    <a href="palette-variants/E-harmonic.html">E · harmonic</a>
-    <a href="palette-variants/F-okabe-anchored.html">F · okabe-anchored</a>
+    <a href="palette-variants/v0/A-analogous.html">A · analogous</a>
+    <a href="palette-variants/v0/B-triadic.html">B · triadic</a>
+    <a href="palette-variants/v0/C-split-complementary.html">C · split-complementary</a>
+    <a href="palette-variants/v0/D-balanced.html">D · balanced</a>
+    <a href="palette-variants/v0/E-harmonic.html">E · harmonic</a>
+    <a href="palette-variants/v0/F-okabe-anchored.html">F · okabe-anchored</a>
 </nav>
 
 <section class="domain">

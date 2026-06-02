@@ -875,7 +875,7 @@ def render_page(
 # -----------------------------------------------------------------------------
 
 
-DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants-v2"
+DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants" / "v2"
 
 
 def main() -> int:

@@ -32,7 +32,7 @@ Two formats are allowed (same pixel count for consistent font sizing across both
 
 ## Color Philosophy
 
-anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical palette tuned for paper-ink rendering on both warm-cream and warm-black surfaces. It is the single consistency rule that spans every library and every plot. Always refer to it as **Imprint** (capitalised, no other names) in code comments, metadata, and review notes. Full design rationale: [`docs/reference/palette-variants-v3/decision-rationale.md`](../docs/reference/palette-variants-v3/decision-rationale.md).
+anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical palette tuned for paper-ink rendering on both warm-cream and warm-black surfaces. It is the single consistency rule that spans every library and every plot. Always refer to it as **Imprint** (capitalised, no other names) in code comments, metadata, and review notes. Full design rationale: [`docs/reference/palette-variants/v3/decision-rationale.md`](../docs/reference/palette-variants/v3/decision-rationale.md).
 
 ### Categorical Palette (Imprint, canonical order)
 

@@ -41,7 +41,7 @@ For each, the script:
 The live D palette itself is rendered as ``D-baseline.html`` using the same
 template, so it sits in the lineup as "the one to beat".
 
-Output: ``docs/reference/palette-variants-v1/{D-baseline,D1..D3,T,W}-…html``
+Output: ``docs/reference/palette-variants/v1/{D-baseline,D1..D3,T,W}-…html``
 plus ``index.html`` (hero wheel + candidate cards) and ``compare.html``.
 
 Run::
@@ -112,7 +112,7 @@ from _palette_common import (  # noqa: E402
 )
 
 
-DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants-v1"
+DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants" / "v1"
 
 # ── Paper-ink corridor in CAM02-UCS (J' = lightness, C = chroma, H = hue) ─────
 # Lower J' bound: at 45 the colour is dark enough to read against #F5F3EC light bg.
@@ -1870,7 +1870,7 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
 </nav>
 
 <section class="intro">
-    <p>v0 (<code>palette-variants/</code>) explored 6 candidates against Okabe-Ito and led to
+    <p>v0 (<code>../v0/</code>) explored 6 candidates against Okabe-Ito and led to
     <strong>variant D</strong> being adopted as the live <code>ANYPLOT_PALETTE</code> in
     <code>core/images.py</code>. v1 reverses the framing: every candidate here is measured against
     <strong>live D</strong>, not Okabe-Ito. the bar is D's own first-4 worst-CVD ΔE
@@ -1908,7 +1908,7 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
 <footer class="notes">
     <p>baseline (live D) first-4 worst-CVD min ΔE = {baseline_first4:.2f}
     — the bar these candidates try to clear. v0 round of variants A–F is preserved at
-    <code>../palette-variants/</code>. references: petroff (2021) arXiv:2107.02270,
+    <code>../v0/</code>. references: petroff (2021) arXiv:2107.02270,
     okabe &amp; ito (2008), wong (2011), machado et al. (2009).</p>
 </footer>
 

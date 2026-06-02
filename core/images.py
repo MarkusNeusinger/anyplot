@@ -26,7 +26,7 @@ from PIL import Image, ImageDraw, ImageFont
 # Defined as a separate module so the project's named-API (palette.green,
 # palette.semantic.bad, etc.) plus sequential / diverging cmaps live in one
 # place. Full design rationale:
-#   docs/reference/palette-variants-v3/decision-rationale.md
+#   docs/reference/palette-variants/v3/decision-rationale.md
 from .palette import AMBER as ANYPLOT_AMBER  # noqa: F401  (re-exported public API)
 from .palette import BLUE as ANYPLOT_BLUE
 from .palette import CYAN as ANYPLOT_CYAN
