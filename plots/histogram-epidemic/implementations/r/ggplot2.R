@@ -58,9 +58,28 @@ events <- data.frame(
 
 y_max <- max(tapply(df$cases, df$date, sum), na.rm = TRUE)
 
+# Cumulative case burden for secondary y-axis
+total_by_date <- tapply(df$cases, df$date, sum)
+cum_df <- data.frame(
+    date  = as.Date(names(total_by_date)),
+    daily = as.numeric(total_by_date)
+)
+cum_df        <- cum_df[order(cum_df$date), ]
+cum_df$cumulative <- cumsum(cum_df$daily)
+cum_max      <- max(cum_df$cumulative)
+scale_factor <- (y_max * 1.15) / cum_max  # scale cumulative to primary axis range
+
 # Plot
 p <- ggplot(df, aes(x = date, y = cases, fill = case_type)) +
     geom_col(width = 1, position = "stack") +
+    geom_line(
+        data        = cum_df,
+        aes(x = date, y = cumulative * scale_factor),
+        color       = INK_MUTED,
+        linewidth   = 0.9,
+        linetype    = "solid",
+        inherit.aes = FALSE
+    ) +
     geom_vline(
         data     = events,
         aes(xintercept = date),
@@ -70,7 +89,7 @@ p <- ggplot(df, aes(x = date, y = cases, fill = case_type)) +
     ) +
     geom_text(
         data        = events,
-        aes(x = date, y = y_max * 0.88, label = label),
+        aes(x = date, y = y_max * 0.97, label = label),
         color       = INK_MUTED,
         size        = 2.8,
         hjust       = -0.12,
@@ -87,8 +106,13 @@ p <- ggplot(df, aes(x = date, y = cases, fill = case_type)) +
         expand      = expansion(mult = c(0.01, 0.02))
     ) +
     scale_y_continuous(
-        expand = expansion(mult = c(0, 0.15)),
-        labels = label_comma()
+        expand   = expansion(mult = c(0, 0.15)),
+        labels   = label_comma(),
+        sec.axis = sec_axis(
+            ~ . / scale_factor,
+            name   = "Cumulative cases",
+            labels = label_comma()
+        )
     ) +
     labs(
         x     = "Date of symptom onset",
@@ -99,12 +123,14 @@ p <- ggplot(df, aes(x = date, y = cases, fill = case_type)) +
     theme(
         plot.background    = element_rect(fill = PAGE_BG,     color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG,     color = NA),
-        panel.grid.major.y = element_line(color = INK,        linewidth = 0.25),
+        panel.grid.major.y = element_line(color = INK_MUTED,  linewidth = 0.25),
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         axis.title         = element_text(color = INK,        size = 10),
+        axis.title.y.right = element_text(color = INK_MUTED,  size = 9),
         axis.text          = element_text(color = INK_SOFT,   size = 8),
         axis.text.x        = element_text(angle = 30,         hjust = 1),
+        axis.text.y.right  = element_text(color = INK_MUTED,  size = 7),
         axis.line.x        = element_line(color = INK_SOFT,   linewidth = 0.4),
         plot.title         = element_text(color = INK,        size = 12, face = "bold"),
         legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
