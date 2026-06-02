@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -99,16 +99,16 @@ nodes = {
     },
 }
 
-# Layout positions (x, y) — left-to-right tree
+# Layout positions (x, y) — left-to-right tree; distributed to reduce upper-right gap
 positions = {
     "D1": (0.0, 0.50),
-    "C1": (0.35, 0.84),
-    "T1": (0.72, 0.96),
-    "T2": (0.72, 0.72),
+    "C1": (0.35, 0.79),
+    "T1": (0.72, 0.88),
+    "T2": (0.72, 0.68),
     "C2": (0.35, 0.33),
     "T3": (0.72, 0.46),
     "T4": (0.72, 0.20),
-    "T5": (0.35, 0.05),
+    "T5": (0.35, 0.06),
 }
 
 # Plot
@@ -165,7 +165,7 @@ for nid, n in nodes.items():
         y=mid_y,
         text=f"<b>{label_text}</b>",
         showarrow=False,
-        font={"size": 12, "color": text_color, "family": "Arial, sans-serif"},
+        font={"size": 14, "color": text_color, "family": "Arial, sans-serif"},
         yshift=yshift,
     )
 
@@ -182,8 +182,9 @@ for nid, n in nodes.items():
     )
 
 # Draw nodes — decision (rect), chance (circle), terminal (triangle)
-shape_size_x = 0.032
-shape_size_y = 0.05
+base_size_x = 0.032
+base_size_y = 0.05
+max_emv = 280  # D1=280, C1=280, C2=170
 
 for nid, n in nodes.items():
     n_x, n_y = positions[nid]
@@ -196,6 +197,11 @@ for nid, n in nodes.items():
     else:
         node_color = C_TERMINAL
     node_opacity = 0.65 if n["pruned"] else 1.0
+
+    # Scale node size by EMV magnitude (min 0.6×, max 1.4× base)
+    emv_scale = max(0.6, min(1.4, n["emv"] / max_emv)) if n["emv"] is not None else 1.0
+    shape_size_x = base_size_x * emv_scale
+    shape_size_y = base_size_y * emv_scale
 
     hover_parts = [f"<b>{nid}</b> — {n['type'].title()} Node"]
     if n["emv"] is not None:
@@ -282,7 +288,7 @@ for nid, n in nodes.items():
             y=n_y,
             text=f"<b>${n['emv']}</b>",
             showarrow=False,
-            font={"size": 12, "color": emv_text_color, "family": "Arial, sans-serif"},
+            font={"size": 14, "color": emv_text_color, "family": "Arial, sans-serif"},
         )
 
     # Payoff label to the right of terminal nodes
@@ -293,7 +299,7 @@ for nid, n in nodes.items():
             y=n_y,
             text=f"<b>${n['payoff']:+,}</b>",
             showarrow=False,
-            font={"size": 12, "color": payoff_color, "family": "Arial, sans-serif"},
+            font={"size": 14, "color": payoff_color, "family": "Arial, sans-serif"},
             xshift=58,
         )
 
@@ -355,7 +361,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.08, 0.95]},
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.05, 1.08]},
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.05, 1.00]},
     legend={
         "font": {"size": 10, "family": "Arial, sans-serif", "color": INK_SOFT},
         "x": 0.01,
