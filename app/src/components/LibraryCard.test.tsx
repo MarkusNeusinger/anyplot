@@ -8,6 +8,11 @@ describe('LibraryCard', () => {
     expect(screen.getByText('matplotlib')).toBeInTheDocument();
   });
 
+  it('renders the description for a javascript library', () => {
+    render(<LibraryCard name="echarts" language="javascript" onClick={vi.fn()} />);
+    expect(screen.getByText(/Powerful interactive charts for the browser/i)).toBeInTheDocument();
+  });
+
   it('renders the language chip in the corner when language is provided', () => {
     render(<LibraryCard name="ggplot2" language="r" onClick={vi.fn()} />);
     expect(screen.getByLabelText('Language: R')).toHaveTextContent('R');
