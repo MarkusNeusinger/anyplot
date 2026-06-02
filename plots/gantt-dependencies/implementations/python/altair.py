@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: altair 6.0.0 | Python 3.13
+Library: altair 6.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-02
 """
 
