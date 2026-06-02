@@ -1,43 +1,57 @@
 library: seaborn
+language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:37:02Z'
-updated: '2026-03-06T03:04:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22746425905
+updated: '2026-06-02T06:07:25Z'
+generated_by: claude-sonnet
+workflow_run: 26800855947
 issue: 4423
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Faithful recreation of Ed Hawkins warming stripes aesthetic with intentional minimal
-    design
-  - Custom diverging palette via sns.diverging_palette() rather than a generic colormap
-  - Realistic warming trend data with proper acceleration in recent decades
-  - Perfect spec compliance - all requirements met including symmetric color scale
-    and 3:1 aspect ratio
-  - Clean elegant code with good seaborn idiom usage
+  - 'Perfect spec compliance: pure warming stripes with no axes, labels, or gridlines
+    as specified'
+  - 'Custom Imprint-derived diverging colormap using palette members (#4467A3 blue,
+    #AE3030 red) with semantic color order (cold=blue left, warm=red right)'
+  - 'Both themes fully readable: light-on-dark title and year markers in dark render,
+    dark-on-light in light render — no chrome failures'
+  - Theme-adaptive midpoint (#A8A79F for dark) prevents invisible near-zero stripes
+    on the dark background — a thoughtful design decision
+  - 'Immediately impactful data storytelling: blue-to-red progression communicates
+    the warming trend in seconds'
+  - Clean reproducible code with KISS structure, seed set, no bbox_inches='tight'
+    drift
   weaknesses:
-  - Non-standard image dimensions (5400x1800 vs allowed 4800x2700 or 3600x3600), though
-    justified by spec 3:1 aspect ratio
-  - Blue-red diverging palette has minor accessibility limitations for certain forms
-    of colorblindness
-  image_description: The plot displays classic climate warming stripes — a series
-    of 175 vertical colored bars spanning from 1850 to 2024. The left portion (earlier
-    years) shows predominantly steel blues and slate blues representing negative temperature
-    anomalies. The middle section transitions through very light blues and pinks near
-    zero anomaly. The right portion (recent decades) shifts to progressively deeper
-    reds and dark crimsons representing strong positive anomalies. The title "heatmap-stripes-climate
-    · seaborn · pyplots.ai" appears in italic gray text above the stripes. Year markers
-    "1850" and "2024" sit at the bottom-left and bottom-right corners respectively.
-    The background is a subtle light gray (#f0f0f0). No axes, gridlines, or tick marks
-    are present — pure color encoding. The aspect ratio is approximately 3:1 (wide
-    and short).
+  - The gap between the title (y=0.88) and the top of the stripe band (y=0.75) is
+    ~234 px (~13% of figure height), creating noticeable empty space mid-figure; consider
+    adjusting ax.set_position to [0.01, 0.20, 0.98, 0.65] to close this gap and make
+    the stripe band taller
+  - 'LM-02: seaborn heatmap used functionally but without showcasing unique seaborn
+    features (e.g., mask, annot, custom fmt) — the core visualization could be replicated
+    with matplotlib imshow'
+  - DE-01/DE-02 could reach higher polish with a subtle decade-marker approach or
+    baseline period annotation at the bottom edge of the stripe band
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
+      Chrome: Title "heatmap-stripes-climate · python · seaborn · anyplot.ai" in dark ink (#1A1A17), centered, clearly readable. Year markers "1850" (left) and "2024" (right) in muted ink, readable. No axes, no tick labels, no gridlines as specified.
+      Data: Stripe band runs full width. Left portion (1850s–1950s) in cool blues; middle (mid-20th century) in near-neutral pale tones; right portion (1990s–2024) in warm reds transitioning to deep saturated red. Continuous diverging colormap from #4467A3 (blue) through #FAF8F1 (midpoint) to #AE3030 (red). Clear warming trend visible immediately.
+      Legibility verdict: PASS — all text elements readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light text (#F0EFE8-equivalent), clearly readable against dark background. Year markers in light muted ink, readable. No dark-on-dark failures observed.
+      Data: Same blue-to-red stripe progression. Near-zero anomaly stripes appear as a warm medium gray (#A8A79F — the theme-adaptive INK_MUTED midpoint) rather than near-white, which correctly prevents those stripes from vanishing into the dark background. Blue and red extremes are visually identical to the light render.
+      Legibility verdict: PASS — all text elements readable against the dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -45,43 +59,55 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, year markers 16pt. Perfectly
-          readable.'
+        comment: 'All font sizes explicitly set: title uses dynamic formula (max(round(12*ratio),8)),
+          year markers at fontsize=10. Readable in both themes at full and mobile
+          scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Title well separated from stripes.
+        comment: No text overlaps. Title above stripe band, year markers below — spatially
+          separated by design.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Each stripe fills full width with zero gaps. Color intensity clearly
-          distinguishes anomaly values.
+        comment: Stripe colors clearly saturated at extremes, appropriately muted
+          near midpoint. Color progression immediately apparent.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Custom blue-red diverging palette is canonical for warming stripes,
-          minor tritanopia concern.
+        comment: 'Imprint palette members (#4467A3 blue, #AE3030 red) are CVD-safe.
+          Blue-red diverging is standard scientific convention for temperature anomaly.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 3:1 aspect ratio per spec. Non-standard image dimensions (5400x1800)
-          but justified by spec requirement.
+        comment: Canvas gate passed. Stripe band fills ~60% of figure height, running
+          nearly full width. No elements cut off. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. No axis labels needed per spec.
+        comment: Spec requires NO axis labels. Title format 'heatmap-stripes-climate
+          · python · seaborn · anyplot.ai' is correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint-derived diverging colormap using palette members (#4467A3,
+          midpoint, #AE3030). Background #FAF8F1 light / #1A1A17 dark correct. Theme-adaptive
+          midpoint (#FAF8F1 light, #A8A79F dark) prevents invisible stripes on dark
+          surface — motivated deviation from #1A1A17 default midpoint.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -89,22 +115,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette, italic title, subtle gray background. Clearly
-          above defaults.
+        comment: 'Strong design: custom Imprint-derived colormap, intentional minimalism,
+          year markers precisely positioned. Clearly above defaults. Not quite 8/8
+          since the format is prescribed by the spec with limited room for creative
+          design.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, no grid, minimal chrome. Exactly right for warming
-          stripes.
+        comment: 'Good refinement: axes fully hidden (ax.set_axis_off()), no grid,
+          no spines, custom ax.set_position for stripe band. Minor: ~13% empty space
+          between title and stripe top creates slight mid-figure gap.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color progression from blues to deep reds immediately communicates
-          accelerating warming.
+        comment: The warming stripes format is inherently strong storytelling — blue-to-red
+          progression immediately communicates climate trend. Year markers provide
+          temporal context. No additional storytelling annotations beyond what the
+          format provides.
     spec_compliance:
       score: 15
       max: 15
@@ -114,50 +145,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct warming stripes visualization with vertical colored bars.
+        comment: 'Correct: warming stripes implemented as 1×N seaborn heatmap with
+          diverging colormap, no axes.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: no axes/labels/ticks/gridlines, diverging
-          colormap, no gaps, 3:1 ratio, symmetric scale.'
+        comment: 'All spec features: blue-to-red diverging cmap centered at 0, no
+          axes/labels/ticks/gridlines, full-width bars with no gaps (linewidths=0),
+          ~3:1 aspect ratio (2.9:1), symmetric color scale (vmin=-vmax, vmax=vmax).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Years mapped to position, anomalies to color. Correct.
+        comment: Years 1850–2024 on horizontal axis, anomaly encoded as color. 175
+          data points within spec range (100–175).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact required format. No legend needed.
+        comment: 'Title ''heatmap-stripes-climate · python · seaborn · anyplot.ai''
+          correct. No legend (appropriate: no colorbar by spec).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full range of anomalies with realistic noise and clear warming acceleration.
+        comment: 'Shows full range: negative anomalies (blues) in early period, near-zero
+          in mid-century, strong positive anomalies (deep reds) in recent decades.
+          Realistic variability with noise.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Climate temperature anomalies 1850-2024, closely mimics real global
-          temperature record.
+        comment: Global mean temperature anomalies 1850–2024 — scientifically neutral,
+          educational, highly recognizable context. Matches real HadCRUT/NASA GISS
+          data patterns.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomalies range -0.5 to +1.3C, realistic for global mean temperature
-          anomalies.
+        comment: Anomaly range -0.5°C to +1.3°C is realistic for global mean temperature
+          anomalies relative to 1961–1990 baseline. Noise level (σ=0.12) matches real
+          interannual variability.
     code_quality:
       score: 10
       max: 10
@@ -167,50 +206,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, Data, Plot, Style, Save. No functions/classes.'
+        comment: 'Linear flow: imports → theme tokens → colormap → data → plot → style
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Three imports, all used.
+        comment: os, matplotlib.pyplot, numpy, seaborn, LinearSegmentedColormap —
+          all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concatenated linspace segments elegantly model acceleration. Appropriate
-          complexity.
+        comment: Clean Pythonic code. Dynamic title fontsize formula is elegant. No
+          over-engineering or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, current API.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of sns.heatmap, set_style, set_context, despine. Slight
-          reliance on matplotlib for text.
+        comment: Correctly uses sns.heatmap with axes-level API, proper cmap/center/vmin/vmax/cbar/xticklabels/yticklabels/linewidths
+          parameters. Idiomatic seaborn heatmap usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.diverging_palette is seaborn-specific. sns.heatmap more convenient
-          than matplotlib equivalents.
+        comment: Uses sns.heatmap with cbar=False and linewidths=0 — seaborn-specific
+          feature combination for stripe visualization. Could be replicated in matplotlib
+          with imshow(), so not purely distinctive, but uses seaborn's heatmap API
+          naturally for this use case.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -219,8 +263,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
