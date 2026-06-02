@@ -1,27 +1,51 @@
-""" pyplots.ai
+""" anyplot.ai
 genome-track-multi: Genome Track Viewer
-Library: highcharts unknown | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-06
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Synthetic genomic data for chr17:7,570,000-7,592,000 (TP53 locus)
-np.random.seed(42)
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
+# Imprint palette — genomic track assignments
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+COL_GENE = IMPRINT_PALETTE[0]  # brand green  — genes (first series)
+COL_COVERAGE = IMPRINT_PALETTE[2]  # blue         — coverage
+COL_SNP = IMPRINT_PALETTE[1]  # lavender     — SNPs
+COL_INDEL = IMPRINT_PALETTE[4]  # matte red    — indels (mutation/error semantic)
+COL_ENHANCER = IMPRINT_PALETTE[5]  # cyan         — enhancers
+COL_PROMOTER = IMPRINT_PALETTE[3]  # ochre        — promoters
+
+# Title — scale fontsize for length (default 66px @ 67 chars)
+TITLE = "TP53 Locus (chr17) · genome-track-multi · python · highcharts · anyplot.ai"
+TITLE_FS = max(44, round(66 * 67 / len(TITLE)))  # = 60px
+
+SUBTITLE = "chr17:7,570,000–7,592,000 (GRCh38)"
+
+# Data — TP53 locus on chr17
+np.random.seed(42)
 region_start = 7570000
 region_end = 7592000
 
-# Gene track - TP53 gene structure (simplified)
+# Gene track: TP53 exon structure (simplified GRCh38 coordinates)
 exons = [
     {"start": 7571720, "end": 7573008, "label": "Exon 11"},
     {"start": 7573927, "end": 7574033, "label": "Exon 10"},
@@ -36,16 +60,15 @@ exons = [
     {"start": 7590695, "end": 7590863, "label": "Exon 1"},
 ]
 
-# Coverage track - simulated read depth across the region
+# Coverage track: simulated read depth — elevated at exons
 coverage_positions = np.arange(region_start, region_end, 50)
 base_coverage = 30 + np.random.poisson(5, len(coverage_positions))
 for exon in exons:
     mask = (coverage_positions >= exon["start"]) & (coverage_positions <= exon["end"])
     base_coverage[mask] = base_coverage[mask] + np.random.poisson(40, mask.sum())
-
 coverage_data = [[int(pos), int(cov)] for pos, cov in zip(coverage_positions, base_coverage, strict=False)]
 
-# Variant track - SNPs and indels
+# Variant track: SNPs and indels with PHRED quality scores
 variants = [
     {"pos": 7572950, "type": "SNP", "id": "rs28934578", "qual": 85},
     {"pos": 7573160, "type": "SNP", "id": "rs1042522", "qual": 99},
@@ -58,29 +81,28 @@ variants = [
     {"pos": 7579472, "type": "SNP", "id": "rs121913343", "qual": 88},
     {"pos": 7590800, "type": "SNP", "id": "rs1800370", "qual": 93},
 ]
-
 snp_data = [{"x": v["pos"], "y": v["qual"], "name": v["id"]} for v in variants if v["type"] == "SNP"]
 indel_data = [{"x": v["pos"], "y": v["qual"], "name": v["id"]} for v in variants if v["type"] == "Indel"]
 
-# Regulatory track - enhancers and promoters
+# Regulatory track: enhancers and promoters
 regulatory = [
-    {"start": 7571200, "end": 7571700, "type": "Enhancer", "score": 0.75},
-    {"start": 7576100, "end": 7576500, "type": "Enhancer", "score": 0.60},
-    {"start": 7579800, "end": 7580200, "type": "Promoter", "score": 0.50},
-    {"start": 7589900, "end": 7590700, "type": "Promoter", "score": 0.92},
-    {"start": 7584000, "end": 7584600, "type": "Enhancer", "score": 0.45},
+    {"start": 7571200, "end": 7571700, "type": "Enhancer"},
+    {"start": 7576100, "end": 7576500, "type": "Enhancer"},
+    {"start": 7579800, "end": 7580200, "type": "Promoter"},
+    {"start": 7589900, "end": 7590700, "type": "Promoter"},
+    {"start": 7584000, "end": 7584600, "type": "Enhancer"},
 ]
 
-# Build arearange data for exons (rectangles via 2-point segments separated by nulls)
-exon_arearange = []
+# Build arearange arrays (rectangles via 2-point segments separated by nulls)
 sorted_exons = sorted(exons, key=lambda e: e["start"])
+exon_arearange = []
 for i, exon in enumerate(sorted_exons):
     if i > 0:
         exon_arearange.append([sorted_exons[i - 1]["end"] + 1, None, None])
     exon_arearange.append([exon["start"], 0.2, 0.8])
     exon_arearange.append([exon["end"], 0.2, 0.8])
 
-# Build intron line data (chevron pattern between exons)
+# Intron chevron pattern (mid-point bump = direction indicator)
 intron_data = []
 for i in range(len(sorted_exons) - 1):
     intron_data.append([sorted_exons[i]["end"], 0.5])
@@ -88,56 +110,67 @@ for i in range(len(sorted_exons) - 1):
     intron_data.append([mid, 0.62])
     intron_data.append([sorted_exons[i + 1]["start"], 0.5])
 
-# Build arearange data for regulatory elements
 enhancer_arearange = []
-for i, r in enumerate([reg for reg in regulatory if reg["type"] == "Enhancer"]):
+for i, r in enumerate([x for x in regulatory if x["type"] == "Enhancer"]):
     if i > 0:
         enhancer_arearange.append([r["start"] - 1, None, None])
     enhancer_arearange.append([r["start"], 0.1, 0.45])
     enhancer_arearange.append([r["end"], 0.1, 0.45])
 
 promoter_arearange = []
-for i, r in enumerate([reg for reg in regulatory if reg["type"] == "Promoter"]):
+for i, r in enumerate([x for x in regulatory if x["type"] == "Promoter"]):
     if i > 0:
         promoter_arearange.append([r["start"] - 1, None, None])
     promoter_arearange.append([r["start"], 0.55, 0.9])
     promoter_arearange.append([r["end"], 0.55, 0.9])
 
-# Serialize data to JSON
+# Exon plot bands — subtle cross-track shading aligned to gene positions
+plotband_color = "rgba(0,158,115,0.06)" if THEME == "light" else "rgba(0,158,115,0.10)"
+exon_plotbands = [{"from": e["start"], "to": e["end"], "color": plotband_color} for e in exons]
+
+# Pre-compute inline label positions
+gene_label_x = (sorted_exons[0]["start"] + sorted_exons[-1]["end"]) // 2
+legend_snp_x = region_start + 600
+legend_indel_x = region_start + 3200
+legend_reg_x = region_start + 400
+
+# Coverage gradient stops (#4467A3 = rgb(68,103,163))
+cov_hi = "rgba(68,103,163,0.55)"
+cov_lo = "rgba(68,103,163,0.04)"
+
+# Serialize data for JS injection
 coverage_json = json.dumps(coverage_data)
 snp_json = json.dumps(snp_data)
 indel_json = json.dumps(indel_data)
+all_variants_json = json.dumps(snp_data + indel_data)
 exon_arearange_json = json.dumps(exon_arearange)
 intron_json = json.dumps(intron_data)
 enhancer_arearange_json = json.dumps(enhancer_arearange)
 promoter_arearange_json = json.dumps(promoter_arearange)
-
-# Build exon plot bands for subtle vertical shading across all tracks
-exon_plotbands = [{"from": e["start"], "to": e["end"], "color": "rgba(48, 105, 152, 0.04)"} for e in exons]
 exon_plotbands_json = json.dumps(exon_plotbands)
 
+# Chart JavaScript — raw JS for multi-yAxis complexity
 chart_js = f"""
 Highcharts.chart('container', {{
     chart: {{
-        width: 4800,
-        height: 2700,
-        backgroundColor: '#ffffff',
-        spacingTop: 60,
-        spacingBottom: 180,
-        spacingLeft: 160,
-        spacingRight: 60,
-        style: {{ fontFamily: 'Arial, sans-serif' }},
+        width: 3200,
+        height: 1800,
+        backgroundColor: '{PAGE_BG}',
+        spacingTop: 50,
+        spacingBottom: 80,
+        spacingLeft: 120,
+        spacingRight: 50,
+        style: {{ fontFamily: 'Arial, sans-serif', color: '{INK}' }},
         events: {{
             load: function() {{
                 var chart = this;
-                // Draw track separator lines
-                var plotLeft = chart.plotLeft;
+                var plotLeft  = chart.plotLeft;
                 var plotWidth = chart.plotWidth;
-                var yAxes = chart.yAxis;
+                var yAxes     = chart.yAxis;
                 for (var i = 1; i < yAxes.length; i++) {{
                     var y = yAxes[i].top;
-                    chart.renderer.path(['M', plotLeft, y - 8, 'L', plotLeft + plotWidth, y - 8])
-                        .attr({{ stroke: '#DDDDDD', 'stroke-width': 2, 'stroke-dasharray': '8,4' }})
+                    chart.renderer.path(['M', plotLeft, y - 6, 'L', plotLeft + plotWidth, y - 6])
+                        .attr({{ stroke: '{INK_SOFT}', 'stroke-width': 1.5, 'stroke-dasharray': '6,4' }})
                         .add();
                 }}
             }}
@@ -145,45 +178,44 @@ Highcharts.chart('container', {{
     }},
 
     title: {{
-        text: 'TP53 Locus (chr17) \\u00b7 genome-track-multi \\u00b7 highcharts \\u00b7 pyplots.ai',
-        style: {{ fontSize: '44px', fontWeight: '500' }}
+        text: '{TITLE}',
+        style: {{ fontSize: '{TITLE_FS}px', fontWeight: '500', color: '{INK}' }}
     }},
 
     subtitle: {{
-        text: 'chr17:7,570,000\\u20137,592,000 (GRCh38)',
-        style: {{ fontSize: '28px', color: '#666666' }}
+        text: '{SUBTITLE}',
+        style: {{ fontSize: '36px', color: '{INK_SOFT}' }}
     }},
 
     credits: {{ enabled: false }},
-    legend: {{ enabled: false }},
+    legend:  {{ enabled: false }},
 
     xAxis: {{
         min: {region_start},
         max: {region_end},
         title: {{
             text: 'Genomic Position (chr17)',
-            style: {{ fontSize: '28px' }}
+            style: {{ fontSize: '44px', color: '{INK}' }}
         }},
         labels: {{
-            style: {{ fontSize: '24px' }},
-            y: 40,
+            style: {{ fontSize: '34px', color: '{INK_SOFT}' }},
+            y: 36,
             formatter: function() {{
                 return (this.value / 1000000).toFixed(3) + ' Mb';
             }}
         }},
-        lineWidth: 2,
-        tickWidth: 0,
+        lineWidth: 1, lineColor: '{INK_SOFT}',
+        tickWidth: 1, tickColor: '{INK_SOFT}',
         tickInterval: 2000,
-        gridLineWidth: 1,
-        gridLineColor: 'rgba(0,0,0,0.06)',
+        gridLineWidth: 1, gridLineColor: '{GRID}',
         plotBands: {exon_plotbands_json}
     }},
 
     yAxis: [{{
         title: {{
             text: 'Genes',
-            style: {{ fontSize: '26px', fontWeight: 'bold', color: '#306998' }},
-            rotation: 0, align: 'high', offset: 0, y: -10, x: -10
+            style: {{ fontSize: '40px', fontWeight: 'bold', color: '{COL_GENE}' }},
+            rotation: 0, align: 'high', offset: 0, y: -8, x: -8
         }},
         top: '0%', height: '16%', offset: 0,
         min: -0.1, max: 1.2,
@@ -192,26 +224,33 @@ Highcharts.chart('container', {{
     }}, {{
         title: {{
             text: 'Coverage',
-            style: {{ fontSize: '26px', fontWeight: 'bold', color: '#306998' }},
-            rotation: 0, align: 'high', offset: 0, y: -10, x: -10
+            style: {{ fontSize: '40px', fontWeight: 'bold', color: '{COL_COVERAGE}' }},
+            rotation: 0, align: 'high', offset: 0, y: -8, x: -8
         }},
         top: '22%', height: '28%', offset: 0, min: 0,
-        labels: {{ style: {{ fontSize: '20px' }}, format: '{{value}}x' }},
-        gridLineWidth: 1, gridLineColor: 'rgba(0,0,0,0.06)', lineWidth: 1
+        labels: {{
+            style: {{ fontSize: '32px', color: '{INK_SOFT}' }},
+            format: '{{value}}x'
+        }},
+        gridLineWidth: 1, gridLineColor: '{GRID}',
+        lineWidth: 1, lineColor: '{INK_SOFT}'
     }}, {{
         title: {{
             text: 'Variants',
-            style: {{ fontSize: '26px', fontWeight: 'bold', color: '#306998' }},
-            rotation: 0, align: 'high', offset: 0, y: -10, x: -10
+            style: {{ fontSize: '40px', fontWeight: 'bold', color: '{INK}' }},
+            rotation: 0, align: 'high', offset: 0, y: -8, x: -8
         }},
         top: '56%', height: '18%', offset: 0, min: 0, max: 110,
-        labels: {{ style: {{ fontSize: '20px' }} }},
-        gridLineWidth: 1, gridLineColor: 'rgba(0,0,0,0.06)', lineWidth: 1
+        labels: {{
+            style: {{ fontSize: '32px', color: '{INK_SOFT}' }}
+        }},
+        gridLineWidth: 1, gridLineColor: '{GRID}',
+        lineWidth: 1, lineColor: '{INK_SOFT}'
     }}, {{
         title: {{
             text: 'Regulatory',
-            style: {{ fontSize: '26px', fontWeight: 'bold', color: '#306998' }},
-            rotation: 0, align: 'high', offset: 0, y: -10, x: -10
+            style: {{ fontSize: '40px', fontWeight: 'bold', color: '{INK}' }},
+            rotation: 0, align: 'high', offset: 0, y: -8, x: -8
         }},
         top: '80%', height: '14%', offset: 0,
         min: -0.1, max: 1.1,
@@ -220,7 +259,9 @@ Highcharts.chart('container', {{
     }}],
 
     tooltip: {{
-        style: {{ fontSize: '20px' }},
+        style: {{ fontSize: '28px', color: '{INK}' }},
+        backgroundColor: '{ELEVATED_BG}',
+        borderColor: '{INK_SOFT}',
         shared: false,
         useHTML: true
     }},
@@ -237,144 +278,153 @@ Highcharts.chart('container', {{
     }},
 
     series: [
-        // Gene track - exons as filled rectangles
+        // Gene track — exon rectangles
         {{
             type: 'arearange',
             name: 'Exons',
             yAxis: 0,
             data: {exon_arearange_json},
-            color: '#306998',
+            color: '{COL_GENE}',
             fillOpacity: 1.0,
             lineWidth: 1,
-            lineColor: '#1E4A6E',
+            lineColor: '{COL_GENE}',
             connectNulls: false,
             tooltip: {{ pointFormat: '<b>Exon</b>' }}
         }},
-        // Gene track - intron chevron lines
+        // Gene track — intron chevron lines (minus-strand direction)
         {{
             type: 'line',
             name: 'Introns',
             yAxis: 0,
             data: {intron_json},
-            color: '#306998',
+            color: '{COL_GENE}',
             lineWidth: 3,
             marker: {{ enabled: false }},
             enableMouseTracking: false
         }},
-        // Gene label
+        // Gene label with strand arrow
         {{
             type: 'scatter',
             name: 'Gene Label',
             yAxis: 0,
-            data: [{{ x: {(sorted_exons[0]["start"] + sorted_exons[-1]["end"]) // 2}, y: 1.05,
-                dataLabels: {{ enabled: true, format: 'TP53 \\u25c0',
-                    style: {{ fontSize: '28px', fontWeight: 'bold', color: '#306998', textOutline: 'none' }} }} }}],
+            data: [{{ x: {gene_label_x}, y: 1.05,
+                dataLabels: {{ enabled: true, format: 'TP53 ◀',
+                    style: {{ fontSize: '36px', fontWeight: 'bold',
+                              color: '{COL_GENE}', textOutline: 'none' }} }} }}],
             marker: {{ enabled: false }},
             enableMouseTracking: false
         }},
 
-        // Coverage track
+        // Coverage track — areaspline with gradient fill
         {{
             type: 'areaspline',
             name: 'Read Depth',
             yAxis: 1,
             data: {coverage_json},
-            color: '#306998',
+            color: '{COL_COVERAGE}',
             fillColor: {{
                 linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }},
-                stops: [[0, 'rgba(48, 105, 152, 0.5)'], [1, 'rgba(48, 105, 152, 0.05)']]
+                stops: [[0, '{cov_hi}'], [1, '{cov_lo}']]
             }},
             lineWidth: 2,
             marker: {{ enabled: false }},
             tooltip: {{ pointFormat: '<b>Coverage:</b> {{point.y}}x<br/>Position: {{point.x:,.0f}}' }}
         }},
 
-        // Variant track - SNPs
+        // Variant track — SNP lollipop markers
         {{
             type: 'scatter',
             name: 'SNPs',
             yAxis: 2,
             data: {snp_json},
-            color: '#E67E22',
-            marker: {{ symbol: 'circle', radius: 14, lineWidth: 2, lineColor: '#D35400' }},
-            tooltip: {{ pointFormat: '<b>{{point.name}}</b> (SNP)<br/>Quality: {{point.y}}<br/>Position: {{point.x:,.0f}}' }}
+            color: '{COL_SNP}',
+            marker: {{ symbol: 'circle', radius: 12, lineWidth: 1.5, lineColor: '{INK}' }},
+            tooltip: {{ pointFormat: '<b>{{point.name}}</b> (SNP)<br/>PHRED: {{point.y}}<br/>Pos: {{point.x:,.0f}}' }}
         }},
-        // Variant track - Indels
+        // Variant track — Indel lollipop markers
         {{
             type: 'scatter',
             name: 'Indels',
             yAxis: 2,
             data: {indel_json},
-            color: '#8E44AD',
-            marker: {{ symbol: 'diamond', radius: 16, lineWidth: 2, lineColor: '#6C3483' }},
-            tooltip: {{ pointFormat: '<b>{{point.name}}</b> (Indel)<br/>Quality: {{point.y}}<br/>Position: {{point.x:,.0f}}' }}
+            color: '{COL_INDEL}',
+            marker: {{ symbol: 'diamond', radius: 14, lineWidth: 1.5, lineColor: '{INK}' }},
+            tooltip: {{ pointFormat: '<b>{{point.name}}</b> (Indel)<br/>PHRED: {{point.y}}<br/>Pos: {{point.x:,.0f}}' }}
         }},
-        // Variant stems (lollipop lines)
+        // Variant lollipop stems
         {{
             type: 'columnrange',
             name: 'Stems',
             yAxis: 2,
-            data: {json.dumps(snp_data + indel_data)}.map(function(v) {{
+            data: {all_variants_json}.map(function(v) {{
                 return {{ x: v.x, low: 0, high: v.y }};
             }}),
-            pointWidth: 3,
-            color: '#BBBBBB',
+            pointWidth: 2,
+            color: '{INK_SOFT}',
             borderWidth: 0,
             enableMouseTracking: false
         }},
-        // Variant track legend (inline)
+        // Variant inline legend
         {{
             type: 'scatter',
             name: 'Variant Legend',
             yAxis: 2,
             data: [
-                {{ x: {region_start + 800}, y: 105, dataLabels: {{ enabled: true, format: '\\u25cf SNP',
-                    align: 'left', x: 5,
-                    style: {{ fontSize: '22px', color: '#E67E22', fontWeight: 'bold', textOutline: 'none' }} }} }},
-                {{ x: {region_start + 3600}, y: 105, dataLabels: {{ enabled: true, format: '\\u25c6 Indel',
-                    align: 'left', x: 5,
-                    style: {{ fontSize: '22px', color: '#8E44AD', fontWeight: 'bold', textOutline: 'none' }} }} }}
+                {{ x: {legend_snp_x},   y: 105,
+                    dataLabels: {{ enabled: true, format: '● SNP',
+                        align: 'left', x: 5,
+                        style: {{ fontSize: '28px', color: '{COL_SNP}',
+                                  fontWeight: 'bold', textOutline: 'none' }} }} }},
+                {{ x: {legend_indel_x}, y: 105,
+                    dataLabels: {{ enabled: true, format: '◆ Indel',
+                        align: 'left', x: 5,
+                        style: {{ fontSize: '28px', color: '{COL_INDEL}',
+                                  fontWeight: 'bold', textOutline: 'none' }} }} }}
             ],
             marker: {{ enabled: false }},
             enableMouseTracking: false
         }},
 
-        // Regulatory track - Enhancers
+        // Regulatory track — Enhancer rectangles
         {{
             type: 'arearange',
             name: 'Enhancers',
             yAxis: 3,
             data: {enhancer_arearange_json},
-            color: '#2196A4',
-            fillOpacity: 0.7,
+            color: '{COL_ENHANCER}',
+            fillOpacity: 0.75,
             lineWidth: 1,
-            lineColor: '#17757F',
+            lineColor: '{COL_ENHANCER}',
             connectNulls: false,
             tooltip: {{ pointFormat: '<b>Enhancer</b>' }}
         }},
-        // Regulatory track - Promoters
+        // Regulatory track — Promoter rectangles
         {{
             type: 'arearange',
             name: 'Promoters',
             yAxis: 3,
             data: {promoter_arearange_json},
-            color: '#D4A017',
-            fillOpacity: 0.7,
+            color: '{COL_PROMOTER}',
+            fillOpacity: 0.75,
             lineWidth: 1,
-            lineColor: '#B8860B',
+            lineColor: '{COL_PROMOTER}',
             connectNulls: false,
             tooltip: {{ pointFormat: '<b>Promoter</b>' }}
         }},
-        // Regulatory labels
+        // Regulatory inline legend
         {{
             type: 'scatter',
-            name: 'Legend',
+            name: 'Regulatory Legend',
             yAxis: 3,
             data: [
-                {{ x: {region_start + 500}, y: 0.28, dataLabels: {{ enabled: true, format: '\\u25a0 Enhancer',
-                    style: {{ fontSize: '22px', color: '#2196A4', fontWeight: 'bold', textOutline: 'none' }} }} }},
-                {{ x: {region_start + 500}, y: 0.72, dataLabels: {{ enabled: true, format: '\\u25a0 Promoter',
-                    style: {{ fontSize: '22px', color: '#D4A017', fontWeight: 'bold', textOutline: 'none' }} }} }}
+                {{ x: {legend_reg_x}, y: 0.28,
+                    dataLabels: {{ enabled: true, format: '■ Enhancer',
+                        style: {{ fontSize: '28px', color: '{COL_ENHANCER}',
+                                  fontWeight: 'bold', textOutline: 'none' }} }} }},
+                {{ x: {legend_reg_x}, y: 0.72,
+                    dataLabels: {{ enabled: true, format: '■ Promoter',
+                        style: {{ fontSize: '28px', color: '{COL_PROMOTER}',
+                                  fontWeight: 'bold', textOutline: 'none' }} }} }}
             ],
             marker: {{ enabled: false }},
             enableMouseTracking: false
@@ -383,7 +433,7 @@ Highcharts.chart('container', {{
 }});
 """
 
-# Download Highcharts JS and highcharts-more for columnrange
+# Download Highcharts JS inline (headless Chrome cannot load external CDN scripts)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
 req = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0"})
 with urllib.request.urlopen(req, timeout=30) as response:
@@ -394,7 +444,7 @@ req2 = urllib.request.Request(highcharts_more_url, headers={"User-Agent": "Mozil
 with urllib.request.urlopen(req2, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# Build HTML with inline scripts (no external CDN references)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -402,35 +452,47 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0; padding:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; padding:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>
     {chart_js}
     </script>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot via Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Save interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Take screenshot using Selenium
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override makes the viewport authoritative — --window-size alone is eaten
+# by Chrome chrome (toolbar/scrollbar leftovers) in headless mode
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(8)
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# PIL safety net: pin to exact 3200×1800 in case of ±1-2px rounding drift
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _canvas = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _canvas.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _canvas.save(f"plot-{THEME}.png")
