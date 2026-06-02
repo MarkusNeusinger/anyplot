@@ -1,42 +1,60 @@
 library: seaborn
+language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:24:15Z'
-updated: '2026-03-04T20:42:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22687521663
+updated: '2026-06-02T01:25:04Z'
+generated_by: claude-sonnet
+workflow_run: 26791515380
 issue: 4427
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of JointGrid with marginal KDE plots — distinctively seaborn and
-    adds statistical context
-  - 'All spec requirements fully implemented: unit circle, vectors, annotations, equal
-    aspect ratio, category differentiation'
-  - Custom palette with distinct markers creates clear visual hierarchy between point
-    categories
-  - Roots of unity triangle connection effectively shows the geometric relationship
-  - Deterministic data with clean, well-structured code
+  - JointGrid with marginal KDE distributions is a distinctively seaborn feature that
+    adds statistical context to the Argand diagram
+  - 'Full spec compliance: unit circle, vectors from origin, equal aspect ratio, rectangular-form
+    annotations, distinct colors and markers per category'
+  - Imprint palette correctly applied (green=Roots, lavender=Sum, blue=Arbitrary),
+    theme-adaptive chrome works in both light and dark renders
+  - Size encoding of marker magnitude adds a fourth data dimension to hue/shape/position
+  - Equilateral triangle connecting roots of unity is a thoughtful geometric addition
+    reinforcing the mathematical story
+  - All font sizes explicitly set; KISS code structure with clean imports and deterministic
+    data
   weaknesses:
-  - Minor visual clutter near the origin where multiple annotations and arrows converge
-  - Annotation font size (13pt) is slightly small compared to other text elements
-  image_description: 'The plot displays a complex plane (Argand diagram) using a seaborn
-    JointGrid layout with marginal KDE distributions on the top and right edges. The
-    main scatter plot shows three categories: Roots of Unity (dark blue diamonds)
-    connected by a triangle, Sum of Roots (orange X marker at the origin), and Arbitrary
-    Points (purple circles) spread across all four quadrants. A dashed gray unit circle
-    is centered at the origin. Vectors (arrows) extend from the origin to each point
-    with category-appropriate colors. Each point is annotated with its label and rectangular
-    form (e.g., "ω₁ / -0.5+0.9i") in white-background rounded boxes. Axis labels read
-    "Re(z)" and "Im(z)". The title reads "scatter-complex-plane · seaborn · pyplots.ai".
-    Subtle grid lines and removed spines give a clean appearance. The marginal KDE
-    plots show the density distribution of real and imaginary parts per category.'
+  - Annotation boxes are dense in the center-right of the plot — ω₀ at (1.0+0.0i)
+    and z₇ at (3.0+0.0i) have annotation boxes close together, and the cluster around
+    the origin (Σωₖ, ω₀, z₃) is visually crowded; consider more aggressive offset
+    adjustments or smaller annotation fontsizes to create more breathing room
+  - Annotation text at 9pt is small — on mobile (400px scaled-down render) this approaches
+    the readability floor; increasing to 10pt and reducing the label verbose to just
+    the label symbol (not the two-line label+rectform for every point) would improve
+    legibility
+  - Legend is inside the joint plot area rather than outside; combined with annotation
+    crowding this makes the upper-left region cluttered — moving legend outside or
+    to the lower-right would open the data field
+  - 'DE-02: while spines are removed and grid is subtle, the annotation background
+    boxes contribute visual clutter that partially undermines the clean minimal aesthetic'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "scatter-complex-plane · python · seaborn · anyplot.ai" clearly readable in dark ink at top. Axis labels "Re(z)" and "Im(z)" visible at 10pt. Tick labels (−3 to +3) readable at 8pt. Legend in upper-left with four entries (Roots of Unity diamond, Sum of Roots X, Arbitrary Points circle, dashed Unit Circle) — all readable with elevated-bg fill.
+      Data: Roots of Unity = green #009E73 filled diamonds (3 points on unit circle arranged 120° apart). Sum of Roots = lavender #C475FD X marker at origin (0+0i). Arbitrary Points = blue #4467A3 circles scattered across all quadrants. Unit circle drawn as dashed gray ring. Arrows from origin to every point. Equilateral triangle connecting roots. Annotation boxes (label + rectangular form) for each point with semi-transparent elevated-bg fill. Top marginal KDE shows green and blue distributions; right marginal shows similar.
+      Legibility verdict: PASS — all elements readable, annotation text at 9pt is small but visible; some crowding around origin area but no text is illegible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title clearly visible in light ink (#F0EFE8). Axis labels and tick labels in light color, all readable against the dark background. Legend box uses elevated dark fill (#242420) with light text — readable. No dark-on-dark failures detected.
+      Data: All data colors identical to light render — green diamonds, lavender X, blue circles. Unit circle visible as dashed line. Arrow vectors from origin visible at alpha=0.5. Annotation boxes have dark elevated fill with light ink text.
+      Legibility verdict: PASS — dark render fully readable, theme-adaptive chrome is correct throughout.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -44,42 +62,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All major font sizes explicitly set (title 24pt, labels 20pt, ticks
-          16pt). Annotations at 13pt are explicit but slightly small.
+        comment: All font sizes explicitly set (title 12pt adaptive, axis 10pt, ticks
+          8pt, annotations 9pt); readable in both themes. Annotation text at 9pt is
+          on the small side for mobile scaling — minor deduction.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation boxes have specific per-point offsets and background fills
+          to prevent collision, and are generally non-overlapping. However the center-right
+          region (ω₀, z₇, Σωₖ cluster) is crowded with boxes in close proximity —
+          reduces from 6.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor visual clutter near the origin where multiple annotations and
-          arrows converge, but white background boxes keep text readable.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Markers well-sized (150-450 range), distinct shapes per category,
-          clearly visible.
+        comment: 11 data points with sizes=(150,450) — appropriate for sparse data.
+          All markers clearly visible. Size encoding for magnitude means the origin
+          point (sum of roots, magnitude≈0) uses minimum size but remains identifiable
+          via the X shape.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue are well-separated perceptually. Redundant shape
+          encoding (diamond/X/circle) ensures CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/purple palette is colorblind-safe with strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: JointGrid uses space well with informative marginals, but marginal
-          panels compress the main plot area slightly.
+        comment: 2400×2400 square canvas ideal for the equal-aspect complex plane.
+          JointGrid fills canvas well with main plot + marginals. Title positioned
+          above marginals. Balanced layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(z) and Im(z) are standard descriptive notation for complex plane
-          axes.
+        comment: Re(z) and Im(z) are standard complex analysis notation — descriptive
+          and correct. Title format exact.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Roots of Unity) = #009E73 ✓. Second = #C475FD ✓. Third
+          = #4467A3 ✓. Background #FAF8F1 light / #1A1A17 dark ✓. Data colors identical
+          across both themes; chrome correctly inverts.'
     design_excellence:
       score: 14
       max: 20
@@ -89,22 +122,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom 3-color palette, distinct markers, JointGrid layout adds sophistication
-          beyond defaults.
+        comment: JointGrid choice is elegant and shows genuine design thinking beyond
+          defaults. Multiple encoding dimensions (hue, shape, size), custom annotation
+          boxes, geometric additions (triangle, unit circle, vectors) all contribute
+          to a sophisticated result. Annotation crowding in center limits from 8.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid (alpha=0.15), clean marginal axes. Good
-          but arrows add clutter near center.
+        comment: All spines removed, subtle grid at alpha=0.15, marginal axes cleaned
+          (no ticks/labels), styled legend with fancybox. Annotation box density partially
+          undermines the clean minimal aesthetic.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Roots triangle shows geometric relationship, magnitude encoded in
-          size, clear category differentiation.
+        comment: 'Plot tells a clear mathematical story: roots arranged symmetrically
+          on unit circle, their sum at origin, vectors showing magnitude/direction,
+          triangle reinforcing the geometric relationship. KDE marginals show distribution
+          context. Visual hierarchy through color, shape, and size guides the viewer.'
     spec_compliance:
       score: 15
       max: 15
@@ -114,51 +152,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram with scatter points in the complex plane.
+        comment: Correct Argand diagram / complex plane scatter. JointGrid adds marginal
+          distributions as a bonus feature.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: unit circle, vectors, annotations, equal
-          aspect ratio, category differentiation.'
+        comment: 'All spec features present: axes through origin with tick marks,
+          dashed unit circle, vectors from origin, equal aspect ratio, rectangular-form
+          annotations, distinct colors/markers per category.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x-axis, imaginary on y-axis, correctly mapped.
+        comment: Real part on X-axis, imaginary part on Y-axis, all data within the
+          [-3.8, 3.8] view range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows all categories plus geometric
-          elements.
+        comment: Title is exactly 'scatter-complex-plane · python · seaborn · anyplot.ai'.
+          Legend shows all four series including Unit Circle.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 3rd roots of unity, their sum, and 7 arbitrary points across
-          all quadrants. Could show polar form.
+        comment: Shows 3rd roots of unity (symmetry, unit magnitude), their sum (zero,
+          demonstrating cancellation), and 7 arbitrary points across all four quadrants.
+          Demonstrates magnitude via size, phase via angle.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical/educational context showing roots of unity — a standard
-          teaching scenario.
+        comment: Classic complex analysis / number theory example — 3rd roots of unity
+          are a canonical teaching example for FFT, Euler's formula, and polynomial
+          factorization.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range -3.5 to 3.5 appropriately frames unit circle and all data points.
+        comment: 3rd roots of unity correctly computed (magnitude=1, angles 0°/120°/240°).
+          Sum correctly equals 0+0i. Arbitrary points span a reasonable domain of
+          [-2.5, 3.0] real, [-2.5, 2.8] imaginary.
     code_quality:
       score: 10
       max: 10
@@ -168,33 +213,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure with no functions or classes.
+        comment: Imports → data → plot → save, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data.
+        comment: Data is fully deterministic via mathematical formulas (no random
+          seed needed).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used.
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Legend filtering verbose but necessary.
+        comment: Clean and Pythonic. The per-point offset dictionary is a good pattern
+          for annotation placement. Legend filtering loop is slightly verbose but
+          functional.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight.
+        comment: Saves as plot-{THEME}.png, bbox_inches not set (defaults to None),
+          current seaborn 0.13 API.
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -202,22 +251,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses JointGrid, scatterplot with multi-encoding, kdeplot,
-          despine, set_theme.
+        comment: sns.JointGrid, sns.scatterplot with hue+style+size, sns.kdeplot with
+          fill=True, sns.despine — all idiomatic seaborn patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: JointGrid with marginal KDEs is distinctively seaborn. Combined hue+style+size
-          encoding is seaborn-specific.
+        comment: JointGrid with per-category marginal KDE distributions is distinctively
+          seaborn — this combination is not trivially replicated in matplotlib or
+          other libraries. The heavy matplotlib annotation layer reduces seaborn specificity
+          somewhat.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
