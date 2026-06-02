@@ -16,7 +16,7 @@ Frontend tokens: `app/src/theme/index.ts` + `app/src/main.tsx` (MUI theme).
 - `fontSize.micro` (0.5rem) and `fontSize.xxs` (0.625rem) restricted to data-dense pages (StatsPage, DebugPage). Public pages: `fontSize.xs` (0.75rem) minimum.
 
 ## Color — imprint palette
-Colourblind-safe categorical palette (8 hues, hybrid-v3 sort) plus 3 semantic anchors outside the pool. All 8 categorical slots stay fixed across themes; the neutral and muted anchors flip per theme. Full rationale: `docs/reference/palette-variants-v3/decision-rationale.md`.
+Colourblind-safe categorical palette (8 hues, hybrid-v3 sort) plus 3 semantic anchors outside the pool. All 8 categorical slots stay fixed across themes; the neutral and muted anchors flip per theme. Full rationale: `docs/reference/palette-variants/v3/decision-rationale.md`.
 
 ```
 slot 0 #009E73 brand green   ★ first series — logo, primary CTAs
@@ -97,6 +97,6 @@ Gradients (esp. purple-blue SaaS), glass/backdrop-blur, isometric illustrations,
 ## Plot defaults
 - First series **always** `#009E73`.
 - Neutral (pos 8) reserved for aggregates/residuals/reference lines.
-- 5 lighter members (lavender, ochre, cyan, lime, amber) fall under WCAG 3:1 on cream bg. Add a 1px ink stroke on affected series when the chart is small or accessibility-strict — see outline pattern in `docs/reference/palette-variants-v3/decision-rationale.md`.
+- 5 lighter members (lavender, ochre, cyan, lime, amber) fall under WCAG 3:1 on cream bg. Add a 1px ink stroke on affected series when the chart is small or accessibility-strict — see outline pattern in `docs/reference/palette-variants/v3/decision-rationale.md`.
 - Non-categorical: sequential → `imprint_seq` (green→blue); diverging → `imprint_div` (red↔theme-adaptive-midpoint↔blue). Never substitute viridis/cividis/BrBG/jet/hsv/rainbow — palette identity is part of the brand.
 - Plot-internal typography (ticks/labels/legends): MonoLisa, 10–13px.
