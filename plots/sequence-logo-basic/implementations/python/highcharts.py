@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -108,7 +108,7 @@ chart.options.chart = {
 }
 
 chart.options.title = {
-    "text": "sequence-logo-basic · highcharts · anyplot.ai",
+    "text": "sequence-logo-basic · python · highcharts · anyplot.ai",
     "style": {"fontSize": "66px", "fontWeight": "600", "color": INK},
     "margin": 36,
 }
