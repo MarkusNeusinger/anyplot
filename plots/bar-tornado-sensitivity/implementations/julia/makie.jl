@@ -62,13 +62,14 @@ ax = Axis(
     fig[1, 1];
     title              = title_str,
     titlesize          = title_fs,
+    titlefont          = :bold,
     titlecolor         = INK,
     xlabel             = "Net Present Value (millions USD)",
     xlabelcolor        = INK,
     xlabelsize         = 14,
-    xticklabelsize     = 12,
+    xticklabelsize     = 14,
     xticklabelcolor    = INK_SOFT,
-    yticklabelsize     = 12,
+    yticklabelsize     = 14,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
@@ -104,17 +105,54 @@ vlines!(ax, BASE_NPV; color = INK, linewidth = 2.0, linestyle = :dash)
 ax.yticks = (1:n, params)
 ylims!(ax, 0.3, Float64(n) + 0.7)
 
-# Legend
+# X-axis limits with padding for bar-end labels
+x_pad = 10.0
+xlims!(ax,
+    minimum(min.(lows, highs)) - x_pad,
+    maximum(max.(lows, highs)) + x_pad,
+)
+
+# Reference line annotation
+text!(ax, [Point2f(BASE_NPV + 2.0, n + 0.4)];
+    text     = ["Base: \$120M"],
+    color    = INK,
+    fontsize = 11,
+    align    = (:left, :center),
+)
+
+# Bar-end value labels — one label per bar tip showing the resulting NPV
+for i in 1:n
+    xl = lows[i]
+    xoff_l  = xl > BASE_NPV ? 2.0 : -2.0
+    align_l = xl > BASE_NPV ? :left : :right
+    text!(ax, [Point2f(xl + xoff_l, Float64(i))];
+        text     = ["$(round(Int, xl))"],
+        color    = COLOR_LOW,
+        fontsize = 11,
+        align    = (align_l, :center),
+    )
+    xh = highs[i]
+    xoff_h  = xh > BASE_NPV ? 2.0 : -2.0
+    align_h = xh > BASE_NPV ? :left : :right
+    text!(ax, [Point2f(xh + xoff_h, Float64(i))];
+        text     = ["$(round(Int, xh))"],
+        color    = COLOR_HIGH,
+        fontsize = 11,
+        align    = (align_h, :center),
+    )
+end
+
+# Legend — framevisible=false per style guide (no legend box borders)
 elem_high = PolyElement(color = COLOR_HIGH, strokecolor = :transparent)
 elem_low  = PolyElement(color = COLOR_LOW,  strokecolor = :transparent)
 Legend(
     fig[1, 2],
     [elem_high, elem_low],
     ["High Input Scenario", "Low Input Scenario"];
-    framecolor      = INK_SOFT,
+    framevisible    = false,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK_SOFT,
-    labelsize       = 12,
+    labelsize       = 13,
     rowgap          = 8,
 )
 
