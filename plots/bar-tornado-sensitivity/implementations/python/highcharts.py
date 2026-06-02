@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-Library: highcharts unknown | Python 3.14.3
+Library: highcharts | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-07
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,11 +14,24 @@ from pathlib import Path
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.bar import BarSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - NPV sensitivity analysis for a capital investment project
+# Theme-adaptive chrome tokens (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — first series always #009E73
+COLOR_HIGH = "#009E73"  # green — high/upside scenario (Imprint position 1)
+COLOR_LOW = "#4467A3"  # blue — low/downside scenario (Imprint position 3)
+
+# Data — NPV sensitivity for a capital investment project
 base_npv = 12.5  # Base case NPV in $M
 
 parameters = [
@@ -33,11 +47,11 @@ parameters = [
     "Operating Expenses",
 ]
 
-# Realistic sensitivity: some parameters have inverse effects
+# Realistic sensitivity values — some parameters have inverse effects on NPV
 low_values = [17.2, 9.2, 14.8, 14.0, 14.2, 13.8, 10.8, 13.2, 9.8, 14.5]
 high_values = [8.1, 16.5, 10.3, 11.2, 11.0, 11.4, 13.9, 12.0, 15.5, 10.8]
 
-# Sort by total range (widest bar first)
+# Sort by total range (widest bar first — classic tornado ordering)
 ranges = [abs(high_values[i] - low_values[i]) for i in range(len(parameters))]
 sorted_indices = sorted(range(len(parameters)), key=lambda i: ranges[i], reverse=True)
 
@@ -45,73 +59,66 @@ sorted_params = [parameters[i] for i in sorted_indices]
 sorted_low = [round(low_values[i] - base_npv, 1) for i in sorted_indices]
 sorted_high = [round(high_values[i] - base_npv, 1) for i in sorted_indices]
 
-# Build chart using highcharts_core
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Color palette
-color_low = "#306998"
-color_high = "#E8A838"
-color_top_low = "#1A4570"
-color_top_high = "#D4880A"
-
 chart.options.chart = {
     "type": "bar",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginLeft": 420,
-    "marginRight": 140,
-    "marginTop": 240,
-    "marginBottom": 180,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "marginLeft": 460,
+    "marginRight": 80,
+    "marginTop": 270,
+    "marginBottom": 140,
     "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
-    "plotBackgroundColor": "#f8f9fa",
 }
 
 chart.options.title = {
-    "text": "bar-tornado-sensitivity \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "700", "color": "#1a1a2e", "letterSpacing": "0.5px"},
-    "y": 45,
+    "text": "bar-tornado-sensitivity · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "600", "color": INK},
+    "y": 50,
 }
 
 chart.options.subtitle = {
-    "text": "NPV Sensitivity Analysis \u2014 Base Case: $12.5M",
-    "style": {"fontSize": "34px", "fontWeight": "400", "color": "#555555"},
-    "y": 100,
+    "text": "NPV Sensitivity Analysis — Base Case: $12.5M",
+    "style": {"fontSize": "44px", "fontWeight": "400", "color": INK_SOFT},
+    "y": 114,
 }
 
 chart.options.x_axis = {
     "categories": sorted_params,
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "30px", "color": "#2a2a2a", "fontWeight": "500"}},
-    "lineWidth": 0,
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "400"}},
+    "lineWidth": 1,
+    "lineColor": INK_SOFT,
     "tickWidth": 0,
 }
 
 chart.options.y_axis = {
     "title": {
         "text": "Change in NPV ($M)",
-        "style": {"fontSize": "30px", "color": "#333333", "fontWeight": "600"},
-        "margin": 35,
+        "style": {"fontSize": "44px", "color": INK, "fontWeight": "500"},
+        "margin": 28,
     },
-    "labels": {"style": {"fontSize": "26px", "color": "#555555"}, "format": "{value}"},
+    "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}, "format": "{value}"},
     "tickInterval": 1,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0,0,0,0.06)",
-    "gridLineDashStyle": "Dot",
+    "gridLineColor": GRID,
     "plotLines": [
         {
             "value": 0,
-            "width": 4,
-            "color": "#1a1a2e",
+            "width": 3,
+            "color": INK,
             "zIndex": 5,
             "label": {
-                "text": "Base Case",
+                "text": "Base",
                 "align": "center",
-                "verticalAlign": "bottom",
+                "verticalAlign": "top",
                 "rotation": 0,
-                "style": {"fontSize": "24px", "fontWeight": "bold", "color": "#1a1a2e"},
-                "y": -20,
+                "style": {"fontSize": "32px", "fontWeight": "bold", "color": INK},
+                "y": 18,
             },
         }
     ],
@@ -119,16 +126,20 @@ chart.options.y_axis = {
 
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "30px", "fontWeight": "500", "color": "#333333"},
+    "itemStyle": {"fontSize": "44px", "fontWeight": "400", "color": INK_SOFT},
     "verticalAlign": "top",
     "layout": "horizontal",
     "align": "center",
-    "y": 140,
+    "y": 165,
     "floating": True,
-    "symbolRadius": 6,
-    "symbolHeight": 18,
-    "symbolWidth": 18,
+    "symbolRadius": 3,
+    "symbolHeight": 16,
+    "symbolWidth": 24,
     "itemDistance": 50,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "padding": 12,
 }
 
 chart.options.credits = {"enabled": False}
@@ -136,8 +147,10 @@ chart.options.accessibility = {"enabled": False}
 
 chart.options.tooltip = {
     "headerFormat": "<b>{point.key}</b><br/>",
-    "pointFormat": "{series.name}: <b>{point.y:.1f} $M</b>",
-    "style": {"fontSize": "24px"},
+    "pointFormat": "{series.name}: <b>{point.y:.1f}M</b>",
+    "style": {"fontSize": "34px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
 }
 
 chart.options.plot_options = {
@@ -145,51 +158,45 @@ chart.options.plot_options = {
         "grouping": True,
         "borderWidth": 0,
         "pointPadding": 0.05,
-        "groupPadding": 0.12,
-        "borderRadius": 3,
+        "groupPadding": 0.1,
+        "borderRadius": 2,
         "dataLabels": {
             "enabled": True,
             "format": "{y:.1f}",
-            "style": {"fontSize": "26px", "fontWeight": "600", "textOutline": "3px white", "color": "#2a2a2a"},
+            "style": {"fontSize": "30px", "fontWeight": "600", "textOutline": f"2px {PAGE_BG}", "color": INK},
         },
     }
 }
 
-# Create data with emphasis on top parameter (darker color)
-low_data = [{"y": sorted_low[0], "color": color_top_low}, *[{"y": v} for v in sorted_low[1:]]]
-high_data = [{"y": sorted_high[0], "color": color_top_high}, *[{"y": v} for v in sorted_high[1:]]]
+# High scenario first → gets #009E73 (Imprint first series, green = upside)
+high_series = BarSeries()
+high_series.name = "High Scenario"
+high_series.data = [{"y": v} for v in sorted_high]
+high_series.color = COLOR_HIGH
 
 low_series = BarSeries()
 low_series.name = "Low Scenario"
-low_series.data = low_data
-low_series.color = color_low
+low_series.data = [{"y": v} for v in sorted_low]
+low_series.color = COLOR_LOW
 
-high_series = BarSeries()
-high_series.name = "High Scenario"
-high_series.data = high_data
-high_series.color = color_high
-
-chart.add_series(low_series)
 chart.add_series(high_series)
+chart.add_series(low_series)
 
-# Serialize via to_dict/JSON for reliable rendering in headless Chrome
-config_json = json.dumps(chart.options.to_dict())
-
-# Download Highcharts JS for inline embedding (required for headless Chrome)
+# Embed Highcharts JS inline (CDN scripts fail in headless file:// context)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
 req = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0"})
 with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+config_json = json.dumps(chart.options.to_dict())
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0; background:#ffffff;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; padding:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>
     document.addEventListener('DOMContentLoaded', function() {{
         Highcharts.chart('container', {config_json});
@@ -198,32 +205,36 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Screenshot with Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
-chrome_options.add_argument("--force-device-scale-factor=1")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override must come before get() — authoritative viewport size
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-driver.execute_cdp_cmd(
-    "Emulation.setDeviceMetricsOverride", {"width": 4800, "height": 2700, "deviceScaleFactor": 1, "mobile": False}
-)
-time.sleep(1)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact canvas dimensions
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
