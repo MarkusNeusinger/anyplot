@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
-Library: highcharts unknown | Python 3.14.3
-Quality: 90/100 | Updated: 2026-03-06
+Library: highcharts-core | Python 3.13
+Quality: 90/100 | Updated: 2026-06-02
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,44 +13,44 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated rainflow counting matrix from variable-amplitude loading
-np.random.seed(42)
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+NULL_COLOR = "#E0DECE" if THEME == "light" else "#2A2A26"
 
+# Canvas — 2400×2400 square (heatmap, symmetric axes)
+CANVAS_W, CANVAS_H = 2400, 2400
+
+# Data — simulated rainflow counting matrix from variable-amplitude loading
+np.random.seed(42)
 n_amp_bins = 20
 n_mean_bins = 20
 
-# Bin centers in MPa
 amplitude_bins = np.linspace(10, 200, n_amp_bins)
 mean_bins = np.linspace(-50, 250, n_mean_bins)
 
-# Generate realistic rainflow matrix
-# Most cycles at low amplitude, centered around mean ~100 MPa
 amp_grid, mean_grid = np.meshgrid(amplitude_bins, mean_bins, indexing="ij")
-
-# Exponential decay with amplitude (low amplitude = many cycles)
 amp_factor = np.exp(-0.025 * amp_grid)
-
-# Gaussian distribution around mean ~100 MPa
 mean_factor = np.exp(-0.5 * ((mean_grid - 100) / 60) ** 2)
 
-# Combined cycle counts
 raw_counts = amp_factor * mean_factor * 5000
 raw_counts += np.random.exponential(scale=raw_counts * 0.15 + 1)
 cycle_counts = np.round(raw_counts).astype(int)
 cycle_counts = np.clip(cycle_counts, 0, None)
-
-# Set very low counts to zero for sparsity (realistic for high-amplitude regions)
 cycle_counts[cycle_counts < 3] = 0
 
-# Amplitude labels (y-axis) and mean labels (x-axis)
 amp_labels = [f"{v:.0f}" for v in amplitude_bins]
 mean_labels = [f"{v:.0f}" for v in mean_bins]
 
-# Build heatmap data: [x_index (mean), y_index (amplitude), value or None]
 heatmap_data = []
 max_count = 0
 for y_idx in range(n_amp_bins):
@@ -59,39 +60,37 @@ for y_idx in range(n_amp_bins):
             max_count = val
         heatmap_data.append([x_idx, y_idx, val if val > 0 else None])
 
-# Build chart using highcharts-core Python wrapper
+# Chart — Highcharts heatmap with Imprint sequential colormap (imprint_seq)
+title = "heatmap-rainflow · python · highcharts · anyplot.ai"
+
 chart = Chart(container="container")
 chart.options = HighchartsOptions.from_dict(
     {
         "chart": {
             "type": "heatmap",
-            "width": 4800,
-            "height": 2700,
-            "backgroundColor": "#fafafa",
-            "marginTop": 180,
-            "marginBottom": 200,
-            "marginRight": 380,
-            "marginLeft": 320,
+            "width": CANVAS_W,
+            "height": CANVAS_H,
+            "backgroundColor": PAGE_BG,
+            "marginTop": 210,
+            "marginBottom": 230,
+            "marginRight": 420,
+            "marginLeft": 290,
             "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
         },
-        "title": {
-            "text": "heatmap-rainflow \u00b7 highcharts \u00b7 pyplots.ai",
-            "style": {"fontSize": "52px", "fontWeight": "600", "color": "#2c3e50"},
-            "y": 30,
-        },
+        "title": {"text": title, "style": {"fontSize": "66px", "fontWeight": "600", "color": INK}, "y": 50},
         "subtitle": {
-            "text": "Rainflow cycle counting matrix \u2014 low-amplitude cycles near 100 MPa mean dominate the fatigue spectrum",
-            "style": {"fontSize": "30px", "fontWeight": "normal", "color": "#7f8c8d"},
-            "y": 80,
+            "text": "Rainflow cycle counting — dominant cycles at low amplitude, near 100 MPa mean stress",
+            "style": {"fontSize": "30px", "fontWeight": "normal", "color": INK_SOFT},
+            "y": 124,
         },
         "xAxis": {
             "categories": mean_labels,
             "title": {
                 "text": "Cycle Mean (MPa)",
-                "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
+                "style": {"fontSize": "56px", "fontWeight": "600", "color": INK},
                 "margin": 20,
             },
-            "labels": {"style": {"fontSize": "28px", "color": "#34495e"}, "rotation": 315, "y": 30},
+            "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "rotation": 315, "y": 30},
             "lineWidth": 0,
             "tickLength": 0,
         },
@@ -99,10 +98,10 @@ chart.options = HighchartsOptions.from_dict(
             "categories": amp_labels,
             "title": {
                 "text": "Cycle Amplitude (MPa)",
-                "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
+                "style": {"fontSize": "56px", "fontWeight": "600", "color": INK},
                 "margin": 20,
             },
-            "labels": {"style": {"fontSize": "28px", "color": "#34495e"}},
+            "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
             "reversed": False,
             "lineWidth": 0,
             "gridLineWidth": 0,
@@ -111,29 +110,19 @@ chart.options = HighchartsOptions.from_dict(
             "min": 1,
             "max": int(max_count),
             "type": "logarithmic",
-            "stops": [
-                [0, "#440154"],
-                [0.12, "#482878"],
-                [0.25, "#3e4989"],
-                [0.37, "#31688e"],
-                [0.50, "#26828e"],
-                [0.62, "#1f9e89"],
-                [0.75, "#35b779"],
-                [0.87, "#6ece58"],
-                [1, "#fde725"],
-            ],
-            "labels": {"style": {"fontSize": "28px", "color": "#34495e"}},
+            "stops": [[0, "#009E73"], [0.5, "#22828B"], [1, "#4467A3"]],
+            "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
         },
         "legend": {
-            "title": {"text": "Cycle Count", "style": {"fontSize": "28px", "fontWeight": "600", "color": "#34495e"}},
+            "title": {"text": "Cycle Count", "style": {"fontSize": "44px", "fontWeight": "600", "color": INK}},
             "align": "right",
             "layout": "vertical",
             "verticalAlign": "middle",
-            "symbolHeight": 900,
+            "symbolHeight": 720,
             "symbolWidth": 36,
-            "itemStyle": {"fontSize": "24px", "color": "#34495e"},
-            "x": -40,
-            "margin": 40,
+            "itemStyle": {"fontSize": "44px", "color": INK_SOFT},
+            "x": -30,
+            "margin": 60,
         },
         "tooltip": {
             "style": {"fontSize": "30px"},
@@ -152,17 +141,16 @@ chart.options = HighchartsOptions.from_dict(
                 "name": "Cycle Count",
                 "data": heatmap_data,
                 "borderWidth": 2,
-                "borderColor": "#fafafa",
-                "nullColor": "#f0f0f0",
+                "borderColor": PAGE_BG,
+                "nullColor": NULL_COLOR,
             }
         ],
     }
 )
 
-# Generate chart JS literal via highcharts-core wrapper
 js_literal = chart.to_js_literal()
 
-# Download Highcharts JS and heatmap module with retry
+# Download Highcharts core and heatmap module inline (CDN unavailable in headless file://)
 urls = {
     "highcharts": "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js",
     "heatmap": "https://cdn.jsdelivr.net/npm/highcharts/modules/heatmap.js",
@@ -174,7 +162,7 @@ for name, url in urls.items():
             with urllib.request.urlopen(url, timeout=30) as response:
                 scripts[name] = response.read().decode("utf-8")
             break
-        except urllib.error.HTTPError:
+        except Exception:
             time.sleep(2 * (attempt + 1))
     else:
         raise RuntimeError(f"Failed to download {url}")
@@ -182,7 +170,11 @@ for name, url in urls.items():
 highcharts_js = scripts["highcharts"]
 heatmap_js = scripts["heatmap"]
 
-# Generate HTML with inline scripts and renderer annotation for data storytelling
+# Theme-adaptive annotation styling
+ann_fill = "rgba(255,253,246,0.93)" if THEME == "light" else "rgba(36,36,32,0.93)"
+ann_text = INK
+ann_stroke = INK_SOFT
+
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -190,30 +182,28 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0; padding:0; overflow:hidden; background:#fafafa;">
-    <div id="container" style="width:4800px; height:2700px;"></div>
+<body style="margin:0; padding:0; overflow:hidden; background:{PAGE_BG};">
+    <div id="container" style="width:{CANVAS_W}px; height:{CANVAS_H}px;"></div>
     <script>
         {js_literal}
     </script>
     <script>
-        // Add annotation highlighting the dominant fatigue region
-        // (separate DOMContentLoaded ensures chart is created first)
         document.addEventListener('DOMContentLoaded', function() {{
             var ch = Highcharts.charts[Highcharts.charts.length - 1];
             if (ch) {{
                 ch.renderer.label(
-                    '\\u25B6 Peak region: low-amplitude cycles near<br>' +
-                    '\\u2003 100 MPa mean stress dominate fatigue damage',
+                    '▶ Peak region: low-amplitude cycles near<br>' +
+                    '  100 MPa mean stress dominate fatigue damage',
                     ch.plotLeft + ch.plotWidth * 0.55,
                     ch.plotTop + ch.plotHeight * 0.78
                 ).css({{
                     fontSize: '28px',
-                    color: '#333',
+                    color: '{ann_text}',
                     fontStyle: 'italic',
                     lineHeight: '40px'
                 }}).attr({{
-                    fill: 'rgba(255, 255, 255, 0.93)',
-                    stroke: '#888',
+                    fill: '{ann_fill}',
+                    stroke: '{ann_stroke}',
                     'stroke-width': 1.5,
                     padding: 18,
                     r: 8,
@@ -225,11 +215,11 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take screenshot using headless Chrome
+# Screenshot via headless Chrome — all four canvas-size knobs must agree
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -239,15 +229,25 @@ chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2840")
-chrome_options.add_argument("--force-device-scale-factor=1")
 chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument(f"--window-size={CANVAS_W},{CANVAS_H}")
 
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(4800, 2840)
+# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride",
+    {"width": CANVAS_W, "height": CANVAS_H, "deviceScaleFactor": 1, "mobile": False},
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact canvas dimensions — guards against ±1-2 px rounding in headless Chrome
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (CANVAS_W, CANVAS_H):
+    _norm = Image.new("RGB", (CANVAS_W, CANVAS_H), PAGE_BG)
+    _norm.paste(_img, ((CANVAS_W - _img.size[0]) // 2, (CANVAS_H - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
