@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-06-02
+Quality: 87/100 | Updated: 2026-06-02
 """
 
 import os
