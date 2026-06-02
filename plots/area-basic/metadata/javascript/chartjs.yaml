@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: area-basic
 created: '2026-06-02T23:25:27Z'
-updated: '2026-06-02T23:29:57Z'
+updated: '2026-06-02T23:39:32Z'
 generated_by: claude-opus
 workflow_run: 26853864877
 issue: 711
@@ -12,55 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - 'First series uses Imprint brand green #009E73 with a soft alpha fill (~0.35),
-    exactly matching the spec''s semi-transparent-fill guidance.'
-  - Theme tokens are threaded consistently to title, axis titles, ticks, grid, and
-    border — both renders are fully legible with correct warm off-white (#FAF8F1)
-    and warm near-black (#1A1A17) chrome.
-  - 'Idiomatic Chart.js: `type: line` + `fill: { target: ''origin'' }` + `tension:
-    0.3` produces a smooth area silhouette without reaching for plugins; `animation:
-    false` set as required.'
-  - Deterministic seeded LCG (SEED=42) makes the area silhouette stable across renders;
-    data has a sensible upward trend with weekend lifts that reads as plausible website
-    traffic.
-  - Axis titles are descriptive with month context ('Date (September 2025)', 'Visitors
-    per day'), and the y-axis tick callback uses `toLocaleString` for thousands-separated
-    counts.
-  - 'Vertical grid hidden, horizontal grid subtle, `beginAtZero: true`, sensible `suggestedMax`
-    headroom — clean editorial layout that emphasises the area shape.'
+  - Implements the spec's gradient-fill recommendation faithfully via a scriptable
+    CanvasGradient (opaque brand green at the line, fading to transparent at the axis)
+    — exactly the 'visual appeal' hint the spec asks for, achieved using Chart.js'
+    own scriptable-color API rather than a hacked plugin.
+  - Peak annotation (dashed leader line + filled brand-green dot + pill-shaped label
+    using elevatedBg + grid stroke) creates a clear focal point and shows real Chart.js
+    plugin-API mastery via a custom `afterDatasetsDraw` plugin.
+  - Theme tokens are threaded everywhere — title/axis-title in `t.ink`, ticks in `t.inkSoft`,
+    grid in `t.grid`, annotation pill in `t.elevatedBg` — so both renders read cleanly
+    without any dark-on-dark or light-on-light failures.
+  - Deterministic seeded LCG, semantic synthetic data with weekend lift + linear growth
+    + bounded noise — visitor counts are realistic for a small site and the silhouette
+    is identical across the two renders.
+  - Y-axis tick formatter uses `toLocaleString` for thousands separators (4,500 /
+    4,000 / …), gridlines limited to the Y axis, X border kept and Y border dropped
+    — restrained chrome that matches the style-guide intent.
   weaknesses:
-  - Spec mentions 'Consider gradient fill from bottom to line for visual appeal'.
-    The current flat semi-transparent fill is fine but a `CanvasGradient` (brand-green
-    opaque at the line, fading toward transparent at the axis) would lift DE-01/DE-03
-    and add data storytelling depth.
-  - Title fontsize 30pt is generous and the title spans ~70% of the landscape canvas
-    width, which is acceptable but on the upper edge. If a gradient or other visual
-    element is added that needs vertical breathing room, consider trimming to ~24pt.
-  - 'Area shape is informative but the chart lacks any focal-point emphasis — e.g.
-    a soft annotation at the Sep 28 peak (''Sep 28 peak: ~3,950'') would turn a generic
-    line+fill into a storytelling chart and raise DE-03 above the default.'
-  - No `aspectRatio`/legend customisation needed (single series), but the implementation
-    does not leverage Chart.js distinctive features beyond `fill.target` and `tension`
-    — e.g. `stepped` modes, segment styling, or per-point hover labels could push
-    LM-02 higher.
+  - Title fontsize 24pt on a 3200×1800 canvas is on the larger side relative to the
+    rest of the chrome (tick labels at 16pt, axis titles at 20pt); the title is comfortably
+    proportional but a touch more breathing room would feel even more refined — consider
+    22pt.
+  - The peak annotation's pill background uses `t.elevatedBg` with a 1 px `t.grid`
+    stroke, which on the light render reads as a near-white box on the warm `#FAF8F1`
+    page — readable, but the stroke is so faint it almost disappears. A slightly stronger
+    contrast (e.g. fillStyle blend at ~92% opacity over the gradient) would make the
+    callout pop more without going noisy.
+  - '`Math.indexOf(Math.max(...visitors))` and `Math.max(...visitors)` are recomputed
+    in the annotation closure each draw rather than memoized once — tiny perf concern
+    only, but a single `const peakValue = Math.max(...visitors)` at module scope would
+    be marginally cleaner.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), uniform across the canvas — not pure white, matches spec.
-      Chrome: Title "area-basic · javascript · chartjs · anyplot.ai" centered at top in dark ink, fully readable. Y-axis title "Visitors per day" rotated on the left in dark ink; X-axis title "Date (September 2025)" centered at bottom in dark ink. Tick labels (Sep 1, Sep 4, ..., Sep 28 on x; 0, 500, ..., 4,500 on y) render in soft ink (#inkSoft) with strong contrast against the off-white. Horizontal grid lines subtle, vertical grid hidden — clean editorial look.
-      Data: Brand green #009E73 line at ~3.5 px with a soft semi-transparent fill (~rgba(0,158,115,0.35)) underneath flowing to the zero baseline. Smooth tension produces a gentle area silhouette with peaks near Sep 7, Sep 13, Sep 20 and Sep 28. First-series brand green confirmed.
-      Legibility verdict: PASS — all chrome readable, area is unmistakable.
+      Background: Warm off-white #FAF8F1 across the full mount — no white plot area, no painted-on rectangle, the chart sits flush on the page color.
+      Chrome: Title "area-basic · javascript · chartjs · anyplot.ai" rendered in dark ink, centered above the plot. X-axis title "Date (September 2025)" and Y-axis title "Visitors per day" both in t.ink dark text. Tick labels (Sep 1, Sep 4, …, Sep 28 on X; 0 / 500 / 1,000 / … / 4,500 with thousands separators on Y) in t.inkSoft. Horizontal gridlines only (Y axis), subtle but visible. X-axis baseline border drawn in t.grid. Peak annotation in the upper-right ("Peak: 3,944 on Sep 28") sits inside a near-white pill with a hairline grid stroke, dashed leader line down to a brand-green dot on the silhouette.
+      Data: Single area series in #009E73 brand green. Vertical CanvasGradient from ~70% opacity at the line to ~5% at the axis — produces a soft, depth-y fill that matches the spec's "gradient fill from bottom to line" note. Borderline at 3.5 px, tension 0.3 for gentle smoothing.
+      Legibility verdict: PASS — every title, axis label, tick, and annotation is comfortably readable against the warm off-white.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), uniform across the canvas — not pure black, matches spec.
-      Chrome: Title in light ink centered at top, fully readable against the dark surface. Y-axis title "Visitors per day" rotated on the left in light ink; X-axis title "Date (September 2025)" centered at bottom in light ink. Tick labels render in soft-light ink with comfortable contrast — no dark-on-dark failures. Horizontal grid lines remain subtle but visible.
-      Data: Same brand green #009E73 line; the fill reads slightly darker visually because the warm-black surface composites under the 35% alpha green, but the data hue itself is identical to the light render (palette[0] = #009E73 in both). Silhouette is byte-identical to the light render.
-      Legibility verdict: PASS — all chrome readable against the warm-black surface; brand green still visible.
+      Background: Warm near-black #1A1A17 across the full mount — no painted-black plot area.
+      Chrome: Same title text in light ink, axis titles in light ink, tick labels in t.inkSoft (a desaturated near-white), horizontal grid in t.grid (a low-contrast warm gray) — subtle but clearly visible. X baseline border same warm gray.
+      Data: Brand green #009E73 area is IDENTICAL to the light render — same silhouette, same gradient stops, same line weight. Peak annotation pill switches to the dark t.elevatedBg with the same hairline stroke; the "Peak: 3,944 on Sep 28" text inside is in light ink and reads cleanly.
+      Legibility verdict: PASS — no dark-on-dark failures. Title, axis labels, ticks, gridlines, peak label, and brand-green area are all clearly distinguishable. Both renders pass the theme-readability gate.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,77 +67,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title 30pt, axis titles 20pt, ticks 16pt — readable in both themes
-          at full res and when scaled to ~400px. Slight deduction: title fontsize
-          is on the generous side at 30pt, fills ~70% of width.'
+        comment: Font sizes explicitly set (title 24, axis titles 20, ticks 16, annotation
+          16) and all readable in both themes at full size. Title fontsize 24 is borderline
+          generous against tick/axis ratios — minor deduction.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; tick autoSkip keeps the x-axis comfortable.
+        comment: No text-text, text-data, or text-grid collisions. Peak label sits
+          comfortably above the silhouette with autoSkip preventing tick collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Line + area fill clearly visible. Sparse markers (pointRadius: 0)
-          is fine for a continuous trend; no shape ambiguity.'
+        comment: 30-point series rendered as a connected area with tension 0.3 and
+          a 3.5 px brand-green stroke — perfectly visible on both surfaces; gradient
+          does not wash out the silhouette.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green has strong contrast against both backgrounds; single-series
-          so no CVD concerns.
+        comment: Single-series brand green has strong contrast against both theme
+          backgrounds; no red-green ambiguity since only one categorical hue is used.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate did not fire. Title 70% width, balanced axis labels,
-          no overflow, generous padding.
+        comment: PNG is exactly 3200x1800 (landscape). Padding (top 24, right 32,
+          bottom 12, left 12) keeps the silhouette and peak callout inside the frame
+          with breathing room.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with month context and unit ('Date (September 2025)',
-          'Visitors per day').
+        comment: X axis 'Date (September 2025)' is descriptive with explicit period;
+          Y axis 'Visitors per day' includes the rate unit. Title matches the mandated
+          `spec-id · language · library · anyplot.ai` format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (palette[0]); backgrounds are #FAF8F1 / #1A1A17
-          via tokens.'
+        comment: 'First (only) series uses tokens.palette[0] (#009E73). Backgrounds
+          via t.pageBg map correctly to #FAF8F1 / #1A1A17. Chrome flips with theme;
+          data colors identical between renders.'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean and intentional — Imprint palette, theme tokens, soft alpha
-          fill. Lacks an extra polish step (e.g. gradient fill, annotation) that would
-          push to 7+.
+        comment: Above the default 4 — brand-aware palette, scriptable CanvasGradient
+          fill, custom plugin-rendered annotation with leader line and pill. Held
+          back from 7+ because the typography hierarchy could be a touch more refined
+          and there is no second decorative touch beyond the peak callout.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Vertical grid hidden, horizontal grid subtle, left border via t.grid,
-          top/right spines naturally absent — solid editorial defaults.
+        comment: Above the default 2 — Y border dropped, only horizontal gridlines,
+          autoSkip ticks, generous outer padding. Held back from 5/6 because the annotation
+          pill stroke is extremely faint on light and could feel more deliberate.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No focal point or narrative emphasis — area silhouette is informative
-          but generic. An annotation at the peak (Sep 28) or a softer-fade gradient
-          toward the line would lift this.
+        passed: true
+        comment: Above the default 2 — peak annotation with leader line creates a
+          clear focal point and tells a story (Sep 28 high). Weekend lift in the synthetic
+          data produces a recognisable rhythm. Strong narrative for a single-series
+          area chart.
     spec_compliance:
       score: 15
       max: 15
@@ -148,28 +155,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line + filled area to origin — correct area chart.
+        comment: 'Correct Chart.js `line` chart with `fill: { target: ''origin'' }`
+          — the canonical idiomatic way to render an area chart in Chart.js.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha 0.35) ✓, gridlines ✓, axis labels with
-          context/units ✓.
+        comment: 'Spec notes: semi-transparent fill (gradient 0.7→0.05), gridlines
+          for value estimation (Y-axis horizontal grid), clear axis labels with units,
+          and gradient fill from bottom to line — all four explicitly delivered.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date label, Y = visitors per day; all 30 days shown, axis covers
-          full range.
+        comment: X is continuous date (Sep 1–30), Y is visitors-per-day magnitude.
+          beginAtZero plus suggestedMax = 1.1*peak gives all 30 points visible with
+          a small ceiling cushion.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'area-basic · javascript · chartjs · anyplot.ai'; legend
-          hidden (single series).
+        comment: Title is the exact mandated form `area-basic · javascript · chartjs
+          · anyplot.ai`. Legend is disabled (correct for a single-series chart with
+          the dataset label conveyed by the title and axis labels).
     data_quality:
       score: 15
       max: 15
@@ -179,22 +190,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows magnitude over a continuous time axis with filled area — full
-          coverage of the area-chart concept.
+        comment: 30 daily points across a full month — exactly the spec's example
+          use case (daily visitors over a month). Demonstrates magnitude, trend, weekly
+          seasonality, and a peak.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitors over September 2025 with weekend lifts — realistic,
-          neutral.
+        comment: Website-traffic context is one of the spec's listed applications
+          and is completely neutral — no politics, no health, no controversial framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~2,000–4,000 visitors/day with sensible noise; y-axis has appropriate
-          headroom.
+        comment: 2,000–4,000 visitors/day is realistic for a small-to-medium site.
+          Y axis caps at 4,500 with thousands separators.
     code_quality:
       score: 10
       max: 10
@@ -204,36 +216,41 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; a tiny `rand` LCG and `hexToRgba` helper are warranted
-          and small.
+        comment: No classes, no module exports. Tiny LCG closure for the seed and
+          a `hexToRgba` helper are scoped one-liner conveniences, not over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (SEED=42) — silhouette stable across renders.
+        comment: Deterministic seeded LCG (seed=42); date list built from a fixed
+          Sep 2025 base. Both renders produce the identical silhouette.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses Chart and ANYPLOT_TOKENS globals as required.
+        comment: No `import`/`require` — `Chart` and `window.ANYPLOT_*` globals consumed
+          exactly as the harness contract requires.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-sectioned comments, sensible config groupings, no fake interactivity.
+        comment: Well-commented sections (Data / Gradient / Annotation / Mount / Chart),
+          tidy helper functions, no fake interactivity (real tooltips/hover are wired
+          but only show in the HTML detail view — not faked into the PNG).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly delegates rendering to the headless Chromium harness per
-          the chartjs library guide — no savefig/save, mounts canvas to #container,
-          animation:false set.'
-    library_features:
-      score: 7
+        comment: 'No filesystem calls — the browser harness writes both `plot-{theme}.png`
+          and `plot-{theme}.html`. Chart.js 4.x current API used throughout (`fill:
+          { target: ''origin'' }`, scriptable colors, `interaction.mode`, modern scale
+          config).'
+    library_mastery:
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -241,30 +258,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Standard Chart.js config-object pattern, `type: line` + `fill: {
-          target: ''origin'' }` is the canonical area recipe, tension for smoothing,
-          callback for tick formatting.'
+        comment: 'Canonical Chart.js area-chart pattern (`type: ''line''` + `fill:
+          { target: ''origin'' }`), scale `title`/`ticks`/`grid` blocks set per Chart.js
+          4 conventions, `responsive: true` + `maintainAspectRatio: false` + `animation:
+          false` exactly as the harness wants.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses `fill.target` with `above`, `tension`, point hover styling,
-          tooltip configuration — solid use of Chart.js-specific options. Could go
-          further with segment styling or per-point hover labels.
+        comment: 'Goes beyond a default config: scriptable `backgroundColor` returning
+          a CanvasGradient computed from `chartArea`, custom plugin object with `afterDatasetsDraw`,
+          scriptable tick `callback` for locale formatting, `interaction.mode: ''index''`
+          for cross-series hover (visible only in the HTML detail view). Strong use
+          of Chart.js-specific extension points.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - area-fill
-  - smooth-line
-  - theme-tokens
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - seeded-rng
   dataprep:
-  - time-series-synthesis
+  - time-series
   styling:
-  - publication-ready
+  - gradient-fill
   - alpha-blending
-  - minimal-grid
