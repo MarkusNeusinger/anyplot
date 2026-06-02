@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: highcharts unknown | Python 3.13.13
-Quality: 84/100 | Updated: 2026-06-02
+Quality: 90/100 | Updated: 2026-06-02
 """
 
 import json
