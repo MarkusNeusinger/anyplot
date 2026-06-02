@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -140,10 +140,12 @@ for _, row in df.iterrows():
 # Annotations with rectangular form — offsets in points from the data point
 offsets = {
     "$\\omega_0$": (20, -28),
-    "$\\omega_1$": (-95, 18),
+    "$\\omega_1$": (-95, -35),  # lowered to clear the upper-left legend
     "$\\omega_2$": (-95, -26),
-    "$\\Sigma\\omega_k$": (15, -55),  # lower-right of origin, away from z4
-    "$z_{4}$": (16, -30),  # below-right to avoid collision with ΣΩk
+    "$\\Sigma\\omega_k$": (15, -55),  # lower-right of origin, away from z3
+    "$z_{2}$": (16, -30),  # below data point to avoid upper-left legend
+    "$z_{3}$": (45, 16),  # shifted right to separate from Σωₖ annotation
+    "$z_{4}$": (-85, 16),  # above-left to avoid ω₂ annotation in lower-left
     "$z_{7}$": (-90, 16),  # rightmost point — move label left to avoid right marginal
 }
 
