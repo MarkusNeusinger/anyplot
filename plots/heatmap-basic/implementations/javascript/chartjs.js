@@ -35,6 +35,10 @@ const matrix = [
   [-0.14, -0.07,  0.46,  0.39, -0.21, -0.18,  0.12,  0.24,  0.31,  1.00],
 ];
 
+// Focal pair — strongest off-diagonal correlation (Cons. Conf. × Unemploy.
+// = -0.81). A heavier t.ink stroke gives the eye a single anchor.
+const FOCAL = [[1, 6], [6, 1]];
+
 // imprint_div interpolation (red ↔ theme midpoint ↔ blue) — t.div is already
 // theme-adaptive (midpoint = pageBg).
 function hexToRgb(hex) {
@@ -48,14 +52,11 @@ function hexToRgb(hex) {
 const C_LO = hexToRgb(t.div[0]);
 const C_MID = hexToRgb(t.div[1]);
 const C_HI = hexToRgb(t.div[2]);
-function lerp(a, b, u) {
-  return a + (b - a) * u;
-}
 function divColor(v) {
   const u = Math.max(0, Math.min(1, (v + 1) / 2));
   const [a, b] = u <= 0.5 ? [C_LO, C_MID] : [C_MID, C_HI];
   const w = u <= 0.5 ? u * 2 : (u - 0.5) * 2;
-  return `rgb(${(lerp(a[0], b[0], w)) | 0},${(lerp(a[1], b[1], w)) | 0},${(lerp(a[2], b[2], w)) | 0})`;
+  return `rgb(${(a[0] + (b[0] - a[0]) * w) | 0},${(a[1] + (b[1] - a[1]) * w) | 0},${(a[2] + (b[2] - a[2]) * w) | 0})`;
 }
 
 const FONT_STACK =
@@ -78,11 +79,42 @@ const heatmapPainter = {
         ctx.fillRect(
           left + j * cellW,
           top + i * cellH,
-          cellW + 0.5,
-          cellH + 0.5,
+          cellW + 1,
+          cellH + 1,
         );
       }
     }
+
+    // 1 px t.grid hairline between cells so the matrix structure remains
+    // visible in dark mode even where imprint_div fades into pageBg.
+    ctx.save();
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let k = 0; k <= N; k++) {
+      const x = Math.round(left + k * cellW) + 0.5;
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      const y = Math.round(top + k * cellH) + 0.5;
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Focal stroke — anchor the eye on the strongest off-diagonal pair.
+    ctx.save();
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 2.5;
+    for (const [i, j] of FOCAL) {
+      ctx.strokeRect(
+        left + j * cellW + 1.5,
+        top + i * cellH + 1.5,
+        cellW - 3,
+        cellH - 3,
+      );
+    }
+    ctx.restore();
   },
   afterDatasetsDraw(chart) {
     const { ctx, chartArea, width } = chart;
