@@ -1,40 +1,59 @@
 library: letsplot
+language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:37:01Z'
-updated: '2026-03-06T02:49:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22746426279
+updated: '2026-06-02T06:16:16Z'
+generated_by: claude-sonnet
+workflow_run: 26801378685
 issue: 4423
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent minimalist design faithful to Ed Hawkins warming stripes concept
-  - 'Custom diverging color palette with spec-recommended hex values (#08306b, #67000d)'
-  - Realistic synthetic data with proper 1961-1990 baseline normalization and acceleration
-    after ~1970
-  - Leverages letsplot-specific features (layer_tooltips, HTML export) beyond what
-    other libraries offer
-  - 'Perfect code quality: clean structure, reproducible seed, all imports used'
+  - 'Perfect spec compliance: warming stripes with no axes, no labels, no grid as
+    required'
+  - 'Correct diverging palette using Imprint colors (#4467A3 blue, #AE3030 red) with
+    appropriate semantic exception (cold=blue, warm=red for climate data)'
+  - 'Theme-adaptive chrome: background (#FAF8F1/#1A1A17) and title color (INK) correctly
+    flip between themes'
+  - Interactive letsplot layer_tooltips show year and anomaly on hover — distinctive
+    letsplot feature
+  - Symmetric diverging colormap centered at 0 with vmax computed from data for accurate
+    encoding
+  - Full 175-year dataset (1850–2024) with realistic warming trend and proper 1961–1990
+    baseline correction
+  - Clean, minimal code with np.random.seed(42) for reproducibility and correct title
+    fontsize scaling formula
   weaknesses:
-  - Aspect ratio is 16:9 (~1.78:1) rather than the spec target ~3:1 (wide and short)
-  image_description: 'The plot displays classic Ed Hawkins-style warming stripes —
-    a sequence of vertical colored bars spanning from 1850 to 2024. The left portion
-    is dominated by blues (deep navy #08306b through lighter blues), representing
-    negative temperature anomalies relative to the 1961-1990 baseline. Moving right,
-    the stripes transition through near-white/neutral tones around the baseline period,
-    then shift to progressively deeper reds (#67000d) in the most recent decades,
-    representing positive anomalies. The title "heatmap-stripes-climate · letsplot
-    · pyplots.ai" appears in subdued gray at the top left. There are no axes, gridlines,
-    tick marks, or legend — the visualization communicates purely through color. The
-    stripes fill most of the white canvas with no gaps between bars. The overall aspect
-    ratio is 16:9 (1600x900 base, exported at 3x scale to 4800x2700).'
+  - 'Dark render: cold-period stripes (1850–1950) have low contrast against near-black
+    background — PAGE_BG (#1A1A17) as the diverging midpoint makes near-zero-to-cool
+    anomaly years nearly invisible in dark mode. Consider a fixed mid-gray midpoint
+    or a lighter blue stop for dark theme to preserve cold-period legibility.'
+  - Stripe band does not fill the full canvas height — there is visible background
+    margin above and below the tile band due to tile height=10.0; the band occupies
+    ~65% of the vertical space. The spec calls for approximately 3:1 aspect ratio
+    for the data area; adjusting ggsize to (800, 350) or increasing tile height would
+    improve proportion.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, matches spec
+      Chrome: Title "heatmap-stripes-climate · python · letsplot · anyplot.ai" in dark near-black text, clearly readable. No axis labels, tick marks, or grid lines (by design).
+      Data: Vertical stripes progressing from steel blue (#4467A3) on the left (1850s, cold anomalies) through cream/off-white (near-zero baseline years ~1961–1990) to deep red (#AE3030) on the right (2000s–2024, warm anomalies). Individual stripes are crisp and seamlessly fill the band. Near-zero years softly blend with the light background.
+      Legibility verdict: PASS — title clearly readable, data progression visible throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, matches spec
+      Chrome: Title in warm off-white text, clearly readable against dark background. No axis clutter.
+      Data: Colors match light render for warm period (right side, red stripes clearly visible). However, cold period (left side, 1850–1950) is significantly lower contrast — dark navy blues merge into the near-black background because the diverging midpoint is PAGE_BG=#1A1A17. Near-zero-to-slightly-cool stripes (~1940–1980) are nearly invisible. Warm period (1990–2024) is bold and clear.
+      Legibility verdict: PASS for title; PARTIAL FAIL for cold-period data visibility in dark mode — approximately 40–50% of the stripe band has poor contrast on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -42,65 +61,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title explicitly set at size=24pt, only text element per spec, perfectly
-          readable
+        comment: Title text readable in both themes; no other text elements
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; only title text and stripes
+        comment: No overlapping elements; minimal chrome
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Stripes clearly visible, width=1.0 creates seamless bars
+        passed: false
+        comment: 'Light render: excellent. Dark render: cold-period stripes (1850–1950)
+          have low contrast; near-zero stripes (~1960–1980) blend with near-black
+          background'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-red diverging is conventional for climate data, not red-green
-          problematic
+        comment: Imprint palette colors CVD-safe; diverging encoding appropriate for
+          signed data
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas fill but aspect ratio is 16:9 instead of target ~3:1
+        comment: Canvas gate passed. Stripe band occupies ~65% of height; spec calls
+          for ~3:1 aspect for data area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present and descriptive. No axes by design per spec.
+        comment: Correct title format; no axes by spec design
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint colors used for diverging scale (#4467A3 blue, #AE3030 red);
+          backgrounds correct; semantic exception (cold=blue, warm=red) appropriate
+          for climate data'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom diverging palette, minimalist theme_void, hidden legend, subdued
-          gray title
+        comment: Clean warming stripes execution; theme-adaptive; tooltips add polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_void removes all chrome, white background, custom margins
+        comment: theme_void() removes all chartjunk; pure data visualization
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Blue-to-red progression immediately communicates warming trend with
-          visible acceleration
+        comment: Warming stripes tell compelling climate story; clear blue-to-red
+          progression
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -108,25 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct warming stripes using geom_tile
+        comment: Correct warming stripes via geom_tile
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present except ~3:1 aspect ratio (currently 16:9)
+        comment: No axes/labels/ticks/grid; blue-to-red diverging scale; equal-width
+          seamless bars; symmetric scale around 0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Year on x-axis, anomaly as fill color
+        comment: year→x, anomaly→fill; 1850–2024 coverage
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed per spec
+        comment: Title correct; legend hidden (appropriate for minimalist warming
+          stripes)
     data_quality:
       score: 15
       max: 15
@@ -136,20 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 1850-2024 range, both negative and positive anomalies, visible
-          acceleration
+        comment: Full time series; diverging color; minimalist design
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global temperature anomalies relative to 1961-1990 baseline
+        comment: Plausible HadCRUT-style anomaly data; realistic warming trend; neutral
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomalies range ~-0.5 to ~+1.0C, realistic for global mean temperature
+        comment: Anomalies ~-0.5°C to +0.7°C; 1961–1990 baseline correction applied
     code_quality:
       score: 10
       max: 10
@@ -159,13 +189,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports, Data, Plot, Save flow
+        comment: No functions or classes; clean sequential flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) used
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -177,13 +207,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Tooltips are legitimate letsplot feature
+        comment: Clean; dynamic title fontsize scaling is a nice touch
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with ggsave
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
       score: 7
       max: 10
@@ -193,14 +223,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with geom_tile, scale_fill_gradient2, theme_void
+        comment: Correct grammar-of-graphics usage; ggsize/ggsave/scale idioms; theme_void
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() for interactive hover and HTML export are distinctive
-          letsplot features
+        comment: layer_tooltips showing year and anomaly value is a distinctive letsplot
+          interactive feature; html export included
   verdict: APPROVED
 impl_tags:
   dependencies: []
