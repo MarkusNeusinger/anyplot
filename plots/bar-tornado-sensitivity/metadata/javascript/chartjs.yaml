@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: bar-tornado-sensitivity
+created: '2026-06-02T23:25:11Z'
+updated: '2026-06-02T23:30:38Z'
+generated_by: claude-sonnet
+workflow_run: 26853403757
+issue: 4566
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: correct tornado/sensitivity chart type with all required
+    features (vertical base line, magnitude-sorted bars, dual-color low/high encoding,
+    9 realistic parameters)'
+  - Excellent three-dataset stacked approach (transparent filler + left segment +
+    right segment) cleanly handles both normal and inverted parameters with per-bar
+    color arrays
+  - 'Custom Chart.js plugin API used expertly: `bgPlugin` fills theme-correct background,
+    `baseLinePlugin` draws annotated dashed reference line using scale pixel APIs'
+  - 'Realistic, neutral, professional dataset: renewable energy NPV sensitivity analysis
+    with plausible dollar values and parameter names'
+  - 'Perfect palette compliance: first series = #009E73, second series = #C475FD (Imprint
+    positions 1–2); both themes render correctly with data colors identical and chrome
+    flipping cleanly'
+  - 'All font sizes explicitly set (title: 22, legend: 16, axis title: 18, ticks:
+    14); typography is balanced and readable at both desktop and mobile scale'
+  - Legend filter `item => !item.text.startsWith("_")` cleanly hides the helper filler
+    dataset while keeping the two semantic legend entries
+  - Deterministic hard-coded data ensures reproducibility without any random-seed
+    ceremony
+  weaknesses:
+  - 'Minor wasted space on the right side of the x-axis: `max: 11` leaves ~10% of
+    axis unused beyond the largest data point ($9.8M); tightening to `max: 10.5` or
+    removing the explicit max would reduce dead space and score VQ-05 higher'
+  - 'Design Excellence is good but not exceptional: top/right chart border (Chart.js
+    `border`) not removed, and no further visual storytelling emphasis (e.g. highlighting
+    the widest bar or annotating the #1 driver)'
+  - 'LM-02 stays at 3/5: the implementation is sophisticated but the custom plugin
+    pattern, while idiomatic, is a well-known Chart.js technique; adding a distinctive
+    Chart.js-only feature (e.g. custom tooltip with formatted value, animation on
+    first draw suppressed via the correct `animation: false` mechanism already present)
+    would not raise this'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the entire canvas as expected. The background plugin correctly paints the chart surface before Chart.js draws.
+      Chrome: Title "bar-tornado-sensitivity · javascript · chartjs · anyplot.ai" in bold dark (#1A1A17) text spans ~65% of canvas width — well within the expected 65–85% for this title length. X-axis title "Net Present Value ($ millions)" in dark ink at size 18. Y-axis parameter labels (Electricity Price … Grid Connection Fee) in dark secondary ink at size 14. X-axis dollar tick labels ($0M … $11M) in secondary ink at size 14. "Base: $5M" annotation in secondary ink just above the dashed base line at the top of the chart area. Legend at bottom: "Low Scenario" (green swatch) and "High Scenario" (purple swatch) in dark ink.
+      Data: Nine horizontal stacked bars sorted widest-to-narrowest (Electricity Price at top, Grid Connection Fee at bottom), creating the characteristic tornado shape. Low-scenario segments in brand green #009E73 and high-scenario segments in Imprint lavender #C475FD. Inverted parameters (Discount Rate, Construction Cost) correctly swap color sides. Dashed vertical base line at $5M clearly visible.
+      Legibility verdict: PASS — all text readable, no dark-on-light failures, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the entire canvas correctly.
+      Chrome: Same title, axis labels, ticks, and legend text now in light (#F0EFE8 / #B8B7B0) ink — all clearly readable against the dark background. Base line switches to near-white dashed line. "Base: $5M" annotation in light secondary ink, readable. Legend text in light color.
+      Data: Bar colors are pixel-identical to the light render — #009E73 (green) and #C475FD (lavender) both pop against the dark background with excellent visibility. Tornado shape and sorting identical.
+      Legibility verdict: PASS — no dark-on-dark text failures detected; all chrome elements adapt correctly to the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title:22, legend:16, axis-title:18,
+          ticks:14, annotation:13px). Well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with strong contrast in both light and dark
+          themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1 and 2 are CVD-safe and have adequate luminance
+          difference.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good layout. Minor: x-axis max=11 leaves ~10% unused space beyond
+          $9.8M data maximum.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Net Present Value ($ millions)' includes units. Y-axis parameter
+          names are self-descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD. Backgrounds #FAF8F1/#1A1A17.
+          Chrome flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: custom background+baseline plugins,
+          intentional color coding, strong typography hierarchy. Not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-grid off, X-grid subtle, background plugin, generous whitespace.
+          No spine removal (Chart.js limitation).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted bars + annotated base line create clear visual hierarchy.
+          The tornado shape naturally guides the eye from most to least influential
+          parameters.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct tornado/sensitivity chart: horizontal bars extending from
+          a base reference line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Base line, magnitude sorting, dual colors, Y-axis parameter labels
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = NPV output, Y = input parameters. Correct orientation and scale.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title ''bar-tornado-sensitivity · javascript · chartjs · anyplot.ai''.
+          Legend: ''Low Scenario'' / ''High Scenario''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all tornado features: sorted ranges, both normal and inverted
+          parameters, full spread of influence levels.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable energy NPV sensitivity analysis — real-world, professional,
+          politically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPV values $1.2M–$9.8M with base $5M are plausible for a renewable
+          energy project.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: tokens → data → canvas → plugins → chart. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data arrays.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart.js is a global. File is clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant three-dataset stacking and per-bar color arrays. Custom plugins
+          are concise object literals.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No file-system operations; harness handles PNG output. Current Chart.js
+          4.x API throughout.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Chart.js patterns: custom plugin lifecycle hooks, stacked
+          horizontal bar, legend filter, per-bar color arrays.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js-specific plugin API (beforeDraw/afterDraw with scale.getPixelForValue),
+          per-bar backgroundColor arrays, and legend item filtering — all Chart.js-distinctive,
+          but the plugin pattern is a well-known technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
