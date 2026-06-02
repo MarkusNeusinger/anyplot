@@ -1,40 +1,41 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-07
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-02
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data
-np.random.seed(42)
+# Theme tokens (Imprint palette + theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Spectral type temperature ranges and colors (distinct, accessible palette)
+# Domain-appropriate spectral colors using closest Imprint palette members (semantic exception to canonical order)
+ANYPLOT_AMBER = "#DDCC77"  # warm-yellow anchor — used for G-type (sun-like golden)
 spectral_config = {
-    "O": {"temp": (30000, 40000), "color": "#2B3990", "n": 15},
-    "B": {"temp": (10000, 30000), "color": "#5B8BD6", "n": 40},
-    "A": {"temp": (7500, 10000), "color": "#A8D8EA", "n": 45},
-    "F": {"temp": (6000, 7500), "color": "#F5E66B", "n": 50},
-    "G": {"temp": (5200, 6000), "color": "#F5C040", "n": 55},
-    "K": {"temp": (3700, 5200), "color": "#E8872B", "n": 50},
-    "M": {"temp": (2400, 3700), "color": "#C83C2C", "n": 45},
+    "O": {"temp": (30000, 40000), "color": "#C475FD", "n": 15},  # Imprint lavender (violet, hottest)
+    "B": {"temp": (10000, 30000), "color": "#4467A3", "n": 40},  # Imprint blue
+    "A": {"temp": (7500, 10000), "color": "#2ABCCD", "n": 45},  # Imprint cyan (blue-white)
+    "F": {"temp": (6000, 7500), "color": "#99B314", "n": 50},  # Imprint lime (white-yellow)
+    "G": {"temp": (5200, 6000), "color": ANYPLOT_AMBER, "n": 55},  # amber anchor (golden, sun-like)
+    "K": {"temp": (3700, 5200), "color": "#BD8233", "n": 50},  # Imprint ochre (orange)
+    "M": {"temp": (2400, 3700), "color": "#AE3030", "n": 45},  # Imprint matte red (coolest)
 }
 
-# Temperature thresholds for spectral classification lookup
-temp_thresholds = [(30000, "O"), (10000, "B"), (7500, "A"), (6000, "F"), (5200, "G"), (3700, "K")]
-
-
-def classify_temps(temps):
-    """Classify temperatures into spectral types."""
-    return [next((s for thresh, s in temp_thresholds if t > thresh), "M") for t in temps]
-
+# Data
+np.random.seed(42)
 
 temperatures = []
 luminosities = []
 spectral_types = []
-regions = []
 
 # Main sequence stars (L ~ T^4 relationship with scatter)
 for stype, cfg in spectral_config.items():
@@ -45,7 +46,6 @@ for stype, cfg in spectral_config.items():
     temperatures.extend(temp)
     luminosities.extend(10**log_lum)
     spectral_types.extend([stype] * n)
-    regions.extend(["Main Sequence"] * n)
 
 # Red giants (cool but bright)
 n_rg = 35
@@ -54,32 +54,39 @@ rg_lum = 10 ** np.random.uniform(1.5, 3.5, n_rg)
 temperatures.extend(rg_temp)
 luminosities.extend(rg_lum)
 spectral_types.extend(np.where(rg_temp > 3700, "K", "M").tolist())
-regions.extend(["Red Giants"] * n_rg)
 
-# Supergiants (bright across temperatures)
+# Supergiants (bright across temperatures) — classify without helper function
 n_sg = 20
 sg_temp = np.random.uniform(3500, 30000, n_sg)
 sg_lum = 10 ** np.random.uniform(4.0, 5.8, n_sg)
 temperatures.extend(sg_temp)
 luminosities.extend(sg_lum)
-spectral_types.extend(classify_temps(sg_temp))
-regions.extend(["Supergiants"] * n_sg)
+spectral_types.extend(
+    np.select(
+        [sg_temp > 30000, sg_temp > 10000, sg_temp > 7500, sg_temp > 6000, sg_temp > 5200, sg_temp > 3700],
+        ["O", "B", "A", "F", "G", "K"],
+        default="M",
+    ).tolist()
+)
 
-# White dwarfs (hot but dim)
+# White dwarfs (hot but dim) — classify without helper function
 n_wd = 30
 wd_temp = np.random.uniform(7000, 30000, n_wd)
 wd_lum = 10 ** np.random.uniform(-4, -1.5, n_wd)
 temperatures.extend(wd_temp)
 luminosities.extend(wd_lum)
-spectral_types.extend(classify_temps(wd_temp))
-regions.extend(["White Dwarfs"] * n_wd)
+spectral_types.extend(
+    np.select(
+        [wd_temp > 30000, wd_temp > 10000, wd_temp > 7500, wd_temp > 6000, wd_temp > 5200, wd_temp > 3700],
+        ["O", "B", "A", "F", "G", "K"],
+        default="M",
+    ).tolist()
+)
 
 temperatures = np.array(temperatures)
 luminosities = np.array(luminosities)
 spectral_types = np.array(spectral_types)
-regions = np.array(regions)
 
-# Derive color map from config
 spectral_colors = {k: v["color"] for k, v in spectral_config.items()}
 
 # Plot
@@ -88,6 +95,8 @@ fig = go.Figure()
 spectral_order = ["O", "B", "A", "F", "G", "K", "M"]
 for stype in spectral_order:
     mask = spectral_types == stype
+    # A (#2ABCCD) and F (#99B314) get thicker stroke for extra contrast on light background
+    stroke_width = 1.5 if stype in ("A", "F") else 0.5
     fig.add_trace(
         go.Scatter(
             x=temperatures[mask],
@@ -97,8 +106,8 @@ for stype in spectral_order:
             marker={
                 "size": 11,
                 "color": spectral_colors[stype],
-                "line": {"width": 0.5, "color": "#333333"},
-                "opacity": 0.75,
+                "line": {"width": stroke_width, "color": INK_SOFT},
+                "opacity": 0.55,
             },
             hovertemplate=(
                 f"Spectral Type: {stype}<br>Temperature: %{{x:,.0f}} K<br>Luminosity: %{{y:.4g}} L☉<br><extra></extra>"
@@ -106,19 +115,19 @@ for stype in spectral_order:
         )
     )
 
-# Sun reference point
+# Sun reference point — star focal point using G-type color
 fig.add_trace(
     go.Scatter(
         x=[5778],
         y=[1.0],
         mode="markers",
         name="☉ Sun",
-        marker={"size": 22, "color": "#FDB813", "line": {"width": 2, "color": "#B8860B"}, "symbol": "star"},
+        marker={"size": 22, "color": ANYPLOT_AMBER, "line": {"width": 2, "color": "#BD8233"}, "symbol": "star"},
         hovertemplate="The Sun<br>Temperature: 5,778 K<br>Luminosity: 1.0 L☉<br><extra></extra>",
     )
 )
 
-# Sun label annotation with arrow
+# Sun label annotation with arrow (log10 coords required for log-type axes in Plotly)
 fig.add_annotation(
     x=np.log10(5778),
     y=np.log10(1.0),
@@ -128,20 +137,22 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowwidth=1.5,
-    arrowcolor="#B8860B",
+    arrowcolor=INK_SOFT,
     ax=-55,
     ay=-40,
-    font={"size": 18, "color": "#B8860B"},
-    bgcolor="rgba(255,255,255,0.9)",
+    font={"size": 14, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderpad=4,
+    opacity=0.9,
 )
 
-# Region annotations with styled labels
+# Region label annotations (theme-adaptive backgrounds)
 region_labels = {
-    "Main Sequence": {"x": 15000, "y": 50, "ax": -80, "ay": -40},
-    "Red Giants": {"x": 3800, "y": 800, "ax": -60, "ay": -40},
-    "Supergiants": {"x": 10000, "y": 200000, "ax": 60, "ay": 40},
-    "White Dwarfs": {"x": 15000, "y": 0.0003, "ax": 60, "ay": 40},
+    "Main Sequence": {"x": 15000, "y": 50},
+    "Red Giants": {"x": 3800, "y": 800},
+    "Supergiants": {"x": 10000, "y": 200000},
+    "White Dwarfs": {"x": 15000, "y": 0.0003},
 }
 
 for label, pos in region_labels.items():
@@ -152,11 +163,12 @@ for label, pos in region_labels.items():
         yref="y",
         text=f"<b>{label}</b>",
         showarrow=False,
-        font={"size": 18, "color": "#333333"},
-        bgcolor="rgba(255,255,255,0.85)",
-        bordercolor="rgba(0,0,0,0.1)",
+        font={"size": 14, "color": INK},
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
         borderpad=6,
+        opacity=0.9,
     )
 
 # Secondary x-axis with spectral class labels
@@ -165,41 +177,43 @@ spectral_temps = {"O": 35000, "B": 20000, "A": 8750, "F": 6750, "G": 5600, "K": 
 # Empty trace to activate xaxis2
 fig.add_trace(go.Scatter(x=[], y=[], xaxis="x2", showlegend=False, hoverinfo="skip"))
 
-# Layout
+title = "scatter-hr-diagram · python · plotly · anyplot.ai"
+
+# Layout — canvas 800×450 at scale=4 → 3200×1800 px output
 fig.update_layout(
-    title={
-        "text": "scatter-hr-diagram · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#222222"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Surface Temperature (K)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Surface Temperature (K)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "autorange": "reversed",
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "showline": True,
-        "linecolor": "#333333",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
+        "mirror": False,
         "tickvals": [2500, 5000, 10000, 20000, 40000],
         "ticktext": ["2,500", "5,000", "10,000", "20,000", "40,000"],
     },
     yaxis={
-        "title": {"text": "Luminosity (L☉)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Luminosity (L☉)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "showline": True,
-        "linecolor": "#333333",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
+        "mirror": False,
     },
     xaxis2={
-        "tickfont": {"size": 18, "color": "#444444"},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "overlaying": "x",
         "side": "top",
         "type": "log",
@@ -208,29 +222,24 @@ fig.update_layout(
         "ticktext": list(spectral_temps.keys()),
         "showgrid": False,
         "showline": True,
-        "linecolor": "#333333",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
         "matches": "x",
     },
-    template="plotly_white",
-    plot_bgcolor="#FAFAFA",
-    paper_bgcolor="#FFFFFF",
     legend={
-        "title": {"text": "Spectral Type", "font": {"size": 18}},
-        "font": {"size": 16},
-        "bgcolor": "rgba(255,255,255,0.92)",
-        "bordercolor": "rgba(0,0,0,0.15)",
+        "title": {"text": "Spectral Type", "font": {"size": 10, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "x": 0.98,
         "y": 0.02,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    width=1600,
-    height=900,
-    margin={"l": 80, "r": 60, "t": 100, "b": 80},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — 3200×1800 landscape (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
