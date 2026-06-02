@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -293,7 +293,7 @@ plot = (
         labels=lambda x: [f"{int(v):,}" for v in x], limits=(region_start, region_end), expand=(0.01, 0)
     )
     + scale_y_continuous(limits=(-0.2, 7.8), breaks=[], expand=(0, 0))
-    + labs(title="genome-track-multi · plotnine · anyplot.ai", x=f"Genomic Position ({chrom})", y="")
+    + labs(title="genome-track-multi · python · plotnine · anyplot.ai", x=f"Genomic Position ({chrom})", y="")
     # Theme-adaptive chrome (Imprint palette canonical tokens)
     + theme_minimal()
     + theme(
