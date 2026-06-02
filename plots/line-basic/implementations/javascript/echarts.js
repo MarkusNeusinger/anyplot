@@ -71,6 +71,8 @@ chart.setOption({
     nameLocation: "middle",
     nameGap: 80,
     nameTextStyle: { color: t.ink, fontSize: 20 },
+    min: 1500,
+    max: 3500,
     axisLabel: {
       color: t.inkSoft,
       fontSize: 16,
@@ -85,11 +87,41 @@ chart.setOption({
     {
       type: "line",
       data: visitors,
-      smooth: 0.25,
       showSymbol: false,
       lineStyle: { color: t.palette[0], width: 3.5 },
       itemStyle: { color: t.palette[0] },
       emphasis: { focus: "series" },
+      markLine: {
+        symbol: "none",
+        silent: true,
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1 },
+        label: {
+          color: t.inkSoft,
+          fontSize: 14,
+          formatter: (p) => `mean ${Math.round(p.value).toLocaleString("en-US")}`,
+          position: "insideEndTop",
+        },
+        data: [{ type: "average" }],
+      },
+      markPoint: {
+        symbol: "circle",
+        symbolSize: 14,
+        itemStyle: { color: t.palette[0], borderColor: t.pageBg, borderWidth: 2 },
+        label: {
+          color: t.ink,
+          fontSize: 15,
+          fontWeight: 500,
+          position: "left",
+          distance: 14,
+          formatter: (p) => `latest ${p.value.toLocaleString("en-US")}`,
+        },
+        data: [
+          {
+            coord: [dates[dates.length - 1], visitors[visitors.length - 1]],
+            value: visitors[visitors.length - 1],
+          },
+        ],
+      },
     },
   ],
 });
