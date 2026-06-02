@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: letsplot
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-06-02
 """
 
 import os
