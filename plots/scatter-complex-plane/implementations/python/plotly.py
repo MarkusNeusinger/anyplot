@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-Library: plotly 6.6.0 | Python 3.14.3
+Library: plotly 6.7.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-02
 """
 
