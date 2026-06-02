@@ -1,8 +1,16 @@
-""" pyplots.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-06
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
+
+import sys
+
+
+# Prevent matplotlib.py from shadowing the matplotlib package on sys.path
+sys.path = [p for p in sys.path if not p.endswith("/python")]
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as pe
@@ -10,9 +18,24 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — node type colors (semantic mapping)
+DECISION_COLOR = "#4467A3"  # blue (position 3) — decision / control
+CHANCE_COLOR = "#BD8233"  # ochre (position 4) — uncertainty / risk
+TERMINAL_COLOR = "#009E73"  # brand green (position 1) — outcome / payoff
+PRUNED_COLOR = INK_MUTED
+PRUNED_MARK = "#AE3030"  # Imprint matte red — rejection / loss semantic
+
 # Data — two-stage investment decision tree
-# Structure: (node_id, node_type, parent_id, branch_label, probability, payoff, emv, pruned)
-# EMV rollback: D2=max(1.2M,800K)=1.2M, C1=0.6*1.2M+0.4*100K=760K, D1=max(760K,0)=760K
+# (node_id, node_type, parent_id, branch_label, probability, payoff, emv, pruned)
+# EMV rollback: D2=max(1.2M,800K)=1.2M, C1=0.6×1.2M+0.4×100K=760K, D1=max(760K,0)=760K
 nodes = [
     ("D1", "decision", None, None, None, None, 760000, False),
     ("C1", "chance", "D1", "Invest", None, None, 760000, False),
@@ -23,30 +46,23 @@ nodes = [
     ("T4", "terminal", "D2", "Maintain", None, 800000, None, True),
 ]
 
-# Layout — manual left-to-right positions, spread to fill canvas
+# Layout — coordinate space tuned to 18×10 ≈ 16:9, so content fills the canvas
+# without needing set_aspect("equal"). Each axis unit ≈ equal physical inches.
 positions = {
-    "D1": (0.8, 4.6),
-    "C1": (3.5, 6.8),
-    "T1": (3.5, 2.2),
-    "D2": (6.2, 8.2),
-    "T2": (6.2, 4.3),
-    "T3": (9.0, 9.2),
-    "T4": (9.0, 7.2),
+    "D1": (2.0, 5.0),
+    "C1": (6.0, 7.0),
+    "T1": (6.0, 2.8),
+    "D2": (10.5, 8.4),
+    "T2": (10.5, 5.0),
+    "T3": (15.2, 9.4),
+    "T4": (15.2, 7.4),
 }
 
-# Colors — refined palette
-decision_color = "#306998"
-chance_color = "#D4682A"
-terminal_color = "#2A9D8F"
-pruned_color = "#B0B0B0"
-bg_color = "#FAFAFA"
-branch_color = "#444444"
+# Canvas — 3200×1800 px (landscape 16:9). No bbox_inches="tight".
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=bg_color)
-ax.set_facecolor(bg_color)
-
-# Draw branches with FancyArrowPatch for refined connectors
+# Draw branches first (under nodes)
 for node in nodes:
     nid, ntype, parent_id, label, prob, payoff, emv, pruned = node
     if parent_id is None:
@@ -54,78 +70,79 @@ for node in nodes:
     px, py = positions[parent_id]
     cx, cy = positions[nid]
 
-    line_color = pruned_color if pruned else branch_color
-    line_style = "dashed" if pruned else "solid"
-    lw = 2.0 if pruned else 2.8
+    line_color = PRUNED_COLOR if pruned else INK_SOFT
+    lw = 1.4 if pruned else 2.0
+    ls = "dashed" if pruned else "solid"
 
     arrow = FancyArrowPatch(
         (px, py),
         (cx, cy),
         arrowstyle="-",
         color=line_color,
-        linestyle=line_style,
+        linestyle=ls,
         linewidth=lw,
         zorder=1,
         connectionstyle="arc3,rad=0.0",
     )
     ax.add_patch(arrow)
 
-    # Pruned marker
+    # Pruned × marker at midpoint
     if pruned:
         mx, my = (px + cx) / 2, (py + cy) / 2
-        ax.plot(mx, my, marker="x", markersize=16, color="#CC3333", markeredgewidth=3.5, zorder=5)
+        ax.plot(mx, my, marker="x", markersize=12, color=PRUNED_MARK, markeredgewidth=2.5, zorder=5)
 
-    # Branch label
+    # Branch label — 30% along the branch, offset toward open space
     if label:
-        mx, my = px + (cx - px) * 0.35, py + (cy - py) * 0.35
-        offset_y = 0.55 if cy >= py else -0.55
+        t = 0.30
+        lx = px + (cx - px) * t
+        ly = py + (cy - py) * t
+        off = 0.55 if cy >= py else -0.55
         ax.text(
-            mx,
-            my + offset_y,
+            lx,
+            ly + off,
             label,
-            fontsize=16,
+            fontsize=7,
             ha="center",
             va="center",
-            color=pruned_color if pruned else "#555555",
-            fontweight="normal",
+            color=PRUNED_COLOR if pruned else INK_SOFT,
             bbox={
-                "boxstyle": "round,pad=0.25",
-                "facecolor": "white",
-                "edgecolor": "#DDDDDD",
+                "boxstyle": "round,pad=0.2",
+                "facecolor": ELEVATED_BG,
+                "edgecolor": INK_MUTED,
                 "alpha": 0.92,
-                "linewidth": 0.8,
+                "linewidth": 0.6,
             },
             zorder=6,
         )
 
 # Draw nodes
-node_size = 0.45
+NODE_R = 0.58  # radius / half-size — large enough for two-line EMV text
+SHADOW = [pe.SimplePatchShadow(offset=(3, -3), shadow_rgbFace="black", alpha=0.13), pe.Normal()]
+
 for node in nodes:
     nid, ntype, parent_id, label, prob, payoff, emv, pruned = node
     x, y = positions[nid]
 
-    shadow_fx = [pe.SimplePatchShadow(offset=(3, -3), shadow_rgbFace="black", alpha=0.15), pe.Normal()]
-
     if ntype == "decision":
         rect = FancyBboxPatch(
-            (x - node_size, y - node_size),
-            node_size * 2,
-            node_size * 2,
+            (x - NODE_R, y - NODE_R),
+            NODE_R * 2,
+            NODE_R * 2,
             boxstyle="round,pad=0.03",
-            facecolor=decision_color,
-            edgecolor="white",
-            linewidth=2.5,
+            facecolor=DECISION_COLOR,
+            edgecolor=PAGE_BG,
+            linewidth=1.8,
             zorder=3,
         )
-        rect.set_path_effects(shadow_fx)
+        rect.set_path_effects(SHADOW)
         ax.add_patch(rect)
         if emv is not None:
-            emv_text = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
+            emv_str = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
             ax.text(
                 x,
-                y + 0.06,
+                y + 0.08,
                 "EMV",
-                fontsize=16,
+                fontsize=7,
                 ha="center",
                 va="bottom",
                 color="white",
@@ -134,20 +151,20 @@ for node in nodes:
                 alpha=0.85,
             )
             ax.text(
-                x, y - 0.06, emv_text, fontsize=18, ha="center", va="top", color="white", fontweight="bold", zorder=4
+                x, y - 0.08, emv_str, fontsize=8.5, ha="center", va="top", color="white", fontweight="bold", zorder=4
             )
 
     elif ntype == "chance":
-        circle = plt.Circle((x, y), node_size, facecolor=chance_color, edgecolor="white", linewidth=2.5, zorder=3)
-        circle.set_path_effects(shadow_fx)
+        circle = plt.Circle((x, y), NODE_R, facecolor=CHANCE_COLOR, edgecolor=PAGE_BG, linewidth=1.8, zorder=3)
+        circle.set_path_effects(SHADOW)
         ax.add_patch(circle)
         if emv is not None:
-            emv_text = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
+            emv_str = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
             ax.text(
                 x,
-                y + 0.06,
+                y + 0.08,
                 "EMV",
-                fontsize=16,
+                fontsize=7,
                 ha="center",
                 va="bottom",
                 color="white",
@@ -156,32 +173,28 @@ for node in nodes:
                 alpha=0.85,
             )
             ax.text(
-                x, y - 0.06, emv_text, fontsize=18, ha="center", va="top", color="white", fontweight="bold", zorder=4
+                x, y - 0.08, emv_str, fontsize=8.5, ha="center", va="top", color="white", fontweight="bold", zorder=4
             )
 
     elif ntype == "terminal":
-        triangle_size = node_size * 0.95
-        tri_color = terminal_color if not pruned else pruned_color
+        tri_color = TERMINAL_COLOR if not pruned else PRUNED_COLOR
+        r = NODE_R * 0.88
         triangle = plt.Polygon(
-            [
-                (x - triangle_size * 0.6, y - triangle_size),
-                (x - triangle_size * 0.6, y + triangle_size),
-                (x + triangle_size, y),
-            ],
+            [(x - r * 0.55, y - r), (x - r * 0.55, y + r), (x + r, y)],
             facecolor=tri_color,
-            edgecolor="white",
-            linewidth=2.5,
+            edgecolor=PAGE_BG,
+            linewidth=1.8,
             zorder=3,
         )
-        triangle.set_path_effects(shadow_fx)
+        triangle.set_path_effects(SHADOW)
         ax.add_patch(triangle)
         if payoff is not None:
-            payoff_text = f"${payoff / 1e6:.1f}M" if payoff >= 1e6 else f"${payoff / 1e3:.0f}K"
+            pay_str = f"${payoff / 1e6:.1f}M" if payoff >= 1e6 else f"${payoff / 1e3:.0f}K"
             ax.text(
-                x + triangle_size + 0.2,
+                x + r + 0.25,
                 y,
-                payoff_text,
-                fontsize=20,
+                pay_str,
+                fontsize=9,
                 ha="left",
                 va="center",
                 fontweight="bold",
@@ -191,40 +204,40 @@ for node in nodes:
 
 # Legend
 legend_handles = [
-    mpatches.Patch(facecolor=decision_color, edgecolor="white", label="Decision Node"),
-    mpatches.Patch(facecolor=chance_color, edgecolor="white", label="Chance Node"),
-    mpatches.Patch(facecolor=terminal_color, edgecolor="white", label="Terminal Node"),
+    mpatches.Patch(facecolor=DECISION_COLOR, edgecolor=PAGE_BG, label="Decision Node"),
+    mpatches.Patch(facecolor=CHANCE_COLOR, edgecolor=PAGE_BG, label="Chance Node"),
+    mpatches.Patch(facecolor=TERMINAL_COLOR, edgecolor=PAGE_BG, label="Terminal Node"),
     plt.Line2D(
         [0],
         [0],
-        color="#CC3333",
+        color=PRUNED_MARK,
         marker="x",
         linestyle="--",
-        markeredgewidth=2.5,
-        markersize=12,
+        markeredgewidth=2.0,
+        markersize=9,
         label="Pruned Branch",
-        linewidth=1.5,
-        markerfacecolor="#CC3333",
+        linewidth=1.2,
     ),
 ]
-legend = ax.legend(
+leg = ax.legend(
     handles=legend_handles,
-    fontsize=16,
+    fontsize=7.5,
     loc="lower right",
     framealpha=0.95,
-    edgecolor="#CCCCCC",
+    edgecolor=INK_MUTED,
     fancybox=True,
-    shadow=True,
-    borderpad=1.0,
+    borderpad=0.8,
 )
-legend.get_frame().set_facecolor("white")
+leg.get_frame().set_facecolor(ELEVATED_BG)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Style
-ax.set_title("tree-decision · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=20, color="#333333")
-ax.set_xlim(-0.3, 11.0)
-ax.set_ylim(0.8, 10.5)
+# Title — 48 chars; within 67-char baseline so default fontsize 12 is fine
+title = "tree-decision · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", pad=10, color=INK)
+
+ax.set_xlim(0.5, 17.8)
+ax.set_ylim(1.2, 10.5)
 ax.set_aspect("equal")
 ax.axis("off")
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=bg_color)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
