@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-02
+// Quality: 91/100 | Created: 2026-06-02
 
 //# anyplot-orientation: landscape
 
