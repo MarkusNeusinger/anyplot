@@ -30,7 +30,7 @@ for (let i = 0; i < days; i++) {
   visitors.push(Math.round(baseline + growth * i + weekend + noise));
 }
 
-// --- Imprint brand-green fill, soft alpha for area readability --------------
+// --- Imprint brand-green fill, vertical gradient for depth ------------------
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -38,7 +38,64 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 const BRAND = t.palette[0];
-const FILL = hexToRgba(BRAND, 0.35);
+// CanvasGradient: opaque brand green at the line, fading to transparent at the axis.
+const areaGradient = (ctx) => {
+  const { chartArea } = ctx.chart;
+  if (!chartArea) return hexToRgba(BRAND, 0.35);
+  const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hexToRgba(BRAND, 0.7));
+  g.addColorStop(1, hexToRgba(BRAND, 0.05));
+  return g;
+};
+
+// --- Peak annotation: highlight Sep 28 with a leader line + label -----------
+const peakIdx = visitors.indexOf(Math.max(...visitors));
+const peakLabel = `Peak: ${visitors[peakIdx].toLocaleString("en-US")} on ${labels[peakIdx]}`;
+const peakAnnotation = {
+  id: "peakAnnotation",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const x = scales.x.getPixelForValue(peakIdx);
+    const y = scales.y.getPixelForValue(visitors[peakIdx]);
+    const leaderEnd = y - 70;
+    ctx.save();
+    // Leader line
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, y - 6);
+    ctx.lineTo(x, leaderEnd);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Peak dot
+    ctx.fillStyle = BRAND;
+    ctx.beginPath();
+    ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Label
+    ctx.font = "500 16px system-ui, -apple-system, sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textBaseline = "bottom";
+    const textWidth = ctx.measureText(peakLabel).width;
+    const padX = 10, padY = 6;
+    const boxLeft = Math.min(x - textWidth / 2, scales.x.right - textWidth - padX);
+    const labelX = Math.max(boxLeft, scales.x.left + padX);
+    // Subtle pill background for legibility over the gradient
+    ctx.fillStyle = t.elevatedBg;
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    const boxY = leaderEnd - 24;
+    ctx.beginPath();
+    ctx.rect(labelX - padX / 2, boxY, textWidth + padX, 24);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = t.ink;
+    ctx.textBaseline = "middle";
+    ctx.fillText(peakLabel, labelX, boxY + 12);
+    ctx.restore();
+  },
+};
 
 // --- Mount ------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -54,8 +111,8 @@ new Chart(canvas, {
         label: "Daily visitors",
         data: visitors,
         borderColor: BRAND,
-        backgroundColor: FILL,
-        fill: { target: "origin", above: FILL },
+        backgroundColor: areaGradient,
+        fill: { target: "origin", above: areaGradient },
         borderWidth: 3.5,
         pointRadius: 0,
         pointHoverRadius: 6,
@@ -76,7 +133,7 @@ new Chart(canvas, {
         display: true,
         text: "area-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 30, weight: "500" },
+        font: { size: 24, weight: "500" },
         padding: { top: 8, bottom: 28 },
       },
       legend: { display: false },
@@ -132,4 +189,5 @@ new Chart(canvas, {
     },
     interaction: { mode: "index", intersect: false },
   },
+  plugins: [peakAnnotation],
 });
