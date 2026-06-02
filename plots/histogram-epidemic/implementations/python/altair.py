@@ -1,13 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-05
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme tokens (Imprint palette — see default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — case classification + cumulative line
+CONFIRMED_COLOR = "#009E73"  # Imprint position 1 — brand green
+PROBABLE_COLOR = "#C475FD"  # Imprint position 2 — lavender
+SUSPECT_COLOR = "#4467A3"  # Imprint position 3 — blue
+CUMULATIVE_COLOR = "#BD8233"  # Imprint position 4 — ochre (cumulative line)
 
 # Data
 np.random.seed(42)
@@ -36,27 +53,27 @@ df = pd.DataFrame(
     }
 )
 
-# Cumulative case count
+# Cumulative totals
 daily_total = pd.DataFrame({"onset_date": dates, "daily_total": total_cases})
 daily_total["cumulative"] = daily_total["daily_total"].cumsum()
 max_daily = int(total_cases.max()) + 15
 
-# Intervention events
+# Intervention events — staggered y positions to avoid bar interference
 events = pd.DataFrame(
     {
         "date": pd.to_datetime(["2024-02-10", "2024-03-01", "2024-03-20"]),
         "event": ["Source identified", "Containment measures", "Vaccination campaign"],
-        "y_pos": [max_daily - 2, max_daily - 2, max_daily - 2],
+        "y_pos": [max_daily * 0.90, max_daily * 0.73, max_daily * 0.56],
     }
 )
 
-# Distinct colorblind-safe palette (dark blue, amber, sky blue)
+# Stacked bars with Imprint palette
 type_order = ["Confirmed", "Probable", "Suspect"]
-color_scale = alt.Scale(domain=type_order, range=["#306998", "#E69F00", "#56B4E9"])
+color_scale = alt.Scale(domain=type_order, range=[CONFIRMED_COLOR, PROBABLE_COLOR, SUSPECT_COLOR])
 
 bars = (
     alt.Chart(df)
-    .mark_bar(stroke="#ffffff", strokeWidth=0.5)
+    .mark_bar(stroke=PAGE_BG, strokeWidth=0.5)
     .encode(
         x=alt.X(
             "onset_date:T",
@@ -75,18 +92,16 @@ bars = (
     .transform_calculate(order="{'Confirmed': 0, 'Probable': 1, 'Suspect': 2}[datum.case_type]")
 )
 
-# Cumulative line overlay with independent right y-axis
+# Cumulative line with independent right y-axis
 cumulative_line = (
     alt.Chart(daily_total)
-    .mark_line(strokeWidth=2.5, interpolate="monotone", color="#D55E00")
+    .mark_line(strokeWidth=2.5, interpolate="monotone", color=CUMULATIVE_COLOR)
     .encode(
         x="onset_date:T",
         y=alt.Y(
             "cumulative:Q",
             title="Cumulative Cases",
-            axis=alt.Axis(
-                titleColor="#D55E00", labelColor="#D55E00", format=",.0f", titleFontSize=22, labelFontSize=18
-            ),
+            axis=alt.Axis(titleColor=CUMULATIVE_COLOR, labelColor=CUMULATIVE_COLOR, format=",.0f"),
         ),
         tooltip=[
             alt.Tooltip("onset_date:T", title="Date", format="%b %d, %Y"),
@@ -95,12 +110,13 @@ cumulative_line = (
     )
 )
 
-# Intervention vertical rules
-rules = alt.Chart(events).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color="#888888").encode(x="date:T")
+# Vertical intervention rules
+rules = alt.Chart(events).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color=INK_SOFT).encode(x="date:T")
 
+# Event labels — horizontal at staggered heights, avoiding bar interference
 rule_labels = (
     alt.Chart(events)
-    .mark_text(align="left", dx=6, fontSize=18, fontWeight="bold", fontStyle="italic", color="#555555", angle=270)
+    .mark_text(align="left", dx=4, fontSize=9, fontStyle="italic", color=INK_MUTED)
     .encode(x="date:T", y="y_pos:Q", text="event:N")
 )
 
@@ -116,44 +132,75 @@ peak_data = pd.DataFrame(
 
 peak_label = (
     alt.Chart(peak_data)
-    .mark_text(fontSize=18, fontWeight="bold", color="#D55E00", dy=-16)
+    .mark_text(fontSize=9, fontWeight="bold", color=CUMULATIVE_COLOR, dy=-10)
     .encode(x="onset_date:T", y="peak_val:Q", text="label:N")
 )
 
-# Combine bar layers (share left y-axis)
+# Title scaling (67-char baseline)
+title_str = "histogram-epidemic · python · altair · anyplot.ai"
+title_fontsize = round(16 * min(1.0, 67 / len(title_str)))
+
+# Layer and compose
 bar_layer = alt.layer(bars, rules, rule_labels, peak_label)
 
-# Combine with cumulative line using independent y-axis resolution
 chart = (
     alt.layer(bar_layer, cumulative_line)
     .resolve_scale(y="independent")
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        background=PAGE_BG,
         title=alt.Title(
-            "histogram-epidemic · altair · pyplots.ai",
-            fontSize=28,
+            title_str,
+            fontSize=title_fontsize,
             anchor="start",
+            color=INK,
             subtitle="Daily new cases by classification with cumulative total",
-            subtitleFontSize=18,
-            subtitleColor="#666666",
+            subtitleFontSize=10,
+            subtitleColor=INK_SOFT,
         ),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15, domainColor="#cccccc", tickColor="#cccccc")
-    .configure_legend(
-        titleFontSize=18,
-        labelFontSize=16,
-        symbolSize=200,
-        orient="top-right",
-        fillColor="#ffffffee",
-        strokeColor="#eeeeee",
-        padding=10,
-        cornerRadius=4,
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        labelFontSize=10,
+        titleFontSize=12,
+        gridOpacity=0.15,
+        gridColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
     )
-    .configure_view(strokeWidth=0)
-    .configure_title(anchor="start")
+    .configure_legend(
+        titleFontSize=10,
+        labelFontSize=10,
+        symbolSize=150,
+        orient="top-right",
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        padding=6,
+        cornerRadius=4,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_title(color=INK, anchor="start")
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad PNG to exact target 3200 × 1800 (altair.md canvas contract)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
