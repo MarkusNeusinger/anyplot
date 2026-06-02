@@ -2,59 +2,50 @@ library: d3
 language: javascript
 specification_id: scatter-basic
 created: '2026-06-02T22:05:57Z'
-updated: '2026-06-02T22:24:59Z'
+updated: '2026-06-02T22:52:07Z'
 generated_by: claude-sonnet
-workflow_run: 26850510462
+workflow_run: 26851886021
 issue: 611
 language_version: 22.22.3
 library_version: 7.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-dark.png
-preview_html_light: null
-preview_html_dark: null
-quality_score: 92
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - OLS regression trend line with correlation annotation (r≈0.81) creates a clear
-    analytical narrative — viewer immediately grasps the marketing-spend → sales relationship
-  - 'Floating grid technique (two separate axis calls: one for gridlines, one for
-    tick labels with no tick marks) is idiomatic D3 and produces a clean, open layout'
-  - 'Perfect Imprint palette usage: #009E73 for both markers and trend line, t.pageBg
-    for marker strokes (theme-adaptive definition ring), t.inkSoft/t.ink/t.grid for
-    all chrome'
-  - Deterministic LCG seed (seed=42) with Box-Muller transform satisfies reproducibility
-    requirement for JS environment without seeded Math.random
-  - All font sizes explicitly set (title 28px, axis labels 22px, ticks 18px, annotation
-    16px) with balanced typography hierarchy
-  - Both HTML and PNG outputs produced as required for D3 (interactive library), and
-    ANYPLOT_SIZE/ANYPLOT_TOKENS contract correctly observed
+  - Correct Imprint palette with theme-adaptive chrome throughout both renders
+  - OLS regression line + 95% CI band using d3.area() adds statistical depth beyond
+    basic scatter
+  - Marginal rug marks on both axes give distribution context — idiomatic D3 detail
+  - All font sizes explicitly set; proportions well-balanced across title, axis labels,
+    and tick labels
+  - Marketing spend vs. sales revenue data is realistic, neutral, and correctly scaled
+  - Correlation annotation (r ≈ 0.81) creates immediate storytelling — viewer sees
+    the insight at a glance
   weaknesses:
-  - 'DE-01 not at top tier: design choices (OLS line, annotation, floating grid) are
-    thoughtful but the overall aesthetic is functional rather than striking — a reference-line
-    annotation style or subtle confidence-band shading around the OLS line would push
-    it toward publication-ready'
-  - DE-02 near-perfect but Y-axis label is positioned at x=22 (very close to left
-    canvas edge in SVG space) — while not clipped, this is inelegant and could conflict
-    with longer Y-axis label text in future variants; increase to x=30–35
-  - DE-03 storytelling is good but not excellent — the r≈0.81 annotation conveys the
-    correlation but doesn't highlight any notable sub-pattern (e.g., whether diminishing
-    returns exist at high spend, or whether outlier points distort the trend); visual
-    emphasis on an insight would elevate this
-  - 'LM-02: no distinctly D3-exclusive technique beyond the floating grid pattern
-    — a D3-native enhancement such as a confidence-interval band via d3.area() or
-    a brushable selection region would demonstrate deeper library mastery'
+  - The CI band annotation text (r ≈ 0.81 / 95% confidence band) sits close to the
+    upper-right corner — consider adding a small inset box or slightly increasing
+    the annotation contrast for better legibility at small sizes
+  - DE-01 could be raised with a slightly more refined annotation style (e.g. a thin
+    border or elevated-bg callout box around the r annotation) to reach publication-ready
+    polish
+  - 'DE-02 deduction: the grid tick count (8 on X, 6 on Y) is acceptable but a light
+    axis-baseline rule or slightly reduced tick label fontsize (18 → 15 px) would
+    improve visual balance'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light-theme page surface, no pure white
-      Chrome: Title "scatter-basic · javascript · d3 · anyplot.ai" in dark ink at 28px CSS (56px in PNG) spans ~50% of the 3200px width — well-proportioned. X-axis label "Marketing Spend ($K)" and Y-axis label "Sales Revenue ($M)" in secondary ink (t.inkSoft) at 22px CSS. Tick labels (18px CSS) readable for all values: 0K–160K on X, $0.0M–$8.0M on Y. Correlation annotation "r ≈ 0.81" in upper right, visible.
-      Data: 100 scatter points in #009E73 (Imprint brand green) with fill-opacity 0.7 and white page-background stroke (1.5px) for clean separation. OLS trend line in same green at 50% opacity, spanning full data range. Grid lines are subtle (t.grid token). Domain/axis lines removed for clean open look. Tick marks removed (labels only).
-      Legibility verdict: PASS — all text clearly readable; no light-on-light issues; no element clipping at canvas edges.
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Title "scatter-basic · javascript · d3 · anyplot.ai" in dark ink (#1A1A17) bold at 28px — fully readable. Axis labels "Marketing Spend ($K)" and "Sales Revenue ($M)" in secondary ink (#4A4A44) at 22px — readable. Tick labels (0K–160K, $0.0M–$8.0M) in secondary ink at 18px — readable. Correlation annotation "r ≈ 0.81" and "95% confidence band" in secondary ink at 16px — readable in the upper right.
+      Data: Markers in brand green #009E73 at fill-opacity=0.7, r=7, with page-bg stroke for definition. OLS trend line in #009E73 at stroke-width=3. 95% CI band in #009E73 at fill-opacity=0.12. Marginal rug marks on both axes in #009E73 at stroke-opacity=0.35. Grid lines subtle using t.grid token.
+      Legibility verdict: PASS — all text clearly readable against the light background; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark-theme page surface, no pure black
-      Chrome: Title and axis labels switch to light ink (t.ink / t.inkSoft = #F0EFE8 / #B8B7B0) — clearly visible against dark background. Tick labels light-colored, all readable. Correlation annotation "r ≈ 0.81" visible in upper right (t.inkSoft adapts to light gray on dark). Grid lines subtle (t.grid token adapts to rgba(240,239,232,0.15)).
-      Data: Scatter points remain identical #009E73 (Imprint palette is theme-independent) — data colors unchanged from light render as required. Marker strokes use t.pageBg = #1A1A17 (dark), creating a subtle dark ring that still visually separates overlapping points. OLS trend line same #009E73 at 50% opacity, visible on dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all text uses light-themed tokens; brand green #009E73 readable on #1A1A17 surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title in light ink (#F0EFE8) bold — clearly readable against dark background. Axis labels in secondary light ink (#B8B7B0) — readable. Tick labels in secondary light ink — readable. Correlation annotation in light secondary ink — readable. Grid lines adapted to dark theme (light opacity lines). No dark-on-dark failures detected.
+      Data: Markers identical brand green #009E73 — same as light render, confirming data colors are theme-independent. OLS line, CI band, and rug marks all identical green. Background stroke on markers flips to dark page-bg (#1A1A17) — correct behavior.
+      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark text failures; data colors identical between renders
   criteria_checklist:
     visual_quality:
       score: 30
@@ -65,83 +56,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px CSS, axis labels 22px,
-          ticks 18px, annotation 16px. Well-proportioned hierarchy, readable at both
-          full-res and 400px mobile thumbnail.'
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
+          18px, annotations 16px. Both renders fully readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Correlation annotation placed in upper-right
-          empty area, tick labels spaced appropriately.
+        comment: No text-on-text or text-on-data overlap. Rug marks clear of tick
+          labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 100 points with r=8 CSS (16px in PNG), fill-opacity=0.7 — optimal
-          for medium density. White-ring stroke helps define overlapping markers.
-          OLS line visible.
+        comment: '100 points: r=7, fill-opacity=0.7 — well calibrated. Trend line
+          stroke-width=3. CI band fill-opacity=0.12 visible.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73 (colorblind-safe Imprint brand green).
-          Adequate contrast on both surface colors.'
+        comment: 'Single series, brand green #009E73 — CVD-safe. Page-bg marker stroke
+          aids definition.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Plot fills
-          ~71% of canvas (inner 1420x720 CSS of 1600x900). Margins balanced. Nothing
-          cut off.
+        comment: Canvas gate passed. Balanced margins (80/60/100/120). Chart fills
+          ~65% of canvas area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Marketing Spend ($K)'', Y: ''Sales Revenue ($M)'' — both descriptive
-          with units.'
+        comment: Marketing Spend ($K) and Sales Revenue ($M) — descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette[0]=#009E73 used for markers and trend line. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. All chrome tokens (t.ink, t.inkSoft, t.grid,
-          t.pageBg) correctly applied. Data colors identical across themes.'
+        comment: 't.palette[0] = #009E73 for all data elements. t.pageBg, t.ink, t.inkSoft,
+          t.grid all theme-adaptive. Both renders correct.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured-default (4): OLS trend line, correlation annotation,
-          floating grid, and marker stroke ring show design thinking. Not yet ''strong
-          design'' (6): visual is clean and functional but lacks a striking focal
-          element.'
+        comment: Imprint palette, intentional hierarchy, OLS+CI layer composition,
+          rug marks. Strong design — above defaults but not quite FiveThirtyEight
+          level.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Domain lines removed, tick marks removed, subtle grid via theme tokens,
-          generous whitespace, page-bg marker strokes. Y-axis label at x=22 is slightly
-          inelegant but functional. Nearly perfect.
+        comment: 'All domain lines removed, tick lines removed, subtle grid, generous
+          margins, marker strokes. Only minor: annotation could use callout box.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'OLS trend line + r≈0.81 annotation create a clear quantitative narrative.
-          ''Good'' (4): visual hierarchy guides the reader to the correlation story,
-          but not ''Excellent'' (6) — no emphasis on outliers or sub-patterns.'
+        comment: r annotation + CI band + regression line creates immediate insight.
+          Viewer sees positive correlation at r=0.81. Visual hierarchy guides the
+          eye.
     spec_compliance:
       score: 15
       max: 15
@@ -151,27 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter plot.
+        comment: Basic 2D scatter plot with appropriate enhancements (OLS, CI, rug
+          marks).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points plotted, alpha~0.7, grid lines, axis labels, descriptive title
-          — all spec requirements met.
+        comment: Transparency (0.7), axis labels, descriptive title, grid lines, appropriate
+          point size all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Marketing Spend, Y=Sales Revenue. All data visible on axes.
+        comment: x = marketing spend (independent), y = sales revenue (dependent).
+          100 points in 50-500 range. r≈0.81 positive correlation.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'scatter-basic · javascript · d3 · anyplot.ai'. No legend
-          needed for single series.
+        comment: Title is 'scatter-basic · javascript · d3 · anyplot.ai'. Single series
+          — no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -181,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 100 points with positive correlation, visible scatter/noise, outliers
-          present, full range of variation shown.
+        comment: Shows scatter distribution, outliers, correlation pattern, range
+          of values.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing spend vs. sales revenue is a real, neutral, comprehensible
-          business scenario.
+        comment: Marketing spend vs. sales revenue — classic neutral business context
+          with real units ($K, $M).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $10K–$150K spend range, $0–$8M sales range — plausible proportions
-          for a mid-sized business.
+        comment: Spend 10-150K, revenue 0.3-7M — plausible proportions for mid-market
+          campaigns.
     code_quality:
       score: 10
       max: 10
@@ -206,37 +192,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → OLS calc → SVG mount → axes → trend line → markers → annotation
-          → labels → title. LCG helpers are minimal and necessary.
+        comment: LCG helpers are the D3-mandated approach for deterministic data;
+          structure is flat and readable.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) with Box-Muller satisfies JS reproducibility
-          requirement.
+        comment: LCG with seed=42 — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; d3 is a global. All code is used.
+        comment: No imports (d3 is global). All window.ANYPLOT_* globals used correctly.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. No fake interactive elements. OLS computation
-          is minimal and appropriate.
+        comment: Clean D3 chaining, no fake UI, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 is an interactive library; harness emits plot-light.png + plot-dark.png
-          + plot-light.html + plot-dark.html. Current D3 7.9.0 API used.
+        comment: Harness writes files; SVG sized to window.ANYPLOT_SIZE. D3 7.9.0
+          API used correctly.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -244,23 +228,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert D3 idioms: data join (.data().join()), d3.axis generators
-          with .call() chaining, d3.line() for trend line, floating grid (separate
-          axis call with tickSize(-ih) and no labels), ANYPLOT_SIZE/ANYPLOT_TOKENS
-          contract correctly observed.'
+        comment: 'Expert D3 usage: .join(), .call(), d3.area(), d3.line(), d3.scaleLinear().nice(),
+          d3.range(), chained axis customization.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Floating grid (dual-axis trick) and data join pattern are distinctly
-          D3. No D3-exclusive technique beyond this — e.g., no d3.area() confidence
-          band, no d3.brush(), no hierarchy/force layout features.
+        comment: CI band via d3.area() with custom y0/y1, rug marks as data-bound
+          SVG lines, floating-grid pattern. Clearly D3-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
@@ -268,3 +250,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome
