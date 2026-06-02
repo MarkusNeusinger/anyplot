@@ -91,8 +91,8 @@ roots_origins = fill(Point2f(0, 0), n_roots)
 roots_dirs    = Point2f.(re_roots, im_roots)
 arrows!(ax, roots_origins, roots_dirs;
     color     = IMPRINT_PALETTE[1],
-    linewidth = 1.5,
-    arrowsize = 12,
+    linewidth = 2.0,
+    arrowsize = 16,
 )
 
 # Arrows from origin to arbitrary complex numbers
@@ -100,29 +100,31 @@ arb_origins = fill(Point2f(0, 0), length(re_arb))
 arb_dirs    = Point2f.(re_arb, im_arb)
 arrows!(ax, arb_origins, arb_dirs;
     color     = IMPRINT_PALETTE[2],
-    linewidth = 1.5,
-    arrowsize = 12,
+    linewidth = 2.0,
+    arrowsize = 16,
 )
 
-# Scatter points — 5th roots of unity
+# Scatter points — 5th roots of unity (circle markers)
 scatter!(ax, re_roots, im_roots;
     color       = IMPRINT_PALETTE[1],
     markersize  = 14,
+    marker      = :circle,
     strokewidth = 1.5,
     strokecolor = PAGE_BG,
     label       = "5th roots of unity",
 )
 
-# Scatter points — arbitrary complex numbers
+# Scatter points — arbitrary complex numbers (diamond markers for shape encoding)
 scatter!(ax, re_arb, im_arb;
     color       = IMPRINT_PALETTE[2],
     markersize  = 14,
+    marker      = :diamond,
     strokewidth = 1.5,
     strokecolor = PAGE_BG,
     label       = "Arbitrary complex",
 )
 
-# Labels for roots of unity (offset outward from origin)
+# Labels for roots of unity — symbolic name + rectangular form annotation
 label_offset = 0.18
 for (r_val, i_val, lbl) in zip(re_roots, im_roots, root_labels)
     mag = sqrt(r_val^2 + i_val^2)
@@ -130,26 +132,52 @@ for (r_val, i_val, lbl) in zip(re_roots, im_roots, root_labels)
     oy  = i_val / mag * label_offset
     h   = r_val > 0.1 ? :left : (r_val < -0.1 ? :right : :center)
     v   = i_val > 0.1 ? :bottom : (i_val < -0.1 ? :top : :center)
+    # Symbolic label
     text!(ax, [Point2f(r_val + ox, i_val + oy)];
-        text    = [lbl],
-        fontsize = 13,
-        color   = INK,
-        align   = [(h, v)],
+        text     = [lbl],
+        fontsize = 14,
+        color    = INK,
+        align    = [(h, v)],
+    )
+    # Rectangular form — placed further out along the same radial direction
+    rect_str = i_val >= 0 ?
+        "$(round(r_val, digits=2))+$(round(i_val, digits=2))i" :
+        "$(round(r_val, digits=2))$(round(i_val, digits=2))i"
+    rox = r_val / mag * (label_offset + 0.24)
+    roy = i_val / mag * (label_offset + 0.24)
+    text!(ax, [Point2f(r_val + rox, i_val + roy)];
+        text     = [rect_str],
+        fontsize = 10,
+        color    = INK_SOFT,
+        align    = [(h, v)],
     )
 end
 
-# Labels for arbitrary complex numbers
+# Labels for arbitrary complex numbers — symbolic name + rectangular form annotation
 for (r_val, i_val, lbl) in zip(re_arb, im_arb, arb_labels)
     mag = sqrt(r_val^2 + i_val^2)
     ox  = r_val / mag * 0.2
     oy  = i_val / mag * 0.2
     h   = r_val > 0 ? :left : :right
     v   = i_val > 0 ? :bottom : :top
+    # Symbolic label
     text!(ax, [Point2f(r_val + ox, i_val + oy)];
-        text    = [lbl],
-        fontsize = 13,
-        color   = INK,
-        align   = [(h, v)],
+        text     = [lbl],
+        fontsize = 14,
+        color    = INK,
+        align    = [(h, v)],
+    )
+    # Rectangular form — placed further out along the same radial direction
+    rect_str = i_val >= 0 ?
+        "$(round(r_val, digits=2))+$(round(i_val, digits=2))i" :
+        "$(round(r_val, digits=2))$(round(i_val, digits=2))i"
+    rox = r_val / mag * (0.2 + 0.24)
+    roy = i_val / mag * (0.2 + 0.24)
+    text!(ax, [Point2f(r_val + rox, i_val + roy)];
+        text     = [rect_str],
+        fontsize = 10,
+        color    = INK_SOFT,
+        align    = [(h, v)],
     )
 end
 
