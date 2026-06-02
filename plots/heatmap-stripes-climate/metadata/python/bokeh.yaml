@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:38:45Z'
-updated: '2026-06-02T06:00:43Z'
+updated: '2026-06-02T06:10:15Z'
 generated_by: claude-sonnet
 workflow_run: 26801003438
 issue: 4423
@@ -12,95 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance — all warming stripe requirements met (no axes, no ticks,
-    no grid, no outline)
-  - Faithful imprint_div colormap implementation with correct blue (#4467A3) cold
-    and red (#AE3030) warm poles
-  - Light render is visually beautiful — cream midpoint creates seamless gradient
-    with the off-white background
-  - 'Perfect code quality: seed set, all imports used, clean linear structure'
-  - Correct Selenium + CDP viewport override approach for precise 3200×1800 screenshot
-  - Interactive HoverTool provides year/anomaly readout in the HTML artifact
-  - 'Complete chrome removal: xaxis.visible=False, yaxis.visible=False, outline_line_color=None,
-    grids removed'
+  - 'Correct warming-stripes chart type: vertical image glyph with seamless per-year
+    color bands, no axes/ticks/gridlines — perfectly matches the minimalist spec intent'
+  - 'Imprint diverging palette correctly applied: #4467A3 (cold/blue) ↔ theme-adaptive
+    midpoint ↔ #AE3030 (warm/red), symmetric around zero, both endpoints from the
+    Imprint palette'
+  - 'Theme-adaptive midpoint (#FAF8F1 light, #3A3A37 dark) keeps near-zero stripes
+    visible on dark background instead of blending into #1A1A17 — a pragmatic and
+    thoughtful choice'
+  - Title text is correctly formatted ('heatmap-stripes-climate · python · bokeh ·
+    anyplot.ai'), centered, 50pt font, readable in both themes
+  - 'Clean Bokeh usage: p.image() glyph for seamless stripe rendering, LinearColorMapper
+    for continuous palette, HoverTool for interactive HTML artifact'
+  - Selenium + CDP viewport override produces reliably-sized 3200×1800 PNG screenshots
+    — robust against browser chrome inflation
+  - Fully reproducible with np.random.seed(42); realistic synthetic anomaly data with
+    warming trend (-0.3°C to +1.2°C over 1850–2024)
   weaknesses:
-  - 'Dark render neutral-zone visibility: near-zero anomaly stripes (roughly 1930s–1970s)
-    render in #1A1A17 against the #1A1A17 background, making them nearly invisible
-    — consider adding a subtle neutral midpoint color (e.g. #3A3A37) that is distinct
-    from the background while still appearing neutral'
-  - 'Dark render data storytelling weakened: the full blue-neutral-red progression
-    is clear in light mode but in dark mode the middle decades disappear, partially
-    obscuring the 3-act warming narrative (cool stable → neutral stable → rapid warming)'
+  - 'Dark render: near-zero anomaly stripes (midpoint #3A3A37) are difficult to distinguish
+    from the #1A1A17 background — the 23-unit luminosity gap causes the central transition
+    zone to appear nearly black, reducing the visible blue-to-red gradient in the
+    dark theme; consider using #4A4A3F or a slightly lighter midpoint to increase
+    separation'
+  - 'Aspect ratio mismatch: spec specifies ~3:1 (wide and short) for warming stripes;
+    the 3200×1800 canvas yields a 1.78:1 ratio for the full canvas and ~1.89:1 for
+    the stripe area (minus 110px title bar) — adding ~400px of PAGE_BG padding above
+    and below the stripe image would create a more authentic 3:1-stripe region within
+    the landscape canvas'
+  - 'Imprint diverging endpoint saturation: classic warming stripes use very deep
+    navy (#08306b) and very deep red (#67000d) for the coldest/warmest bars; the Imprint
+    palette endpoints (#4467A3 and #AE3030) are more muted, reducing the visual drama
+    of the most extreme years — within palette constraints this is acceptable but
+    the lack of saturation at extremes is a storytelling limitation'
+  - 'SC-02 minor: the spec notes target aspect ratio ~3:1 is not achieved — the full-canvas
+    fill is pragmatic given the fixed 3200×1800 constraint but the stripe proportions
+    appear taller than canonical warming-stripes charts'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, matches PAGE_BG for light theme.
-      Chrome: Title "heatmap-stripes-climate · python · bokeh · anyplot.ai" centered at top in dark (#1A1A17) text, ~50% canvas width, clearly readable at 50pt. No axes, no ticks, no grid, no outline — all chrome correctly removed.
-      Data: Vertical stripes spanning full canvas width (edge-to-edge), from muted steel-blue (left/cold, 1850s) through cream-neutral (mid-century near-zero anomalies) to saturated crimson-red (right/warm, 2010s–2024). The cream neutral midpoint (#FAF8F1) blends beautifully with the background, creating a seamless visual flow. The warming trend is immediately apparent — last ~30 years are clearly deep red.
-      Legibility verdict: PASS — title fully readable, all stripes visible with full color range expressed.
+      Background: Warm off-white (#FAF8F1) — correct, fills entire canvas border and title area.
+      Chrome: Title "heatmap-stripes-climate · python · bokeh · anyplot.ai" centered at top, dark ink (#1A1A17) on warm off-white. No axes, tick labels, gridlines, or legend — intentionally minimalist per spec.
+      Data: 175 vertical stripes (1850–2024) using Imprint diverging palette: muted blue (#4467A3) for cold negative anomalies on the left third, near-white (#FAF8F1) midpoint for near-zero anomalies in the central section, warming to Imprint matte red (#AE3030) for warm positive anomalies on the right. The color transition from blue → cream → red is clear and reads the expected warming progression immediately.
+      Legibility verdict: PASS — title is fully readable, all stripe colors clearly distinct from background, no overlap or clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, matches PAGE_BG for dark theme.
-      Chrome: Title in light (#F0EFE8) text on dark background, clearly readable. No axes, no grid — same minimalist chrome as light.
-      Data: Diverging colormap midpoint is set to #1A1A17 (same as background). Cold stripes on left appear as dark navy-blue (distinguishable but low contrast). Near-zero anomaly stripes in the middle (roughly 1930s–1970s) render in near-black, essentially invisible against the near-black background. Warm stripes on right appear as dark crimson-red (visible). Data colors (blue and red endpoints) are consistent with light render, only the midpoint/neutral zone is affected by the background-matching midpoint choice.
-      Legibility verdict: PARTIAL PASS — title readable, warm/cold poles visible, but neutral-zone stripes are nearly invisible, reducing mid-century readability.
+      Background: Warm near-black (#1A1A17) — correct throughout.
+      Chrome: Title in light cream/off-white text (#F0EFE8 equivalent) clearly visible against dark background. No other text elements. No dark-on-dark failure.
+      Data: Same 175 vertical stripes with identical Imprint palette endpoints (#4467A3 blue left, #AE3030 red right) — data colors correctly preserved between themes. However, the near-zero midpoint uses #3A3A37 (instead of #1A1A17) to provide some separation between near-zero stripes and the background. In practice the central transition zone appears very dark — blue-grey stripes on the left are visible but less saturated than in light render; the neutral middle area is a dark brownish-grey that is somewhat hard to distinguish from the background; the warm red stripes on the right remain clearly vivid and distinct.
+      Legibility verdict: PASS for chrome (title clear, no dark-on-dark text issue). PARTIAL for data visibility — cold and near-zero stripes are discernibly present but with reduced contrast vs. the light render; warm red stripes are fully vivid. Not a failure, but the central region legibility is reduced in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title readable in both themes at 50pt, proper dark-on-light and light-on-dark.
-          No other text by design.
+        comment: Title explicitly set at 50pt, centered, readable in both themes;
+          no axis labels/ticks by design
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — only stripes and title.
+        comment: Only title text + stripes; zero overlap possible
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: 'Light render: all stripes fully visible. Dark render: neutral-zone
-          stripes (near-zero anomaly, ~1930s–1970s) rendered in #1A1A17 against #1A1A17
-          background — near-invisible.'
+        passed: true
+        comment: 'Stripes clearly visible in light render; dark render cold/neutral
+          stripes reduced contrast due to #3A3A37 midpoint near #1A1A17 background'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-red diverging palette, CVD-safe per Imprint guidelines. No red-green
-          sole signal.
+        comment: Imprint diverging palette uses blue-red (not red-green); CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. 3200x1800 landscape. Edge-to-edge stripes with
-          correct min_border_top=110 for title. No overflow or clipping.
+        comment: 3200x1800 correct; no clipping; stripes fill full canvas with 110px
+          title margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. No axis labels by spec design.
+        comment: Title matches required format exactly; no axis labels by design (correct
+          for warming stripes)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div used with Imprint blue (#4467A3) and red (#AE3030) poles,
-          theme-adaptive midpoint. Backgrounds #FAF8F1 / #1A1A17 correct.'
+        comment: 'imprint_div used: #4467A3 (cold) to #AE3030 (warm) with theme-adaptive
+          midpoint; backgrounds #FAF8F1/#1A1A17 correct; title ink theme-adaptive'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -108,27 +123,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Elegant minimalism faithful to the warming stripes concept. Custom
-          imprint_div gradient, deliberate zero-margin design extending stripes to
-          canvas edges for maximum visual impact.
+        comment: Custom Imprint diverging colormap, theme-adaptive midpoint, full-canvas
+          stripe layout — strong design above defaults; not FiveThirtyEight-level
+          due to limited design surface in minimal chart type
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: 'Exemplary chrome removal: all axes hidden, no grid, no outline,
-          no ticks. The minimalism is the point and it is executed flawlessly in light
-          render. Dark render midpoint issue slightly detracts.'
+        comment: All axes/ticks/gridlines/outlines removed; border_fill matches background;
+          perfectly clean
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Warming trend narrative is powerful in light mode (3-act: cool →
-          neutral → red hot). In dark mode, the neutral middle zone disappears, partially
-          obscuring the stable mid-century period before rapid modern warming.'
+        passed: true
+        comment: Blue-to-red progression immediately communicates warming trend; visual
+          hierarchy through color gradient alone is effective; reduced impact in dark
+          theme due to midpoint blending
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,51 +150,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct warming stripes implementation.
+        comment: 'Correct warming-stripes implementation: vertical colored bars per
+          year, no decoration'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: No axes, no labels, no tick marks, no gridlines. Equal-width bars
-          with no gaps. Diverging colormap centered at 0.
+        comment: No axes/labels/ticks ✓, blue-red diverging colormap ✓, no gaps between
+          bars ✓, symmetric color scale ✓; aspect ratio ~3:1 target not achieved (canvas
+          yields ~1.89:1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: years 1850–2024, color: temperature anomaly, symmetric range
-          around 0.'
+        comment: Year left-to-right (1850–2024), anomaly encoded as color; all 175
+          years shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-stripes-climate · python · bokeh · anyplot.ai' matches
-          required format exactly. No legend needed.
+        comment: 'Title exact: ''heatmap-stripes-climate · python · bokeh · anyplot.ai'';
+          no legend (correct)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 175 years of data covering full warming stripes concept.
+        comment: Shows full year range, both cold and warm anomalies, warming trend;
+          interactive hover adds year/anomaly tooltips in HTML artifact
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible HadCRUT-like anomalies, 1961-1990 baseline, ~1.2°C end-of-record
-          anomaly matching real global temperature record.
+        comment: Global mean temperature anomalies 1850–2024 relative to 1961–1990
+          baseline — real-world scientific context, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Symmetric color range, realistic anomaly magnitudes (-0.4 to +1.3°C).
+        comment: Anomaly range (-0.4 to +1.2°C) consistent with HadCRUT/GISS observed
+          data; symmetric vmax calculated from data
     code_quality:
       score: 10
       max: 10
@@ -190,31 +208,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: _lerp_hex helper is necessary; otherwise linear structure.
+        comment: _lerp_hex is a small utility; main flow is linear Imports→Data→Plot→Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, sys, time, pathlib, numpy, bokeh (io/models/plotting),
+          selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity.
+        comment: 'Elegant: image glyph for seamless rendering, CDP viewport override
+          for precise dimensions'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly
     library_mastery:
       score: 7
       max: 10
@@ -224,16 +244,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: p.image() for 2D rendering, LinearColorMapper, Range1d, output_file+save,
-          Selenium+CDP viewport override — all idiomatic Bokeh patterns.
+        comment: p.image() glyph is the idiomatic Bokeh approach for raster/heatmap
+          data; LinearColorMapper correct; Range1d for axis bounds
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool for interactive year/anomaly display, LinearColorMapper
-          with custom Imprint palette, CDP Emulation.setDeviceMetricsOverride for
-          precise screenshot dimensions.
+        comment: HTML artifact with HoverTool (year/anomaly on hover) is a Bokeh-distinctive
+          feature; CDP viewport override for reliable PNG dimensions shows Bokeh-specific
+          knowledge
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -241,6 +261,7 @@ impl_tags:
   techniques:
   - hover-tooltips
   - html-export
+  - custom-colormap
   patterns:
   - data-generation
   - matrix-construction

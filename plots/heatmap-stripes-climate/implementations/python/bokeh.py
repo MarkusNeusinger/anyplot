@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-02
+Quality: 88/100 | Updated: 2026-06-02
 """
 
 import os
