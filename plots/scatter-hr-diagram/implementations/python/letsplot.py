@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-02
+Quality: 84/100 | Updated: 2026-06-02
 """
 
 import os
