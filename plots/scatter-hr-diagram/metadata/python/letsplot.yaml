@@ -1,132 +1,157 @@
 library: letsplot
+language: python
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:47:23Z'
-updated: '2026-03-07T07:19:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22794049034
+updated: '2026-06-02T18:27:46Z'
+generated_by: claude-sonnet
+workflow_run: 26838090270
 issue: 4558
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Dark theme (#0D1117) is thematically perfect for an astrophysics diagram — stars
-    float in space-like darkness
-  - Custom spectral color palette follows real astrophysical convention with improved
-    O/B differentiation using purple (#6644CC) vs blue (#6699FF)
-  - Sun reference point prominently marked with gold color and bold label — creates
-    clear human-scale anchor
-  - Spectral class labels (O, B, A, F, G, K, M) along the top act as a secondary x-axis,
-    adding educational value
-  - Region labels guide viewer through four stellar populations with well-chosen positions
-  - Vectorized spectral type assignment using np.select is clean and Pythonic
-  - layer_tooltips() leverages letsplot-distinctive interactive hover feature with
-    formatted multi-line content
+  - Semantically-correct spectral type color mapping using Imprint palette members
+    closest to astrophysical conventions (O=lavender, B=blue, A=cyan, G=lime, M=matte
+    red) — clearly a deliberate, domain-aware choice
+  - X-axis correctly reversed following astrophysical convention, log scale on Y-axis,
+    both spectral features work correctly in letsplot
+  - Sun reference marker prominently placed in gold (#FFD700) at correct position
+    (5778K, 1 L☉) providing an immediate relatable anchor
+  - All four stellar region labels (Main Sequence, Red Giants, Supergiants, White
+    Dwarfs) strategically positioned to guide the viewer through stellar populations
+  - Interactive tooltips via layer_tooltips() display region, temperature, luminosity,
+    and spectral type — a letsplot-distinctive feature
+  - Staggered spectral axis labels (O, B, A, F, G, K, M) at alternating luminosity
+    levels add astrophysical context without crowding
+  - 'Theme-adaptive chrome correctly implemented: all text, grid, and legend elements
+    flip between INK tokens across light and dark themes'
+  - 'Perfect code quality: KISS structure, np.random.seed(42), clean imports, correct
+    output filenames with THEME variable'
   weaknesses:
-  - Spectral class letters A, F, G, K, M at the top are bunched together due to narrow
-    temperature ranges on the reversed scale
-  - Redundant color='spectral_type' in base ggplot aes is overridden by fixed color
-    in geom_point and hidden via guides(color='none')
-  image_description: 'The plot displays a Hertzsprung-Russell diagram on a dark background
-    (#0D1117). The x-axis shows "Surface Temperature (K)" reversed from ~40,000K on
-    the left to ~3,000K on the right with formatted tick labels. The y-axis shows
-    "Luminosity (L☉)" on a logarithmic scale from ~0.0001 to 10^6. Points are rendered
-    as filled circles with dark edge strokes (shape 21), colored by spectral type:
-    purple/violet for O types in the upper-left, blue for B types along the hot main
-    sequence, pale blue-white for A types, cream/pale yellow for F types, gold-yellow
-    for G types near the Sun, orange for K types, and red for M types in the lower-right.
-    The main sequence runs as a clear diagonal band from upper-left (hot, luminous)
-    to lower-right (cool, dim). Red Giants cluster in the upper-right with orange/red
-    colors, Supergiants scatter across the top at high luminosities, and White Dwarfs
-    appear at the bottom-center (hot but dim). The Sun is marked with a prominent
-    large gold dot at ~5,778K/1 L☉, with a bold gold "☉ Sun" label offset above. Four
-    region labels in muted blue-gray bold-italic text identify "Supergiants", "Red
-    Giants", "Main Sequence", and "White Dwarfs". Along the top of the plot, spectral
-    class letters O, B, A, F, G, K, M are displayed in light blue-gray bold text at
-    their corresponding temperature positions, simulating a secondary x-axis. A legend
-    box on the right with dark background lists all seven spectral types with matching
-    fill colors. The title "scatter-hr-diagram · letsplot · pyplots.ai" appears in
-    bold light text at the top. Very subtle dark grid lines (#171D28) provide reference
-    without distraction.'
+  - 'VQ-01/VQ-02: The ''O'' spectral axis label (placed at temperature=35000, luminosity=1,200,000)
+    blends into the dense cluster of B-type blue points in the upper-left — increase
+    label size or add a light halo/background to ensure it stands out from the data'
+  - 'VQ-02/VQ-03: The K/M star region around 3000–5000K shows significant overplotting
+    — with ~100 cool stars stacked and alpha=0.75, individual points become hard to
+    distinguish; reduce marker size slightly (size=3.5) and lower alpha to 0.65 in
+    that zone, or use a slight size gradient by spectral type'
+  - 'DE-01/DE-02: While spectral type colors are excellent, the legend box uses a
+    plain rectangular background; removing the legend box border or using a very subtle
+    shadow would add publication-grade polish. Additionally, top/right spines could
+    be more explicitly removed via theme(panel_border=element_blank())'
+  - 'DE-02: Grid lines use INK_MUTED color directly rather than the recommended semi-transparent
+    rgba rule token — replacing with panel_grid_major=element_line(color=''rgba(26,26,23,0.15)'')
+    for light theme would make the grid subtler and more refined'
+  - 'DE-03: The main sequence diagonal — the signature insight of the HR diagram —
+    has no visual emphasis; a subtle dashed trend line or a light band overlaid on
+    the main sequence would immediately communicate the fundamental mass-luminosity
+    relationship to non-expert viewers'
+  - 'LM-01: The fontface=''bold_italic'' parameter in geom_text may not render in
+    all letsplot versions — verify this renders as expected, as ''bold_italic'' is
+    not a universally supported fontface value in lets_plot geom_text()'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "scatter-hr-diagram · python · letsplot · anyplot.ai" clearly visible at top in dark ink. X-axis label "Surface Temperature (K)" and Y-axis label "Luminosity (L☉)" both readable in dark INK at size=12. Tick labels readable at size=10. Grid lines subtle (INK_MUTED, size=0.2).
+      Data: Main sequence diagonal clearly visible from upper-left (hot O/B stars in lavender/blue) to lower-right (cool M stars in matte red). Red giants cluster upper-right in rose/red. Supergiants in upper-middle range. White dwarfs sparse at lower-middle. Sun marker prominent gold (#FFD700) at 5778K, 1 L☉. Region labels visible in INK_MUTED. Spectral axis labels (A, F, G, K, M) visible at top; O label partially obscured by dense blue point cluster.
+      First series color: Spectral type O mapped to #C475FD (lavender) — valid semantic exception since spectral types have established astrophysical color conventions; all 7 colors are Imprint palette members.
+      Legibility verdict: PASS — all title, axis, tick, and legend text readable against warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title, axis labels, tick labels all rendered in light tokens (INK=#F0EFE8, INK_SOFT=#B8B7B0) — clearly visible against dark background. Legend text light-colored. Grid lines use INK_MUTED dark token.
+      Data: Data colors are identical to light render — spectral type palette unchanged (lavender O, blue B, cyan A, ochre F, lime G, rose K, matte red M). Sun marker remains gold. Only chrome elements (background, text, grid, legend box) have flipped.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All text elements readable against warm near-black background. Theme token threading is complete and correct.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          legend_text=15, legend_title=17, region labels=16, sun label=17, spectral
-          axis labels=18. All perfectly readable.'
+        comment: 'All font sizes explicitly set; title, axis labels, ticks readable
+          in both themes. Minor: O spectral axis label slightly hard to distinguish
+          from dense blue data cluster at upper-left.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Region labels well-positioned in sparse areas. Minor crowding of
-          spectral class letters A/F/G/K/M at top due to narrow temperature ranges.
-          Red Giants label close to data cluster but readable.
+        comment: Region labels well-positioned; Sun label offset from Sun marker.
+          Minor overlap of spectral axis label 'O' with B-type star cluster at upper-left.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points at size=4.5 with alpha=0.7 well-adapted for ~295 data points.
-          Sun prominently marked at size=9. Some crowding in lower-right main sequence.
+        comment: 295 points with size=4.5 and alpha=0.75 works well for most regions.
+          K/M star cluster around 3000-5000K shows noticeable overplotting density.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe. Stroke on markers (stroke=1.0 in INK_MUTED)
+          aids definition. Shape 21 with fill+stroke provides redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Improved O/B differentiation with purple (#6644CC) vs blue (#6699FF).
-          A (#C8D8FF) and F (#FFF4D6) now more distinct. Adjacent types still somewhat
-          similar against dark background.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Excellent canvas utilization with ggsize(1600,900) at scale=3. Balanced
-          margins, legend well-positioned. No clipping.
+        comment: 'Canvas 3200x1800 correct. Plot fills canvas well with good margins.
+          Title proportion appropriate. Minor: spectral axis labels at top add helpful
+          context but slightly compress plot area.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Surface Temperature (K) and Luminosity (L☉) — descriptive with units.
+        comment: 'X: ''Surface Temperature (K)'', Y: ''Luminosity (L☉)'' — both descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 7 spectral type colors are Imprint palette members mapped via
+          valid semantic exception (astrophysical color conventions). Backgrounds
+          #FAF8F1/#1A1A17 correct. Chrome adapts correctly in both themes.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Dark theme perfectly suits astronomy context. Custom spectral palette
-          with astrophysical convention. Edge-highlighted markers (shape 21 with dark
-          stroke). Professional typography hierarchy. Spectral class markers along
-          top add polish.
+        comment: 'Above-default: domain-aware semantic color mapping, gold Sun marker,
+          staggered spectral axis labels, tooltips. Stops short of publication-grade
+          due to plain legend box and no main sequence emphasis.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Minor grid removed, major grid very subtle (#171D28 at 0.3). Dark
-          legend background matches panel. Generous margins. Axis ticks customized.
+        comment: theme_minimal base, subtle grid (size=0.2), minor grid removed, proper
+          margins, INK_MUTED stroke on markers. Grid uses solid INK_MUTED rather than
+          semi-transparent rgba which would be subtler.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Region labels guide viewer through stellar populations. Sun as golden
-          reference creates human-scale anchor. Spectral class axis adds educational
-          value. Blue-to-red color gradient naturally conveys temperature story.
+        comment: Region labels, Sun anchor, spectral color progression, and log scale
+          all tell the HR story. Main sequence diagonal — the key insight — lacks
+          visual emphasis (no trend line or band).
     spec_compliance:
       score: 15
       max: 15
@@ -136,55 +161,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot for HR diagram.
+        comment: Correct scatter HR diagram with all four stellar populations represented.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: reversed x-axis, log y-axis, spectral
-          type coloring with conventional colors, four region labels, Sun reference.
-          Now includes optional spectral class labels along top.'
+        comment: Reversed X-axis, log Y-axis, spectral type color coding, four region
+          labels, Sun marker, secondary spectral class labels — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x (reversed), luminosity on y (log scale), all data
-          visible across full range.
+        comment: Temperature on X (reversed, K), luminosity on Y (log scale, L☉),
+          spectral type as fill color.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-hr-diagram · letsplot · pyplots.ai' in correct format.
-          Legend shows all 7 spectral types with correct labels.
+        comment: 'Title: ''scatter-hr-diagram · python · letsplot · anyplot.ai'' —
+          exact required format. Legend ''Spectral Type'' with all 7 categories labeled
+          correctly.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All four stellar populations well-represented: 200 main sequence,
-          40 red giants, 25 supergiants, 30 white dwarfs. Good spectral type distribution
-          across populations.'
+        comment: 'All four stellar regions represented with realistic counts. Covers
+          full range of spectral types O through M. Sun as reference. Minor: white
+          dwarfs somewhat sparse visually.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic astrophysics visualization with physically accurate temperature-luminosity
-          relationship. Sun correctly at 5778K/1 L☉.
+        comment: Astrophysics HR diagram — canonical scientific topic. Data is neutral,
+          educational, and well-established.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature ~3,000-35,000K and luminosity ~0.0001-1,000,000 L☉ are
-          physically realistic for observed stellar populations.
+        comment: Temperature 3000-40000K correct. Luminosity 10^-4 to 10^6 L☉ correct.
+          Main sequence uses L∝T^4 relationship. Sun at 5778K, 1 L☉ is factually accurate.
     code_quality:
       score: 10
       max: 10
@@ -194,35 +219,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → seed → data generation → plot construction
-          → save.'
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave.'
+        comment: All imported symbols used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean vectorized np.select for spectral type assignment. Well-structured
-          code with appropriate complexity.
+        comment: Appropriate complexity. layer_tooltips() is real letsplot interactivity,
+          not fake UI. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 and plot.html.
+        comment: ggsave(plot, f'plot-{THEME}.png', path='.', scale=4) and HTML saved
+          correctly.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -230,30 +255,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: aes mappings, scale_x_continuous with trans=''reverse'',
-          scale_y_log10, scale_fill_manual with limits for ordering, theme_minimal
-          with comprehensive overrides. Shape 21 with fill/stroke used correctly.'
+        comment: 'ggplot grammar used correctly: multi-layer composition, scale_y_log10,
+          scale_x_continuous(trans=''reverse''), scale_fill_manual, guides, theme
+          composition. Multiple data frames per geom with inherit_aes=False.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with formatted multi-line tooltip content is a letsplot-distinctive
-          interactive feature. HTML export alongside PNG leverages letsplot's interactive
-          capabilities.
+        comment: layer_tooltips() is a letsplot-distinctive interactive feature. fontface='bold_italic'
+          in geom_text and shape=21 with stroke are ggplot2-style features well-supported
+          in letsplot. HTML export alongside PNG.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
-  - layer-composition
   - html-export
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - dark-theme
   - alpha-blending
   - edge-highlighting
-  - grid-styling
