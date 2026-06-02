@@ -1,16 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 genome-track-multi: Genome Track Viewer
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-06
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-02
 """
 
-import copy
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+TRACK_BG = "rgba(26,26,23,0.04)" if THEME == "light" else "rgba(240,239,232,0.04)"
+
+# Imprint categorical palette — positions assigned by track role
+EXON_COLOR = "#009E73"  # Imprint pos 1 — brand green (gene annotation)
+INTRON_COLOR = INK_SOFT  # theme-adaptive structural chrome
+COVERAGE_COLOR = "#4467A3"  # Imprint pos 3 — blue (expression depth)
+SNP_COLOR = "#BD8233"  # Imprint pos 4 — ochre
+INDEL_COLOR = "#AE3030"  # Imprint pos 5 — matte red (more impactful variant)
+PROMOTER_COLOR = "#C475FD"  # Imprint pos 2 — lavender
+ENHANCER_COLOR = "#2ABCCD"  # Imprint pos 6 — cyan
+CTCF_COLOR = "#99B314"  # Imprint pos 8 — lime
+
+# Data
 np.random.seed(42)
 
 # Genomic region: chr7, EGFR locus
@@ -18,7 +39,7 @@ chrom = "chr7"
 region_start = 55_086_000
 region_end = 55_280_000
 
-# Gene track data - EGFR gene structure
+# Gene track — EGFR structure (28 exons)
 gene_name = "EGFR"
 strand = "+"
 exons = [
@@ -54,15 +75,17 @@ exons = [
 gene_start = exons[0][0]
 gene_end = exons[-1][1]
 
-# Coverage track data - simulated RNA-seq read depth
+# Coverage track — RNA-seq read depth, clipped at 95th percentile
+# to prevent the extreme 3' spike from compressing smaller exon peaks
 positions = np.linspace(region_start, region_end, 2000)
 base_coverage = np.random.exponential(5, 2000)
 for ex_start, ex_end in exons:
     mask = (positions >= ex_start) & (positions <= ex_end)
     base_coverage[mask] += np.random.exponential(40, mask.sum())
 coverage = np.convolve(base_coverage, np.ones(15) / 15, mode="same")
+coverage = np.clip(coverage, 0, np.percentile(coverage, 95))
 
-# Variant track data - SNPs and indels
+# Variant track — SNPs and indels with quality scores
 variant_positions = [
     55_092_000,
     55_155_900,
@@ -96,7 +119,7 @@ variant_labels = [
     "rs11543848",
 ]
 
-# Regulatory track data - enhancers, promoters, CTCF sites
+# Regulatory track — enhancers, promoters, CTCF binding sites
 reg_elements = [
     (55_084_500, 55_086_700, "Promoter"),
     (55_100_000, 55_103_000, "Enhancer"),
@@ -108,39 +131,23 @@ reg_elements = [
     (55_272_000, 55_275_000, "Promoter"),
 ]
 
-# Colors
-python_blue = "#306998"
-exon_color = "#306998"
-intron_color = "#8FB0CC"
-coverage_color = "#306998"
-snp_color = "#D4763A"
-indel_color = "#8B3A8B"
-promoter_color = "#8E44AD"
-enhancer_color = "#2980B9"
-ctcf_color = "#F39C12"
-
-# Plot - 4 tracks with shared x-axis
-fig = make_subplots(
-    rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.06, row_heights=[0.2, 0.35, 0.2, 0.2], subplot_titles=None
-)
+# Plot — 4 tracks sharing x-axis
+fig = make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.06, row_heights=[0.2, 0.35, 0.2, 0.2])
 
 # Track 1: Gene annotations
 gene_y = 0.5
-# Intron line (full gene span)
 fig.add_trace(
     go.Scatter(
         x=[gene_start, gene_end],
         y=[gene_y, gene_y],
         mode="lines",
-        line={"color": intron_color, "width": 2},
+        line={"color": INTRON_COLOR, "width": 2},
         showlegend=False,
         hoverinfo="skip",
     ),
     row=1,
     col=1,
 )
-
-# Exon rectangles
 for ex_start, ex_end in exons:
     fig.add_shape(
         type="rect",
@@ -148,13 +155,11 @@ for ex_start, ex_end in exons:
         x1=ex_end,
         y0=0.2,
         y1=0.8,
-        fillcolor=exon_color,
-        line={"color": exon_color, "width": 1},
+        fillcolor=EXON_COLOR,
+        line={"color": EXON_COLOR, "width": 1},
         row=1,
         col=1,
     )
-
-# Strand direction arrows
 arrow_positions = np.linspace(gene_start + 5000, gene_end - 5000, 12)
 for pos in arrow_positions:
     in_exon = any(es <= pos <= ee for es, ee in exons)
@@ -172,33 +177,32 @@ for pos in arrow_positions:
             arrowhead=2,
             arrowsize=1.5,
             arrowwidth=1.5,
-            arrowcolor=intron_color,
+            arrowcolor=INTRON_COLOR,
             row=1,
             col=1,
         )
-
-# Gene label
 fig.add_annotation(
     x=(gene_start + gene_end) / 2,
     y=1.1,
     text=f"<b>{gene_name}</b> ({strand})",
     showarrow=False,
-    font={"size": 16, "color": exon_color},
+    font={"size": 12, "color": EXON_COLOR},
     xref="x",
     yref="y",
     row=1,
     col=1,
 )
 
-# Track 2: Coverage
+# Track 2: Coverage (filled area)
+cov_fill = "rgba(68,103,163,0.35)" if THEME == "light" else "rgba(68,103,163,0.5)"
 fig.add_trace(
     go.Scatter(
         x=positions,
         y=coverage,
         mode="lines",
         fill="tozeroy",
-        fillcolor="rgba(48, 105, 152, 0.3)",
-        line={"color": coverage_color, "width": 1.5},
+        fillcolor=cov_fill,
+        line={"color": COVERAGE_COLOR, "width": 1.5},
         showlegend=False,
         hovertemplate="Position: %{x:,.0f}<br>Coverage: %{y:.1f}x<extra></extra>",
     ),
@@ -206,12 +210,10 @@ fig.add_trace(
     col=1,
 )
 
-# Track 3: Variants (lollipop plot)
-for _i, (pos, vtype, qual, label) in enumerate(
-    zip(variant_positions, variant_types, variant_quality, variant_labels, strict=False)
-):
-    color = snp_color if vtype == "SNP" else indel_color
-    # Stem
+# Track 3: Variants (lollipop markers encoding quality score)
+var_color_map = {"SNP": SNP_COLOR, "Indel": INDEL_COLOR}
+for pos, vtype, qual, vlabel in zip(variant_positions, variant_types, variant_quality, variant_labels, strict=False):
+    color = var_color_map[vtype]
     fig.add_trace(
         go.Scatter(
             x=[pos, pos],
@@ -224,7 +226,6 @@ for _i, (pos, vtype, qual, label) in enumerate(
         row=3,
         col=1,
     )
-    # Head
     fig.add_trace(
         go.Scatter(
             x=[pos],
@@ -234,101 +235,122 @@ for _i, (pos, vtype, qual, label) in enumerate(
                 "size": 10 if vtype == "SNP" else 12,
                 "color": color,
                 "symbol": "circle" if vtype == "SNP" else "diamond",
-                "line": {"color": "white", "width": 1},
+                "line": {"color": PAGE_BG, "width": 1.5},
             },
             showlegend=False,
-            hovertemplate=(f"{label}<br>Type: {vtype}<br>Position: {pos:,}<br>Quality: {qual:.1f}<extra></extra>"),
+            hovertemplate=f"{vlabel}<br>Type: {vtype}<br>Position: {pos:,}<br>Quality: {qual:.1f}<extra></extra>",
         ),
         row=3,
         col=1,
     )
-
-# Variant legend entries
 fig.add_trace(
     go.Scatter(
-        x=[None], y=[None], mode="markers", marker={"size": 10, "color": snp_color, "symbol": "circle"}, name="SNP"
+        x=[None], y=[None], mode="markers", marker={"size": 10, "color": SNP_COLOR, "symbol": "circle"}, name="SNP"
     ),
     row=3,
     col=1,
 )
 fig.add_trace(
     go.Scatter(
-        x=[None], y=[None], mode="markers", marker={"size": 12, "color": indel_color, "symbol": "diamond"}, name="Indel"
+        x=[None], y=[None], mode="markers", marker={"size": 12, "color": INDEL_COLOR, "symbol": "diamond"}, name="Indel"
     ),
     row=3,
     col=1,
 )
 
-# Track 4: Regulatory elements
-reg_color_map = {"Promoter": promoter_color, "Enhancer": enhancer_color, "CTCF": ctcf_color}
+# Track 4: Regulatory elements (add_shape for clean rectangles; invisible traces for legend)
+reg_color_map = {"Promoter": PROMOTER_COLOR, "Enhancer": ENHANCER_COLOR, "CTCF": CTCF_COLOR}
 added_legend = set()
 for reg_start, reg_end, reg_type in reg_elements:
-    show = reg_type not in added_legend
-    added_legend.add(reg_type)
-    fig.add_trace(
-        go.Scatter(
-            x=[reg_start, reg_start, reg_end, reg_end, reg_start],
-            y=[0.1, 0.9, 0.9, 0.1, 0.1],
-            fill="toself",
-            fillcolor=reg_color_map[reg_type],
-            line={"color": reg_color_map[reg_type], "width": 1},
-            opacity=0.8,
-            name=reg_type,
-            showlegend=show,
-            hovertemplate=(f"{reg_type}<br>{reg_start:,} - {reg_end:,}<extra></extra>"),
-        ),
+    color = reg_color_map[reg_type]
+    fig.add_shape(
+        type="rect",
+        x0=reg_start,
+        y0=0.1,
+        x1=reg_end,
+        y1=0.9,
+        fillcolor=color,
+        line={"color": color, "width": 1},
+        opacity=0.85,
         row=4,
         col=1,
     )
+    if reg_type not in added_legend:
+        added_legend.add(reg_type)
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker={"color": color, "size": 12, "symbol": "square"},
+                name=reg_type,
+                showlegend=True,
+            ),
+            row=4,
+            col=1,
+        )
 
-# Track labels on left
-track_labels = [(1, "Genes"), (2, "Coverage"), (3, "Variants"), (4, "Regulatory")]
-for row, label in track_labels:
-    fig.update_yaxes(title={"text": f"<b>{label}</b>", "font": {"size": 18}}, row=row, col=1)
+# Track y-axis labels
+for row, label in [(1, "Genes"), (2, "Coverage"), (4, "Regulatory")]:
+    fig.update_yaxes(title={"text": f"<b>{label}</b>", "font": {"size": 12, "color": INK}}, row=row, col=1)
+fig.update_yaxes(title={"text": "<b>Variants</b><br>Quality", "font": {"size": 12, "color": INK}}, row=3, col=1)
+
+# Title fontsize scaled to title character length
+title_text = "EGFR Locus (chr7) · genome-track-multi · python · plotly · anyplot.ai"
+subtitle_text = "Multi-track genome browser — chr7:55,086,000–55,280,000"
+n = len(title_text)
+title_fontsize = max(11, round(16 * 67 / n)) if n > 67 else 16
 
 # Layout
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     title={
-        "text": (
-            "EGFR Locus (chr7) · genome-track-multi · plotly · pyplots.ai"
-            '<br><span style="font-size:16px;color:#666">Multi-track genome browser — chr7:55,086,000–55,280,000</span>'
-        ),
-        "font": {"size": 30},
+        "text": (f'{title_text}<br><span style="font-size:10px;color:{INK_MUTED}">{subtitle_text}</span>'),
+        "font": {"size": title_fontsize, "color": INK},
         "x": 0.5,
     },
-    template="plotly_white",
-    height=900,
-    width=1600,
-    legend={"font": {"size": 16}, "orientation": "h", "yanchor": "top", "y": -0.06, "xanchor": "center", "x": 0.5},
-    margin={"l": 100, "r": 40, "t": 100, "b": 110},
+    legend={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"size": 10, "color": INK_SOFT},
+        "orientation": "h",
+        "yanchor": "top",
+        "y": -0.12,
+        "xanchor": "center",
+        "x": 0.5,
+    },
+    margin={"l": 90, "r": 40, "t": 70, "b": 100},
 )
 
-# X-axis formatting (genomic coordinates)
+# X-axis (bottom track only shows labels and title)
 fig.update_xaxes(
-    title={"text": "Genomic Position (bp)", "font": {"size": 22}},
-    tickfont={"size": 16},
+    title={"text": "Genomic Position (bp)", "font": {"size": 12, "color": INK}},
+    tickfont={"size": 10, "color": INK_SOFT},
     tickformat=",",
     range=[region_start - 2000, region_end + 5000],
-    rangeslider={"visible": True, "thickness": 0.06},
+    linecolor=INK_SOFT,
+    gridcolor=GRID,
     row=4,
     col=1,
 )
 for row in range(1, 4):
-    fig.update_xaxes(tickfont={"size": 16}, tickformat=",", showticklabels=False, row=row, col=1)
+    fig.update_xaxes(
+        tickfont={"size": 10}, tickformat=",", showticklabels=False, showgrid=False, linecolor=INK_SOFT, row=row, col=1
+    )
 
-# Y-axis formatting per track
-fig.update_yaxes(range=[-0.2, 1.4], showticklabels=False, showgrid=False, row=1, col=1)
-fig.update_yaxes(tickfont={"size": 16}, gridcolor="rgba(200, 210, 220, 0.4)", gridwidth=1, row=2, col=1)
+# Y-axes per track
+fig.update_yaxes(range=[-0.2, 1.4], showticklabels=False, showgrid=False, linecolor=INK_SOFT, row=1, col=1)
 fig.update_yaxes(
-    title={"text": "<b>Variants</b><br>Qual. Score", "font": {"size": 18}},
-    tickfont={"size": 16},
-    range=[-5, 110],
-    row=3,
-    col=1,
+    tickfont={"size": 10, "color": INK_SOFT}, gridcolor=GRID, gridwidth=1, linecolor=INK_SOFT, row=2, col=1
 )
-fig.update_yaxes(range=[-0.1, 1.1], showticklabels=False, showgrid=False, row=4, col=1)
+fig.update_yaxes(tickfont={"size": 10, "color": INK_SOFT}, range=[-5, 110], linecolor=INK_SOFT, row=3, col=1)
+fig.update_yaxes(range=[-0.1, 1.1], showticklabels=False, showgrid=False, linecolor=INK_SOFT, row=4, col=1)
 
-# Subtle background shading for alternate tracks
+# Alternating background shading on tracks 1 and 3
 for row in [1, 3]:
     fig.add_shape(
         type="rect",
@@ -338,32 +360,29 @@ for row in [1, 3]:
         y1=1,
         xref=f"x{row} domain" if row > 1 else "x domain",
         yref=f"y{row} domain" if row > 1 else "y domain",
-        fillcolor="rgba(240, 245, 250, 0.5)",
+        fillcolor=TRACK_BG,
         line={"width": 0},
         layer="below",
     )
 
-# Colored left-edge accent strips for each track
-track_accent_colors = {1: exon_color, 2: coverage_color, 3: snp_color, 4: promoter_color}
-for row, accent_color in track_accent_colors.items():
-    xref = f"x{row} domain" if row > 1 else "x domain"
-    yref = f"y{row} domain" if row > 1 else "y domain"
+# Colored left-edge accent strips per track
+accent_colors = {1: EXON_COLOR, 2: COVERAGE_COLOR, 3: SNP_COLOR, 4: PROMOTER_COLOR}
+for row, accent in accent_colors.items():
     fig.add_shape(
         type="rect",
         x0=-0.005,
         x1=0.0,
         y0=0,
         y1=1,
-        xref=xref,
-        yref=yref,
-        fillcolor=accent_color,
+        xref=f"x{row} domain" if row > 1 else "x domain",
+        yref=f"y{row} domain" if row > 1 else "y domain",
+        fillcolor=accent,
         line={"width": 0},
         layer="above",
     )
 
-# Track divider lines for visual separation
+# Track divider lines
 for row in range(1, 5):
-    yref = f"y{row} domain" if row > 1 else "y domain"
     fig.add_shape(
         type="line",
         x0=0,
@@ -371,14 +390,13 @@ for row in range(1, 5):
         y0=0,
         y1=0,
         xref=f"x{row} domain" if row > 1 else "x domain",
-        yref=yref,
-        line={"color": "rgba(180, 190, 200, 0.6)", "width": 1},
+        yref=f"y{row} domain" if row > 1 else "y domain",
+        line={"color": INK_SOFT, "width": 0.8},
     )
 
-# Save static PNG without rangeslider (cleaner layout)
-fig_static = copy.deepcopy(fig)
-fig_static.update_xaxes(rangeslider={"visible": False}, row=4, col=1)
-fig_static.write_image("plot.png", width=1600, height=900, scale=3)
+# Save static PNG (no rangeslider — cleaner layout)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 
 # Save HTML with rangeslider for interactive navigation
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.update_xaxes(rangeslider={"visible": True, "thickness": 0.06}, row=4, col=1)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
