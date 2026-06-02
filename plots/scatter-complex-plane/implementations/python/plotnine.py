@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -112,7 +112,7 @@ plot = (
     + geom_vline(xintercept=0, color=INK_SOFT, size=0.4, linetype="solid", alpha=0.4)
     # Unit circle — dashed reference
     + geom_path(df_circle, aes(x="x", y="y"), color=INK_MUTED, linetype="dashed", size=0.7, alpha=0.65)
-    + annotate("text", x=0.73, y=0.73, label="∣z∣ = 1", size=3.0, color=INK_MUTED, fontstyle="italic", angle=45)
+    + annotate("text", x=0.62, y=0.80, label="∣z∣ = 1", size=3.8, color=INK_MUTED, fontstyle="italic", angle=50)
     # Vectors from origin (no parallelogram construction lines)
     + geom_segment(
         df_vectors,
@@ -137,7 +137,7 @@ plot = (
     + geom_label(
         df_labels[df_labels["ha"] == "left"],
         aes(x="x", y="y", label="annotation"),
-        size=3.2,
+        size=3.8,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.88,
@@ -150,7 +150,7 @@ plot = (
     + geom_label(
         df_labels[df_labels["ha"] == "right"],
         aes(x="x", y="y", label="annotation"),
-        size=3.2,
+        size=3.8,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.88,
@@ -184,6 +184,7 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.2, alpha=0.15),
         panel_grid_minor=element_blank(),
+        panel_border=element_blank(),
     )
 )
 
