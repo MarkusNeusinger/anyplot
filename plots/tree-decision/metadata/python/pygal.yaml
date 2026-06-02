@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: tree-decision
 created: '2026-03-06T21:39:10Z'
-updated: '2026-06-02T16:01:04Z'
+updated: '2026-06-02T16:14:53Z'
 generated_by: claude-sonnet
 workflow_run: 26830886712
 issue: 4569
@@ -12,53 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-deci
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Correct decision tree node shapes (squares/circles/right-pointing triangles)
-  - 'All spec features implemented: pruned branches with X marks + dashed lines, EMV
-    rollback values in nodes, probabilities on branches, left-to-right layout'
-  - 'Semantic Imprint palette use: gain=brand green, loss=matte red, muted for neutral
-    — justified semantic exception'
-  - Gradient fills and drop-shadow filter give polished node appearance above library
-    defaults
-  - Amber highlight box clearly marks the optimal decision subtree for strong data
-    storytelling
-  - 'Clever approach: pygal XY chart used as themed base for native legend/tooltips,
-    with SVG overlay for diagram shapes'
-  - Both light and dark themes fully functional with correct backgrounds and theme-adaptive
-    chrome
-  - Interactive HTML output generated correctly
+  - Full spec compliance — all three node types (decision squares, chance circles,
+    right-pointing terminal triangles) correctly rendered with appropriate shapes
+    and distinct colors
+  - 'Excellent semantic color usage: green (#009E73) for gain terminals, red (#AE3030)
+    for loss, blue (#4467A3) for decision nodes, ochre (#BD8233) for chance nodes
+    — all from the Imprint palette'
+  - 'Strong data storytelling: optimal path shown with solid teal/green lines, pruned
+    branches with dashed gray lines and red X marks, amber golden border with ''Optimal''
+    label encircling the winning subtree'
+  - 'Sophisticated SVG overlay: linear gradient fills on decision/chance nodes, drop-shadow
+    SVG filter, clean elbow connectors — clearly above library defaults'
+  - Both light and dark renders pass theme-readability checks — background, text,
+    and chrome all correctly adapt
   weaknesses:
-  - 'Title is wrong: uses "tree-decision · pygal · pyplots.ai" but must be "tree-decision
-    · python · pygal · anyplot.ai" — missing the language token (python) and wrong
-    domain (pyplots.ai vs anyplot.ai). Fix: change title= argument to "tree-decision
-    · python · pygal · anyplot.ai"'
-  - Significant empty space in the lower-right quadrant of the canvas. The C2 subtree
-    (License Result at y=1200) and T5 (Do Nothing at y=1570) leave the bottom-right
-    area mostly blank. Consider shifting nodes to distribute the tree more evenly
-    across the full 3200x1800 canvas — either move C1 subtree lower or spread terminal
-    nodes more to the right
-  - 'Minor crowding near C2 node: the X pruning marks, Accepted/Rejected branch labels,
-    and p=0.7/p=0.3 probability labels compete for space in a compact region. Increase
-    vertical spacing between branches from C2 to T3/T4 nodes'
-  - Helper functions (fmt_k, elbow, tx) defined at module level — KISS structure prefers
-    inline logic for a single-run script; consider inlining at least the trivial ones
+  - 'First series in pygal''s style.colors tuple is #4467A3 (Decision Node), not brand
+    green #009E73 — semantic exception applies (blue for decision nodes is conventional
+    in decision tree literature) but the canonical first-series rule is not met; VQ-07
+    deducted 1 point'
+  - Legend uses default pygal colored squares rather than the actual node shapes (mini
+    square/circle/triangle) — misses an opportunity to reinforce node-type semantics
+    directly in the legend; a custom SVG legend matching each shape would improve
+    LM-02 and DE-02
+  - 'Overlapping branch paths in the trunk: ''Launch Product'' (solid green), ''Sell
+    License'' (dashed), and ''Do Nothing'' (dashed) all share the same horizontal
+    segment from D1 to mx≈1005 — visually the solid green line and two dashed lines
+    are layered, creating slight ambiguity about which branches are pruned from that
+    trunk'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "tree-decision · pygal · pyplots.ai" in dark ink at top — readable but WRONG FORMAT (missing 'python', wrong domain). Branch labels (Launch Product, Sell License, Do Nothing, High Demand, Low Demand, Accepted, Rejected) in dark/muted ink — readable. Payoff labels ($500K, -$100K, $250K, $50K, $0K) in semantic colors next to triangles — readable. Probability labels (p=0.6, p=0.4, p=0.7, p=0.3) in italic ochre/muted — readable. Legend at bottom with 5 entries — all readable.
-      Data: Decision node (blue gradient square, EMV $260K). Two chance nodes (ochre gradient circles: Market Outcome EMV $260K, License Result EMV $190K). Terminal nodes as right-pointing triangles: green (#009E73) for gain ($500K, $250K, $50K), red (#AE3030) for loss (-$100K), muted gray for neutral ($0K). Optimal path in brand green (#009E73) lines; pruned branches in dashed gray. Amber box highlights optimal C1 subtree. X marks on pruned branch connections.
-      Legibility verdict: PASS — all text readable; note lower-right quadrant has notable empty space
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white
+      Chrome: Title "tree-decision · python · pygal · anyplot.ai" in dark bold text (~73% width), clearly readable. No axis labels (appropriate for diagram). Legend at bottom with five labeled series.
+      Data: Decision node D1 (left) is a blue gradient rectangle with white "EMV $260K" text inside and "Strategy Choice" label below. Chance nodes C1 and C2 are ochre gradient circles with white EMV values inside. Terminal triangles are right-pointing: green ($500K, $250K, $50K), red (−$100K), gray ($0K). Optimal path uses solid teal/green connector lines; pruned branches use dashed gray lines with red X marks. Amber golden border encloses the winning C1 subtree with "Optimal" label. Probability labels in italic ochre (p=0.6, p=0.4, p=0.7, p=0.3) on all chance branches. First data series shown in teal/green (brand color #009E73) as gain terminal.
+      Legibility verdict: PASS — all text readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title visible in light cream text — readable. All branch labels and node captions rendered in theme-adaptive light ink — readable. Legend at bottom readable. No dark-on-dark failures detected.
-      Data: All node colors identical to light render (brand green, ochre, blue, matte red, muted) — theme-independent Imprint palette applied correctly. Branch connectors, X marks, and amber box all identical to light render.
-      Legibility verdict: PASS — all text readable; data colors identical to light render; only chrome flips between themes
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black
+      Chrome: Title appears in light/cream text clearly visible against near-black. Branch labels ("Launch Product" in light bold, "Sell License" and "Do Nothing" in muted light gray) are readable. Probability labels in ochre italic remain distinct. Legend text at bottom appears in light colors. No dark-on-dark issues detected.
+      Data: All node shapes, colors, connector lines, X marks, amber border, and payoff labels are identical to the light render — only the background and text colors have flipped to dark-theme values. Gradient fills on nodes retain their blue and ochre colors. Terminal triangle colors (green/red/gray) unchanged.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -66,81 +64,87 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout; all text readable in both
-          themes. Minor: branch labels near C2 node slightly compact but legible.'
+        comment: 'All font sizes explicitly set; title, branch labels, probability
+          labels, payoff values all readable in both themes. Minor: EMV header text
+          inside nodes at size 20-23 is the smallest element but remains legible.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding near C2 node where X marks, branch labels (Accepted/Rejected),
-          and probability labels compete for space. No actual overlap but tight.
+        comment: No text overlaps detected. Branch labels at well-separated y-positions.
+          Probability labels and branch labels are clearly distinct.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All nodes clearly visible with gradient fills and drop shadows. Triangles
-          well-sized at TRI=50. Lines clearly distinguishable.
+        comment: All nodes, connectors, triangles, and labels are clearly visible.
+          Terminal triangles (100px sides) are appropriately sized for 3200×1800.
+          Amber box is subtle but visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette. Gain/loss uses redundant shape encoding
-          (triangles) beyond color.
+        comment: Imprint palette — CVD-safe. Red-green are not sole distinguishing
+          signals; shape (square/circle/triangle) and position also differentiate
+          node types.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800 correct. Significant empty space in lower-right
-          quadrant: C1 subtree occupies top half, C2 and Do Nothing branches are compact
-          leaving bottom-right mostly blank.'
+        comment: Tree spans ~75% canvas width and ~89% height. Reasonable margins.
+          Slightly unbalanced right margin (~450px) and minor empty space in lower-right
+          quadrant but within acceptable range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes (appropriate for diagram). Title present. Node
-          and branch labels serve as identifiers.
+        comment: Title in correct '{spec-id} · python · pygal · anyplot.ai' format.
+          No axis labels needed for a diagram-style chart.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Imprint palette with justified semantic assignments: gain=brand
-          green (#009E73), loss=matte red (#AE3030), decision=blue (#4467A3), chance=ochre
-          (#BD8233). Semantic exception valid for node-type categories. Backgrounds
-          #FAF8F1/#1A1A17 correct.'
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Chrome adapts
+          properly. However, first series in pygal style.colors is #4467A3 (Decision
+          Node), not brand green #009E73. Semantic exception is valid (blue=decision
+          is conventional) but the first-series rule is technically not met. Brand
+          green IS used for gain terminals (its correct semantic role).'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: gradient fills on nodes, drop-shadow filter, amber
-          highlight box. Not publication-ready but clearly above library defaults.'
+        comment: 'Strong design: linear gradient fills on decision/chance nodes, SVG
+          drop-shadow filter, semantic Imprint colors, amber optimal region highlight.
+          Clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid, no axes (appropriate), clean SVG rendering. Some refinement
-          visible. Excessive empty space in lower right detracts from polish.
+        comment: 'Good refinement: grid disabled, axes hidden, clean background integration.
+          Legend could be more refined with actual node shapes instead of default
+          colored squares.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Strong storytelling: optimal path in brand green, pruned branches
-          dashed/muted, amber box highlights optimal subtree, EMV rollback values
-          guide viewer through the decision logic. Clear focal point.'
+        comment: 'Good storytelling: solid green for optimal path, dashed gray for
+          pruned, red X marks, amber box with ''Optimal'' label. Viewer immediately
+          identifies the winning path.'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,31 +152,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct decision tree: decision nodes (squares), chance nodes (circles),
-          terminal nodes (right-pointing triangles). Left-to-right layout.'
+        comment: 'Correct decision tree with all three node types: squares (decision),
+          circles (chance), right-pointing triangles (terminal).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: node shapes, pruned branch marking (dashed + X), EMV
-          rollback values, probabilities on chance branches, payoffs on terminals.'
+        comment: 'All required features present: EMV values at non-terminal nodes,
+          probability labels on chance branches, pruned branches with X marks and
+          dashed lines, left-to-right layout.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Branch labels, probabilities, payoffs and EMV all correctly mapped
-          to the appropriate nodes and branches.
+        comment: All 8 nodes present with correct connections. Probabilities (0.6+0.4=1.0,
+          0.7+0.3=1.0) sum correctly. EMV rollback is accurate ($260K, $190K).
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title is ''tree-decision · pygal · pyplots.ai'' — missing ''python''
-          language token and wrong domain (''pyplots.ai'' instead of ''anyplot.ai'').
-          Required: ''tree-decision · python · pygal · anyplot.ai''. Legend labels
-          correct.'
+        passed: true
+        comment: Title exactly 'tree-decision · python · pygal · anyplot.ai'. Legend
+          correctly labels all five node/outcome categories.
     data_quality:
       score: 15
       max: 15
@@ -182,90 +185,94 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all decision tree features: decision node, chance nodes, terminal
-          nodes, probabilities summing to 1.0 per chance node, EMV rollback, pruned
-          branches.'
+        comment: 'Shows all decision tree features: decision nodes, chance nodes,
+          terminal nodes, probabilities, EMV rollback, pruned branches, and the neutral
+          ''Do Nothing'' option.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'New product launch decision: Launch Product / Sell License / Do
-          Nothing with real market outcomes (High/Low Demand). Neutral business scenario.'
+        comment: New Product Launch business scenario is real-world plausible and
+          neutral. Business strategy / operations research domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Monetary values in $K range (-$100K to $500K), probabilities correctly
-          bounded (0.6+0.4=1.0, 0.7+0.3=1.0), EMV rollback mathematically correct.
+        comment: Monetary values ($500K, $250K, $50K, -$100K) are realistic for a
+          product launch decision. Probabilities sum correctly to 1.0 at each chance
+          node.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Defines helper functions fmt_k, elbow, tx — minor deviation from
-          KISS (no functions/classes). Helpers are simple and justified but not strictly
-          KISS.
+        comment: Three small necessary helper functions (fmt_k, elbow, tx) plus flat
+          procedural code. No unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic.
+        comment: Fully deterministic — hardcoded data with no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, cairosvg, pygal, pygal.style.Style.'
+        comment: Only os, sys (for path fix, then deleted), cairosvg, pygal, pygal.style.Style
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for an SVG diagram. SVG manipulation is clean
-          and well-organized.
+        comment: Clean Pythonic code. SVG overlay approach is a clever and effective
+          technique. sys.path patching is properly cleaned up with del _sys.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, and plot-{THEME}.html correctly.
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Clever use of pygal XY chart as a themed base providing native legend/tooltips/background,
-          then injecting custom SVG shapes. Idiomatic leverage of pygal's SVG rendering
-          pipeline.
+        comment: Uses pygal.XY with named series, pygal.Style for full theming, and
+          xlink metadata. Core tree rendering is done as SVG overlay — correct usage
+          but the library's native chart API handles background/legend/interactivity
+          only.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal's native SVG string output (chart.render()) for SVG manipulation/injection,
-          interactive HTML export with pygal's JS tooltips, and pygal's Style system
-          for full theme-adaptive theming.
-  verdict: REJECTED
+        comment: Uses xlink for tooltip metadata, tooltip_fancy_mode, value_formatter,
+          legend_at_bottom_columns, and native HTML/SVG interactive export — all pygal-specific
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - html-export
   - annotations
+  - custom-legend
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
   - gradient-fill
   - alpha-blending
+  - minimal-chrome
