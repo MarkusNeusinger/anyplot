@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:54Z'
-updated: '2026-06-02T03:49:49Z'
+updated: '2026-06-02T04:02:55Z'
 generated_by: claude-sonnet
 workflow_run: 26796584817
 issue: 4426
@@ -12,62 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance — all required features implemented: stacked bars by
-    case classification, annotated vertical intervention markers, cumulative overlay
-    line scaled to share the primary y-axis, and date-based x-axis with weekly ticks'
-  - 'Realistic and well-executed data story: simulated foodborne point-source outbreak
-    with log-normal timing produces a visually distinctive sharp-peak epi curve that
-    matches the spec description'
-  - 'Semantic color choices for intervention markers are intentional and read correctly:
-    matte red (#AE3030) for the lockdown restriction, cyan (#2ABCCD) for the vaccination
-    health intervention — both from the Imprint palette'
-  - 'Correct Imprint palette in canonical order for case classifications: Confirmed=#009E73
-    (brand green), Probable=#C475FD (lavender), Suspect=#4467A3 (blue)'
-  - 'Theme-adaptive chrome fully implemented: background, text, grid, legend box all
-    flip correctly between #FAF8F1 light and #1A1A17 dark; data colors are identical
-    across both renders'
-  - Interactive tooltips via layer_tooltips() and dual PNG+HTML export leverage lets-plot's
-    distinctive capabilities appropriately
-  - Code is clean, linear, reproducible (seed=42), with all font sizes explicitly
-    set and dynamic title scaling for the long mandated title string
+  - 'Complete spec compliance: stacked bars by case type (Confirmed/Probable/Suspect),
+    annotated intervention markers (Lockdown/Vaccination vertical lines), cumulative
+    overlay trend line, weekly datetime axis ticks — all features correctly implemented'
+  - 'Perfect theme adaptation in both renders: warm off-white (#FAF8F1) and warm near-black
+    (#1A1A17) backgrounds with all chrome tokens (title, axis labels, ticks, legend,
+    grid, caption) correctly adaptive in both light and dark modes'
+  - Epidemiologically realistic data using log-normal distribution to produce a natural
+    point-source outbreak shape; 45-day window with 2,650 total cases is plausible
+    for a foodborne outbreak scenario
+  - Dynamic title sizing formula (max(11, round(16 * 67/n_chars))) prevents overflow
+    for the mandated long title format — shows library-aware implementation
+  - 'Clean code quality: linear structure (imports → data → plot → save), seeded randomness
+    (np.random.seed(42)), clean imports, idiomatic ggplot grammar with dict-based
+    scale_fill_manual and ms-based datetime breaks'
   weaknesses:
-  - 'Vaccination annotation label is partially obscured by the legend box in both
-    renders. The text (''Vaccination'', hjust=1, nudge_x=-80000000) ends at approximately
-    83% of plot width, directly where the legend starts (legend_position=[0.82, 0.88]).
-    Fix: move the legend lower (e.g. legend_position=[0.82, 0.75]) or reposition the
-    Vaccination annotation to the right of the cyan line (hjust=0, nudge_x=+80000000)
-    — VQ-02 and VQ-05.'
-  - The cumulative grey line's tail extends behind the legend box in the upper right,
-    creating a visual intrusion into the legend area. Moving the legend down (as above)
-    would also resolve this.
-  - 'Design excellence could be raised with one or two targeted refinements: (a) explicitly
-    removing any remaining panel border/frame spines via element_blank() if theme_minimal()
-    leaves them, (b) slightly increasing bar visual separation or adding a thin outline
-    stroke on bars to help distinguish stacked segments under CVD.'
-  - 'Library Mastery: the layer_tooltips tooltip is a good start but the tooltip line
-    format could be improved — currently shows both ''@|case_type'' and ''Cases|@case_count''
-    on separate lines; a single cleaner format such as ''.line("@case_type|@case_count
-    cases")'' is more idiomatic.'
+  - Caption font at 9pt is the smallest element in the hierarchy; minimum recommended
+    is 10pt for mobile-scale (~400px) legibility — change plot_caption=element_text(size=9)
+    to size=10
+  - Stacked bar layers lack edge definition — thin Suspect (blue) slivers at low case
+    counts can be hard to distinguish from the Probable (lavender) layer; add a subtle
+    white or neutral stroke on geom_bar (e.g., color='white', size=0.1) to visually
+    separate stacked layers
+  - 'LM-02: uses layer_tooltips and HTML export as lets-plot distinctive features
+    but leaves richer options unused; could leverage tooltip format strings, geom_ribbon
+    for confidence bands, or advanced sampling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "histogram-epidemic · python · letsplot · anyplot.ai" is bold dark text, clearly readable. Subtitle in softer dark ink is readable. X-axis label "Date of Symptom Onset" and Y-axis label "Daily New Cases" are visible. Tick labels (Mar 01 through Apr 12 on x, 0–180 on y) are clearly legible against the warm background. Caption at bottom is small but readable.
-      Data: Stacked bars show confirmed cases in brand green (#009E73) at the base, probable cases in lavender (#C475FD) in the middle, suspect cases in blue (#4467A3) on top. A grey cumulative line rises from left and flattens on the right. A dashed red vertical line marks Lockdown (~Mar 15) with a red "Lockdown" annotation to its right. A dashed cyan vertical line marks Vaccination (~Apr 05) with a cyan "Vaccination" annotation. First series is correctly #009E73.
-      Layout issue: The "Vaccination" annotation text is partially obscured by the legend box (upper right, legend_position=[0.82, 0.88]). The text appears as "Vaccinatio" with the trailing characters hidden behind the legend — confirmed overlap, not canvas-edge clipping.
-      Legibility verdict: PASS (all axis/title/tick text is fully readable; "Vaccination" annotation is partially obscured by legend — overlap issue, not legibility failure in both renders).
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "histogram-epidemic · python · letsplot · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT. X-axis label "Date of Symptom Onset" and Y-axis label "Daily New Cases" both in dark ink at size 12, balanced. Tick labels (weekly dates + case counts) in INK_SOFT at size 10, readable. Caption "Grey line = cumulative cases (scaled to axis) · 2,650 total cases" at 9pt — small but visible. Annotation labels "Lockdown" (matte red) and "Vaccination" (cyan) in bold at size 4mm (~11pt), readable against background.
+      Data: Stacked bars — brand green (#009E73) for Confirmed (largest layer, bottom), lavender (#C475FD) for Probable (middle), blue (#4467A3) for Suspect (top, thin at low counts). Classic point-source epidemic curve peaks around Mar 11–15 at ~170 total daily cases. Gray cumulative trend line arcs smoothly from lower-left to upper-right. Dashed matte-red vertical line at Mar 15 (Lockdown); dashed cyan vertical line at Apr 05 (Vaccination). Legend "Case Classification" in lower-right float position with elevated background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title is in light near-white text, clearly readable against the dark background. Subtitle, axis labels, tick labels, caption all appear in appropriate light ink tones. No dark-on-dark failures observed — all text is light-colored on the dark surface.
-      Data: Colors are identical to the light render — Confirmed green (#009E73), Probable lavender (#C475FD), Suspect blue (#4467A3). The grey cumulative line reads well on the dark surface. Red dashed lockdown line and cyan dashed vaccination line are clearly visible. Legend box has the elevated dark background (#242420) with light text.
-      Layout issue: Same "Vaccination" annotation overlap with the legend box as in the light render.
-      Legibility verdict: PASS (all chrome elements correctly adapted to dark theme; no dark-on-dark failures; data colors identical to light render as required).
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and all axis labels appear in light text (#F0EFE8 INK equivalent) against dark background — clearly readable. Tick labels in INK_SOFT dark-mode token (#B8B7B0). Caption visible. Annotation labels "Lockdown" (matte red) and "Vaccination" (cyan) remain readable. Grid lines subtle on dark surface. Legend box uses elevated dark fill (#242420). No dark-on-dark failures detected.
+      Data: Data colors identical to light render — green (#009E73), lavender (#C475FD), blue (#4467A3) bars all clearly visible. Cumulative line in dark-mode INK_SOFT (#B8B7B0) visible. Intervention dashed lines (red and cyan) clearly visible against dark background. First series (Confirmed) remains brand green #009E73 — same as light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -75,55 +62,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title, subtitle, axis labels, ticks,
-          legend, and caption all readable in both themes. Minor deduction: annotation
-          labels (size=4mm) are small relative to the bar chart data.'
+        comment: All font sizes explicitly set with dynamic title sizing; caption
+          at 9pt is smallest element and may strain at mobile widths
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Vaccination annotation label (hjust=1, right-aligned near Apr 05)
-          is partially obscured by the legend box positioned at [0.82, 0.88]. Cumulative
-          line tail also extends behind the legend.
+        passed: true
+        comment: Bars stack cleanly; annotation labels and cumulative line coexist
+          without collision in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars, cumulative line, intervention markers, and annotation
-          text all clearly visible. Bar width and density appropriate for 45-day dataset.
+        comment: Stacked bars, cumulative line, and intervention markers all clearly
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used correctly; three case types are perceptually
-          distinct. Intervention markers use distinct hues. No red-green sole signal
-          issue.
+        comment: Imprint palette is CVD-safe; red/cyan intervention lines distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall layout. Canvas fills well with plot filling 80%+ of
-          area. Minor deduction for legend/annotation overlap creating a cluttered
-          upper right corner.
+        comment: 3200x1800 canvas (ggsize 800x450 x scale=4); good margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Date of Symptom Onset'', Y: ''Daily New Cases'' — both descriptive.
-          Title in correct format. Subtitle and caption add context.'
+        comment: Date of Symptom Onset and Daily New Cases are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Confirmed) = #009E73. Probable = #C475FD, Suspect
-          = #4467A3 — canonical Imprint order. Intervention colors from Imprint pool
-          used semantically. Backgrounds #FAF8F1 / #1A1A17. Chrome flips correctly.'
+        comment: 'First series #009E73; Imprint positions 1/2/3 for case types; semantic
+          use of position 5 (lockdown) and 6 (vaccination); correct warm backgrounds
+          in both themes'
     design_excellence:
       score: 13
       max: 20
@@ -133,25 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a well-configured default: semantic color assignment for intervention
-          markers, multi-layer composition, meaningful subtitle and caption. Not publication-ready
-          (spines not explicitly removed, no distinctive typographic hierarchy beyond
-          bold title).'
+        comment: 'Above default 4: thoughtful semantic color choices for intervention
+          lines, float legend, dual-overlay design. Not publication-ready — bar edges
+          lack stroke definition for thin Suspect slivers.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Horizontal-only grid with custom color, no minor grid, theme-adaptive
-          legend background, clean panel background. Good refinement above defaults.
+        comment: X-grid removed, minor grid removed, subtle horizontal y-grid only,
+          theme_minimal() base, legend with subtle border. Good refinement above default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear epidemiological story: point-source peak visible, intervention
-          timing shown, cumulative burden visible. Viewer is guided to key events
-          by the dashed lines and labels.'
+        comment: 'Above default 2: epidemic curve shape immediately conveys point-source
+          outbreak; intervention markers add temporal context; cumulative line shows
+          disease burden; caption explains overlay encoding.'
     spec_compliance:
       score: 15
       max: 15
@@ -161,29 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct epidemic curve histogram using stacked bars by case classification.
+        comment: Stacked bar histogram (epi curve) — correct type and subtype
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked bars by case type, annotated vertical intervention lines
-          (lockdown + vaccination), cumulative overlay scaled to primary axis, date
-          x-axis with weekly ticks.
+        comment: Stacked classification bars, annotated intervention vertical lines,
+          weekly x-axis ticks, cumulative overlay all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: onset_date on x, case_count (stacked) on y, fill by case_type. All
-          45 days visible.
+        comment: onset_date->X, case_count->Y, case_type->fill, all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'histogram-epidemic · python · letsplot · anyplot.ai' correct.
-          Legend shows 'Case Classification' with Confirmed/Probable/Suspect labels.
+        comment: Title is histogram-epidemic · python · letsplot · anyplot.ai; legend
+          Case Classification with correct labels
     data_quality:
       score: 15
       max: 15
@@ -193,23 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows point-source outbreak curve shape, three case classifications
-          with different magnitudes, cumulative burden, and intervention events —
-          all aspects of an epi curve.
+        comment: Shows all three case classifications across full outbreak lifecycle;
+          intervention events; cumulative burden
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Foodborne outbreak scenario is realistic, neutral, and epidemiologically
-          appropriate. Lockdown and vaccination timing are plausible.
+        comment: Epidemiologically realistic foodborne outbreak with log-normal distribution;
+          neutral scientific domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~175 cases/day, 2,650 total — appropriate for a localized foodborne
-          outbreak. 45-day window appropriate for point-source event.
+        comment: 45-day window for daily bins; peak ~170 cases/day realistic; 2,650
+          total cases plausible
     code_quality:
       score: 10
       max: 10
@@ -219,34 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → constants → data → plot → save. No functions
-          or classes.'
+        comment: Linear imports -> data -> plot -> save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, including layer_tooltips in geom_bar().
+        comment: All lets_plot imports used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Title fontsize scaling formula is
-          a good touch. Millisecond timestamp conversion for datetime axis is a necessary
-          lets-plot idiom.
+        comment: Clean and readable; dynamic title sizing is elegant; millisecond
+          datetime handling well-documented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly via ggsave
     library_mastery:
       score: 7
       max: 10
@@ -256,28 +231,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, scale_x_datetime with millisecond breaks,
-          scale_fill_manual, theme_minimal + theme() customization, ggsize + ggsave
-          with scale. Idiomatic lets-plot usage.
+        comment: 'Good ggplot grammar: scale_fill_manual with dict mapping, scale_x_datetime
+          with ms breaks, theme_minimal() + theme() override, multiple geom layers
+          composed correctly'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() for interactive tooltip customization and HTML export
-          leverage lets-plot capabilities not easily replicated in static libraries.
-  verdict: REJECTED
+        comment: Uses layer_tooltips() for interactive hover, HTML export, millisecond
+          DateTime axis — lets-plot specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
-  - cumulative-sum
   - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
