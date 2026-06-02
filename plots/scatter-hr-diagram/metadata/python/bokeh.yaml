@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:45:43Z'
-updated: '2026-06-02T18:07:22Z'
+updated: '2026-06-02T18:22:02Z'
 generated_by: claude-sonnet
 workflow_run: 26837538339
 issue: 4558
@@ -12,52 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Outstanding spec compliance: all required features (reversed X-axis, logarithmic
-    axes, spectral type colors, four region labels, Sun reference, spectral class
-    letters along top) implemented correctly'
-  - 'Theme-adaptive implementation is exemplary: separate darkened label colors for
-    light theme, white marker edges for dark theme, correct PAGE_BG and ELEVATED_BG
-    tokens throughout both renders'
-  - Redundant marker shape encoding (7 distinct marker types per spectral class) is
-    excellent CVD mitigation for the 7-series chart
-  - Real Bokeh interactivity (HoverTool with formatted tooltips, click_policy='hide'
-    on legend) leverages the library's strength in HTML output
-  - 'Perfect code quality: np.random.seed(42), all imports used, linear KISS structure,
-    proper output naming for both HTML and PNG artifacts'
+  - Dual redundant encoding (color + distinct marker shape per spectral type) handles
+    both aesthetics and CVD accessibility simultaneously
+  - 'Theme-adaptive label colors (SPECTRAL_LABEL_COLORS) darken label text for the
+    light theme — preventing washed-out labels from #2ABCCD and #C475FD on the cream
+    surface'
+  - 'Star-shaped amber Sun reference marker at T=5778 K, L=1 L☉ uses the correct #DDCC77
+    semantic anchor and provides crucial educational scale'
+  - Spectral class letters (O-M) along the top row, color-coded and bold, serve as
+    an implicit secondary axis reference
+  - CDP setDeviceMetricsOverride + PIL canvas-pin is a robust workaround for Chrome
+    headless height-drift
   weaknesses:
-  - A-type (#CCD8FF) and F-type (#FFF4C8) spectral fill colors are nearly invisible
-    on the light cream (#FAF8F1) background — these very light fills rely entirely
-    on dark outlines for visibility, making these stellar populations hard to distinguish
-    in the light render; increase marker size for these types (e.g., size=18-20) or
-    use slightly more saturated fills
-  - 'Custom spectral hex colors (#5588FF, #88AAFF, #CCD8FF, #FFF4C8, #FFD700, #FF8C00,
-    #FF3300) are not Imprint palette members; semantic exception for astronomical
-    domain is valid but rule requires mapping to closest Imprint palette members (O/B→#4467A3,
-    M→#AE3030, etc.) not arbitrary custom hexes'
-  - Top and right spines are visible via full box outline (p.outline_line_color =
-    INK_SOFT); remove or set to None to achieve the recommended L-shaped spine style
-    per the style guide
-  - '"Main Sequence" label at position (8500, 8) sits within the dense scatter cloud
-    overlapping many data markers; reposition to data-sparse area e.g., (12000, 50)
-    above the main sequence band'
+  - F stars assigned lime (#99B314) instead of a yellow/ochre color; the spec explicitly
+    says F/G stars should be yellow, and lime green creates a misleading association
+    that breaks the hot-blue/cool-red gradient story
+  - A stars assigned lavender (#C475FD) instead of a white/blue-white color; A-type
+    stars are spectrally white with slight blue tinge — lavender introduces purple
+    hue that readers associate with neither white nor blue
+  - Region label 'Main Sequence' has no background fill, making it overlap visually
+    with the dense G/K scatter zone — add background_fill_color=ELEVATED_BG, background_fill_alpha=0.85
+    consistent with the Sun label
+  - No visual emphasis on the main sequence itself (e.g. a faint diagonal guide or
+    slightly larger main-sequence markers) to make it the clear focal point
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "scatter-hr-diagram · python · bokeh · anyplot.ai" in bold dark ink, spans ~65-70% of canvas width (expected for mandated format). X-axis label "Surface Temperature (K)" and Y-axis "Luminosity (L☉)" in dark INK color. Tick labels in medium gray INK_SOFT. Spectral class letters (O, B, A, F, G, K, M) along top edge in darkened theme-adaptive colors. Region annotations (Supergiants, Red Giants, Main Sequence, White Dwarfs) visible. Legend on right with "Spectral Type" header and 7 type entries.
-      Data: Seven spectral types plotted with distinct marker shapes (circle=O, diamond=B, hex=A, inverted_triangle=F, circle=G, triangle=K, square=M). O/B types in blue shades, G in yellow, K in orange, M in red-brick. A-type (#CCD8FF very light periwinkle) and F-type (#FFF4C8 near-cream yellow) fills are nearly invisible against cream background — visible only via dark-ink outlines. Sun marked as gold star at T=5778K, L=1.0 L☉ with "☀ Sun" label. First series (O-type) uses #5588FF — NOT Imprint #009E73 (valid semantic exception for astronomy but custom hex).
-      Legibility verdict: PASS with minor concerns — all text readable; A/F type fill contrast is borderline on cream background
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Bold dark title "scatter-hr-diagram · python · bokeh · anyplot.ai" fully visible at top (~75% width, expected for title length). X-axis label "Surface Temperature (K)" and Y-axis label "Luminosity (L☉)" in dark INK color, readable. Tick labels in INK_SOFT (#4A4A44), readable. Spectral class letters O-M in darkened spectral label colors across top — readable.
+      Data: 7 spectral types with Imprint palette colors and distinct marker shapes: O=blue circles, B=cyan diamonds, A=lavender hexagons, F=lime inverted-triangles, G=ochre circles, K=matte-red triangles, M=rose squares. Sun marker = amber star (#DDCC77) at (5778K, 1 L☉). Region labels (Main Sequence, Red Giants, Supergiants, White Dwarfs) positioned in data space. Alpha=0.85.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light F0EFE8-range text, clearly visible. Axis labels and tick labels in light B8B7B0-range text. No dark-on-dark failures observed. Legend background in elevated dark #242420. Spectral class letters and region annotations readable in appropriate colors.
-      Data: All data colors identical to light render — spectral type colors unchanged (only chrome flipped). A-type (#CCD8FF) and F-type (#FFF4C8) fills, which were nearly invisible in light render, are now clearly distinguishable against the dark background. Marker edges switched to white (#FFFFFF) in dark theme for better definition. Sun star still prominent. Main sequence diagonal clearly visible. Data color constancy confirmed.
-      Legibility verdict: PASS — dark render is actually cleaner for A/F type visibility than light render; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all in light tones (INK=#F0EFE8, INK_SOFT=#B8B7B0) — fully readable against dark background. No dark-on-dark failures. Grid lines visible at alpha=0.12. Legend on right with light label text.
+      Data: Colors identical to light render — O blue, B cyan, A lavender, F lime, G ochre, K matte-red, M rose. Sun amber star visible. Region labels readable with appropriate light color values.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -65,56 +60,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 34/36pt legend); Main Sequence annotation uses INK_MUTED which is
-          slightly faint on cream background
+        comment: 'All font sizes explicitly set (50pt title, 42pt axis, 34pt ticks,
+          28pt annotations). Readable in both themes. Minor: region labels at 28pt
+          are small relative to total plot area.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Main Sequence italic annotation at position (8500, 8) overlaps with
-          dense scatter data in the central region
+        comment: Mostly clean layout. Main Sequence label (no background fill) sits
+          atop data cloud; minor crowding near Sun label.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: A-type (#CCD8FF) and F-type (#FFF4C8) fill colors nearly invisible
-          on cream background; visible only via dark-ink outlines; Sun star marker
-          excellent at size 32
+        comment: Markers size 14-18px well-adapted to 300 points, alpha=0.85 reasonable.
+          A/F boosted to 18px. B diamonds and A hexagons somewhat subtle at thumbnail
+          scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent redundant marker shape encoding per spectral type (7 distinct
-          shapes); strong CVD mitigation for 7-series chart
+        comment: Dual redundant encoding color + distinct marker shapes. Edge outlines
+          add definition. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout with appropriate min_border settings; canvas exactly
-          3200x1800; Main Sequence label placement slightly suboptimal overlapping
-          data
+        comment: Canvas gate passed. Good min_border reservations (110/160/180/80).
+          Legend on right without crowding.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Surface Temperature (K) and Luminosity (L☉) with units
+        comment: Surface Temperature (K) and Luminosity (L☉) — descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Custom spectral hex colors (#5588FF, #88AAFF, #CCD8FF, #FFF4C8,
-          #FFD700, #FF8C00, #FF3300) not Imprint palette members; semantic exception
-          for astronomical domain is valid but should use closest Imprint palette
-          members; plot backgrounds (#FAF8F1/#1A1A17) and theme chrome correct'
+        comment: 'Backgrounds correct. Chrome theme-adaptive. Semantic exception justified
+          for spectral types. Deduction: F stars use lime (#99B314) when spec calls
+          for yellow, A stars use lavender (#C475FD) when spec calls for white/blue-white.
+          These specific Imprint assignments don''t satisfy the semantic exception
+          well.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -122,28 +117,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: theme-adaptive label darkening, redundant marker
-          shapes, spectral class letters along top axis, Sun reference star as focal
-          anchor, region annotations in semantically-matched spectral colors, marker
-          edge contrast adaptation per theme'
+        comment: 'Clearly above defaults: spectral class letters at top, darkened
+          SPECTRAL_LABEL_COLORS for light theme, star-shaped amber Sun reference,
+          redundant shape encoding. No strong focal-point emphasis on main sequence.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid at 12% opacity is subtle and appropriate; but full box outline
-          (all 4 spines via outline_line_color=INK_SOFT) instead of recommended L-shape
-          (top/right removed)
+        passed: true
+        comment: 'outline_line_color=None removes box. Grid at alpha=0.12 subtle.
+          Minor tick marks removed. Generous whitespace. Deduction: Main Sequence
+          region label lacks background fill, competes with data.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good: conventional hot-to-cool color gradient communicates temperature
-          story; Sun reference anchors the viewer; region labels guide classification;
-          main sequence diagonal clearly visible'
+        comment: 'Color temperature gradient (blue=hot to rose=cool) reads as natural
+          narrative. Region labels give roadmap. Sun contextualizes scale. Missing:
+          no visual emphasis on main sequence as primary focal point.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -151,28 +145,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct HR diagram scatter plot
+        comment: Correct scatter plot with reversed log x-axis and log y-axis. All
+          four stellar populations visible.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: X-axis reversed, log axes, spectral type colors, four regions labeled,
-          Sun marked, spectral class letters along top (optional implemented)
+        comment: 'X reversed, y-log, spectral colors, four region labels, Sun reference,
+          spectral class letters — all present. Deduction: A (lavender) and F (lime)
+          deviate from spec''s conventional color guidance.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on X (reversed, log), luminosity on Y (log), full data
-          range visible
+        comment: Temperature on reversed x, luminosity on log y, spectral type mapped
+          to color and shape. All populations in expected regions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows Spectral Type with all 7 types
-          labeled
+        comment: 'Title: scatter-hr-diagram · python · bokeh · anyplot.ai. Legend:
+          Spectral Type with Type O through Type M in correct order.'
     data_quality:
       score: 15
       max: 15
@@ -182,21 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All four stellar populations represented: main sequence, red giants,
-          supergiants, white dwarfs'
+        comment: All four stellar populations, full spectral range O-M, log-log structure
+          shows classical HR diagram.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Astrophysics neutral educational context
+        comment: HR diagram is canonical neutral astrophysics scenario. Sun at T=5778
+          K, L=1 L☉ is factually correct.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic stellar parameter ranges; Sun at T=5778K, L=1.0 L☉ is factually
-          correct; luminosity log scale 1e-4 to 2e6 appropriate
+        comment: Temperature 2400-50000 K, luminosity 1e-4 to 1e6 L☉, L∝T^4 main sequence,
+          300 stars — all realistic.
     code_quality:
       score: 10
       max: 10
@@ -206,61 +203,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear procedural code, no functions or classes; sys.path fix has
-          appropriate comment
+        comment: 'Linear flow: imports → tokens → data → figure → series → labels
+          → style → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) before all data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, time, Path, numpy, bokeh, selenium, PIL'
+        comment: All imported names are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, no fake UI elements
+        comment: Clean iteration, sensible constants, PIL resize-pin is a justified
+          workaround for CDP screenshot size drift.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png for both themes.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Expert use of ColumnDataSource per series, HoverTool with formatted
-          tooltips, Range1d for reversed log axis, add_layout for annotations, output_file+save
-          for HTML, Selenium CDP setDeviceMetricsOverride for exact canvas dimensions
+        comment: ColumnDataSource per series, Range1d for axis reversal, LegendItem
+          with renderer references, add_layout for external legend and labels, HoverTool
+          with formatted tooltips, CDP workaround for headless Chrome.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Real HoverTool interactivity in HTML output, custom LegendItem construction
-          with click_policy='hide' for interactive legend toggling, per-series ColumnDataSource
-          enabling independent hover, CDP canvas override for precise rendering
-  verdict: REJECTED
+        comment: 'click_policy=hide for interactive legend, rich HoverTool tooltips
+          with number formatting, HTML export + PNG. Full 5 withheld: no CustomJS
+          callbacks or other uniquely-Bokeh interactive capability.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
+  - custom-legend
   - hover-tooltips
   - html-export
-  - custom-legend
   - annotations
   patterns:
   - data-generation
