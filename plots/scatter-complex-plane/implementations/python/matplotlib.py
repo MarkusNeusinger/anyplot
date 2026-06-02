@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-02
@@ -14,6 +14,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
+from matplotlib.patches import Arc
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -68,14 +69,34 @@ for z, color in zip(all_points, all_colors, strict=False):
         zorder=3,
     )
 
+# Angle arcs — dotted arcs from positive real axis to each vector, showing the argument
+for z, color in zip(all_points, all_colors, strict=False):
+    angle_deg = np.degrees(np.angle(z))  # in [-180, 180]
+    if abs(angle_deg) > 0.5:
+        arc = Arc(
+            (0, 0),
+            0.38,
+            0.38,
+            angle=0,
+            theta1=min(0.0, angle_deg),
+            theta2=max(0.0, angle_deg),
+            color=color,
+            linewidth=0.9,
+            linestyle=":",
+            alpha=0.45,
+            zorder=2,
+        )
+        ax.add_patch(arc)
+
 # Scatter points
 for z, color, marker in zip(all_points, all_colors, all_markers, strict=False):
     ax.scatter(z.real, z.imag, s=130, color=color, marker=marker, edgecolors=PAGE_BG, linewidth=1.2, zorder=5)
 
-# Labels — name + rectangular form (a+bi), offset outward from origin
+# Labels — name, rectangular form (a+bi), and polar form (|z|∠θ°), offset outward from origin
 for z, label in zip(all_points, all_labels, strict=False):
     re, im = z.real, z.imag
     mag = abs(z) + 1e-12
+    angle_deg = np.degrees(np.angle(z)) % 360
 
     if abs(im) < 1e-10:
         coord = f"{re:.2f}"
@@ -84,14 +105,16 @@ for z, label in zip(all_points, all_labels, strict=False):
     else:
         coord = f"{re:.2f}{im:.2f}i"
 
-    dx = (re / mag) * 0.36
-    dy = (im / mag) * 0.36
+    polar = f"{abs(z):.2f}∠{angle_deg:.1f}°"
+
+    dx = (re / mag) * 0.45
+    dy = (im / mag) * 0.45
 
     ax.annotate(
-        f"{label}\n{coord}",
+        f"{label}\n{coord}\n{polar}",
         xy=(re, im),
         xytext=(re + dx, im + dy),
-        fontsize=7,
+        fontsize=9,
         color=INK,
         ha="center",
         va="center",
@@ -115,8 +138,8 @@ ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-ax.set_xlim(-2.2, 2.2)
-ax.set_ylim(-2.2, 2.2)
+ax.set_xlim(-2.4, 2.4)
+ax.set_ylim(-2.4, 2.4)
 
 # Legend
 legend_elements = [
