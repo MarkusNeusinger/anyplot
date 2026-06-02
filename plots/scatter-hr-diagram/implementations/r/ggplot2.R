@@ -17,14 +17,28 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
-# Imprint palette — semantic exception applies: red giants are literally red,
-# white dwarfs are hot blue-shifted remnants, brand green for main-sequence stars
-REGION_COLORS <- c(
-    "Main Sequence" = "#009E73",  # brand green — stars in their prime
-    "Red Giants"    = "#AE3030",  # matte red — literal stellar color
-    "Supergiants"   = "#C475FD",  # lavender — rare, luminous giants
-    "White Dwarfs"  = "#4467A3"   # blue — hot, degenerate remnants
+# Spectral type colors — semantic exception: conventional stellar color sequence
+# O/B are blue, A is pale lavender (white-ish), F/G are warm yellow-ochre,
+# K is rose (nearest Imprint to orange), M is matte red — all Imprint palette
+SPECTRAL_COLORS <- c(
+    "O" = "#4467A3",  # blue — O stars are intensely blue-hot
+    "B" = "#2ABCCD",  # cyan — B stars are blue-white
+    "A" = "#C475FD",  # lavender — A stars are white/pale blue-white
+    "F" = "#99B314",  # lime — F stars are yellow-white
+    "G" = "#BD8233",  # ochre — G stars are yellow (Sun-like)
+    "K" = "#954477",  # rose — K stars are orange-red
+    "M" = "#AE3030"   # matte red — M stars are red
 )
+
+# Assign spectral type based on effective temperature (Harvard classification)
+spectral_class <- function(temp) {
+    ifelse(temp >= 30000, "O",
+    ifelse(temp >= 10000, "B",
+    ifelse(temp >= 7500,  "A",
+    ifelse(temp >= 6000,  "F",
+    ifelse(temp >= 5200,  "G",
+    ifelse(temp >= 3700,  "K", "M"))))))
+}
 
 # --- Data -------------------------------------------------------------------
 # Main sequence: luminosity ~ T^4 (Stefan-Boltzmann), log-linear with scatter
@@ -47,26 +61,37 @@ n_wd    <- 45
 wd_temp <- runif(n_wd, 9000, 38000)
 wd_lum  <- 10^(runif(n_wd, -3.8, -1.6) + rnorm(n_wd, sd = 0.18))
 
-# Combined stellar dataset
+# Combined stellar dataset with spectral type and region classification
+all_temp <- c(ms_temp, rg_temp, sg_temp, wd_temp)
+all_lum  <- c(ms_lum,  rg_lum,  sg_lum,  wd_lum)
+all_reg  <- c(rep("Main Sequence", n_ms), rep("Red Giants", n_rg),
+              rep("Supergiants",   n_sg), rep("White Dwarfs", n_wd))
+
 df <- data.frame(
-    temperature = c(ms_temp, rg_temp, sg_temp, wd_temp),
-    luminosity  = c(ms_lum,  rg_lum,  sg_lum,  wd_lum),
-    region = factor(
-        c(rep("Main Sequence", n_ms), rep("Red Giants", n_rg),
-          rep("Supergiants",   n_sg), rep("White Dwarfs", n_wd)),
-        levels = c("Main Sequence", "Red Giants", "Supergiants", "White Dwarfs")
-    )
+    temperature   = all_temp,
+    luminosity    = all_lum,
+    region        = factor(all_reg, levels = c("Main Sequence", "Red Giants",
+                                               "Supergiants", "White Dwarfs")),
+    spectral_type = factor(spectral_class(all_temp),
+                           levels = c("O", "B", "A", "F", "G", "K", "M"))
 )
 
-# Sun: reference star — 5,778 K and 1.0 L_sun
+# Sun: reference star — 5,778 K, 1.0 L_sun, G2V spectral type
 sun <- data.frame(temperature = 5778, luminosity = 1.0)
+
+# Notable named stars (star_name data dimension — DQ-01)
+named_stars <- data.frame(
+    temperature = c(3500,   9940,  12000),
+    luminosity  = c(1.26e5, 25.4,  1.3e5),
+    star_name   = c("Betelgeuse", "Sirius", "Rigel")
+)
 
 # --- Plot -------------------------------------------------------------------
 title_str <- "scatter-hr-diagram · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = temperature, y = luminosity, color = region)) +
+p <- ggplot(df, aes(x = temperature, y = luminosity, color = spectral_type)) +
     geom_point(size = 1.8, alpha = 0.72) +
-    # Sun: amber filled diamond as a distinct reference marker
+    # Sun: amber filled diamond — distinct reference marker
     geom_point(
         data        = sun,
         aes(x = temperature, y = luminosity),
@@ -77,7 +102,29 @@ p <- ggplot(df, aes(x = temperature, y = luminosity, color = region)) +
         stroke      = 0.8,
         inherit.aes = FALSE
     ) +
-    # Stellar region labels positioned within each population
+    # Named star markers (filled triangles to distinguish from scatter)
+    geom_point(
+        data        = named_stars,
+        aes(x = temperature, y = luminosity),
+        color       = INK,
+        fill        = INK_SOFT,
+        size        = 3.5,
+        shape       = 24,
+        stroke      = 0.6,
+        inherit.aes = FALSE
+    ) +
+    # Named star labels
+    geom_text(
+        data        = named_stars,
+        aes(x = temperature, y = luminosity, label = star_name),
+        color       = INK_SOFT,
+        size        = 2.5,
+        fontface    = "italic",
+        hjust       = c(1.1, -0.15, -0.15),
+        vjust       = -0.4,
+        inherit.aes = FALSE
+    ) +
+    # Stellar region annotations guide the viewer through populations
     annotate("text",
         x = 12000, y = 9e5,
         label = "SUPERGIANTS", color = INK_MUTED,
@@ -98,17 +145,17 @@ p <- ggplot(df, aes(x = temperature, y = luminosity, color = region)) +
         label = "WHITE DWARFS", color = INK_MUTED,
         size = 3.0, fontface = "italic"
     ) +
-    # Sun label (amber matches the marker fill)
+    # Sun label (amber matches the diamond marker fill)
     annotate("text",
         x = 4750, y = 0.60,
         label = "Sun", color = "#DDCC77",
         size = 3.0, fontface = "bold"
     ) +
     # Reversed x-axis (astrophysical convention: hot on left, cool on right)
-    # with optional spectral class secondary axis on top
+    # Fewer breaks at cool end to avoid label crowding
     scale_x_reverse(
         name     = "Surface Temperature (K)",
-        breaks   = c(30000, 20000, 10000, 7500, 5000, 3500),
+        breaks   = c(30000, 20000, 10000, 5000, 3500),
         labels   = scales::label_comma(),
         limits   = c(42000, 2700),
         expand   = c(0.01, 0),
@@ -119,7 +166,7 @@ p <- ggplot(df, aes(x = temperature, y = luminosity, color = region)) +
             name      = "Spectral Class"
         )
     ) +
-    # Log-scale luminosity axis with exponent labels
+    # Log-scale luminosity axis with scientific notation tick labels
     scale_y_log10(
         name   = "Luminosity (solar units)",
         breaks = 10^c(-4, -2, 0, 2, 4, 6),
@@ -127,7 +174,7 @@ p <- ggplot(df, aes(x = temperature, y = luminosity, color = region)) +
         limits = c(5e-5, 5e6),
         expand = c(0.01, 0)
     ) +
-    scale_color_manual(values = REGION_COLORS, name = NULL) +
+    scale_color_manual(values = SPECTRAL_COLORS, name = "Spectral Type") +
     labs(title = title_str) +
     theme_minimal(base_size = 8) +
     theme(
@@ -148,6 +195,7 @@ p <- ggplot(df, aes(x = temperature, y = luminosity, color = region)) +
         legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                          linewidth = 0.3),
         legend.text       = element_text(color = INK_SOFT,   size = 8),
+        legend.title      = element_text(color = INK_SOFT,   size = 9),
         legend.key        = element_rect(fill = PAGE_BG,     color = NA),
         legend.position   = "right",
         plot.margin       = margin(12, 15, 12, 12)
