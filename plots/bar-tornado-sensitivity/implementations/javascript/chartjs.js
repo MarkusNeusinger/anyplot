@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-02
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-02
 
 const t = window.ANYPLOT_TOKENS;
 const BASE_VALUE = 5.0;
