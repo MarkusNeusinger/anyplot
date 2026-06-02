@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -104,10 +104,7 @@ title_size = max(11, round(16 * ratio))
 plot = (
     ggplot(df, aes(x="onset_date", y="case_count", fill="case_type"))
     + geom_bar(
-        stat="identity",
-        position="stack",
-        width=0.8,
-        tooltips=layer_tooltips().format("case_count", "d").line("@|case_type").line("Cases|@case_count"),
+        stat="identity", position="stack", width=0.8, tooltips=layer_tooltips().line("@case_type|@case_count cases")
     )
     + geom_line(
         data=df_cumulative,
@@ -161,7 +158,7 @@ plot = (
         legend_title=element_text(size=10, color=INK, face="bold"),
         legend_text=element_text(size=10, color=INK_SOFT),
         plot_caption=element_text(size=9, color=INK_MUTED, hjust=0.5),
-        legend_position=[0.82, 0.88],
+        legend_position=[0.82, 0.28],
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
