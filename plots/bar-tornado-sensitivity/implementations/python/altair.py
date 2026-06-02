@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-06-02
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-02
 """
 
 import importlib
