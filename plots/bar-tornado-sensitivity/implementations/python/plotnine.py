@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -14,6 +14,7 @@ sys.path = [p for p in sys.path if p and not p.endswith("implementations") and n
 import pandas as pd  # noqa: E402
 from plotnine import (  # noqa: E402
     aes,
+    annotate,
     coord_flip,
     element_blank,
     element_line,
@@ -90,6 +91,7 @@ df = pd.DataFrame(records)
 
 # Sort by total range: ascending so widest bar sits at top after coord_flip
 sort_order = df.groupby("parameter")["total_range"].first().sort_values(ascending=True).index.tolist()
+top_range = int(high_values[0] - low_values[0])  # Discount Rate: 148 - 95 = 53
 df["parameter"] = pd.Categorical(df["parameter"], categories=sort_order, ordered=True)
 
 # Visual emphasis: top 3 influential parameters at full opacity, rest muted
@@ -111,8 +113,18 @@ plot = (
     ggplot(df, aes(x="parameter", y="deviation", fill="scenario"))
     + geom_col(aes(alpha="bar_alpha"), position="identity", width=0.7)
     + geom_hline(yintercept=0, linetype="dashed", color=INK_SOFT, size=0.8)
-    + geom_text(aes(label="npv_label", y="deviation"), data=df_low, ha="right", nudge_y=-1.0, size=2.5, color=INK_MUTED)
-    + geom_text(aes(label="npv_label", y="deviation"), data=df_high, ha="left", nudge_y=1.0, size=2.5, color=INK_MUTED)
+    + geom_text(aes(label="npv_label", y="deviation"), data=df_low, ha="right", nudge_y=-1.0, size=3.2, color=INK_MUTED)
+    + geom_text(aes(label="npv_label", y="deviation"), data=df_high, ha="left", nudge_y=1.0, size=3.2, color=INK_MUTED)
+    + annotate(
+        "text",
+        x=10.35,
+        y=30.0,
+        label=f"Primary driver: ${top_range}M NPV range",
+        size=2.8,
+        color=INK_MUTED,
+        ha="left",
+        va="center",
+    )
     + coord_flip()
     + scale_fill_manual(values={"Low Scenario": CLR_LOW, "High Scenario": CLR_HIGH})
     + scale_alpha_identity(guide=None)
@@ -130,7 +142,7 @@ plot = (
         plot_title=element_text(size=title_fontsize, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="top",
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.15),
