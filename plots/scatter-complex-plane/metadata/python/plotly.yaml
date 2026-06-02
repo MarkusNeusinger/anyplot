@@ -1,110 +1,149 @@
 library: plotly
+language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:23:50Z'
-updated: '2026-03-04T20:54:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22687521485
+updated: '2026-06-02T01:11:45Z'
+generated_by: claude-sonnet
+workflow_run: 26791586478
 issue: 4427
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/plotly/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Comprehensive mathematical storytelling with four distinct categories demonstrating
-    different complex number concepts
-  - Excellent spec compliance with every required feature present and well-executed
-  - Custom text positioning per label to minimize overlap shows attention to detail
-  - Rich Plotly-specific hover tooltips with magnitude and phase information
-  - Clean well-organized code with consistent typography and color palette
+  - 'Full spec compliance: unit circle, vector arrows from origin, equal aspect ratio,
+    annotated roots of unity, and two distinct categories all implemented correctly'
+  - 'Expert Plotly usage: scaleanchor/scaleratio for equal aspect ratio, customdata
+    with hovertemplate showing both rectangular and polar form of each complex number,
+    axref/ayref for data-coordinate arrow annotations'
+  - 'Excellent palette compliance: C1=#009E73 (brand green) for roots of unity as
+    first series, C2=#C475FD (Imprint position 2) for spiral — both theme-independent
+    and identical across light/dark renders'
+  - 'Strong data storytelling: diminishing spiral marker sizes encode convergence
+    visually, arrow vectors make magnitude/direction immediately clear, dashed unit
+    circle provides geometric reference'
+  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, GRID,
+    PAGE_BG, ELEVATED_BG) correctly applied; both renders pass readability checks
+    with no dark-on-dark failures'
+  - Interactive HTML export alongside PNG — fully appropriate for Plotly as an interactive
+    library
   weaknesses:
-  - Minor crowding near the origin where 5 roots of unity and their arrows converge
-  - Arrow opacity at 0.60 makes shorter vectors slightly less prominent
-  image_description: 'The plot displays an Argand diagram on a white background with
-    the title "scatter-complex-plane · plotly · pyplots.ai" and subtitle "Argand diagram
-    — roots of unity, conjugates & vector addition" centered at the top in Georgia
-    serif font. The axes are labeled Re(z) (horizontal) and Im(z) (vertical) with
-    bold zeroline axes through the origin. A dashed gray unit circle centered at the
-    origin is labeled "r = 1" in italic near 160°. Four categories of complex numbers
-    are plotted: (1) navy-blue 5th Roots of Unity (ω0–ω4) on the unit circle, (2)
-    orange Arbitrary Points (z₁–z₅) spread across quadrants, (3) purple Conjugate
-    Pair (w and w̄) connected by a dashed vertical line showing real-axis symmetry,
-    and (4) a larger green Sum point (z₁+z₂) with dotted green lines showing the parallelogram
-    rule from z₁ and z₂. Vector arrows extend from the origin to each point with semi-transparent
-    coloring. Each point is annotated with its label in bold and rectangular form
-    (a+bi). A legend in the upper-left lists all four categories. The plot uses equal
-    aspect ratio (1:1 square at 1200×1200), very subtle gridlines, and a clean plotly_white
-    template.'
+  - 'CQ-01: Helper function root_anchor() defined in top-level scope — KISS structure
+    expects no functions/classes; inline the 8-element lookup table or use a dict
+    instead'
+  - 'VQ-01 minor: title font is not explicitly specified as a numeric value — it is
+    computed dynamically (max(11, round(16*67/n_chars))), which is correct in principle
+    but at 52 chars the formula yields default_fs=16, so the title could have been
+    pinned directly to 16 for clarity'
+  - 'DE-02: All four plot spines are retained (box frame); while defensible for a
+    coordinate system, removing top/right spines would add visual refinement without
+    losing mathematical clarity'
+  - 'DE-01/DE-03: Design is mathematically precise but lacks one emphatic focal point
+    — adding a subtle shaded sector or polar coordinate arc annotation at a key root
+    would elevate storytelling from ''data shown'' to ''insight highlighted'''
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, no pure white
+      Chrome: title "scatter-complex-plane · python · plotly · anyplot.ai" in dark ink, readable; subtitle "Argand diagram — 8th roots of unity & inward geometric spiral" in muted gray; axis labels "Re(z)" and "Im(z)" in dark ink; tick labels in dark-gray (INK_SOFT); legend box with elevated-bg fill and border in top-left
+      Data: 8th roots of unity as large green circles (#009E73) with white stroke and green vector arrows from origin; geometric spiral as purple diamonds (#C475FD) connected by dotted purple line with diminishing marker sizes; dashed gray unit circle reference; root labels (1, ω, i, ω³, −1, ω⁵, −i, ω⁷) in green positioned around the circle; "r = 1" annotation in muted gray at 120°
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, no pure black
+      Chrome: title and subtitle in light off-white text, clearly readable; axis labels in light ink; tick labels in medium-light gray (INK_SOFT dark=#B8B7B0); legend box with dark elevated-bg (#242420) and lighter border; zero lines appear as lighter lines through origin — all correct for dark theme
+      Data: 8th roots of unity still in #009E73 (identical to light render); spiral diamonds still in #C475FD (identical); dashed circle in adapted gray; root labels in #009E73 green — readable against dark background; "r = 1" annotation in #A8A79F muted gray — readable
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures; brand green #009E73 visually strong on dark surface
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 16pt'
+        comment: Font sizes explicitly set (title computed dynamically via formula,
+          axis labels 12px, ticks 10px, annotations 12-14px); all text readable in
+          both themes; proportions well-balanced
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Custom text offsets reduce overlap but crowding near origin among
-          roots of unity is noticeable
+        comment: Root labels carefully positioned with root_anchor offsets around
+          unit circle; legend in top-left corner does not overlap data; spiral and
+          roots do not collide
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers well-sized with white borders; arrow opacity 0.60 slightly
-          faint for short vectors
+        comment: Root markers size=16 (64px at scale=4), highly visible; spiral diamonds
+          from 16 down to 7 encode convergence intentionally; all elements clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/purple/green colorblind-safe palette with strong contrast
+        comment: Green (#009E73) and purple (#C475FD) are perceptually distinct across
+          CVD conditions; gray unit circle adds third distinguishable reference element
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format ideal for complex plane; equal aspect ratio; good margins
+        comment: Square 2400x2400 correct for symmetric complex plane; equal aspect
+          ratio enforced; canvas gate passed; margins appropriate; data fills center
+          well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(z) and Im(z) are standard mathematical axis labels
+        comment: Re(z) and Im(z) descriptive with standard mathematical notation;
+          title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data series (#009E73 green) correct; second series (#C475FD
+          lavender, Imprint position 2) correct; backgrounds #FAF8F1/#1A1A17 correct;
+          all chrome theme-adaptive'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, Georgia serif throughout, white marker borders, styled
-          HTML subtitle
+        comment: 'Above well-configured defaults: white stroke on markers, opacity
+          on arrows, decreasing spiral sizes, subtitle adds context; not quite publication-ready
+          FiveThirtyEight level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, very subtle grid, bold zerolines, legend with
-          subtle border
+        comment: Grid at 15% opacity, zero lines for complex plane axes, legend explicitly
+          styled; all 4 spines retained (defensible for coordinate system but limits
+          refinement score)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Multiple stories: roots of unity, conjugate symmetry, parallelogram
-          rule; marker size hierarchy'
+        comment: Arrow vectors from origin, dashed unit circle, and diminishing marker
+          sizes create clear visual narrative; color contrast distinguishes two mathematical
+          concepts cleanly
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +153,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram / complex plane scatter plot
+        comment: 'Correct Argand diagram: real on x-axis, imaginary on y-axis, complex
+          numbers as scatter points'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: axes through origin, dashed unit circle, vectors,
-          equal aspect, annotations, distinct colors'
+        comment: Unit circle (dashed), vector arrows from origin, equal aspect ratio
+          (scaleanchor), point annotations with labels, two distinct categories —
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=real, Y=imaginary, all data visible
+        comment: Re(z) on x-axis, Im(z) on y-axis; axes cover full data range [-1.45,
+          1.45]
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match categories
+        comment: Title 'scatter-complex-plane · python · plotly · anyplot.ai' correct
+          format; legend labels descriptive and match data
     data_quality:
       score: 15
       max: 15
@@ -143,70 +186,80 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Roots of unity, arbitrary points, conjugate pair, vector addition
-          — comprehensive coverage
+        comment: Shows roots of unity (symmetric angular distribution), geometric
+          spiral (convergence via repeated multiplication), unit circle reference,
+          vector representation — all Argand diagram aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical/educational context with standard complex analysis concepts
+        comment: 8th roots of unity and geometric spiral are fundamental, neutral
+          mathematical concepts from complex analysis — real and educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis range fits all points well with appropriate padding
+        comment: 8th roots correctly on unit circle |z|=1; spiral starts at |z0|=0.88
+          and converges to origin; factually correct mathematical properties
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Clean Imports → Data → Plot → Save structure, no functions/classes
+        passed: false
+        comment: One helper function root_anchor() defined — violates no-functions
+          KISS rule; should be inlined as a dict or list
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, data largely deterministic
+        comment: 'Fully deterministic: data from mathematical formulas, no random
+          numbers'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear sections and clean category iteration
+        comment: Clean, well-structured; customdata/hovertemplate usage is idiomatic
+          Plotly; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Plotly API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct API usage
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper go.Figure, add_trace, add_annotation, hovertemplate with customdata
+        comment: 'Expert Plotly: scaleanchor/scaleratio for equal aspect ratio, customdata
+          with hovertemplate, axref/ayref=''x''/''y'' for data-coordinate arrows,
+          zeroline for complex plane axes'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Rich hovertemplate, HTML annotations, interactive HTML export, scaleanchor
+        comment: Interactive hover showing both rectangular (Re/Im) and polar (|z|,
+          arg) form is distinctly Plotly; HTML export; arrow annotations in data coordinates
+          — strong Plotly-specific implementation
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -219,6 +272,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
-  - grid-styling
   - alpha-blending
+  - edge-highlighting

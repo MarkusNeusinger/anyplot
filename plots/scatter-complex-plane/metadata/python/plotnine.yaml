@@ -1,46 +1,64 @@
 library: plotnine
+language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:26:38Z'
-updated: '2026-03-04T20:58:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22687521661
+updated: '2026-06-02T01:24:09Z'
+generated_by: claude-sonnet
+workflow_run: 26791798019
 issue: 4427
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/plotnine/plot.png
-preview_html: null
-quality_score: 89
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance with all required features present and well-implemented
-  - Strong data storytelling with parallelogram rule demonstrating complex addition
-  - Custom color palette with intentional visual hierarchy (halo rings, size variation,
-    color categories)
-  - Clean idiomatic plotnine code using layered grammar of graphics effectively
-  - Perfect data quality with educational context showing roots of unity and complex
-    arithmetic
+  - 'Complete spec implementation — all required elements present: axes through origin,
+    dashed unit circle, vectors with closed arrowheads, point annotations with rectangular
+    form (a+bi), equal aspect ratio (coord_fixed), distinct colors per category'
+  - Thoughtful visual hierarchy — halo rings on 6th roots of unity (alpha=0.12 ghost
+    layer), size variation between categories (roots 3.5 / arbitrary 4.0 / sum 5.5),
+    alpha progression from 0.90 → 1.0 for depth
+  - Sophisticated annotation strategy — radial offset with left/right alignment split
+    to work around plotnine's ha limitation; geom_label with rounded boxstyle and
+    ELEVATED_BG fill renders correctly in both light and dark themes
+  - 'Correct Imprint palette: brand green (#009E73) for roots of unity (first series),
+    lavender (#C475FD) for arbitrary points, blue (#4467A3) for sum; theme-adaptive
+    chrome fully wired through all text and structural elements'
+  - Perfect code quality — flat script, deterministic data, all imports used, idiomatic
+    plotnine grammar-of-graphics layering
   weaknesses:
-  - Annotation label font size (9) is slightly small compared to other text elements
-  - Central area where vectors converge is somewhat crowded
-  - DE-03 storytelling could be stronger with more visual emphasis on the parallelogram
-    addition rule
-  image_description: 'The plot shows an Argand diagram (complex plane) on a square
-    canvas with a light gray panel background. The title "scatter-complex-plane ·
-    plotnine · pyplots.ai" appears in large bold text at the top. The x-axis is labeled
-    "Re(z)" and y-axis "Im(z)", both ranging from -2 to 2. A dashed gray unit circle
-    is centered at the origin with an italic "|z| = 1" label at 45 degrees. Light
-    gray reference axes cross through the origin. There are 11 points in three categories:
-    5 dark navy blue points (5th roots of unity, ω0–ω4) sitting on the unit circle
-    with subtle halo rings, 5 orange points (arbitrary complex numbers z₁–z₅) spread
-    across all quadrants, and 1 green point (z₁+z₂) showing complex addition. Arrows
-    extend from the origin to each point. Dotted green lines form the parallelogram
-    rule from z₁ and z₂ to their sum. Each point has a white-background label box
-    showing its name and rectangular form (e.g., "z₃ = 0.40+1.80i"). A bottom legend
-    distinguishes the three categories: "5th Root of Unity (|z| = 1)", "Arbitrary
-    Point", and "Sum (z₁ + z₂)".'
+  - The '|z| = 1' unit circle annotation (annotate size=3.8, italic, angle=50°) is
+    small in both renders and may be difficult to read at thumbnail scale (~400px);
+    increase to size=5.0-5.5
+  - 'Label crowding in the upper-left quadrant: ''z₂ = −0.90+1.10i'' and ''ω2 = −0.50+0.87i''
+    label boxes are close together; the offset radius (label_radius=0.46) is tight
+    for this cluster — consider increasing to 0.55-0.60 for ω2 to push labels further
+    apart'
+  - Design Excellence is functional but not exceptional — DE-02 could be pushed by
+    tuning legend box margins and reducing the panel_border_blank visual gap; DE-03
+    could benefit from a subtle annotation callout for the sum vector to reinforce
+    the parallelogram-law story
+  - The '|z| = 1' label uses INK_MUTED (#A8A79F on dark) with a geom_path circle at
+    alpha=0.65 — on the dark render the label is somewhat faint; increase to INK_SOFT
+    or raise label size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed correct, not pure white.
+      Chrome: Title "scatter-complex-plane · python · plotnine · anyplot.ai" bold in dark ink (~80% width), readable. Axis labels "Re(z)" / "Im(z)" at fontsize=10, balanced and legible. Tick labels (−2, −1, 0, 1, 2) in INK_SOFT at fontsize=8, clear. Grid lines very subtle (alpha=0.15). Legend at bottom in styled box (ELEVATED_BG fill) with bold "Category" heading, 3 entries clearly labelled.
+      Data: 6 roots of unity in brand green (#009E73) on unit circle with prominent halo rings; 4 arbitrary points in lavender (#C475FD) spread across quadrants; sum point in blue (#4467A3) at ~(0.60, 1.70) — clearly the largest marker. Dashed unit circle reference visible. Vector arrows from origin to each point in matching colors. Annotation label boxes (ELEVATED_BG fill, rounded corners) display "name = a+bi" for all 11 points. The small italic "∣z∣=1" near the unit circle at angle 50° is readable but small.
+      Legibility verdict: PASS — all critical text is readable; the "∣z∣=1" annotation is small but present.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed correct, not pure black.
+      Chrome: Title in light #F0EFE8 (INK dark token), bold, clearly visible. Axis labels, tick labels all in adaptive INK / INK_SOFT tokens — fully readable against dark background. No dark-on-dark failures detected. Grid lines subtle. Legend box uses ELEVATED_BG (#242420) fill with light text — readable.
+      Data: All data colors identical to light render — brand green roots, lavender arbitrary, blue sum. Color identity maintained across themes as required. Annotation label boxes use dark fill (#242420) with light INK text (#F0EFE8) — clearly legible on dark background. Unit circle "∣z∣=1" label is slightly faint at INK_MUTED (#A8A79F) but still discernible.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable; "∣z∣=1" annotation is borderline-faint on dark but not a critical failure.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,67 +66,87 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Annotation labels at size=9 slightly
-          small but readable with white-fill boxes.
+        comment: Title, axis labels, tick labels all readable in both themes. Small
+          '|z|=1' annotation (size=3.8) is the only weak point — readable but small
+          at thumbnail scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels use geom_label with white background preventing most issues.
-          Some crowding near origin where vectors converge.
+        comment: Radial offset strategy works well overall. Minor label proximity
+          in upper-left (ω2 / z₂ cluster) but no pixel overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points clearly visible with appropriate sizing for 11 data points.
-          Halo rings on roots of unity add emphasis.
+        comment: All markers clearly visible with halo rings on roots of unity. Vector
+          arrows prominent. Size hierarchy between categories effective. Sparse data
+          appropriately handled with larger markers.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Navy blue, orange, and green are distinguishable for all color vision
-          types.
+        comment: Imprint palette used — CVD-safe. No red-green sole signal. 3 categories
+          with strong perceptual distance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12x12 format with equal aspect ratio. Good canvas utilization
-          with balanced margins.
+        comment: Canvas gate passed. Square 2400×2400 format correct for symmetric
+          complex plane. Good proportions. Title fits well. No overflow or clipping
+          detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(z) and Im(z) are descriptive standard notation for complex plane.
+        comment: Re(z) and Im(z) are correct mathematical notation. Title matches
+          required format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 is first series (6th roots of unity). Lavender
+          #C475FD second, blue #4467A3 third — canonical Imprint order. Light bg #FAF8F1,
+          dark bg #1A1A17 both correct.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom three-color palette with intentional hierarchy. Halo rings,
-          styled label boxes, refined typography. Above configured defaults.
+        comment: 'Above default (4): halo ring ghost layer on roots of unity is a
+          deliberate design choice; annotation boxes with rounded corners and ELEVATED_BG
+          fill add refinement; size/alpha visual hierarchy is intentional. Not elevated
+          to 6+ as overall composition is primarily functional.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_minimal base, minor grid removed, major grid very subtle, light
-          panel background, styled legend with border.
+        comment: 'Above default (2): theme_minimal removes top/right spines; panel_grid_major
+          at alpha=0.15 is appropriately subtle; legend_background styled with ELEVATED_BG;
+          panel_border removed. Minor deduction: legend box border (INK_SOFT, size=0.4)
+          adds a slight frame that could be cleaner.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Parallelogram rule for complex addition, size hierarchy, halo rings
-          guide the eye. Good hierarchy but could push storytelling further.
+        comment: 'Above default (2): unit circle as organizing reference geometry
+          is a clear focal structure; vector arrows from origin create radiating narrative;
+          halos on roots emphasize their special status on the circle; size-progressive
+          hierarchy (roots/arbitrary/sum) guides the viewer''s attention toward the
+          sum as the result. Deduction: no narrative label or callout reinforcing
+          the complex-addition story (z₁+z₂ resultant concept).'
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +156,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram with scatter points and vectors.
+        comment: Correct Argand diagram / complex plane scatter visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: axes through origin, dashed unit
-          circle, vectors with arrows, equal aspect ratio, annotations, distinct colors.'
+        comment: 'All required features present: real/imaginary axes through origin
+          (geom_hline + geom_vline), dashed unit circle (geom_path linetype=''dashed''),
+          vectors with arrows (geom_segment + arrow()), equal aspect ratio (coord_fixed),
+          annotations with rectangular form, distinct colors per category.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x-axis, imaginary on y-axis. All data visible.
+        comment: Real part on x-axis, imaginary on y-axis. All 11 data points plotted.
+          Axis limits ±2.5 show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels are descriptive and accurate.
+        comment: 'Title ''scatter-complex-plane · python · plotnine · anyplot.ai''
+          matches required format. Legend labels are descriptive: ''6th Root of Unity
+          (|z| = 1)'', ''Arbitrary Point'', ''Sum (z₁+z₂)''.'
     data_quality:
       score: 15
       max: 15
@@ -147,20 +190,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 5th roots of unity, arbitrary points across all quadrants,
-          and complex addition with parallelogram rule.
+        comment: 'Shows all key complex plane concepts: nth roots of unity on unit
+          circle, arbitrary points in all 4 quadrants, complex addition result, vector
+          representation, unit circle reference, point annotations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematics/education context with roots of unity and complex arithmetic.
+        comment: 6th roots of unity are the canonical example for complex analysis
+          pedagogy. Arbitrary points z₁-z₄ in all quadrants with z₁+z₂ demonstrating
+          addition are realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values span ±2, unit circle at radius 1. Sensible scale for the domain.
+        comment: Axis limits ±2.5 with tick marks at integers. Unit circle at radius=1
+          is fully visible. Arbitrary points within ±2 range. Sum point at (0.6, 1.7)
+          is within bounds.
     code_quality:
       score: 10
       max: 10
@@ -170,60 +218,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: Flat script with no functions or classes. Clear linear flow from
+          data → layers → theme → save.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is deterministic, no random generation.
+        comment: Fully deterministic — data computed analytically from trig functions,
+          no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used in the plot construction.
+        comment: All imports verified used in the implementation. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured layered grammar approach. HA-splitting workaround
-          is practical for plotnine.
+        comment: Appropriate complexity for the spec. The ha-split geom_label workaround
+          is clean and well-commented. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 dpi.
+        comment: Saves as plot-{THEME}.png via plot.save() with correct dpi=400, width=6,
+          height=6.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expertly uses plotnine grammar of graphics: layered geoms, aes mappings,
-          scale functions, coord_fixed, guide_legend.'
+        comment: Exemplary grammar-of-graphics layering. coord_fixed() for aspect
+          ratio, scale_color_manual() with guide_legend override_aes, scale_size_identity()
+          and scale_alpha_identity() for direct data-driven sizing. Very idiomatic
+          plotnine.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses scale_size_identity/scale_alpha_identity, guide_legend(override_aes),
-          geom_label with boxstyle. Distinctive ggplot2/plotnine patterns.
-  verdict: REJECTED
+        comment: Uses scale_size_identity() + scale_alpha_identity() creatively for
+          per-point visual hierarchy. The geom_label split by ha is a plotnine-specific
+          pattern. boxstyle='round,pad=0.2' exposes the matplotlib bbox passthrough.
+          Halo ring via transparent geom_point layer is a ggplot-native technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
