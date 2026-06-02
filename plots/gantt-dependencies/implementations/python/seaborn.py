@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: seaborn 0.13.2 | Python 3.14
-Quality: 89/100 | Updated: 2026-02-25
+Library: seaborn | Python 3.14
+Quality: 89/100 | Updated: 2026-06-02
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -12,11 +14,34 @@ import seaborn as sns
 from matplotlib.patches import FancyArrowPatch
 
 
-# Set seaborn theme and context for proper sizing at 4800x2700
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.1)
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data: Software Development Project with Dependencies
-# All dependent tasks start at or after their predecessors end
 tasks_data = [
     # Requirements Phase
     {
@@ -127,22 +152,13 @@ df = pd.DataFrame(tasks_data)
 df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
 
-# Reference date for x-axis (convert dates to numeric)
 ref_date = df["start"].min()
 df["start_num"] = (df["start"] - ref_date).dt.days
 df["end_num"] = (df["end"] - ref_date).dt.days
-df["duration"] = df["end_num"] - df["start_num"]
 
-# Calculate y positions - groups first, then tasks
-groups = df["group"].unique()
-# Curated 4-color palette with clearly distinct hues (colorblind-safe)
-phase_palette = sns.color_palette(["#306998", "#FFD43B", "#CC553D", "#2A9D8F"])
-group_colors = {
-    "Requirements": phase_palette[0],
-    "Design": phase_palette[1],
-    "Development": phase_palette[2],
-    "Testing": phase_palette[3],
-}
+# Y positions: group header row, then individual task rows
+groups = list(df["group"].unique())
+phase_colors = {group: IMPRINT_PALETTE[i] for i, group in enumerate(groups)}
 
 y_positions = {}
 task_to_y = {}
@@ -151,30 +167,29 @@ y_counter = 0
 for group in groups:
     y_positions[group] = y_counter
     y_counter += 1
-    group_tasks = df[df["group"] == group]["task"].tolist()
-    for task in group_tasks:
+    for task in df[df["group"] == group]["task"].tolist():
         task_to_y[task] = y_counter
         y_counter += 1
 
-# Add y position to dataframe
 df["y_pos"] = df["task"].map(task_to_y)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Canvas: 3200 × 1800 px (landscape 16:9) — bbox_inches must stay default (None)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Create data for seaborn lineplot (bars as thick lines)
+# Build lineplot data: two endpoints per task (sns.lineplot + units draws one bar per task)
 line_data = []
 for _, row in df.iterrows():
-    line_data.append(
-        {"x": row["start_num"], "y": row["y_pos"], "task": row["task"], "group": row["group"], "point": "start"}
-    )
-    line_data.append(
-        {"x": row["end_num"], "y": row["y_pos"], "task": row["task"], "group": row["group"], "point": "end"}
+    line_data.extend(
+        [
+            {"x": row["start_num"], "y": row["y_pos"], "task": row["task"], "group": row["group"]},
+            {"x": row["end_num"], "y": row["y_pos"], "task": row["task"], "group": row["group"]},
+        ]
     )
 
 line_df = pd.DataFrame(line_data)
 
-# Use seaborn lineplot with units parameter to draw separate lines for each task
+# Task bars via sns.lineplot with units — idiomatic seaborn approach for Gantt charts
 sns.lineplot(
     data=line_df,
     x="x",
@@ -182,122 +197,111 @@ sns.lineplot(
     hue="group",
     units="task",
     estimator=None,
-    palette=group_colors,
-    linewidth=14,
+    palette=phase_colors,
+    linewidth=10,
     alpha=0.85,
     ax=ax,
     legend=False,
 )
 
-# Draw group bars (aggregate spans) as thinner lines
+# Phase aggregate bars: semi-transparent span across all tasks in each group
 for group in groups:
-    group_df = df[df["group"] == group]
-    group_start = group_df["start_num"].min()
-    group_end = group_df["end_num"].max()
-    y = y_positions[group]
-    color = group_colors[group]
+    g_df = df[df["group"] == group]
+    ax.plot(
+        [g_df["start_num"].min(), g_df["end_num"].max()],
+        [y_positions[group], y_positions[group]],
+        color=phase_colors[group],
+        linewidth=8,
+        alpha=0.35,
+        solid_capstyle="round",
+    )
 
-    ax.plot([group_start, group_end], [y, y], color=color, linewidth=10, alpha=0.4, solid_capstyle="round")
-
-# Add phase milestone markers at group completion points using scatterplot
-milestone_data = []
-for group in groups:
-    group_df = df[df["group"] == group]
-    milestone_data.append({"x": group_df["end_num"].max(), "y": y_positions[group], "group": group})
-milestone_df = pd.DataFrame(milestone_data)
+# Phase completion milestones via sns.scatterplot — diamond markers sized for 3200×1800
+milestone_df = pd.DataFrame(
+    [{"x": df[df["group"] == g]["end_num"].max(), "y": y_positions[g], "group": g} for g in groups]
+)
 
 sns.scatterplot(
     data=milestone_df,
     x="x",
     y="y",
     hue="group",
-    palette=group_colors,
+    palette=phase_colors,
     marker="D",
-    s=120,
-    edgecolor="white",
+    s=280,
+    edgecolor=PAGE_BG,
     linewidth=1.5,
     zorder=6,
     ax=ax,
     legend=False,
 )
 
-# Draw dependency arrows from right edge of predecessor to left edge of successor
+# Dependency arrows: predecessor end → successor start, theme-adaptive ink color
 for _, row in df.iterrows():
     if row["depends_on"]:
-        end_y = task_to_y[row["task"]]
-        end_x = row["start_num"]
-
         for dep in row["depends_on"]:
             dep_row = df[df["task"] == dep].iloc[0]
-            start_y = task_to_y[dep]
-            start_x = dep_row["end_num"]
-
-            # Draw arrow with curved path
             arrow = FancyArrowPatch(
-                (start_x, start_y),
-                (end_x, end_y),
+                (dep_row["end_num"], task_to_y[dep]),
+                (row["start_num"], task_to_y[row["task"]]),
                 connectionstyle="arc3,rad=0.1",
-                arrowstyle="->,head_width=0.6,head_length=0.4",
-                color="#333333",
-                linewidth=2.2,
+                arrowstyle="->,head_width=0.4,head_length=0.3",
+                color=INK_SOFT,
+                linewidth=1.2,
                 alpha=0.8,
                 zorder=5,
             )
             ax.add_patch(arrow)
 
-# Y-axis labels with proper formatting
+# Y-axis: hierarchical labels with bold group headers
 all_labels = []
 all_y = []
-
 for group in groups:
     all_labels.append(f"▪ {group}")
     all_y.append(y_positions[group])
-    group_tasks = df[df["group"] == group]["task"].tolist()
-    for task in group_tasks:
+    for task in df[df["group"] == group]["task"].tolist():
         all_labels.append(f"   {task}")
         all_y.append(task_to_y[task])
 
 ax.set_yticks(all_y)
-ax.set_yticklabels(all_labels, fontsize=16)
+ax.set_yticklabels(all_labels, fontsize=7.5)
 ax.invert_yaxis()
 
-# Bold group labels for hierarchy emphasis
 for label in ax.get_yticklabels():
     if label.get_text().startswith("▪"):
         label.set_fontweight("bold")
-        label.set_fontsize(17)
+        label.set_fontsize(8)
 
-# X-axis formatting (dates)
+# X-axis: biweekly date ticks
 max_day = int(df["end_num"].max()) + 7
 date_ticks = np.arange(0, max_day, 14)
 date_labels = [(ref_date + pd.Timedelta(days=int(d))).strftime("%b %d") for d in date_ticks]
 ax.set_xticks(date_ticks)
-ax.set_xticklabels(date_labels, fontsize=16, rotation=45, ha="right")
+ax.set_xticklabels(date_labels, fontsize=8, rotation=45, ha="right")
 ax.set_xlim(-2, max_day)
 
-# Labels and title
-ax.set_xlabel("Project Timeline (2024)", fontsize=20)
-ax.set_ylabel("Tasks by Phase", fontsize=20)
-ax.set_title("gantt-dependencies · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
+# Title and axis labels
+ax.set_title("gantt-dependencies · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Project Timeline (2024)", fontsize=10, color=INK)
+ax.set_ylabel("Tasks by Phase", fontsize=10, color=INK)
 
-# Grid (subtle, vertical only)
-ax.grid(True, axis="x", alpha=0.3, linestyle="--", linewidth=0.8)
+# Subtle vertical-only grid
+ax.grid(True, axis="x", alpha=0.15, linewidth=0.8, color=INK)
 ax.grid(False, axis="y")
 ax.set_axisbelow(True)
 
-# Legend for groups
-legend_patches = [mpatches.Patch(color=color, alpha=0.85, label=group) for group, color in group_colors.items()]
-arrow_legend = plt.Line2D(
-    [0], [0], color="#333333", linewidth=2.2, linestyle="-", marker=">", markersize=9, label="Dependency"
-)
+# Legend: phase colors + dependency arrow symbol
+legend_patches = [mpatches.Patch(color=phase_colors[g], alpha=0.85, label=g) for g in groups]
+arrow_legend = plt.Line2D([0], [0], color=INK_SOFT, linewidth=1.5, marker=">", markersize=7, label="Dependency")
 legend_patches.append(arrow_legend)
-
 ax.legend(
-    handles=legend_patches, loc="upper right", fontsize=14, framealpha=0.9, title="Project Phases", title_fontsize=16
+    handles=legend_patches, loc="upper right", fontsize=7.5, framealpha=0.9, title="Project Phases", title_fontsize=8
 )
 
-# Clean up spines
-sns.despine(left=True, bottom=False)
+# Remove left spine for cleaner look; keep bottom for time axis reference
+sns.despine(left=True, bottom=False, ax=ax)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Manual padding — avoids bbox_inches="tight" canvas drift
+fig.subplots_adjust(left=0.25, right=0.97, top=0.92, bottom=0.14)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
