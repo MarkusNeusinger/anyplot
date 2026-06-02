@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-02
@@ -76,9 +76,9 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="tree-decision · bokeh · anyplot.ai",
-    x_range=(-120, 3150),
-    y_range=(-30, 1800),
+    title="tree-decision · python · bokeh · anyplot.ai",
+    x_range=(-280, 3250),
+    y_range=(-100, 1880),
     toolbar_location=None,  # omit toolbar so exported PNG height == H
     min_border_bottom=60,
     min_border_left=60,
@@ -111,7 +111,7 @@ for src, dst, label, prob, pruned in edges:
             x=mid_x,
             y=label_y,
             text=branch_text,
-            text_font_size="18pt",
+            text_font_size="21pt",
             text_color=INK_MUTED if pruned else INK_SOFT,
             text_align="right",
             text_baseline="middle",
@@ -136,21 +136,33 @@ chance_nodes = {k: v for k, v in nodes.items() if v["type"] == "chance"}
 terminal_nodes = {k: v for k, v in nodes.items() if v["type"] == "terminal"}
 
 
-def _src(node_dict, label):
-    return ColumnDataSource(
-        data={
-            "x": [n["x"] for n in node_dict.values()],
-            "y": [n["y"] for n in node_dict.values()],
-            "name": list(node_dict.keys()),
-            "emv": [f"${n['value']}K" for n in node_dict.values()],
-            "node_type": [label] * len(node_dict),
-        }
-    )
-
-
-decision_src = _src(decision_nodes, "Decision")
-chance_src = _src(chance_nodes, "Chance")
-terminal_src = _src(terminal_nodes, "Terminal")
+decision_src = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in decision_nodes.values()],
+        "y": [n["y"] for n in decision_nodes.values()],
+        "name": list(decision_nodes.keys()),
+        "emv": [f"${n['value']}K" for n in decision_nodes.values()],
+        "node_type": ["Decision"] * len(decision_nodes),
+    }
+)
+chance_src = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in chance_nodes.values()],
+        "y": [n["y"] for n in chance_nodes.values()],
+        "name": list(chance_nodes.keys()),
+        "emv": [f"${n['value']}K" for n in chance_nodes.values()],
+        "node_type": ["Chance"] * len(chance_nodes),
+    }
+)
+terminal_src = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in terminal_nodes.values()],
+        "y": [n["y"] for n in terminal_nodes.values()],
+        "name": list(terminal_nodes.keys()),
+        "emv": [f"${n['value']}K" for n in terminal_nodes.values()],
+        "node_type": ["Terminal"] * len(terminal_nodes),
+    }
+)
 
 # Decision nodes — squares (width/height in data units ≈ pixels)
 r_dec = p.rect(
