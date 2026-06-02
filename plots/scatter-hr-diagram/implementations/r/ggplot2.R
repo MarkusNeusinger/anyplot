@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-hr-diagram: Hertzsprung-Russell Diagram
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-06-02
+#' Quality: 86/100 | Created: 2026-06-02
 
 library(ggplot2)
 library(scales)
