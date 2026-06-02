@@ -80,6 +80,8 @@ rows.append("rect")
   .attr("width", d => x(BASE_NPV) - x(d.lowNpv))
   .attr("height", bh)
   .attr("fill", COLOR_LOW)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 1.5)
   .attr("opacity", 0.88);
 
 // High-scenario bars — extend right from base
@@ -89,6 +91,8 @@ rows.append("rect")
   .attr("width", d => x(d.highNpv) - x(BASE_NPV))
   .attr("height", bh)
   .attr("fill", COLOR_HIGH)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 1.5)
   .attr("opacity", 0.88);
 
 // Value labels at bar ends
@@ -96,28 +100,41 @@ rows.append("text")
   .attr("x", d => x(d.lowNpv) - 7)
   .attr("y", bh / 2).attr("dy", "0.35em")
   .attr("text-anchor", "end")
-  .attr("fill", t.inkSoft).style("font-size", "13px")
+  .attr("fill", t.inkSoft).style("font-size", "14px")
   .text(d => `$${d.lowNpv}M`);
 
 rows.append("text")
   .attr("x", d => x(d.highNpv) + 7)
   .attr("y", bh / 2).attr("dy", "0.35em")
   .attr("text-anchor", "start")
-  .attr("fill", t.inkSoft).style("font-size", "13px")
+  .attr("fill", t.inkSoft).style("font-size", "14px")
   .text(d => `$${d.highNpv}M`);
+
+// Callout: annotate the highest-impact parameter (widest bar at top)
+const topParam = data[0];
+const topBarTopY = y(topParam.parameter);
+const topBarMidX = (x(topParam.lowNpv) + x(topParam.highNpv)) / 2;
+g.append("line")
+  .attr("x1", x(topParam.lowNpv) + 6).attr("x2", x(topParam.highNpv) - 6)
+  .attr("y1", topBarTopY - 10).attr("y2", topBarTopY - 10)
+  .attr("stroke", t.inkSoft).attr("stroke-width", 1).attr("stroke-dasharray", "4 3");
+g.append("text")
+  .attr("x", topBarMidX).attr("y", topBarTopY - 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "13px").style("font-style", "italic")
+  .text("highest impact");
 
 // Y-axis (parameter names)
 const yAxis = g.append("g").call(d3.axisLeft(y).tickSize(0).tickPadding(14));
 yAxis.selectAll("text").attr("fill", t.ink).style("font-size", "16px");
-yAxis.select(".domain").attr("stroke", t.inkSoft);
+yAxis.select(".domain").attr("stroke", "none");
 
 // X-axis
 const xAxis = g.append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(7).tickFormat(d => `$${d}M`));
+  .call(d3.axisBottom(x).ticks(7).tickSize(0).tickPadding(8).tickFormat(d => `$${d}M`));
 xAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
-xAxis.selectAll("line").attr("stroke", t.grid);
-xAxis.select(".domain").attr("stroke", t.inkSoft);
+xAxis.select(".domain").attr("stroke", "none");
 
 // X-axis label
 g.append("text")
