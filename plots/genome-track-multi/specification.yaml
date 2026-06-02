@@ -6,7 +6,7 @@ title: Genome Track Viewer
 
 # Specification tracking
 created: "2026-02-25T21:32:10Z"
-updated: null
+updated: "2026-06-02T12:15:37Z"
 issue: 4422
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - heatmap
     - area
     - bar
   data_type:
