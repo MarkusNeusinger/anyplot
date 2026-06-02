@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-02
@@ -54,8 +54,8 @@ high_deltas = high_values - base_npv
 
 # Gradient opacity by influence rank — more vivid = wider bar = stronger driver
 n = len(parameters)
-low_colors = [f"rgba({_LOW_RGB},{0.35 + 0.65 * i / (n - 1):.2f})" for i in range(n)]
-high_colors = [f"rgba({_HIGH_RGB},{0.35 + 0.65 * i / (n - 1):.2f})" for i in range(n)]
+low_colors = [f"rgba({_LOW_RGB},{0.50 + 0.50 * i / (n - 1):.2f})" for i in range(n)]
+high_colors = [f"rgba({_HIGH_RGB},{0.50 + 0.50 * i / (n - 1):.2f})" for i in range(n)]
 
 # Plot
 fig = go.Figure()
@@ -115,7 +115,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     font={"size": 10, "color": INK_SOFT},
-    yshift=10,
+    yshift=20,
 )
 
 title_text = "bar-tornado-sensitivity · python · plotly · anyplot.ai"
@@ -139,9 +139,16 @@ fig.update_layout(
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
-        "linecolor": INK_SOFT,
+        "showline": False,
+        "mirror": False,
     },
-    yaxis={"tickfont": {"size": 10, "color": INK_SOFT}, "showgrid": False, "automargin": True, "linecolor": INK_SOFT},
+    yaxis={
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": False,
+        "automargin": True,
+        "showline": False,
+        "mirror": False,
+    },
     barmode="overlay",
     bargap=0.25,
     legend={
