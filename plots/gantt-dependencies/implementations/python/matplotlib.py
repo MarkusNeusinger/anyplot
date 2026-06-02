@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-06-02
@@ -201,8 +201,8 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_axisbelow(True)
 
-bar_height = 0.55
-group_bar_height = 0.30
+bar_height = 0.62
+group_bar_height = 0.38
 
 # Alternating row bands improve scanability across the wide timeline
 for i in range(n_tasks):
@@ -283,7 +283,7 @@ for _, row in df.iterrows():
 task_labels = df["task"].tolist()[::-1]
 styled_labels = [f"    {lbl}" if df[df["task"] == lbl].iloc[0]["group"] is not None else lbl for lbl in task_labels]
 ax.set_yticks(range(len(task_labels)))
-ax.set_yticklabels(styled_labels, fontsize=8, color=INK_SOFT)
+ax.set_yticklabels(styled_labels, fontsize=6.5, color=INK_SOFT)
 for i, lbl in enumerate(task_labels):
     row_data = df[df["task"] == lbl].iloc[0]
     if row_data["group"] is None and lbl in phase_colors:
@@ -369,7 +369,7 @@ legend_patches += [
     ),
 ]
 leg = ax.legend(
-    handles=legend_patches, loc="upper right", fontsize=8, framealpha=0.95, edgecolor=INK_SOFT, fancybox=False
+    handles=legend_patches, loc="lower right", fontsize=7, framealpha=0.95, edgecolor=INK_SOFT, fancybox=False
 )
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
