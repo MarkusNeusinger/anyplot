@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -51,11 +51,12 @@ letter_heights = pwm * info_content[:, np.newaxis]
 
 # SVG glyph paths in normalized 0-1 unit square (x: 0=left, 1=right; y: 0=bottom, 1=top)
 GLYPH_PATHS = {
-    "A": "M 0.5 0 L 0.05 1 L 0.25 1 L 0.35 0.7 L 0.65 0.7 L 0.75 1 L 0.95 1 L 0.5 0 Z M 0.4 0.52 L 0.6 0.52 L 0.55 0.38 L 0.45 0.38 Z",
+    # A: apex at top (y=1), legs at bottom (y=0), crossbar at y≈0.3, inner hole above crossbar
+    "A": "M 0.5 1 L 0.05 0 L 0.25 0 L 0.35 0.3 L 0.65 0.3 L 0.75 0 L 0.95 0 L 0.5 1 Z M 0.4 0.48 L 0.6 0.48 L 0.55 0.62 L 0.45 0.62 Z",
     "C": "M 0.85 0.2 C 0.65 -0.05 0.2 0 0.1 0.3 C 0 0.6 0.15 0.95 0.5 1 C 0.7 1.02 0.85 0.9 0.88 0.8 L 0.68 0.7 C 0.6 0.82 0.5 0.82 0.4 0.78 C 0.28 0.7 0.25 0.5 0.3 0.35 C 0.35 0.2 0.5 0.15 0.6 0.18 C 0.68 0.2 0.72 0.28 0.75 0.32 Z",
     "G": "M 0.85 0.2 C 0.65 -0.05 0.2 0 0.1 0.3 C 0 0.6 0.15 0.95 0.5 1 C 0.7 1.02 0.85 0.9 0.88 0.8 L 0.68 0.7 C 0.6 0.82 0.5 0.82 0.4 0.78 C 0.28 0.7 0.25 0.5 0.3 0.35 C 0.35 0.2 0.5 0.15 0.6 0.18 C 0.68 0.2 0.72 0.28 0.75 0.32 L 0.85 0.2 Z M 0.55 0.45 L 0.85 0.45 L 0.85 0.55 L 0.55 0.55 Z",
-    # Wider crossbar (0.24 fraction) makes T more legible when stretched tall
-    "T": "M 0.05 0 L 0.05 0.24 L 0.38 0.24 L 0.38 1 L 0.62 1 L 0.62 0.24 L 0.95 0.24 L 0.95 0 Z",
+    # T: crossbar at top (y=0.76–1), stem extends down to y=0
+    "T": "M 0.05 1 L 0.05 0.76 L 0.38 0.76 L 0.38 0 L 0.62 0 L 0.62 0.76 L 0.95 0.76 L 0.95 1 Z",
 }
 
 # Plot
