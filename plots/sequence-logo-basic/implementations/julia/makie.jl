@@ -1,7 +1,7 @@
 # anyplot.ai
 # sequence-logo-basic: Sequence Logo for Motif Visualization
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 83/100 | Created: 2026-06-02
+# Quality: 90/100 | Created: 2026-06-02
 
 using CairoMakie
 using Colors
