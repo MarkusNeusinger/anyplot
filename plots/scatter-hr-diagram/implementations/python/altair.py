@@ -1,15 +1,23 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: altair | Python
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
 np.random.seed(42)
 
 # Main sequence stars (diagonal band from hot/bright to cool/dim)
@@ -23,12 +31,12 @@ n_giants = 50
 giant_temp = 10 ** np.random.uniform(np.log10(3200), np.log10(5500), n_giants)
 giant_lum = 10 ** np.random.uniform(1.2, 3.0, n_giants)
 
-# Supergiants (very bright, various temps)
+# Supergiants (very bright, wide temperature range)
 n_super = 20
 super_temp = 10 ** np.random.uniform(np.log10(3500), np.log10(30000), n_super)
 super_lum = 10 ** np.random.uniform(3.5, 5.5, n_super)
 
-# White dwarfs (hot but dim)
+# White dwarfs (hot but very dim)
 n_wd = 40
 wd_temp = 10 ** np.random.uniform(np.log10(5000), np.log10(30000), n_wd)
 wd_lum = 10 ** np.random.uniform(-4, -1.5, n_wd)
@@ -37,7 +45,6 @@ temperatures = np.concatenate([main_temp, giant_temp, super_temp, wd_temp])
 luminosities = np.concatenate([main_lum, giant_lum, super_lum, wd_lum])
 regions = ["Main Sequence"] * n_main + ["Red Giants"] * n_giants + ["Supergiants"] * n_super + ["White Dwarfs"] * n_wd
 
-# Assign spectral type by temperature using np.select
 spectral_types = np.select(
     [
         temperatures >= 30000,
@@ -63,7 +70,7 @@ df = pd.DataFrame(
 # Sun as a reference point
 sun = pd.DataFrame({"Temperature (K)": [5778], "Luminosity (Solar)": [1.0], "label": ["Sun ☉"]})
 
-# Region label positions (placed in clear areas away from dense data)
+# Region labels placed in clear areas away from dense data
 region_labels = pd.DataFrame(
     {
         "Temperature (K)": [8000, 3200, 9000, 25000],
@@ -75,7 +82,12 @@ region_labels = pd.DataFrame(
 # Interactive selection: click legend to highlight spectral type
 selection = alt.selection_point(fields=["Spectral Type"], bind="legend")
 
-# Plot
+# Spectral type colors follow astrophysical convention (semantic exception to Imprint order).
+# A-type uses a more saturated blue (#88aaee) for better visibility on both backgrounds.
+# F uses amber-gold (#d4a020) distinct from G's bright yellow (#f0dc20) for better separation.
+SPECTRAL_DOMAIN = ["O", "B", "A", "F", "G", "K", "M"]
+SPECTRAL_RANGE = ["#2244bb", "#5588ee", "#88aaee", "#d4a020", "#f0dc20", "#ee7722", "#cc3311"]
+
 stars = (
     alt.Chart(df)
     .mark_circle(strokeWidth=0)
@@ -84,80 +96,88 @@ stars = (
             "Temperature (K):Q",
             scale=alt.Scale(type="log", domain=[50000, 2000]),
             axis=alt.Axis(
-                title="Surface Temperature (K)",
-                titleFontSize=22,
-                titleColor="#333333",
-                labelFontSize=16,
-                labelColor="#555555",
-                values=[2000, 3000, 5000, 7000, 10000, 20000, 40000],
-                format="~s",
-                gridOpacity=0.12,
-                gridColor="#cccccc",
-                domainColor="#aaaaaa",
+                title="Surface Temperature (K)", values=[2000, 3000, 5000, 7000, 10000, 20000, 40000], format="~s"
             ),
         ),
         y=alt.Y(
             "Luminosity (Solar):Q",
             scale=alt.Scale(type="log", domain=[0.00005, 2000000]),
-            axis=alt.Axis(
-                title="Luminosity (L/L☉)",
-                titleFontSize=22,
-                titleColor="#333333",
-                labelFontSize=16,
-                labelColor="#555555",
-                gridOpacity=0.12,
-                gridColor="#cccccc",
-                domainColor="#aaaaaa",
-                format=".0e",
-            ),
+            axis=alt.Axis(title="Luminosity (L/L☉)", format=".0e"),
         ),
         color=alt.Color(
             "Spectral Type:N",
-            scale=alt.Scale(
-                domain=["O", "B", "A", "F", "G", "K", "M"],
-                range=["#2244aa", "#6699ee", "#b0c4de", "#c8a82a", "#f0e040", "#ee8822", "#cc4411"],
-            ),
-            sort=["O", "B", "A", "F", "G", "K", "M"],
-            legend=alt.Legend(
-                title="Spectral Type", titleFontSize=18, labelFontSize=15, symbolSize=200, orient="right"
-            ),
+            scale=alt.Scale(domain=SPECTRAL_DOMAIN, range=SPECTRAL_RANGE),
+            sort=SPECTRAL_DOMAIN,
+            legend=alt.Legend(title="Spectral Type", symbolSize=150, orient="right"),
         ),
-        size=alt.value(40),
-        opacity=alt.condition(selection, alt.value(0.5), alt.value(0.08)),
+        size=alt.value(60),
+        opacity=alt.condition(selection, alt.value(0.75), alt.value(0.08)),
         tooltip=["Temperature (K):Q", "Luminosity (Solar):Q", "Spectral Type:N", "Region:N"],
     )
     .add_params(selection)
 )
 
-# Sun marker
 sun_point = (
     alt.Chart(sun)
-    .mark_point(shape="cross", size=500, color="#FFD700", strokeWidth=3, filled=True)
+    .mark_point(shape="cross", size=400, color="#FFD700", strokeWidth=3, filled=True)
     .encode(x="Temperature (K):Q", y="Luminosity (Solar):Q", tooltip=alt.value("Sun (G2V, 5778 K, 1.0 L☉)"))
 )
 
+SUN_LABEL_COLOR = "#b07c00" if THEME == "light" else "#FFD700"
 sun_label = (
     alt.Chart(sun)
-    .mark_text(fontSize=16, fontWeight="bold", color="#DAA520", dx=30, dy=-18)
+    .mark_text(fontSize=11, fontWeight="bold", color=SUN_LABEL_COLOR, dx=22, dy=-14)
     .encode(x="Temperature (K):Q", y="Luminosity (Solar):Q", text="label:N")
 )
 
-# Region labels
 labels = (
     alt.Chart(region_labels)
-    .mark_text(fontSize=15, fontStyle="italic", color="#888888", fontWeight="bold")
+    .mark_text(fontSize=13, fontStyle="italic", color=INK_MUTED, fontWeight="bold")
     .encode(x="Temperature (K):Q", y="Luminosity (Solar):Q", text="text:N")
 )
 
+TITLE = "scatter-hr-diagram · altair · pyplots.ai"
+
 chart = (
     (stars + sun_point + sun_label + labels)
-    .properties(
-        width=1600, height=900, title=alt.Title("scatter-hr-diagram · altair · pyplots.ai", fontSize=28, anchor="start")
+    .properties(width=620, height=320, title=alt.Title(TITLE, fontSize=16, anchor="start"), background=PAGE_BG)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        tickSize=0,
+        gridColor=INK,
+        gridOpacity=0.12,
+        labelColor=INK_SOFT,
+        labelFontSize=10,
+        titleColor=INK,
+        titleFontSize=12,
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(tickSize=0)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad to exact 3200×1800 target (vl-convert output is smaller than the inner view * scale_factor)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
