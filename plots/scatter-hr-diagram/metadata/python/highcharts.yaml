@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:51:32Z'
-updated: '2026-06-02T18:09:14Z'
+updated: '2026-06-02T18:19:48Z'
 generated_by: claude-sonnet
 workflow_run: 26837979085
 issue: 4558
@@ -12,93 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: reversed X-axis, log Y-axis, spectral coloring, four
-    labeled regions, spectral class letters, Sun reference — all present'
-  - Astrophysically accurate data (temperatures, luminosities, stellar populations)
-  - Variable marker sizes (radius 6–18px) encode stellar hierarchy (dwarfs smallest,
-    supergiants largest)
-  - Correct dual-theme chrome with all tokens properly applied
-  - Elegant use of Highcharts renderer API for post-render text placement
+  - 'Perfect spec compliance: reversed X-axis, log Y-axis, spectral type colors, all
+    four stellar regions labeled, spectral class letters along top, Sun reference
+    with label'
+  - 'Astrophysically accurate data: temperatures and luminosities match real stellar
+    physics (T^3.5 mass-luminosity, Sun at 5778 K/1.0 L☉)'
+  - 'Variable marker sizes (radius 6–18 px) create a natural visual hierarchy: white
+    dwarfs smallest, supergiants largest, encoding stellar class'
+  - 'Repair successfully fixed Attempt 1 weaknesses: Sun ☉ data label now uses INK_SOFT
+    dark outline (good contrast), spectral letters A/F now have dark text-shadow in
+    light mode'
+  - 'Dual-theme chrome fully correct: all tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG,
+    GRID) properly theme-adaptive; data colors identical between light and dark'
+  - 'Idiomatic Highcharts usage: renderer API for post-render labels, plotLines for
+    spectral class boundaries, logarithmic+reversed axis combination, HTML artifact
+    output'
   weaknesses:
-  - 'Sun label barely readable in light mode: color=#ffee58 + textOutline=2px #FAF8F1
-    on #FAF8F1 background is near-zero contrast. Fix: change textOutline to INK_SOFT
-    token so outline contrasts background'
-  - 'Spectral class letters A (#c8c8ff) and F (#ffe9a0) near-invisible in light mode
-    — low contrast against cream background. Fix: add dark outline/stroke to renderer
-    text elements for light theme'
-  - 'Type A star markers (#c8c8ff lavender-white) faint in light mode — low contrast
-    on cream. Fix: add thin dark border lineColor to Type A series markers'
+  - 'VQ-02: Moderate overlap in the dense main sequence region (G/K/F/M stars cluster
+    near 2k–6k K), Sun label slightly overlaps surrounding G-type stars — inherent
+    to the domain but marker size or opacity could be tuned to reduce crowding'
+  - 'VQ-03: Type A (lavender #c8c8ff) and White Dwarf (#b0c4de) markers remain subtly
+    low-contrast on the cream light background despite border additions — slight remaining
+    visibility gap'
+  - 'VQ-04: 11 series exceeds color-alone distinguishability ceiling (ΔE_CVD floor
+    at 7 colors); adjacent spectral types A/B near-identical under CVD'
+  - 'VQ-07: Data colors use fully custom astrophysical hexes (justified by spec''s
+    explicit ''conventional colors'' requirement), not Imprint palette members — chrome
+    and backgrounds are correct'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "scatter-hr-diagram · python · highcharts · anyplot.ai" bold dark text — readable; subtitle readable; axis labels "Surface Temperature (K)" and "Luminosity (L☉)" — readable; tick labels dark on cream — readable
-      Data: Type O (royal blue) left, through spectral sequence to Type M (red-orange) right; Red Giants (red-orange) upper right; Supergiants (yellow) top-center; White Dwarfs (steel blue) lower-center; Sun (bright yellow circle with dark border) at ~5778K, 1 L☉; region labels SUPERGIANTS, RED GIANTS, MAIN SEQUENCE, WHITE DWARFS placed over regions
-      Legibility verdict: PARTIAL FAIL — main text elements (title, axes, ticks, legend) all readable; Sun label uses #ffee58 yellow with #FAF8F1 cream outline on cream bg = near-zero contrast, barely readable; spectral class letters "A" (#c8c8ff lavender) and "F" (#ffe9a0 pale yellow) near-invisible against cream background
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "scatter-hr-diagram · python · highcharts · anyplot.ai" in dark ink, ~75% width, readable. Subtitle "Hertzsprung-Russell Diagram — Stellar Luminosity vs Surface Temperature" in INK_SOFT gray. Axis labels "Surface Temperature (K)" and "Luminosity (L☉)" in dark ink, explicitly sized. Tick labels in INK_SOFT. Legend on right with elevated-bg cream frame. Region labels (SUPERGIANTS in gold, RED GIANTS in red, MAIN SEQUENCE in blue, WHITE DWARFS in blue) clearly placed. Spectral class letters O (blue), B (cyan), A (lavender — readable with dark text shadow), F (pale yellow — readable with dark shadow), G (yellow), K (orange), M (red-orange) along top of plot.
+      Data: Stars span the full HR diagram. Type O–M main sequence diagonal visible from top-left to bottom-right. Red Giants cluster cool+luminous (upper right). Supergiants span top with large gold markers. White Dwarfs at bottom (hot+dim). Sun marked with large yellow circle, dark ring border, and "Sun ☉" label — label contrast improved vs Attempt 1 (dark INK_SOFT outline). First series (Type O) is #4169e1 (domain exception — spec requires astrophysical colors). All series clearly colored per stellar physics convention.
+      Legibility verdict: PASS — all text legible, repair fixes from Attempt 1 successful
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title in light off-white — readable; axis labels in light color — readable; tick labels in light secondary color — readable; legend with dark elevated bg and light text — readable
-      Data: colors identical to light render — same domain spectral colors for each stellar type; Sun marker (yellow circle with dark outline) clearly visible; region labels and spectral letters visible (A and F still light but better contrast on dark bg)
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; data colors identical to light render; Sun label #ffee58 readable on dark bg
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title, axis labels, tick labels all in light off-white (#F0EFE8) — clearly readable on dark background. Legend background uses elevated dark surface #242420 with light-colored text. No dark-on-dark failures. Region labels visible in their respective adapted colors. Spectral class letters readable (no shadow needed on dark — colors provide sufficient contrast).
+      Data: Colors are identical to light render — same domain spectral colors for each type. Sun ☉ label in yellow with medium-grey INK_SOFT outline, readable on dark background. All data series visible and properly placed. No dark-on-dark text failures.
+      Legibility verdict: PASS — all text readable, data colors identical to light render, chrome properly adapted
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: 'Font sizes explicitly set; Sun label near-invisible in light mode
-          (#ffee58 on #FAF8F1 with cream outline); spectral letters A and F barely
-          visible in light mode'
+        passed: true
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, legend 44px). Repair from Attempt 1 fixed Sun label contrast and spectral
+          letter A/F visibility via dark text-shadow. All text readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text collisions
+        comment: Moderate overlap in dense main sequence region (G/K/M stars). Sun
+          label with offset (-80, -25) reduces but doesn't eliminate overlap with
+          surrounding G-type cluster. Main content readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most markers well-sized; Type A (lavender) and White Dwarfs slightly
-          faint in light mode
+        comment: Variable marker sizes (radius 6–18px) effective. Type A (lavender)
+          and White Dwarfs (light blue-grey) slightly faint on cream background. Border
+          additions partially mitigate.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: true
-        comment: Adjacent spectral colors (A/B) CVD-challenging; position provides
-          redundant encoding
+        comment: 11 series exceeds CVD-safe color-alone distinguishability ceiling.
+          Domain requirement (astrophysical spectral colors) drives this. Adjacent
+          types A/B near-identical under deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 confirmed, gate passed, good margins
+        comment: Canvas 3200x1800 confirmed, gate passed. Explicit margins (top 160,
+          bottom 240, left 260, right 200). Good canvas utilization. Legend well-positioned
+          at top-right with vertical layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Surface Temperature (K) and Luminosity (L-sun) — descriptive with
-          units
+        comment: Surface Temperature (K) and Luminosity (L☉) — descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
-        passed: false
-        comment: 'Backgrounds #FAF8F1/#1A1A17 correct; chrome theme-adaptive; data
-          colors are custom astronomical hex values (spec-required domain exception)
-          rather than Imprint palette members'
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.
+          Data colors use custom astrophysical hexes — justified semantic exception
+          (spec explicitly requires conventional stellar colors). First series is
+          Type O (#4169e1), not #009E73.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -106,22 +123,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Intentional domain colors, variable marker radii, spectral letter
-          overlay, region labels, subtitle — clearly above defaults
+        comment: 'Intentional domain-specific design: spectral colors match astrophysical
+          convention, variable marker sizes encode stellar hierarchy, spectral class
+          letter overlay with domain colors, subtitle provides context, region labels
+          guide viewer.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle 15%-opacity grid, clean margins, dashed plotLines as spectral
-          class boundaries
+        comment: Subtle grid lines (15% opacity), dashed plotLines as spectral class
+          boundaries, rounded legend corners, explicit generous margins. Some refinement
+          present.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Main sequence diagonal visible, labeled regions guide viewer, Sun
-          reference anchors diagram
+        comment: Main sequence diagonal immediately apparent. Region labels guide
+          viewer through stellar populations. Sun reference anchors to familiar scale.
+          Size hierarchy (supergiants largest, dwarfs smallest) reinforces the story.
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +152,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with multiple stellar population series
+        comment: Correct scatter plot for HR diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X-axis reversed, log Y-axis, spectral color coding, four regions
-          labeled, Sun marked, spectral class letters
+        comment: X-axis reversed, Y-axis log, spectral type color-coding, all four
+          regions labeled, Sun reference, spectral class letters along top.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on reversed X, luminosity on log Y
+        comment: Temperature on reversed X-axis, luminosity on log Y-axis. Covers
+          full range (2000–40000K, 0.0001–1M L☉).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match all series
+        comment: 'Title: scatter-hr-diagram · python · highcharts · anyplot.ai. Legend
+          lists all 11 series correctly.'
     data_quality:
       score: 15
       max: 15
@@ -160,21 +183,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All stellar populations represented: 7 spectral types + red giants
-          + supergiants + white dwarfs + Sun'
+        comment: 'All stellar populations represented: 7 spectral type main-sequence
+          series, red giants, supergiants, white dwarfs, Sun reference.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Astrophysics HR diagram, neutral scientific domain
+        comment: Astrophysics HR diagram — neutral scientific domain, real-world use
+          case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperatures match astronomical standards; Sun at 5778K, 1 L-sun;
-          log scale spans 10-order range
+        comment: Temperatures match spectral class standards, Sun at 5778K/1.0 L☉
+          is exact, luminosity range covers 10 orders of magnitude correctly.
     code_quality:
       score: 10
       max: 10
@@ -184,57 +208,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: constants -> data -> chart -> series -> HTML/screenshot'
+        comment: 'Flat: constants → data generation → chart setup → series → HTML/screenshot.
+          No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean; JS renderer setTimeout is correct Highcharts idiom
+        comment: Clean Python; JS renderer setTimeout is the correct Highcharts idiom
+          for post-render labels.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of Chart(container='container'), ScatterSeries, HighchartsOptions,
+          chart.to_js_literal(), Selenium CDP override, PIL normalization.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct use of highcharts_core: ScatterSeries, HighchartsOptions,
-          plotOptions, to_js_literal(), Selenium CDP override'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Highcharts renderer API (r.text()) for custom label placement; plotLines
-          for spectral class boundaries; HTML artifact output
-  verdict: REJECTED
+        comment: Highcharts renderer API (r.text()) for custom post-render labels,
+          plotLines for spectral class boundaries, logarithmic+reversed axis combination,
+          interactive tooltip, HTML artifact.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - html-export
   - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
