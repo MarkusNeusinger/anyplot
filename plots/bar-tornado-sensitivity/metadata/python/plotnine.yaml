@@ -1,108 +1,134 @@
 library: plotnine
+language: python
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:45:22Z'
-updated: '2026-03-07T08:58:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22795810091
+updated: '2026-06-02T23:22:22Z'
+generated_by: claude-sonnet
+workflow_run: 26852922575
 issue: 4566
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent alpha-based visual hierarchy distinguishing top-3 influential parameters
-    from the rest
-  - Clean data storytelling through tornado sorting and endpoint value labels
-  - Professional color palette (orange/blue) with strong colorblind accessibility
-  - Well-executed theme customization with subtle gridlines and appropriate typography
-  - Realistic NPV sensitivity analysis with 10 plausible financial parameters
+  - Perfect spec compliance — correct tornado diagram with sorted bars, base-case
+    reference line, dual Imprint semantic colors, and optional bar-end value labels
+  - 'Strong semantic color usage: High Scenario (#009E73 brand green) and Low Scenario
+    (#AE3030 matte red) correctly apply the Imprint semantic exception for gain/loss
+    context'
+  - Visual storytelling through alpha-based emphasis (top 3 parameters at full opacity,
+    remaining 7 at 0.55) creates clear visual hierarchy without annotations alone
+  - Complete theme adaptation — both light and dark renders pass readability checks
+    with all chrome tokens correctly assigned
+  - Realistic and professional NPV sensitivity data (10 financial parameters, base
+    NPV $120M) — highly contextually appropriate for the tornado plot type
+  - Clean, deterministic code using KISS structure with idiomatic plotnine grammar-of-graphics
+    composition
   weaknesses:
-  - DE-01 could reach 7-8 with more typographic refinement or annotation of the base
-    case value
-  - LM-01 could improve with more advanced plotnine features
-  image_description: The plot displays a horizontal tornado (butterfly) bar chart
-    showing NPV sensitivity analysis for 10 financial parameters. Bars extend left
-    and right from a dashed vertical reference line at the base case value of $120M.
-    The top 3 parameters (Discount Rate, Revenue Growth, Material Cost) are rendered
-    at full opacity while the remaining 7 are muted with reduced alpha, creating clear
-    visual hierarchy. Orange (#D95F02) represents the Low Scenario and blue (#306998)
-    represents the High Scenario. Each bar has dollar-value labels at its endpoints
-    (e.g., "$95M", "$148M"). Parameters are sorted by total range descending, creating
-    the characteristic tornado shape. The title reads "bar-tornado-sensitivity · plotnine
-    · pyplots.ai" with the legend positioned at top. The x-axis is labeled "Net Present
-    Value ($M)" with tick marks at $100M, $120M, $140M. Y-axis parameter names are
-    bold. The background is clean minimal with subtle x-axis gridlines only.
+  - Bar end labels (geom_text size=3.2 mm ≈ 9pt) and annotation text (size=2.8 mm
+    ≈ 8pt) are on the small side — at mobile-scaled widths (~400 px) they will be
+    barely readable; consider raising geom_text size to 3.8–4.0 mm for the bar labels
+  - 'LM-02 moderate score: while coord_flip + scale_alpha_identity + factor-ordering
+    is idiomatic, no distinctly plotnine-only feature is exploited (e.g. stat_summary,
+    geom_label with label.padding, or facet_grid for multi-panel comparison)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, visually matches the expected cream surface.
+      Chrome: Title "bar-tornado-sensitivity · python · plotnine · anyplot.ai" in bold dark INK at ~12pt, fully readable. Y-axis parameter labels in bold dark INK, clearly legible. X-axis tick labels ($100M/$120M/$140M) and label "Net Present Value ($M)" in dark INK_SOFT. Legend at top ("High Scenario" green, "Low Scenario" red) readable. Caption "Dashed line: base case NPV $120M" in small INK_MUTED at bottom right. Bar-end value labels (size 3.2mm) are small but readable at full canvas resolution.
+      Data: High Scenario bars in #009E73 (brand green), Low Scenario bars in #AE3030 (matte red). Top 3 parameters (Discount Rate, Revenue Growth, Material Cost) at full opacity; remaining 7 at alpha=0.55 creating intentional muting. Dashed vertical reference line at base case $120M. All 10 tornado bars correctly sorted widest-at-top.
+      Legibility verdict: PASS — all primary text elements clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, matches expected dark surface.
+      Chrome: Title in light F0EFE8 on dark background — clearly visible. Y-axis parameter labels in light INK (F0EFE8) bold — readable. X-axis ticks and label in B8B7B0 (INK_SOFT dark) — readable. Legend text readable. Caption visible in muted INK_MUTED dark tone. No dark-on-dark failures observed.
+      Data: Bar colors are identical to the light render — #009E73 green and #AE3030 red unchanged. Alpha emphasis preserved. Dashed reference line visible in INK_SOFT dark. The muted-alpha bars (0.55) remain distinguishable against the dark background.
+      Legibility verdict: PASS — all text elements readable against the near-black background; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt bold, axis_title=20pt,
-          axis_text=16pt, y-axis bold, legend=16pt, base=14pt'
+        comment: All font sizes explicitly set; bar-end geom_text at 3.2mm and annotation
+          at 2.8mm are small but readable at canvas resolution; may be marginal at
+          mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Value labels positioned with nudge offsets,
-          parameter names well-spaced
+        comment: No overlapping elements across both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with width=0.7, alpha differentiation creates
-          visual layering
+        comment: Bars clearly visible; muted alpha=0.55 bars still readable; full-opacity
+          top-3 bars prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Orange and blue are colorblind-safe with strong contrast
+        comment: Green/red semantic pair has redundant encoding through bar direction
+          (left=low, right=high from baseline); CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, plot fills canvas well, expand accommodates endpoint
-          labels
+        comment: Well-proportioned landscape layout; balanced margins; legend at top
+          close to chart; caption bottom-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Net Present Value ($M)' with units
+        comment: X-axis 'Net Present Value ($M)' descriptive with units; Y-axis intentionally
+          blank (parameter names serve as labels)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint semantic exception correctly applied: High Scenario=#009E73
+          (brand green), Low Scenario=#AE3030 (matte red). Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Chrome tokens correct in both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom orange/blue palette, alpha-based emphasis
-          on top-3, bold y-axis, intentional hierarchy'
+        comment: 'Above well-configured default: semantic color assignment with intentional
+          alpha-based emphasis hierarchy; annotation callout for primary driver. Not
+          quite FiveThirtyEight-level but clearly above generic defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor grid removed, y-major grid removed, subtle x-grid, custom x-axis
-          line, good refinement
+        comment: theme_minimal base, y-axis grid removed, x-axis grid only with alpha=0.15,
+          elevated legend background, axis line styled. Clean and refined layout.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Alpha-based hierarchy draws attention to top 3 most influential parameters
+        comment: 'Alpha-emphasis clearly highlights top-3 influential parameters vs
+          the rest; sorted order inherently creates visual hierarchy; annotation ''Primary
+          driver: $53M NPV range'' adds concrete insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tornado/butterfly horizontal bar chart
+        comment: Correct horizontal tornado bar chart with bars extending left and
+          right from base case line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: reference line, sorting, dual colors,
-          labels, value annotations'
+        comment: 'All features present: vertical reference line, sorted bars, dual
+          colors, parameter names on y-axis, optional bar-end value labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Parameters on y-axis, NPV on x-axis, deviations computed correctly
+        comment: Parameters on y-axis, NPV on x-axis, deviations from base correctly
+          computed and displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend labels
+        comment: Title 'bar-tornado-sensitivity · python · plotnine · anyplot.ai'
+          matches required format; legend labels 'High Scenario' and 'Low Scenario'
+          accurate
     data_quality:
       score: 15
       max: 15
@@ -141,20 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 parameters with varying ranges, clear tornado shape, both positive
-          and negative deviations
+        comment: '10 parameters showing full range of tornado chart features: varying
+          bar widths, both positive/negative deviations, sorted ranking, clear tornado
+          shape'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity analysis with real financial parameters
+        comment: NPV sensitivity analysis with financial parameters (Discount Rate,
+          Revenue Growth, Material Cost, etc.) is highly realistic and a canonical
+          use case for tornado diagrams
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NPV values $95M-$148M with base $120M, realistic for business analysis
+        comment: Base NPV $120M reasonable; $25-53M parameter ranges realistic; Discount
+          Rate as most influential is correct for NPV analysis
     code_quality:
       score: 10
       max: 10
@@ -164,49 +198,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-compute-plot-save structure, no functions or classes
+        comment: 'Clean linear flow: imports → data → plot → save, no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded values
+        comment: 'Fully deterministic: hardcoded parameter lists, no random data'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used; no unused symbols
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean alpha hierarchy implementation
+        comment: Clean, appropriate complexity, no fake functionality or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: plot.save(f'plot-{THEME}.png') with theme-aware filename, verbose=False,
+          current plotnine 0.15.5 API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good grammar of graphics usage with aes, layered geoms, coord_flip,
-          scales, theme system
+        comment: 'Expertly uses grammar-of-graphics composition: aes(), geom_col,
+          coord_flip, scale_fill_manual, scale_alpha_identity, theme() — all idiomatic
+          plotnine patterns'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: pd.Categorical ordering, aes alpha mapping, custom scale labels,
-          guides() - plotnine-distinctive patterns
+        comment: Uses coord_flip for horizontal orientation, scale_alpha_identity
+          with data-driven alpha column, pd.Categorical for factor-order control —
+          library-specific but not beyond standard ggplot2 repertoire
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -215,8 +253,7 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
