@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-02
@@ -192,6 +192,9 @@ for stype, data in stars_by_type.items():
     series.name = f"Type {stype}"
     series.color = data["color"]
     series.z_index = 2
+    # Type A (#c8c8ff lavender) is near-invisible on light cream — add visible border
+    if stype == "A":
+        series.marker = {"lineWidth": 2, "lineColor": INK_SOFT if THEME == "light" else "rgba(128,128,128,0.35)"}
     chart.add_series(series)
 
 # Red giants — larger markers, cool+luminous region
@@ -243,7 +246,7 @@ sun_series.z_index = 5
 sun_series.data_labels = {
     "enabled": True,
     "format": "Sun ☉",
-    "style": {"fontSize": "36px", "color": "#ffee58", "textOutline": f"2px {PAGE_BG}", "fontWeight": "600"},
+    "style": {"fontSize": "36px", "color": "#ffee58", "textOutline": f"2px {INK_SOFT}", "fontWeight": "600"},
     "x": -80,
     "y": -25,
 }
@@ -265,6 +268,9 @@ if highcharts_js is None:
     )
     with urllib.request.urlopen(req, timeout=30) as response:
         highcharts_js = response.read().decode("utf-8")
+
+# Text shadow for low-contrast spectral letters (A, F) in light mode
+spectral_text_shadow = "0 0 4px #1A1A17, -1px -1px 2px rgba(26,26,23,0.6)" if THEME == "light" else "none"
 
 # Region annotation colors — theme-adaptive: darker on light bg, lighter on dark bg
 main_seq_color = "rgba(50,90,180,0.65)" if THEME == "light" else "rgba(200,215,245,0.45)"
@@ -317,7 +323,8 @@ setTimeout(function() {{
             color: s[2],
             fontSize: '44px',
             fontWeight: '700',
-            textAnchor: 'middle'
+            textAnchor: 'middle',
+            textShadow: '{spectral_text_shadow}'
         }}).attr({{zIndex: 6}}).add();
     }}
 }}, 500);
