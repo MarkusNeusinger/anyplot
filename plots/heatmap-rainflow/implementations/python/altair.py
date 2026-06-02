@@ -1,15 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-02
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - synthetic rainflow counting matrix for a steel component under variable-amplitude loading
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap — single-polarity continuous data (cycle counts)
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
+
+# Data — synthetic rainflow counting matrix for a steel component under variable-amplitude loading
 np.random.seed(42)
 
 n_amp_bins = 20
@@ -25,7 +38,7 @@ amp_grid, mean_grid = np.meshgrid(amplitude_centers, mean_centers, indexing="ij"
 # Base distribution: exponential decay in amplitude, Gaussian in mean
 base_counts = 5000 * np.exp(-amp_grid / 120) * np.exp(-0.5 * (mean_grid / 100) ** 2)
 
-# Add secondary cluster at moderate amplitude / slight positive mean (e.g., dominant load cycle)
+# Secondary cluster at moderate amplitude / slight positive mean (dominant load cycle)
 cluster = 800 * np.exp(-0.5 * ((amp_grid - 175) / 50) ** 2 - 0.5 * ((mean_grid - 50) / 40) ** 2)
 raw_counts = base_counts + cluster
 
@@ -38,7 +51,7 @@ cycle_counts = np.clip(cycle_counts, 0, None)
 mask = np.random.rand(*cycle_counts.shape) < 0.3
 cycle_counts[(amp_grid > 350) & mask] = 0
 
-# Convert to long-form DataFrame
+# Convert to long-form DataFrame (drop zero-count bins — PAGE_BG shows through as zero indicator)
 rows = []
 for i, amp in enumerate(amplitude_centers):
     for j, mean_val in enumerate(mean_centers):
@@ -46,8 +59,8 @@ for i, amp in enumerate(amplitude_centers):
         if count > 0:
             rows.append(
                 {
-                    "Amplitude (MPa)": round(amp, 1),
-                    "Mean Stress (MPa)": round(mean_val, 1),
+                    "Amplitude (MPa)": int(round(amp)),
+                    "Mean Stress (MPa)": int(round(mean_val)),
                     "Cycle Count": count,
                     "Log Count": float(np.log10(max(count, 1))),
                 }
@@ -55,7 +68,13 @@ for i, amp in enumerate(amplitude_centers):
 
 df = pd.DataFrame(rows)
 
-# Plot - rainflow heatmap with sequential colormap, log-scaled
+# Sorted tick values for axes (every other bin center to avoid crowding)
+amp_sorted = sorted(df["Amplitude (MPa)"].unique().tolist())
+mean_sorted = sorted(df["Mean Stress (MPa)"].unique().tolist())
+
+# Plot — rainflow heatmap with Imprint sequential colormap, log-scaled color
+title = "heatmap-rainflow · python · altair · anyplot.ai"
+
 heatmap = (
     alt.Chart(df)
     .mark_rect(cornerRadius=1)
@@ -63,41 +82,32 @@ heatmap = (
         x=alt.X(
             "Mean Stress (MPa):O",
             title="Mean Stress (MPa)",
-            sort=sorted(df["Mean Stress (MPa)"].unique().tolist()),
-            axis=alt.Axis(
-                labelFontSize=14,
-                titleFontSize=20,
-                labelAngle=-45,
-                labelPadding=6,
-                titlePadding=12,
-                values=sorted(df["Mean Stress (MPa)"].unique().tolist())[::2],
-            ),
+            sort=mean_sorted,
+            axis=alt.Axis(labelAngle=-45, labelPadding=6, titlePadding=12, values=mean_sorted[::2]),
         ),
         y=alt.Y(
             "Amplitude (MPa):O",
             title="Stress Amplitude (MPa)",
-            sort=sorted(df["Amplitude (MPa)"].unique().tolist(), reverse=True),
-            axis=alt.Axis(
-                labelFontSize=14,
-                titleFontSize=20,
-                labelPadding=6,
-                titlePadding=12,
-                values=sorted(df["Amplitude (MPa)"].unique().tolist())[::2],
-            ),
+            sort=sorted(amp_sorted, reverse=True),
+            axis=alt.Axis(labelPadding=6, titlePadding=12, values=amp_sorted[::2]),
         ),
         color=alt.Color(
             "Log Count:Q",
-            scale=alt.Scale(scheme="inferno"),
+            scale=alt.Scale(range=IMPRINT_SEQ),
             legend=alt.Legend(
                 title="Cycle Count",
-                titleFontSize=18,
-                labelFontSize=14,
-                gradientLength=400,
-                gradientThickness=20,
+                titleFontSize=10,
+                labelFontSize=10,
+                gradientLength=220,
+                gradientThickness=15,
                 orient="right",
                 titlePadding=8,
                 offset=12,
-                labelExpr="pow(10, datum.value) < 10 ? format(pow(10, datum.value), '.0f') : format(pow(10, datum.value), ',.0f')",
+                labelExpr=(
+                    "pow(10, datum.value) < 10 ? "
+                    "format(pow(10, datum.value), '.0f') : "
+                    "format(pow(10, datum.value), ',.0f')"
+                ),
             ),
         ),
         tooltip=[
@@ -108,26 +118,46 @@ heatmap = (
     )
 )
 
-# Style and layout
+# Style and layout — square canvas: inner view 500×460, scale_factor=4.0 → pads to 2400×2400
 chart = (
     heatmap.properties(
-        width=780,
-        height=780,
+        width=478,
+        height=506,
+        background=PAGE_BG,
         title=alt.Title(
-            "heatmap-rainflow · altair · pyplots.ai",
-            subtitle="Rainflow cycle counting matrix — variable-amplitude fatigue loading on steel component",
-            fontSize=26,
-            subtitleFontSize=16,
-            subtitleColor="#666666",
+            title,
+            subtitle="Rainflow cycle counting matrix — variable-amplitude fatigue loading on steel",
+            fontSize=16,
+            subtitleFontSize=12,
+            color=INK,
+            subtitleColor=INK_SOFT,
             anchor="start",
-            offset=16,
+            offset=12,
         ),
-        padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
     )
-    .configure_view(strokeWidth=0, fill="#ffffff")
-    .configure_axis(grid=False, domain=False, ticks=False)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        grid=False, domain=False, ticks=False, labelColor=INK_SOFT, titleColor=INK, labelFontSize=10, titleFontSize=12
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.6)
-chart.save("plot.html")
+# Save PNG with theme suffix; pad canvas to exactly 2400×2400 (square Imprint target)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save interactive HTML
+chart.save(f"plot-{THEME}.html")
