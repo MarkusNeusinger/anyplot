@@ -6,7 +6,7 @@ title: Epidemic Curve (Epi Curve)
 
 # Specification tracking
 created: "2026-02-25T21:32:09Z"
-updated: null
+updated: "2026-06-02T03:12:37Z"
 issue: 4426
 suggested: MarkusNeusinger
 
@@ -17,7 +17,7 @@ tags:
     - histogram
     - bar
   data_type:
-    - timeseries
+    - time-series
     - categorical
     - discrete
   domain:
