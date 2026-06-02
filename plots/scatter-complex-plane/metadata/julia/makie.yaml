@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-complex-plane
 created: '2026-06-02T01:21:29Z'
-updated: '2026-06-02T01:26:39Z'
+updated: '2026-06-02T01:38:50Z'
 generated_by: claude-sonnet
 workflow_run: 26792134290
 issue: 4427
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Correct Argand diagram with vectors, unit circle, and equal aspect ratio
-  - Complete theme-adaptive chrome — all tokens correctly wired for both light and
-    dark renders
-  - 'Idiomatic Makie: arrows!, DataAspect(), axislegend, hlines!/vlines!, Point2f
-    — no workarounds'
-  - Imprint palette positions 1 (green) and 2 (lavender) correctly applied; data colors
-    identical across themes
-  - Intelligent label offset logic that places subscript labels outward from origin
-  - 'Perfect code quality: flat KISS structure, deterministic seed, all imports used,
-    correct save API'
+  - Full Imprint palette compliance with correct theme-adaptive chrome across both
+    renders — all axis properties receive theme tokens
+  - Dual-format annotation strategy (symbolic label at fontsize=14 + rectangular form
+    at fontsize=10, each at distinct radial offsets) is well-executed and educationally
+    valuable
+  - arrows! primitive for vector visualisation is idiomatic and distinctive to Makie
+    — correct CairoMakie API with origins/directions arrays
+  - DataAspect() ensures the unit circle appears circular — critical correctness for
+    an Argand diagram
+  - Two-category design (5th roots of unity vs arbitrary) with redundant shape encoding
+    (circle vs diamond) provides clear visual differentiation
   weaknesses:
-  - Point labels use symbolic subscript names (z₀, z₁, w₁, etc.) rather than rectangular
-    form (a+bi) as the spec requires — add secondary text annotations showing e.g.
-    "1+0i" or "−0.81+0.59i" beneath/beside each label
-  - Arrow linewidth 1.5 (3px rendered) is thin for the 2400×2400 canvas — increase
-    to 2.0–2.5 for better visual weight of the vectors
-  - Point labels fontsize=13 is readable but slightly small for mobile view — consider
-    14–15
-  - No visual emphasis between the two categories beyond color — adding distinct marker
-    shapes (circle vs diamond) would aid CVD accessibility
-  - 'DE-03: data storytelling is functional but lacks emphasis — consider bolding
-    or enlarging one root-of-unity arrow or adding a brief annotation explaining the
-    geometric significance'
+  - Rectangular form annotations at fontsize=10 are borderline small at mobile scale
+    (~400px); bump to fontsize=11-12 for better legibility
+  - Some text annotations (w1 1.5+1.1i and w2 -1.3+0.8i rectangular forms) extend
+    slightly beyond axis bounds into canvas margins — reduce radial offsets or add
+    axis padding via autolimits
+  - Minor label crowding near z2/w2 cluster in the upper-left quadrant where the two
+    categories converge spatially
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white.
-      Chrome: Title "scatter-complex-plane · julia · makie · anyplot.ai" in dark near-black text, clearly readable. Axis labels "Re(z)" and "Im(z)" in dark ink, readable. Tick labels (−2, −1, 0, 1) in INK_SOFT dark gray, clearly readable. Left and bottom spines in INK_SOFT; top/right spines removed.
-      Data: Five green (#009E73) arrows from origin to 5th roots of unity on the unit circle with matching green scatter points. Three lavender (#C475FD) arrows from origin to arbitrary complex numbers beyond the unit circle with matching lavender points. Dashed gray unit circle reference. Faint horizontal and vertical axis crosshairs through origin. Subscript labels (z₀–z₄, w₁–w₃) in dark ink placed outward from each point. Legend in lower-left with ELEVATED_BG box.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-complex-plane · julia · makie · anyplot.ai" in dark #1A1A17, clearly visible. Axis labels Re(z) and Im(z) in dark ink, readable. Tick labels in INK_SOFT (#4A4A44), readable. Legend in lower-left with ELEVATED_BG (#FFFDF6) fill and INK_SOFT frame.
+      Data: Five green (#009E73) arrow vectors from origin to 5th roots of unity with circle markers. Three lavender (#C475FD) arrow vectors to arbitrary complex numbers with diamond markers. Dashed unit circle in INK_SOFT. Symbolic labels (z0-z4, w1-w3) and rectangular form annotations placed radially. First series correctly uses #009E73 brand green.
+      Legibility verdict: PASS — all text elements readable; some rectangular form annotations at fontsize=10 are small but legible at full res
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black.
-      Chrome: Title, axis labels, and tick labels rendered in light ink (#F0EFE8 / INK_SOFT #B8B7B0) — all clearly readable against the dark background. No dark-on-dark failures observed. Left/bottom spines and grid in soft light color. Top/right spines removed.
-      Data: Data colors are identical to light render — green (#009E73) for 5th roots of unity, lavender (#C475FD) for arbitrary complex numbers. Dashed unit circle is visible in light-gray. Point labels and legend text appear in light ink, readable.
-      Legibility verdict: PASS — all text clearly readable; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8, clearly visible against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0 in dark mode), readable. Legend uses ELEVATED_BG (#242420) fill. No dark-on-dark failures detected — all chrome elements use light tokens correctly.
+      Data: Colors identical to light render — 5th roots of unity in #009E73 green, arbitrary complex in #C475FD lavender. Unit circle dashed line visible in light grey. Marker strokes with PAGE_BG provide definition against dark background.
+      Legibility verdict: PASS — no dark-on-dark text failures; all labels and annotations readable
   criteria_checklist:
     visual_quality:
       score: 27
@@ -60,52 +56,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, ticks all readable in both themes. Point labels
-          at fontsize=13 slightly small for mobile.
+        comment: 'All font sizes explicitly set (title=20, labels=14, ticks=12, annotations=14/10).
+          Readable in both themes. Minor deduction: rectangular form annotations at
+          fontsize=10 borderline at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding near z₂/w₂ in upper-left where label and arrow line
-          are close, but no hard overlap.
+        comment: Good radial label placement with deliberate offsets. Minor crowding
+          near z2/w2 upper-left cluster but no severe overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Arrows at linewidth=1.5 (3px rendered) are somewhat thin for the
-          2400x2400 canvas; all elements visible.
+        comment: Arrows (linewidth=2.0, arrowsize=16), scatter points (markersize=14,
+          strokewidth=1.5), dashed unit circle all clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1 and 2 (green/lavender) — colorblind-safe, no
-          red-green sole signal.
+        comment: '#009E73 green and #C475FD lavender are CVD-safe Imprint palette
+          pair. Redundant shape encoding (circle vs diamond).'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed, square 2400x2400 appropriate for equal-aspect
-          complex plane, DataAspect() correct.
+        comment: Square 2400x2400 canvas correct for equal-aspect complex plane. Some
+          rectangular form annotations (w1, w2) extend slightly beyond axis bounds
+          into canvas margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; Re(z) and Im(z) axis labels are descriptive
-          and conventional.
+        comment: Re(z) and Im(z) are correct mathematical notation. Title format matches
+          required pattern.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1/#1A1A17;
-          data colors identical across themes.'
+        comment: 'First series #009E73 brand green, second #C475FD lavender. Background
+          #FAF8F1 light / #1A1A17 dark. All chrome tokens applied. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,24 +111,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default — intentional hierarchy, custom Imprint palette, spine
-          removal, marker strokes for definition.
+        comment: Above well-configured defaults. Dual-format annotations (symbolic
+          + rectangular at distinct radial offsets), marker shape encoding, stroke
+          definition show deliberate design intent.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (12% opacity), dashed unit circle as elegant reference,
-          white strokewidth on markers, L-spine frame.
+        comment: Top/right spines removed, very subtle grid (opacity 0.12), reduced-opacity
+          axis reference lines, marker strokes for definition. Clean refined aesthetic.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Vector arrows + unit circle create geometric narrative, but no emphasis
-          technique highlights one aspect.
+        comment: Two-category split (unit-circle roots vs external arbitrary) tells
+          clear mathematical story. Dual-format annotation actively educates about
+          complex number notation. Visual hierarchy through colour and shape.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,53 +138,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Argand diagram: scatter + vectors + unit circle + equal
-          aspect.'
+        comment: 'Correct Argand diagram: scatter on complex plane with arrow vectors
+          and unit circle reference.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All structural features present. Missing: rectangular (a+bi) form
-          annotations as spec requires.'
+        comment: Real/imaginary axes through origin (hlines!/vlines!), dashed unit
+          circle, arrows from origin, equal aspect ratio (DataAspect()), rectangular
+          form annotations, distinct colours/markers for categories.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Re(z), Y=Im(z), both categories plotted, equal aspect ratio.
+        comment: Real part on Re(z) x-axis, imaginary part on Im(z) y-axis. All 8
+          complex numbers correctly positioned.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: scatter-complex-plane · julia · makie · anyplot.ai. Legend:
-          ''5th roots of unity'' and ''Arbitrary complex''.'
+          5th roots of unity, Arbitrary complex.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Two categories, arrows, unit circle, axis lines, point labels — missing
-          rectangular form annotations.
+        comment: Points on unit circle and outside, arrow vectors for magnitude/phase,
+          unit circle reference, dual annotation formats, two distinct categories
+          with different geometric properties.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 5th roots of unity are mathematically precise; arbitrary points (1.5+1.1i,
-          etc.) are plausible and neutral.
+        comment: 5th roots of unity is a classic neutral mathematical example directly
+          relevant to complex analysis and FFT education. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ~-1.7 to 1.5, equal aspect, appropriate for complex plane
-          demo.
+        comment: 5th roots of unity are mathematically exact (|zn|=1, evenly spaced
+          at 2pi/5). Arbitrary complex numbers have plausible magnitudes. 8 total
+          points within spec range of 5-50.
     code_quality:
       score: 10
       max: 10
@@ -194,56 +198,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, loops for labels only.
+        comment: 'Linear: imports -> theme tokens -> data -> plot primitives -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present; data is deterministic.
+        comment: Random.seed!(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used.
+        comment: CairoMakie, Colors, Random — all three imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, clean readable code, appropriate loop for label offset
-          logic.
+        comment: Clean, readable code. Radial offset computation concise. No over-engineering
+          or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct.
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2). Uses current `size`
+          keyword (correct for Makie 0.22.10).
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: arrows!, DataAspect(), axislegend, hlines!/vlines!, text! with align
-          — all idiomatic Makie patterns.
+        comment: Expertly uses Figure/Axis pattern, arrows! primitive, DataAspect(),
+          axislegend with positioning, all theme tokens mapped to Axis properties.
+          Fully idiomatic CairoMakie.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: arrows! with Point2f origins/directions is Makie-specific; DataAspect()
-          and axislegend are Makie-native.
+        comment: Uses arrows! primitive (distinct Makie vector visualisation tool),
+          DataAspect() constraint, colorant macro. Multiple geometric layers composed
+          fluidly. Does not leverage recipe system or Observable-based features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - arrows
   patterns:
   - data-generation
   - iteration-over-groups
