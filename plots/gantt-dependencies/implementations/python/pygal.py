@@ -1,19 +1,42 @@
-""" pyplots.ai
+""" anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: pygal 3.1.0 | Python 3.14
-Quality: 81/100 | Updated: 2026-03-06
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-02
 """
 
+import os
 import re
+import sys
 from datetime import date, timedelta
+
+
+# Strip script directory from sys.path so 'import pygal' finds the installed package, not this file
+_script_dir = os.path.abspath(os.path.dirname(__file__))
+sys.path = [p for p in sys.path if p and os.path.abspath(p) != _script_dir]
 
 import cairosvg
 import pygal
 from pygal.style import Style
 
 
-# Software Development Project with Dependencies
-# Each tuple: (task_id, task_name, category, start_date, end_date, depends_on_ids)
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — positions 1–5 mapped to phases
+CAT_COLORS = {
+    "Requirements": "#009E73",  # Imprint pos 1 — brand green
+    "Design": "#C475FD",  # Imprint pos 2 — lavender
+    "Development": "#4467A3",  # Imprint pos 3 — blue
+    "Testing": "#BD8233",  # Imprint pos 4 — ochre
+    "Deployment": "#2ABCCD",  # Imprint pos 6 — cyan
+}
+CRITICAL_COLOR = "#AE3030"  # Imprint pos 5 — matte red, critical path semantic anchor
+
+# Data: Software Development Project with phase groupings and dependencies
 tasks = [
     (1, "Requirements Gathering", "Requirements", date(2025, 1, 6), date(2025, 1, 17), []),
     (2, "Stakeholder Interviews", "Requirements", date(2025, 1, 20), date(2025, 1, 31), [1]),
@@ -33,22 +56,10 @@ tasks = [
     (16, "Post-Launch Support", "Deployment", date(2025, 6, 2), date(2025, 6, 13), [15]),
 ]
 
-task_by_id = {t[0]: t for t in tasks}
-reference = date(2025, 1, 1)
-
 categories = ["Requirements", "Design", "Development", "Testing", "Deployment"]
-cat_colors = {
-    "Requirements": "#306998",
-    "Design": "#E6A817",
-    "Development": "#2A9D8F",
-    "Testing": "#E76F51",
-    "Deployment": "#7B68AE",
-}
-
-# Critical path: tasks with zero float (longest dependency chain)
 critical_ids = {1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 15, 16}
 
-# Phase aggregate spans
+reference = date(2025, 1, 1)
 phase_spans = {}
 for cat in categories:
     cat_tasks = [t for t in tasks if t[2] == cat]
@@ -68,8 +79,7 @@ for cat in reversed(categories):
 
 num_rows = len(display_rows)
 
-# Build HorizontalStackedBar data: transparent offset + colored category duration
-# This uses pygal's stacking to position Gantt bars at correct timeline positions
+# HorizontalStackedBar: transparent offset bar + per-category bars (pygal-native Gantt technique)
 offset_data = []
 cat_series = {c: [] for c in categories}
 
@@ -82,7 +92,12 @@ for row_type, row_data in display_rows:
         offset_data.append(offset)
         for c in categories:
             if c == cat:
-                cat_series[c].append({"value": dur, "style": "fill-opacity:0.3;stroke-width:2.5;stroke-opacity:0.6"})
+                cat_series[c].append(
+                    {
+                        "value": dur,
+                        "style": f"fill-opacity:0.22;stroke:{CAT_COLORS[c]};stroke-width:2;stroke-opacity:0.7",
+                    }
+                )
             else:
                 cat_series[c].append(None)
     else:
@@ -93,47 +108,50 @@ for row_type, row_data in display_rows:
         is_crit = tid in critical_ids
         for c in categories:
             if c == category:
-                style = (
-                    "fill-opacity:0.95;stroke:#2a2a2a;stroke-width:2.5"
-                    if is_crit
-                    else "fill-opacity:0.65;stroke-dasharray:8,4;stroke-width:1;stroke:#999"
-                )
+                if is_crit:
+                    style = f"fill-opacity:0.92;stroke:{INK};stroke-width:1"
+                else:
+                    style = f"fill-opacity:0.62;stroke-dasharray:5,3;stroke-width:1;stroke:{INK_MUTED}"
                 cat_series[c].append({"value": dur, "style": style})
             else:
                 cat_series[c].append(None)
 
-# Row labels
 row_labels = []
 for row_type, row_data in display_rows:
     if row_type == "phase":
-        row_labels.append(f"\u25b6 {row_data}")
+        row_labels.append(f"▶ {row_data}")
     else:
         row_labels.append(f"  {row_data[1]}")
 
-# Style: first color transparent (offset series), then category colors
+# Title length-based font scaling (67-char baseline → 66px default)
+title = "gantt-dependencies · python · pygal · anyplot.ai"
+title_n = len(title)
+title_ratio = 67 / title_n if title_n > 67 else 1.0
+title_fs = max(44, round(66 * title_ratio))
+
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#dddddd",
-    colors=("rgba(0,0,0,0)", "#306998", "#E6A817", "#2A9D8F", "#E76F51", "#7B68AE"),
-    title_font_size=56,
-    label_font_size=24,
-    major_label_font_size=26,
-    legend_font_size=26,
-    value_font_size=20,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("rgba(0,0,0,0)",) + tuple(CAT_COLORS[c] for c in categories),
     font_family="Consolas, monospace",
+    title_font_size=title_fs,
+    label_font_size=38,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=22,
+    stroke_width=2,
 )
 
-# Month boundary positions for value axis guides
 month_positions = [(date(2025, m, 1) - reference).days - start_day for m in range(1, 7)]
 
 chart = pygal.HorizontalStackedBar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="gantt-dependencies \u00b7 pygal \u00b7 pyplots.ai",
+    title=title,
     show_legend=False,
     print_values=False,
     show_y_guides=True,
@@ -142,25 +160,22 @@ chart = pygal.HorizontalStackedBar(
     show_x_labels=True,
     y_labels=month_positions,
     value_formatter=lambda v: (reference + timedelta(days=int(round(v)) + start_day)).strftime("%b %Y"),
-    margin=60,
-    margin_bottom=180,
+    margin=50,
+    margin_bottom=210,
     spacing=4,
     range=(0, day_range),
-    rounded_bars=6,
+    rounded_bars=4,
 )
 
 chart.x_labels = row_labels
-
-# Add real data series - pygal renders the actual bars
 chart.add("", offset_data)
 for cat in categories:
     chart.add(cat, cat_series[cat])
 
-# Render SVG with pygal's charting engine
 svg_string = chart.render().decode("utf-8")
 
-# Extract plot area coordinates from rendered SVG for arrow positioning
-plot_left, plot_top, plot_w, plot_h = 580, 140, 4100, 2200
+# Extract plot area from rendered SVG — fallbacks calibrated to 3200×1800 canvas
+plot_left, plot_top, plot_w, plot_h = 410, 110, 2630, 1420
 
 m1 = re.search(r'class="plot[^"]*"[^>]*transform="translate\(([\d.]+)[, ]+([\d.]+)\)"', svg_string)
 if not m1:
@@ -176,7 +191,7 @@ if m2:
 
 row_h = plot_h / num_rows
 
-# Calculate bar positions from data values for dependency arrows
+# Map task IDs to bar pixel positions for dependency arrow rendering
 bar_pos = {}
 for i, (row_type, row_data) in enumerate(display_rows):
     if row_type != "task":
@@ -190,108 +205,116 @@ for i, (row_type, row_data) in enumerate(display_rows):
         "yc": plot_top + plot_h - (i + 0.5) * row_h,
     }
 
-# Custom SVG elements: arrow markers, dependency arrows, legend
 custom = []
 
-# Arrowhead markers for critical and non-critical dependency arrows
+# SVG defs: arrowhead markers for standard and critical-path dependencies
 custom.append(
     "<defs>"
-    '<marker id="darr" markerWidth="14" markerHeight="10" refX="13" refY="5" orient="auto">'
-    '<polygon points="0 0,14 5,0 10" fill="#777"/>'
+    f'<marker id="arr_dep" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">'
+    f'<polygon points="0 0,10 3.5,0 7" fill="{INK_SOFT}"/>'
     "</marker>"
-    '<marker id="carr" markerWidth="14" markerHeight="10" refX="13" refY="5" orient="auto">'
-    '<polygon points="0 0,14 5,0 10" fill="#c0392b"/>'
+    f'<marker id="arr_crit" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">'
+    f'<polygon points="0 0,10 3.5,0 7" fill="{CRITICAL_COLOR}"/>'
     "</marker>"
     "</defs>"
 )
 
-# Alternating row backgrounds
+# Alternating row backgrounds — theme-adaptive, ink-tinted
 for i in range(num_rows):
     y_top = plot_top + plot_h - (i + 1) * row_h
     row_type = display_rows[i][0]
     if row_type == "phase":
         custom.append(
-            f'<rect x="{plot_left}" y="{y_top:.1f}" width="{plot_w}" '
-            f'height="{row_h:.1f}" fill="#f0f0f0" opacity="0.5"/>'
+            f'<rect x="{plot_left:.1f}" y="{y_top:.1f}" '
+            f'width="{plot_w:.1f}" height="{row_h:.1f}" '
+            f'fill="{INK}" opacity="0.07"/>'
         )
     elif i % 2 == 0:
         custom.append(
-            f'<rect x="{plot_left}" y="{y_top:.1f}" width="{plot_w}" '
-            f'height="{row_h:.1f}" fill="#f8f8f8" opacity="0.4"/>'
+            f'<rect x="{plot_left:.1f}" y="{y_top:.1f}" '
+            f'width="{plot_w:.1f}" height="{row_h:.1f}" '
+            f'fill="{INK}" opacity="0.03"/>'
         )
 
-# Diamond markers on phase aggregate bars
+# Diamond milestone markers at phase aggregate start/end
 for i, (row_type, row_data) in enumerate(display_rows):
     if row_type != "phase":
         continue
     cat = row_data
     ps, pe = phase_spans[cat]
-    off_s = (ps - reference).days - start_day
-    off_e = (pe - reference).days - start_day
-    x_s = plot_left + (off_s / day_range) * plot_w
-    x_e = plot_left + (off_e / day_range) * plot_w
+    x_s = plot_left + ((ps - reference).days - start_day) / day_range * plot_w
+    x_e = plot_left + ((pe - reference).days - start_day) / day_range * plot_w
     yc = plot_top + plot_h - (i + 0.5) * row_h
-    color = cat_colors[cat]
-    ds = 11
+    color = CAT_COLORS[cat]
+    ds = 15
     for dx in [x_s, x_e]:
         custom.append(
-            f'<polygon points="{dx},{yc - ds} {dx + ds},{yc} '
-            f'{dx},{yc + ds} {dx - ds},{yc}" fill="{color}" opacity="0.8"/>'
+            f'<polygon points="{dx:.1f},{yc - ds:.1f} {dx + ds:.1f},{yc:.1f} '
+            f'{dx:.1f},{yc + ds:.1f} {dx - ds:.1f},{yc:.1f}" '
+            f'fill="{color}" opacity="0.9"/>'
         )
 
-# Dependency arrows with visual distinction for critical path
+# Dependency arrows — elbow connectors, critical path in Imprint matte red
 for tid, _, _, _, _, deps in tasks:
     if not deps:
         continue
     tgt = bar_pos[tid]
     for did in deps:
         src = bar_pos[did]
-        x1, y1, x2, y2 = src["xe"], src["yc"], tgt["xs"], tgt["yc"]
+        x1, y1 = src["xe"], src["yc"]
+        x2, y2 = tgt["xs"], tgt["yc"]
         mx = x1 + (x2 - x1) * 0.5
         is_crit = tid in critical_ids and did in critical_ids
-        if abs(y1 - y2) < 5:
-            d = f"M{x1:.0f},{y1:.0f} L{x2:.0f},{y2:.0f}"
+        if abs(y1 - y2) < 4:
+            d = f"M{x1:.1f},{y1:.1f} L{x2:.1f},{y2:.1f}"
         else:
-            d = f"M{x1:.0f},{y1:.0f} L{mx:.0f},{y1:.0f} L{mx:.0f},{y2:.0f} L{x2:.0f},{y2:.0f}"
-        color, sw, marker, op = (
-            ("#c0392b", "3.5", "url(#carr)", "0.85") if is_crit else ("#777", "2", "url(#darr)", "0.55")
-        )
+            d = f"M{x1:.1f},{y1:.1f} L{mx:.1f},{y1:.1f} L{mx:.1f},{y2:.1f} L{x2:.1f},{y2:.1f}"
+        if is_crit:
+            color, sw, marker, op = CRITICAL_COLOR, "3.5", "url(#arr_crit)", "0.88"
+        else:
+            color, sw, marker, op = INK_SOFT, "2", "url(#arr_dep)", "0.55"
         custom.append(
             f'<path d="{d}" stroke="{color}" stroke-width="{sw}" fill="none" opacity="{op}" marker-end="{marker}"/>'
         )
 
-# X-axis timeline label
+# X-axis timeline label (below axis tick labels)
+tl_x = plot_left + plot_w / 2
+tl_y = plot_top + plot_h + 90
 custom.append(
-    f'<text x="{plot_left + plot_w / 2}" y="{plot_top + plot_h + 80}" '
-    f'font-family="Consolas, monospace" font-size="30" fill="#333" '
-    f'text-anchor="middle" font-weight="bold">Project Timeline (Jan \u2013 Jun 2025)</text>'
+    f'<text x="{tl_x:.1f}" y="{tl_y:.1f}" font-size="42" fill="{INK}" '
+    f'font-family="Consolas, monospace" text-anchor="middle" font-weight="600">'
+    "Project Timeline (Jan – Jun 2025)</text>"
 )
 
-# Custom legend
-ly = plot_top + plot_h + 130
-lx = plot_left + 30
-sp = 560
+# Bottom legend — category color swatches + critical path indicator
+ly = plot_top + plot_h + 145
+lx = plot_left + 10
+sp = min(475, int((3200 - lx - 360) // 5))
 
 for idx, cat in enumerate(categories):
     x = lx + idx * sp
-    custom.append(f'<rect x="{x}" y="{ly}" width="24" height="24" fill="{cat_colors[cat]}" rx="4"/>')
+    color = CAT_COLORS[cat]
+    custom.append(f'<rect x="{x:.1f}" y="{ly:.1f}" width="30" height="30" fill="{color}" rx="3"/>')
     custom.append(
-        f'<text x="{x + 34}" y="{ly + 19}" font-family="Consolas, monospace" font-size="26" fill="#333">{cat}</text>'
+        f'<text x="{x + 38:.1f}" y="{ly + 24:.1f}" font-family="Consolas, monospace" '
+        f'font-size="42" fill="{INK}">{cat}</text>'
     )
 
-# Critical path legend entry
 cpx = lx + 5 * sp
 custom.append(
-    f'<line x1="{cpx}" y1="{ly + 12}" x2="{cpx + 40}" y2="{ly + 12}" '
-    f'stroke="#c0392b" stroke-width="3.5" marker-end="url(#carr)"/>'
+    f'<line x1="{cpx:.1f}" y1="{ly + 13:.1f}" x2="{cpx + 40:.1f}" y2="{ly + 13:.1f}" '
+    f'stroke="{CRITICAL_COLOR}" stroke-width="3.5" marker-end="url(#arr_crit)"/>'
 )
 custom.append(
-    f'<text x="{cpx + 52}" y="{ly + 19}" font-family="Consolas, monospace" '
-    f'font-size="26" fill="#333">Critical Path</text>'
+    f'<text x="{cpx + 52:.1f}" y="{ly + 24:.1f}" font-family="Consolas, monospace" '
+    f'font-size="42" fill="{INK}">Critical Path</text>'
 )
 
-# Inject custom SVG elements and render PNG
+# Inject custom SVG elements into pygal's rendered output
 svg_out = svg_string.replace("</svg>", "\n".join(custom) + "\n</svg>")
 svg_out = svg_out.replace(">No data<", "><")
 
-cairosvg.svg2png(bytestring=svg_out.encode(), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg_out.encode(), write_to=f"plot-{THEME}.png")
+
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
