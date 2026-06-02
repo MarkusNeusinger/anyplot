@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-02
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-02
 """
 
 import os
