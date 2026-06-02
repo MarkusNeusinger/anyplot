@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-06-02
@@ -66,14 +66,14 @@ plot = (
         height=10.0,
         tooltips=layer_tooltips().line("Year: @year").line("Anomaly: @anomaly °C").format("@anomaly", ".3f"),
     )
-    + scale_fill_gradient2(low="#08306b", mid="#f7f7f7", high="#67000d", midpoint=0, limits=[-vmax, vmax], name="")
+    + scale_fill_gradient2(low="#4467A3", mid=PAGE_BG, high="#AE3030", midpoint=0, limits=[-vmax, vmax], name="")
     + labs(title=title)
     + theme_void()
     + theme(
         plot_title=element_text(size=title_fontsize, color=INK),
         legend_position="none",
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_margin=[30, 10, 10, 10],
     )
     + ggsize(800, 450)
