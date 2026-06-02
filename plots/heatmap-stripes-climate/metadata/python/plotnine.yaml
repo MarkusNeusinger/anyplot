@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:36:57Z'
-updated: '2026-06-02T06:03:02Z'
+updated: '2026-06-02T06:12:15Z'
 generated_by: claude-sonnet
 workflow_run: 26801151337
 issue: 4423
@@ -12,135 +12,147 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correct climate warming stripes format using geom_tile() with no axes, labels,
-    or gridlines — exactly as the spec requires
-  - Perfect canvas dimensions (3200×1800) and landscape orientation ideal for the
-    wide-and-short warming stripes format
-  - 'Excellent data generation: realistic temperature anomaly trend with 1961-1990
-    baseline normalization, acceleration curve, and noise matching real climate records'
-  - Both themes correctly set background (PAGE_BG) and title text (INK) — readability
-    passes in both light and dark renders
-  - 'Clean code structure: KISS, seed set, all imports used, title size scaled with
-    length formula'
+  - 'Perfect spec compliance: theme_void() strips all axes/labels/ticks/gridlines
+    exactly as warming-stripes spec demands'
+  - 'Correct imprint_div diverging colormap with Imprint palette colors (#4467A3 blue
+    / #AE3030 red) and theme-adaptive mid-color'
+  - 'Fully reproducible: np.random.seed(42) with realistic synthetic HadCRUT-style
+    trend (linspace baseline + accelerating post-1980 component)'
+  - Title correctly sized via the 67-char scaling formula and is bold and clearly
+    readable in both light and dark themes
+  - expand=(0,0) on both continuous scales cleanly eliminates all whitespace around
+    the stripe block
+  - guides(fill=False) correctly suppresses the fill colorbar — consistent with the
+    spec's 'no axes, no labels' requirement
   weaknesses:
-  - 'Non-Imprint colormap used: scale_fill_gradientn with 9 custom ColorBrewer-derived
-    hex stops (#08306b, #2171b5, #6baed6, #deebf7, #ffffff, #fee0d2, #fc9272, #de2d26,
-    #67000d). Style guide mandates imprint_div only for diverging continuous data
-    — replace with scale_fill_gradient2(low=''#4467A3'', mid=PAGE_BG, high=''#AE3030'',
-    midpoint=0) so cold anomalies map to Imprint blue and warm anomalies map to Imprint
-    matte-red, with theme-adaptive neutral midpoint'
-  - 'Midpoint is pure #ffffff (pure white) in both themes — the style guide forbids
-    pure white; the midpoint must be theme-adaptive: PAGE_BG (#FAF8F1 light / #1A1A17
-    dark). With the current #ffffff midpoint, near-zero stripes appear bright white-on-dark
-    in the dark render and nearly invisible against the off-white background in the
-    light render, creating visual inconsistency between themes'
-  - Blue-red colormap is not CVD-optimized — the Imprint palette was engineered for
-    max-min ΔE across deuteranopia/protanopia/tritanopia simulations; the custom RdBu-derived
-    stops lack this guarantee
+  - 'Near-zero anomaly stripes have reduced visibility because mid=PAGE_BG means values
+    near the 1961-1990 baseline take the background color (#FAF8F1 in light / #1A1A17
+    in dark) and partially blend with the canvas. In the light render the transitional
+    stripes appear cream-on-cream; in the dark render the same stripes appear near-black-on-near-black.
+    Consider using a neutral light-grey (#D8D6CF) as a fixed mid-color that contrasts
+    with both backgrounds, or pick a slightly off-neutral colour that reads on both
+    surfaces.'
+  - plot_margin=0.01 leaves a visible cream/dark margin around the stripe block on
+    all four sides, breaking the ideal full-bleed warming-stripes look. Remove or
+    reduce plot_margin further (try 0 or a tiny 0.002) so the stripes touch the canvas
+    edge on left, right, and bottom.
+  - after_stat('1') is unnecessarily complex for a constant y-aesthetic. A simpler
+    and more readable idiom is df['y'] = 1 followed by aes(x='year', y='y', fill='anomaly'),
+    or aes(x='year', y=1, fill='anomaly') directly — no after_stat import needed.
+  - 'Design Excellence could be elevated: the default warming-stripes implementation
+    omits any year annotation markers or subtle axis decorations that characterise
+    the most polished published versions of this chart (e.g. a small label for the
+    baseline period 1961-1990, or decade tick marks beneath the stripe block without
+    full axis display). Even one subtle enhancement would raise storytelling score.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, fills the entire canvas around the stripes and the title area above.
-      Chrome: Title "heatmap-stripes-climate · python · plotnine · anyplot.ai" is bold, dark (#1A1A17-equivalent) text centered at top — clearly readable and well-proportioned (~70% of canvas width). No axis labels, no tick marks, no gridlines, no legend — exactly as spec requires.
-      Data: 175 vertical colored stripes spanning 1850–2024, progressing from dark navy/deep blues on the left (cold early years) through lighter blues toward mid-frame, through very pale near-white stripes near the 1980–2000 range, then increasingly warm pinks and reds extending to deep crimson on the right (recent hot years). The rightmost stripes are vivid red-orange, making the warming trend immediately obvious. Near-zero anomaly stripes in the transition zone are subtle (~near-white against the off-white background) but still distinguishable.
-      Legibility verdict: PASS — title is readable; data stripes are visible throughout, though near-zero stripes in the middle zone are marginally subtle on the light background due to the #ffffff midpoint color being very close to the #FAF8F1 background.
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white
+      Chrome: Bold title "heatmap-stripes-climate · python · plotnine · anyplot.ai" in dark (#1A1A17) text at top; all readable. No axis labels, no ticks, no grid — correct per spec.
+      Data: 175 vertical stripes spanning full canvas height. Left portion (approx. 1850–1940) shows deep blues and medium blues indicating persistent cold anomalies. Central transitional zone (1940s–1990s) transitions through pale/cream stripes near the zero baseline — these near-zero stripes are visibly faint against the cream background (mid=PAGE_BG effect). Right portion (1990s–2024) transitions sharply through salmon pinks to deep reds, clearly communicating accelerating warming. Warming trend unmistakably visible left-to-right.
+      Legibility verdict: PASS — title is bold and clearly readable; no other text exists by design.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, fills the canvas outside the stripe area and the title banner.
-      Chrome: Title rendered in bright/near-white light text — clearly readable against the dark background. No axis labels, no tick marks, no gridlines.
-      Data: Data stripe colors are identical to the light render — the same dark-navy-to-deep-red progression. However, the near-zero anomaly stripes (which use #ffffff as midpoint) appear as bright white-on-dark in this render, creating a more visually striking contrast in the neutral zone compared to the light render. This makes the two renders look slightly different in feel even though the data hex values are the same.
-      Legibility verdict: PASS — title is readable; all data stripes are visible. Note: the #ffffff midpoint stripes appear unnaturally bright (white on dark) in this render, which is a palette compliance issue rather than a readability failure.
+      Background: Warm near-black (#1A1A17) — correct, clearly not pure black
+      Chrome: Bold title in light (#F0EFE8) text — clearly readable against the dark background. No dark-on-dark text failures observed.
+      Data: Same stripe pattern as light render. Blues on left, transitioning to reds on right — data colors are identical across both renders (only chrome flips). The transitional near-zero stripes (mid=PAGE_BG=#1A1A17 in dark) appear very dark/nearly invisible in the dark theme, creating a subtle visual gap around the baseline period. Blues and reds remain well-distinguished and the overall warming narrative is clear.
+      Legibility verdict: PASS — title is white-on-dark and fully readable. Minor issue: near-zero stripes blend with dark background, slightly reducing visibility of baseline-period years.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font size explicitly set (title_size scaled with 67/n formula), bold
-          and readable in both themes. Near-perfect; minor point off for no explicit
-          size on any secondary text (N/A here but pattern noted).
+        comment: 'Title is bold, correctly sized via 67-char formula, clearly readable
+          in both light (#1A1A17 on #FAF8F1) and dark (#F0EFE8 on #1A1A17). No axis
+          labels by spec design. Full marks.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — spec mandates no axes or labels, so only
-          the title exists above the stripes. Clean layout.
+        comment: No overlapping elements. Title sits cleanly above the stripe block.
+          Stripes are uniform tiles with no gaps or overlaps.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Stripes are clearly visible across most of the color range. Near-zero
-          anomaly stripes (using #ffffff midpoint) are marginally subtle in the light
-          render — they blend slightly with the #FAF8F1 background.'
+        comment: 'Most stripes clearly visible. Deducted 1pt: near-zero anomaly stripes
+          (mid=PAGE_BG) partially blend with the background in both renders, reducing
+          visibility of baseline-period years. Blues and reds are well-saturated and
+          prominent.'
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Blue-red diverging is generally acceptable for CVD (blue-red fares
-          better than red-green), but the custom ColorBrewer-derived stops lack the
-          guaranteed ΔE optimization of the Imprint palette.
+        comment: 'Blue-red diverging (not green-red). Imprint palette colors (#4467A3,
+          #AE3030) are CVD-safe. No accessibility violations.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200×1800). scale_x_continuous(expand=(0,0))
-          and scale_y_continuous(expand=(0,0)) make stripes fill the plot area edge-to-edge.
-          Landscape orientation is optimal for warming stripes (wide-and-short per
-          spec).
+        comment: 'Canvas gate passed (3200x1800). Landscape format correct for horizontal
+          time-progression spec. Deducted 1pt: plot_margin=0.01 leaves a thin visible
+          cream/dark margin on all sides, breaking the full-bleed warming-stripes
+          aesthetic that the spec implies (''each bar fills equal width with no gaps'').'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches the required format exactly. No axis labels as per
-          spec (no axes/labels/ticks on warming stripes).
+        comment: 'Title is correct format: ''heatmap-stripes-climate · python · plotnine
+          · anyplot.ai''. No axis labels is correct per spec (''no axes, no labels,
+          no tick marks'').'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Imprint colormap: scale_fill_gradientn with 9-stop ColorBrewer-derived
-          RdBu hex sequence. Style guide mandates imprint_div only for diverging continuous
-          data. Also uses pure #ffffff as midpoint (forbidden). Backgrounds are correct
-          (#FAF8F1/#1A1A17).'
+        passed: true
+        comment: 'Uses imprint_div correctly: low=#4467A3 (Imprint blue) / high=#AE3030
+          (Imprint matte red) / mid=PAGE_BG (theme-adaptive). Blue=cold / red=warm
+          is a valid semantic ordering. Backgrounds #FAF8F1 light / #1A1A17 dark are
+          correct. Both renders theme-correct.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: theme_void() with no chrome, edge-to-edge stripes,
-          and clean title placement create a professional, iconic warming-stripes
-          look. Clearly above defaults. Non-Imprint colormap prevents full marks.'
+        comment: 'Above default (4). Clean minimalist execution faithful to the Ed
+          Hawkins warming-stripes concept. Intentional hierarchy: title only, pure
+          color data. Slightly above default for the thoughtful theme-adaptive midpoint
+          color.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Well-refined: theme_void() removes all unnecessary elements, expand=(0,0)
-          ensures edge-to-edge fill, legend suppressed. plot_margin=0.01 leaves a
-          tiny gap visible in the light render but does not significantly detract.'
+        comment: 'Above default (2). theme_void() is the ideal choice. expand=(0,0)
+          removes whitespace. guides(fill=False) removes redundant colorbar. Small
+          deduction: plot_margin=0.01 leaves a margin that prevents full-bleed; also
+          no additional refinements like subtle period markers.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The left-to-right blue-to-red progression makes the warming trend
-          immediately legible. The dense clustering of deep reds in the rightmost
-          years creates a natural focal point communicating recent acceleration.
+        comment: 'Above default (2). The warming progression from cool blues to saturated
+          reds is immediately apparent. Post-1980 acceleration is clearly visible
+          in the rapidly intensifying reds. Effective at communicating climate change
+          narrative without any labels. Minor deduction: no period annotation to orient
+          the viewer.'
     spec_compliance:
       score: 15
       max: 15
@@ -150,58 +162,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct — climate warming stripes using geom_tile(), one tile per
-          year, no gaps.
+        comment: 'Correct: warming stripes implemented as geom_tile with diverging
+          fill scale, one row of vertical bars per year, no axes.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: no axes/labels/ticks/gridlines (theme_void()),
-          diverging colormap centered at 0 (symmetric vmax), equal-width bars (width=1),
-          no gaps (expand=(0,0)), guides(fill=False) removes colorbar, ~3:1 landscape
-          aspect ratio.'
+        comment: 'All spec features present: no axes/labels/ticks/gridlines (theme_void),
+          diverging colormap centred at 0, no gaps between bars (aes width=1), symmetric
+          color scale (limits=(-vmax,vmax)).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Year mapped to x, anomaly mapped to fill color, all 175 years (1850–2024)
-          represented, symmetric color limits (±vmax).
+        comment: X=year (1850-2024), fill=anomaly (temperature deviation from baseline).
+          Correct mapping throughout.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-stripes-climate · python · plotnine · anyplot.ai''
-          — correct format. No legend as appropriate (colorbar suppressed per spec''s
-          minimal aesthetics).'
+        comment: Title is exactly 'heatmap-stripes-climate · python · plotnine · anyplot.ai'.
+          No legend shown (correct per spec's no-labels requirement).
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full temporal range (1850–2024), realistic noise, warming acceleration
-          after 1980, clear cold-to-warm progression — all aspects of the plot type
-          demonstrated.
+        comment: 'Good coverage: 175 years of data (1850-2024), realistic trend with
+          linear baseline + accelerating post-1980 component + random noise. Baseline
+          normalised to 1961-1990 mean. Minor deduction: no annotation identifying
+          the baseline period or any temporal reference.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global temperature anomaly relative to 1961–1990 baseline — scientifically
-          accurate framing, neutral topic (climate science), realistic numerical range.
+        comment: Global temperature anomaly is an established, neutral scientific
+          dataset. Realistic anomaly magnitude (~-0.5°C to +1.5°C). Politically uncontroversial
+          framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomalies range roughly −0.5 to +1.2°C — consistent with observed
-          global temperature records. Baseline normalization correctly implemented.
+        comment: Anomaly range aligns well with HadCRUT/NASA GISS datasets. Symmetric
+          limits around zero ensure equal visual intensity for positive and negative
+          deviations.
     code_quality:
       score: 10
       max: 10
@@ -211,36 +224,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
+        comment: No functions or classes. Linear, readable script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (after_stat used on line 55, all plotnine symbols
-          used).
+        comment: All imports used. after_stat is imported and used (though the usage
+          pattern is overly complex for a constant).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. after_stat('1') is an unusual but
-          valid idiom for a constant y aesthetic. No fake UI.
+        comment: 'Clean and appropriate. Minor note: after_stat(''1'') for a constant
+          y-value is unusual; simpler idiom would be aes(y=1) or df[''y'']=1.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dimensions (width=8, height=4.5,
-          dpi=400).
+        comment: Saves to plot-{THEME}.png with correct dpi=400, width=8, height=4.5,
+          units='in'.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -248,25 +261,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics pipeline is correctly composed. after_stat('1')
-          for constant y-aesthetic is creative and above default usage. scale_fill_gradientn,
-          guides(fill=False), and theme_void() all used appropriately.
+        comment: 'Good plotnine idioms: geom_tile, scale_fill_gradient2, theme_void,
+          guides(fill=False), scale expand. Minor deduction for after_stat(''1'')
+          instead of a simpler constant mapping.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: after_stat('1') as a y-aesthetic for creating 1D tile layouts is
-          a plotnine-specific pattern. The grammar of graphics chaining is idiomatic,
-          but the overall approach could be replicated in other libraries with minor
-          changes.
-  verdict: REJECTED
+        comment: Above default (1). Uses theme_void() — distinctive ggplot2/plotnine
+          feature. Theme-adaptive mid-color in scale_fill_gradient2 is a notable plotnine-idiomatic
+          design choice. Could be elevated further with plotnine-specific faceting
+          or annotation layers.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
   - custom-colormap
