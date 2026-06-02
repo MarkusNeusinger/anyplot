@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:25:25Z'
-updated: '2026-06-02T01:20:07Z'
+updated: '2026-06-02T01:42:32Z'
 generated_by: claude-sonnet
 workflow_run: 26791866333
 issue: 4427
@@ -12,130 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'Perfect Imprint palette adherence: first series green (#009E73), canonical color
-    order, theme-correct chrome in both renders with matching backgrounds (#FAF8F1
-    light / #1A1A17 dark).'
-  - Idiomatic use of pygal's None-segment-break pattern to draw multiple disconnected
-    origin-to-point vectors within each series — a distinctively pygal idiom.
-  - Square 2400x2400 canvas with equal x/y ranges (-3.5, 3.5) gives mathematically
-    correct equal-aspect-ratio Argand diagram; unit circle renders as a circle.
-  - js=[] demonstrates savvy understanding of pygal's render pipeline, stripping CDN
-    dependencies for reliable offline PNG export.
-  - Clean KISS code structure with no functions/classes; all font sizes explicitly
-    set; dual PNG+HTML output correctly implemented; np.random.seed(42) present.
+  - Mathematically accurate data (roots of unity exactly on unit circle, vector sum
+    z1+z2 computed correctly) with standard complex notation (omega0-omega2, z1-z4)
+  - 'Excellent Imprint palette usage across 5 series in canonical order; full theme-adaptive
+    chrome with correct backgrounds (#FAF8F1 light, #1A1A17 dark); both renders pass
+    legibility check'
+  - 'Intentional design: varying opacity per series (0.40 for unit circle reference
+    vs 0.88-0.92 for primary vectors), varying dots_size per series, dashed vs solid
+    strokes to distinguish result from operands'
+  - Square 2400x2400 canvas correctly chosen for equal-aspect-ratio requirement of
+    Argand diagram
+  - Interactive HTML output saved alongside PNG — leverages pygal's distinguishing
+    interactive feature
+  - Clean KISS code with all font sizes explicitly set and fully deterministic data
+    (np.random.seed(42))
   weaknesses:
-  - Static PNG has no visible point labels — a+bi annotations (and polar-form labels)
-    only appear as hover-tooltips in the interactive HTML. Use print_values=True with
-    a value_formatter returning the rectangular-form string per series (e.g. '2.5+1.0i'),
-    applied at the series level to keep unit circle and origin label-free.
-  - No arrowheads on vectors — pygal XY cannot natively add arrowheads. Consider post-render
-    SVG patching with <marker> elements before PNG conversion, or use endpoint marker
-    shapes within a CustomStyle to simulate arrowheads.
-  - 'Origin marker (dots_size=8, matte-red #AE3030) is nearly invisible in both renders
-    because all other series start at (0, 0) and their larger dots (16-22) stack on
-    top. Increase origin dots_size to 18-20 and move the ''Origin'' chart.add() call
-    to last so it renders on top of all other series.'
-  - Grid lines in the dark render are noticeably bright since pygal cannot control
-    grid opacity independently (foreground_subtle governs tone). This is a known library
-    limitation — flag if persistent after repair.
+  - Vectors are line segments without arrowheads — pygal XY stroke cannot render arrowhead
+    markers natively; spec calls for vector arrows with arrowheads which are absent
+  - 'Label crowding near origin: omega1, omega2, and z4 labels cluster in the center-left
+    quadrant where multiple vectors converge; pygal auto-placement has limited collision
+    avoidance'
+  - 'Point value labels in dark render use foreground_subtle (INK_MUTED #A8A79F) —
+    readable but softer than ideal; primary foreground color for value labels would
+    improve dark-mode readability'
+  - Unit circle at 40% opacity is very subtle in both renders — increasing to 0.55-0.65
+    would improve discoverability of the reference circle without competing with primary
+    data vectors
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "scatter-complex-plane · python · pygal · anyplot.ai" in dark ink, clearly readable. Axis labels "Real Axis" (X) and "Imaginary Axis" (Y) clearly visible. Tick labels -3 to 3 on both axes readable. Bottom legend with 5 entries fully legible.
-      Data: Five series — brand green (#009E73) roots-of-unity dots with solid vector lines from origin; lavender (#C475FD) sample-point dots with solid vector lines; blue (#4467A3) vector-sum dot with dashed line; ochre (#BD8233) dashed unit circle reference; small red (#AE3030) origin marker at (0,0). Grid shown as subtle dashed lines. Unit circle appears as a dashed circle centered at origin within the coordinate range.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "scatter-complex-plane · python · pygal · anyplot.ai" in dark text, clearly readable. X-axis label "Real Axis" and Y-axis label "Imaginary Axis" in dark text, readable. Tick labels (-3 to 3) in dark numeric text, readable. Grid lines subtle dashed lines.
+      Data: 5 series — Roots of Unity (3rd) in brand green #009E73 with solid vectors from origin; Sample Points in lavender #C475FD with solid vectors; z1+z2 Vector Sum in blue #4467A3 with dashed vector; Unit Circle in ochre #BD8233 as subtle dashed circle; Origin in matte red #AE3030 as prominent center dot. Point value labels (omega0=1.0, omega1=-0.5+0.9i, z1=2.5+1.0i, etc.) visible in dark text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light cream/off-white text — clearly readable against the dark background. Legend entries at bottom readable. No dark-on-dark failures observed.
-      Data: All five series retain identical data colors from the light render — green (#009E73), lavender (#C475FD), blue (#4467A3), ochre (#BD8233), red (#AE3030). Only chrome flips. Grid lines are slightly more prominent in dark theme (pygal limitation — foreground_subtle governs grid tone without separate opacity control) but do not obscure the data.
-      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light-colored text, clearly readable against dark background. Axis labels "Real Axis" and "Imaginary Axis" in light text, readable. Tick labels in light numeric text, readable. Grid lines visible as subtle lighter lines on dark background. No dark-on-dark failures.
+      Data: Data colors are identical to light render — brand green vectors, lavender vectors, blue dashed vector, ochre dashed circle, red origin dot. Point value labels use INK_MUTED (#A8A79F) which gives approx 7.8:1 contrast on #1A1A17 — readable but slightly softer than primary ink. Legend at bottom in light text, readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). Both themes fully readable, proportions balanced.
+        comment: All font sizes explicitly set (title_fs=66, label_font_size=56, major_label_font_size=44,
+          legend_font_size=44, value_font_size=36). Good proportions. Point value
+          labels in dark render use INK_MUTED which is readable but slightly softer;
+          -1.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text or data collisions in either render.
+        comment: Minimal crowding near origin where omega1, omega2, and z4 labels
+          cluster in center-left quadrant where multiple vectors converge. Main content
+          readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All series clearly visible; origin dot (dots_size=8) partially buried
-          under overlapping starting points of other series at (0,0).
+        comment: Data elements well-sized for sparse scatter. dots_size 20/16/22/20
+          per series. Unit circle intentionally subtle at 40% opacity. Vector strokes
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; series further differentiated by stroke
-          style (solid vs. dashed) and dot size.
+        comment: Imprint palette used, CVD-safe. No red-green as sole distinguishing
+          signal. Adequate contrast across all series.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas ideal for symmetric diagram; equal x/y range
-          (-3.5, 3.5) ensures equal aspect ratio; explicit margins.
+        comment: Square 2400x2400 canvas correct for equal aspect ratio. Custom generous
+          margins. Plot fills canvas well. Legend at bottom integrated. No content
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis and Imaginary Axis are descriptive; complex-plane axes
-          are dimensionless so no units needed.
+        comment: Real Axis and Imaginary Axis are descriptive and appropriate for
+          complex plane (dimensionless).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; subsequent series follow Imprint canonical
-          order; backgrounds #FAF8F1/#1A1A17; data colors identical across both renders.'
+        comment: 'First series #009E73, subsequent follow canonical Imprint order.
+          Light bg #FAF8F1, dark bg #1A1A17. Data colors identical across both renders.
+          Chrome adapts correctly.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: correct Imprint palette, theme-adaptive chrome,
-          per-series stroke differentiation, dot-size hierarchy (sum=22 > roots=20
-          > samples=16 > origin=8). Not yet strong-design territory — no visible point
-          labels in PNG, reads as a well-configured chart.'
+        comment: Well-configured with full Imprint palette and intentional opacity/stroke
+          variations. Looks like thorough library configuration rather than exceptional
+          publication-ready design.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Explicit margins, bottom legend with column grouping, subtle dashed
-          grid, warm backgrounds. Refinement evident. Pygal grid opacity cannot be
-          reduced further (library limitation).
+        comment: Dashed strokes for unit circle and vector sum, varying opacity per
+          series (0.40 to 0.92), varying dots_size per series, custom margins, fill=False
+          and show_dots=False for circle.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Dashed stroke on vector sum signals ''result''; largest dot on sum
-          creates focal point; ochre unit circle as structural reference is good semantic
-          choice. Missing: per-point a+bi labels visible in PNG — only available as
-          hover in HTML.'
+        passed: true
+        comment: 'Clear visual hierarchy: origin prominent in red, roots-of-unity
+          as primary story in green, vector sum as derived result in dashed blue,
+          unit circle as subtle reference in ochre. Dashed stroke signals computed
+          result.'
     spec_compliance:
       score: 14
       max: 15
@@ -145,29 +151,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Argand/complex-plane diagram: real on X, imaginary on Y,
-          vectors from origin, unit circle reference.'
+        comment: 'Correct Argand diagram: complex numbers in Cartesian plane, vectors
+          from origin, unit circle reference, labeled points, equal-aspect square
+          canvas.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Unit circle (dashed, correct), vectors from origin, equal aspect
-          ratio, distinct category colors. Missing: arrowheads (pygal XY limitation)
-          and static point annotations with a+bi form (hover-only in HTML).'
+        comment: 'Unit circle (dashed), real/imaginary axes with ticks, equal aspect
+          ratio, rectangular form annotations, distinct color categories all present.
+          Missing: true arrowheads on vectors (pygal XY stroke limitation).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on X, imaginary on Y; all points within (-3.5, 3.5) viewport.
+        comment: Real part on x-axis, imaginary part on y-axis, all 8 data points
+          shown, axes range -3.5 to 3.5 accommodates all data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'scatter-complex-plane · python · pygal · anyplot.ai'.
-          Legend lists all five series with correct labels.
+        comment: Title is 'scatter-complex-plane · python · pygal · anyplot.ai' exactly.
+          Legend labels correctly describe all series.
     data_quality:
       score: 14
       max: 15
@@ -177,24 +185,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Demonstrates roots of unity (symmetric on unit circle), arbitrary
-          sample points, vector addition (z1+z2), unit circle reference, and origin.
-          Missing explicit polar-form annotation to showcase r∠θ aspect.
+        comment: Roots of unity symmetrically on unit circle, sample points in multiple
+          quadrants, vector addition result, unit circle reference, origin marker
+          all shown. Polar form absent (marked optional in spec).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical education scenario (3rd roots of unity + complex addition);
-          neutral, real-world content relevant to signal processing and number theory.
+        comment: Real mathematical scenario (complex analysis, roots of unity, vector
+          addition). Standard notation (omega0-2, z1-z4). Neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 3rd roots of unity at unit magnitude (mathematically exact via np.exp(2*pi*i*k/3));
-          z1=2.5+1.0j, z2=-1.8+1.5j, sum=0.7+2.5j; unit circle radius exactly 1. Factually
-          correct.
+        comment: 'Roots of unity exactly on unit circle (|e^{2piki/3}|=1). Vector
+          sum computed correctly: z1+z2=(2.5+1.0i)+(-1.8+1.5i)=0.7+2.5i. All values
+          mathematically accurate.'
     code_quality:
       score: 10
       max: 10
@@ -204,55 +212,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → labels → style → chart → series
-          → save. No functions or classes.'
+        comment: Imports, data, style, chart, series, save — clean flat structure
+          with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data otherwise deterministic.
+        comment: np.random.seed(42) set. Data fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (os, numpy, pygal, Style) actively used.
+        comment: os, numpy, pygal, pygal.style.Style — all used, no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; inline label conditionals readable; None segment-break
-          pattern idiomatic; js=[] for reliable PNG rendering.
+        comment: Clean Pythonic code. Series building with None separators follows
+          pygal XY pattern. Title fontsize scaling formula clean. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API;
-          no deprecated calls.
+        comment: Saves plot-{THEME}.png via render_to_png() and plot-{THEME}.html
+          via render(). Current pygal API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expertly uses pygal.XY; Style object for all theming; js=[] to strip
-          CDN dependencies; None sentinel for multi-segment lines; per-series stroke,
-          show_dots, dots_size, stroke_style overrides — all idiomatic pygal patterns.
+        comment: Correct pygal.XY with stroke=True for vector lines, per-series stroke_style
+          dicts with dasharray/linecap/opacity, per-series dots_size overrides, print_labels=True,
+          legend_at_bottom with column layout.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Dual output (PNG + interactive HTML with hover labels); None-segment-break
-          to render multiple disconnected vectors within one chart.add() call; per-series
-          dasharray for reference circle. Uses several pygal-specific capabilities.
-  verdict: REJECTED
+        comment: Interactive HTML output saved alongside PNG (pygal's distinguishing
+          feature). Uses dasharray in stroke_style for dashed elements. Per-series
+          show_dots and fill overrides. Library-specific capabilities demonstrated.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
