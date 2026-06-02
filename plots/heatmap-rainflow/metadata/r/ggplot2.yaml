@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: heatmap-rainflow
+created: '2026-06-02T09:56:18Z'
+updated: '2026-06-02T10:12:53Z'
+generated_by: claude-sonnet
+workflow_run: 26812126538
+issue: 4465
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance: colorbar, physical units (MPa), zero-bin handling, and
+    sequential colormap all correctly implemented'
+  - Contour overlay at 25% of peak is a genuine engineering insight — highlights the
+    dominant fatigue cycle zone without crowding the visualization
+  - Correct imprint_seq gradient (green→blue) with sqrt transform well-suited to cycle
+    count data that spans multiple orders of magnitude
+  - 'Fully theme-adaptive chrome: all INK/INK_SOFT tokens correctly wired through
+    axis labels, tick labels, title, legend, and NA tiles'
+  - Realistic structural steel fatigue scenario with physically plausible amplitude/mean
+    ranges and a concentrated hot-spot distribution
+  weaknesses:
+  - NA threshold count <= 2L is too aggressive — bins with 1–2 actual cycles are masked,
+    creating scattered white/black holes throughout the outer region rather than a
+    smooth boundary; lower to count == 0L so all non-zero bins are colored
+  - Contour line lacks any label or annotation explaining what the threshold represents;
+    a small geom_text label (e.g., '25% of peak') near the contour would improve data
+    storytelling without cluttering the plot
+  - Legend box (ELEVATED_BG fill + borderless) is functional but slightly detached
+    from the color scale — a minimal adjustments like reducing legend padding or omitting
+    the background entirely would increase visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "heatmap-rainflow · r · ggplot2 · anyplot.ai" centered in dark #1A1A17 ink at 12pt, clearly readable. Axis labels "Mean Stress (MPa)" (x) and "Stress Amplitude (MPa)" (y) in dark ink at 10pt, readable. Tick labels in #4A4A44 (INK_SOFT) at 8pt, readable.
+      Data: Heatmap tiles using imprint_seq gradient (green #009E73 low → blue #4467A3 high) with sqrt transform. Hot spot (highest cycle count ~2500) at low amplitude (5–15 MPa) near 60 MPa mean, displayed in blue. Outer tiles appear in green (low counts). NA bins (count ≤ 2) displayed as PAGE_BG cream — scattered white patches visible in the outer high-amplitude/extreme-mean region, creating a slightly patchy boundary. A subtle gray contour line (INK_SOFT, alpha=0.7) outlines the 25% of peak threshold zone. Colorbar on right with "Cycle Count" label, comma-formatted values from ~500 to ~2500.
+      Legibility verdict: PASS — all text elements readable; data visible; contour subtle but clear.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface.
+      Chrome: Title in #F0EFE8 (INK light on dark), axis labels and tick labels in #B8B7B0 (INK_SOFT dark). All text clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Imprint data colors identical to light render — same green #009E73 to blue #4467A3 gradient, same hot spot location and distribution. NA bins now display as dark (#1A1A17), creating dark holes in place of light holes from the light render. Contour is rendered in B8B7B0 (INK_SOFT dark) and remains visible. Legend background uses #242420 (ELEVATED_BG dark).
+      Legibility verdict: PASS — all chrome adapts correctly; no dark-on-dark text; data colors identical to light render as required.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set (title=12, axis=10, ticks=8, legend=8).
+          All text readable in both themes. Minor: at 2400x2400 square, a slightly
+          larger base could improve mobile readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Contour line does not obscure labels. Colorbar
+          properly placed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Hot spot clearly visible. Color gradient readable. Minor: scattered
+          NA patches (count<=2 threshold) create irregular boundary, slightly reducing
+          clarity of the cycle distribution shape.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue imprint_seq gradient is CVD-safe. Contour uses INK_SOFT
+          with good contrast against both green and blue fills.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is 2400x2400 square (correct for heatmap). Good proportions,
+          nothing cut off, colorbar well-placed, generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels include physical units (MPa). Title format exactly matches
+          spec.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq gradient (#009E73 → #4467A3) correctly applied. na.value=PAGE_BG
+          is theme-adaptive. Backgrounds #FAF8F1 / #1A1A17 correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom imprint_seq scale, thoughtful contour overlay, clean no-grid
+          aesthetic. Patchy NA holes reduce polish slightly.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: No grid (appropriate for heatmap), custom axis lines, generous margins.
+          Legend box is functional but could be leaner.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Contour at 25% of peak genuinely highlights the dominant fatigue
+          zone. Sqrt scale aids count level differentiation. Contour has no text label
+          explaining the threshold.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap with geom_tile.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar present, sequential colormap, physical units, zero-count
+          bins visually distinct via NA/PAGE_BG.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Amplitude on y-axis, mean on x-axis, count mapped to fill color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-rainflow · r · ggplot2 · anyplot.ai' matches spec.
+          Legend labeled 'Cycle Count'.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 20x20 matrix, colorbar, zero-bin handling, contour overlay,
+          sqrt scale all present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Structural steel fatigue scenario. Amplitude 5–100 MPa, mean −40
+          to 140 MPa — realistic ranges. Count distribution peaks at low amplitude
+          / mid mean as expected physically.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20x20 bins within spec range (10x10–64x64). Max count ~2500 realistic
+          for a measured load history.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Linear script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, scales, ragg — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean dplyr pipeline, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_tile for heatmap, scale_fill_gradient with guide_colorbar, scale_*_continuous
+          with pretty_breaks, theme_minimal + custom theme overrides. All idiomatic
+          ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_contour combined with geom_tile is distinctive ggplot2 layering.
+          guide_colorbar with custom barheight. scales::comma formatting. NA handling
+          via na.value.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
