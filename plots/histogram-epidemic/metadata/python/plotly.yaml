@@ -1,112 +1,154 @@
 library: plotly
+language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:44:27Z'
-updated: '2026-03-05T18:57:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22731097646
+updated: '2026-06-02T03:47:09Z'
+generated_by: claude-sonnet
+workflow_run: 26796192234
 issue: 4426
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance with all required features: stacked bars, intervention annotations,
-    cumulative overlay, secondary y-axis'
-  - Strong data storytelling with three epidemic waves and intervention context creating
-    a clear outbreak narrative
-  - Clean, well-structured code with elegant Gaussian wave generation and Poisson
-    noise
-  - 'Good use of Plotly-distinctive features: range slider, hover templates, spike
-    lines, HTML interactivity'
-  - Colorblind-accessible palette with good visual separation between case types
+  - Full Imprint palette compliance — Confirmed (#009E73), Probable (#C475FD), Suspect
+    (#4467A3), Cumulative (#BD8233) follow canonical order; theme-adaptive chrome
+    is correctly implemented in both renders
+  - 'All required spec features present: stacked bars by case classification, weekly
+    bins, secondary y-axis cumulative line, and two annotated intervention lines with
+    labeled annotation boxes'
+  - Excellent data storytelling — two distinct seasonal flu waves with endemic baseline,
+    realistic case classification ratios (58:30:12), and vaccine rollout events that
+    contextualise the epidemiological narrative
+  - 'Plotly-distinctive features used: hovermode=''x unified'', spikemode=''across'',
+    secondary y-axis, HTML export alongside PNG, and hovertemplate customisation per
+    trace'
+  - 'Clean KISS code structure: linear flow with no functions/classes, reproducible
+    seed (17), and correct output filenames for both themes'
   weaknesses:
-  - Range slider slightly compresses the main chart area, reducing effective vertical
-    space for data
-  - Annotation styling could be slightly more refined for true publication-grade design
-  image_description: 'The plot displays a stacked bar epidemic curve covering 120
-    days (mid-January to mid-May 2024). Three case classifications are stacked: Confirmed
-    (dark navy blue, bottom), Probable (golden orange, middle), and Suspect (light
-    blue, top). A solid red cumulative cases line rises on the secondary y-axis (right),
-    reaching approximately 4,500 total cases. Two dashdot vertical intervention lines
-    are annotated with styled boxes: "Lockdown imposed" (dark red, ~Feb 4) and "Vaccination
-    campaign" (green, ~Mar 30). Three distinct epidemic waves are visible — a smaller
-    initial peak (~Feb 8), a large main peak (~Mar 18-20, ~83 daily cases), and a
-    smaller resurgence (~late April). A Plotly range slider at the bottom provides
-    time-window exploration. The background is subtle off-white, the horizontal legend
-    at top-center correctly orders traces to match visual stacking, and x-axis labels
-    are biweekly at -30° angle.'
+  - Rotated x-axis tick labels (tickangle=-30) cause leading characters to be partially
+    obscured by adjacent labels at ~5 of the 8 quarterly tick positions ('Apr 2023'
+    reading as 'pr 2023', 'Jul 2023' as 'ul 2023', etc.) — tighten spacing or use
+    tickangle=-45 with right-anchor to prevent overlap
+  - Legend with y=1.02, yanchor='bottom' is rendering at the bottom of the chart area
+    rather than above the plot, forcing 'Week of Symptom Onset' x-axis title into
+    tight proximity with the legend box bottom edge — fix by positioning legend above
+    plot (y=1.0, yanchor='bottom') and increasing bottom margin (b=120) or shifting
+    the legend to inside the chart area
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "histogram-epidemic · python · plotly · anyplot.ai" centered in dark ink, ~70% canvas width, fully readable. Left y-axis label "Weekly New Cases" and right y-axis label "Cumulative Cases" (in ochre) are clear. X-axis label "Week of Symptom Onset" is readable at bottom, in close proximity to the legend box. Tick labels (size 10) are in muted dark (#4A4A44); quarterly ticks rotated at -30° with ~5 of 8 labels showing leading-character occlusion from adjacent label overlap (e.g. "Apr 2023" appears as "pr 2023"). Subtle y-axis grid lines only.
+      Data: Confirmed bars in brand green (#009E73), Probable in lavender (#C475FD), Suspect in blue (#4467A3) — stacked, showing two seasonal flu peaks (Jan 2023, Jan 2024). Cumulative ochre line (#BD8233) on secondary right axis rising from 0 to ~15k. Two dashed intervention lines in matte red (#AE3030) and cyan (#2ABCCD) with labeled annotation boxes. All data elements clearly visible and distinguishable.
+      Legibility verdict: PASS — all text readable, minor tick label rotation overlap reduces polish but does not make content unreadable.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in cream-white, clearly readable against dark background. Left and right axis labels in light color, readable. Tick labels in muted light (#B8B7B0), readable. Legend box has dark elevated (#242420) background with colored text entries — all readable. Annotation boxes have dark background with colored borders, text readable. "Week of Symptom Onset" x-axis label visible in light color.
+      Data: Data colors identical to light render — green (#009E73), lavender (#C475FD), blue (#4467A3) bars, ochre (#BD8233) cumulative line. Same rotation overlap issue on tick labels present. No dark-on-dark failures detected — no near-black text on near-black background anywhere.
+      Legibility verdict: PASS — both themes correctly implemented; no dark-on-dark failures; same minor tick label rotation overlap as light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          fonts 16-18pt, legend 16pt, annotations 13pt'
+        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, legend=10).
+          Title, axis labels, and legend text readable in both themes. Minor deduction:
+          ~5 of 8 rotated x-axis tick labels show leading-character overlap from -30°
+          rotation; x-axis title is in tight proximity to legend box.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Minor crowding where Vaccination campaign annotation meets peak bar
-          area
+        passed: false
+        comment: Multiple quarterly x-axis tick labels (Apr 2023, Jul 2023, Jan 2024,
+          Apr 2024, Jul 2024) have leading characters obscured by adjacent rotated-label
+          overlap. The x-axis title 'Week of Symptom Onset' is in very close proximity
+          to the bottom edge of the legend box. Main content is readable but multiple
+          overlap issues exist.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized, cumulative line width=3 clearly visible, three-wave
-          pattern apparent
+        comment: Stacked bars well-defined with appropriate bargap=0.15. Cumulative
+          ochre line clearly visible. Intervention dashed lines clearly distinguishable.
+          All 104 weekly bars visible; bar width well-adapted to data density.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/light-blue distinguishable under all color vision types
+        comment: Imprint palette provides good CVD-safe contrast between stacked categories.
+          Green/purple/blue series distinguishable under deuteranopia. No red-green
+          sole-signal encoding for critical data.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Range slider slightly compresses main chart area vertically
+        comment: 'Good overall canvas utilization. Plot fills majority of canvas.
+          Minor deduction: legend position causes x-axis label to be pushed below
+          the legend in tight proximity, indicating a bottom-margin layout tension.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Date of Symptom Onset, Daily New Cases, Cumulative
-          Cases'
+        comment: 'Left y-axis: ''Weekly New Cases''. Right y-axis: ''Cumulative Cases''.
+          X-axis: ''Week of Symptom Onset''. Title: ''histogram-epidemic · python
+          · plotly · anyplot.ai''. All descriptive with temporal/unit context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Confirmed) = #009E73 (brand green). Subsequent: #C475FD,
+          #4467A3, #BD8233 in canonical Imprint order. Intervention lines use #AE3030
+          and #2ABCCD (palette slots 5 and 6). Light bg=#FAF8F1, dark bg=#1A1A17.
+          Theme-adaptive chrome correct in both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, white edge highlighting, styled annotation boxes,
-          clearly above defaults
+        comment: 'Clear design intent: custom Imprint palette throughout, theme-adaptive
+          chrome, no default Plotly template, secondary y-axis with color-coded labels,
+          intervention annotation boxes with colored borders. Goes beyond configured
+          defaults. Slight deduction for layout tension (legend/x-axis overlap) and
+          missing fine-tuning that would characterise truly publication-ready output.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dotted y-grid at 0.07 opacity, no x-grid, custom background, white
-          bar edges
+        comment: 'Good refinement: x-axis grid disabled, y-axis grid subtle (15% opacity),
+          no spine lines (showline=False), thin bar separation lines using page background
+          color. Legend has visible border. Layout imperfection (x-axis label proximity
+          to legend) is a refinement miss.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three-wave epidemic with intervention markers creates compelling
-          outbreak narrative
+        comment: 'Clear epidemiological narrative: two distinct seasonal flu waves
+          visible, case classification stack shows confirmed/probable/suspect breakdown,
+          cumulative burden line adds context for total impact, intervention annotations
+          contextualise the timing of vaccine rollouts relative to peaks. The viewer
+          can immediately read the seasonal pattern and intervention story.'
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +158,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart for epidemic curve
+        comment: 'Correct chart type: stacked bar histogram (epi curve) with weekly
+          bins appropriate for a 104-week (>3 month) outbreak dataset.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: stacked bars, intervention lines, cumulative overlay,
-          daily bins'
+        comment: 'All spec features: weekly bins, stacked bars by case classification
+          (confirmed/probable/suspect), annotated vertical intervention lines (vaccine
+          rollouts), date x-axis with appropriate tick intervals, secondary y-axis
+          cumulative line.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=onset dates, Y=daily cases, secondary Y=cumulative
+        comment: 'X-axis: onset date (weekly). Left y-axis: weekly new cases. Right
+          y-axis: cumulative total. All 104 weeks of data displayed across full range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels match data series
+        comment: 'Title: ''histogram-epidemic · python · plotly · anyplot.ai'' — exact
+          required format. Legend labels: Confirmed, Probable, Suspect, Cumulative
+          — match data categories.'
     data_quality:
       score: 15
       max: 15
@@ -145,20 +193,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three waves, three case types, cumulative, interventions
+        comment: 'Shows all epi curve features: two distinct seasonal peaks, endemic
+          baseline between peaks, three case classification stacks, cumulative burden
+          overlay, and intervention timing events.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: COVID-like regional outbreak with standard epidemiological classification
+        comment: 'Real, neutral epidemiological scenario: Influenza-Like Illness (ILI)
+          surveillance over two flu seasons (2022-2024). Seasonal winter peaks, three-way
+          case classification, and flu vaccine rollout timing are all standard public
+          health surveillance concepts. No controversial content.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~83 daily, ~4500 cumulative over 120 days, plausible for regional
-          outbreak
+        comment: Weekly peak cases ~320-370 cases plausible for regional ILI surveillance.
+          Confirmed:Probable:Suspect ratio (58:30:12) realistic for surveillance systems.
+          Cumulative ~15,000 over 2 years appropriate for described context.
     code_quality:
       score: 10
       max: 10
@@ -168,33 +222,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, traces, layout, save'
+        comment: 'Linear: imports → constants → data → traces → layout → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(17) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, plotly.graph_objects'
+        comment: Only os, numpy, pandas, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Gaussian wave generation, elegant loop for annotations
+        comment: Clean Pythonic code. Loop over intervention events is appropriate.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700px and plot.html, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
+          explicit width/height. Current Plotly API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -202,15 +259,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, secondary y-axis, add_shape/add_annotation,
-          hovertemplate
+        comment: Idiomatic go.Bar + go.Scatter pattern, yaxis2 with overlaying='y',
+          add_shape + add_annotation for events, hovertemplate per trace, barmode='stack'.
+          Good Plotly patterns throughout.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Range slider, hover templates, spike lines, unified hover mode, HTML
-          export
+        comment: hovermode='x unified' for coordinated hover, spikemode='across' for
+          crosshair indicator, HTML-formatted annotation text with <b> tags, secondary
+          y-axis with color-coded labels, write_html() alongside write_image(). Distinctively
+          Plotly features not replicable in static libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -227,4 +287,3 @@ impl_tags:
   - time-series
   styling:
   - edge-highlighting
-  - grid-styling
