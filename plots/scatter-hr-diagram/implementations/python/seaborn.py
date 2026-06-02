@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -27,15 +27,19 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Spectral type colors: astrophysical convention (semantic exception to Imprint order)
+# Spectral type colors: astrophysical convention mapped to closest Imprint palette members.
+# O-type (first categorical series) uses #4467A3 (Imprint blue) — O/B-type stars are blue-hot;
+# using brand green #009E73 as first-series default would violate the strong spectral convention.
+# A-type uses #F0EFE8 (Imprint near-white anchor); marker edge coloring provides contrast on light bg.
+# F-type uses #99B314 (Imprint lime) as closest warm Imprint member to white-yellow F stars.
 spectral_colors = {
-    "O": "#5B7FFF",
-    "B": "#8EAAFF",
-    "A": "#C4D4FF",
-    "F": "#E8E8D0",
-    "G": "#E6C84B",
-    "K": "#D98030",
-    "M": "#C94420",
+    "O": "#4467A3",  # Imprint blue — hottest stars; first-series #009E73 exception: spectral convention
+    "B": "#2ABCCD",  # Imprint cyan — hot blue stars
+    "A": "#F0EFE8",  # Imprint near-white anchor — blue-white A-type; edges provide contrast
+    "F": "#99B314",  # Imprint lime — warm-white F-type, closest warm Imprint member
+    "G": "#DDCC77",  # Imprint amber — solar yellow, exact astrophysical convention match
+    "K": "#BD8233",  # Imprint ochre — orange-brown K-type
+    "M": "#AE3030",  # Imprint matte red — cool red M-type, exact convention match
 }
 
 # Theme-adaptive edge: dark outline on light bg for pale stars, page bg on dark
@@ -117,6 +121,7 @@ df = pd.DataFrame(
 # Plot — figsize=(8, 4.5) at dpi=400 → exactly 3200×1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+fig.subplots_adjust(top=0.86)  # breathing room for secondary spectral-class axis + title
 
 spectral_order = ["O", "B", "A", "F", "G", "K", "M"]
 palette = [spectral_colors[s] for s in spectral_order]
@@ -148,14 +153,14 @@ sns.kdeplot(
     y="Luminosity (L☉)",
     levels=4,
     color="#4467A3",
-    alpha=0.30,
-    linewidths=0.6,
+    alpha=0.45,
+    linewidths=1.0,
     ax=ax,
     log_scale=True,
 )
 
 # Sun reference — hexagon marker differentiates this impl from other library implementations
-ax.scatter(5778, 1, s=220, color="#E6C84B", edgecolors=INK_SOFT, linewidth=1.5, zorder=10, marker="h")
+ax.scatter(5778, 1, s=280, color="#DDCC77", edgecolors=INK_SOFT, linewidth=1.5, zorder=10, marker="h")
 ax.annotate(
     "Sun",
     (5778, 1),
@@ -222,8 +227,8 @@ leg1 = ax.legend(
     [h for h, _ in spectral_handles],
     [lab for _, lab in spectral_handles],
     title="Spectral Type",
-    fontsize=7,
-    title_fontsize=8,
+    fontsize=8,
+    title_fontsize=9,
     loc="lower left",
     framealpha=0.85,
     facecolor=ELEVATED_BG,
@@ -236,8 +241,8 @@ leg2 = ax.legend(
     [h for h, _ in region_handles],
     [lab for _, lab in region_handles],
     title="Region",
-    fontsize=7,
-    title_fontsize=8,
+    fontsize=8,
+    title_fontsize=9,
     loc="upper right",
     framealpha=0.85,
     facecolor=ELEVATED_BG,
