@@ -1,109 +1,150 @@
 library: altair
+language: python
 specification_id: genome-track-multi
 created: '2026-03-06T17:04:08Z'
-updated: '2026-03-06T17:25:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22773343267
+updated: '2026-06-02T08:27:09Z'
+generated_by: claude-sonnet
+workflow_run: 26806246834
 issue: 4422
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/altair/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all 4 required tracks and every specified feature
-    implemented
-  - Biologically realistic data with real gene names (EGFR, VOPP1) at correct chr7
-    coordinates
-  - Coverage correlates with exon positions creating a scientifically plausible visualization
-  - Strong idiomatic Altair usage with declarative layer composition and vconcat
-  - Clean well-organized code with good reproducibility
+  - Biologically realistic chr7/EGFR locus data with meaningful coverage peaks over
+    exons
+  - Excellent multi-track layout using Altair vconcat with independent color scales
+    per track
+  - Idiomatic Altair layer composition — intron lines + exon bars + strand marks combined
+    with + operator
+  - 'Full Imprint palette compliance: brand green #009E73 for coverage (primary series)
+    and SNP, correct palette positions for gene/regulatory tracks'
+  - Theme-adaptive chrome works correctly in both light and dark renders
+  - 'Proper canvas handling: raise on overshoot, pad-only to 3200×1800 target'
+  - Strand direction encoded with angle-rotated triangle markers — a sophisticated
+    genomic convention
   weaknesses:
-  - Regulatory track elements appear relatively small compared to other tracks
-  - Some wasted canvas space on the right due to legend placement outside plot area
-  image_description: The plot displays a four-track genome browser view on chr7 (~55.14-55.19
-    Mb). The top Genes track shows two genes — EGFR (+ strand, right-pointing triangle
-    arrows) and VOPP1 (- strand, left-pointing arrows) — with dark blue (#306998)
-    exon rectangles connected by thin intron lines, gene names in bold black text,
-    all on a light gray background band. The Coverage track is a blue filled area
-    chart with monotone interpolation showing read depth (0-100x) with clear peaks
-    over exon regions. The Variants track displays orange SNP circles and blue Indel
-    circles with quality scores (0-100) on the y-axis, on alternating gray background.
-    The Regulatory track shows purple promoter and gold/amber enhancer rectangles
-    at the bottom with the shared x-axis labeled "Genomic Position (chr7)" with formatted
-    base-pair coordinates. Each track has a left-anchored gray title. The main title
-    "genome-track-multi · altair · pyplots.ai" is centered at the top. Legends for
-    variant type and regulatory element type appear on the right side.
+  - Regulatory bars are quite narrow/short — y_pos fixed at 0 with height=38 makes
+    them appear as short flat markers; increasing bar height or y-domain range would
+    improve prominence
+  - The gene track inner-height (58px) leaves very little vertical room — the two
+    gene bodies at y_pos=0 and y_pos=1 are stacked very tightly; slightly more vertical
+    space would improve readability
+  - Repeated alt.Scale(domain=x_domain) in every encoding could be simplified using
+    shared scale or per-track resolve_scale; minor code elegance issue
+  - The variant track uses plain circles rather than lollipop/stick markers as suggested
+    by spec — functionally equivalent but the lollipop form would better communicate
+    variant position clarity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — PASS. Even-numbered tracks (Coverage, Regulatory) have a slightly elevated #FFFDF6 tint that cleanly separates them from the page surface.
+      Chrome: Main title "genome-track-multi · python · altair · anyplot.ai" is dark, centered, clearly readable. Track sub-titles (Genes, Coverage, Variants, Regulatory) are muted INK_MUTED colored at fontSize=12 and anchor-left within each track — all readable. X-axis label "Genomic Position (chr7)" at bottom is visible. Y-axis labels "Read Depth" (Coverage) and "Quality" (Variants) are readable at titleFontSize=12. X-axis tick labels formatted as "55,140,000" style numbers are readable at labelFontSize=10.
+      Data: Coverage area filled with brand green #009E73 with opacity 0.55 + line stroke — peaks over exon regions are clearly higher, telling a biological story. Exon bars in blue (#4467A3), intron lines in the same blue, strand direction triangles in cyan (#2ABCCD). Variant circles: SNP in green (#009E73), Indel in lavender (#C475FD) at opacity 0.75. Regulatory bars: Promoter in matte red (#AE3030), Enhancer in ochre (#BD8233). Gene names EGFR and VOPP1 are bold text labels anchored to their gene bodies.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no "light on light" failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — PASS. Elevated track backgrounds flip to #242420 as expected.
+      Chrome: Title text flips to light (#F0EFE8) and is clearly readable against the dark background. Track labels, axis labels, tick labels all use light INK_SOFT tokens — all readable. No dark-on-dark failures observed. Legend box backgrounds flip to #242420 with light text for SNP/Indel and Promoter/Enhancer entries.
+      Data: Coverage green #009E73 is identical to light render — PASS. Exon blue #4467A3, strand cyan #2ABCCD, variant green/lavender, regulatory red/ochre — all visually identical to light render (only chrome flipped). Brand green #009E73 reads clearly on both the dark near-black background and the slightly elevated #242420 coverage track background.
+      Legibility verdict: PASS — all text readable against near-black background, data colors identical to light render, theme inversion correct.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, track titles 20pt, axis
-          labels 16pt, axis titles 20pt, gene names 16pt bold'
+        comment: 'Font sizes explicitly set throughout: title=16px, track titles=12px,
+          axis labels=12px, tick labels=10px, legend=9px. All readable in both themes.
+          Bottom x-axis large formatted numbers (55,140,000) could be marginally larger
+          but are readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere
+        comment: No overlapping text or data elements. Gene labels EGFR/VOPP1 positioned
+          above gene bodies with dx/dy offsets. Track spacing=6 prevents inter-track
+          overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All elements visible and well-sized; regulatory elements slightly
-          small relative to canvas
+        comment: Coverage area prominent with opacity=0.55 + line stroke. Variant
+          circles size=160 at opacity=0.75 appropriate for 18 points. Exon bars height=20
+          clearly visible. Regulatory bars height=38 somewhat short but distinguishable.
+          Strand triangles size=110 readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Orange/blue and purple/gold pairs are colorblind-safe
+        comment: Imprint palette is CVD-optimized. SNP (green) vs Indel (lavender)
+          are perceptually distinct under CVD. Promoter (red) vs Enhancer (ochre)
+          are shape-redundantly encoded as rectangular bars. Good contrast throughout.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good horizontal fill; minor wasted space on right due to legend placement
+        comment: Canvas gate passed. Four tracks stacked vertically fill approximately
+          60-70% of canvas area. Centering on 3200x1800 target creates modest horizontal
+          side padding but remains well-balanced. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Genomic Position (chr7), Read Depth,
-          Quality'
+        comment: 'X-axis: ''Genomic Position (chr7)'' — descriptive with chromosome
+          context. Y-axes: ''Read Depth'' and ''Quality'' — descriptive. Track titles
+          serve as subplot labels. Title follows required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 used for coverage (primary quantitative series)
+          and SNP (primary variant type). All palette positions from Imprint hybrid-v3.
+          Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome theme-adaptive in both
+          renders. resolve_scale(color=independent) correctly isolates per-track legends.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Cohesive blue-based palette with intentional color choices per track
-          type; above defaults but not publication-level
+        comment: Professional multi-track genome browser with intentional color hierarchy.
+          Alternating track backgrounds, biological data placement (coverage peaks
+          over exons, promoters near gene starts) show design thought. Strong but
+          not quite publication-ready Nature level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View strokes removed, grid disabled, subtle background bands separate
-          tracks
+        comment: Grid disabled per track (grid=False), alternating elevated backgrounds
+          for even tracks, strokeWidth=0 on view borders, INK_SOFT for axis domain/tick
+          chrome. Good refinement above library defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Coverage peaks correlate with exon positions; two genes on opposite
-          strands demonstrate strand direction
+        comment: 'The chr7 EGFR locus data creates a meaningful biological narrative:
+          coverage peaks correlate with exon positions, regulatory elements flank
+          gene starts, variants are distributed with varying quality. Reader can infer
+          gene expression patterns from coverage shape.'
     spec_compliance:
       score: 15
       max: 15
@@ -113,30 +154,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-track genome browser with 4 vertically stacked tracks sharing
-          chromosomal coordinate x-axis
+        comment: Correct multi-track genome browser with 4 stacked tracks sharing
+          a genomic x-axis. All required track types present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: exon/intron/strand, coverage area, variant
-          circles with types, regulatory rectangles, track labels, shared coordinates,
-          background shading'
+        comment: 'Genes: exon rectangles + intron lines + strand arrows. Coverage:
+          filled area. Variants: markers with quality encoding. Regulatory: colored
+          bars. Track labels, x-axis position labels, background shading — all present.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis genomic position shared across all tracks; Y-axis varies appropriately
-          per track
+        comment: X-axis genomic position consistent across all tracks. Gene y_pos
+          encodes two gene rows. Coverage depth on y-axis. Variant quality on y-axis.
+          All data correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legends for variant type and regulatory element
-          type
+        comment: 'Title: ''genome-track-multi · python · altair · anyplot.ai'' matches
+          required format exactly. Legends for Variant (SNP/Indel) and Regulatory
+          (Promoter/Enhancer) present with correct labels.'
     data_quality:
       score: 15
       max: 15
@@ -146,20 +189,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two genes opposite strands, multiple exons, variable coverage, SNPs
-          and Indels, promoters and enhancers
+        comment: 'All genomic feature types represented: two genes with multiple exons
+          each, both strand orientations (+/-), varied coverage depth, two variant
+          types (SNP/Indel) with quality range, two regulatory element types (Promoter/Enhancer).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real gene names (EGFR, VOPP1) at realistic chr7 coordinates
+        comment: 'Real genomic locus: chr7 EGFR/VOPP1 region. Scientifically plausible
+          data. Neutral scientific domain (genomics).'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50kb window, coverage 0-100x, quality scores 20-100 all realistic
+        comment: Coverage depth 0-100 reads is biologically realistic for RNA-seq.
+          PHRED quality scores 20-100 for variants are standard. 50 kb genomic window
+          is appropriate for showing multi-gene structure. Exon sizes (~1-3 kb) are
+          realistic.
     code_quality:
       score: 10
       max: 10
@@ -169,31 +217,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, tracks, combine, save'
+        comment: 'Flat structure: imports, theme tokens, data generation, chart layers
+          per track, combine, save. No functions or classes. Two iteration loops for
+          data prep are appropriate.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used
+        comment: altair, numpy, pandas, PIL, os, sys — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with each track built separately
+        comment: Clean layer composition. sys.path manipulation is necessary given
+          file naming conflict. Slightly repetitive alt.Scale(domain=x_domain) across
+          every encoding but within acceptable bounds.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API.
     library_mastery:
       score: 9
       max: 10
@@ -203,21 +256,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert declarative grammar: encoding types, vconcat, layer composition,
-          resolve_scale, configure_*'
+        comment: 'Expert use of Altair: layer composition with + operator, vconcat
+          for stacking, resolve_scale(color=independent), alt.Title with anchor/fontSize/color,
+          angle encoding for strand direction, proper Q/N encoding types throughout.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Declarative layer composition, alt.Angle encoding, vconcat with independent
-          scale resolution, interactive tooltips
+        comment: 'Altair-specific: declarative vconcat for multi-track layout with
+          shared x-axis, resolve_scale for independent legends per track, angle encoding
+          for strand arrow direction, layer composition for multi-mark gene track.
+          Could push further with Altair selection interactions.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -225,5 +281,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
