@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -150,6 +150,9 @@ sns.heatmap(
     freq_df,
     ax=ax_heat,
     cmap=imprint_seq,
+    annot=True,
+    fmt=".2f",
+    annot_kws={"size": 5, "color": INK_SOFT},
     linewidths=0.3,
     linecolor=PAGE_BG,
     cbar_kws={"label": "Freq.", "shrink": 0.85, "aspect": 12, "pad": 0.02},
@@ -160,12 +163,17 @@ ax_heat.set_xlabel("Position", fontsize=10, color=INK)
 ax_heat.set_ylabel("", fontsize=10)
 ax_heat.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax_heat.tick_params(axis="y", rotation=0)
+sns.despine(ax=ax_heat, top=True, right=True, left=True, bottom=True)
 
 # Color y-axis labels to match DNA color scheme
+# In dark theme, #4467A3 (C=blue) has ~3:1 contrast against #1A1A17 — use INK_SOFT instead
 for tick_label in ax_heat.get_yticklabels():
     base = tick_label.get_text()
     if base in base_colors:
-        tick_label.set_color(base_colors[base])
+        if THEME == "dark" and base == "C":
+            tick_label.set_color(INK_SOFT)
+        else:
+            tick_label.set_color(base_colors[base])
         tick_label.set_fontweight("bold")
 
 # Theme-adaptive colorbar text
