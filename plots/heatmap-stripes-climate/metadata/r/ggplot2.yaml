@@ -1,0 +1,247 @@
+library: ggplot2
+language: r
+specification_id: heatmap-stripes-climate
+created: '2026-06-02T06:03:21Z'
+updated: '2026-06-02T06:11:19Z'
+generated_by: claude-sonnet
+workflow_run: 26801456468
+issue: 4423
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Faithful polished implementation of warming stripes concept with no axes, labels,
+    or gridlines as specified
+  - 'Correct imprint_div colormap using Imprint palette anchors (#4467A3 cold, #AE3030
+    warm) with theme-adaptive midpoint per style guide'
+  - 'Perfect spec compliance: all required features present (no-chrome, equal-width
+    tiles, symmetric diverging colormap, guide hidden)'
+  - Clean minimal code using theme_void() — the right ggplot2 approach for this plot
+    type
+  - Realistic well-modelled synthetic data including the historically accurate post-WWII
+    industrial cooling dip
+  weaknesses:
+  - 'Dark render: near-zero anomaly stripes (~1930s-1970s) are invisible against the
+    #1A1A17 background because MID_COLOR = PAGE_BG. For a warming stripes visualization
+    where ALL bars should read as part of the continuous time series, consider using
+    a fixed mid-gray (e.g., #6B6A63) as the gradient midpoint in the dark theme so
+    that neutral-temperature years remain faintly visible.'
+  - 'VQ-01 minor: title at size=12pt is the minimum recommended; for a plot with no
+    other text elements, bumping to 13-14pt would improve mobile-scale readability.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct cream surface
+      Chrome: Title "heatmap-stripes-climate · r · ggplot2 · anyplot.ai" centered in dark ink (#1A1A17), size=12pt, clearly readable. No axis labels, no ticks, no gridlines (theme_void).
+      Data: 145 vertical stripes spanning 1880-2024. Left portion (early decades) shows clear Imprint blue (#4467A3 range) for cold anomalies. Middle transitions through pale/near-background neutral. Right portion (post-1980s) shows progressively stronger Imprint red (#AE3030 range) for warm anomalies. All 145 stripes visible with good gradient progression.
+      Legibility verdict: PASS — title clearly readable; no other text elements; all stripes visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light off-white (INK token = #F0EFE8), clearly readable against dark background. No dark-on-dark failure detected.
+      Data: Same hue range as light render — blues on left, reds on right. Near-zero anomaly stripes (~1930s-1970s) blend nearly completely into the #1A1A17 background because the imprint_div midpoint is set to PAGE_BG (background color). Roughly 20-25% of stripes in the neutral-temperature mid-period are indistinguishable from the background. Blues and reds match the light render's hue identity. Overall warming trend (blue left, red right) still clearly communicates the story.
+      Legibility verdict: PASS for chrome — title white-on-dark is fully readable. PARTIAL for data — mid-period neutral stripes are invisible per imprint_div design; hot and cold anomaly stripes are clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title explicitly set size=12 color=INK, readable in both themes,
+          ~70% canvas width. Minor: only text element on minimal plot; 13-14pt would
+          improve mobile readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Only one text element (title); no overlaps possible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Light render: all 145 stripes clearly visible. Dark render: ~20-25%
+          of stripes (near-zero anomaly years) blend into #1A1A17 background due to
+          imprint_div midpoint = PAGE_BG.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-to-red diverging is reasonably CVD-safe for directional change;
+          no red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is correct 3200x1800 (gate passed); stripes fill ~80% of canvas
+          height; edge-to-edge via expand=c(0,0).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels by spec design; title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_div used correctly: #4467A3 cold, #AE3030 warm, theme-adaptive
+          neutral midpoint per style guide; backgrounds #FAF8F1/#1A1A17 correct; chrome
+          tokens INK applied.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Faithful intentional minimalism matching Ed Hawkins warming stripes
+          aesthetic; Imprint colors well-chosen; compelling gradient impact. Dark
+          render mid-stripe invisibility reduces sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void() removes all chrome perfectly; expand=c(0,0) for edge-to-edge
+          stripes; appropriate margins. Slight reduction for dark render visual gap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Blue-to-red warming narrative immediately clear; post-WWII cooling
+          dip adds realism; dark render creates dramatic emergence-from-darkness effect.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming stripes visualization; pure color-encoded time series.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-to-red diverging colormap, equal-width no-gap bars, no axes/labels/ticks/gridlines,
+          symmetric color scale around zero — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year on x-axis (1880-2024, left to right); anomaly mapped to fill
+          color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; guide=none correctly suppresses colorbar.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: cool early years, neutral mid-period, strong
+          warming trend, year-by-year variability, post-WWII cooling dip.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic data modelled on real HadCRUT/NASA GISS pattern; climate
+          science topic is neutral and well-established.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 145 years (1880-2024) canonical for warming stripes; anomalies ~-0.5
+          to +0.7°C relative to 1961-1990 baseline are factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports -> data -> plot -> save; no functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise, clear, appropriate complexity; no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ragg::agg_png; modern ggplot2 API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct geom_tile for raster heatmaps; scale_fill_gradient2 with
+          midpoint; theme_void() for no-chrome; canonical labs()+theme() composition.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_fill_gradient2 with theme-adaptive midpoint is ggplot2-specific;
+          scale expand=c(0,0) for edge-to-edge; but overall approach is standard ggplot2
+          heatmap.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
