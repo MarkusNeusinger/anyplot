@@ -1,16 +1,45 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-02
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LinearSegmentedColormap, LogNorm
 
 
-# Data - Simulated rainflow counting matrix for a steel shaft under variable-amplitude loading
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint continuous colormap — sequential (brand green → blue)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — simulated rainflow counting matrix for a steel shaft under variable-amplitude loading
 np.random.seed(42)
 
 n_amp_bins = 20
@@ -34,39 +63,41 @@ cycle_counts[cycle_counts < 3] = 0
 amp_labels = [f"{v:.0f}" if i % 2 == 0 else "" for i, v in enumerate(amplitude_centers)]
 mean_labels = [f"{v:.0f}" if i % 2 == 0 else "" for i, v in enumerate(mean_centers)]
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — square canvas for symmetric 2D heatmap: 2400×2400 px
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 mask = cycle_counts == 0
 sns.heatmap(
     cycle_counts,
     mask=mask,
     norm=LogNorm(vmin=1, vmax=cycle_counts.max()),
-    cmap="inferno",
+    cmap=imprint_seq,
     xticklabels=mean_labels,
     yticklabels=amp_labels,
     linewidths=0.3,
-    linecolor="#e8e8e8",
-    cbar_kws={"label": "Cycle Count (log scale)", "shrink": 0.82},
+    linecolor=INK_SOFT,
+    cbar_kws={"shrink": 0.82},
     ax=ax,
 )
 
 # Invert y-axis so amplitudes increase upward (standard engineering convention)
 ax.invert_yaxis()
 
-# Zero-count bins shown as light background
-ax.set_facecolor("#f0f0f0")
+# Zero-count bins show the page background
+ax.set_facecolor(PAGE_BG)
 
 # Style
-ax.set_xlabel("Mean Stress (MPa)", fontsize=20, labelpad=12)
-ax.set_ylabel("Stress Amplitude (MPa)", fontsize=20, labelpad=12)
-ax.set_title("heatmap-rainflow · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+title = "heatmap-rainflow · python · seaborn · anyplot.ai"
+ax.set_xlabel("Mean Stress (MPa)", fontsize=10, labelpad=12, color=INK)
+ax.set_ylabel("Stress Amplitude (MPa)", fontsize=10, labelpad=12, color=INK)
+ax.set_title(title, fontsize=12, fontweight="medium", pad=16, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Colorbar styling
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=16)
-cbar.set_label("Cycle Count (log scale)", fontsize=18, labelpad=12)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.set_label("Cycle Count (log scale)", fontsize=10, labelpad=12, color=INK)
 
 # Annotate peak count region — creates a clear focal point for data storytelling
 peak_idx = np.unravel_index(cycle_counts.argmax(), cycle_counts.shape)
@@ -75,11 +106,11 @@ ax.annotate(
     f"Peak: {peak_val:,} cycles",
     xy=(peak_idx[1] + 0.5, peak_idx[0] + 0.5),
     xytext=(peak_idx[1] + 4, peak_idx[0] + 4.5),
-    fontsize=14,
+    fontsize=8,
     fontweight="semibold",
-    color="#2b2b2b",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#aaaaaa", "alpha": 0.9},
-    arrowprops={"arrowstyle": "-|>", "color": "#555555", "lw": 1.5, "connectionstyle": "arc3,rad=-0.15"},
+    color=INK,
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.5, "connectionstyle": "arc3,rad=-0.15"},
     zorder=10,
 )
 
@@ -87,4 +118,4 @@ ax.annotate(
 sns.despine(ax=ax, left=True, bottom=True)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
