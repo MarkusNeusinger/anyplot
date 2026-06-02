@@ -1,0 +1,281 @@
+library: d3
+language: javascript
+specification_id: bar-tornado-sensitivity
+created: '2026-06-02T23:17:40Z'
+updated: '2026-06-02T23:39:06Z'
+generated_by: claude-sonnet
+workflow_run: 26853482054
+issue: 4566
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correct tornado diagram implementation: bars sorted by range (widest at top),
+    bilateral bars extending left/right from the $10M base case dashed reference line'
+  - 'Semantic Imprint palette color assignment is appropriate: brand green (#009E73)
+    for high-scenario (positive NPV impact) and semantic red (#AE3030) for low-scenario
+    (negative NPV impact) — explicitly documented in the code'
+  - 'Modern D3 idioms throughout: .data().join() pattern, scaleBand for categorical
+    Y-axis, tickSize(0) for clean tick removal, hidden domain lines, custom tickFormat'
+  - All font sizes explicitly set (title 22px, y-labels 16px, x-ticks and value labels
+    14px, x-axis label 17px) — readable at 3200px and mobile scale
+  - '''highest impact'' span-line annotation over the widest bar adds storytelling
+    value beyond basic requirements'
+  - Realistic NPV sensitivity analysis data with 8 plausible financial parameters
+    and credible $M values
+  - 'Theme adaptation correct in both renders: warm off-white #FAF8F1 light / warm
+    near-black #1A1A17 dark backgrounds via t.pageBg token, chrome flips correctly'
+  weaknesses:
+  - 'VQ-04: Red (#AE3030) and green (#009E73) are the primary color signal for Low
+    vs High scenario — CVD viewers (deuteranopes) would lose the hue distinction;
+    positional encoding (left/right of base) partially compensates but the chart could
+    add a legend swatch border or pattern fill for full accessibility'
+  - 'DE-01: Design is functional and well-configured but sits at the upper end of
+    ''configured default'' — does not reach the ''strongly above defaults'' tier;
+    adding typographic polish (e.g., a subtle subtitle showing the base case value,
+    or slightly softer grid treatment) would push it toward 6/8'
+  - 'DE-02: tick marks removed and domain lines hidden, but gridlines are full-opacity
+    vertical lines rather than the style-guide''s 15% opacity rule — use stroke-opacity
+    0.15 on the grid lines to make them more subtle'
+  - 'LM-02: Uses standard D3 bar chart patterns (scaleBand, axisLeft/Bottom, .join())
+    without reaching truly distinctive D3-only capabilities; no use of d3.format for
+    consistent number formatting, no d3.max/min for dynamic domain calculation (domain
+    is hard-coded as [4,17])'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
+      Chrome: Title "bar-tornado-sensitivity · javascript · d3 · anyplot.ai" in bold dark ink at 22px spans ~70% of canvas width — readable. Y-axis parameter names in dark ink (#1A1A17 via t.ink) at 16px — all 8 labels (Revenue Growth Rate, Discount Rate, Operating Costs, Market Size, Tax Rate, Material Costs, Labour Efficiency, Customer Retention) are clearly legible. X-axis tick labels ($4M–$16M) in t.inkSoft at 14px — readable. X-axis label "Net Present Value ($ Millions)" at 17px — readable. "Base: $10M" callout label and "highest impact" annotation both visible. Value labels ($5.5M–$15M) at bar ends in t.inkSoft at 14px — all readable. Legend "High Scenario" / "Low Scenario" in right margin — clear.
+      Data: Bars use brand green (#009E73) for High Scenario and matte red (#AE3030) for Low Scenario at opacity 0.88. Bilateral bars extend left (red) and right (green) from the dashed $10M base case reference line. Tornado shape clearly visible — widest bar (Revenue Growth Rate, $5.5M–$15M) at top, narrowest (Customer Retention, $9M–$11M) at bottom. Vertical subtle gridlines present.
+      Legibility verdict: PASS — all text elements clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title in light-colored ink (t.ink = #F0EFE8 in dark theme) — readable. Y-axis parameter names in light ink — all 8 labels readable against dark background. X-axis tick labels in t.inkSoft (B8B7B0) — readable. X-axis label "Net Present Value ($ Millions)" — readable. "Base: $10M" and "highest impact" annotation both visible in light ink. Value labels at bar ends in t.inkSoft — readable. Legend entries in t.inkSoft — readable. No dark-on-dark text failures observed.
+      Data: Data colors are identical to light render — green (#009E73) for High Scenario, matte red (#AE3030) for Low Scenario. The bilateral tornado structure is equally clear on the dark surface.
+      Legibility verdict: PASS — all text elements clearly readable against the dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title 22px, y-axis labels 16px, x-ticks/value
+          labels 14px, x-axis label 17px. Readable in both themes at 3200px and mobile
+          scale. No overflow, no crowding.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized for 8 parameters, opacity 0.88 provides slight depth
+          without hurting visibility, colors clearly distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Red (#AE3030) vs green (#009E73) as primary hue signal — deuteranopes
+          lose hue distinction. Positional encoding (left/right of base case) partially
+          compensates, but no redundant pattern or border encoding for full CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Generous margins (top:90, right:150, bottom:100,
+          left:234). Plot fills canvas well. Legend placed in right margin near data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Net Present Value ($ Millions)'' — descriptive with units.
+          Y-axis shows parameter names via D3 axis.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'High scenario = t.palette[0] = #009E73 (brand green, first series).
+          Low scenario = t.palette[4] = #AE3030 (semantic red for financial loss/risk).
+          Backgrounds #FAF8F1 light / #1A1A17 dark via t.pageBg. Data colors identical
+          between themes. Chrome adapts correctly via t.ink/t.inkSoft tokens.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color assignment, clean layout, 'highest impact'
+          annotation adds polish. Above a basic configured default but short of the
+          'strongly above defaults' tier — no typography layering or advanced visual
+          hierarchy beyond the annotation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed (tickSize:0), domain lines hidden (stroke:'none'),
+          generous whitespace. However, gridlines use full stroke color rather than
+          the style-guide's 15% opacity — slightly too prominent.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The 'highest impact' span-line annotation plus sorted bars creates
+          clear visual hierarchy. Dashed base case line is the central reference.
+          Above the default 'data displayed without interpretation.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct tornado diagram: horizontal bars sorted by range (widest
+          at top), bilateral extension from base case reference line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: vertical base case reference line, sorted by
+          total range descending, dual colors for low/high, parameter names on Y-axis,
+          optional value labels at bar ends included.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = NPV output values ($M), Y-axis = parameter names. Full data
+          range shown ($4M–$16M domain).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''bar-tornado-sensitivity · javascript · d3 · anyplot.ai''
+          ✓. Legend: ''High Scenario'' (green) and ''Low Scenario'' (red) ✓.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all tornado chart features: bilateral bars, sorted by range,
+          base case reference, dual-color encoding, value labels, 8 parameters with
+          varying impact widths creating the characteristic tornado shape.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real NPV sensitivity analysis scenario for a capital project. Financial
+          parameters (Revenue Growth Rate, Discount Rate, Operating Costs, Market
+          Size, Tax Rate, Material Costs, Labour Efficiency, Customer Retention) are
+          realistic and domain-appropriate. Neutral business context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base NPV $10M, range $5.5M–$15M. Plausible magnitudes for a capital
+          project sensitivity analysis. Revenue Growth Rate as highest-impact parameter
+          is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flat structure: data → SVG mount → scales → gridlines → reference
+          line → bars → labels → axes → legend → title. No unnecessary abstractions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data array, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — d3 is a global. All used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic D3. No fake functionality. Appropriate complexity
+          for a tornado diagram.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-{theme}.png and plot-{theme}.html output. Code
+          correctly sizes SVG to window.ANYPLOT_SIZE.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Modern .data().join() pattern, scaleBand for categorical Y-axis,
+          axisLeft/Bottom with tickSize(0) and custom tickFormat, proper margin convention,
+          grouped g elements per data row. Above the default of 3 but short of expert-level
+          D3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses D3-specific SVG data binding with row grouping (selectAll('.row').data(data).join('g')),
+          scaleBand for band positioning, and custom tick formatting. Standard D3
+          patterns applied correctly but no advanced D3-only capabilities (force,
+          geographic, complex path generators). Domain is hard-coded rather than using
+          d3.extent.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
