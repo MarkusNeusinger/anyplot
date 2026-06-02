@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-02
 """
 
 import os
@@ -73,6 +72,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
+    value_label_font_size=36,
     stroke_width=2.5,
     opacity=0.94,
     opacity_hover=1.0,
@@ -102,6 +102,7 @@ chart = pygal.XY(
     range=(-3.5, 3.5),
     xrange=(-3.5, 3.5),
     print_values=False,
+    print_labels=True,
     js=[],
 )
 
@@ -159,8 +160,8 @@ chart.add(
     stroke_style={"width": 2.5, "dasharray": "6, 6", "opacity": 0.40},
 )
 
-# Series 5: Origin — Imprint #AE3030, small structural marker
-chart.add("Origin", [{"value": (0.0, 0.0), "label": "O"}], stroke=False, dots_size=8, print_values=False)
+# Series 5: Origin — Imprint #AE3030, drawn last to render on top of all vectors
+chart.add("Origin", [{"value": (0.0, 0.0), "label": ""}], stroke=False, dots_size=20)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
