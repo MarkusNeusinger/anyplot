@@ -1,0 +1,266 @@
+library: makie
+language: julia
+specification_id: tree-decision
+created: '2026-06-02T16:11:10Z'
+updated: '2026-06-02T16:35:23Z'
+generated_by: claude-sonnet
+workflow_run: 26831358099
+issue: 4569
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'Perfect spec compliance: all three node types (decision squares, chance circles,
+    terminal right-triangles) correctly rendered; pruned branches use dashed lines
+    + double-slash marks; EMV rollback values correctly calculated and displayed'
+  - 'Excellent data quality: realistic software product-launch scenario with correctly
+    computed EMVs (631K at D1, 1310K at C1/D2) and sensible $K payoffs'
+  - 'Full code quality: flat KISS structure with no functions/classes, Random.seed!(42),
+    clean imports, dynamic title-fontsize formula, correct plot-{THEME}.png output'
+  - 'Proper Imprint palette use with semantic assignments: decision=#009E73 (green,
+    positive/proceed), chance=#4467A3 (blue), terminal=#BD8233 (ochre); theme-adaptive
+    chrome correct in both renders'
+  - 'Idiomatic CairoMakie: Makie layout system (fig[1,1], fig[2,1], rowsize!), MarkerElement/LineElement
+    for custom legend, RGBAf alpha for pruned elements — all CairoMakie-native patterns'
+  weaknesses:
+  - Edge labels rendered at fontsize=10 — at 3200×1800 with px_per_unit=2 this is
+    20px which is readable at full resolution but borderline small when scaled to
+    mobile width (~400px); consider raising to fontsize=11 or 12
+  - 'Upper-right area is label-dense: ''Competition'' node, ''EMV=$1310K'', ''Low
+    Comp (p=0.65)'', ''High Comp (p=0.35)'', ''Low Comp'', ''$1800K'', ''High Comp'',
+    ''$400K'' all converge in a small region — some crowding visible'
+  - 'Duplicate-sounding labels near pruned nodes: the edge label ''Abandon'' and the
+    T1 node-name ''Abandon'' are distinct positions but visually proximate in the
+    lower-left; ''Maintain'' similarly appears as both D2→T4 edge label and T4 node-name
+    in the mid-right area — can cause momentary confusion'
+  - Pruned terminal node T1 ('Abandon') rendered at markersize=30 with alpha=0.45
+    — the triangle marker is noticeably faint, especially in the dark render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Product Launch Decision · tree-decision · julia · makie · anyplot.ai" rendered in dark ink, clearly readable at top. No axis labels or tick labels (appropriate for diagram layout). Legend at bottom strip shows four items in dark soft ink.
+      Data: Decision tree laid out left-to-right. Root "Launch?" (D1) is a green square (#009E73) at left. "Market" (C1) is a blue circle (#4467A3) centre-left. "Scale Up?" (D2) is another green square upper-centre. "Competition" (C2) is a blue circle upper-right. Terminal nodes ("Weak", "Low Comp", "High Comp", "Maintain", "Abandon") are ochre right-pointing triangles (#BD8233). Pruned branches (D1→T1 "Abandon", D2→T4 "Maintain") are dashed with alpha-reduced ochre/muted markers and double-slash crossing marks. Branch labels show probabilities and option names. EMV values and payoffs appear below each node marker. Upper-right area is label-dense but readable.
+      Legibility verdict: PASS — all title, node names, EMV labels, and edge probability labels are readable against the light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8-range), clearly readable. Legend text in lighter INK_SOFT token, visible. All chrome tokens correctly inverted for dark theme.
+      Data: Data colors are identical to the light render — green squares, blue circles, ochre triangles. Pruned elements still correctly de-emphasized with reduced opacity. No dark-on-dark failures observed; node labels and edge labels appear in theme-adaptive ink colors that read well against the near-black background.
+      Legibility verdict: PASS — title, node names, EMV/payoff labels, and edge probability labels are all readable against the dark background. No black-text-on-dark-background issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize dynamically scaled, edge
+          labels at 10, node labels at 10). Readable at full resolution; edge labels
+          are borderline small at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Upper-right area is label-dense with Competition/Low Comp/High Comp
+          nodes and their edge labels crowded together. Lower-left has proximate 'Abandon'
+          edge and node labels. No severe overlap but crowding is visible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node markers (markersize=30) clearly visible. Pruned terminal T1
+          at alpha=0.45 is noticeably faint, particularly in dark render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with three perceptually distinct hues (green, blue,
+          ochre) for node types. CVD-safe, good luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Tree fills canvas well left-to-right. Legend at bottom strip is appropriately
+          compact. Slight crowding in upper-right region.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title prefix 'Product Launch Decision' plus required
+          format. No axis labels needed for diagram layout.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Decision nodes use #009E73 (Imprint[1]). Chance nodes use #4467A3
+          (Imprint[3]). Terminal nodes use #BD8233 (Imprint[4]). Semantic skip of
+          position 2 (lavender) is justified. Background #FAF8F1 light / #1A1A17 dark.
+          Chrome theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: Imprint palette with semantic color assignments,
+          pruning marks, theme-adaptive chrome. Not quite publication-level but clearly
+          professionally designed.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, no legend frame, dashed pruned edges,
+          double-slash pruning marks, alpha-blended pruned elements. Good attention
+          to detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Optimal decision path clearly traceable via color/opacity contrast
+          (active vs. pruned). EMV rollback values guide viewer through the analysis.
+          Viewer can immediately identify the winning strategy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision tree with decision squares, chance circles, terminal
+          right-triangles, left-to-right layout, pruned branches marked.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: node shapes, branch probability labels,
+          terminal payoffs, EMV rollback values, pruned branch marking with double-slash
+          and dashed lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct left-to-right flow, correct probabilities, EMV calculations
+          verified correct (631K, 1310K), payoffs at terminal nodes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Product Launch Decision · tree-decision · julia · makie ·
+          anyplot.ai' matches required format. Legend correctly labels all four element
+          types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: two-stage decision process, all three node types,
+          both active and pruned branches, multi-chance outcomes, EMV rollback.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software product-launch decision tree — realistic, neutral business
+          scenario with plausible market probability structure.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'EMV calculations verified: EMV(C2)=0.65x1800+0.35x400=1310, EMV(D2)=max(1310,750)=1310,
+          EMV(C1)=0.55x1310+0.45x(-200)=631, EMV(D1)=max(631,0)=631. All correct.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat: imports → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Julia idioms, dynamic title-fontsize formula, appropriate perpendicular-normal
+          math for edge label offsets. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2. Current CairoMakie API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic: Figure/Axis layout, scatter!/lines!/text! primitives,
+          MarkerElement/LineElement for legend, rowsize! for strip layout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Makie-specific patterns: fig.layout rowsize! for bottom strip,
+          MarkerElement/LineElement for custom legend construction, RGBAf for alpha-blended
+          colors — not easily replicated in matplotlib without patches/proxy artists.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
