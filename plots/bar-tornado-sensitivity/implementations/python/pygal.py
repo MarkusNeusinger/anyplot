@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -66,6 +66,9 @@ sorted_params = [d[0] for d in deviations]
 sorted_low_devs = [d[1] for d in deviations]
 sorted_high_devs = [d[2] for d in deviations]
 
+# Mark the top driver (last in ascending sort = widest bar = top of chart)
+sorted_params[-1] = f"* {sorted_params[-1]}"
+
 # Title with length-based fontsize scaling (67-char baseline at size 66)
 title_text = "NPV Sensitivity Analysis · bar-tornado-sensitivity · python · pygal · anyplot.ai"
 n = len(title_text)
@@ -99,12 +102,12 @@ chart = pygal.HorizontalStackedBar(
     height=1800,
     style=custom_style,
     title=title_text,
-    x_title="Change in NPV ($M)",
+    x_title="Change in NPV ($M)  |  * = top driver",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
     legend_box_size=30,
-    show_x_guides=True,
+    show_x_guides=False,
     show_y_guides=False,
     y_labels_major=[0],
     range=(-1.4, 1.4),
