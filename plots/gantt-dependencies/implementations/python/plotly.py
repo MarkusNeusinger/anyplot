@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -170,7 +170,7 @@ df["end"] = pd.to_datetime(df["end"])
 
 # Group colors — Imprint palette canonical order
 group_order = ["Requirements", "Design", "Development", "Testing", "Deployment"]
-group_colors = dict(zip(group_order, IMPRINT_PALETTE))
+group_colors = dict(zip(group_order, IMPRINT_PALETTE, strict=False))
 
 # Compute critical path by backward traversal from project end
 task_deps = {row["task"]: row["depends_on"] for _, row in df.iterrows()}
@@ -286,7 +286,7 @@ for _, task in df.iterrows():
                 arrowsize=1.3,
                 arrowwidth=2.5 if is_cp_edge else 1.3,
                 arrowcolor=CP_RED if is_cp_edge else INK_SOFT,
-                opacity=0.9 if is_cp_edge else 0.6,
+                opacity=0.9 if is_cp_edge else 0.35,
             )
 
 # Layout
@@ -309,13 +309,15 @@ fig.update_layout(
         tickangle=0,
         linecolor=INK_SOFT,
         zerolinecolor=INK_SOFT,
+        mirror=False,
     ),
     yaxis=dict(
-        tickfont=dict(size=9, color=INK_SOFT),
+        tickfont=dict(size=10, color=INK_SOFT),
         categoryorder="array",
         categoryarray=y_categories[::-1],
         showgrid=False,
         linecolor=INK_SOFT,
+        mirror=False,
     ),
     barmode="overlay",
     legend=dict(
