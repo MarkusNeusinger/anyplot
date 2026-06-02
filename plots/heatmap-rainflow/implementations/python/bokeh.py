@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-02
+Quality: 91/100 | Updated: 2026-06-02
 """
 
 import os

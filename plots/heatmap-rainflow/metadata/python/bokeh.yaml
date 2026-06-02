@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:05:10Z'
-updated: '2026-06-02T09:58:30Z'
+updated: '2026-06-02T10:11:11Z'
 generated_by: claude-sonnet
 workflow_run: 26811512613
 issue: 4465
@@ -12,117 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Full spec compliance: correct 2D heatmap with amplitude on Y-axis and mean on
-    X-axis, LogColorMapper with log scale, colorbar titled ''Cycle Count'', and axis
-    labels with MPa units'
-  - 'Imprint sequential colormap (#009E73 → #4467A3) correctly applied as imprint_seq
-    for single-polarity cycle count data — no forbidden viridis/hot used'
-  - 'Thorough theme adaptation: all chrome elements (title, axis labels, tick labels,
-    colorbar background/title/labels, annotation background fills) use INK/INK_SOFT/PAGE_BG
-    tokens in both renders'
-  - Data storytelling via two labeled annotations — dominant loading cluster (~5000
-    cycles) and rare severe events — guides the viewer to the key fatigue engineering
-    insights
-  - 'Idiomatic Bokeh usage: ColumnDataSource for sparse non-zero bins, LogColorMapper+LogTicker,
-    construct_color_bar() (modern Bokeh 3.x API), HoverTool for interactive HTML'
-  - Clean heatmap aesthetic with no grid lines (xgrid/ygrid set to None) and outline_line_color=None
-    — appropriate for a 2D matrix visualization
-  - CDP setDeviceMetricsOverride + PIL canvas pin ensures authoritative 2400×2400
-    output despite headless Chrome viewport quirks
+  - Correct 2D heatmap with amplitude on y-axis and mean on x-axis per spec
+  - Imprint sequential colormap (green→blue) used correctly for single-polarity continuous
+    data
+  - LogColorMapper + LogTicker is the right choice for cycle count data spanning 3
+    orders of magnitude
+  - All font sizes explicitly set with proper bokeh pt sizing — title (50pt), axis
+    labels (42pt), tick labels (34pt) all well-proportioned on 2400×2400 canvas
+  - 'Full theme-adaptive chrome: background, text, axis colors, colorbar all use theme
+    tokens; data colors identical between light and dark renders'
+  - Annotations with elevated background boxes guide viewer to dominant loading cluster
+    and rare severe events — good data storytelling
+  - Subtle cell borders (line_alpha=0.2) add visual hierarchy at transition zones
+    without distracting from data
+  - Spines and grid explicitly removed for clean heatmap aesthetic
+  - Zero-count bins show as background (nan_color=PAGE_BG) matching spec requirement
+  - HoverTool provides interactive tooltips in HTML output; construct_color_bar()
+    idiomatic bokeh pattern
+  - CDP setDeviceMetricsOverride ensures reliable 2400×2400 screenshot with PIL fallback
+    pin
   weaknesses:
-  - Annotation text at 28pt is smaller than tick labels (34pt), which makes the two
-    annotation boxes appear quite small on the 2400×2400 canvas — increase annotation
-    text_font_size to 32–34pt to match tick label hierarchy
-  - 'DE-02: Axis lines (axis_line_color = INK_SOFT) are retained, creating an L-shaped
-    frame. For a clean heatmap aesthetic the conventional choice is to remove all
-    four spines (set p.xaxis.axis_line_color = None, p.yaxis.axis_line_color = None)
-    so the data tiles float on the background surface'
-  - 'DE-03: ''Rare severe events →'' annotation placed at (x=-60, y=185) points right
-    (→) but the sparse high-amplitude bins extend across all mean values, not specifically
-    to the right — reposition to the top-right of the plot area or change arrow direction
-    to ''↓'' to indicate the region above the dominant cluster where rare cycles appear'
-  - 'DE-01: No intentional visual hierarchy within the heatmap itself — consider adding
-    a thin white/muted cell border (line_color=INK_SOFT with alpha=0.2) to the rect()
-    glyph to help distinguish adjacent cells at the transition zones, improving readability
-    of individual bins'
+  - 'Rare severe events annotation is mispositioned: label is placed at mean=150 MPa,
+    amplitude=193 MPa but the actual rare cluster center is at amplitude=150 MPa,
+    mean=100 MPa — the ↓ arrow does not clearly point to the cluster'
+  - Dominant loading cluster annotation is at mean=100, amplitude=25 MPa while the
+    actual cluster center is mean=80, amplitude=40 MPa — slightly off but the ↑ arrow
+    still approximately indicates the correct region
+  - 'DE-01 and DE-03 have room to grow: annotation placement precision and minor additional
+    polish (e.g. colorbar border subtlety) would push aesthetic sophistication higher'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, the page/border fill is the correct cream surface, not pure white.
-      Chrome: Title "heatmap-rainflow · python · bokeh · anyplot.ai" in bold dark text, clearly readable. X-axis label "Cycle Mean Stress (MPa)" and Y-axis label "Cycle Amplitude (MPa)" in dark INK, prominently visible. Tick labels (-100, 0, 100, 200, 300 on x; 50, 100, 150, 200 on y) in INK_SOFT, readable. Colorbar on right with "Cycle Count" italic title in dark INK and log tick labels (10, 10², 10³) in INK_SOFT. Two annotation boxes with warm elevated background (#FFFDF6): "Rare severe events →" in upper-left area and "↑ Dominant loading cluster (~5000 cycles)" in lower-right area — text readable but somewhat small (~28pt vs 34pt ticks).
-      Data: Imprint sequential colormap — green (#009E73) for low cycle counts at outer edges, transitioning to blue (#4467A3) for the highest cycle counts (~5000) in the dominant center-bottom region. Classic dome shape of rainflow counting matrix visible. Zero-count bins absent (background shows through). No grid lines — clean tile-based heatmap.
-      Legibility verdict: PASS — all text readable against warm off-white, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, no pure white.
+      Chrome: Title "heatmap-rainflow · python · bokeh · anyplot.ai" in dark #1A1A17, spans ~65% of canvas width at 50pt — well-proportioned. X-axis label "Cycle Mean Stress (MPa)" and Y-axis label "Cycle Amplitude (MPa)" in dark INK at 42pt — balanced and readable. Tick labels at 34pt in INK_SOFT, fully legible. Colorbar title "Cycle Count" and log-scale tick labels visible. Two annotation boxes with ELEVATED_BG (#FFFDF6) fill and dark INK text: "↑ Dominant loading cluster (~5000 cycles)" at bottom-center, "↓ Rare severe events" near top-center — both readable.
+      Data: Imprint sequential colormap from #009E73 (green, low counts ~10) to #4467A3 (dark blue, high counts ~5000). Arch-shaped heatmap with dominant dark-blue cluster at low amplitude / mid mean (peak at ~amplitude=40, mean=80 MPa). Sparse outer cells in teal-green. Zero-count bins show as background color. Log colorbar on right with correct scale.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, correct dark surface, not pure black.
-      Chrome: Title in light #F0EFE8, clearly readable against dark surface. Axis labels in light INK, fully visible. Tick labels in #B8B7B0 (INK_SOFT dark), readable. Colorbar title and labels in light/soft tones — legible. Annotation boxes use dark elevated background (#242420) with light text — readable. No dark-on-dark failures observed.
-      Data: Colors are identical to light render — same green-to-blue gradient, same dome shape, same log color scale. Imprint data colors unchanged between themes as required.
-      Legibility verdict: PASS — all text readable against warm near-black, no dark-on-dark issues found.
+      Background: Near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title in light #F0EFE8 (INK dark-mode), clearly visible against dark background. Axis labels in #F0EFE8, tick labels in #B8B7B0 (INK_SOFT dark-mode) — all readable. Colorbar title and tick values in appropriate light colors. Annotation boxes with #242420 (ELEVATED_BG dark-mode) fill and #F0EFE8 text — no dark-on-dark failure observed; both annotation labels are legible. No axis lines (set to None).
+      Data: Data colors identical to light render — same green-to-blue Imprint sequential palette. The arch shape of cycle counts is preserved. No hue drift between themes. Colorbar renders identically.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 38pt colorbar title, 28pt annotations). Title fills ~65% of width.
-          Both themes fully legible. Minor deduction: annotation text at 28pt is noticeably
-          smaller than tick labels (34pt), appearing somewhat small on the 2400×2400
-          canvas.'
+        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
+          labels 34pt, colorbar 38pt/34pt, annotations 34pt). Well-proportioned title
+          at ~65% width. Balanced axis labels. Both themes legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Annotations have background fills that separate
-          them from data. Colorbar comfortably placed on right with adequate spacing.
+        comment: No overlapping text elements. Annotation boxes placed in distinct
+          areas (bottom-center and top-center). No tick label collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells are clearly visible. Green-to-blue Imprint sequential
-          gradient is distinct across the full range. Dome shape of rainflow matrix
-          clearly legible.
+        comment: Heatmap cells clearly visible with proper rect glyphs. Colorbar well-sized
+          at width=120 for 2400px canvas. Log scale ensures low-count cells remain
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap is CVD-safe per palette design. Green-to-blue
-          perceptually uniform under deuteranopia and protanopia simulations.
+        comment: Imprint sequential colormap (green to blue) is CVD-safe by design.
+          No red-green signals.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas correct for symmetric heatmap. Generous min_borders
-          (160/180/110/200px). Plot fills ~80% of canvas with colorbar on right. No
-          content cut off.
+        comment: Canvas gate passed (2400×2400). Generous min_border margins. Plot
+          fills ~65% of canvas with balanced whitespace. Colorbar on right is well-integrated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''heatmap-rainflow · python · bokeh · anyplot.ai''. X: ''Cycle
-          Mean Stress (MPa)''. Y: ''Cycle Amplitude (MPa)''. Both axes have physical
-          units.'
+        comment: 'X: ''Cycle Mean Stress (MPa)'', Y: ''Cycle Amplitude (MPa)'', colorbar:
+          ''Cycle Count'' — all descriptive with physical units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential colormap (#009E73 → #4467A3) correctly applied
-          for single-polarity count data. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
-          Chrome tokens correct in both renders. Data colors identical across themes.'
+        comment: 'Imprint sequential colormap (imprint_seq: #009E73 → #4467A3) used
+          correctly for single-polarity count data. Background #FAF8F1 light / #1A1A17
+          dark. Full theme-adaptive chrome. Data colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -130,30 +121,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): log color scale is a thoughtful technical choice
-          for wide dynamic range, annotations add professional context, theme-adaptive
-          everything. Not quite ''strong design'' (6) as the overall look is a well-polished
-          required implementation rather than truly publication-ready — no intentional
-          visual hierarchy within the tile grid itself.'
+        comment: 'Above defaults: Imprint sequential colormap, log scale, subtle cell
+          borders, no spines, no grid, theme-adaptive annotations with elevated background.
+          Not quite publication-ready level but clearly thoughtful.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: 'Above default (2): grid lines removed (correct for heatmap), outline_line_color=None,
-          generous margins, annotation background fills use ELEVATED_BG token. Loses
-          points: axis lines retained (axis_line_color=INK_SOFT) creating L-frame
-          when fully removing spines would be cleaner for a heatmap.'
+        comment: Spines explicitly removed (outline_line_color=None, axis_line_color=None).
+          Grid explicitly removed. Generous min_border margins. Colorbar with label_standoff
+          and padding. Tick marks kept for reference at INK_SOFT.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): two annotations label the dominant loading cluster
-          and rare severe events, log scale emphasizes the wide count range. Loses
-          points: ''Rare severe events →'' arrow direction (→) doesn''t precisely
-          indicate where the sparse high-amplitude bins are — guidance is present
-          but imprecise.'
+        comment: Two annotations guide viewer to dominant cluster and rare events
+          — adds storytelling value. However, 'Rare severe events' label at mean=150,
+          amp=193 is mispositioned from actual cluster at mean=100, amp=150. 'Dominant
+          cluster' annotation also slightly off-center from actual peak at mean=80,
+          amp=40.
     spec_compliance:
       score: 15
       max: 15
@@ -163,32 +151,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap (rainflow counting matrix). Amplitude on Y-axis,
-          mean on X-axis as specified.
+        comment: Correct 2D heatmap (rect glyphs) for rainflow counting matrix.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sequential colormap with log scale, colorbar
-          indicating cycle count values, MPa units on axes, zero-count bins absent
-          (background shows through via nan_color=PAGE_BG and sparse ColumnDataSource).'
+        comment: Amplitude on y-axis, mean on x-axis, sequential colormap, log scale,
+          colorbar with cycle count, physical units (MPa), zero-count bins shown as
+          background, 20×20 bin grid (within 10×10–64×64 spec range).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Mean stress on X, amplitude on Y, cycle count mapped to color via
-          LogColorMapper. All non-zero bins rendered. Data range covers full amplitude_edges
-          (10–210 MPa) and mean_edges (-100–300 MPa).
+        comment: 'X: cycle mean stress (−100 to 300 MPa), Y: cycle amplitude (10 to
+          210 MPa), color: cycle count. All axes show full data range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-rainflow · python · bokeh · anyplot.ai' matches required
-          format. Colorbar labeled 'Cycle Count' serves as legend for continuous color
-          mapping.
+        comment: 'Title: ''heatmap-rainflow · python · bokeh · anyplot.ai'' — correct
+          format. No categorical legend needed (colorbar serves as the scale indicator).'
     data_quality:
       score: 15
       max: 15
@@ -198,27 +183,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: dominant low-amplitude cluster (~5000 cycles),
-          secondary moderate-amplitude cluster (~800 cycles), sparse high-amplitude
-          rare events (~50 cycles). Three-cluster structure demonstrates the full
-          range of fatigue loading scenarios.'
+        comment: 'Three distinct cycle density clusters: dominant low-amplitude cluster
+          (~5000 cycles), secondary moderate cluster (~800), and rare high-amplitude
+          events (~50). Log scale makes all visible. Shows the full distributional
+          character of rainflow results.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Vehicle suspension component fatigue analysis — realistic engineering
-          context. Neutral, non-controversial domain. Comprehensible to engineers
-          and non-specialists.
+        comment: Simulated rainflow counting matrix for a vehicle suspension component
+          — realistic engineering scenario. MPa units, physically plausible cycle
+          distributions, neutral non-controversial topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean stress -100 to 300 MPa and amplitude 10–210 MPa are physically
-          reasonable for automotive suspension (typical steel component with ~200–400
-          MPa yield). ~5000 cycles for dominant cluster is realistic for variable-amplitude
-          loading. Values consistent with SAE/automotive fatigue standards.
+        comment: Amplitude 10–210 MPa, mean stress −100 to 300 MPa (includes compressive),
+          cycle counts 50–5000 — all plausible for a vehicle suspension under variable-amplitude
+          loading. 3 orders of magnitude in counts justifies log scale.
     code_quality:
       score: 10
       max: 10
@@ -228,9 +212,9 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: constants → data generation → ColumnDataSource → figure
-          → glyphs → colorbar → hover → chrome → annotations → save HTML → screenshot.
-          No unnecessary functions or classes.'
+        comment: 'Linear: imports → tokens → data → source → figure → glyphs → colorbar
+          → hover → chrome → annotations → save HTML → Selenium screenshot → PIL pin.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -242,24 +226,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, time, pathlib.Path, numpy, bokeh.io, bokeh.models
-          (all 6 used), bokeh.plotting, PIL.Image, selenium.webdriver, selenium Options.'
+        comment: 'All imports used: os, time, pathlib, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean numpy operations for simulation. HoverTool is genuine Bokeh
-          interactivity (not fake). CDP viewport override is a well-reasoned workaround
-          for headless Chrome canvas sizing. No fake UI elements.
+        comment: Clean, appropriate complexity. No over-engineering, no fake UI elements.
+          The CDPsetDeviceMetricsOverride pattern is a legitimate workaround for bokeh
+          viewport reliability.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html (interactive) and plot-{THEME}.png (static).
-          No bare plot.png. Current Bokeh API used (construct_color_bar, modern field
-          transform syntax).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current bokeh 3.9.0
+          API used throughout.
     library_mastery:
       score: 8
       max: 10
@@ -269,22 +252,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expertly idiomatic: ColumnDataSource for sparse heatmap data, p.rect()
-          with field transform color mapping, construct_color_bar() from glyph renderer
-          (Bokeh 3.x pattern), LogColorMapper+LogTicker combination, HoverTool with
-          renderers=[r]. All high-level Bokeh APIs used correctly.'
+        comment: ColumnDataSource with field-mapped fill_color, LogColorMapper with
+          LogTicker, construct_color_bar() method, HoverTool with renderers=, add_layout()
+          for colorbar and annotations — all idiomatic bokeh patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses several Bokeh-distinctive features: LogColorMapper (server-side
-          log scaling, not available in all libraries), LogTicker for log-scale colorbar
-          labels, construct_color_bar() which ties the colorbar directly to the glyph
-          renderer, and CDP Emulation.setDeviceMetricsOverride for authoritative viewport
-          control in Selenium. Good use of library-specific APIs, not just generic
-          patterns.'
-  verdict: REJECTED
+        comment: 'Uses bokeh-specific: LogColorMapper (not available in matplotlib
+          by default), LogTicker on colorbar, construct_color_bar() API, HoverTool
+          for interactive HTML, and the HTML→Selenium→PNG workflow that gives bokeh
+          its interactive+static dual output advantage.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -301,3 +281,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
