@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: matplotlib | Python 3.14
-Quality: 90/100 | Updated: 2026-06-02
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-02
 """
 
 import os
