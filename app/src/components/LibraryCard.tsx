@@ -14,6 +14,9 @@ const DESCRIPTIONS: Record<string, string> = {
   letsplot: 'Grammar of graphics by JetBrains. Interactive.',
   ggplot2: 'The reference grammar of graphics. R’s expressive plotting standard.',
   makie: 'High-performance Julia visualization. CairoMakie ships publication-quality static charts.',
+  chartjs: 'Simple, flexible HTML5-canvas charts. The popular JS default.',
+  d3: 'Data-driven SVG. Low-level, maximum control on the web.',
+  echarts: 'Powerful interactive charts for the browser. Vast chart catalog.',
 };
 
 interface LibraryCardProps {
