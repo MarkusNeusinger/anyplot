@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 87/100 | Created: 2026-06-02
+Quality: 89/100 | Created: 2026-06-02
 """
 
 import sys
