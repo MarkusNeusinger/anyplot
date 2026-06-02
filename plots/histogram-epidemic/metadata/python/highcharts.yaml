@@ -1,44 +1,60 @@
 library: highcharts
+language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:48:48Z'
-updated: '2026-03-05T19:05:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22731100352
+updated: '2026-06-02T03:44:31Z'
+generated_by: claude-sonnet
+workflow_run: 26796516849
 issue: 4426
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - 'Complete spec compliance: all five spec requirements implemented (daily bins,
-    stacked bars by classification, intervention markers, date x-axis, cumulative
-    secondary y-axis)'
-  - Excellent data storytelling with dual epidemic waves, intervention markers, and
-    cumulative overlay creating a rich epidemiological narrative
-  - Strong typography hierarchy and cohesive color palette showing intentional design
-  - Clean, well-structured code with proper reproducibility
+  - 'Perfect Imprint palette compliance across both themes — data colors identical,
+    chrome correctly inverts, backgrounds match the warm surface tokens (#FAF8F1 light
+    / #1A1A17 dark).'
+  - 'Full spec implementation: all three case types stacked (Confirmed/Probable/Suspect),
+    both intervention plotlines annotated with semantic colors, secondary cumulative
+    line overlay on right y-axis.'
+  - Excellent epidemiologically realistic data — two-wave Poisson outbreak with Gaussian
+    rate functions produces a believable epi curve shape with plausible case counts
+    (~60 peak daily, ~2280 cumulative).
+  - 'Semantic annotation colors for plotLines (matte red #AE3030 for restrictive travel
+    advisory, lime #99B314 for positive vaccination campaign) show deliberate palette
+    reasoning beyond ordinal assignment.'
+  - CDP viewport override + PIL canvas pinning correctly handles the Highcharts/Selenium
+    exact-dimensions challenge — both renders land at exactly 3200x1800.
   weaknesses:
-  - Canvas margins are slightly generous, losing some horizontal space for the chart
-    area
-  - Spines could be further refined for a more polished publication-ready look
-  image_description: 'The plot displays a stacked column chart (epidemic curve) showing
-    daily new cases of a respiratory illness outbreak from January 15 to mid-April
-    2024. Three case classifications are stacked: Confirmed (dark steel blue #306998),
-    Probable (amber/orange #f39c12), and Suspect (gray #95a5a6). Two dashed vertical
-    plot lines mark key interventions: "Travel Advisory Issued" in red (~day 25) and
-    "Vaccination Campaign" in green (~day 42). A dashed dark spline line overlays
-    the cumulative total cases on a secondary y-axis (right side, 0-2320+). The chart
-    has a light gray background (#fafbfc), a prominent title "histogram-epidemic ·
-    highcharts · pyplots.ai" with a descriptive subtitle below it. The legend is centered
-    at the top. X-axis shows "Symptom Onset Date" with weekly tick intervals, left
-    y-axis shows "Daily New Cases" (0-75), right y-axis shows "Cumulative Cases."
-    Two distinct epidemic waves are visible — a first wave peaking around day 20 and
-    a larger second wave peaking around day 55.'
+  - 'DE-01 MODERATE: No distinctive typographic hierarchy beyond font weight — annotation
+    labels, subtitle, and axis labels read at similar visual weight levels. Consider
+    size differentiation or a peak-bar data label to create a clearer reading order
+    and focal point.'
+  - 'DE-02 MINOR: Secondary y-axis has visible axis line and tick marks that add unnecessary
+    chrome noise on the right side. Fix: set lineColor and tickColor to ''transparent''
+    on the secondary y-axis dict.'
+  - 'DE-03: Visual hierarchy is good but could be sharpened — adding a data label
+    annotation at the epidemic peak bar would create a clear focal point and make
+    the story more immediate for the viewer.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct anyplot light theme.
+      Chrome: Title "histogram-epidemic · python · highcharts · anyplot.ai" in bold dark ink, clearly readable. Subtitle in secondary ink. X-axis label "Symptom Onset Date" and Y-axis label "Daily New Cases" in dark ink. Secondary y-axis "Cumulative Cases" in muted ink on the right. Tick labels in soft dark ink (#4A4A44). All text clearly readable against the light background.
+      Data: Three stacked column series — Confirmed (#009E73 brand green), Probable (#C475FD lavender), Suspect (#4467A3 blue). Cumulative dashed spline in muted gray on secondary axis. Two vertical dashed plotLines: "Travel Advisory Issued" in matte red (#AE3030), "Vaccination Campaign" in lime (#99B314). Two distinct outbreak waves visible (peak ~day 20, larger peak ~day 55).
+      Legibility verdict: PASS — all text readable, no overflow, no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct anyplot dark theme.
+      Chrome: Title and all axis labels in light ink (#F0EFE8). Tick labels in light-muted ink (#B8B7B0). No dark-on-dark failures — all chrome correctly inverts to light colors on dark background. Legend text readable. Subtitle readable.
+      Data: Imprint palette data colors identical to light render — Confirmed stays #009E73, Probable stays #C475FD, Suspect stays #4467A3. Cumulative line adapts to muted dark token (#A8A79F). Intervention plotLine labels remain readable in semantic colors (red, lime) against dark background.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -46,68 +62,82 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 56px, subtitle 36px, axis titles
-          42px, tick labels 28-34px, legend 32px, plot line labels 28px'
+        comment: All font sizes explicitly set (66px title, 56px axis labels, 44px
+          ticks/legend, 40px subtitle, 36px annotation labels). Both themes fully
+          readable, balanced proportions.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels spaced every 7 days with no collisions. Legend floats
-          above chart. Plot line labels offset cleanly
+        comment: No text collisions. Annotation labels at top do not clash with data
+          or each other. Legend well-positioned below the plot.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with pointPadding:0 and minimal groupPadding. Cumulative
-          spline has lineWidth:5
+        comment: Stacked bars clearly visible with good height differentiation. Cumulative
+          dashed line distinct from bars. All three classification layers distinguishable.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette (green/lavender/blue) is CVD-safe. Intervention lines
+          in red/lime use colors with strong semantic signal. Muted cumulative line
+          reads as structural.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/gray palette is colorblind-safe. No red-green distinction
-          issues
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Chart fills canvas reasonably well but margins are generous (240px
-          each side on 4800px)
+        comment: Plot fills canvas well. Generous but balanced margins. No content
+          cut off in either render. Canvas gate passed (no /tmp/anyplot-canvas-gate.txt).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Symptom Onset Date, Daily New Cases, Cumulative
-          Cases'
+        comment: 'Descriptive labels: ''Symptom Onset Date'', ''Daily New Cases'',
+          ''Cumulative Cases''. Title in correct anyplot format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (Confirmed). Multi-series uses canonical
+          Imprint order (positions 1-3). Intervention plotLines use palette semantic
+          anchors appropriately. Chrome correctly adapts in both themes. Backgrounds
+          are #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom background, cohesive palette, Segoe UI font, styled typography
-          hierarchy. Clearly above defaults
+        comment: Above configured-default baseline due to deliberate semantic annotation
+          color choices and dual-axis sophistication. Falls short of publication-ready
+          — no distinctive typographic hierarchy beyond weight.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dotted grid lines, secondary grid removed, no column borders, generous
-          whitespace
+        comment: Subtle gridlines (15% opacity), custom warm backgrounds, borderWidth
+          0 on bars for clean stack. Secondary y-axis axis line/ticks add minor chrome
+          noise.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Dual-wave pattern, intervention markers, cumulative overlay create
-          rich epidemiological narrative
+        comment: Two epidemic waves tell epidemiological story. Annotated intervention
+          plotLines contextualize public health response timing. Cumulative line adds
+          total-burden perspective. Good but could add peak focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked column chart is correct type for epidemic curve
+        comment: Stacked column chart by date = canonical epidemic curve (epi curve)
+          format.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: daily bins, stacked bars by classification, intervention
-          lines, cumulative overlay'
+        comment: Stacking by case classification, annotated vertical intervention
+          lines, secondary y-axis with cumulative line overlay, date x-axis with tick
+          intervals — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates, Y-axis case counts, all data visible
+        comment: 'X: symptom onset dates; Primary Y: daily new cases; Secondary Y:
+          cumulative total. All correctly assigned.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels match data series
+        comment: 'Title: ''histogram-epidemic · python · highcharts · anyplot.ai''.
+          Legend: Confirmed, Probable, Suspect, Cumulative Total.'
     data_quality:
       score: 15
       max: 15
@@ -146,21 +180,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two waves, three classifications, interventions, cumulative burden
+        comment: 'Shows all spec aspects: three case types, two distinct outbreak
+          waves (point-source + propagated), cumulative burden overlay, intervention
+          event timing.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Respiratory illness outbreak is real-world neutral epidemiological
-          scenario
+        comment: Respiratory illness outbreak (COVID-19 analogous) with real-world
+          plausible public health responses (travel advisory, vaccination campaign).
+          Neutral scientific context, Jan-Apr 2024 dates.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily cases 0-75, cumulative ~2300 over 90 days, realistic classification
-          ratios
+        comment: Daily peaks of ~60 cases/day and cumulative total ~2280 over 90 days
+          are realistic for a regional outbreak. Two-wave Poisson-generated data with
+          bimodal Gaussian rate function produces epidemiologically credible curve
+          shapes.
     code_quality:
       score: 10
       max: 10
@@ -170,32 +209,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, series, rendering. No
-          functions/classes'
+        comment: 'Linear: imports -> theme tokens -> data generation -> chart config
+          -> series -> HTML export -> screenshot.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random generation
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used. No dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized. No fake functionality
+        comment: Well-structured, appropriate complexity. CDN fallback retry loop
+          is pragmatic, not over-engineered.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via container screenshot. Current API
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html. Current Highcharts API.
     library_mastery:
       score: 7
       max: 10
@@ -205,27 +245,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of HighchartsOptions, series types, plotOptions for stacking,
-          dual y-axis
+        comment: Correctly uses Chart(container='container'), HighchartsOptions, typed
+          series classes (ColumnSeries, SplineSeries), chart.add_series(), dual y_axis
+          as list, shared tooltip. CDP viewport override and PIL canvas-pinning are
+          idiomatic Highcharts+Selenium pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts-specific plotLines with labels, shared tooltip, spline
-          series type
+        comment: plotLines with labeled vertical annotations is a Highcharts-specific
+          feature. Dual y-axis with opposite:True and secondary spline series, stacking:'normal'
+          with zero borderWidth for seamless bar stacking leverage Highcharts strengths.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - twin-axes
-  - annotations
   - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   - time-series
-  styling:
-  - grid-styling
+  styling: []
