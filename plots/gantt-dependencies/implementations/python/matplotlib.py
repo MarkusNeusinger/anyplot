@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -196,18 +196,25 @@ while node is not None:
 critical_set = set(critical_path)
 
 # Plot
+n_tasks = len(df)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+ax.set_axisbelow(True)
 
 bar_height = 0.55
 group_bar_height = 0.30
+
+# Alternating row bands improve scanability across the wide timeline
+for i in range(n_tasks):
+    if i % 2 == 0:
+        ax.axhspan(i - 0.5, i + 0.5, alpha=0.04, color=INK, zorder=0)
 
 for _, row in df.iterrows():
     task = row["task"]
     start = row["start"]
     duration = row["duration"]
     group = row["group"]
-    y_pos = len(df) - 1 - task_to_idx[task]
+    y_pos = n_tasks - 1 - task_to_idx[task]
     is_group = group is None and task in phase_colors
     on_critical = task in critical_set
 
@@ -241,34 +248,40 @@ for _, row in df.iterrows():
             zorder=3,
         )
 
-# Dependency arrows
+# Dependency arrows — offset endpoints into inter-bar gaps; alternate curvature for multi-predecessor tasks
 for _, row in df.iterrows():
     task = row["task"]
-    y_pos = len(df) - 1 - task_to_idx[task]
-    for dep in row["depends_on"]:
+    y_pos = n_tasks - 1 - task_to_idx[task]
+    for dep_i, dep in enumerate(row["depends_on"]):
         if dep not in task_to_idx:
             continue
-        dep_y = len(df) - 1 - task_to_idx[dep]
+        dep_y = n_tasks - 1 - task_to_idx[dep]
         dep_end = df[df["task"] == dep].iloc[0]["end"]
         dy = abs(y_pos - dep_y)
         rad = 0.15 if dy <= 2 else (0.10 if dy <= 5 else 0.07)
         is_crit = dep in critical_set and task in critical_set
+
+        # Vertical offset routes arrows through the gap between bars rather than crossing them
+        y_dir = 1 if dep_y > y_pos else -1
+        v_off = 0.20
+        # Alternate curvature for multi-predecessor cases to spread converging arrows apart
+        rad_sign = 1 if dep_i % 2 == 0 else -1
         arrow = FancyArrowPatch(
-            (dep_end, dep_y),
-            (row["start"], y_pos),
+            (dep_end, dep_y - y_dir * v_off),
+            (row["start"], y_pos + y_dir * v_off),
             arrowstyle="-|>",
             color=CRITICAL_COLOR if is_crit else INK_SOFT,
             linewidth=1.8 if is_crit else 1.0,
-            connectionstyle=f"arc3,rad={rad}",
+            connectionstyle=f"arc3,rad={rad_sign * rad}",
             alpha=0.85 if is_crit else 0.45,
             mutation_scale=7,
             zorder=5 if is_crit else 4,
         )
         ax.add_patch(arrow)
 
-# Y-axis labels — phase headers bold and in INK, child tasks in INK_SOFT with indent
+# Y-axis labels — phase headers bold in INK, child tasks indented with wider margin in INK_SOFT
 task_labels = df["task"].tolist()[::-1]
-styled_labels = [f"  {lbl}" if df[df["task"] == lbl].iloc[0]["group"] is not None else lbl for lbl in task_labels]
+styled_labels = [f"    {lbl}" if df[df["task"] == lbl].iloc[0]["group"] is not None else lbl for lbl in task_labels]
 ax.set_yticks(range(len(task_labels)))
 ax.set_yticklabels(styled_labels, fontsize=8, color=INK_SOFT)
 for i, lbl in enumerate(task_labels):
@@ -282,6 +295,7 @@ for i, lbl in enumerate(task_labels):
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
 ax.xaxis.set_major_locator(mdates.WeekdayLocator(interval=2))
 ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelrotation=45)
+ax.tick_params(axis="y", length=0)  # hide tick marks, keep labels — cleaner alongside no left spine
 plt.setp(ax.get_xticklabels(), ha="right")
 
 # Labels and title
@@ -292,17 +306,18 @@ ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK, pad=8)
 ax.set_xlabel("Timeline (2024)", fontsize=10, color=INK)
 ax.set_ylabel("Project Tasks", fontsize=10, color=INK)
 
-# Grid and spines
+# Grid — x-axis only; alternating row bands handle horizontal scanability
 ax.grid(True, axis="x", alpha=0.15, linewidth=0.6, color=INK)
-ax.set_axisbelow(True)
+
+# Spines — remove top, right, and left for a clean open composition
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
+ax.spines["left"].set_visible(False)
 ax.spines["bottom"].set_color(INK_SOFT)
 
 # Milestone marker at project completion
 project_end = df["end"].max()
-last_y = len(df) - 1 - task_to_idx["User Acceptance Testing"]
+last_y = n_tasks - 1 - task_to_idx["User Acceptance Testing"]
 ax.plot(
     project_end,
     last_y,
