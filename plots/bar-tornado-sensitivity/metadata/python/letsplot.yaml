@@ -1,106 +1,139 @@
 library: letsplot
+language: python
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:46:47Z'
-updated: '2026-03-07T09:13:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22795810110
+updated: '2026-06-02T23:18:49Z'
+generated_by: claude-sonnet
+workflow_run: 26853167674
 issue: 4566
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/letsplot/plot.html
-quality_score: 87
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with every required feature present and well-executed
-  - Strong colorblind-safe blue/orange palette with high contrast
-  - Good data storytelling with sorted bars, informative caption, and contextual subtitle
-  - Uses distinctive letsplot features (layer_tooltips, flavor_high_contrast_light)
-  - Clean readable code with deterministic data
+  - 'Semantic Imprint palette assignment: green for gain (high scenario), red for
+    loss (low scenario) — both from Imprint palette, semantically documented, immediately
+    intuitive for financial audiences'
+  - 'Complete spec compliance: reference line, sorted order, dual colors, value labels
+    at bar ends all present'
+  - Captioned insight adds genuine storytelling value (Revenue Growth and Discount
+    Rate account for over 50% of total NPV sensitivity)
+  - Dynamic title font scaling formula correctly applied for the 83-char mandated
+    title
+  - layer_tooltips() adds genuine interactive value in the HTML output — a distinctive
+    letsplot capability
+  - Directional arrows in legend labels (◀ Low Scenario / High Scenario ▶) are a polished
+    redundant-encoding touch
   weaknesses:
-  - Y-axis label is empty rather than descriptive
-  - pd.options.future.infer_string workaround adds code noise
-  - Some delta labels on bottom bars are slightly crowded
-  image_description: The plot displays a horizontal tornado diagram for NPV Sensitivity
-    Analysis. Ten financial parameters are listed on the y-axis, sorted by total impact
-    range with Revenue Growth (widest, ~9.1M range) at top and Inflation Rate (narrowest,
-    ~1.7M range) at bottom. Steel blue (#306998) bars extend leftward representing
-    the Low Scenario (NPV decrease) and burnt orange (#E8783A) bars extend rightward
-    for the High Scenario (NPV increase). A dark vertical reference line at x=0 marks
-    the base case. Each bar has bold delta labels (e.g., "-4.3", "+4.8") positioned
-    just outside the bar ends. The title reads "NPV Sensitivity Analysis · bar-tornado-sensitivity
-    · letsplot · pyplots.ai" centered at top in bold, with a subtitle "One-at-a-time
-    parameter variation from base case (NPV = $12.5M)". A legend at top shows "◀ Low
-    Scenario" and "High Scenario ▶". The caption at bottom notes "Revenue Growth and
-    Discount Rate account for over 50% of total NPV sensitivity". The background is
-    clean white with subtle vertical gridlines only. Layout is 16:9 landscape.
+  - flavor_high_contrast_dark() adds visible dark outlines around each bar segment
+    in the dark render, creating a cluttered look — consider removing the high-contrast
+    flavor and relying on manual theme settings, or set geom_bar(color="transparent",
+    size=0) to suppress outlines
+  - The panel frame from the high-contrast flavor differs from the style guide recommended
+    L-shaped or borderless aesthetic — set panel_border=element_blank() or remove
+    the flavor
+  - Bar value labels at size=4mm become very small (~7–8 px) at 400px mobile viewport
+    width — increase to size=5 or size=6
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "NPV Sensitivity Analysis · bar-tornado-sensitivity · python · letsplot · anyplot.ai" bold centered in dark ink (#1A1A17), clearly readable. Subtitle and italic caption in secondary/muted ink, readable. Axis title "Change in NPV ($M)" at 12pt, "Input Parameter" at 12pt — balanced and clear. Tick labels at 10pt in INK_SOFT (#4A4A44) — readable. Legend at top with colored swatches, readable.
+      Data: Bars in #AE3030 (matte red, low scenario left side) and #009E73 (brand green, high scenario right side). First/primary series High Scenario uses #009E73 (semantic exception: gain/profit). Bar value labels in dark bold, positioned outside bar ends.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title, subtitle, axis labels, tick labels all render in light near-white text (#F0EFE8 / #B8B7B0) clearly readable against dark background. No dark-on-dark failures observed. Caption in muted light (#A8A79F), readable. Legend text light-colored.
+      Data: Bar colors identical to light render — #AE3030 (matte red) and #009E73 (brand green). flavor_high_contrast_dark() adds visible dark outlines around bar segments (minor clutter, not a legibility failure). Bar value labels render in light ink (#F0EFE8) — readable on dark background.
+      Legibility verdict: PASS — all text readable against dark background; bar outlines from high-contrast flavor are a visual refinement issue, not a readability failure
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, axis titles
-          20pt, ticks 16-18pt, legend 16pt'
+        comment: 'All font sizes explicitly set; dynamic title scaling applied; balanced
+          axis labels; readable at canvas size. Minor: bar value labels (size=4mm)
+          very small at 400px mobile viewport.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding of delta labels on smaller bottom bars
+        comment: No overlapping text; nudge offsets place value labels cleanly outside
+          bars; Y-axis labels well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized at width=0.7, alpha=0.92, all distinctly visible
+        comment: Bars well-sized (width=0.7, alpha=0.92); reference line clearly visible;
+          value labels prominent.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green with valid semantic exception (financial gain/loss); redundant
+          encoding via bar position, directional arrows in legend, and explicit value
+          labels ensures CVD accessibility.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe blue/orange with excellent contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 layout but x-axis expand creates extra padding
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with balanced
+          margins. Legend cleanly positioned at top.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has units, y-axis label is empty string
+        comment: 'X-axis: Change in NPV ($M) with units. Y-axis: Input Parameter descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'High Scenario uses #009E73 (Imprint position 1, brand green). Low
+          Scenario uses #AE3030 (Imprint position 5, matte red). Valid semantic exception.
+          Backgrounds #FAF8F1/#1A1A17 correct. Chrome adapts correctly.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, high-contrast flavor, bold delta labels, unicode
-          arrows in legend
+        comment: 'Above generic default: semantic color reasoning, dynamic title scaling,
+          informative subtitle and caption, directional arrows in legend. Held back
+          by visible bar outlines in dark render from flavor_high_contrast_dark().'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Horizontal grid removed, subtle vertical grid, minimal chrome, informative
-          caption
+        comment: theme_minimal(), Y-axis grid removed, X-axis grid subtle (size=0.3),
+          minor grid removed, legend elevated background. High-contrast flavor adds
+          panel border and dark bar outlines reducing polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorted by impact, caption highlights key insight, subtitle provides
-          context
+        comment: Clear visual hierarchy via sorted order; specific caption names top
+          drivers and quantifies share; semantic color assignment immediately intuitive
+          for financial audience; subtitle grounds base case.
     spec_compliance:
       score: 15
       max: 15
@@ -110,51 +143,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal tornado/sensitivity bar chart
+        comment: 'Correct tornado chart: horizontal bars extending left and right
+          from zero, widest at top.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reference line, sorted bars, two colors, parameter
-          labels, delta values'
+        comment: Vertical reference line at zero, sorted by total range, two distinct
+          colors, parameter names on Y-axis, value labels at bar ends — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows NPV change, y-axis shows parameters, sorted by range
+        comment: X-axis shows output metric (change in NPV $M); Y-axis shows input
+          parameters; bars correctly extend left (negative) and right (positive) from
+          zero.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, legend clearly labels scenarios with
-          arrows
+        comment: Title matches {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai format. Legend labels clear with directional arrows.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 10 parameters with good range, both positive and negative impacts
+        comment: 10 parameters (within spec 6-15 range); tornado shape clearly visible;
+          both sides shown; range varies across parameters showing realistic heterogeneity.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity for capital investment - real-world financial scenario
+        comment: NPV sensitivity for capital investment — canonical neutral real-world
+          business use case. Parameters are exactly what practitioners vary. No controversial
+          topics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base $12.5M with sensitivities ±0.8M to ±4.8M - realistic
+        comment: Base NPV $12.5M plausible; impact ranges ±$1M-$5M reasonable (8-40%
+          of base); revenue/discount rate as top drivers is economically correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,60 +202,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, processing, plot, save'
+        comment: 'Linear: imports → tokens → data → transformation → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded values
+        comment: Fully deterministic data (no random generation).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: pd.options.future.infer_string workaround adds noise
+        passed: true
+        comment: All lets_plot imports used. Only os and pandas as additional imports,
+          both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for long-form data construction
+        comment: Clean, appropriate complexity. layer_tooltips() is legitimate (produces
+          real HTML tooltips). No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale=3 for 4800x2700
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current letsplot
+          API used.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good ggplot grammar, proper aes mapping, theme layering
+        comment: 'Full ggplot2-style grammar: multiple geom layers, stat=identity,
+          pd.Categorical for ordering, scale_fill_manual with breaks/labels, ggsize
+          and ggsave(scale=4). Fully idiomatic.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: layer_tooltips, flavor_high_contrast_light, export_ggsave with scale
-  verdict: REJECTED
+        comment: layer_tooltips() with multi-line configuration is distinctly letsplot.
+          flavor_high_contrast_light/dark() is letsplot-native theme switching. Both
+          require letsplot specifically.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
+  - manual-ticks
   patterns:
-  - data-generation
-  - iteration-over-groups
   - wide-to-long
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
