@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -91,7 +91,7 @@ custom_style = Style(
     value_font_size=36,
     legend_font_size=44,
     font_family="sans-serif",
-    stroke_width=2.5,
+    stroke_width=0,
 )
 
 # Shared chart parameters (avoids duplicating config between PNG and HTML)
@@ -105,7 +105,7 @@ _base = {
     "show_x_guides": False,
     "show_y_labels": False,
     "margin": 0,
-    "margin_top": 120,
+    "margin_top": 150,
     "margin_left": 10,
     "margin_right": 10,
     "spacing": 0,
