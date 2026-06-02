@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:06:18Z'
-updated: '2026-06-02T10:04:29Z'
+updated: '2026-06-02T10:16:59Z'
 generated_by: claude-sonnet
 workflow_run: 26811924655
 issue: 4465
@@ -12,51 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: correct 2D heatmap with amplitude on Y-axis, mean on
-    X-axis, logarithmic colorbar, and 20×20 bins all match the spec exactly'
-  - 'Imprint sequential colormap correctly implemented (#009E73 green → teal → #4467A3
-    blue) with custom color stops on a log color axis'
-  - Theme-adaptive chrome is thorough — all text, backgrounds, annotation fill, and
-    null color use the correct tokens for both light and dark themes
-  - Annotation callout using Highcharts renderer.label() correctly identifies the
-    peak low-amplitude, near-100-MPa-mean region
-  - 'Zero-count bins shown as distinct null color (light #E0DECE / dark #2A2A26) which
-    is visually clear in both renders'
-  - 'Code quality is excellent: flat KISS structure, seed=42 reproducibility, all
-    imports used, saves both .png and .html artifacts'
-  - CDP setDeviceMetricsOverride + PIL pinning ensures exact 2400×2400 canvas dimensions
-    — canvas gate passed
-  - 'Library-idiomatic: correct container=''container'', HighchartsOptions.from_dict(),
-    inline JS download for headless Chrome compatibility'
+  - Perfect spec compliance — logarithmic color scale, null color for zero bins, colorbar,
+    MPa units on both axes, all required features present
+  - Correct Imprint sequential palette via colorAxis stops [#009E73→#22828B→#4467A3],
+    consistent with imprint_seq intent
+  - Complete theme adaptation — all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG,
+    NULL_COLOR) properly set; both renders read correctly in light and dark
+  - Strong library mastery — logarithmic colorAxis, nullColor, symbolHeight for tall
+    colorbar, and ch.renderer.label() for native SVG annotation are all distinctive
+    Highcharts features
+  - Excellent data quality — physically realistic rainflow counting matrix with correct
+    MPa domain (amplitude 10–200, mean −50 to 250), proper exponential decay distribution
+  - Clean code — flat structure, np.random.seed(42), PIL canvas pinning, proper module
+    download (heatmap.js), CDP viewport override for exact 2400×2400 canvas
   weaknesses:
-  - Subtitle font size (30px) is smaller than tick labels (44px), inverting the typographic
-    hierarchy — subtitle should be ~48px to sit between axis labels (56px) and tick
-    labels (44px)
-  - The horizontal bell-curve pattern (dominant cycles near 100 MPa mean) is visually
-    subtle — the logarithmic scale and wide Gaussian sigma (60 MPa) compress the horizontal
-    contrast; consider narrowing sigma to ~40 MPa or using a linear color scale in
-    addition to log to make the mean-stress pattern more immediately visible
-  - DE-03 storytelling is primarily text-driven (subtitle + annotation) rather than
-    visual — the heatmap color pattern alone does not strongly tell the 'near 100
-    MPa mean stress dominates' story without reading the annotation
-  - 'DE-02 refinement is good but the outer heatmap border could be removed (set plotBorderWidth:
-    0) for a cleaner minimal look consistent with the style guide''s ''remove all
-    spines for heatmaps'' recommendation'
+  - Annotation text at 28px is below the tertiary text minimum (~35px) for a 2400×2400
+    canvas — annotation box reads noticeably smaller than tick labels (44px); increase
+    annotation CSS fontSize from 28px to 36–40px
+  - X-axis has 20 category labels rotated at 315°, producing a dense label band at
+    the bottom — consider thinning to every 2nd bin label OR switching to 270° (fully
+    vertical) rotation to reduce crowding
+  - Annotation box is positioned in the lower-center of the heatmap (dark high-count
+    region) where it blends visually — repositioning it above the heatmap or to a
+    lighter region would improve readability and focal-point clarity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "heatmap-rainflow · python · highcharts · anyplot.ai" in dark #1A1A17 at 66px, fills ~80% of canvas width — readable and well-proportioned. Subtitle "Rainflow cycle counting — dominant cycles at low amplitude, near 100 MPa mean stress" in INK_SOFT at 30px — readable but slightly small relative to tick labels. Y-axis label "Cycle Amplitude (MPa)" at 56px and X-axis label "Cycle Mean (MPa)" at 56px — both clearly visible in dark text. Tick labels at 44px in INK_SOFT — all readable. X-axis tick labels rotated at -45° (315°), 20 values from -50 to 250 MPa, no overlap. Colorbar title "Cycle Count" at 44px, scale labels from 1 to 10k — fully readable.
-      Data: The heatmap 20×20 grid shows a gradient from #009E73 green (low amplitude, high count) at the bottom to #4467A3 blue (high amplitude, low count) at the top. Subtle horizontal bell-curve pattern is visible — the bottom-center cells (mean ≈ 80-130 MPa) are slightly greener than the bottom-left and bottom-right corners. Two gray null-color patches (#E0DECE) at top-left (amplitude ~200 MPa, mean ~-50 MPa) and top-right (amplitude ~190 MPa, mean ~250 MPa) correctly mark zero-count bins. Annotation box in lower-right of heatmap with italic text identifying the peak region — readable.
-      Legibility verdict: PASS — all text readable, no dark-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
+      Chrome: Title "heatmap-rainflow · python · highcharts · anyplot.ai" in dark bold text (#1A1A17), clearly readable. Subtitle in softer gray, readable. Axis labels "Cycle Amplitude (MPa)" (y) and "Cycle Mean (MPa)" (x) in dark INK with 56px sizing, clearly readable. Tick labels in INK_SOFT at 44px — readable but noticeably dense at 20 categories on x-axis (rotated 315°). Colorbar legend titled "Cycle Count" with 44px text, readable.
+      Data: 2D heatmap showing green (#009E73) at low cycle counts transitioning through teal (#22828B) to blue (#4467A3) at high counts — consistent with imprint_seq. Zero-count bins rendered as warm beige null color (#E0DECE), visually distinct from data cells. Cell borders in PAGE_BG color create subtle cell definition. Annotation box in lower-center area shows "▶ Peak region: low-amplitude cycles near 100 MPa mean stress dominate fatigue damage" — readable but annotation text (28px) noticeably smaller than tick labels.
+      Legibility verdict: PASS — all primary text elements readable, annotation text slightly small but not unreadable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light #F0EFE8 — clearly visible against dark background. Subtitle in INK_SOFT #B8B7B0 — readable. Y-axis and X-axis labels in light INK color — readable. Tick labels in INK_SOFT — readable. Colorbar labels in INK_SOFT on dark background — readable. No dark-on-dark failures detected — all text uses the correct light token for the dark theme.
-      Data: Imprint sequential colormap colors (green → teal → blue) are identical to the light render — only chrome changed. Null-color patches now show as dark #2A2A26 against the near-black background — clearly distinct from the colored heatmap cells. Annotation box has dark fill (rgba(36,36,32,0.93)) with light italic text — readable.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title and subtitle now in light INK (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — all readable against dark background. Colorbar legend text light-colored, readable. No dark-on-dark text failures detected. Annotation box uses dark elevated background (#242420) with light text — readable.
+      Data: Data colors identical to light render — green (#009E73) to blue (#4467A3) gradient unchanged. Null color updated to dark beige (#2A2A26), distinct from both empty and filled cells. Brand green #009E73 clearly visible in low-count cells and at the bottom of the colorbar scale. Cell borders in dark PAGE_BG maintain cell definition.
+      Legibility verdict: PASS — all text elements readable on dark background; chrome correctly adapts; data colors unchanged from light render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -67,55 +60,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes. Subtitle at 30px is slightly below
-          tick labels (44px) — minor hierarchy inversion. Annotation at 28px is small
-          but readable as tertiary text.
+        comment: All primary text explicitly sized and readable; annotation at 28px
+          is below tertiary text target (~35px) for 2400×2400 canvas
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text-on-text or text-on-data overlaps. Annotation box overlays
-          heatmap cells intentionally.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Color gradient (green bottom, blue top) clearly visible. Horizontal
-          bell-curve (mean direction) is subtle but present. Null-color bins clearly
-          distinct in both themes.
+        comment: 20 x-axis labels rotated 315° are dense and somewhat crowded, but
+          no actual overlap detected
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible, green-to-blue gradient distinct, null
+          color visually separate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential (green→blue) is CVD-safe. No red-green as sole
-          signal.
+        comment: Sequential green-to-blue with logarithmic scale; perceptually ordered
+          and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed (2400×2400). Good proportions: generous margins,
-          colorbar well-placed, title at ~80% width within expected range for mandated
-          title length.'
+        comment: 2400×2400 canvas correct for square heatmap; generous margins; colorbar
+          well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Cycle Amplitude (MPa)', X-axis 'Cycle Mean (MPa)' — both
-          descriptive with units. Title in correct format.
+        comment: Both axes include units (MPa); title correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq colormap (#009E73 → #22828B → #4467A3) used for continuous
-          data. Light bg #FAF8F1, dark bg #1A1A17. Both themes correct.'
+        comment: 'imprint_seq stops [#009E73→#22828B→#4467A3]; light bg #FAF8F1, dark
+          bg #1A1A17; all chrome tokens theme-adaptive'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -123,25 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: custom imprint_seq colormap, annotation callout,
-          subtitle, clean typography hierarchy. Subtitle size (30px) slightly smaller
-          than tick labels is a minor flaw. Not exceptional but clearly above generic.'
+        comment: 'Above default: Imprint palette, descriptive subtitle, annotation
+          box, theme adaptation — but not FiveThirtyEight level'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: gridLineWidth:0 removes heatmap grid. Invisible cell borders (borderColor=PAGE_BG).
-          Tick marks removed (tickLength:0). Axis lines removed (lineWidth:0). Heatmap
-          outer border still present — could be cleaner.
+        comment: No grid lines, no axis lines (lineWidth=0), no tick marks (tickLength=0),
+          cell borders in PAGE_BG — refined heatmap presentation
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle + annotation add narrative context. But the horizontal bell-curve
-          pattern in the mean direction is visually subtle — the story relies on reading
-          text rather than seeing a dramatic color pattern.
+        comment: Subtitle and annotation indicate storytelling intent; annotation
+          buried in lower-center dark region limits focal-point impact
     spec_compliance:
       score: 15
       max: 15
@@ -151,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap with amplitude on Y-axis and mean on X-axis.
+        comment: Correct 2D heatmap with amplitude on y-axis, mean on x-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sequential colormap (imprint_seq), logarithmic color scale, colorbar,
-          axis labels with MPa units, tick labels at bin centers, zero-count bins
-          visually distinct.
+        comment: Sequential colormap, logarithmic color scale, colorbar, axis units
+          (MPa), bin center labels, null color for zero-count bins
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Amplitude on Y-axis, mean on X-axis, count as color. 20×20 bins within
-          spec range (10×10 to 64×64).
+        comment: X=mean (−50 to 250 MPa), Y=amplitude (10–200 MPa), color=count —
+          all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'heatmap-rainflow · python · highcharts · anyplot.ai'. Colorbar
-          titled 'Cycle Count'.
+        comment: Title 'heatmap-rainflow · python · highcharts · anyplot.ai' correct;
+          colorbar labeled 'Cycle Count'
     data_quality:
       score: 15
       max: 15
@@ -183,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec aspects shown: 2D matrix, amplitude/mean axes, count-as-color,
-          logarithmic scale, null bins, annotation.'
+        comment: Shows full 2D amplitude-mean distribution, logarithmic count range,
+          zero-count bins, realistic sparsity at high amplitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Amplitude 10-200 MPa, mean -50 to 250 MPa, counts 1-~10k — all physically
-          plausible for fatigue analysis. Neutral engineering content.
+        comment: Physically realistic fatigue analysis scenario; amplitude 10–200
+          MPa, mean −50 to 250 MPa — valid steel/aluminum fatigue domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MPa values appropriate for stress analysis. Logarithmic scale appropriate
-          for wide count range. seed=42 for reproducibility.
+        comment: 20×20 bins within spec range (10–64); count distribution physically
+          consistent with exponential decay by amplitude
     code_quality:
       score: 10
       max: 10
@@ -208,7 +193,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential code, no functions or classes.
+        comment: 'Flat script: tokens → data → chart options → HTML → screenshot →
+          PIL pin'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,21 +206,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: os, tempfile, time, urllib.request, pathlib,
-          numpy, highcharts_core, PIL, selenium.'
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib, numpy,
+          highcharts_core, PIL, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Clean data generation and chart config. Appropriate complexity.
+        comment: Clean, no fake interactivity; ch.renderer.label() is native Highcharts
+          SVG annotation, not simulated UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Highcharts
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes
     library_mastery:
       score: 9
       max: 10
@@ -245,16 +231,16 @@ review:
         max: 5
         passed: true
         comment: Chart(container='container'), HighchartsOptions.from_dict(), inline
-          JS download, CDP viewport override, PIL canvas pinning — all idiomatic per
-          library guide.
+          JS download, CDP viewport override, PIL canvas pinning — full idiomatic
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: colorAxis with log scale and custom stops, nullColor for zero bins,
-          renderer.label() for annotation callout, custom tooltip with category label
-          lookup, symbolHeight/symbolWidth for colorbar proportions.
+        comment: colorAxis with type:logarithmic; nullColor; ch.renderer.label() for
+          SVG annotation; symbolHeight:720 for tall colorbar; borderColor:PAGE_BG
+          for cell definition — strong Highcharts-specific usage
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -264,10 +250,10 @@ impl_tags:
   - colorbar
   - annotations
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
