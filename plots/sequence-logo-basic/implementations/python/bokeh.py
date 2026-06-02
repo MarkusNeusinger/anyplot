@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-02
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 79/100 | Updated: 2026-06-02
 """
 
 import sys
