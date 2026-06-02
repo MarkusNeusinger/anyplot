@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -18,16 +18,16 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Domain-appropriate spectral colors (astrophysical convention — semantic exception to Imprint order)
-# More distinct O/B/A hues to improve distinguishability across the blue-to-violet range
+# Domain-appropriate spectral colors using closest Imprint palette members (semantic exception to canonical order)
+ANYPLOT_AMBER = "#DDCC77"  # warm-yellow anchor — used for G-type (sun-like golden)
 spectral_config = {
-    "O": {"temp": (30000, 40000), "color": "#7C3AED", "n": 15},  # violet-purple (hottest, ultra-violet peak)
-    "B": {"temp": (10000, 30000), "color": "#2563EB", "n": 40},  # clear blue
-    "A": {"temp": (7500, 10000), "color": "#93C5FD", "n": 45},  # pale blue-white
-    "F": {"temp": (6000, 7500), "color": "#FEF08A", "n": 50},  # pale yellow
-    "G": {"temp": (5200, 6000), "color": "#FCD34D", "n": 55},  # gold (Sun-like)
-    "K": {"temp": (3700, 5200), "color": "#F97316", "n": 50},  # orange
-    "M": {"temp": (2400, 3700), "color": "#DC2626", "n": 45},  # red (coolest)
+    "O": {"temp": (30000, 40000), "color": "#C475FD", "n": 15},  # Imprint lavender (violet, hottest)
+    "B": {"temp": (10000, 30000), "color": "#4467A3", "n": 40},  # Imprint blue
+    "A": {"temp": (7500, 10000), "color": "#2ABCCD", "n": 45},  # Imprint cyan (blue-white)
+    "F": {"temp": (6000, 7500), "color": "#99B314", "n": 50},  # Imprint lime (white-yellow)
+    "G": {"temp": (5200, 6000), "color": ANYPLOT_AMBER, "n": 55},  # amber anchor (golden, sun-like)
+    "K": {"temp": (3700, 5200), "color": "#BD8233", "n": 50},  # Imprint ochre (orange)
+    "M": {"temp": (2400, 3700), "color": "#AE3030", "n": 45},  # Imprint matte red (coolest)
 }
 
 # Data
@@ -95,27 +95,34 @@ fig = go.Figure()
 spectral_order = ["O", "B", "A", "F", "G", "K", "M"]
 for stype in spectral_order:
     mask = spectral_types == stype
+    # A (#2ABCCD) and F (#99B314) get thicker stroke for extra contrast on light background
+    stroke_width = 1.5 if stype in ("A", "F") else 0.5
     fig.add_trace(
         go.Scatter(
             x=temperatures[mask],
             y=luminosities[mask],
             mode="markers",
             name=stype,
-            marker={"size": 11, "color": spectral_colors[stype], "line": {"width": 0.5, "color": INK_SOFT}, "opacity": 0.55},
+            marker={
+                "size": 11,
+                "color": spectral_colors[stype],
+                "line": {"width": stroke_width, "color": INK_SOFT},
+                "opacity": 0.55,
+            },
             hovertemplate=(
                 f"Spectral Type: {stype}<br>Temperature: %{{x:,.0f}} K<br>Luminosity: %{{y:.4g}} L☉<br><extra></extra>"
             ),
         )
     )
 
-# Sun reference point — gold star focal point
+# Sun reference point — star focal point using G-type color
 fig.add_trace(
     go.Scatter(
         x=[5778],
         y=[1.0],
         mode="markers",
         name="☉ Sun",
-        marker={"size": 22, "color": "#FDB813", "line": {"width": 2, "color": "#B8860B"}, "symbol": "star"},
+        marker={"size": 22, "color": ANYPLOT_AMBER, "line": {"width": 2, "color": "#BD8233"}, "symbol": "star"},
         hovertemplate="The Sun<br>Temperature: 5,778 K<br>Luminosity: 1.0 L☉<br><extra></extra>",
     )
 )
@@ -130,10 +137,10 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowwidth=1.5,
-    arrowcolor="#B8860B",
+    arrowcolor=INK_SOFT,
     ax=-55,
     ay=-40,
-    font={"size": 14, "color": "#B8860B"},
+    font={"size": 14, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
     borderpad=4,
@@ -189,6 +196,7 @@ fig.update_layout(
         "showline": True,
         "linecolor": INK_SOFT,
         "linewidth": 1,
+        "mirror": False,
         "tickvals": [2500, 5000, 10000, 20000, 40000],
         "ticktext": ["2,500", "5,000", "10,000", "20,000", "40,000"],
     },
@@ -202,6 +210,7 @@ fig.update_layout(
         "showline": True,
         "linecolor": INK_SOFT,
         "linewidth": 1,
+        "mirror": False,
     },
     xaxis2={
         "tickfont": {"size": 10, "color": INK_SOFT},
