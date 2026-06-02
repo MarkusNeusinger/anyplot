@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: tree-decision
 created: '2026-03-06T21:38:26Z'
-updated: '2026-06-02T16:01:33Z'
+updated: '2026-06-02T16:12:02Z'
 generated_by: claude-sonnet
 workflow_run: 26830766679
 issue: 4569
@@ -12,55 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-deci
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Correct node shapes: squares for decision, circles for chance, right-pointing
-    triangles for terminal — spec requirements fully met'
-  - 'Semantic color choices: green (#009E73) for Decision (optimal starting node),
-    lavender (#C475FD) for Chance, blue (#4467A3) for Terminal — intuitive mapping'
-  - Optimal path glow effect (translucent green behind winning branches) is an effective
-    storytelling device
-  - Pruned branches correctly de-emphasized with dashed lines, reduced opacity, and
-    matte red ✕ marks (semantic anchor correctly applied)
-  - Full EMV rollback analysis with correct values at all decision/chance nodes
-  - theme_void() is the correct plotnine choice for a node-link diagram — removes
-    irrelevant axes/grid
-  - Three-layer node rendering (outer border ring + fill + shape) ensures readability
-    on both light and dark backgrounds
-  - 'guides(color=guide_legend(override_aes={''size'': 8})) shows sophisticated plotnine
-    legend control'
-  - Theme-adaptive chrome throughout — INK/INK_SOFT/INK_MUTED tokens correctly applied
-    to all text elements
-  - 'Full spec compliance: all 15/15 spec points met with correct data context and
-    realistic EMV values'
+  - 'Perfect spec compliance: all three node shapes (squares/circles/triangles), pruned
+    branch marking (dashed + cross marks), EMV rollback values, and probabilities
+    are correctly implemented in a clean left-to-right layout.'
+  - 'Strong data storytelling: optimal path glow (alpha=0.13) + red X marks + dashed
+    pruned branches + star annotation create clear visual hierarchy guiding the viewer
+    to the winning decision path.'
+  - 'Correct Imprint palette usage: semantic red (#AE3030) for pruned marks, canonical
+    positions 1-3 for Decision/Chance/Terminal node types, both themes render correctly
+    with no chrome failures.'
+  - Mathematically sound EMV rollback with coherent business scenario (product launch
+    vs. license IP) and probabilities summing to 1.0 at each chance node.
+  - Clean, idiomatic plotnine code using coord_fixed(), guide_legend override_aes,
+    and proper grammar-of-graphics layer composition.
   weaknesses:
-  - 'Text crowding near top chance node: ''Launch Product'' branch label overlaps
-    with ''EMV: $320K'' node annotation — branch label at y-midpoint is too close
-    to node label positioned at y-1.05'
-  - 'Text crowding near right chance node: ''No Recovery (p=0.50)'' branch label and
-    ''EMV: $50K'' node label are tightly packed, reducing readability at mobile scale'
-  - 'Upper-left area underutilized: the ''★ Optimal Path'' annotation and its pointer
-    arrow occupy a large empty region, wasting ~25% of the canvas; nudging tree nodes
-    slightly right or down would improve balance'
-  - 'DQ-01 deduction: only a two-stage tree; the spec allows 10-30 nodes and this
-    implementation uses exactly 11 — a slightly deeper tree (adding one more decision
-    stage) would demonstrate more feature coverage'
+  - 'Lower-left area is crowded: the License IP sub-tree groups EMV: $184K, Accepted
+    (p=0.70), Rejected (p=0.30), and prune marks in a compressed space — increase
+    the vertical spread of nodes in that region or nudge label positions to reduce
+    visual competition.'
+  - Branch labels at geom_text size=7 are somewhat small for mobile-scaled thumbnails
+    — consider increasing to size=8 or 8.5 for branch labels.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface
-      Chrome: Bold title "tree-decision · python · plotnine · anyplot.ai" is dark (#1A1A17), fully readable. Subtitle in INK_SOFT is readable. Legend at bottom with "Node Type" label and three swatches (Chance/Decision/Terminal) all readable.
-      Data: Decision nodes as dark-bordered teal-green squares (#009E73), Chance nodes as lavender circles (#C475FD), Terminal nodes as blue right-pointing triangles (#4467A3). Active edges are thick black lines with a translucent green optimal-path glow. Pruned branches are dashed gray with matte red ✕ marks (#AE3030). EMV values in bold near each node, payoff values beside terminal nodes. "★ Optimal Path" annotation in brand green upper-left.
-      Legibility verdict: PASS — all text readable against warm off-white background. Minor crowding between some branch labels and node annotations (see weaknesses) but no text is unreadable.
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "tree-decision · python · plotnine · anyplot.ai" in dark ink, clearly readable. Subtitle in dark ink, readable. Branch labels in INK_SOFT (~#4A4A44), readable. EMV labels in INK (#1A1A17), bold and readable. Payoff labels at terminal nodes readable.
+      Data: Decision nodes = green squares (#009E73), Chance nodes = purple circles (#C475FD), Terminal nodes = blue right-pointing triangles (#4467A3). Active branches are solid dark lines; pruned branches are dashed and muted. Prune marks (X) in matte red (#AE3030). Optimal path has a subtle brand-green glow. Star annotation in brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface
-      Chrome: Title is light-colored (#F0EFE8), clearly visible against dark background. Subtitle visible in INK_SOFT (#B8B7B0). Legend text readable. Active edges are now rendered as bright white/light lines, providing good contrast.
-      Data: All node colors (#009E73 green, #C475FD lavender, #4467A3 blue) are identical to the light render — only chrome flipped. Optimal path glow still visible. Pruned branches and ✕ marks visible.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All title, label, and annotation text is visible against the dark background. Brand green #009E73 reads well on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title and subtitle rendered in light cream (#F0EFE8), clearly readable against dark background. Branch labels in light gray (#B8B7B0), readable. EMV labels in #F0EFE8, readable. No dark-on-dark failures observed.
+      Data: Node colors identical to light render — green squares, purple circles, blue triangles (Imprint palette unchanged). Active branch segments visible in light tone. Prune X marks still in matte red, visible. Optimal path glow in brand green, visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -68,82 +57,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, legend, payoffs, and EMV labels all readable in both themes.
-          Minor crowding between branch label and node annotation near top chance
-          node reduces score slightly.
+        comment: All font sizes explicitly set; readable in both themes. Branch labels
+          at size=7 slightly small for mobile thumbnails.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: '''Launch Product'' branch label overlaps ''EMV: $320K'' annotation.
-          ''No Recovery (p=0.50)'' and ''EMV: $50K'' are tightly packed. No catastrophic
-          collisions but noticeable crowding.'
+        comment: Lower-left License IP sub-tree area is crowded (EMV label, branch
+          labels, prune marks compete for space), but no actual unreadable overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Node shapes are well-sized (size=11/13) and clearly distinct. Branch
-          lines are thick enough to trace. Pruned branches appropriately muted. Slight
-          deduction for glow effect not clearly signposting the path at a glance.
+        comment: All node shapes, segments, and labels clearly visible and appropriately
+          sized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. Node types encoded with both color AND shape
-          (redundant encoding). Pruned branches use color + linetype.
+        comment: Imprint palette with shape redundancy (square/circle/triangle). CVD-safe
+          by palette design.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Tree layout occupies most of canvas.
-          Upper-left area underutilized (optimal path annotation in empty space).
-          Legend at bottom works well.
+        comment: Canvas gate passed. Tree fills canvas well. Slight lower-left crowding
+          reduces perfect proportionality.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. Subtitle adds informative context. No axis
-          labels needed for node-link diagram type.
+        comment: Correct title format; informative subtitle; no axis labels appropriate
+          for theme_void tree diagram.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Decision=#009E73 (pos 1), Chance=#C475FD (pos 2), Terminal=#4467A3
-          (pos 3). Pruned marks use #AE3030 semantic red anchor. Background #FAF8F1/#1A1A17.
-          Chrome correctly flips between themes.'
+        comment: 'Decision:#009E73, Chance:#C475FD, Terminal:#4467A3. Pruned marks
+          use #AE3030 semantic anchor. Backgrounds #FAF8F1/#1A1A17. Both themes correct.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color mapping for node types, three-layer
-          node rendering, optimal path glow, muted pruned branches. Intentional visual
-          hierarchy.'
+        comment: Above 4-pt default. Glow on optimal path, dashed pruned branches,
+          semantic red X marks, star annotation with arrow pointer show intentional
+          design hierarchy.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() appropriate for node-link diagram. Subtle glow effect.
-          Node border rings add definition against both themes. Good whitespace.
+        comment: theme_void with warm backgrounds, subtle glow (alpha=0.13), dashed
+          muted pruned lines demonstrate deliberate layering above default.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Optimal path glow + annotation guides viewer to conclusion. Pruned
-          ✕ marks clearly indicate rejected paths. EMV labels trace the rollback logic.
-          Subtitle summarizes the decision outcome.
+        comment: 'Strong: optimal path highlighted prominently, EMV rollback values
+          displayed, pruned branches de-emphasized, subtitle states optimal outcome.'
     spec_compliance:
       score: 15
       max: 15
@@ -153,55 +136,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree with squares/circles/triangles for decision/chance/terminal
-          nodes. Left-to-right layout.
+        comment: 'Decision tree with correct node shapes: decision=squares, chance=circles,
+          terminal=right-pointing triangles.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: probability labels, payoff values,
-          EMV rollback, pruned branch marking, optimal path tracing.'
+        comment: 'All required: distinct node colors, pruned branch marking (dashed
+          + X), EMV values, probabilities, left-to-right layout.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 11 nodes displayed. Branch labels show correct probabilities
-          and option names. EMV values match rollback calculations.
+        comment: Two-stage decision tree with 11 nodes; all correctly positioned and
+          connected.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''tree-decision · python · plotnine · anyplot.ai'' — correct
-          format. Legend shows all three node types with correct shapes and colors.'
+        comment: 'Title: ''tree-decision · python · plotnine · anyplot.ai''. Legend:
+          Chance/Decision/Terminal with matching shapes.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all three node types, EMV rollback, pruned branches, optimal
-          path. Two-stage tree (11 nodes) is minimal for the spec's 10-30 range; a
-          slightly deeper tree would score higher.
+        comment: Multi-stage tree with decision nodes, chance nodes, terminal nodes,
+          pruned and non-pruned branches, EMV rollback.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product Launch vs License IP is a classic realistic business decision
-          scenario. Probabilities sum to 1.0 at each chance node. Values are plausible.
+        comment: Product launch vs. license IP is a classic neutral business decision
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $30K to $500K payoff range is realistic. All probabilities in [0,1].
-          11 nodes within spec's 10-30 range.
+        comment: Dollar payoffs ($30K-$500K), probabilities summing to 1.0, EMV rollback
+          mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -211,34 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear flat code structure.
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded and deterministic. No random generation.
+        comment: All data hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used. os, sys, pandas all used.
+        comment: All plotnine imports used; no stray imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear comments explaining EMV calculations. Layer
-          composition is appropriate.
+        comment: Well-organized with sections; sys.path fix is necessary workaround;
+          EMV comments informative.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bare plot.png.
+        comment: Saves as plot-{THEME}.png correctly.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -246,16 +228,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: theme_void(), scale_color_manual, scale_shape_manual, guides(override_aes),
-          coord_fixed, annotate — all idiomatic plotnine patterns used correctly.
+        comment: Correct ggplot grammar-of-graphics composition, scale_color_manual
+          + scale_shape_manual, coord_fixed(), guide_legend override_aes. Above 3-point
+          default.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Multi-layer geom composition for node rendering, shape mapping via
-          scale_shape_manual, guides(override_aes) for legend customization — plotnine-specific
-          capabilities well utilized.
+        comment: guide_legend override_aes and ggplot layer composition are ggplot-API-specific,
+          but the visualization is fundamentally coordinate-based scatter/segment
+          rendering.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -264,7 +247,7 @@ impl_tags:
   - layer-composition
   - custom-legend
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome

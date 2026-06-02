@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-06-02
+Quality: 86/100 | Updated: 2026-06-02
 """
 
 import os
