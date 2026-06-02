@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-02
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 84/100 | Created: 2026-06-02
 
 using CairoMakie
 using Colors
