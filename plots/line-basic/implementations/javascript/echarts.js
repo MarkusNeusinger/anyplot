@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-basic: Basic Line Plot
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 81/100 | Created: 2026-06-02
+// Quality: 87/100 | Created: 2026-06-02
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-basic: Basic Line Plot

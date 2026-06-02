@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-basic
 created: '2026-06-02T23:24:48Z'
-updated: '2026-06-02T23:29:33Z'
+updated: '2026-06-02T23:45:24Z'
 generated_by: claude-opus
 workflow_run: 26853769837
 issue: 653
@@ -12,52 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - 'Title matches mandated format exactly: ''line-basic · javascript · echarts ·
-    anyplot.ai'''
-  - 'Brand green #009E73 used for the single data series; chrome flips correctly between
-    light (#FAF8F1) and dark (#1A1A17) while data color stays identical'
-  - Clean theme-adaptive chrome via t.ink / t.inkSoft / t.grid tokens — no white-on-white
-    or dark-on-dark failures
-  - 'Idiomatic ECharts: animation: false, transparent background, top-level color
-    from palette, splitLine for subtle grid, axisLine hidden on Y-axis for a minimal
-    frame'
-  - Deterministic data generation with a fixed-seed LCG plus weekly seasonality on
-    top of a trend — realistic 'daily unique visitors' signal
-  - Canvas renders exactly at 3200×1800 (landscape gate passes)
+  - Y-axis tightened to 1,500-3,500 - the attempt-1 wasted-space issue is fully resolved
+    and the trend now fills the canvas
+  - Line is now straight (no smooth) - matches the spec's 'straight lines' wording
+  - markLine at the average and markPoint at the latest reading add genuine storytelling
+    without breaking the minimal aesthetic
+  - Title exactly matches the mandated {spec-id} dot {language} dot {library} dot
+    anyplot.ai format
+  - Theme-adaptive chrome via t.ink/t.inkSoft/t.grid/t.pageBg tokens is wired through
+    every element; data color stays identical across themes
+  - Canvas renders exactly at 3200x1800; landscape gate passes
   weaknesses:
-  - Y-axis starts at 0 while all data sits between ~1800 and ~3300, leaving the bottom
-    ~50% of the plot area empty and visually flattening the trend. Consider setting
-    yAxis.min to a value like 1500 (or omitting min so ECharts auto-scales) so the
-    line uses more vertical space and the weekly seasonality reads more clearly.
-  - 'Series uses smooth: 0.25 even though the spec describes ''straight lines''. For
-    a basic line plot, either set smooth: false (or drop the property) to keep the
-    line literal, or commit to a stronger smoothing only if the design rationale is
-    clear.'
-  - Design lacks a focal point or storytelling emphasis (DE-03) — for example, marking
-    the latest value, highlighting the peak, or adding a faint trend annotation could
-    lift the design from 'clean default' to 'distinctive'.
-  - 'LM-02: implementation only lightly touches ECharts-specific features (smooth,
-    emphasis.focus, finished event). Could showcase more distinctive ECharts capabilities
-    such as markPoint/markLine for peak/min, a visualMap for value-based color, or
-    an area-style fill for emphasis.'
+  - 'markPoint label is visually detached from its marker. position: ''left'' with
+    distance: 14 plus a long ''latest 3,130'' formatter pushes the label noticeably
+    to the left of the dot, so the annotation reads as floating in the chart interior
+    rather than anchored to the rightmost point. Switch label.position to ''top''
+    (with small distance) or use explicit position: [x, y] so the text sits tight
+    against the marker.'
+  - 'markPoint border matches the background (borderColor: t.pageBg) which makes the
+    dot itself low-contrast - especially in dark mode where the dark border merges
+    with the near-black canvas. Drop the border or swap it for a contrasting color
+    (e.g. t.ink) so the circle stays distinguishable on both surfaces.'
+  - 'DE-01 still feels close to echarts defaults - a small typographic step (lighter
+    weight on tick labels, fontWeight: 600 on title, or a thin separator under the
+    title) would lift the design polish.'
+  - LM-02 lightly used - could add markArea for a 'last 7 days' band, or visualMap
+    for a subtle value-based color ramp to showcase more ECharts surface area.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface consistent with #FAF8F1 — clearly not pure white.
-      Chrome: Title "line-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, fully readable. Y-axis label "Daily Unique Visitors" rotated on the left in dark ink. X-axis label "Date (2026)" at bottom-center. Tick labels (0, 500, 1,000, … 3,500 on Y; 01-01, 01-15, …, 03-26 on X) are mid-grey (inkSoft) and clearly legible. Horizontal grid lines are subtle pale-grey — visible but unobtrusive. No spines except the bottom axis line.
-      Data: Single smoothed line in brand green #009E73 (palette[0]), 3.5px wide, no markers. Shows an upward trend from ~1800 to ~3300 with visible weekly oscillation.
-      Legibility verdict: PASS — every text element is readable; no light-on-light failures.
+      Background: warm off-white surface ~#FAF8F1, exactly the page bg token
+      Chrome: title "line-basic · javascript · echarts · anyplot.ai" centered at top in dark ink; y-axis label "Daily Unique Visitors" (rotated, left); x-axis label "Date (2026)" (bottom); y-ticks 1,500/2,000/2,500/3,000/3,500 and x-ticks every ~14 days (01-01 through 03-26) in soft grey; subtle horizontal split lines only - all readable
+      Data: single brand-green #009E73 line ~3.5 px wide, straight segments (no smoothing), climbing from ~1,800 to ~3,130 with visible weekly oscillation; dashed mean line at 2,533 with right-side "mean 2,533" label; small green circle marks the latest point at the right edge with "latest 3,130" label positioned to its left
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — clearly not pure black, has a slight warm tint.
-      Chrome: Same title and axis labels as the light render, now rendered in near-white ink fully legible against the dark surface. Tick labels are softer light-grey (inkSoft on dark), still clearly readable. Horizontal grid lines are dim but visible.
-      Data: Same brand green #009E73 line — color is identical to the light render (only chrome flipped). Line remains clearly distinguishable against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures. Title, axis labels, tick labels, and grid all theme-adapted correctly via INK / INK_SOFT / GRID tokens.
+      Background: warm near-black surface ~#1A1A17, exactly the page bg token
+      Chrome: title, axis labels, and ticks rendered in near-white/light grey - all legible; dim but visible horizontal grid lines; no dark-on-dark failures
+      Data: brand-green #009E73 line identical to light render (only chrome flipped); dashed mean line and "latest 3,130" annotation present in the same positions
+      Legibility verdict: PASS
+
+    Both renders: data colors are identical between light and dark - confirmed. Only chrome (background, text, grid colors) flips. Canvas measured at 3200x1800, landscape gate satisfied.
+
+    Observation noted in weaknesses: the markPoint label position ("left" with distance: 14) creates a visible gap between the "latest 3,130" text and the actual marker dot - the text reads as floating mid-chart rather than tightly anchored to the rightmost point. This is a design/storytelling concern, not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,50 +67,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28pt, axis names 20pt, ticks 16pt — all clearly readable on
-          both light and dark; no dark-on-dark or light-on-light failures.
+        comment: All text readable on both themes; mean and latest annotations legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data overlaps anywhere.
+        comment: Annotations stay clear of the data line and each other
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 3.5px line at 90 datapoints reads cleanly; no markers (correct for
-          this density).
+        comment: 'markPoint circle uses borderColor: t.pageBg which blends into both
+          backgrounds, making the dot low-contrast (especially in dark mode)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green has strong contrast on both surfaces.
+        comment: Single CVD-safe brand green; chrome contrast OK
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Y-axis starts at 0 while data lives in 1800-3300, leaving ~50% of
-          vertical space empty — the trend reads weaker than it should. Canvas dimensions
-          (3200x1800) correct.
+        passed: true
+        comment: Canvas exactly 3200x1800; y-axis tightened to 1,500-3,500 so trend
+          now fills vertical space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Date (2026)'' and ''Daily Unique Visitors'' are descriptive.'
+        comment: Descriptive with explicit year and units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (palette[0]); chrome flips correctly to #FAF8F1
-          / #1A1A17.'
+        comment: 'First series #009E73; both renders theme-correct'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -116,24 +115,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean execution but generic — no custom typography hierarchy or extra
-          polish beyond the style-guide defaults.
+        comment: Clean and on-brand but mostly default echarts feel - no typographic
+          hierarchy beyond title vs ticks
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks tastefully hidden, subtle splitLine grid, dashed mean
+          line is a nice refinement
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Y-axis line hidden, no top/right spines, subtle horizontal grid only
-          — slightly above default thanks to consistent token usage.
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: No focal point, no annotation of latest value or peak, no narrative
-          emphasis — purely a clean default line.
+        comment: 'Mean line + latest callout add storytelling, but position: ''left''
+          with distance: 14 on the markPoint label pushes the text noticeably to the
+          left of the marker - reads as floating in the chart interior rather than
+          tightly anchored to the rightmost point'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,27 +142,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart.
+        comment: Basic line plot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Single line, grid, both axis labels — all present. Minor: spec says
-          ''straight lines'' but implementation uses smooth: 0.25.'
+        passed: true
+        comment: Single line, clear axis labels, subtle grid, no smoothing (matches
+          spec's 'straight lines' wording)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = dates, Y = visitor counts, full range shown.
+        comment: Date -> X, daily unique visitors -> Y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'line-basic · javascript · echarts · anyplot.ai'.
-          No legend needed for single series.
+        comment: Title exactly matches mandated format; no legend needed (single series)
     data_quality:
       score: 14
       max: 15
@@ -170,21 +170,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: false
-        comment: Shows trend + weekly seasonality across 90 days; could include a
-          callout or annotation for richness.
+        passed: true
+        comment: Trend + weekly seasonality + mean reference + latest callout cover
+          most of line-basic; could push further with e.g. period shading
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''Daily Unique Visitors'' is realistic and neutral.'
+        comment: Daily unique visitors over Q1 - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1800-3300 daily uniques is a plausible mid-size site.
+        comment: 1,800-3,300 range realistic for a mid-size site
     code_quality:
       score: 10
       max: 10
@@ -194,36 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; only a small LCG helper which is idiomatic
-          for deterministic JS RNG.
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed seed 42 + LCG.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses the global echarts and window.ANYPLOT_TOKENS as
-          required.
+        comment: Echarts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise and well-structured; no fake interactivity.
+        comment: Clean, idiomatic config object
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness saves plot-light.png/.html and plot-dark.png/.html; snippet
-          correctly avoids filesystem writes.
+        comment: Snippet leaves PNG/HTML emission to the harness
     library_features:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,25 +228,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'echarts.init + setOption, animation: false, transparent backgroundColor,
-          top-level color array, splitLine/axisLine token wiring, finished-event ready
-          signal — all idiomatic.'
+        comment: 'animation: false, transparent bg, top-level color, splitLine/axisLine
+          tokens, finished ready signal, containLabel: true'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Only light use of ECharts-specific features (smooth, emphasis.focus,
-          finished event); no markLine / markPoint / visualMap / areaStyle to highlight
-          what makes ECharts distinctive.
+        passed: true
+        comment: Uses markLine (mean) + markPoint (latest) - both ECharts-specific
+          annotation primitives. Could lift with visualMap or markArea
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - minimal-chrome
-  - grid-styling
