@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
-Library: plotnine | Python 3.13
-Quality: pending | Updated: 2026-06-02
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-02
 """
 
 import os
