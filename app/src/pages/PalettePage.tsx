@@ -10,7 +10,7 @@ import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { SectionHeader } from '../components/SectionHeader';
-import { useAnalytics } from '../hooks';
+import { useAnalytics, useTheme } from '../hooks';
 import { colors, fontSize, typography, textStyle } from '../theme';
 import matrixData from '../data/paletteMatrices.json';
 
@@ -31,7 +31,7 @@ type Swatch = {
   minNorm: number;
   /** Per-hex min ΔE to any other imprint member under worst CVD sim (deuter / protan / tritan). */
   minCvd: number;
-  /** WCAG contrast on cream bg #FAF8F1. */
+  /** WCAG contrast on the cream page bg #F5F3EC (--bg-page). */
   wcagL: number;
   /** WCAG contrast on warm near-black bg #121210. */
   wcagD: number;
@@ -180,19 +180,13 @@ const HISTORY: HistoryEntry[] = [
     id: 'v3',
     title: 'v3 — imprint (current)',
     hexes: ['#009E73', '#C475FD', '#4467A3', '#BD8233', '#AE3030', '#2ABCCD', '#954477', '#99B314'],
-    summary: '8 hues; the first four come from distinct hue families and stay above the 10-ΔE discrimination floor under CVD (worst pair 13.98 at n=4). Semantic red is deferred to slot 4 so it stays a free anchor for bad / loss / error instead of appearing in every 3-series chart. Plus 3 anchors outside the pool (amber, neutral, muted).',
-  },
-  {
-    id: 'v2',
-    title: 'v2 — D1-8 (internal · never shipped)',
-    hexes: ['#009E73', '#AE3030', '#C475FD', '#99B314', '#4467A3', '#2ABCCD', '#954477', '#BD8233'],
-    summary: 'A work-in-progress step on the way to v3 — never released; v1 stayed live throughout. This is where the 8-hex muted set was locked in, chosen over a higher-chroma vivid-8 whose CVD-distance edge was marginal (n=4: 17.3 vs 15.2 ΔE) and below the ~10-ΔE discrimination floor at n=8 anyway, while the muted register reads editorial rather than dashboard. The colours were right but the slot order was not — a pure-CVD-greedy sort put two greens and two purples in the first four slots. That ordering fix is exactly what v3 added, so v2 went straight to v3 without a live release.',
+    summary: 'the shipping palette — v1\'s hues pulled into an even tighter, lower-chroma band so the set reads editorial rather than dashboard and nothing washes out on cream. all six primary hue families are present — red / yellow / green / cyan / blue / purple — which is also why the palette doubles as the site\'s code-syntax coloring — every token type gets its own colourblind-safe hue. the first four slots span four distinct hue families, and semantic red is deferred to slot 4 so it stays a free named anchor for bad / loss / error instead of landing in every 3-series chart. plus 3 anchors outside the pool: amber, neutral, muted.',
   },
   {
     id: 'v1',
     title: 'v1 — variant D ("balanced")',
     hexes: ['#009E73', '#9418DB', '#B71D27', '#16B8F3', '#99B314', '#D359A7', '#BA843E'],
-    summary: 'anyplot\'s first custom palette, and the last one shipped before v3 — v2 never went live, so this is what "anyplot v1 (previous live)" overlays on the wheel above. 7 hues + adaptive neutral. Brand green inherited from Okabe-Ito; the rest from a Petroff-style max-min ΔE search in the muted-paper chroma envelope — separating red from tan and trading the near-yellow for olive-lime so nothing washes out on cream.',
+    summary: 'anyplot\'s first custom palette — the last one live before v3, and what "anyplot v1 (previous live)" overlays on the wheel above. 7 hues + adaptive neutral. Brand green inherited from Okabe-Ito; the rest from a Petroff-style max-min ΔE search in the muted-paper chroma envelope — separating red from tan and trading the near-yellow for olive-lime so nothing washes out on cream.',
     href: 'https://arxiv.org/abs/2107.02270',
     hrefLabel: 'Petroff 2021 (arXiv)',
   },
@@ -200,7 +194,7 @@ const HISTORY: HistoryEntry[] = [
     id: 'v0',
     title: 'v0 — Okabe-Ito',
     hexes: ['#009E73', '#D55E00', '#0072B2', '#CC79A7', '#E69F00', '#56B4E9', '#F0E442'],
-    summary: 'The original colorblind-safe categorical palette (Wong 2011, Nature Methods). 7 hues + adaptive neutral, brand green at slot 0 — inherited unchanged by every version since. Its limits on warm paper: orange and vermillion sit only ~25° apart on the hue wheel, and the yellow washes out on cream — both fixed by the later variants.',
+    summary: 'The original colorblind-safe categorical palette (Wong 2011, Nature Methods). 7 hues + adaptive neutral, brand green at slot 0 — inherited unchanged by every version since. Its limits on warm paper: orange and vermillion sit only ~30° apart on the hue wheel, and the yellow washes out on cream — both fixed by the later variants.',
     href: 'https://jfly.uni-koeln.de/color/',
     hrefLabel: 'jfly.uni-koeln.de',
   },
@@ -640,16 +634,16 @@ function DeltaEMatrix({
   breakdown?: { label: string; m: number[][] }[];
 }) {
   const dot = (hx: string, label: string) => (
-    <Box sx={{ width: 11, height: 11, borderRadius: '50%', bgcolor: hx, mx: 'auto', boxShadow: '0 0 0 1px var(--rule)' }} title={label} />
+    <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: hx, mx: 'auto', boxShadow: '0 0 0 1px var(--rule)' }} title={label} />
   );
   return (
     <Box sx={{ minWidth: 0 }}>
       <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink)', fontWeight: 600, mb: 1 }}>{title}</Box>
       <Box sx={{ overflowX: 'auto' }}>
-        <Box component="table" sx={{ borderCollapse: 'collapse', fontFamily: typography.mono, fontSize: '9px' }}>
+        <Box component="table" sx={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontFamily: typography.mono, fontSize: '13px' }}>
           <Box component="thead">
             <Box component="tr">
-              <Box component="th" sx={{ width: 14 }} />
+              <Box component="th" sx={{ width: 24 }} />
               {MATRIX_HEXES.map((hx, j) => (
                 <Box component="th" key={j} sx={{ p: '2px' }}>{dot(hx, MATRIX_LABELS[j])}</Box>
               ))}
@@ -671,7 +665,7 @@ function DeltaEMatrix({
                       key={j}
                       title={tip}
                       sx={{
-                        width: 21, height: 17, textAlign: 'center',
+                        height: 30, textAlign: 'center',
                         border: '1px solid var(--rule)',
                         bgcolor: deltaECellBg(v),
                         color: i === j ? 'var(--rule)' : v < DE_T_WARN ? 'var(--ink)' : 'var(--ink-muted)',
@@ -705,6 +699,7 @@ const proseColumnSx = { maxWidth: 880, mx: 'auto' };
 
 export function PalettePage() {
   const { trackPageview } = useAnalytics();
+  const { isDark } = useTheme();
   const [lang, setLang] = useState<Lang>('python');
   const [oklch, setOklch] = useState(false);
   const [compareId, setCompareId] = useState<string | null>(null);
@@ -799,7 +794,7 @@ export function PalettePage() {
                     overlay={wheelOpen ? overlayDots : undefined}
                   />
                 </Box>
-                <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: wheelOpen ? 'var(--ink-muted)' : colors.primary }}>
+                <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: wheelOpen ? 'var(--ink-muted)' : colors.primary }}>
                   {wheelOpen ? 'click to close' : 'compare ▸'}
                 </Box>
               </Box>
@@ -808,7 +803,7 @@ export function PalettePage() {
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={textStyle}>
                   <strong>imprint</strong> is anyplot&apos;s categorical palette — 8 hues plus 3 semantic
-                  anchors. low-chroma and warm-tinted for cream paper, validated against deuteranopia /
+                  anchors. low-chroma and warm-tinted for cream paper, the same hues on dark, validated against deuteranopia /
                   protanopia / tritanopia. built to let the data speak.
                 </Box>
 
@@ -853,7 +848,7 @@ export function PalettePage() {
                         );
                       })}
                     </Box>
-                    <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', mt: 1.75, lineHeight: 1.5 }}>
+                    <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', mt: 1.75, lineHeight: 1.5 }}>
                       hue counter-clockwise from 3 o&apos;clock · chroma = distance from centre · ★ = brand · shaded band = imprint&apos;s low-chroma corridor
                       {compareId && (
                         <Box component="span"> · rings = {COMPARISONS.find((c) => c.id === compareId)?.name}</Box>
@@ -871,7 +866,7 @@ export function PalettePage() {
           <SectionHeader prompt="❯" title={<em>the 8 categorical hues</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mt: 1, mb: 2, flexWrap: 'wrap', gap: 1 }}>
-              <Box sx={{ fontFamily: typography.mono, fontSize: fontSize.base, color: 'var(--ink-muted)' }}>
+              <Box sx={{ fontFamily: typography.mono, fontSize: fontSize.base, fontWeight: 300, color: 'var(--ink-muted)' }}>
                 sort:
                 {(['imprint', 'cvd'] as const).map((s) => (
                   <Box
@@ -881,7 +876,7 @@ export function PalettePage() {
                     onClick={() => setSort(s)}
                     sx={{
                       background: 'none', border: 'none', padding: 0, ml: 1,
-                      fontFamily: typography.mono, fontSize: fontSize.base,
+                      fontFamily: typography.mono, fontSize: fontSize.base, fontWeight: 300,
                       color: sort === s ? colors.primary : 'var(--ink-soft)',
                       textDecoration: 'underline',
                       textDecorationColor: sort === s ? colors.primary : 'var(--rule)',
@@ -895,10 +890,10 @@ export function PalettePage() {
             </Box>
             {sort === 'cvd' && (
               <Box sx={{ fontFamily: typography.mono, lineHeight: 1.55, mb: 2, p: 2, borderLeft: `2px solid ${colors.primary}`, backgroundColor: 'var(--bg-surface)' }}>
-                <Box sx={{ fontSize: '12px', color: 'var(--ink)', fontWeight: 600, mb: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <Box sx={{ fontSize: '11px', color: 'var(--ink)', fontWeight: 600, mb: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   why use CVD-optimal sort?
                 </Box>
-                <Box sx={{ fontSize: '12px', color: 'var(--ink-soft)', mb: 1.5 }}>
+                <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', mb: 1.5 }}>
                   this ordering picks each next slot by maximising ΔE under the worst of deuteranopia /
                   protanopia / tritanopia simulation against the already-placed set. it&apos;s the best choice
                   when colour alone has to carry the categorical encoding for users with red-green colour
@@ -940,14 +935,14 @@ export function PalettePage() {
                   </Box>
                 </Box>
 
-                <Box sx={{ fontSize: '12px', color: 'var(--ink-soft)', mt: 2 }}>
+                <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', mt: 2 }}>
                   <Box component="strong" sx={{ color: 'var(--ink)' }}>trade-off:</Box> the first 4 slots end
                   up with two greens (brand at slot 0 + lime at slot 2) and two purples (lavender at slot 1 +
                   rose at slot 3) side by side — the eye loses the &ldquo;four distinct hue families&rdquo;
-                  cue that imprint default gives you. n=2..6 gains 0.71–5.83 ΔE under CVD; n=7..8 are
-                  identical because both sortings ship the same 8 hexes.
+                  cue that imprint default gives you. it gains +1.22–5.83 ΔE under CVD at n=3..5 (most at
+                  n=4); n=2 and n=6..8 are identical, since both sortings ship the same 8 hexes.
                 </Box>
-                <Box sx={{ fontSize: '12px', color: 'var(--ink-muted)', mt: 1 }}>
+                <Box sx={{ fontSize: '13px', color: 'var(--ink-muted)', mt: 1 }}>
                   <Box component="strong" sx={{ color: 'var(--ink)' }}>when to switch:</Box> CVD-first
                   audience + small-n (n ≤ 4) + colour is the only encoding. otherwise the imprint default is
                   the better balance — and at n = 7..8 you should add a marker shape or linestyle either way.
@@ -1014,7 +1009,7 @@ export function PalettePage() {
                             transition: 'transform 0.15s',
                           }}
                         >
-                          <Box sx={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Box>
+                          <Box sx={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Box>
                           <Box sx={{ fontSize: '11px', opacity: 0.85 }}>{copied ? 'copied ✓' : s.hex}</Box>
                         </Box>
                       </Tooltip>
@@ -1022,10 +1017,10 @@ export function PalettePage() {
                           contrast moved into the swatch tooltip (and remain in
                           full in the ΔE matrix + WCAG table below). */}
                       <Box sx={{
-                        fontFamily: typography.mono, fontSize: fontSize.base,
-                        mt: 1, lineHeight: 1.6, color: 'var(--ink-soft)',
+                        fontFamily: typography.mono, fontSize: '11px', fontWeight: 300,
+                        mt: 1, lineHeight: 1.5, color: 'var(--ink-soft)',
                       }}>
-                        <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
+                        <Box component="span" sx={{ color: 'var(--ink)' }}>slot {i}{i === 0 ? ' ★' : ''}</Box>
                         {' · '}{s.role}
                       </Box>
                     </Box>
@@ -1062,7 +1057,7 @@ export function PalettePage() {
                             flex: 1, border: 'none', p: 0, pb: 0.75,
                             bgcolor: hx, color: textOn(hx),
                             display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                            fontFamily: typography.mono, fontSize: '10px',
+                            fontFamily: typography.mono, fontSize: '11px',
                             cursor: 'pointer',
                             transition: 'filter 0.15s',
                             '&:hover': { filter: 'brightness(1.06)' },
@@ -1080,7 +1075,7 @@ export function PalettePage() {
                     <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', mb: 0.75 }}>
                       palette.{a.key}{a.hexDark ? ' — adaptive' : ''}
                     </Box>
-                    <Box sx={{ fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+                    <Box sx={{ fontSize: '13px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>
                       {a.hint}
                     </Box>
                   </Box>
@@ -1101,10 +1096,10 @@ export function PalettePage() {
               {/* Sequential */}
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '11px', fontWeight: 600, color: 'var(--ink)' }}>
                     imprint_seq
                   </Box>
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
                     single-polarity · density / magnitude
                   </Box>
                 </Box>
@@ -1114,7 +1109,7 @@ export function PalettePage() {
                   background: 'linear-gradient(to right, #009E73, #4467A3)',
                   boxShadow: '0 0 0 1px var(--rule)',
                 }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
                   <span>#009E73 brand-green</span>
                   <span>#4467A3 blue</span>
                 </Box>
@@ -1122,10 +1117,10 @@ export function PalettePage() {
               {/* Diverging */}
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '11px', fontWeight: 600, color: 'var(--ink)' }}>
                     imprint_div
                   </Box>
-                  <Box sx={{ fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                  <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
                     diverging · correlations / signed deviations
                   </Box>
                 </Box>
@@ -1135,14 +1130,14 @@ export function PalettePage() {
                   background: 'linear-gradient(to right, #AE3030, var(--bg-surface), #4467A3)',
                   boxShadow: '0 0 0 1px var(--rule)',
                 }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
                   <span>#AE3030 red</span>
                   <span style={{ color: 'var(--ink-muted)' }}>theme-adaptive midpoint</span>
                   <span>#4467A3 blue</span>
                 </Box>
               </Box>
             </Box>
-            <Box sx={{ fontSize: '11px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
+            <Box sx={{ fontSize: '13px', color: 'var(--ink-muted)', mt: 2, fontFamily: typography.mono, lineHeight: 1.55 }}>
               the diverging midpoint flips per theme — <code>#FAF8F1</code> on cream bg / <code>#1A1A17</code>
               on warm-near-black — so the zero point reads as part of the page rather than as a grey blob.
             </Box>
@@ -1185,9 +1180,10 @@ export function PalettePage() {
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               muted palettes share a known limit: the lighter members carry their distinguishability through
-              chroma, not L-spread. On cream bg <code>#FAF8F1</code>, five categorical hues + amber fall under
+              chroma, not L-spread. On cream bg <code>#F5F3EC</code>, four categorical hues + amber fall under
               WCAG 2.1 SC 1.4.11&apos;s 3:1 minimum. The industry-standard fix is a <strong>1px ink-color
-              stroke</strong> on affected series — but it&apos;s a renderer judgment call, not a hard rule.
+              stroke</strong> on affected series — but it&apos;s a renderer judgment call, not a hard rule. the
+              swatches below carry that stroke wherever a series fails in the current theme.
             </Box>
             <Box sx={{ mt: 2, overflowX: 'auto' }}>
               <Box component="table" sx={{
@@ -1205,10 +1201,16 @@ export function PalettePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {WCAG_TABLE.map((row) => (
+                  {WCAG_TABLE.map((row) => {
+                    // Live demo of the intro's fix: in the current theme the failing (✗) series get
+                    // the 1px ink-color stroke on their swatch. The affected set flips per theme (light
+                    // hues fail on cream, dark hues fail on dark) and --ink adapts, so each swatch shows
+                    // the fix exactly as it would render.
+                    const affected = isDark ? row.dark < 3 : row.light < 3;
+                    return (
                     <tr key={row.hex}>
                       <td>
-                        <Box component="span" sx={{ display: 'inline-block', width: 12, height: 12, borderRadius: 2, bgcolor: row.hex, mr: 1, verticalAlign: 'middle', border: '1px solid var(--rule)' }} />
+                        <Box component="span" sx={{ display: 'inline-block', width: 16, height: 16, borderRadius: 2, bgcolor: row.hex, mr: 1, verticalAlign: 'middle', border: affected ? '1px solid var(--ink)' : '1px solid var(--rule)' }} />
                         {row.hex}
                       </td>
                       <td style={{ color: 'var(--ink-muted)' }}>{row.name}</td>
@@ -1219,7 +1221,8 @@ export function PalettePage() {
                         {row.dark.toFixed(2)}:1 {row.dark < 3 ? '✗' : '✓'}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </Box>
             </Box>
@@ -1231,13 +1234,13 @@ export function PalettePage() {
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>ΔE colour distance</em>} />
           <Box sx={proseColumnSx}>
-            <Box sx={{ ...textStyle, fontSize: '13px' }}>
+            <Box sx={textStyle}>
               the numbers behind each hue&apos;s <code>norm</code> / <code>cvd</code> readout, in full — pairwise
               ΔE in CAM02-UCS for the 8 hues plus the amber and neutral anchors. lower = closer = harder to
               tell apart. the worst-CVD grid takes the lowest of the deuteranopia / protanopia / tritanopia
               simulations per pair; hover any cell for the breakdown.
             </Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3, mt: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 6, mt: 2 }}>
               <DeltaEMatrix title="normal vision" matrix={matrixData.matrices.normal} />
               <DeltaEMatrix
                 title="worst of deuter / protan / tritan"
@@ -1249,24 +1252,26 @@ export function PalettePage() {
                 ]}
               />
             </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 2, fontFamily: typography.mono, fontSize: '10px', color: 'var(--ink-muted)', alignItems: 'center' }}>
-              {DE_LEGEND.map((l) => (
-                <Box key={l.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 12, height: 12, bgcolor: l.bg, border: '1px solid var(--rule)' }} />
-                  {l.label}
-                </Box>
-              ))}
-              <Box component="span" sx={{ ml: 'auto' }}>thresholds: Petroff 2021 · amber + neutral (light-theme ink) sit outside the categorical pool</Box>
+            <Box sx={{ mt: 2, fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+                {DE_LEGEND.map((l) => (
+                  <Box key={l.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 13, height: 13, bgcolor: l.bg, border: '1px solid var(--rule)' }} />
+                    {l.label}
+                  </Box>
+                ))}
+              </Box>
+              <Box sx={{ mt: 0.75 }}>thresholds: Petroff 2021 · amber + neutral (light-theme ink) sit outside the categorical pool</Box>
             </Box>
           </Box>
         </Box>
 
         {/* 7. HISTORY */}
         <Box component="section" sx={sectionSx}>
-          <SectionHeader prompt="❯" title={<em>palette history</em>} />
+          <SectionHeader prompt="❯" title={<em>lineage</em>} />
           <Box sx={proseColumnSx}>
-              <Box sx={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.6, mb: 2.5 }}>
-                four versions, each fixing a concrete failure of the last. the interactive hue–chroma
+              <Box sx={{ ...textStyle, mb: 2.5 }}>
+                three versions, each fixing a concrete failure of the last. the interactive hue–chroma
                 wheel at the top of the page overlays any of these against imprint.
               </Box>
               <Box sx={{ fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', mb: 1.5 }}>
@@ -1303,7 +1308,7 @@ export function PalettePage() {
                         <Box key={hx} sx={{ flex: 1, height: 32, bgcolor: hx }} title={hx} />
                       ))}
                     </Box>
-                    <Box sx={{ fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.55 }}>
+                    <Box sx={{ fontSize: '13px', color: 'var(--ink-muted)', lineHeight: 1.55 }}>
                       {entry.summary}
                     </Box>
                   </Box>
@@ -1311,18 +1316,18 @@ export function PalettePage() {
               </Box>
 
               {/* Credit / inspiration + method references */}
-              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid var(--rule)', fontFamily: typography.mono, fontSize: '11px', color: 'var(--ink-muted)', lineHeight: 1.7 }}>
-                the candidate-palette search drew on Anselm Hahn&apos;s{' '}
+              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid var(--rule)', fontFamily: typography.mono, fontSize: '13px', color: 'var(--ink-muted)', lineHeight: 1.7 }}>
+                colour-harmony and chroma input from Anselm Hahn, whose eye for colour shows in his{' '}
                 <Box
                   component="a"
-                  href="https://github.com/Anselmoo/dracula-palette"
+                  href="https://anselmoo.github.io/dracula-palette/"
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{ color: 'var(--ink-soft)', textDecoration: 'underline', textDecorationColor: 'var(--rule)', '&:hover': { color: colors.primary, textDecorationColor: colors.primary } }}
                 >
                   dracula-palette
                 </Box>{' '}
-                colour-harmony generator. perceptual distances in CAM02-UCS (Petroff 2021); CVD via Machado et al. 2009.
+                generator. perceptual distances in CAM02-UCS (Petroff 2021); CVD via Machado et al. 2009.
               </Box>
           </Box>
         </Box>
