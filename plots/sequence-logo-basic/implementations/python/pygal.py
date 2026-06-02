@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-06-02
+Quality: 85/100 | Updated: 2026-06-02
 """
 
 import os

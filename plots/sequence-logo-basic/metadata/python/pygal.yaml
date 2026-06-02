@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:25:16Z'
-updated: '2026-06-02T12:04:07Z'
+updated: '2026-06-02T12:23:11Z'
 generated_by: claude-sonnet
 workflow_run: 26817619705
 issue: 4421
@@ -12,184 +12,187 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Correct information-content calculation (Shannon entropy formula) producing biologically
-    accurate IC values for the TATA-box motif
-  - 'Well-documented semantic exception: DNA color convention (A=green, C=blue, G=ochre/orange,
-    T=red) mapped precisely to Imprint palette members with inline code comment'
-  - Clean threshold logic (height >= 0.08) suppressing labels on insignificant bar
-    segments — avoids clutter at low-IC positions
-  - All Imprint palette semantic anchors and chrome tokens correctly applied; both
-    light and dark theme chrome elements adapt properly
-  - Elegant lambda formatter pattern for per-data-point conditional letter display
-    in tooltips
+  - Biologically accurate TATA-box motif with correct IC calculations and meaningful
+    conservation pattern
+  - Semantic DNA color convention correctly mapped to Imprint palette members (A=#009E73,
+    C=#4467A3, G=#BD8233, T=#AE3030)
+  - TATA core amber cap adds genuine data storytelling — visually highlights the conserved
+    binding site positions 2–7
+  - All font sizes explicitly set with theme-adaptive chrome; both light and dark
+    renders fully readable
+  - Clean deterministic data, no random seeding needed; KISS structure maintained
+    throughout
+  - Interactive HTML export uses pygal distinctive feature with per-value formatters
+    for conditional letter display
   weaknesses:
-  - 'Value labels (T, A, G) printed inside bars use dark/black monospace text in both
-    light and dark themes — in the dark render, these should use a lighter color (e.g.,
-    #F0EFE8) for better aesthetic consistency; the print_values color should be derived
-    from INK token per-theme'
-  - Stacking order is fixed by global average frequency (ascending) rather than per-position
-    frequency — spec requires 'most frequent on top' which implies per-position reordering;
-    at position 2 (T dominant), A (top slot with lowest global avg) sits above T in
-    the stack rather than T being at the visible apex
-  - No visual emphasis differentiating the conserved TATA core (positions 2-7) beyond
-    asterisks and height — a contrasting background stripe, annotation, or distinct
-    top-cap color on conserved bars would improve storytelling
-  - Letter labels are plain text via print_values, not scaled glyphs filling their
-    allocated segment height; using a bolder monospace font or larger value_font_size
-    scaled to segment height would bring this closer to the sequence logo ideal
+  - Letters not rendered as scaled glyphs filling bar height — spec explicitly requires
+    scaled glyphs, not plain text labels. Per-value formatter shows uniform-size letters
+    regardless of bar segment height.
+  - Stack ordering is a global IC-weighted approximation, not per-position frequency
+    ordering as the spec requires. True sequence logos reorder nucleotides at each
+    position by local frequency.
+  - 'DE-01/DE-02: Visual design is well-configured but still looks like a library
+    default — rounded bars and opacity tuning add some polish but the overall look
+    remains a styled stacked bar chart rather than an iconic sequence logo aesthetic.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "sequence-logo-basic · python · pygal · anyplot.ai" in dark text, clearly visible. Y-axis label "Information content (bits)" and x-axis label "Position (* = conserved, IC > 0.5 bits)" readable. Tick labels (0, 0.3, 0.7, 1.0, 1.4) and position numbers (1-10) all clearly readable in dark text.
-      Data: 4 nucleotide colors — A=#009E73 (brand green), C=#4467A3 (blue), G=#BD8233 (ochre), T=#AE3030 (matte red). Bars stacked correctly; conserved positions (2-8) are taller, non-conserved (1, 9, 10) near-zero. Value labels T, A, G displayed in dark monospace text inside dominant bar segments.
-      Legibility verdict: PASS
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface.
+      Chrome: Title "sequence-logo-basic · python · pygal · anyplot.ai" is dark text, clearly readable at top. Y-axis label "Information content (bits)" and X-axis label "Position (* = conserved TATA core, IC > 0.5 bits)" both clearly visible in dark ink. Tick labels (0, 0.3, 0.7, 1.1, 1.5 on Y; 1 through 10 on X) sharp and legible. Subtle dashed Y-axis grid lines.
+      Data: Stacked bars for 10 positions. Conserved TATA-box core at positions 2–7 shows tall bars (~1.1–1.15 bits IC). Non-conserved positions 1, 9, 10 show near-zero bars. Nucleotide colors: A=brand green (#009E73), C=blue (#4467A3), G=ochre (#BD8233), T=matte red (#AE3030). Amber (#DDCC77) TATA core caps sit above conserved bars. Letter labels (A, T, G) visible inside large bar segments. Legend at bottom: C, G, T, A, ▲ TATA core.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, tick labels, and legend text all render in light/cream color — clearly readable against dark background. No dark-on-dark failures for chrome elements.
-      Data: Bar colors identical to light render (A=green, C=blue, G=ochre, T=red) — confirmed Imprint palette semantic exception maintained across themes. Value labels (T, A, G) inside bars appear in dark/black monospace text — suboptimal for dark theme aesthetic but readable since bars provide color contrast. Grid lines subtle and visible.
-      Legibility verdict: PASS (minor caveat: in-bar value labels use dark text in dark theme, readable on colored bars but not theme-adaptive)
+      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface.
+      Chrome: Title, axis labels, and tick labels all rendered in light cream text, clearly visible against near-black background. Grid lines subtle. No dark-on-dark failures detected.
+      Data: Colors identical to light render — A=green, C=blue, G=ochre, T=red, TATA caps=amber. All bar segments, letter labels, and amber caps visually identical to light render. Only chrome (background, text color) has flipped.
+      Legibility verdict: PASS — all text elements clearly readable against warm near-black background. No dark-on-dark issues observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set and proportionate; minor: in-bar value
-          labels use dark text in both themes rather than adapting to theme-adaptive
-          INK token'
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44, value=48). Well-proportioned at canvas size, readable in both
+          themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; threshold logic (height>=0.08) correctly
-          suppresses labels on tiny bar segments
+        comment: No overlapping text elements in either render. Letter labels inside
+          bars are spaced correctly.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; low-IC positions (1, 9, 10) render near-invisible
-          bars which is data-accurate
+        comment: Bars clearly visible. TATA core amber caps visible above conserved
+          positions. Letter labels appear for segments >= 0.08 bits.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct CVD-safe Imprint palette colors; no red-green sole
-          signaling
+        comment: Imprint palette members used for DNA colors. CVD-safe. Colors distinguishable
+          by position context.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; balanced margins; legend at bottom with
-          4 columns; no clipping
+        comment: Plot fills canvas well, balanced margins, legend at bottom cleanly
+          placed. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Information content (bits)''; X: ''Position (* = conserved,
-          IC > 0.5 bits)''; both descriptive'
+        comment: 'Y: ''Information content (bits)'', X: ''Position (* = conserved
+          TATA core, IC > 0.5 bits)'' — both descriptive with context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: All Imprint palette members via documented semantic exception for
-          DNA convention; correct backgrounds; chrome theme-adaptive
+        comment: 'Valid semantic exception: DNA nucleotide bioinformatics convention
+          mapped to Imprint palette members (A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030).
+          Amber TATA cap from anchors. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: semantic color mapping documented,
-          rounded_bars, opacity=0.92, biologically accurate motif; not at strong design
-          level'
+        comment: Well-configured implementation with thoughtful semantic colors and
+          TATA core caps. Looks like a styled stacked bar chart rather than a truly
+          distinctive sequence logo aesthetic.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Rounded bars, show_x_guides=False, opacity, legend_at_bottom; still
-          largely pygal defaults for spine/grid
+        comment: Rounded bars, Y-grid only, opacity=0.92 tuning, theme-adaptive chrome
+          all show refinement above defaults. Pygal retains full frame by default
+          (no spine removal).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Conserved positions marked with asterisks; IC heights create natural
-          visual hierarchy for TATA core; no visual emphasis beyond asterisks
+        comment: Amber TATA core caps create genuine visual hierarchy highlighting
+          the biologically conserved binding site. Asterisk markers on x-axis reinforce
+          the focal point. Clear viewer guidance to the TATA core.
     spec_compliance:
-      score: 13
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Stacked bar is correct approximation for pygal; spec requires letter-shaped
-          glyphs which pygal cannot natively render
+        comment: 'Correct base type (stacked bars with IC-scaled heights) but lacks
+          the defining feature of sequence logos: letters rendered as scaled glyphs
+          filling bar height. Spec explicitly says ''not as plain text''.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: 'IC scaling, DNA colors, position axes all correct; deducted: global
-          frequency sort not per-position, and text labels not scaled glyphs'
+        comment: 'IC calculation correct, DNA standard colors correct, correct axes.
+          Missing: (1) scaled letter glyphs filling bar height, (2) per-position frequency-ordered
+          stacking (uses global IC-weighted approximation instead).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position 1-10, Y=information content in bits; all positions shown
-          correctly
+        comment: X=position numbers, Y=information content in bits. Heights scaled
+          by freq × IC. All 10 positions shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sequence-logo-basic · python · pygal · anyplot.ai'; legend
-          shows C, G, T, A with correct colors
+        comment: Title 'sequence-logo-basic · python · pygal · anyplot.ai' is correct
+          format. Legend labels C, G, T, A, ▲ TATA core are meaningful and correct.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows IC variation, nucleotide composition, conserved vs non-conserved
-          positions; only DNA mode shown
+        comment: Full range of IC values shown (near-zero at positions 1,9,10; high
+          at 2–7). Variable dominant nucleotides across positions. Both conserved
+          and variable positions represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'TATA-box promoter element: canonical, biologically significant,
-          neutral scientific context'
+        comment: TATA-box promoter element is a real, well-known transcription factor
+          binding site. Biologically neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC values 0-1.16 bits biologically accurate for TATA-box; y-axis
-          to 1.4 with appropriate headroom
+        comment: IC values 0–1.15 bits (max 2 bits for DNA). Frequencies sum to 1
+          per position. TATA-box pattern (TATAAAA) biologically realistic.
     code_quality:
       score: 10
       max: 10
@@ -199,33 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports -> theme tokens -> data -> IC calc ->
-          sort -> chart -> save'
+        comment: Imports → data → IC computation → stacked data build → plot → save.
+          No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded frequency data
+        comment: Fully deterministic data (hardcoded frequency table). No random sampling
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, Style — all used
+        comment: os, sys, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Lambda formatter for conditional label display is elegant; appropriate
-          complexity
+        comment: Lambda formatters for conditional letter display are elegant. IC-weighted
+          sort is a well-reasoned workaround for pygal's fixed stacking order. Appropriate
+          complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
       score: 7
       max: 10
@@ -235,22 +240,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good: Style object for all theme tokens, StackedBar, custom formatters
-          in add() dicts, legend_at_bottom_columns'
+        comment: Uses pygal.StackedBar with x_labels, per-series add(), Style object
+          with all tokens. Per-value formatter lambda for conditional letter display
+          is idiomatic pygal.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML via tooltip_fancy_mode with per-data-point custom
-          tooltips, print_values with conditional display, rounded_bars; above generic
-          but not pushing pygal's most distinctive capabilities
-  verdict: REJECTED
+        comment: Interactive HTML export (render_to_file), per-value formatters with
+          conditional logic, tooltip_fancy_mode=True, rounded_bars=4 — all pygal-specific
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
