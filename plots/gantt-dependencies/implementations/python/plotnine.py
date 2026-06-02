@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-02
+Quality: 89/100 | Updated: 2026-06-02 (repaired)
 """
 
 import os
@@ -15,10 +15,11 @@ from plotnine import (
     element_rect,
     element_text,
     geom_point,
+    geom_rect,
     geom_segment,
     ggplot,
     labs,
-    scale_color_manual,
+    scale_fill_manual,
     scale_x_datetime,
     scale_y_continuous,
     theme,
@@ -162,15 +163,19 @@ group_data = [
         "start": df[df["group"] == grp]["start"].min(),
         "end": df[df["group"] == grp]["end"].max(),
         "group": grp,
+        "ymin": group_positions[grp] - 0.42,
+        "ymax": group_positions[grp] + 0.42,
     }
     for grp in group_order
 ]
 
-# Task bars split by critical path membership
+# Task bars split by critical path membership (geom_rect requires ymin/ymax)
 critical_task_data = []
 normal_task_data = []
 for _, row in df.iterrows():
-    entry = {"y": task_positions[row["task"]], "start": row["start"], "end": row["end"], "group": row["group"]}
+    y = task_positions[row["task"]]
+    hw = 0.34 if row["task"] in critical_path_tasks else 0.26
+    entry = {"y": y, "start": row["start"], "end": row["end"], "group": row["group"], "ymin": y - hw, "ymax": y + hw}
     (critical_task_data if row["task"] in critical_path_tasks else normal_task_data).append(entry)
 
 phase_order = pd.CategoricalDtype(categories=group_order, ordered=True)
@@ -261,27 +266,24 @@ title_fontsize = max(round(12 * 67 / n) if n > 67 else 12, 8)
 plot = (
     ggplot()
     # Non-critical task bars (subdued)
-    + geom_segment(
+    + geom_rect(
         data=normal_df,
-        mapping=aes(x="start", xend="end", y="y", yend="y", color="group"),
-        size=2,
-        lineend="butt",
+        mapping=aes(xmin="start", xmax="end", ymin="ymin", ymax="ymax", fill="group"),
+        color=None,
         alpha=0.5,
     )
-    # Critical path task bars (prominent)
-    + geom_segment(
+    # Critical path task bars (prominent, slightly taller)
+    + geom_rect(
         data=critical_df,
-        mapping=aes(x="start", xend="end", y="y", yend="y", color="group"),
-        size=2.5,
-        lineend="butt",
+        mapping=aes(xmin="start", xmax="end", ymin="ymin", ymax="ymax", fill="group"),
+        color=None,
         alpha=1.0,
     )
-    # Group aggregate bars (boldest — slightly reduced to ease vertical crowding)
-    + geom_segment(
+    # Group aggregate bars (tallest — span each phase)
+    + geom_rect(
         data=groups_df,
-        mapping=aes(x="start", xend="end", y="y", yend="y", color="group"),
-        size=3.5,
-        lineend="butt",
+        mapping=aes(xmin="start", xmax="end", ymin="ymin", ymax="ymax", fill="group"),
+        color=None,
         alpha=0.85,
     )
     # Non-critical connectors
@@ -333,7 +335,7 @@ plot = (
         data=milestones, mapping=aes(x="x", y="y"), shape="D", size=2, color="#AE3030", fill="#AE3030", alpha=0.9
     )
     # Scales
-    + scale_color_manual(values=group_colors, name="Project Phase", limits=group_order)
+    + scale_fill_manual(values=group_colors, name="Project Phase", limits=group_order)
     + scale_y_continuous(breaks=y_breaks, labels=y_labels_list, trans="reverse")
     + scale_x_datetime(
         date_breaks="1 week", date_labels="%b %d", limits=(datetime(2023, 12, 29), datetime(2024, 3, 22))
@@ -352,12 +354,12 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         plot_title=element_text(size=title_fontsize, weight="bold", color=INK, margin={"b": 3}),
-        plot_subtitle=element_text(size=7, color=INK_SOFT, margin={"b": 5}),
+        plot_subtitle=element_text(size=8, color=INK_SOFT, margin={"b": 5}),
         axis_title_x=element_text(size=10, color=INK),
-        axis_text_x=element_text(size=7, color=INK_SOFT, rotation=45, ha="right"),
-        axis_text_y=element_text(size=7, color=INK_SOFT, ha="right"),
+        axis_text_x=element_text(size=8, color=INK_SOFT, rotation=45, ha="right"),
+        axis_text_y=element_text(size=8, color=INK_SOFT, ha="right"),
         legend_title=element_text(size=8, weight="bold", color=INK),
-        legend_text=element_text(size=7, color=INK_SOFT),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_key_size=8,
