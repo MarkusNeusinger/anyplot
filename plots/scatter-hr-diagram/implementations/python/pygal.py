@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-06-02
 """
 
 import os
@@ -24,15 +23,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — spectral colors remapped to Imprint for colorblind safety
-# Temperature order hot→cool, matching astrophysical blue→red convention.
-# Semantic exception: astrophysical spectral colors are strong domain anchors.
-# Key fix: O/B (blue #4467A3) and A (cyan #2ABCCD) are clearly distinct under CVD,
-# replacing the previous blue-purple pair that was close for some color deficiencies.
+# Imprint categorical palette — first series must be brand green per Imprint rule.
+# F/G Stars: lavender replaces amber #DDCC77 (reserved for warning/caution only).
 SPECTRAL_COLORS = (
-    "#4467A3",  # O/B Stars — Imprint blue (hot, blue-white)
-    "#2ABCCD",  # A Stars — Imprint cyan (distinctly separate from O/B blue under CVD)
-    "#DDCC77",  # F/G Stars — Imprint amber (yellow-white, solar-type)
+    "#009E73",  # O/B Stars — brand green (Imprint first-series rule)
+    "#2ABCCD",  # A Stars — Imprint cyan
+    "#C475FD",  # F/G Stars — Imprint lavender (replaces out-of-pool #DDCC77)
     "#BD8233",  # K Stars — Imprint ochre (orange-cool)
     "#AE3030",  # M Stars — Imprint matte red (cool, red)
     INK,  # Sun ☉ — theme-adaptive ink (distinct reference marker)
@@ -157,6 +153,15 @@ chart = pygal.XY(
             f" fill:{INK} !important; paint-order:stroke fill;"
             f" stroke:{PAGE_BG} !important; stroke-width:5px !important;}}"
         ),
+        # Soften grid: solid thin lines, low opacity; remove full box frame.
+        (
+            "inline:"
+            ".guide{stroke-dasharray:none !important;"
+            " stroke-width:1.5px !important;"
+            " stroke-opacity:0.18 !important;}"
+            ".background,.chart-background"
+            "{stroke:none !important;}"
+        ),
     ],
     js=[],
 )
@@ -178,7 +183,7 @@ chart.add(
 # Region labels placed in low-density zones to minimise data overlap
 region_labels = [
     ("Supergiants", -np.log10(8000), 5.8),
-    ("Main Sequence", -np.log10(18000), 3.8),
+    ("Main Sequence", -np.log10(6000), 2.5),
     ("Red Giants", -np.log10(4000), 2.6),
     ("White Dwarfs", -np.log10(15000), -2.8),
 ]
