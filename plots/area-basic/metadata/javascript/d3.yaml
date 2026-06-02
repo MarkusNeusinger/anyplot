@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: area-basic
+created: '2026-06-02T23:28:16Z'
+updated: '2026-06-02T23:32:55Z'
+generated_by: claude-opus
+workflow_run: 26853954144
+issue: 711
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Idiomatic D3: scaleTime + scaleLinear, axisBottom/Left with d3.timeWeek.every(2)
+    and d3.format(''~s''), area + line generators with curveMonotoneX, linearGradient
+    defs — all canonical D3 patterns.'
+  - 'Beautiful theme-adaptive vertical gradient fill (0.55 -> 0.05 opacity) on the
+    brand green #009E73 that fades naturally into both the light #FAF8F1 and dark
+    #1A1A17 backgrounds.'
+  - 'Realistic, well-modelled data: 90 daily visitor points with linear growth trend,
+    weekend dips, and seeded LCG noise — visually communicates real-world traffic
+    dynamics.'
+  - 'Chrome correctly threaded via window.ANYPLOT_TOKENS: inkSoft for axis text/domain,
+    ink for title and axis labels, grid token for gridlines — both renders pass the
+    dark-on-dark / light-on-light legibility checks.'
+  - 'Polished refinement: y-axis-only subtle gridlines, tick lines removed, generous
+    margins (top:110, bottom:90, left:110, right:80), line overlay on top of the area
+    for definition.'
+  weaknesses:
+  - 'Data storytelling is functional but understated: no annotation, end-point marker,
+    or visual emphasis on the clear upward trend or peak value — adding a subtle highlight
+    (e.g. final-value label, peak annotation, or a soft reference line for the trend)
+    would lift DE-03.'
+  - Title fontsize 26px on a 3200x1800 canvas reads a touch small relative to the
+    canvas; bumping to ~32-36px would give the headline more presence and improve
+    hierarchy without affecting layout.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct Imprint light surface, not pure white.
+      Chrome: Bold dark title "area-basic · javascript · d3 · anyplot.ai" sits cleanly above the plot. X-axis tick labels (Mar 08, Mar 22, Apr 05, Apr 19, May 03, May 17) and y-axis ticks (0, 2k, 4k, 6k, 8k, 10k) are rendered in soft dark ink, all clearly readable. Axis titles "Date (2026)" and "Daily visitors" (rotated -90deg) are in slightly heavier dark ink. Horizontal gridlines are subtle but visible.
+      Data: Area chart in brand green #009E73 with a smooth monotone-X curve, filled with a vertical linear gradient that goes from ~55% opacity green at the line down to ~5% opacity green near the x-axis. The line stroke on top of the area is solid #009E73. Shape shows daily visitors rising from ~3k in early March to ~8k+ by late May with weekly weekend dips clearly visible.
+      Legibility verdict: PASS — all chrome readable against the warm off-white surface; no text on data overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title rendered in light ink (off-white), clearly readable. X-axis tick labels, y-axis tick labels, and both axis titles are in soft light ink — no dark-on-dark failure observed. Horizontal gridlines are subtle but visible against the dark background.
+      Data: Area uses the identical brand green #009E73 — colors are unchanged from the light render. The gradient now fades from ~55% opacity green at the line into the near-black background near the x-axis, which produces an attractive depth effect symmetric to the light variant. The line stroke on top reads as a bright teal accent that pops against the dark surface.
+      Legibility verdict: PASS — chrome correctly flipped, all text readable, no dark-on-dark failures.
+
+    Both renders pass the theme-readability checks (5c). Data colors identical between themes; only chrome (background, ink, grid) flips, exactly as required. Canvas dimensions are correct (no /tmp/anyplot-canvas-gate.txt present).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Ticks 16px, axis labels 18px, title 26px — all readable against both
+          themes; no dark-on-dark or light-on-light.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; tick labels comfortably spaced (bi-weekly
+          time ticks).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Solid line stroke-width 3 over a graded area fill — clearly visible
+          in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single-series brand green #009E73 — CVD-safe and high contrast on
+          both surfaces.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape canvas gate passed; margins generous, no overflow
+          or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels with year context: ''Date (2026)'' and ''Daily
+          visitors''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = t.palette[0] (#009E73). Backgrounds are #FAF8F1 /
+          #1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Polished vertical gradient fill + line overlay is sophisticated;
+          could push further with a subtle highlight or annotation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Tick marks removed, y-axis-only gridlines, generous whitespace, domain
+          styled with token — genuinely refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Trend visible but no annotation or focal-point emphasis — endpoint
+          marker or trend callout would elevate this.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Filled area chart over a continuous (time) axis — exactly the spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent gradient fill, gridlines for value estimation, axis
+          labels with year units, line overlay for definition — all spec notes addressed.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = date (scaleTime), y = visitors (scaleLinear with .nice() and
+          8% headroom). 90 points within 20-500 range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format. No legend needed for single
+          series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows growth trend, weekly seasonality (weekend dips), and noise
+          — exercises the area chart's strengths.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily documentation-site visitors over a quarter — neutral, realistic,
+          no controversial framing.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range ~3k-8k+ visitors with weekend dips — plausible domain values,
+          y-axis ticks formatted with SI prefix.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single linear script; only helper is the tiny lcg() seeded RNG, required
+          for browser determinism.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG seeded with 42 — deterministic across renders.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses d3 global as required by harness.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sectioned with light comments, no fake interactivity, clean d3 chaining.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Plot artifacts written by harness; no filesystem writes in snippet.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Canonical D3: scaleTime/scaleLinear, axisBottom/axisLeft, area +
+          line generators, defs/linearGradient, .nice(), curveMonotoneX, timeWeek.every(2),
+          d3.format(''~s'').'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: SVG defs + linearGradient for the fill, monotone interpolation, time-axis
+          specific tick interval — leverages D3's expressiveness well; an additional
+          D3-specific touch (e.g. brushing/zoom or a focus mark) could push to 5.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - gradient-fill
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - gradient-fill
+  - alpha-blending
+  - publication-ready
