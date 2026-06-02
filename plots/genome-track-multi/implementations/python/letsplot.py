@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-02
@@ -217,9 +217,9 @@ for i in range(len(track_order) - 1):
     divider_positions.append(y_mid)
 divider_df = pd.DataFrame({"x": [x_start] * 3, "xend": [x_end] * 3, "y": divider_positions, "yend": divider_positions})
 
-# Track labels at vertical center of each track to avoid overlap with gene names
+# Track labels shifted right to clear leftmost data elements
 track_labels_df = pd.DataFrame(
-    {"x": [x_start + 0.8] * 4, "y": [tracks[n]["center"] for n in track_order], "label": track_order}
+    {"x": [x_start + 3.5] * 4, "y": [tracks[n]["center"] for n in track_order], "label": track_order}
 )
 
 # Highlight region: variant-dense area near HOXA3
@@ -353,13 +353,15 @@ plot = (
         axis_text_x=element_text(size=10, color=INK_SOFT, angle=0),  # noqa: F405
         axis_text_y=element_blank(),  # noqa: F405
         axis_ticks_y=element_blank(),  # noqa: F405
-        panel_grid_major_x=element_line(color=INK, size=0.15),  # noqa: F405
+        panel_grid_major_x=element_line(color=INK_SOFT, size=0.15),  # noqa: F405
         panel_grid_major_y=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         legend_title=element_text(size=10, face="bold", color=INK),  # noqa: F405
         legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
         legend_position="bottom",
+        legend_box="horizontal",
+        legend_direction="horizontal",
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
         panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
         plot_margin=[10, 10, 5, 10],
