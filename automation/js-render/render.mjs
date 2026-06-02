@@ -164,11 +164,11 @@ function buildHtml({ tokens, bundleSource, snippetSource, css }) {
   window.addEventListener("unhandledrejection", (e) => { window.__anyplotError = String(e.reason); });
 </script>
 <script>
-${bundleSource}
+${bundleSource.replace(/<\/script/gi, "<\\/script")}
 </script>
 <script>
 try {
-${snippetSource}
+${snippetSource.replace(/<\/script/gi, "<\\/script")}
 } catch (err) {
   window.__anyplotError = String(err && err.stack ? err.stack : err);
   throw err;
@@ -263,9 +263,18 @@ async function main() {
       process.exit(1);
     }
 
+    // The HTML scaffold always provides `#container`, so its mere existence
+    // proves nothing — assert the snippet actually drew something into it. All
+    // three Phase-1 libraries mount a <canvas> (Chart.js, ECharts) or <svg>
+    // (D3); an empty mount means the snippet rendered nothing and we must fail
+    // rather than ship a blank PNG.
     const container = page.locator("#container");
-    if ((await container.count()) === 0) {
-      console.error("render: snippet did not draw into #container (mount node empty/missing).");
+    const drewSomething = await page.evaluate(() => {
+      const el = document.getElementById("container");
+      return !!el && el.querySelector("canvas, svg, img") !== null;
+    });
+    if (!drewSomething) {
+      console.error("render: snippet did not draw into #container (no <canvas>/<svg> mounted).");
       process.exit(1);
     }
 
