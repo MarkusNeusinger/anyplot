@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-05
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-02
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,18 +12,27 @@ import pygal
 from pygal.style import Style
 
 
-# Data - Simulated outbreak with two waves (propagated transmission pattern)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens (Imprint palette reference)
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — first series always #009E73
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Data — simulated respiratory outbreak with two waves (propagated transmission)
 np.random.seed(42)
 dates = pd.date_range("2024-01-15", periods=90, freq="D")
 
-# Wave 1: peaks around day 20, Wave 2: peaks around day 55
 days = np.arange(90)
 wave1 = 35 * np.exp(-0.5 * ((days - 20) / 7) ** 2)
 wave2 = 50 * np.exp(-0.5 * ((days - 55) / 9) ** 2)
 baseline = 2 + 3 * np.random.rand(90)
 total_signal = wave1 + wave2 + baseline
 
-# Split into confirmed, probable, suspect cases
 confirmed_frac = np.clip(0.6 + 0.15 * np.sin(days / 15), 0.45, 0.75)
 probable_frac = np.clip(0.25 + 0.05 * np.cos(days / 10), 0.15, 0.35)
 suspect_frac = 1.0 - confirmed_frac - probable_frac
@@ -31,7 +42,7 @@ probable = np.round(total_signal * probable_frac).astype(int)
 suspect = np.round(total_signal * suspect_frac).astype(int)
 daily_total = confirmed + probable + suspect
 
-# Key intervention events with spaced-out dates to avoid label crowding
+# Intervention events with spaced dates to avoid label crowding
 interventions = {
     10: "Cluster Identified",
     28: "Contact Tracing",
@@ -40,20 +51,19 @@ interventions = {
     80: "Outbreak Contained",
 }
 
-# X-axis labels — intervention dates get marker + event name
+# X-axis labels — intervention dates get distinct triangle marker + event name
 date_labels = []
 for i, d in enumerate(dates):
     fmt = d.strftime("%b %d")
     if i in interventions:
-        date_labels.append(f"\u25bc {interventions[i]}")
+        date_labels.append(f"▼ {interventions[i]}")
     else:
         date_labels.append(fmt)
 
-# Major labels: monthly anchors + intervention dates, filtered to avoid crowding
+# Major labels: monthly anchors + intervention dates, de-crowded
 monthly_set = {0, 31, 59, 89}
 intervention_set = set(interventions.keys())
 major_indices = sorted(monthly_set | intervention_set)
-# Remove monthly ticks within 5 days of an intervention label
 filtered_indices = []
 for idx in major_indices:
     if idx in intervention_set:
@@ -62,7 +72,7 @@ for idx in major_indices:
         filtered_indices.append(idx)
 major_labels = [date_labels[i] for i in filtered_indices]
 
-# Build series with rich tooltip labels for interactive HTML
+# Build series with rich tooltip dicts for interactive HTML
 confirmed_series = []
 probable_series = []
 suspect_series = []
@@ -70,51 +80,49 @@ for i in range(90):
     day_str = dates[i].strftime("%b %d, %Y")
     total_day = int(daily_total[i])
     event = interventions.get(i)
-    tip = f"{day_str} \u2014 {total_day} total cases"
+    tip = f"{day_str} — {total_day} total cases"
     if event:
-        tip = f"\u26a0 {event}\n{tip}"
+        tip = f"⚠ {event}\n{tip}"
     confirmed_series.append({"value": int(confirmed[i]), "label": tip})
     probable_series.append({"value": int(probable[i]), "label": tip})
     suspect_series.append({"value": int(suspect[i]), "label": tip})
 
-# Style — publication-quality epidemiological palette
+# Title font size scaled for length (formula: round(66 * 67 / len(title)))
+title = "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic · python · pygal · anyplot.ai"
+title_font_size = round(66 * 67 / len(title))  # prevents overflow at 3200 px
+
 custom_style = Style(
-    background="#FAFAF7",
-    plot_background="#FAFAF7",
-    foreground="#2D2D2D",
-    foreground_strong="#1A1A1A",
-    foreground_subtle="#D8D8D4",
-    colors=("#1B5E8C", "#E8A838", "#8B4049"),
-    title_font_size=58,
-    label_font_size=26,
-    major_label_font_size=28,
-    legend_font_size=34,
-    value_font_size=22,
-    tooltip_font_size=26,
-    stroke_width=1,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    title_font_size=title_font_size,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    tooltip_font_size=36,
+    stroke_width=2.5,
     opacity=0.92,
     opacity_hover=1.0,
-    title_font_family="DejaVu Sans",
-    label_font_family="DejaVu Sans",
-    legend_font_family="DejaVu Sans",
-    value_font_family="DejaVu Sans",
 )
 
-# Chart — clean stacked bar with polished layout
 chart = pygal.StackedBar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="Epidemic Curve (Respiratory Outbreak) \u00b7 histogram-epidemic \u00b7 pygal \u00b7 pyplots.ai",
+    title=title,
     x_title="Date of Symptom Onset",
     y_title="New Cases (Daily)",
     show_y_guides=True,
-    show_x_guides=False,
+    show_x_guides=True,
     legend_at_bottom=True,
-    legend_box_size=24,
+    legend_box_size=28,
     legend_at_bottom_columns=3,
-    margin=50,
-    margin_bottom=200,
+    margin=60,
+    margin_bottom=140,
     margin_right=80,
     spacing=2,
     rounded_bars=3,
@@ -129,12 +137,13 @@ chart = pygal.StackedBar(
 
 chart.x_labels = date_labels
 chart.x_labels_major = major_labels
+# Vertical reference lines at intervention x-positions
+chart.x_guides = list(interventions.keys())
 
-# Add stacked epidemic series
 chart.add("Confirmed", confirmed_series)
 chart.add("Probable", probable_series)
 chart.add("Suspect", suspect_series)
 
-# Save
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

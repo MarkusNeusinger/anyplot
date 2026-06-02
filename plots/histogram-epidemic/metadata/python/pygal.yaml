@@ -1,45 +1,53 @@
 library: pygal
+language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:50Z'
-updated: '2026-03-05T19:20:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22731097161
+updated: '2026-06-02T03:51:18Z'
+generated_by: claude-sonnet
+workflow_run: 26796454017
 issue: 4426
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/pygal/plot.html
-quality_score: 86
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent data modeling with two realistic epidemic waves and varying case classification
-    proportions over time
-  - 'Strong use of pygal-specific features: rich tooltip dicts, x_labels_major filtering,
-    HTML export'
-  - Well-designed intervention markers integrated into x-axis labels creating narrative
-    flow
-  - Custom epidemiological color palette with warm background and intentional font
-    hierarchy
-  - Perfect data quality with realistic, neutral, comprehensive feature coverage
+  - 'Correct stacked bar type with exact Imprint palette order (positions 1–3); first
+    series brand green #009E73'
+  - Intervention events effectively communicated through ▼ markers in x-axis labels
+    + x_guides vertical lines — creates a temporal narrative
+  - Dynamic title font-size formula prevents overflow for the long descriptive title
+  - 'Complete code quality: seed, clean imports, proper output filenames for both
+    PNG and HTML'
+  - Both light and dark themes render correctly with no dark-on-dark failures
   weaknesses:
-  - Missing cumulative case count line overlay as suggested by spec
-  - X-axis intervention labels could benefit from more visual distinction
-  image_description: 'The plot displays a stacked bar chart representing an epidemic
-    curve for a respiratory outbreak over 90 days (Jan 15 to mid-April 2024). The
-    x-axis shows "Date of Symptom Onset" with rotated labels at 45 degrees. Major
-    labels include date anchors (Jan 15, Apr 13) and five intervention events marked
-    with down-pointing triangle symbols: Cluster Identified, Contact Tracing, Quarantine
-    Order, Vaccination Drive, and Outbreak Contained. The y-axis shows "New Cases
-    (Daily)" from 0 to approximately 60. Three stacked series are displayed: Confirmed
-    (steel blue), Probable (amber/golden), and Suspect (dark maroon). Two distinct
-    epidemic waves are visible - a smaller first wave peaking around 38 cases at day
-    20 and a larger second wave peaking around 55 cases at day 55 - showing a clear
-    propagated transmission pattern. The background is warm off-white. Horizontal
-    y-axis grid lines are subtle and dotted. Bars have slight rounding. Legend at
-    bottom shows all three categories in a single row.'
+  - x-guides shown on both axes (show_x_guides=True + show_y_guides=True); for a bar
+    chart, only y-guides are recommended — the vertical x-grid lines add visual noise
+    on top of the already-prominent intervention guides; set show_x_guides=False
+  - 'Bottom area is tight: rotated intervention labels + x-axis title + legend are
+    stacked closely; increase margin_bottom from 140 to 160–180 px or reduce major_label_font_size
+    from 44 to 38'
+  - Missing the recommended cumulative case count overlay (secondary y-axis with a
+    running total line) — would have elevated data storytelling and spec coverage
+    above the «Consider» threshold
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis title "New Cases (Daily)" and X-axis title "Date of Symptom Onset" both dark and readable. Y-tick labels (0, 10, 20, 30, 40, 50, 60) readable. X-axis major labels (Jan 15, ▼ Cluster Identified, ▼ Contact Tracing, ▼ Quarantine Order, ▼ Vaccination Drive, ▼ Outbreak Contained, Apr 13) rotated 45°, readable but bottom zone is snug.
+      Data: Three stacked series — Confirmed (#009E73 brand green, position 1), Probable (#C475FD lavender, position 2), Suspect (#4467A3 blue, position 3). Two epidemic waves clearly visible: first peak ~Feb 4 (~38 total cases), second larger peak ~Mar 17 (~53 total cases). Subtle vertical guides at 5 intervention positions.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: All text flipped to light ink. Title, axis labels, tick labels, and legend text all clearly readable against the dark background. No dark-on-dark failures detected. Grid lines subtle and not competing with data.
+      Data: All data colors identical to light render (#009E73, #C475FD, #4467A3 — unchanged). Bars clearly visible against dark background. Brand green #009E73 reads well on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -47,69 +55,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=58, labels=26, major_labels=28,
-          legend=34). Clear and readable.
+        comment: Title, axis labels, tick labels readable in both themes; intervention
+          labels slightly crowded in x-axis area due to label length x rotation
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Major labels well-filtered, minor labels hidden. Slight density at
-          intervention markers.
+        comment: No severe overlap; five rotated intervention labels are spaced adequately
+          but the bottom area is snug
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with spacing=2, stacking clear, all three series
-          distinguishable.
+        comment: Stacked bars fully visible and colour-distinguishable in both light
+          and dark themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, amber, dark maroon palette is colorblind-safe with good luminance
-          contrast.
+        comment: Imprint positions 1-3 used, CVD-safe through n=4
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with generous margins. Slight empty space
-          above max y-value.
+        comment: 3200x1800 landscape correct; x-axis bottom zone somewhat tight with
+          rotated labels + x-title + legend stacked vertically
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Date of Symptom Onset, New Cases (Daily).'
+        comment: Date of Symptom Onset / New Cases (Daily) descriptive; title includes
+          spec-id and descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint canonical order, #FAF8F1/#1A1A17 backgrounds,
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom epidemiological palette, warm background, intentional font
-          hierarchy. Above defaults.
+        passed: false
+        comment: Correct Imprint palette and clean legend; no distinctive aesthetic
+          treatment beyond functional correctness
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle dotted y-guides, no x-guides, rounded bars, generous margins,
-          custom grid color.
+        passed: false
+        comment: rounded_bars and opacity are nice; both x and y guides shown when
+          only y-guides are recommended for bar charts
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Two-wave pattern immediately visible. Intervention markers create
-          narrative arc.
+        passed: false
+        comment: Two-wave pattern and intervention narrative effective; missing cumulative
+          overlay would have elevated storytelling
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,27 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked bar chart is standard epi curve representation with daily
-          bins.
+        comment: pygal.StackedBar is the correct chart type for an epidemic curve
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Daily bins, stacked classification, interventions marked. Missing
-          optional cumulative line.
+        comment: Stacked confirmed/probable/suspect bars, intervention vertical guides,
+          date x-axis, daily bins all present; cumulative overlay is spec-optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=case counts, all 90 days visible, correct stacking order.
+        comment: Onset date on X, daily case counts on Y, stacking maps correctly
+          to case classification
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend labels match data series.
+        comment: Title format correct with descriptive prefix; legend labels match
+          series names
     data_quality:
       score: 15
       max: 15
@@ -147,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two waves, three classifications, five interventions, baseline noise.
-          All key features.
+        comment: 'All chart-type aspects present: stacked multi-series, two-wave pattern,
+          intervention markers, appropriate time span'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Respiratory outbreak with realistic progression. Neutral public health
-          topic.
+        comment: Respiratory outbreak 2024 with public-health milestones — realistic
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~55 daily cases for localized outbreak is realistic. 90-day
-          duration plausible.
+        comment: ~55 daily case peak plausible for community outbreak; 90-day span
+          with two waves mirrors real epidemiology
     code_quality:
       score: 10
       max: 10
@@ -172,31 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, labels, style, chart, save. No functions/classes.'
+        comment: Flat script with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports actively used: numpy, pandas, pygal, Style.'
+        comment: All five imports (os, numpy, pandas, pygal, Style) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean wave generation, organized label filtering, appropriate complexity.
+        comment: List comprehension for tooltip dicts, dynamic title font-size formula,
+          de-crowding logic for major labels
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: render_to_png plot.png and render_to_file plot.html.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -206,21 +223,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper StackedBar, Style class, x_labels_major, show_minor_x_labels,
-          value_formatter.
+        comment: Correct Style object, StackedBar, x_labels/x_labels_major/show_minor_x_labels,
+          x_guides, value_formatter, legend_at_bottom_columns — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Rich tooltip dicts, x_labels_major filtering, rounded_bars, HTML
-          export.
-  verdict: REJECTED
+        passed: false
+        comment: Uses x_guides for intervention vertical lines, rounded_bars, rich
+          tooltip dicts, truncate_legend/truncate_label — good pygal-specific repertoire
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   - manual-ticks
   patterns:
   - data-generation
@@ -228,5 +245,4 @@ impl_tags:
   dataprep:
   - time-series
   styling:
-  - grid-styling
-  - edge-highlighting
+  - alpha-blending
