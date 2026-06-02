@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-basic: Basic Area Chart
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-02
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 93/100 | Created: 2026-06-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
