@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-basic: Basic Line Plot
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-02
+// Quality: 94/100 | Created: 2026-06-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;

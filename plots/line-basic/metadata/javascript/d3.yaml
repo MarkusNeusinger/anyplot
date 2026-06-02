@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-basic
 created: '2026-06-02T23:21:33Z'
-updated: '2026-06-02T23:26:19Z'
+updated: '2026-06-02T23:35:55Z'
 generated_by: claude-opus
 workflow_run: 26853674142
 issue: 653
@@ -12,43 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Imprint palette + theme tokens wired correctly: t.palette[0] for the line, t.ink/t.inkSoft
-    for title vs ticks, t.grid for gridlines, t.pageBg for marker punch-out — both
-    renders pass the dark/light legibility check cleanly'
-  - 'Idiomatic D3: scaleTime + scaleLinear, monotone-curve d3.line, axis-call gridline
-    pattern (d3.axisLeft(y).tickSize(-iw).tickFormat('''')), .selectAll().data().join()
-    for markers'
-  - Reproducible data with a tiny inline LCG (seed=42), in-memory generation with
-    sensible trend + wobble — no fetches, no CDN, fully offline-safe
-  - Canvas sized from window.ANYPLOT_SIZE (3200x1800 exact); title format conforms
-    to {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
+  - 'Brand-correct: line stroke and area-fill gradient both anchored to Imprint palette[0]
+    (#009E73); data colors identical in light and dark renders, only chrome flips.'
+  - Theme-adaptive chrome is flawless — warm off-white (#FAF8F1) light surface and
+    warm near-black (#1A1A17) dark surface, with title, axis labels, ticks, and gridlines
+    all reading clearly in both renders (no dark-on-dark or light-on-light failures).
+  - 'Refined chrome: top/right spines absent, bottom domain removed, only the y-axis
+    spine kept; gridlines are subtle horizontals at ~15% contrast — minimal-chartjunk
+    discipline.'
+  - Descriptive title prefix 'Spring Warming Trend · ' adds narrative context beyond
+    the mandated suffix, and the emphasized endpoint marker + '19.1°' annotation creates
+    a visible focal point.
+  - 'Idiomatic D3: scaleTime + scaleLinear, axisBottom/axisLeft with d3.timeWeek tick
+    generator and d3.timeFormat, d3.area + d3.line with curveMonotoneX, defs+linearGradient
+    for the fill — all high-level D3 patterns, no manual SVG arithmetic.'
+  - Deterministic data via inline LCG (seed=42) — no fetch/csv/json, fully self-contained
+    snippet honoring the no-network rule.
+  - Canvas exactly 3200×1800 with svg sized from window.ANYPLOT_SIZE; orientation
+    directive on its own line so the header-rewrite preserves it.
   weaknesses:
-  - 'No data storytelling: a single brand-green line with no annotation, callout,
-    or visual emphasis on the warming inflection around Mar 15 — costs DE-03. Fix
-    by adding an annotation at the Mar 15->22 rise or a labeled endpoint marker at
-    March 31.'
-  - 'Aesthetic polish is functional rather than distinctive: domain spines and tick
-    lines still drawn (thin but present), no faint area fill under the line, no endpoint
-    emphasis. Consider dropping the bottom axis .domain or adding a 15% opacity area
-    fill in t.palette[0] under the line to give it presence without ink-heaviness.'
-  - 'Distinctive D3 affordances are underused: no defs/linearGradient (a cool->warm
-    stroke gradient would be semantically meaningful for a warming-temperature dataset),
-    no curveBasis variant, no emphasized endpoint with value label. Costs LM-02.'
+  - 'Storytelling focal point is slightly off-message: the emphasized endpoint at
+    19.1° is not the data peak (the line crests near 22° around Mar 25 and dips back
+    at month-end), so labelling the final point as the trend anchor under-sells the
+    ''Spring Warming Trend'' framing. Consider annotating the peak instead, or adding
+    a thin trend/regression guideline to make the upward direction the focal point
+    rather than a single endpoint value.'
+  - 'DE-01 polish ceiling: the chart is clean and on-brand but stops at a conventional
+    area-under-line treatment. Small touches like a faint baseline rule at 0° (or
+    the monthly mean), a date-aligned annotation for the warmest day, or marker shape
+    de-emphasis on interior points would push aesthetic sophistication higher without
+    adding chartjunk.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface around #FAF8F1 — not pure white, not dark; matches the Imprint light token.
-      Chrome: Bold dark-ink title "Spring Warming Trend · line-basic · javascript · d3 · anyplot.ai" centered at top; soft-ink Y-axis tick labels (6° to 24° in 2° steps) and X-axis ticks (Mar 01, 08, 15, 22, 29); darker-ink axis titles "Daily high temperature (°C)" (rotated, left) and "Date (March 2026)" (centered, bottom); subtle horizontal y-gridlines. All text clearly readable against the off-white background.
-      Data: Smooth monotone curve in Imprint brand green #009E73 (palette[0]), ~3.5px stroke, with small circle markers (radius 4) stroked in pageBg for a punched-out look. Trend rises ~9°C -> 22°C across the month with a noticeable inflection around Mar 15.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1) — confirmed, not pure white, not dark.
+      Chrome: Title "Spring Warming Trend · line-basic · javascript · d3 · anyplot.ai" rendered in dark ink, centred, ~70% of canvas width. Y-axis tick labels 6° through 24° in soft ink; x-axis tick labels Mar 01 through Mar 29 in soft ink. Axis labels "Date (March 2026)" (bottom) and "Daily high temperature (°C)" (left, rotated) in primary ink. Horizontal gridlines subtle at ~15% contrast. Y-axis spine retained; top/right/bottom spines absent. All chrome clearly readable against the cream surface.
+      Data: Single line in brand green #009E73 (Imprint palette[0]) with a vertical gradient area fill (22% → 2% green) from line to baseline. Interior markers as small green dots with cream stroke. Emphasized endpoint marker at right edge (radius 9) with adjacent "19.1°" label in primary ink. Line uses curveMonotoneX for a smooth, monotonic spring-warming trajectory rising from ~9° on Mar 01 to a ~22° crest around Mar 25 then settling at 19.1° on Mar 31.
+      Legibility verdict: PASS — every text element (title, axis labels, tick labels, endpoint annotation) is fully legible against the warm cream background; no clipping, no overflow.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface around #1A1A17 — not pure black, not light; matches the Imprint dark token.
-      Chrome: Title is rendered in near-white bold ink; axis titles in near-white; tick labels in soft slate ink; gridlines subtle but visible. No dark-on-dark failures — every text element is clearly legible against the dark surface.
-      Data: Identical Imprint brand green #009E73 line + markers as the light render — only chrome flipped. Marker stroke uses pageBg (now dark) so markers read as filled green dots on the dark surface. Brand green still has strong contrast on the near-black surface.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17) — confirmed, not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels as the light render but in light ink tokens — title in primary light, ticks in soft light. Gridlines are subtle light horizontals at ~15% contrast — visible but not dominant. Y-axis spine in soft light. No dark-on-dark elements detected; all text reads cleanly against the warm near-black surface.
+      Data: Brand green #009E73 line is IDENTICAL to the light render — same hue, same opacity, same stroke width, same curveMonotoneX trajectory, same interior markers, same emphasized endpoint at 19.1°. Only the area-fill gradient and marker stroke colour adapt to the dark page background. The Imprint brand green continues to read with strong contrast against the warm near-black surface.
+      Legibility verdict: PASS — title, axis labels, tick labels, and the endpoint "19.1°" annotation are all clearly readable in light ink; no dark-on-dark failures, no clipping.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,72 +67,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 32px, axis labels 22px, ticks 18px; all readable in both themes;
-          proportional to 3200px canvas
+        comment: All text (title 32px, axis labels 22px, ticks 18px, endpoint 20px)
+          explicitly sized and clearly readable in both themes; mobile-scale legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axis labels, ticks, or data line
+        comment: No text/text or text/data collisions; endpoint label sits in the
+          right margin clear of the line.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 31 points with 3.5px line + 4px markers; appropriately prominent
-          for the sparse-to-moderate density
+        comment: Line stroke 3.5px is bold for 31-point sparse data; interior markers
+          at r=4 with cream stroke; emphasized endpoint at r=9 — density-appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series; strong contrast on both surfaces
+        comment: 'Brand green #009E73 passes contrast on both warm surfaces; single-series
+          so CVD pair-separation is moot.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800; nothing clipped; generous margins (80/50/70/90)
+        comment: Canvas exactly 3200x1800 (gate passed); generous margins (top 80,
+          right 90, bottom 70, left 90); no overflow; balanced axis-label sizes.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Daily high temperature (°C)'' and
-          ''Date (March 2026)'''
+        comment: 'Descriptive labels with units: ''Date (March 2026)'' and ''Daily
+          high temperature (°C)''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series is t.palette[0]=#009E73; backgrounds and chrome route
-          through theme tokens; both renders theme-correct
+        comment: 'First (only) series uses Imprint palette[0] #009E73; backgrounds
+          are #FAF8F1 light and #1A1A17 dark; chrome tokens drawn from ANYPLOT_TOKENS.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean professional polish (monotone curve, pageBg-stroked markers)
-          but no annotation, no callout, no emphasis on the warming inflection
+        comment: Clean and on-brand with area-fill gradient and endpoint emphasis
+          — refined but a conventional line+area treatment; not exceptional.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, bottom domain removed, only y-axis spine
+          kept; gridlines subtle horizontals; generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Domain spines kept thin (1.2px softInk), gridlines on Y only and
-          subtle, whitespace generous — could shed more chrome
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Single bare trend line — no focal point, no annotation guiding the
-          viewer
+        comment: Descriptive 'Spring Warming Trend' title + endpoint emphasis create
+          a focal point, but the endpoint (19.1°) is not the peak — focal anchor undersells
+          the warming-trend story.
     spec_compliance:
       score: 15
       max: 15
@@ -134,26 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic line plot connecting sequential daily temperatures
+        comment: Basic line plot, single line connecting sequential daily temperature
+          points — matches spec exactly.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single line, clear X/Y labels, gridlines, optional markers all included
+        comment: Single line, clear X/Y axis labels, subtle y-axis gridlines, optional
+          data-point markers — every spec note covered.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date (Mar 01-31), Y=temperature (~9-22°C); all 31 points visible
+        comment: x = date (scaleTime), y = temp (scaleLinear); domain nicely bracketed
+          via .nice() so all 31 points sit inside the axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'; no legend needed for single series
+        comment: Title 'Spring Warming Trend · line-basic · javascript · d3 · anyplot.ai'
+          matches the {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
+          pattern; single-series so legend omission is correct.
     data_quality:
       score: 15
       max: 15
@@ -163,21 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Clearly shows the basic line-plot affordance: smooth ordered trend
-          across a date axis'
+        comment: 31 daily values cover a full spring month, showing trend + day-to-day
+          variability — exemplary for the line-basic archetype.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily spring temperatures (March, 9-22°C) — plausible mid-latitude
-          warming trend; neutral
+        comment: March daily highs warming from ~9°C to ~22°C in temperate spring
+          is plausible, neutral, and reader-relatable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 9-22°C well-matched to spring climate; Y-domain padded with floor(yMin-2)/ceil(yMax+2).nice()
+        comment: Y-axis 6°–24° padded by ±2° and .nice()-ed; tick spacing of 2° matches
+          the data range.
     code_quality:
       score: 10
       max: 10
@@ -187,35 +204,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, only a tiny inline LCG arrow; no classes or wrapper
-          functions
+        comment: Linear, top-to-bottom snippet — no functions or classes (rand is
+          a tiny inline LCG closure, idiomatic).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG seeded at 42
+        comment: Deterministic LCG with fixed seed=42; in-memory data only — no network
+          fetches.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No import/require; uses the d3 global as required by the harness
+        comment: Only the d3 global is consumed; no import/require/script-tag/external
+          loads — matches the harness contract.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity
+        comment: Concise, idiomatic D3; no fake interactivity; no UI controls drawn.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Defers to JS render harness for plot-{theme}.png + .html; no manual
-          file paths
-    library_features:
-      score: 8
+        comment: 'Snippet builds the svg inside #container as required; harness emits
+          plot-{theme}.png and plot-{theme}.html. Current D3 v7 API throughout.'
+    library_mastery:
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -223,26 +242,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Classic D3 pipeline: scaleTime + scaleLinear, axisBottom/Left, d3.line
-          with curveMonotoneX, .selectAll().data().join() for markers, axis-call gridline
-          pattern with tickSize(-iw)'
+        comment: 'Textbook D3: scaleTime/scaleLinear with .nice(), axisBottom/axisLeft
+          with d3.timeWeek.every and d3.timeFormat, d3.line + d3.area with curveMonotoneX,
+          defs+linearGradient with userSpaceOnUse, data-join for markers.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Time-scale ticks via d3.timeWeek.every(1), monotone curve, grid-via-axis
-          trick — competent but typical-D3 idioms; no standout features
+        comment: Combines area-fill gradient via SVG defs, smoothing via curveMonotoneX,
+          endpoint emphasis through a separate selection — distinctive D3 composition
+          without resorting to a single high-level helper.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
-  - minimal-chrome
+  - gradient-fill
   - grid-styling
