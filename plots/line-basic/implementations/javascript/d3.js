@@ -6,7 +6,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 80, right: 50, bottom: 70, left: 90 };
+const margin = { top: 80, right: 90, bottom: 70, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -21,6 +21,7 @@ const data = d3.range(31).map((i) => {
   const wobble = Math.sin(i / 3.2) * 2.6 + (rand() - 0.5) * 2.4;
   return { date: day, temp: +(trend + wobble).toFixed(1) };
 });
+const endpoint = data[data.length - 1];
 
 // SVG mount
 const svg = d3.select("#container").append("svg")
@@ -38,6 +39,15 @@ const y = d3.scaleLinear()
   .nice()
   .range([ih, 0]);
 
+// Vertical area-fill gradient — brand green, fading top->bottom
+const defs = svg.append("defs");
+const grad = defs.append("linearGradient")
+  .attr("id", "fillGrad")
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", ih);
+grad.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.22);
+grad.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.02);
+
 // Gridlines (y-axis only, behind the data)
 g.append("g")
   .attr("class", "grid")
@@ -47,7 +57,7 @@ g.append("g")
     sel.selectAll("line").attr("stroke", t.grid).attr("stroke-width", 1);
   });
 
-// Axes
+// Axes — drop bottom domain spine for a lighter, more refined chrome
 const xAxis = g.append("g")
   .attr("transform", `translate(0,${ih})`)
   .call(
@@ -62,8 +72,9 @@ const yAxis = g.append("g")
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "18px");
   ax.selectAll(".tick line").attr("stroke", t.inkSoft);
-  ax.select(".domain").attr("stroke", t.inkSoft).attr("stroke-width", 1.2);
 }
+xAxis.select(".domain").remove();
+yAxis.select(".domain").attr("stroke", t.inkSoft).attr("stroke-width", 1.2);
 
 // Axis labels
 g.append("text")
@@ -78,11 +89,22 @@ g.append("text")
   .attr("fill", t.ink).style("font-size", "22px")
   .text("Daily high temperature (°C)");
 
-// Line + markers — first categorical series is Imprint palette[0]
+// Area + line — first categorical series is Imprint palette[0]
+const area = d3.area()
+  .x((d) => x(d.date))
+  .y0(ih)
+  .y1((d) => y(d.temp))
+  .curve(d3.curveMonotoneX);
+
 const line = d3.line()
   .x((d) => x(d.date))
   .y((d) => y(d.temp))
   .curve(d3.curveMonotoneX);
+
+g.append("path")
+  .datum(data)
+  .attr("fill", "url(#fillGrad)")
+  .attr("d", area);
 
 g.append("path")
   .datum(data)
@@ -93,8 +115,9 @@ g.append("path")
   .attr("stroke-linejoin", "round")
   .attr("d", line);
 
+// Interior markers (skip the endpoint — emphasized separately below)
 g.selectAll("circle.point")
-  .data(data).join("circle")
+  .data(data.slice(0, -1)).join("circle")
   .attr("class", "point")
   .attr("cx", (d) => x(d.date))
   .attr("cy", (d) => y(d.temp))
@@ -102,6 +125,23 @@ g.selectAll("circle.point")
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
+
+// Emphasized endpoint marker + value label — narrative anchor for the warming trend
+g.append("circle")
+  .attr("cx", x(endpoint.date)).attr("cy", y(endpoint.temp))
+  .attr("r", 9)
+  .attr("fill", t.palette[0])
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2.5);
+
+g.append("text")
+  .attr("x", x(endpoint.date) + 18).attr("y", y(endpoint.temp))
+  .attr("dy", "0.35em")
+  .attr("text-anchor", "start")
+  .attr("fill", t.ink)
+  .style("font-size", "20px")
+  .style("font-weight", "600")
+  .text(`${endpoint.temp.toFixed(1)}°`);
 
 // Title
 svg.append("text")
