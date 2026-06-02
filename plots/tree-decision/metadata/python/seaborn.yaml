@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: tree-decision
 created: '2026-03-06T21:34:38Z'
-updated: '2026-06-02T15:48:29Z'
+updated: '2026-06-02T16:04:14Z'
 generated_by: claude-sonnet
 workflow_run: 26830287227
 issue: 4569
@@ -12,58 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-deci
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 91
 review:
   strengths:
-  - Full spec compliance — decision (square), chance (circle), and terminal (right-pointing
-    triangle) nodes all correct with proper EMV/payoff annotations and branch probability
-    labels
-  - 'Excellent semantic color choice: brand green (#009E73) for decision nodes, lavender
-    (#C475FD) for chance nodes, blue (#4467A3) for positive payoffs, and matte red
-    (#AE3030) for negative payoffs — all from Imprint palette in semantically appropriate
-    roles'
-  - 'Pruned branches are double-encoded: dashed lines + reduced opacity (alpha=0.30)
-    + X cross-marks, clearly communicating rejected paths without ambiguity'
-  - Theme-adaptive chrome is fully correct — both light (#FAF8F1) and dark (#1A1A17)
-    renders have proper background, INK tokens flow to all text elements, and data
-    colors are identical across themes
-  - Clean KISS code structure with deterministic hardcoded data, no functions/classes,
-    and idiomatic seaborn usage (lineplot with units for multi-segment lines, scatterplot
-    with hue+style for node encoding)
+  - 'Semantic Imprint palette assignments are conceptually coherent: green=decision
+    agency, lavender=chance uncertainty, blue=positive payoff, red=negative payoff'
+  - Opacity hierarchy (active 100% / pruned 30%) with dashed lines and red X marks
+    creates immediately readable visual stratification between optimal and pruned
+    paths
+  - EMV rollback calculations are mathematically correct (C1=130K, C2=80K, D1=130K)
+    and clearly labeled inside each non-terminal node
+  - Creative use of seaborn units= aesthetic for multi-segment branch drawing, combining
+    all four seaborn aesthetics (hue, style, size, units) in one lineplot call
+  - Both light and dark themes render correctly with proper chrome adaptation — no
+    dark-on-dark failures, no pure-white/black backgrounds
+  - Title font dynamically scales with string length per style guide rules
+  - No bbox_inches='tight'; canvas dimensions correct at 3200x1800
   weaknesses:
-  - 'Branch labels for ''High Demand (p=0.6)'' and ''Low Demand (p=0.4)'' overlap
-    visually with the chance node circle (C1 at x=6.0, y=4.8) — label_y=(4.8+5.8)/2=5.3
-    sits within the marker''s bounding box. Fix: push label_x further right (e.g.
-    label_x = mid_x * 0.8 instead of (px+mid_x)/2) or add a y-offset to clear the
-    node'
-  - Only 7 tree nodes when the spec says 10–30 is typical for a readable decision
-    tree. Consider adding a second-stage chance node to expand the tree depth (e.g.
-    'Technical Success' sub-branch after 'Invest'), which would also improve DQ-01
-    feature coverage
-  - Library mastery is limited — the seaborn calls (lineplot/scatterplot) contribute
-    branch/node rendering but the bulk of the work (text annotations, X marks, legend)
-    is plain matplotlib. The `units` parameter in lineplot is the only distinctively
-    seaborn technique used. Consider using sns.FacetGrid or additional seaborn-specific
-    patterns to raise LM-02
-  - 'Design Excellence could be improved: the layout has ample empty space in the
-    lower-left quadrant; the pruned sub-tree floats in empty space. Consider tightening
-    ylim or repositioning nodes to fill the canvas more evenly and improve canvas
-    utilization'
+  - 'Legend uses uniform colored rectangles only — the actual node shapes (square/circle/triangle)
+    are not shown in the legend swatches, missing an opportunity to reinforce the
+    shape encoding central to reading the diagram. Fix: use Line2D with marker styles
+    (marker=''s'', marker=''o'', marker=''>'') for Decision/Chance/Terminal handles'
+  - 'Pruned branch labels rendered at alpha=0.30 are slightly below legibility comfort
+    zone at thumbnail sizes. Fix: raise pruned label alpha from 0.30 to 0.45–0.50
+    to better balance legibility with visual de-emphasis'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, non-pure surface
-      Chrome: Title "tree-decision · python · seaborn · anyplot.ai" in dark ink, centered, fully readable. No axis labels (ax.axis("off") used appropriately for this diagram type). Branch labels ("Invest", "Partner", "High Demand (p=0.6)", "Low Demand (p=0.4)") displayed with rounded bounding boxes using ELEVATED_BG fill — readable against the light background.
-      Data: Decision node (large green square, #009E73) at left with "EMV $130K" in warm white text inside. Chance node (large lavender circle, #C475FD) in center-right with "EMV $130K" inside. Two terminal triangles at far right: positive payoff (+$300K in blue #4467A3) and negative payoff (-$125K in red #AE3030). Pruned "Partner" path shown faded (alpha=0.30) with dashed lines and X cross-marks. Pruned EMV $80K labeled above the pruned chance node.
-      Legibility verdict: PASS — all text readable in light theme. Notable overlap: "High Demand (p=0.6)" branch label box overlaps the upper portion of the C1 chance node circle.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "tree-decision · python · seaborn · anyplot.ai" in dark INK (#1A1A17) — clearly readable. No axis labels (axis off, appropriate for tree diagram). Branch labels in dark INK with warm-white bbox backgrounds — readable. Payoff labels in semantic Imprint colors — readable.
+      Data: Decision node = #009E73 (brand green) square. Chance node = #C475FD (lavender) circle. Positive terminal = #4467A3 (blue) right-triangle. Negative terminal = #AE3030 (red) right-triangle. Pruned path at ~30% opacity with dashed lines and red X marks.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, non-pure dark surface
-      Chrome: Title in light off-white text (#F0EFE8 via INK token), clearly readable. Branch labels ("Invest", "Partner") shown in light text with elevated dark background boxes (#242420) — readable. Probability branch labels also in light text.
-      Data: Colors identical to light render — green decision node, lavender chance node, blue positive terminal, red negative terminal. Pruned section faded identically. No dark-on-dark failures observed; all text (including "Invest" label and "EMV $130K" in nodes) reads as light-on-dark correctly.
-      Legibility verdict: PASS — both renders fully legible with no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 — clearly readable. Branch labels in light INK with dark elevated (#242420) bbox backgrounds — readable. Legend box in #242420 with light text — readable. No dark-on-dark failures detected.
+      Data: All node colors identical to light render — #009E73, #C475FD, #4467A3, #AE3030. Pruned path similarly faded. Data colors unchanged between themes as required.
+      Legibility verdict: PASS — all text readable against dark background, chrome adaptation correct
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,85 +58,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title calculated, nodes at 9-10pt).
-          Readable in both themes. Minor concern: EMV label at 8pt in pruned branch
-          may be small at mobile scale.'
+        comment: 'All font sizes explicitly set; readable in both themes. Minor: pruned
+          labels at alpha=0.30 are intentionally faded but slightly hard to read at
+          thumbnail sizes.'
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Branch labels 'High Demand (p=0.6)' and 'Low Demand (p=0.4)' overlap
-          the chance node circle (C1) — label_y=5.3 falls within the large (s=1800)
-          marker's bounding box. Labels are still readable but collision is clearly
-          visible.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes at s=1800 are large and clear. Terminal triangles prominent.
-          Pruned elements at alpha=0.30 are appropriately dimmed but still interpretable.
+        comment: Clean layout with no text collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node markers at s=1800 are prominently visible; optimal branches
+          at 2.5pt are clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Decision (green) vs Chance (lavender)
-          perceptually distinct. Positive/negative payoffs additionally distinguished
-          by +/- sign labels.
+        comment: Imprint palette with redundant shape encoding (square/circle/triangle)
+          — CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Left-to-right layout is correct. Legend placed lower-right. Lower-left
-          quadrant is largely empty due to the compact pruned sub-tree — slight canvas
-          underutilization.
+        comment: Tree fills 70-80% of canvas with balanced margins; legend cleanly
+          positioned lower right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ax.axis('off') appropriate for this diagram type. Title format 'tree-decision
-          · python · seaborn · anyplot.ai' is exact.
+        comment: Correct title format; no axis labels needed (axis off appropriate
+          for tree diagram).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Decision nodes #009E73 (first series / brand green). Chance nodes
-          #C475FD (position 2). Positive payoff #4467A3 (position 3). Negative payoff
-          #AE3030 (position 5 semantic red — correct semantic use for loss). Background
-          #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
+        comment: 'Decision node #009E73 (first series). Imprint positions 2,3,5 with
+          semantic justification. Correct backgrounds. Identical data colors between
+          renders.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional semantic color hierarchy, thoughtful treatment of pruned
-          vs optimal paths. Above default level. Not quite publication-ready due to
-          the label-node overlap and canvas underutilization.
+        comment: Strong design with semantic color assignments and opacity hierarchy.
+          Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: ax.axis('off') creates a fully clean canvas. Rounded bboxes on labels
-          add polish. fancybox=False on legend. Alpha treatment for pruned elements
-          is refined.
+        comment: 'Axis fully off, branch label boxes polished. Deduction: legend uses
+          uniform rectangles, not actual node shapes.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Optimal path is clearly distinguished from pruned alternatives through
-          opacity, line style, and X marks. EMV values guide the viewer through the
-          rollback calculation. Visual hierarchy is effective.
+        comment: Viewer immediately identifies optimal path via opacity contrast and
+          X marks. EMV values support quantitative story.
     spec_compliance:
       score: 15
       max: 15
@@ -159,32 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree diagram with decision (square), chance (circle),
-          and terminal (right-pointing triangle) nodes.
+        comment: Decision tree with squares/circles/triangles, left-to-right layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: node types, pruned branches with marks and
-          reduced opacity, EMV values, probabilities on chance branches, left-to-right
-          layout, distinct colors for node types.'
+        comment: 'All features present: node types, EMV rollback, probabilities, payoffs,
+          pruned branches with X marks.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'All data fields used: node_id, node_type, parent_id, branch_label,
-          probability, payoff, emv, pruned. All nodes shown.'
+        comment: Correct topology D1->C1/C2->T1/T2/T3/T4. Probabilities sum to 1.0.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'tree-decision · python · seaborn · anyplot.ai'. Legend
-          shows all four node types plus pruned branch indicator.
+        comment: 'Correct title format. Legend with all 5 elements: Decision Node,
+          Chance Node, Positive Payoff, Negative Payoff, Pruned Branch.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -192,25 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: decision node, chance nodes, terminal nodes (positive
-          and negative payoffs), pruned branches, EMV rollback values, probability
-          labels.'
+        comment: 'All decision tree components shown: decision, chance, terminal nodes,
+          probabilities, EMV rollback, pruned paths.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: R&D investment decision (Invest vs Partner) with realistic market
-          demand outcomes. Neutral business scenario. Probabilities sum to 1.0 per
-          chance node.
+        comment: Two-stage R&D investment (Invest vs Partner). Neutral business-strategy
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Only 7 nodes vs spec's 'typical 10-30'. Values ($300K, -$125K, $150K,
-          -$25K) are realistic. EMV $130K = 0.6×300 + 0.4×(-125) = 130 — mathematically
-          correct. Node count slightly below recommended range.
+        comment: 'EMV calculations verified correct: C1=130K, C2=80K, D1=130K.'
     code_quality:
       score: 10
       max: 10
@@ -220,57 +191,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Linear top-to-bottom flow: tokens → data
-          → DataFrame construction → plot → save.'
+        comment: No functions/classes; clean Imports->Data->Plot->Save.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: all data hardcoded, no random generation.'
+        comment: Deterministic hard-coded tree data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.patches, matplotlib.pyplot, pandas, seaborn — all
-          used.
+        comment: All 5 imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration patterns, good use of DataFrame for branch segments.
-          No fake interactivity.
+        comment: No fake interactivity. Purposeful use of units= aesthetic and branch
+          DataFrame.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png. No bbox_inches='tight'. Current seaborn API
-          used.
+        comment: plot-{THEME}.png, no bbox_inches='tight', current API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: units= for grouped segments, hue+style+markers for categorical nodes
+          — idiomatic seaborn patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.lineplot with units parameter for multi-segment lines and sns.scatterplot
-          with hue+style for categorical node encoding are correct seaborn patterns.
-          However, bulk of rendering (text, X marks, legend) uses raw matplotlib.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: The units parameter in sns.lineplot for drawing independent polyline
-          segments is a genuinely seaborn-specific pattern. Combining hue+style in
-          scatterplot is also idiomatic. Beyond that, the implementation leans heavily
-          on matplotlib primitives — LM-02 is not fully realized.
-  verdict: REJECTED
+        comment: All four seaborn aesthetics in one lineplot call is distinctive.
+          Heavy reliance on matplotlib primitives for labels/X marks limits score.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -278,8 +243,8 @@ impl_tags:
   - custom-legend
   - patches
   patterns:
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome

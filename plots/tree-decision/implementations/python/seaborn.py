@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-06-02
+Quality: 91/100 | Updated: 2026-06-02
 """
 
 import os
