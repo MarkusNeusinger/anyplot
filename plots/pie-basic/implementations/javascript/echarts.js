@@ -1,12 +1,8 @@
 // anyplot.ai
 // pie-basic: Basic Pie Chart
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-02
-//# anyplot-orientation: square
-// anyplot.ai
-// pie-basic: Basic Pie Chart
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-02
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -25,7 +21,29 @@ let largestIndex = 0;
 for (let i = 1; i < allocation.length; i++) {
   if (allocation[i].value > allocation[largestIndex].value) largestIndex = i;
 }
-const data = allocation.map((d, i) => ({ ...d, selected: i === largestIndex }));
+
+// Per-slice overrides: tiny wedges (<5%) get outside labels with a leader line
+// so the percentage doesn't get squeezed against the slice border.
+const SMALL_SLICE_THRESHOLD = 5;
+const data = allocation.map((d, i) => {
+  const item = { ...d, selected: i === largestIndex };
+  if (d.value < SMALL_SLICE_THRESHOLD) {
+    item.label = {
+      position: "outside",
+      color: t.inkSoft,
+      fontSize: 22,
+      fontWeight: 600,
+      formatter: "{d}%",
+    };
+    item.labelLine = {
+      show: true,
+      length: 14,
+      length2: 18,
+      lineStyle: { color: t.inkSoft, width: 1.5 },
+    };
+  }
+  return item;
+});
 
 // Init — fill the pre-sized #container; the harness handles size + DPR.
 const chart = echarts.init(document.getElementById("container"));
