@@ -1,3 +1,7 @@
+// anyplot.ai
+// pie-basic: Basic Pie Chart
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 85/100 | Created: 2026-06-02
 //# anyplot-orientation: square
 // anyplot.ai
 // pie-basic: Basic Pie Chart
