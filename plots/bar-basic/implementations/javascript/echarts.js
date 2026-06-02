@@ -1,12 +1,8 @@
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-02
-//# anyplot-orientation: landscape
-// anyplot.ai
-// bar-basic: Basic Bar Chart
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-02
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -15,6 +11,17 @@ const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const loans  = [18.4, 21.7, 26.2, 31.5, 35.8, 41.3,
                 47.1, 44.6, 35.9, 29.8, 24.2, 27.6];
+
+// Highlight the seasonal peak; fade the rest for hierarchy
+const peakIdx = loans.indexOf(Math.max(...loans));
+const bars = loans.map((v, i) => ({
+  value: v,
+  itemStyle: {
+    color: t.palette[0],
+    opacity: i === peakIdx ? 1 : 0.55,
+    borderRadius: [4, 4, 0, 0],
+  },
+}));
 
 // Init
 const chart = echarts.init(document.getElementById("container"));
@@ -56,15 +63,26 @@ chart.setOption({
   },
   series: [{
     type: "bar",
-    data: loans,
+    data: bars,
     barWidth: "62%",
-    itemStyle: { color: t.palette[0] },
     label: {
       show: true,
       position: "top",
       color: t.inkSoft,
       fontSize: 16,
       formatter: (p) => p.value.toFixed(1),
+    },
+    markLine: {
+      silent: true,
+      symbol: "none",
+      data: [{ type: "average", name: "Avg" }],
+      lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5, opacity: 0.8 },
+      label: {
+        color: t.inkSoft,
+        fontSize: 16,
+        position: "insideEndTop",
+        formatter: (p) => `Avg ${p.value.toFixed(1)}`,
+      },
     },
   }],
 });
