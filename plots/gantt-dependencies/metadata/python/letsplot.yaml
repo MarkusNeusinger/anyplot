@@ -1,50 +1,55 @@
 library: letsplot
+language: python
 specification_id: gantt-dependencies
 created: '2026-01-15T21:04:02Z'
-updated: '2026-02-25T15:40:58Z'
-generated_by: claude-opus-4-6
-workflow_run: 21046152686
+updated: '2026-06-02T14:02:49Z'
+generated_by: claude-sonnet
+workflow_run: 26823484664
 issue: 3830
-python_version: '3.14'
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/letsplot/plot.html
-quality_score: 87
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance with all required features (dependency arrows, 3 dependency
-    types, group headers, color coding, legend)
-  - Strong design with custom harmonious palette, intentional visual hierarchy, and
-    subtle alternating background bands
-  - Realistic and comprehensive data covering 4 phases, 12 tasks, and 3 dependency
-    types in a plausible software project scenario
-  - Good use of lets-plot layer_tooltips() for interactive hover information on all
-    elements
-  - 'Clean theme with minimal chrome: subtle x-grid only, no y-grid/ticks, generous
-    whitespace'
+  - Full Imprint palette compliance with correct first-series green (#009E73) and
+    theme-adaptive chrome across both renders
+  - All 3 dependency types (Finish-to-Start, Start-to-Start, Finish-to-Finish) implemented
+    and color-distinguished with an explicit inline legend
+  - 'Clear visual hierarchy: black INK group headers + colored task bars + direct
+    phase labels — no redundant legend needed for groups'
+  - Rich layer_tooltips() integration showcasing letsplot's interactive strengths
+    with .title() and .line() chaining
+  - Deterministic fully realistic software development lifecycle data with logically
+    consistent dependencies across 4 phases
   weaknesses:
-  - Task and group label font size (14) slightly small — bumping to 16 would improve
-    legibility
-  - Manual dependency legend construction is verbose with per-entry DataFrames
-  - Some vertical space between legend area and x-axis labels is underutilized
-  - Dependency arrows at size=1.5 are slightly thin relative to task bar weight
-  image_description: 'The plot displays a Gantt chart for a software development lifecycle
-    with 4 phases (Requirements, Design, Development, Testing) containing 12 tasks
-    total. Group header bars are rendered in dark navy (#1a365d) spanning each phase''s
-    full timeline. Individual task bars are color-coded by phase: steel blue for Requirements,
-    amber/orange for Design, teal/cyan for Development, and purple/lavender for Testing.
-    Dependency arrows connect tasks using three distinct colors: orange for Finish-to-Start,
-    light blue for Start-to-Start, and purple for Finish-to-Finish. Task names appear
-    left-aligned to the left of their bars; group names appear right-aligned to the
-    right of group bars. Alternating subtle background bands (#F0F4F8/#FAFBFC) distinguish
-    phase regions. The x-axis shows weekly date labels from Jan 01 to Mar 25 at 45-degree
-    rotation with label "Project Timeline (2024)". A dependency type legend with colored
-    arrow samples sits in the lower-right area. Title reads "gantt-dependencies ·
-    letsplot · pyplots.ai" with subtitle "Software development lifecycle — task dependencies
-    and critical path across phases".'
+  - 'Alternating background bands are nearly invisible in dark mode — #242420 vs #1A1A17
+    contrast is too low; consider using #2A2A26 or #2E2E2A for the dark-mode even-band
+    color'
+  - Dependency arrows in the Design->Development transition zone are visually dense
+    and cross through bar fills, creating mid-chart noise; add a small y-offset (±0.3)
+    to arrow endpoints so arrows pass above/below bar centers rather than through
+    them
+  - Task labels at size=4mm are at the lower limit of readability at mobile widths
+    — consider bumping to size=4.5mm
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "gantt-dependencies · python · letsplot · anyplot.ai" in bold dark INK, clearly readable. Subtitle in INK_SOFT. X-axis tick labels in INK_SOFT at 10pt rotated 45°, all readable. Group-name labels bold and prominent. Task labels in INK_SOFT, smaller but legible.
+      Data: Four phase groups — Requirements (#009E73 brand green), Design (#C475FD lavender), Development (#4467A3 blue), Testing (#BD8233 ochre). Group header bars in solid black INK. Dependency arrows in matte red (#AE3030 FS), cyan (#2ABCCD SS), rose (#954477 FF). Alternating warm/gray phase bands visible and effective.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and subtitle in #F0EFE8 (dark-INK), clearly readable against dark background. X-axis tick labels in #B8B7B0 (dark-INK_SOFT), legible. Group headers switch to #F0EFE8 and remain clearly visible. No dark-on-dark text failures.
+      Data: All four Imprint palette data colors are identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — only chrome flips. Alternating background bands are very subtle in dark mode (#242420 vs #1A1A17 delta is low) but not a readability failure — group separation exists but is less pronounced than in light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -52,69 +57,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=32, subtitle=20, axis_title=22,
-          axis_text=18, labels=14). Task/group labels at size=14 slightly below recommended
-          16pt.
+        comment: All font sizes explicitly set (title=16, subtitle=13, axis=12, ticks=10,
+          group labels=5mm, task labels=4mm). Both themes legible. Task labels at
+          4mm are at lower readability limit.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor crowding near Integration label and dependency legend area.
-          No significant text-on-text overlap.
+        comment: No text-text overlap. Dependency arrows dense in Design->Development
+          zone, crossing through bar areas and creating visual noise.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Task bars (size=8) and group bars (size=14) well-sized. Dependency
-          arrows (size=1.5) slightly thin relative to bar weight.
+        comment: Task bars (size=7), group headers (size=11), and arrows (size=1.5)
+          all clearly visible. Appropriate sizing.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Curated blue/orange/teal/purple palette avoids red-green issues.
-          Good contrast against light backgrounds.
+        comment: Imprint palette is CVD-safe. Group bars in INK against colored task
+          bars provide good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills ~60-65% of canvas. Some wasted vertical space between
-          legend and x-axis labels.
+        comment: Good 3200x1800 canvas utilization. Left margin provides task label
+          space. Minor dead space at right tail.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Project Timeline (2024) is descriptive with context. Blank y-axis
-          appropriate for labeled Gantt chart.
+        comment: X-axis 'Project Timeline (2024)' descriptive with temporal context.
+          Y-axis correctly blank.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint positions 1-4 for groups and 5-7 for
+          arrow types, backgrounds #FAF8F1/#1A1A17, fully theme-adaptive chrome.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom harmonious palette, dark navy group bars create hierarchy,
-          coordinated text colors. Clearly above defaults.
+        comment: 'Above defaults: alternating phase bands, group/task hierarchy (black
+          headers vs colored bars), direct labeling, dependency legend. Not publication-level
+          polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal with subtle x-grid only, alternating phase bands, generous
-          whitespace. Manual legend could be more refined.
+        comment: theme_minimal base, Y-grid removed, subtle X-grid only, no panel
+          border. Bands effective in light but nearly invisible in dark mode.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy guides viewer through phases. Dependency arrows
-          reveal relationships. Chronological flow tells the project story.
+        comment: Clear hierarchy between group headers and task bars. Dependency arrows
+          illustrate critical path. Three dependency types visually distinguished.
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with horizontal bars, grouped by phases.
+        comment: Correct Gantt chart with dependency arrows and group aggregate bars.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: dependency arrows, 3 dependency types, group
-          headers, color coding, legend, proper scheduling.'
+        comment: 'All features: 3 dependency types (FS/SS/FF), group headers, dependency
+          legend, color-coded phases, direct task labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis maps datetime timeline, Y-axis maps tasks organized by group
-          with proper ordering.
+        comment: Time on X, tasks on Y, colors map to group membership, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Dependency type legend with colored arrows
-          present and accurate.
+        comment: Title 'gantt-dependencies · python · letsplot · anyplot.ai' correct.
+          Groups directly labeled. Dependency legend present and correct.
     data_quality:
       score: 15
       max: 15
@@ -155,24 +167,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 phases, 12 tasks, 3 dependency types, multi-dependency tasks, sequential
-          and parallel relationships.
+        comment: 'Demonstrates all Gantt features: parallel tasks, sequential dependencies,
+          all 3 dependency types, grouped phases, overlapping timelines.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development lifecycle with realistic task names and phases.
-          Neutral business/technology topic.
+        comment: Authentic software development lifecycle with plausible neutral task
+          names across 4 phases.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Task durations 7-21 days realistic for software projects. 2.5-month
-          timeline plausible.
+        comment: 3-month timeline with 7-21 day task durations. Logically consistent
+          dependencies.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,32 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, position calculation, plot construction,
-          save. No functions or classes.'
+        comment: 'Linear script: imports -> data -> Y-positions -> DataFrames -> plot
+          layers -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded dates and relationships.
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Three imports, all used: pandas, lets_plot wildcard, ggsave.'
+        comment: os, pandas, lets_plot (wildcard), ggsave — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Well-organized but manual legend with per-entry DataFrames is verbose.
+        comment: Complexity justified by Gantt chart requirements. Loop-driven band/arrow
+          construction appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale=3 and plot.html. Current lets-plot API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current API.
     library_mastery:
       score: 7
       max: 10
@@ -215,29 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with layer composition, aes mappings, scale_color_manual,
-          theme_minimal. geom_segment for Gantt bars is idiomatic.
+        comment: Proper grammar-of-graphics layer composition, aes() mappings, scale_color_manual
+          with breaks, theme() overrides, layer_tooltips() with .title()/.line() chaining.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with chaining for interactive hover — distinctive
-          to lets-plot. Also arrow() and HTML export.
-  verdict: REJECTED
+        comment: Uses layer_tooltips() rich API, arrow() endpoint styling, dual PNG+HTML
+          export. Does not exploit letsplot's higher-level linked-view interactive
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - custom-legend
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
