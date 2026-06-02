@@ -1,13 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-06
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-02
 """
+
+import os
 
 import plotly.graph_objects as go
 
 
-# Data - Two-stage product launch investment decision
+# Theme tokens — Imprint palette / chrome (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — node type colors (positions 1→3)
+C_DECISION = "#009E73"  # brand green — decision nodes (first series)
+C_CHANCE = "#4467A3"  # blue — chance nodes
+C_TERMINAL = "#BD8233"  # ochre — terminal/payoff nodes
+C_PRUNED = INK_MUTED  # theme-adaptive muted — pruned elements
+
+# Data — two-stage product launch investment decision
 nodes = {
     "D1": {
         "type": "decision",
@@ -83,41 +99,32 @@ nodes = {
     },
 }
 
-# Layout positions (x, y) - left-to-right tree with adjusted spacing
+# Layout positions (x, y) — left-to-right tree; distributed to reduce upper-right gap
 positions = {
     "D1": (0.0, 0.50),
-    "C1": (0.35, 0.84),
-    "T1": (0.72, 0.96),
-    "T2": (0.72, 0.72),
+    "C1": (0.35, 0.79),
+    "T1": (0.72, 0.88),
+    "T2": (0.72, 0.68),
     "C2": (0.35, 0.33),
     "T3": (0.72, 0.46),
     "T4": (0.72, 0.20),
-    "T5": (0.35, 0.05),
+    "T5": (0.35, 0.06),
 }
-
-# Colors
-decision_color = "#306998"
-chance_color = "#E8833A"
-terminal_color = "#4CAF50"
-pruned_color = "#9E9E9E"
-optimal_edge = "#2D5F8A"
-bg_color = "#FAFBFC"
 
 # Plot
 fig = go.Figure()
 
-# Draw edges (branches) with hover text built inline
+# Draw edges (branches)
 for nid, n in nodes.items():
     if n["parent"] is None:
         continue
-    px, py = positions[n["parent"]]
-    cx, cy = positions[nid]
-    line_color = pruned_color if n["pruned"] else optimal_edge
+    p_x, p_y = positions[n["parent"]]
+    c_x, c_y = positions[nid]
+    edge_color = C_PRUNED if n["pruned"] else C_DECISION
     dash = "dash" if n["pruned"] else "solid"
     line_width = 2.5 if n["pruned"] else 4
     opacity = 0.5 if n["pruned"] else 1.0
 
-    # Build hover text for this edge
     hover_parts = [f"<b>{n['label'] or ''}</b>"]
     if n["prob"] is not None:
         hover_parts.append(f"Probability: {n['prob']:.0%}")
@@ -129,10 +136,10 @@ for nid, n in nodes.items():
 
     fig.add_trace(
         go.Scatter(
-            x=[px, cx],
-            y=[py, cy],
+            x=[p_x, c_x],
+            y=[p_y, c_y],
             mode="lines",
-            line={"color": line_color, "width": line_width, "dash": dash},
+            line={"color": edge_color, "width": line_width, "dash": dash},
             opacity=opacity,
             hoverinfo="text",
             hovertext=[edge_hover, edge_hover],
@@ -140,20 +147,17 @@ for nid, n in nodes.items():
         )
     )
 
-    # Branch label with adjusted positioning to avoid crowding
+    # Branch label at midpoint
     t = 0.42 if n["parent"] == "D1" else 0.5
-    mid_x = px + (cx - px) * t
-    mid_y = py + (cy - py) * t
+    mid_x = p_x + (c_x - p_x) * t
+    mid_y = p_y + (c_y - p_y) * t
     label_text = n["label"] or ""
     if n["prob"] is not None:
         label_text = f"{n['label']} (p={n['prob']})"
-    text_color = pruned_color if n["pruned"] else "#2B2B2B"
+    text_color = C_PRUNED if n["pruned"] else INK
 
-    # Adjust yshift based on branch direction to prevent crowding
     yshift = 22
-    if nid == "T5":
-        yshift = -18
-    elif nid == "C2":
+    if nid in ("T5", "C2"):
         yshift = -18
 
     fig.add_annotation(
@@ -161,45 +165,44 @@ for nid, n in nodes.items():
         y=mid_y,
         text=f"<b>{label_text}</b>",
         showarrow=False,
-        font={"size": 20, "color": text_color, "family": "Arial, sans-serif"},
+        font={"size": 14, "color": text_color, "family": "Arial, sans-serif"},
         yshift=yshift,
     )
 
-# Draw pruned marks on pruned branches
+# Pruned double-strike marks
 for nid, n in nodes.items():
     if not n["pruned"] or n["parent"] is None:
         continue
-    px, py = positions[n["parent"]]
-    cx, cy = positions[nid]
-    mark_x = px + (cx - px) * 0.18
-    mark_y = py + (cy - py) * 0.18
-
+    p_x, p_y = positions[n["parent"]]
+    c_x, c_y = positions[nid]
+    mark_x = p_x + (c_x - p_x) * 0.18
+    mark_y = p_y + (c_y - p_y) * 0.18
     fig.add_annotation(
-        x=mark_x, y=mark_y, text="//", showarrow=False, font={"size": 26, "color": "#CC0000", "family": "Arial Black"}
+        x=mark_x, y=mark_y, text="//", showarrow=False, font={"size": 18, "color": "#AE3030", "family": "Arial Black"}
     )
 
-
-# Helper to get node color
-def _node_color(n):
-    if n["pruned"]:
-        return pruned_color
-    if n["type"] == "decision":
-        return decision_color
-    if n["type"] == "chance":
-        return chance_color
-    return terminal_color
-
-
-# Draw nodes using add_shape for precise geometric rendering + scatter with hovertemplate
-shape_size_x = 0.032
-shape_size_y = 0.05
+# Draw nodes — decision (rect), chance (circle), terminal (triangle)
+base_size_x = 0.032
+base_size_y = 0.05
+max_emv = 280  # D1=280, C1=280, C2=170
 
 for nid, n in nodes.items():
-    nx, ny = positions[nid]
-    node_color = _node_color(n)
+    n_x, n_y = positions[nid]
+    if n["pruned"]:
+        node_color = C_PRUNED
+    elif n["type"] == "decision":
+        node_color = C_DECISION
+    elif n["type"] == "chance":
+        node_color = C_CHANCE
+    else:
+        node_color = C_TERMINAL
     node_opacity = 0.65 if n["pruned"] else 1.0
 
-    # Build hover text for this node
+    # Scale node size by EMV magnitude (min 0.6×, max 1.4× base)
+    emv_scale = max(0.6, min(1.4, n["emv"] / max_emv)) if n["emv"] is not None else 1.0
+    shape_size_x = base_size_x * emv_scale
+    shape_size_y = base_size_y * emv_scale
+
     hover_parts = [f"<b>{nid}</b> — {n['type'].title()} Node"]
     if n["emv"] is not None:
         hover_parts.append(f"EMV: <b>${n['emv']:,}</b>")
@@ -218,46 +221,46 @@ for nid, n in nodes.items():
     if n["type"] == "decision":
         fig.add_shape(
             type="rect",
-            x0=nx - shape_size_x,
-            y0=ny - shape_size_y,
-            x1=nx + shape_size_x,
-            y1=ny + shape_size_y,
+            x0=n_x - shape_size_x,
+            y0=n_y - shape_size_y,
+            x1=n_x + shape_size_x,
+            y1=n_y + shape_size_y,
             fillcolor=node_color,
             opacity=node_opacity,
-            line={"color": "white", "width": 2.5},
+            line={"color": PAGE_BG, "width": 2.5},
             xref="x",
             yref="y",
         )
     elif n["type"] == "chance":
         fig.add_shape(
             type="circle",
-            x0=nx - shape_size_x,
-            y0=ny - shape_size_y,
-            x1=nx + shape_size_x,
-            y1=ny + shape_size_y,
+            x0=n_x - shape_size_x,
+            y0=n_y - shape_size_y,
+            x1=n_x + shape_size_x,
+            y1=n_y + shape_size_y,
             fillcolor=node_color,
             opacity=node_opacity,
-            line={"color": "white", "width": 2.5},
+            line={"color": PAGE_BG, "width": 2.5},
             xref="x",
             yref="y",
         )
     else:
-        # Terminal: right-pointing triangle marker
+        # Terminal node: right-pointing triangle
         fig.add_trace(
             go.Scatter(
-                x=[nx],
-                y=[ny],
+                x=[n_x],
+                y=[n_y],
                 mode="markers",
                 marker={
                     "size": 52,
                     "color": node_color,
                     "symbol": "triangle-right",
-                    "line": {"color": "white", "width": 2.5},
+                    "line": {"color": PAGE_BG, "width": 2.5},
                     "opacity": node_opacity,
                 },
                 hoverinfo="text",
                 hovertext=[node_hover],
-                hoverlabel={"bgcolor": node_color, "font_size": 15, "font_color": "white"},
+                hoverlabel={"bgcolor": node_color, "font_size": 13, "font_color": PAGE_BG},
                 showlegend=False,
             )
         )
@@ -266,53 +269,53 @@ for nid, n in nodes.items():
     if n["type"] in ("decision", "chance"):
         fig.add_trace(
             go.Scatter(
-                x=[nx],
-                y=[ny],
+                x=[n_x],
+                y=[n_y],
                 mode="markers",
                 marker={"size": 50, "color": "rgba(0,0,0,0)", "symbol": "square"},
                 hoverinfo="text",
                 hovertext=[node_hover],
-                hoverlabel={"bgcolor": node_color, "font_size": 15, "font_color": "white"},
+                hoverlabel={"bgcolor": node_color, "font_size": 13, "font_color": PAGE_BG},
                 showlegend=False,
             )
         )
 
-    # EMV inside decision/chance nodes
+    # EMV label inside decision/chance nodes
     if n["emv"] is not None:
-        emv_color = "#333333" if n["pruned"] else "white"
+        emv_text_color = PAGE_BG
         fig.add_annotation(
-            x=nx,
-            y=ny,
+            x=n_x,
+            y=n_y,
             text=f"<b>${n['emv']}</b>",
             showarrow=False,
-            font={"size": 20, "color": emv_color, "family": "Arial, sans-serif"},
+            font={"size": 14, "color": emv_text_color, "family": "Arial, sans-serif"},
         )
 
-    # Payoff at terminal nodes
+    # Payoff label to the right of terminal nodes
     if n["payoff"] is not None:
-        display_color = pruned_color if n["pruned"] else "#2B2B2B"
+        payoff_color = C_PRUNED if n["pruned"] else INK
         fig.add_annotation(
-            x=nx,
-            y=ny,
+            x=n_x,
+            y=n_y,
             text=f"<b>${n['payoff']:+,}</b>",
             showarrow=False,
-            font={"size": 20, "color": display_color, "family": "Arial, sans-serif"},
+            font={"size": 14, "color": payoff_color, "family": "Arial, sans-serif"},
             xshift=58,
         )
 
-# Legend entries using grouped legendgroup for organization
-for name, color, symbol in [
-    ("Decision Node", decision_color, "square"),
-    ("Chance Node", chance_color, "circle"),
-    ("Terminal Node", terminal_color, "triangle-right"),
+# Legend entries
+for legend_name, legend_color, legend_symbol in [
+    ("Decision Node", C_DECISION, "square"),
+    ("Chance Node", C_CHANCE, "circle"),
+    ("Terminal Node", C_TERMINAL, "triangle-right"),
 ]:
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            marker={"size": 16, "color": color, "symbol": symbol, "line": {"color": "white", "width": 1}},
-            name=name,
+            marker={"size": 14, "color": legend_color, "symbol": legend_symbol, "line": {"color": PAGE_BG, "width": 1}},
+            name=legend_name,
             showlegend=True,
         )
     )
@@ -322,50 +325,58 @@ fig.add_trace(
         x=[None],
         y=[None],
         mode="lines",
-        line={"color": pruned_color, "width": 3, "dash": "dash"},
+        line={"color": C_PRUNED, "width": 3, "dash": "dash"},
         name="Pruned Branch",
         showlegend=True,
     )
 )
 
-# Style using update_layout with plotly_white template
+# Title — scaled font for length > 67 chars
+title_main = "Product Launch Decision · tree-decision · python · plotly · anyplot.ai"
+n_chars = len(title_main)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(11, round(16 * ratio))
+
+subtitle_color = INK_SOFT
+title_full = (
+    f"{title_main}"
+    f"<br><sup style='color:{subtitle_color}; font-size:12px'>"
+    f"Optimal path: Launch Product · EMV $280K · Pruned branches marked with //</sup>"
+)
+
+# Style
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 80, "r": 40, "t": 100, "b": 60},
     title={
-        "text": (
-            "Product Launch Decision · tree-decision · plotly · pyplots.ai"
-            "<br><sup style='color:#666; font-size:16px'>"
-            "Optimal path maximizes EMV at $280K · Pruned branches marked with //</sup>"
-        ),
-        "font": {"size": 28, "color": "#2B2B2B", "family": "Arial, sans-serif"},
+        "text": title_full,
+        "font": {"size": title_fontsize, "color": INK, "family": "Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.97,
     },
-    template="plotly_white",
-    width=1600,
-    height=900,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.08, 0.95]},
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.05, 1.08]},
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.05, 1.00]},
     legend={
-        "font": {"size": 17, "family": "Arial, sans-serif"},
+        "font": {"size": 10, "family": "Arial, sans-serif", "color": INK_SOFT},
         "x": 0.01,
         "y": 0.01,
         "xanchor": "left",
         "yanchor": "bottom",
-        "bgcolor": "rgba(255,255,255,0.92)",
-        "bordercolor": "#CCCCCC",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "itemsizing": "constant",
     },
-    margin={"l": 40, "r": 60, "t": 100, "b": 30},
-    plot_bgcolor=bg_color,
-    paper_bgcolor="white",
-    hoverlabel={"font_size": 15},
+    hoverlabel={"font_size": 13},
     hovermode="closest",
 )
 
-# Save static PNG
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML with all hover already configured
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
