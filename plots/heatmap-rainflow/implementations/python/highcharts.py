@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -40,7 +40,7 @@ mean_bins = np.linspace(-50, 250, n_mean_bins)
 
 amp_grid, mean_grid = np.meshgrid(amplitude_bins, mean_bins, indexing="ij")
 amp_factor = np.exp(-0.025 * amp_grid)
-mean_factor = np.exp(-0.5 * ((mean_grid - 100) / 60) ** 2)
+mean_factor = np.exp(-0.5 * ((mean_grid - 100) / 38) ** 2)
 
 raw_counts = amp_factor * mean_factor * 5000
 raw_counts += np.random.exponential(scale=raw_counts * 0.15 + 1)
@@ -71,7 +71,8 @@ chart.options = HighchartsOptions.from_dict(
             "width": CANVAS_W,
             "height": CANVAS_H,
             "backgroundColor": PAGE_BG,
-            "marginTop": 210,
+            "marginTop": 280,
+            "plotBorderWidth": 0,
             "marginBottom": 230,
             "marginRight": 420,
             "marginLeft": 290,
@@ -80,8 +81,8 @@ chart.options = HighchartsOptions.from_dict(
         "title": {"text": title, "style": {"fontSize": "66px", "fontWeight": "600", "color": INK}, "y": 50},
         "subtitle": {
             "text": "Rainflow cycle counting — dominant cycles at low amplitude, near 100 MPa mean stress",
-            "style": {"fontSize": "30px", "fontWeight": "normal", "color": INK_SOFT},
-            "y": 124,
+            "style": {"fontSize": "48px", "fontWeight": "normal", "color": INK_SOFT},
+            "y": 134,
         },
         "xAxis": {
             "categories": mean_labels,
