@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: letsplot 4.8.2 | Python 3.14
-Quality: 87/100 | Updated: 2026-02-25
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-02
 """
+
+import os
 
 import pandas as pd
 from lets_plot import *
@@ -11,7 +13,33 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
-# Data - Software development project with phases and dependencies
+# Theme-adaptive chrome — Imprint palette tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Group colors: Imprint palette positions 1–4
+group_order = ["Requirements", "Design", "Development", "Testing"]
+group_colors = {
+    "Requirements": IMPRINT_PALETTE[0],  # brand green
+    "Design": IMPRINT_PALETTE[1],  # lavender
+    "Development": IMPRINT_PALETTE[2],  # blue
+    "Testing": IMPRINT_PALETTE[3],  # ochre
+}
+
+# Dependency arrow colors: Imprint palette positions 5–7
+dep_colors = {
+    "finish-to-start": IMPRINT_PALETTE[4],  # matte red
+    "start-to-start": IMPRINT_PALETTE[5],  # cyan
+    "finish-to-finish": IMPRINT_PALETTE[6],  # rose
+}
+
+# Data — software development project with phases and dependencies
 tasks_data = [
     # Requirements phase
     {
@@ -107,11 +135,7 @@ df = pd.DataFrame(tasks_data)
 df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
 
-# Group ordering and curated color palette (muted, harmonious, colorblind-safe)
-group_order = ["Requirements", "Design", "Development", "Testing"]
-group_colors = {"Requirements": "#4878A8", "Design": "#D4913B", "Development": "#45A5A5", "Testing": "#8B6BAD"}
-
-# Build y positions — assign in reading order top-to-bottom, then flip
+# Build y positions — reading order top-to-bottom, then flipped for chart
 y_positions = {}
 task_info = {}
 reading_order = []
@@ -135,12 +159,11 @@ for group in group_order:
             "depends_on": row["depends_on"],
         }
 
-# Flip: first in reading order gets highest y (top of chart)
 n = len(reading_order)
 for i, name in enumerate(reading_order):
     y_positions[name] = n - 1 - i
 
-# Prepare plot dataframes using native datetimes
+# Prepare plot DataFrames
 plot_data = []
 for name, y in y_positions.items():
     info = task_info[name]
@@ -160,10 +183,7 @@ plot_df = pd.DataFrame(plot_data)
 groups_df = plot_df[plot_df["is_group"]]
 tasks_df = plot_df[~plot_df["is_group"]]
 
-# Colorblind-safe dependency arrow colors
-dep_colors = {"finish-to-start": "#D95F02", "start-to-start": "#3498DB", "finish-to-finish": "#7570B3"}
-
-# Build arrow data with native datetimes
+# Build dependency arrows
 arrows_data = []
 for task_name, info in task_info.items():
     if info["is_group"] or not info.get("depends_on"):
@@ -198,42 +218,45 @@ x_max = plot_df["end"].max()
 
 plot = ggplot()
 
-# Alternating group background bands (softened tones)
+# Alternating background bands (theme-adaptive warm tones)
+band_even = "#EDECEA" if THEME == "light" else ELEVATED_BG
+band_odd = PAGE_BG
+
 for i, group in enumerate(group_order):
     group_task_ys = [y_positions[t] for t, info in task_info.items() if info["group"] == group]
     y_lo = min(group_task_ys) - 0.45
     y_hi = max(group_task_ys) + 0.45
-    band_color = "#F0F4F8" if i % 2 == 0 else "#FAFBFC"
+    band_color = band_even if i % 2 == 0 else band_odd
     band_df = pd.DataFrame(
         [{"xmin": x_min - pd.Timedelta(days=22), "xmax": x_max + pd.Timedelta(days=5), "ymin": y_lo, "ymax": y_hi}]
     )
     plot += geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=band_df, fill=band_color, alpha=0.8)
 
-# Group header bars with interactive tooltips
+# Group header bars (full phase span, ink color)
 plot += geom_segment(
     aes(x="start", xend="end", y="y", yend="y"),
     data=groups_df,
-    size=14,
-    color="#1a365d",
-    alpha=0.95,
-    tooltips=layer_tooltips().title("@task").line("@start \u2014 @end").line("Duration: @duration days"),
+    size=11,
+    color=INK,
+    alpha=0.92,
+    tooltips=layer_tooltips().title("@task").line("@start — @end").line("Duration: @duration days"),
 )
 
-# Task bars — single layer with color mapped to group via scale_color_manual
+# Task bars — color mapped to group via Imprint palette
 task_tooltips = (
-    layer_tooltips().title("@task").line("@start \u2014 @end").line("Group: @group").line("Duration: @duration days")
+    layer_tooltips().title("@task").line("@start — @end").line("Group: @group").line("Duration: @duration days")
 )
 plot += geom_segment(
     aes(x="start", xend="end", y="y", yend="y", color="group"),
     data=tasks_df,
-    size=8,
+    size=7,
     alpha=0.85,
     tooltips=task_tooltips,
     show_legend=False,
 )
 plot += scale_color_manual(values=[group_colors[g] for g in group_order], breaks=group_order)
 
-# Dependency arrows by type with interactive tooltips
+# Dependency arrows — three types, each in a distinct Imprint hue
 if arrows_df is not None and not arrows_df.empty:
     for dep_type, color in dep_colors.items():
         type_df = arrows_df[arrows_df["dep_type"] == dep_type]
@@ -243,22 +266,20 @@ if arrows_df is not None and not arrows_df.empty:
                 data=type_df,
                 size=1.5,
                 color=color,
-                alpha=0.85,
-                arrow=arrow(angle=25, length=10, type="closed"),
-                tooltips=layer_tooltips().line("@from_task \u2192 @to_task").line("Type: @dep_type"),
+                alpha=0.88,
+                arrow=arrow(angle=25, length=6, type="closed"),
+                tooltips=layer_tooltips().line("@from_task → @to_task").line("Type: @dep_type"),
             )
 
-# Labels: task names on left, group names on right
+# Labels: group names right of bars (bold), task names left of bars
 label_offset = pd.Timedelta(days=1)
 group_labels = groups_df.assign(label_x=groups_df["end"] + label_offset)
 task_labels_df = tasks_df.assign(label_x=tasks_df["start"] - label_offset)
 
-plot += geom_text(
-    aes(x="label_x", y="y", label="task"), data=group_labels, hjust=0, size=14, fontface="bold", color="#1a365d"
-)
-plot += geom_text(aes(x="label_x", y="y", label="task"), data=task_labels_df, hjust=1, size=14, color="#2D3748")
+plot += geom_text(aes(x="label_x", y="y", label="task"), data=group_labels, hjust=0, size=5, fontface="bold", color=INK)
+plot += geom_text(aes(x="label_x", y="y", label="task"), data=task_labels_df, hjust=1, size=4, color=INK_SOFT)
 
-# Dependency type legend (compact)
+# Dependency legend (consolidated DataFrames)
 legend_x = x_max - pd.Timedelta(days=12)
 legend_xend = legend_x + pd.Timedelta(days=5)
 legend_text_x = legend_xend + pd.Timedelta(days=1)
@@ -272,26 +293,34 @@ plot += geom_text(
     aes(x="x", y="y", label="label"),
     data=pd.DataFrame([{"x": legend_x, "y": -0.7, "label": "Dependencies:"}]),
     hjust=0,
-    size=13,
+    size=4,
     fontface="bold",
-    color="#1a365d",
+    color=INK,
 )
 
-for label, dep_type, y in legend_entries:
-    seg_df = pd.DataFrame([{"x": legend_x, "xend": legend_xend, "y": y}])
-    plot += geom_segment(
-        aes(x="x", xend="xend", y="y", yend="y"),
-        data=seg_df,
-        size=1.5,
-        color=dep_colors[dep_type],
-        arrow=arrow(angle=25, length=10, type="closed"),
-    )
+legend_seg_df = pd.DataFrame(
+    [{"x": legend_x, "xend": legend_xend, "y": y, "dep_type": dt} for _, dt, y in legend_entries]
+)
+for dep_type, color in dep_colors.items():
+    seg = legend_seg_df[legend_seg_df["dep_type"] == dep_type]
+    if not seg.empty:
+        plot += geom_segment(
+            aes(x="x", xend="xend", y="y", yend="y"),
+            data=seg,
+            size=1.5,
+            color=color,
+            arrow=arrow(angle=25, length=6, type="closed"),
+        )
 
-legend_lbl_df = pd.DataFrame([{"x": legend_text_x, "y": y, "label": label} for label, _, y in legend_entries])
-plot += geom_text(aes(x="x", y="y", label="label"), data=legend_lbl_df, hjust=0, size=13, color="#2D3748")
+plot += geom_text(
+    aes(x="x", y="y", label="label"),
+    data=pd.DataFrame([{"x": legend_text_x, "y": y, "label": label} for label, _, y in legend_entries]),
+    hjust=0,
+    size=4,
+    color=INK_SOFT,
+)
 
-# Native datetime axis and refined theme
-# Explicit weekly breaks starting from first task date (avoids empty Dec labels)
+# Scales
 x_breaks = pd.date_range(start=x_min, end=x_max + pd.Timedelta(days=10), freq="W-MON").tolist()
 plot += scale_x_datetime(
     format="%b %d", limits=[x_min - pd.Timedelta(days=22), x_max + pd.Timedelta(days=12)], breaks=x_breaks
@@ -300,24 +329,29 @@ plot += scale_y_continuous(breaks=[], labels=[], limits=[-3.8, n + 0.5])
 plot += labs(
     x="Project Timeline (2024)",
     y="",
-    title="gantt-dependencies \u00b7 letsplot \u00b7 pyplots.ai",
-    subtitle="Software development lifecycle \u2014 task dependencies and critical path across phases",
+    title="gantt-dependencies · python · letsplot · anyplot.ai",
+    subtitle="Software development lifecycle — task dependencies and critical path across phases",
 )
+
+# Theme — canvas 800×450, saved at scale=4 → 3200×1800 px
 plot += theme_minimal()
 plot += theme(
-    axis_title_x=element_text(size=22, color="#4A5568"),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    axis_title_x=element_text(size=12, color=INK_SOFT),
     axis_title_y=element_blank(),
-    axis_text_x=element_text(size=18, angle=45, color="#4A5568"),
+    axis_text_x=element_text(size=10, angle=45, color=INK_SOFT),
     axis_text_y=element_blank(),
-    plot_title=element_text(size=32, face="bold", color="#1a365d"),
-    plot_subtitle=element_text(size=20, color="#4A5568"),
+    plot_title=element_text(size=16, face="bold", color=INK),
+    plot_subtitle=element_text(size=13, color=INK_SOFT),
     panel_grid_major_y=element_blank(),
     panel_grid_minor=element_blank(),
-    panel_grid_major_x=element_line(color="#E2E8F0", size=0.4),
-    plot_margin=[30, 20, 20, 120],
+    panel_grid_major_x=element_line(color=INK_SOFT, size=0.3),
+    panel_border=element_blank(),
+    plot_margin=[20, 15, 15, 80],
 )
-plot += ggsize(1600, 900)
+plot += ggsize(800, 450)
 
-# Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save — PNG at scale=4 (3200×1800) + interactive HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
