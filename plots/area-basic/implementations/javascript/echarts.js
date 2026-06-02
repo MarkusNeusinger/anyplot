@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-basic: Basic Area Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-02
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 93/100 | Created: 2026-06-02
 
 //# anyplot-orientation: landscape
 
