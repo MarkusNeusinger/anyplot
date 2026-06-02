@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: pygal 3.1.0 | Python 3.14.3
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-02
 """
 
 import os
