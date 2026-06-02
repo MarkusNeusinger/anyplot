@@ -44,7 +44,7 @@ const COL_TERMINAL = IMPRINT_PALETTE[4]  # ochre        — terminal nodes
 const node_ids    = ["D1",       "T1",       "C1",     "T5",      "D2",       "T4",       "C2",          "T2",      "T3"]
 const node_types  = [:decision,  :terminal,  :chance,  :terminal, :decision,  :terminal,  :chance,       :terminal, :terminal]
 const node_xs     = [0.0,        3.0,        3.0,      6.5,       6.5,        10.0,       10.0,          13.5,      13.5]
-const node_ys     = [0.0,       -2.2,        2.2,      0.7,       3.7,         2.4,        5.0,           6.0,       4.0]
+const node_ys     = [1.5,       -1.5,        4.5,      2.5,       6.0,         4.0,        8.0,           9.0,       7.0]
 const node_emvs   = [631.0,      0.0,      631.0,    -200.0,   1310.0,       750.0,     1310.0,        1800.0,    400.0]
 const node_pruned = [false,      true,     false,     false,    false,        true,      false,         false,     false]
 const node_names  = ["Launch?",  "Abandon", "Market", "Weak",   "Scale Up?", "Maintain", "Competition", "Low Comp","High Comp"]
@@ -89,7 +89,7 @@ ax = Axis(
 )
 
 xlims!(ax, -1.5, 15.5)
-ylims!(ax, -4.0, 7.5)
+ylims!(ax, -3.0, 10.5)
 
 # Draw edges (rendered before nodes so markers sit on top)
 for i in eachindex(edge_froms)
@@ -121,13 +121,15 @@ for i in eachindex(edge_froms)
     end
 
     # Branch label offset perpendicular to edge (counter-clockwise normal)
+    # Pruned-edge labels use a larger offset to avoid collision with double-slash marks
     mx     = (x1 + x2) / 2
     my     = (y1 + y2) / 2
-    nx_off = (-dy / elen) * 0.5
-    ny_off = (dx  / elen) * 0.5
+    off    = is_pr ? 0.8 : 0.5
+    nx_off = (-dy / elen) * off
+    ny_off = (dx  / elen) * off
     lc     = is_pr ? INK_MUTED : INK_SOFT
     text!(ax, mx + nx_off, my + ny_off;
-          text = edge_labels[i], color = lc, fontsize = 9, align = (:center, :center))
+          text = edge_labels[i], color = lc, fontsize = 10, align = (:center, :center))
 end
 
 # Draw nodes
@@ -161,7 +163,7 @@ for i in eachindex(node_ids)
 
     # Short node name above the marker
     text!(ax, x, y + 0.62;
-          text = name, color = lc, fontsize = 9, align = (:center, :bottom))
+          text = name, color = lc, fontsize = 10, align = (:center, :bottom))
 
     # EMV (decision/chance) or payoff (terminal) below the marker
     emv_abs = abs(Int(round(emv)))
@@ -171,7 +173,7 @@ for i in eachindex(node_ids)
         emv >= 0 ? "EMV=\$$(emv_abs)K" : "EMV=-\$$(emv_abs)K"
     end
     text!(ax, x, y - 0.62;
-          text = emv_str, color = lc, fontsize = 9, align = (:center, :top))
+          text = emv_str, color = lc, fontsize = 10, align = (:center, :top))
 end
 
 # Legend in bottom strip
