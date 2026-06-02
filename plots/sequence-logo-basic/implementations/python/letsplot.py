@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-02
@@ -20,8 +20,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Standard DNA color scheme (spec-mandated for nucleotide visualization)
-color_map = {"A": "#2CA02C", "C": "#1F77B4", "G": "#FF7F0E", "T": "#D62728"}
+# Imprint palette members for DNA nucleotides (A=green, C=blue, G=ochre, T=red)
+color_map = {"A": "#009E73", "C": "#4467A3", "G": "#BD8233", "T": "#AE3030"}
 
 # 10-position TATA-box transcription factor binding site motif
 positions = list(range(1, 11))
@@ -75,6 +75,8 @@ for pos in positions:
 df = pd.DataFrame(rows)
 # Only label blocks tall enough to show text legibly
 df_labeled = df[df["height"] > 0.08].copy()
+# Scale text size proportional to block height so letters visually fill allocated space
+df_labeled["text_size"] = (df_labeled["height"] / max_info * 9).clip(2, 9)
 
 # Invisible points for building a proper fill legend with square symbols
 legend_df = pd.DataFrame({"x": [0] * 4, "y": [0] * 4, "letter": ["A", "C", "G", "T"]})
@@ -95,11 +97,10 @@ plot = (
         size=0.5,
         show_legend=False,
     )
-    # White letter labels centered in each block (only where they fit legibly)
+    # Letter labels with size proportional to block height so they visually fill allocated space
     + geom_text(
-        aes(x="position", y="ymid", label="letter"),
+        aes(x="position", y="ymid", label="letter", size="text_size"),
         data=df_labeled,
-        size=4,
         fontface="bold",
         color="white",
         show_legend=False,
@@ -110,6 +111,7 @@ plot = (
         .line("Frequency: @frequency")
         .line("Info content: @info_bits bits"),
     )
+    + scale_size_identity()
     # Invisible points — carry fill mapping so the legend renders colored squares
     + geom_point(
         aes(x="x", y="y", fill="letter"),
@@ -132,6 +134,7 @@ plot = (
         axis_text=element_text(size=10, color=INK_SOFT),
         legend_title=element_text(size=11, face="bold", color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=RULE, size=0.5),
