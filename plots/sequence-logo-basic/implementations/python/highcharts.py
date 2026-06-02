@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
-Library: highcharts | Python
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-02
 """
 
 import os
