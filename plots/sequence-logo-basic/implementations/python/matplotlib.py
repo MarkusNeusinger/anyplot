@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-06
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
@@ -13,7 +15,20 @@ from matplotlib.patches import FancyBboxPatch, PathPatch
 from matplotlib.textpath import TextPath
 
 
-# Data — a 10-position DNA transcription factor binding site motif (ETS-family-like)
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution anchor — used for conserved core highlight
+
+# DNA colors — semantic exception: standard ACGT associations map to Imprint palette
+# A=green → #009E73, C=blue → #4467A3, G=orange/ochre → #BD8233, T=red → #AE3030
+dna_colors = {"A": "#009E73", "C": "#4467A3", "G": "#BD8233", "T": "#AE3030"}
+
+# Data — 10-position ETS-family DNA transcription factor binding site motif
 position_freqs = [
     {"A": 0.25, "C": 0.25, "G": 0.25, "T": 0.25},
     {"A": 0.10, "C": 0.60, "G": 0.10, "T": 0.20},
@@ -27,34 +42,33 @@ position_freqs = [
     {"A": 0.25, "C": 0.25, "G": 0.25, "T": 0.25},
 ]
 
-# Colorblind-safe palette: replaced green/red with teal/purple for A/T
-dna_colors = {"A": "#1b7837", "C": "#1f77b4", "G": "#ff7f0e", "T": "#9467bd"}
 letters = ["A", "C", "G", "T"]
 n_positions = len(position_freqs)
 max_bits = 2.0
 
-# Compute information content per position
+# Compute information content per position (Shannon entropy method)
 info_contents = []
 for freqs in position_freqs:
     entropy = sum(-f * np.log2(f) for f in freqs.values() if f > 0)
     info_contents.append(max_bits - entropy)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 fp = FontProperties(family="DejaVu Sans", weight="bold")
 bar_width = 0.9
 
-# Highlight conserved core region (positions 3-6) with background shading
+# Highlight conserved core region (positions 3-6) using amber caution anchor
 core_start, core_end = 3, 6
 highlight = FancyBboxPatch(
     (core_start - 0.48, -0.02),
     core_end - core_start + 0.96,
     max_bits + 0.04,
     boxstyle="round,pad=0.02",
-    facecolor="#f0e68c",
-    edgecolor="#c4a000",
-    alpha=0.25,
-    linewidth=1.5,
+    facecolor=ANYPLOT_AMBER,
+    edgecolor=INK_MUTED,
+    alpha=0.18,
+    linewidth=0.8,
     zorder=0,
 )
 ax.add_patch(highlight)
@@ -81,46 +95,53 @@ for pos_idx, freqs in enumerate(position_freqs):
         ax.add_patch(patch)
         y_offset += h
 
-# Annotate conserved core motif
+# Annotate conserved core region
 ax.annotate(
     "Conserved core",
-    xy=((core_start + core_end) / 2, max_bits * 0.88),
-    fontsize=14,
+    xy=((core_start + core_end) / 2, max_bits * 0.92),
+    fontsize=8,
     fontweight="medium",
-    color="#6b5900",
+    color=INK_MUTED,
     ha="center",
     va="center",
     zorder=3,
 )
 
-# Color legend for nucleotides using matplotlib legend API
-
+# Nucleotide color legend
 legend_handles = [
-    Line2D([0], [0], marker="s", color="w", markerfacecolor=dna_colors[lt], markersize=12, label=lt, linewidth=0)
+    Line2D([0], [0], marker="s", color="w", markerfacecolor=dna_colors[lt], markersize=8, label=lt, linewidth=0)
     for lt in letters
 ]
-ax.legend(
+leg = ax.legend(
     handles=legend_handles,
     loc="upper right",
-    fontsize=14,
-    framealpha=0.8,
-    edgecolor="#cccccc",
+    fontsize=8,
+    framealpha=0.9,
+    edgecolor=INK_SOFT,
     handletextpad=0.4,
     labelspacing=0.3,
 )
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 # Style
+title = "sequence-logo-basic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_xlim(0.5, n_positions + 0.5)
 ax.set_ylim(0, max_bits)
 ax.set_xticks(range(1, n_positions + 1))
-ax.set_xticklabels(range(1, n_positions + 1), fontsize=16)
-ax.set_xlabel("Position", fontsize=20)
-ax.set_ylabel("Information content (bits)", fontsize=20)
-ax.set_title("sequence-logo-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xticklabels(range(1, n_positions + 1))
+ax.set_xlabel("Position", fontsize=10, color=INK)
+ax.set_ylabel("Information content (bits)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8, zorder=0)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK, zorder=0)
 
+# Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
