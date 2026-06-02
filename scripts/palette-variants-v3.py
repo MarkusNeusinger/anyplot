@@ -11,7 +11,7 @@
 """palette variants v3 — muted-8 finalist with hybrid sort.
 
 After 5 independent expert reviewers unanimously picked muted-8 over vivid-8
-(see ``../v2/expert-reviews.md``), only the slot order was
+(see ``docs/reference/palette-variants/v2/expert-reviews.md``), only the slot order was
 still open. The v2 head-to-head exposed a real trade-off: pure-CVD-greedy
 maximised ΔE under CVD simulation but duplicated hue families in the first 4
 slots, while wheel-gap-first gave 4 visually distinct hues but put red and
