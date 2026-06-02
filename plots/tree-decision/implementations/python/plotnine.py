@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-02
@@ -98,7 +98,7 @@ nodes = pd.DataFrame(
 
 emv_nodes = nodes[nodes["node_type"] != "Terminal"].copy()
 emv_nodes["lx"] = emv_nodes["x"]
-emv_nodes["ly"] = emv_nodes["y"] - 1.05
+emv_nodes["ly"] = emv_nodes["y"] - 1.3
 
 terminal_nodes = nodes[nodes["node_type"] == "Terminal"].copy()
 terminal_nodes["lx"] = terminal_nodes["x"] + 0.7
@@ -131,7 +131,7 @@ edges["lx"] = (edges["x"] + edges["xend"]) / 2
 edges["ly"] = (edges["y"] + edges["yend"]) / 2
 for i in edges.index:
     dy = edges.loc[i, "yend"] - edges.loc[i, "y"]
-    edges.loc[i, "ly"] += 0.75 if dy > 0 else -0.75
+    edges.loc[i, "ly"] += 1.1 if dy > 0 else -1.1
     if edges.loc[i, "pruned"]:
         edges.loc[i, "lx"] -= 0.3
 
@@ -196,9 +196,9 @@ plot = (
     )
     # Optimal path annotation
     + annotate(
-        "text", x=0.5, y=10.6, label="★ Optimal Path", size=8, color=IMPRINT_PALETTE[0], fontweight="bold", ha="left"
+        "text", x=0.2, y=10.6, label="★ Optimal Path", size=8, color=IMPRINT_PALETTE[0], fontweight="bold", ha="left"
     )
-    + annotate("segment", x=0.9, y=10.3, xend=1.3, yend=9.2, size=0.8, color=IMPRINT_PALETTE[0], alpha=0.7)
+    + annotate("segment", x=0.6, y=10.3, xend=1.0, yend=9.2, size=0.8, color=IMPRINT_PALETTE[0], alpha=0.7)
     + scale_color_manual(values=NODE_COLORS, name="Node Type")
     + scale_shape_manual(values={"Decision": "s", "Chance": "o", "Terminal": ">"}, name="Node Type")
     + guides(color=guide_legend(override_aes={"size": 8}))
@@ -217,7 +217,7 @@ plot = (
     )
     + labs(title=title, subtitle="Product Launch vs. License IP — EMV Rollback Analysis (Optimal: Launch → $320K)")
     + coord_fixed(ratio=0.65)
-    + xlim(-1.5, 14.5)
+    + xlim(-0.5, 14.5)
     + ylim(-1.0, 11.5)
 )
 
