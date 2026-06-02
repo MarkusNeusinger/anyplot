@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 genome-track-multi: Genome Track Viewer
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-06
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
 
 import os
