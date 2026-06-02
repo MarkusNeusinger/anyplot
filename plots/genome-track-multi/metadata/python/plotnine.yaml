@@ -1,45 +1,54 @@
 library: plotnine
+language: python
 specification_id: genome-track-multi
 created: '2026-03-06T17:02:46Z'
-updated: '2026-03-06T17:29:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22773343256
+updated: '2026-06-02T08:18:28Z'
+generated_by: claude-sonnet
+workflow_run: 26806343767
 issue: 4422
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance with all 4 required tracks and all sub-features implemented
-  - Realistic EGFR gene locus data with biologically meaningful coverage-exon correlation
-  - Strong grammar-of-graphics composition with multiple data frames and native legend
-    generation
-  - Professional visual design with alternating track backgrounds, dashed separators,
-    and colorblind-safe palettes
-  - Clean, well-organized code following KISS principles
+  - Complete multi-track genome browser with all 4 required track types (genes with
+    exons/introns/chevrons, filled-area coverage, lollipop variants, colored regulatory
+    elements)
+  - Biologically realistic data using real EGFR locus at chr7:55,086,000-55,141,000
+    with accurate 13-exon structure and coverage peaks at exon positions
+  - Perfect Imprint palette compliance with brand green for the first categorical
+    series (SNP), canonical-order subsequent colors, and full theme-adaptive chrome
+    in both renders
+  - Clean plotnine grammar-of-graphics layer composition — ggplot() without global
+    data, per-layer data pattern, guided legend ordering, and categorical Pandas types
+    with ordered categories
   weaknesses:
-  - Minor color proximity between Indel (orange) variant markers and Enhancer (orange)
-    regulatory rectangles
-  - Track label font size (13pt) slightly below recommended minimum for annotation
-    text
-  - Strand direction chevrons could be slightly more prominent for better visibility
-  image_description: 'The plot displays a multi-track genome browser view of the EGFR
-    locus on chromosome 7 (~55,086,000-55,141,000 bp). Four tracks are stacked vertically
-    sharing a common x-axis of genomic position. Genes track (top): dark blue rectangles
-    represent 13 exons connected by thin blue intron lines, with small directional
-    chevrons indicating + strand; the gene is labeled "EGFR (+)" in bold italic. Coverage
-    track: a filled light-blue area plot showing read depth with distinct peaks correlating
-    with exon positions. Variants track: lollipop markers with grey stems; blue circles
-    for SNPs and orange circles for Indels, with stem height encoding quality scores.
-    Regulatory track (bottom): colored rectangles - teal for Promoters, orange for
-    Enhancers, purple for Insulator. Track labels appear in bold at the upper-left
-    of each track. Alternating light grey/white background shading separates tracks
-    with dashed grey separator lines. The x-axis shows formatted genomic coordinates
-    with the label "Genomic Position (chr7)". A legend on the right identifies Variant
-    Type and Regulatory element types. The title reads "genome-track-multi · plotnine
-    · pyplots.ai".'
+  - Track labels (geom_text size=3.5mm ≈ 9.9pt) and EGFR gene label are borderline
+    small at mobile scale (~400px width); consider size=4–4.5mm for better mobile
+    readability
+  - Regulatory element rectangles (reg_half=0.25 → 0.5 unit tall) are quite narrow
+    relative to the plot; increasing to reg_half=0.3–0.35 would improve visibility
+    without crowding the track
+  - DE-03 data storytelling is functional but not maximized — the biological insight
+    that coverage spikes align with exon positions is implicit; a subtle annotation
+    or reference line connecting the gene track exons to the coverage peaks would
+    elevate narrative clarity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface; the two shaded track backgrounds (coverage and regulatory bands) use the slightly elevated #FFFDF6 tone, cleanly separating them from the gene and variant track areas.
+      Chrome: Title "genome-track-multi · python · plotnine · anyplot.ai" in dark bold text, clearly readable. X-axis label "Genomic Position (chr7)" in dark ink, readable. Tick labels formatted with comma separators (55,090,000 … 55,140,000) in INK_SOFT dark grey, readable. Track labels ("Genes", "Coverage", "Variants", "Regulatory") in bold INK_SOFT at top-left of each band — small but legible at full resolution.
+      Data: Genes track shows 13 blue (#4467A3) exon rectangles connected by thin intron lines with V-shaped chevron strand markers in mid-grey; "EGFR (+)" label in italic bold. Coverage track shows a cyan (#2ABCCD) filled ribbon area with peaks visible over exon positions. Variants track shows 18 lollipop markers — SNPs in brand green (#009E73), Indels in lavender (#C475FD). Regulatory track shows Promoter (blue), Enhancer (ochre), Insulator (red) colored rectangles. Legend on right shows both Variant Type and Regulatory categories.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface; shaded track backgrounds use the slightly elevated #242420 tone.
+      Chrome: Title in light (#F0EFE8) text against dark background — clearly readable. Axis labels and tick labels rendered in INK_SOFT light grey (#B8B7B0) — clearly visible. Track labels in INK_SOFT light grey — readable. Dashed separator lines visible in muted INK_MUTED grey. Legend box uses elevated dark background (#242420) with light text — readable.
+      Data: Data colors (green SNP, lavender Indel, cyan coverage, blue exons, ochre/blue/red regulatory) are visually identical to the light render — only chrome has flipped. No dark-on-dark failures detected; all text elements use light-colored tokens against the dark surface.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -50,67 +59,87 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All major text sizes explicitly set (title=24, axis=20, ticks=16,
-          legend=14-16). Track labels at size=13 slightly below 16pt guideline but
-          readable.
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
+          legend 8pt, geom_text 3.5mm); readable at full resolution. Track labels
+          and EGFR label are small but bold at 3.5mm; borderline at mobile 400px scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Track labels well-positioned.
+        comment: No overlapping text or data elements in either render. Tracks well-separated,
+          legend does not crowd plot area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Exons, coverage ribbon, and lollipop markers clearly visible. Strand
-          chevrons relatively subtle.
+        comment: Coverage ribbon, lollipop heads, exon rectangles all clearly visible.
+          Regulatory element rectangles (reg_half=0.25) and strand chevrons are slightly
+          small but visible at full resolution.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Okabe-Ito palette for variants, Dark2 brewer for regulatory. Colorblind-safe.
+        comment: Imprint palette is CVD-safe. Green/lavender for variants, blue/ochre/red
+          for regulatory elements are clearly distinct under normal vision and CVD
+          simulations.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent 16:9 canvas utilization. Four tracks fill vertical space
-          with balanced margins.
+        comment: Canvas gate passed. Multi-track layout fills canvas well. All elements
+          within canvas bounds. Legend on right side proportional. No content clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Genomic Position (chr7)' is descriptive with context. Y-axis
-          intentionally blank.
+        comment: 'X-axis: ''Genomic Position (chr7)'' — descriptive with chromosome
+          identifier. Y-axis intentionally blank (tracks use left-side labels). Title
+          correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series (SNP) uses #009E73 (brand green). Subsequent
+          series follow Imprint canonical order: Indel #C475FD (pos 2), exons/Promoter
+          #4467A3 (pos 3), Enhancer #BD8233 (pos 4), Insulator #AE3030 (pos 5), Coverage
+          #2ABCCD (pos 6). Light background #FAF8F1, dark #1A1A17. Data colors identical
+          across both renders; chrome correctly adapts.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional color scheme with Python blue, Okabe-Ito, Dark2. Minor
-          color proximity between Indel orange and Enhancer orange.
+        comment: 'Strong design: thoughtful Imprint palette, italic-bold EGFR label,
+          strand chevron markers, shaded track backgrounds, and dashed separator lines
+          create a professional genomics-browser aesthetic clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal, y-axis removed, subtle x-grid, dashed separators,
-          alternating backgrounds.
+        comment: theme_minimal removes top/right spines; Y-axis major grid removed;
+          X-axis grid at 15% opacity is very subtle; shaded track backgrounds and
+          dashed separators add structure. Good refinement but not every detail is
+          polished (legend border is visible).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Coverage peaks correlate with exon positions. EGFR locus provides
-          real scientific context with visual hierarchy.
+        comment: Multi-track layout enables visual correlation across data types at
+          the EGFR locus. Coverage spikes over exon positions encode biological insight
+          implicitly. EGFR (+) annotation provides genomic context. Visual hierarchy
+          is present but the exon-coverage correlation story could be made more explicit.
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +149,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-track genome browser with 4 vertically stacked tracks.
+        comment: Correct multi-track genome browser with all 4 required track types.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: gene track, coverage, variants, regulatory, labels,
-          shading.'
+        comment: 'All spec features present: exons/introns/strand-chevrons in gene
+          track, filled-area coverage, lollipop variant markers with quality height
+          encoding, colored regulatory rectangles, track labels, consistent genomic
+          coordinates, shaded track backgrounds.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps genomic position. All tracks aligned.
+        comment: X-axis correctly uses genomic position (bp coordinates). Track y-coordinates
+          use separate non-overlapping bands. Variant quality encoded in lollipop
+          height.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend identifies Variant Type and Regulatory
-          types.
+        comment: 'Title: ''genome-track-multi · python · plotnine · anyplot.ai'' —
+          correct format. Legends correctly show ''Variant Type'' (SNP/Indel) and
+          ''Regulatory'' (Promoter/Enhancer/Insulator).'
     data_quality:
       score: 15
       max: 15
@@ -150,22 +184,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All track types with rich sub-features: 13 exons, SNP/Indel variants,
-          3 regulatory types.'
+        comment: 'Shows all 4 required track types with different data types: discrete
+          gene structure, continuous coverage, quantitative-encoded variants, and
+          categorical regulatory elements.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real EGFR gene locus on chr7 with accurate coordinates. Neutral scientific
-          context.
+        comment: Uses real EGFR gene locus at chr7:55,086,000-55,141,000 with biologically
+          accurate 13-exon structure. Coverage peaks realistically align with exon
+          positions. Neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~55kb region appropriate for single-gene view. Realistic feature
-          density.
+        comment: ~55kb genomic region is appropriate for a gene browser view. 13 exons
+          for EGFR is accurate. Coverage depths and variant density are plausible
+          for sequencing data.
     code_quality:
       score: 10
       max: 10
@@ -175,61 +212,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure. No functions or classes.
+        comment: 'Linear script: imports → data preparation (per-track) → plot composition
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at the top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All imports are used. sys.path manipulation is necessary to resolve
+          the naming conflict between plotnine.py script and the plotnine package.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized per-track data preparation. No fake UI or over-engineering.
+        comment: Well-organized with clear per-track data sections. No fake UI elements
+          or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert grammar-of-graphics: ggplot + multiple geom layers, aes mappings,
-          scale functions, guide_legend.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multi-data-frame layer composition, pd.Categorical for legend order,
-          guide_legend override_aes.
+        comment: 'Idiomatic plotnine: ggplot() without global data (per-layer data
+          pattern), scale_color_manual/scale_fill_manual, guides() with guide_legend(order=),
+          labs(), theme() customization. Strong idiomatic usage.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses plotnine-distinctive patterns: per-layer data on ggplot() without
+          a global dataframe, ordered Categorical pandas types for correct legend
+          ordering, scale_x_continuous with lambda formatter, guide_legend order parameter
+          for multi-scale layout.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
