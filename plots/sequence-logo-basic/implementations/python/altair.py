@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-06-02
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
 
 import os
