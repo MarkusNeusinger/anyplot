@@ -555,7 +555,8 @@ jobs:
           get_r_version() {
             local v
             v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1)
-            is_version "$v" && printf '%s' "$v"
+            # if/fi, not `&&`: never return non-zero (would abort under `set -e`).
+            if is_version "$v"; then printf '%s' "$v"; fi
           }
           get_julia_version() {
             # Pkg.dependencies() returns a Dict{UUID, PackageInfo}; locate the
@@ -571,15 +572,22 @@ jobs:
                 end
               end
             " 2>/dev/null | tail -n1)
-            is_version "$v" && printf '%s' "$v"
+            # if/fi, not `&&`: never return non-zero (would abort under `set -e`).
+            if is_version "$v"; then printf '%s' "$v"; fi
           }
           get_npm_version() {
             # Read the installed version straight out of the package's own
             # package.json (restored by `npm ci` from the committed lockfile).
-            # `require('<pkg>/package.json')` resolves the subpath reliably.
+            # NB: read the file via fs, NOT `require('<pkg>/package.json')`:
+            # packages with an `exports` map (d3, chart.js) block that subpath
+            # with ERR_PACKAGE_PATH_NOT_EXPORTED, while echarts happens to allow
+            # it — reading node_modules/<pkg>/package.json directly is uniform.
             local v
-            v=$(node -p "require('$1/package.json').version" 2>/dev/null | tail -n1)
-            is_version "$v" && printf '%s' "$v"
+            v=$(node -p "JSON.parse(require('fs').readFileSync('node_modules/$1/package.json','utf8')).version" 2>/dev/null | tail -n1)
+            # if/fi, not `&&`: a failing is_version must not propagate a non-zero
+            # exit, or `LIBRARY_VERSION=$(get_npm_version …)` aborts the whole
+            # step under `set -e` before the `"unknown"` fallback can run.
+            if is_version "$v"; then printf '%s' "$v"; fi
           }
 
           if [ "$LANGUAGE" = "r" ]; then
