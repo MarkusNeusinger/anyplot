@@ -23,6 +23,8 @@ from core.constants import (
     get_library_label,
     is_interactive_library,
     is_valid_library,
+    language_file_extensions,
+    library_file_extension,
 )
 
 
@@ -30,10 +32,16 @@ class TestSupportedLibraries:
     """Tests for SUPPORTED_LIBRARIES constant."""
 
     def test_contains_expected_libraries(self) -> None:
-        """Should contain exactly the expected catalog of library IDs (9 Python + ggplot2 + makie)."""
+        """Should contain exactly the expected catalog of library IDs.
+
+        9 Python + ggplot2 (R) + makie (Julia) + chartjs/d3/echarts (JavaScript).
+        """
         expected = {
             "altair",
             "bokeh",
+            "chartjs",
+            "d3",
+            "echarts",
             "ggplot2",
             "highcharts",
             "letsplot",
@@ -61,9 +69,22 @@ class TestLibrariesMetadata:
 
     def test_each_library_has_required_fields(self) -> None:
         """Each library should have all required fields."""
-        required_fields = {"id", "name", "language_id", "version", "documentation_url", "description"}
+        required_fields = {"id", "name", "language_id", "framework", "version", "documentation_url", "description"}
         for lib in LIBRARIES_METADATA:
             assert required_fields.issubset(lib.keys()), f"Missing fields in {lib.get('id', 'unknown')}"
+
+    def test_framework_values_are_valid(self) -> None:
+        """Every library's framework must be one of the allowed values."""
+        allowed = {"none", "react", "vue", "svelte", "angular"}
+        for lib in LIBRARIES_METADATA:
+            assert lib["framework"] in allowed, f"{lib['id']} has invalid framework {lib['framework']}"
+
+    def test_javascript_libraries_are_framework_none(self) -> None:
+        """Phase-1 JavaScript libraries are all framework-agnostic."""
+        for lib_id in ("chartjs", "d3", "echarts"):
+            lib = next(lib for lib in LIBRARIES_METADATA if lib["id"] == lib_id)
+            assert lib["language_id"] == "javascript"
+            assert lib["framework"] == "none"
 
     def test_documentation_urls_are_valid(self) -> None:
         """Documentation URLs should be valid HTTP(S) URLs."""
@@ -90,8 +111,12 @@ class TestInteractiveLibraries:
         assert INTERACTIVE_LIBRARIES.issubset(SUPPORTED_LIBRARIES)
 
     def test_contains_expected_libraries(self) -> None:
-        """Should contain the expected interactive libraries."""
-        expected = {"altair", "bokeh", "highcharts", "letsplot", "plotly", "pygal"}
+        """Should contain the expected interactive libraries.
+
+        The three JavaScript libraries render in a browser and ship a
+        self-contained interactive HTML page alongside the static PNG.
+        """
+        expected = {"altair", "bokeh", "chartjs", "d3", "echarts", "highcharts", "letsplot", "plotly", "pygal"}
         assert INTERACTIVE_LIBRARIES == expected
 
     def test_matplotlib_seaborn_plotnine_not_interactive(self) -> None:
@@ -223,9 +248,9 @@ class TestIsInteractiveLibrary:
 class TestSupportedLanguages:
     """Tests for SUPPORTED_LANGUAGES + LANGUAGES_METADATA."""
 
-    def test_contains_python_r_and_julia(self) -> None:
-        """Catalog currently supports Python, R, and Julia."""
-        assert SUPPORTED_LANGUAGES == {"python", "r", "julia"}
+    def test_contains_python_r_julia_and_javascript(self) -> None:
+        """Catalog supports Python, R, Julia, and JavaScript."""
+        assert SUPPORTED_LANGUAGES == {"python", "r", "julia", "javascript"}
 
     def test_metadata_ids_match_supported(self) -> None:
         """Every LANGUAGES_METADATA entry must appear in SUPPORTED_LANGUAGES."""
@@ -243,9 +268,41 @@ class TestSupportedLanguages:
         assert LANGUAGE_FILE_EXTENSIONS["python"] == ".py"
         assert LANGUAGE_FILE_EXTENSIONS["r"] == ".R"
         assert LANGUAGE_FILE_EXTENSIONS["julia"] == ".jl"
+        assert LANGUAGE_FILE_EXTENSIONS["javascript"] == ".js"
 
     def test_every_library_references_known_language(self) -> None:
         """No library may point at a language we don't list in LANGUAGES_METADATA."""
         known = SUPPORTED_LANGUAGES
         for lib in LIBRARIES_METADATA:
             assert lib["language_id"] in known, f"{lib['id']} has unknown language_id {lib['language_id']}"
+
+
+class TestLibraryFileExtensions:
+    """Tests for the per-library extension override mechanism."""
+
+    def test_library_inherits_language_default(self) -> None:
+        """Libraries without an override get their language's default extension."""
+        assert library_file_extension("matplotlib") == ".py"
+        assert library_file_extension("ggplot2") == ".R"
+        assert library_file_extension("makie") == ".jl"
+        assert library_file_extension("chartjs") == ".js"
+        assert library_file_extension("d3") == ".js"
+        assert library_file_extension("echarts") == ".js"
+
+    def test_unknown_library_falls_back_to_py(self) -> None:
+        """Unknown libraries default to .py rather than raising."""
+        assert library_file_extension("does-not-exist") == ".py"
+
+    def test_language_file_extensions_phase1_javascript_is_js_only(self) -> None:
+        """All Phase-1 JS libs are .js, so JavaScript discovery scans only .js."""
+        assert language_file_extensions("javascript") == {".js"}
+
+    def test_language_file_extensions_single_extension_languages(self) -> None:
+        """Languages without per-library overrides expose just their default."""
+        assert language_file_extensions("python") == {".py"}
+        assert language_file_extensions("r") == {".R"}
+        assert language_file_extensions("julia") == {".jl"}
+
+    def test_language_file_extensions_unknown_language(self) -> None:
+        """An unknown language has no extensions to scan."""
+        assert language_file_extensions("cobol") == set()

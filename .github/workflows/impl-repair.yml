@@ -79,6 +79,10 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
+            chartjs|d3|echarts)
+              LANGUAGE="javascript"
+              EXT=".js"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -126,6 +130,10 @@ jobs:
       - name: Setup Julia + Makie
         if: steps.lang.outputs.language == 'julia'
         uses: ./.github/actions/setup-julia
+
+      - name: Setup Node + browser render harness
+        if: steps.lang.outputs.language == 'javascript'
+        uses: ./.github/actions/setup-node
 
       - name: Extract AI feedback from PR
         id: feedback
