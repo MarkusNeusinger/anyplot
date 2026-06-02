@@ -1,5 +1,7 @@
-"""anyplot.ai — tree-decision: Decision Tree Visualization with Probabilities
-Library: pygal
+""" anyplot.ai
+tree-decision: Decision Tree Visualization with Probabilities
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-06-02
 """
 
 import os
