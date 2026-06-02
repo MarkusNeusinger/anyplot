@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -94,6 +94,7 @@ for ex_start, ex_end in exons:
 kernel = np.exp(-0.5 * np.linspace(-3, 3, 31) ** 2)
 kernel /= kernel.sum()
 coverage = np.clip(np.convolve(base_coverage, kernel, mode="same"), 0, None)
+cov_max = float(coverage.max()) * 1.1
 
 # --- Variant Track Data ---
 variant_positions = [
@@ -120,6 +121,7 @@ variant_positions = [
 ]
 variant_types = ["SNP"] * 14 + ["Indel"] * 6
 variant_quality = np.random.uniform(20, 100, len(variant_positions))
+var_max = 110.0
 
 # --- Regulatory Track Data ---
 reg_elements = [
@@ -136,7 +138,7 @@ reg_color_map = {"Promoter": COLOR_PROMOTER, "Enhancer": COLOR_ENHANCER, "CTCF B
 
 shared_x_range = Range1d(start=region_start, end=region_end)
 W = 3200
-BL = 180  # min_border_left — room for y-axis label + tick labels
+BL = 220  # min_border_left — room for y-axis label + tick labels at 32pt+26pt
 BR = 60  # min_border_right
 
 # ============================================================
@@ -150,7 +152,7 @@ p_gene = figure(
     title="genome-track-multi · python · bokeh · anyplot.ai",
     tools="",
     toolbar_location=None,
-    min_border_top=110,
+    min_border_top=140,
     min_border_bottom=5,
     min_border_left=BL,
     min_border_right=BR,
@@ -204,18 +206,18 @@ p_gene.text(
     x=[(genes[0]["tx_start"] + genes[0]["tx_end"]) / 2],
     y=[1.1],
     text=["EGFR (+)"],
-    text_font_size="24pt",
+    text_font_size="28pt",
     text_align="center",
     text_color=INK,
     text_font_style="italic",
 )
 p_gene.add_layout(
     Label(
-        x=region_start + 1800, y=1.6, text="Genes", text_font_size="22pt", text_color=INK_SOFT, text_font_style="bold"
+        x=region_start + 1800, y=1.6, text="Genes", text_font_size="28pt", text_color=INK_SOFT, text_font_style="bold"
     )
 )
 
-p_gene.title.text_font_size = "36pt"
+p_gene.title.text_font_size = "46pt"
 p_gene.title.text_color = INK
 p_gene.xaxis.visible = False
 p_gene.yaxis.visible = False
@@ -232,6 +234,7 @@ p_cov = figure(
     width=W,
     height=525,
     x_range=shared_x_range,
+    y_range=Range1d(0, cov_max),
     tools="",
     toolbar_location=None,
     min_border_top=5,
@@ -239,6 +242,18 @@ p_cov = figure(
     min_border_left=BL,
     min_border_right=BR,
 )
+
+# Subtle exon position shading — visually ties coverage peaks to gene structure
+for ex_start, ex_end in exons:
+    p_cov.quad(
+        left=[ex_start],
+        right=[ex_end],
+        top=[cov_max],
+        bottom=[0],
+        fill_color=COLOR_EXON,
+        fill_alpha=0.06,
+        line_color=None,
+    )
 
 cov_src = ColumnDataSource(
     data={
@@ -255,9 +270,9 @@ p_cov.add_tools(HoverTool(tooltips=[("Position", "@pos_fmt"), ("Depth", "@depth_
 p_cov.add_layout(
     Label(
         x=region_start + 1800,
-        y=coverage.max() * 0.88,
+        y=cov_max * 0.88,
         text="Coverage",
-        text_font_size="22pt",
+        text_font_size="28pt",
         text_color=INK_SOFT,
         text_font_style="bold",
     )
@@ -265,10 +280,10 @@ p_cov.add_layout(
 
 p_cov.xaxis.visible = False
 p_cov.yaxis.axis_label = "Read Depth"
-p_cov.yaxis.axis_label_text_font_size = "22pt"
+p_cov.yaxis.axis_label_text_font_size = "32pt"
 p_cov.yaxis.axis_label_text_font_style = "normal"
 p_cov.yaxis.axis_label_text_color = INK
-p_cov.yaxis.major_label_text_font_size = "18pt"
+p_cov.yaxis.major_label_text_font_size = "26pt"
 p_cov.yaxis.major_label_text_color = INK_SOFT
 p_cov.yaxis.axis_line_color = INK_SOFT
 p_cov.yaxis.minor_tick_line_color = None
@@ -288,6 +303,7 @@ p_var = figure(
     width=W,
     height=460,
     x_range=shared_x_range,
+    y_range=Range1d(0, var_max),
     tools="",
     toolbar_location=None,
     min_border_top=5,
@@ -295,6 +311,18 @@ p_var = figure(
     min_border_left=BL,
     min_border_right=BR,
 )
+
+# Subtle exon position shading — visually ties variants to gene structure
+for ex_start, ex_end in exons:
+    p_var.quad(
+        left=[ex_start],
+        right=[ex_end],
+        top=[var_max],
+        bottom=[0],
+        fill_color=COLOR_EXON,
+        fill_alpha=0.06,
+        line_color=None,
+    )
 
 # Lollipop stems
 for i, vp in enumerate(variant_positions):
@@ -348,16 +376,21 @@ p_var.scatter(
 p_var.add_tools(HoverTool(tooltips=[("Type", "@type"), ("Position", "@pos_fmt"), ("Quality", "@qual_fmt")]))
 p_var.add_layout(
     Label(
-        x=region_start + 1800, y=95, text="Variants", text_font_size="22pt", text_color=INK_SOFT, text_font_style="bold"
+        x=region_start + 1800,
+        y=var_max * 0.87,
+        text="Variants",
+        text_font_size="28pt",
+        text_color=INK_SOFT,
+        text_font_style="bold",
     )
 )
 
 p_var.xaxis.visible = False
 p_var.yaxis.axis_label = "Quality Score"
-p_var.yaxis.axis_label_text_font_size = "22pt"
+p_var.yaxis.axis_label_text_font_size = "32pt"
 p_var.yaxis.axis_label_text_font_style = "normal"
 p_var.yaxis.axis_label_text_color = INK
-p_var.yaxis.major_label_text_font_size = "18pt"
+p_var.yaxis.major_label_text_font_size = "26pt"
 p_var.yaxis.major_label_text_color = INK_SOFT
 p_var.yaxis.axis_line_color = INK_SOFT
 p_var.yaxis.minor_tick_line_color = None
@@ -369,7 +402,7 @@ p_var.ygrid.grid_line_dash = [4, 4]
 p_var.background_fill_color = PAGE_BG
 p_var.border_fill_color = PAGE_BG
 p_var.outline_line_color = None
-p_var.legend.label_text_font_size = "20pt"
+p_var.legend.label_text_font_size = "26pt"
 p_var.legend.label_text_color = INK_SOFT
 p_var.legend.glyph_height = 28
 p_var.legend.glyph_width = 28
@@ -391,7 +424,7 @@ p_reg = figure(
     tools="",
     toolbar_location=None,
     min_border_top=5,
-    min_border_bottom=160,
+    min_border_bottom=200,
     min_border_left=BL,
     min_border_right=BR,
 )
@@ -433,7 +466,7 @@ p_reg.add_layout(
         x=region_start + 1800,
         y=1.25,
         text="Regulatory",
-        text_font_size="22pt",
+        text_font_size="28pt",
         text_color=INK_SOFT,
         text_font_style="bold",
     )
@@ -441,10 +474,10 @@ p_reg.add_layout(
 
 p_reg.yaxis.visible = False
 p_reg.xaxis.axis_label = f"Genomic Position ({chrom})"
-p_reg.xaxis.axis_label_text_font_size = "26pt"
+p_reg.xaxis.axis_label_text_font_size = "32pt"
 p_reg.xaxis.axis_label_text_font_style = "normal"
 p_reg.xaxis.axis_label_text_color = INK
-p_reg.xaxis.major_label_text_font_size = "20pt"
+p_reg.xaxis.major_label_text_font_size = "26pt"
 p_reg.xaxis.major_label_text_color = INK_SOFT
 p_reg.xaxis.formatter = NumeralTickFormatter(format="0,0")
 p_reg.xaxis.axis_line_width = 2
@@ -456,7 +489,7 @@ p_reg.ygrid.grid_line_color = None
 p_reg.background_fill_color = PAGE_BG
 p_reg.border_fill_color = PAGE_BG
 p_reg.outline_line_color = None
-p_reg.legend.label_text_font_size = "20pt"
+p_reg.legend.label_text_font_size = "26pt"
 p_reg.legend.label_text_color = INK_SOFT
 p_reg.legend.glyph_height = 28
 p_reg.legend.glyph_width = 36
