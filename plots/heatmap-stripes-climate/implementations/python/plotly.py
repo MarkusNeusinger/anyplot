@@ -1,12 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-06
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
+
+import sys
+
+
+sys.path = sys.path[1:]  # Prevent self-import: script dir is removed so 'import plotly' finds the package
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data
 np.random.seed(42)
@@ -24,25 +39,27 @@ for year, dip in volcanic_events.items():
 anomalies = trend + noise + volcanic_dips
 vmax = max(abs(anomalies.min()), abs(anomalies.max()))
 
-# Colorscale (blue to white to red, symmetric around 0)
+# Colorscale: classic warming stripes (deep blue → neutral → deep red)
+# Midpoint is theme-adaptive so near-zero bars harmonise with the page surface
+mid_color = "#E8E4D8" if THEME == "light" else "#3A3A35"
 colorscale = [
     [0.0, "#08306b"],
     [0.25, "#2171b5"],
     [0.45, "#6baed6"],
-    [0.5, "#ffffff"],
+    [0.5, mid_color],
     [0.55, "#fb6a4a"],
     [0.75, "#cb181d"],
     [1.0, "#67000d"],
 ]
 
-# Classify each year's anomaly for hover display
+# Hover labels per bar
 labels = np.where(
     anomalies > 0.3,
     "Strong warming",
     np.where(anomalies > 0, "Warm", np.where(anomalies > -0.3, "Cool", "Strong cooling")),
 )
 
-# Plot using go.Heatmap with native colorscale and custom hovertemplate
+# Plot — warming stripes heatmap
 fig = go.Figure(
     data=go.Heatmap(
         z=[anomalies],
@@ -59,51 +76,42 @@ fig = go.Figure(
     )
 )
 
-# Subtle decade markers as thin semi-transparent lines
-for dy in [1900, 1950, 2000]:
-    fig.add_shape(type="line", x0=dy, x1=dy, y0=-0.5, y1=0.5, line={"color": "rgba(255,255,255,0.35)", "width": 1.5})
+# Subtle decade markers (semi-transparent, adapts to theme)
+decade_color = "rgba(255,255,255,0.30)" if THEME == "light" else "rgba(0,0,0,0.40)"
+for decade in [1900, 1950, 2000]:
+    fig.add_shape(type="line", x0=decade, x1=decade, y0=-0.5, y1=0.5, line={"color": decade_color, "width": 1.5})
 
-# Subtle start/end year annotations
-fig.add_annotation(
-    x=0.01,
-    y=-0.02,
-    text="1850",
-    showarrow=False,
-    font={"size": 16, "color": "rgba(80,80,80,0.7)"},
-    xanchor="left",
-    yanchor="top",
-    xref="paper",
-    yref="paper",
-)
-fig.add_annotation(
-    x=0.99,
-    y=-0.02,
-    text="2024",
-    showarrow=False,
-    font={"size": 16, "color": "rgba(80,80,80,0.7)"},
-    xanchor="right",
-    yanchor="top",
-    xref="paper",
-    yref="paper",
-)
+# Start / end year labels (theme-adaptive ink)
+for x_pos, anchor, label in [(0.01, "left", "1850"), (0.99, "right", "2024")]:
+    fig.add_annotation(
+        x=x_pos,
+        y=-0.04,
+        text=label,
+        showarrow=False,
+        font={"size": 16, "color": INK_MUTED},
+        xanchor=anchor,
+        yanchor="top",
+        xref="paper",
+        yref="paper",
+    )
 
+title_text = "heatmap-stripes-climate · python · plotly · anyplot.ai"
 fig.update_layout(
-    title={
-        "text": "heatmap-stripes-climate · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#333333"},
-        "x": 0.5,
-        "y": 0.95,
-    },
-    paper_bgcolor="white",
-    plot_bgcolor="white",
+    autosize=False,
+    title={"text": title_text, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     xaxis={"showgrid": False, "showticklabels": False, "zeroline": False, "showline": False, "range": [1849.5, 2024.5]},
     yaxis={"showgrid": False, "showticklabels": False, "zeroline": False, "showline": False, "fixedrange": True},
-    margin={"l": 0, "r": 0, "t": 70, "b": 30},
+    margin={"l": 20, "r": 20, "t": 70, "b": 40},
     showlegend=False,
 )
 
-# Save with ~3:1 aspect ratio (wide and short, per spec)
-fig.write_image("plot.png", width=1600, height=533, scale=3)
+# Save — landscape 3200×1800 canvas
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(
-    "plot.html", include_plotlyjs="cdn", config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
+    f"plot-{THEME}.html",
+    include_plotlyjs="cdn",
+    config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False},
 )
