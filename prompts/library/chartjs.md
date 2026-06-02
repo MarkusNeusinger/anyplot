@@ -177,7 +177,7 @@ the Python/R/Julia conventions:
 ```js
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: chartjs 4.4 | JavaScript 22
+// Library: chartjs 4.4.7 | JavaScript 22
 // Quality: pending | Created: 2026-06-02
 ```
 

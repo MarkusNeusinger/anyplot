@@ -255,12 +255,12 @@ async function main() {
     }
 
     // Surface snippet failures loudly — a blank/half-drawn PNG must fail the
-    // render so the pipeline retries, never ship silently.
+    // render so the pipeline retries, never ship silently. Throw (don't
+    // process.exit) so the `finally` below still closes the browser; the outer
+    // main().catch turns the throw into a non-zero exit.
     const inPageError = await page.evaluate(() => window.__anyplotError);
     if (pageError || inPageError) {
-      console.error("render: the snippet threw while drawing:");
-      console.error(String(pageError?.stack || pageError || inPageError));
-      process.exit(1);
+      throw new Error(`render: the snippet threw while drawing:\n${String(pageError?.stack || pageError || inPageError)}`);
     }
 
     // The HTML scaffold always provides `#container`, so its mere existence
@@ -274,8 +274,7 @@ async function main() {
       return !!el && el.querySelector("canvas, svg, img") !== null;
     });
     if (!drewSomething) {
-      console.error("render: snippet did not draw into #container (no <canvas>/<svg> mounted).");
-      process.exit(1);
+      throw new Error("render: snippet did not draw into #container (no <canvas>/<svg> mounted).");
     }
 
     const pngOut = path.resolve(process.cwd(), `plot-${theme}.png`);
