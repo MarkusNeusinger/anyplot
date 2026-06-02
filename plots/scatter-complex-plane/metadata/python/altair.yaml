@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:22:49Z'
-updated: '2026-06-02T01:49:36Z'
+updated: '2026-06-02T02:08:17Z'
 generated_by: claude-sonnet
 workflow_run: 26791723871
 issue: 4427
@@ -15,47 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 quality_score: 88
 review:
   strengths:
-  - Multi-layer Altair composition with 9 distinct layers (axes, unit circle, arc,
-    arc label, vectors, arrowheads, points, annotations, Re/Im labels)
-  - Interactive legend selection using alt.selection_point(bind=legend) with conditional
-    opacity — genuine Altair interactivity
-  - Dynamic angle encoding (alt.Angle) for arrowhead orientation — precise directional
-    rendering
-  - 'Correct Imprint palette in canonical order: #009E73 (Roots of Unity), #C475FD
-    (Arbitrary), #4467A3 (Transformation)'
-  - Full theme-adaptive chrome in both renders — dark background (#1A1A17), light
-    text in dark mode, correct ELEVATED_BG for legend box
-  - 'Mathematically correct data: 3rd roots of unity, complex rotation (z·e^(iπ/4)),
-    and π/4 arc annotation'
-  - Equal aspect ratio (460×460 inner view) ensures unit circle renders as a true
-    circle
-  - Clean KISS code structure, seed set, all imports used, saves both PNG and HTML
+  - 'Fully compliant with all spec requirements: axes through origin, dashed unit
+    circle, origin vectors with correct arrowheads, equal aspect ratio, per-category
+    colors, rectangular-form annotations'
+  - Sophisticated interactive legend selection (click to isolate category) — distinctive
+    and useful Altair feature
+  - Rotation arc with π/4 label directly illustrates the complex multiplication transformation
+    — excellent data storytelling
+  - Per-point label offset tuning prevents the worst overlaps in a naturally dense
+    diagram
+  - 'Complete theme-adaptive chrome: all tokens correctly applied to both renders'
+  - Correct Imprint palette canonical order and palette-compliant backgrounds in both
+    themes
   weaknesses:
-  - 'Central-area annotation crowding: vectors from origin and labels for ω0, z, and
-    z₅ cluster in the Q1 region creating visual noise — increase label offsets or
-    reduce annotation verbosity to separate them'
-  - z₁ annotation label_x=2.68 slightly exceeds axis_limit=2.65 domain, causing the
-    label (z₁ = 2.5+1.5i) to be clipped by the Vega-Lite scale boundary — fix by reducing
-    label dx offset or expanding axis_limit by 0.1
-  - 'DE-01 headroom: the multi-layer composition is sophisticated but annotation crowding
-    in the center detracts from publication-ready polish — improve by tuning label
-    offsets to avoid vector lines and reducing the ω0 label which overlaps the horizontal
-    axis line'
-  - π/4 arc label uses a fixed blue (#4467A3) at fontSize=11 — slightly small and
-    color may be low-contrast on dark background; increase to fontSize=12 or use INK_SOFT
-    token instead
+  - Annotation density in upper-right quadrant (z·e^(iπ/4), z, z₁) is close to the
+    legend box — consider increasing z₁ label offset or reducing annotation fontSize
+    to 9 in crowded areas
+  - No redundant marker-shape encoding across categories — adding distinct shapes
+    (circle/square/diamond) per category would improve CVD discrimination at small
+    sizes
+  - Spec optionally requested polar form annotations (r∠θ) — could add as tooltip
+    fields for completeness
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
-      Chrome: Title "scatter-complex-plane · python · altair · anyplot.ai" bold and clearly readable in dark ink. Subtitle in softer dark tone, readable. "Re" and "Im" italic labels at axis endpoints in INK_MUTED. Legend box with ELEVATED_BG fill and INK_SOFT border, Category title and labels in dark tones — all readable. Axis tick marks and labels at the chart edges are very faint due to 0.12 gridOpacity but present.
-      Data: Roots of Unity points in #009E73 (green), Arbitrary points in #C475FD (lavender), Transformation points in #4467A3 (blue) — canonical Imprint order confirmed. Arrowheads and vector lines match category colors. Dashed unit circle in grey/INK_SOFT. Rotation arc in blue (#4467A3) with π/4 italic label. Point annotations in dark bold text with rectangular forms (e.g. "ω0 = 1.0+0.0i"). Central area has some visual crowding where multiple vectors and labels converge.
-      Legibility verdict: PASS — all text is readable against the warm off-white background. Minor crowding in central Q1 area but no "light on light" failures. The z₁ label (at label_x=2.68, slightly outside axis domain 2.65) may have its trailing "i" clipped by the Vega-Lite scale boundary.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "scatter-complex-plane · python · altair · anyplot.ai" at fontsize 16 in dark ink (#1A1A17), centered, ~70% plot width. Subtitle in INK_SOFT. Axis titles "Real Axis" / "Imaginary Axis" at 12px in INK. Tick labels at 10px in INK_SOFT. "Re" / "Im" italic endpoint labels in INK_MUTED. Legend in top-right with ELEVATED_BG (#FFFDF6) fill and INK_SOFT border. All chrome readable.
+      Data: Three categories — Roots of Unity in #009E73 (brand green, first series ✓), Arbitrary in #C475FD (lavender), Transformation in #4467A3 (blue). Vectors from origin, triangular arrowheads, dashed unit circle, dashed rotation arc with π/4 italic label. Point annotations (label + rectangular form) at fontsize 10. Minor annotation crowding in Q1 (z·e^(iπ/4)/z/z₁ near legend).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
-      Chrome: Title in light (#F0EFE8) — clearly readable against dark background. Subtitle in medium-light tone, readable. "Re"/"Im" axis labels visible. Legend box with dark ELEVATED_BG (#242420) fill, light label text — no dark-on-dark issues found. Point annotations in light/off-white text — all readable against the dark surface.
-      Data: Colors identical to light render — #009E73 (green), #C475FD (lavender), #4467A3 (blue). Only chrome (background, text, legend box) flips between themes as required. Dashed unit circle appears slightly lighter/more visible against the dark background. π/4 arc label in #4467A3 blue is readable but medium-contrast on dark background.
-      Legibility verdict: PASS — all text is readable in dark mode. No dark-on-dark failures detected. Brand green #009E73 remains clearly visible on dark surface.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle flip to light INK (#F0EFE8) and INK_SOFT (#B8B7B0) — clearly readable against dark surface. Tick labels in INK_SOFT (#B8B7B0). Legend uses ELEVATED_BG (#242420) fill. No dark-on-dark failures detected. All annotations, axis labels, and tick labels are legible.
+      Data: Colors are IDENTICAL to light render — #009E73 (green), #C475FD (lavender), #4467A3 (blue). Data appearance unchanged; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 26
@@ -66,88 +58,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, subtitle=12, annotations=10,
-          axis labels=12, arc label=11). All text readable in both themes. Minor concern:
-          annotation density at fontsize=10 may be tight at 400px mobile width.'
+        comment: 'Explicit font sizes throughout (title 16, axis 12, ticks 10, annotations
+          10). Readable in both themes. Minor concern: annotation text at 10px may
+          be slightly tight at 400px mobile scale.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Moderate crowding in central Q1 area where vectors from origin and
-          point labels for ω0, z, and z₅ cluster. Text is individually readable but
-          visually busy. The ω0 label sits very close to the horizontal axis line.
+        comment: Per-point offset tuning does well. Slight crowding in upper-right
+          quadrant where z·e^(iπ/4), z, and z₁ annotations cluster near the legend
+          box — readable but dense.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Scatter points size=250 (effectively ~500px at scale 4), arrowheads
-          size=400, vector strokeWidth=2 — all clearly visible and well-sized for
-          sparse data (10 points).
+        comment: 'Points at size=250 and arrowheads at size=400 appropriate for 10
+          sparse data points. Unit circle and rotation arc clearly visible. Minor:
+          vector lines could be slightly thicker.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Three Imprint palette colors (#009E73, #C475FD, #4467A3) are CVD-safe
-          and perceptually distinct. PAGE_BG stroke on markers adds definition. No
-          red-green sole-signal issues.'
+        comment: Imprint palette positions 1-3 (green/lavender/blue) are CVD-safe
+          and distinct.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Plot fills canvas well with good centering. Minor issue: z₁ annotation
-          label_x=2.68 exceeds axis_limit=2.65 scale domain — trailing ''i'' of ''2.5+1.5i''
-          appears clipped by Vega-Lite scale boundary, not canvas edge.'
+        comment: Square 2400x2400 canvas correct for equal aspect ratio. No overflow.
+          Slight annotation density in upper-right costs a point.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Standard 'Real Axis' / 'Imaginary Axis' axis titles set via alt.Axis,
-          supplemented by 'Re'/'Im' italic convention labels at axis endpoints — complete
-          and appropriate for an Argand diagram.
+        comment: Real Axis / Imaginary Axis titles with Re/Im endpoint italic labels
+          — thorough and correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Roots of Unity). Imprint canonical order:
-          #C475FD (Arbitrary), #4467A3 (Transformation). Light bg #FAF8F1, dark bg
-          #1A1A17. All chrome theme-adaptive. Data colors identical across both renders.'
+        comment: 'First series #009E73 ✓. Multi-series uses Imprint canonical order
+          ✓. Backgrounds #FAF8F1/#1A1A17 ✓. Both renders theme-correct ✓.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above a well-configured default: multi-layer composition, interactive
-          legend selection, styled arrowheads with angle encoding, dashed rotation
-          arc with π/4 label, styled legend box. Annotation crowding in center detracts
-          from publication-ready polish.'
+        comment: 'Sophisticated: interactive click-to-highlight, rotated arrowheads
+          with correct Vega angle mapping, dashed rotation arc with π/4 label, theme-adaptive
+          elevated legend. Annotation crowding slightly reduces polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Very subtle grid (opacity=0.12), strokeWidth=0 removes view border
-          frame, PAGE_BG stroke on markers, styled dashed reference elements, axis
-          lines through origin rather than traditional bottom/left axes. Some visual
-          noise from crowded central area.
+        comment: No spines, grid opacity 0.12 very subtle, custom axis lines through
+          origin, elevated legend fill. Room to improve axis padding and inner whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: rotation arc with π/4 label highlights the
-          transformation story, unit circle as geometric reference, three color-coded
-          categories communicate distinct point types. Vector arrows from origin tell
-          the magnitude/phase story effectively.'
+        comment: Three conceptual groups well differentiated. Rotation arc directly
+          illustrates π/4 transformation. Interactive category highlighting. Could
+          add redundant marker shape encoding.
     spec_compliance:
       score: 15
       max: 15
@@ -157,58 +141,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Argand diagram: scatter points + vectors + unit circle +
-          equal aspect ratio (460×460).'
+        comment: Correct Argand diagram with all structural features.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: axes through origin with tick marks,
-          dashed unit circle, vectors with arrowheads, rectangular form annotations,
-          equal aspect ratio, distinct category colors.'
+        comment: Axes through origin, dashed unit circle, origin vectors with arrowheads,
+          equal aspect ratio, rectangular-form annotations, distinct category colors
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real parts on x-axis, imaginary parts on y-axis, all points visible
-          within domain [-2.65, 2.65].
+        comment: Real part on x-axis, imaginary on y-axis, all 10 points in view.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''scatter-complex-plane · python · altair · anyplot.ai''
-          — correct format. Legend: ''Roots of Unity'', ''Arbitrary'', ''Transformation''
-          — appropriate labels.'
+        comment: Title is scatter-complex-plane · python · altair · anyplot.ai ✓.
+          Legend labels match category names ✓.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Covers all complex plane features: roots of unity (symmetric on
-          unit circle), arbitrary points in all four quadrants, complex rotation with
-          arc annotation.'
+        comment: 3rd roots of unity, arbitrary points in all four quadrants, complex
+          rotation transformation, unit circle reference, annotated vectors. Spec
+          optional polar form not included.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Educational math/complex analysis context. Neutral, science-educational
-          scenario demonstrating real complex analysis concepts.
+        comment: Mathematically rigorous (e^(2πik/3) roots, rotation by e^(iπ/4)),
+          neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically correct: 3rd roots of unity at correct positions
-          (1, -0.5±0.87i), rotation z·e^(iπ/4) calculated correctly, arbitrary points
-          span all quadrants with plausible magnitudes.'
+        comment: Axis range ±2.75 accommodates all data including z₁=(2.5+1.5i) with
+          room. Unit circle at r=1 correctly inscribed.
     code_quality:
       score: 10
       max: 10
@@ -218,36 +198,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Clean sequential structure: data generation
-          → chart layers → compose → save.'
+        comment: No functions or classes; linear flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is mathematically deterministic anyway.
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: importlib (altair import), os (ANYPLOT_THEME),
-          sys (path manipulation), numpy, pandas, PIL.Image (padding).'
+        comment: All imports used (numpy, pandas, PIL, importlib/sys/os for path hack,
+          altair via importlib).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. The hardcoded label offsets for specific points
-          (z₅, z·e^(iπ/4)) are acceptable for a static layout. No fake interactivity
-          — Altair's selection is genuine.
+        comment: Appropriate complexity for the richness of the spec. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API.
-          PAD-only block correctly implemented.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Pads to exact 2400×2400.
     library_mastery:
       score: 9
       max: 10
@@ -257,28 +233,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Altair usage: layer composition, selection parameters, condition
-          encoding, angle encoding, resolve_scale, configure_view/axis/legend. High-level
-          declarative API throughout.'
+        comment: alt.layer composition, selection_point with bind=legend, alt.condition
+          for opacity, alt.Angle encoding, alt.Title with subtitle — all idiomatic
+          Altair patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.selection_point(bind='legend') with conditional opacity (alt.condition),
-          alt.Angle() encoding for dynamic arrowhead rotation, resolve_scale(color='independent')
-          for multi-scale layers — genuinely Altair-specific features.
-  verdict: REJECTED
+        comment: Interactive click-to-highlight via selection_point is a distinctive
+          Altair feature. Angle encoding for mark rotation is library-specific. Tooltip
+          integration. Could additionally use transform_calculate for tighter data-binding.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - layer-composition
-  - hover-tooltips
   - annotations
+  - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
