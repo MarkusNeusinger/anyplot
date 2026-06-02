@@ -109,7 +109,7 @@ ax_gene = Axis(
     ygridvisible       = false,
     yticklabelsvisible = false,
     yticksvisible      = false,
-    limits             = (reg_start, reg_end, -1.1, 1.2),
+    limits             = (reg_start, reg_end, -1.3, 1.4),
 )
 hidexdecorations!(ax_gene; ticks = false, grid = false)
 
@@ -162,7 +162,7 @@ ax_cov = Axis(
     yticklabelcolor    = INK_SOFT,
     yticklabelsize     = 10,
     ytickcolor         = INK_SOFT,
-    backgroundcolor    = PAGE_BG,
+    backgroundcolor    = ELEVATED_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     bottomspinevisible = false,
@@ -207,7 +207,7 @@ for (pos, q) in zip(snp_pos, snp_q)
 end
 
 text!(ax_var, Float64(reg_start + 100), 110.0;
-    text = "Quality score", fontsize = 10, color = INK_MUTED, align = (:left, :top))
+    text = "Quality score", fontsize = 12, color = INK_MUTED, align = (:left, :top))
 
 # ---- Track 4: Regulatory Elements ------------------------------------
 ax_reg = Axis(
@@ -221,7 +221,7 @@ ax_reg = Axis(
     xticklabelcolor    = INK_SOFT,
     xticklabelsize     = 10,
     xtickcolor         = INK_SOFT,
-    backgroundcolor    = PAGE_BG,
+    backgroundcolor    = ELEVATED_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
