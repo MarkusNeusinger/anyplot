@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:26:36Z'
-updated: '2026-06-02T11:57:56Z'
+updated: '2026-06-02T12:09:55Z'
 generated_by: claude-sonnet
 workflow_run: 26817125894
 issue: 4421
@@ -15,141 +15,126 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Correct sequence logo implementation with scaled glyph rendering using TextPath/PathPatch
-    — letters are properly stretched to fill their allocated height at each position
-  - Semantic Imprint palette colors for DNA bases (A=#009E73 green, C=#4467A3 blue,
-    G=#BD8233 ochre, T=#AE3030 red) matching both the spec requirement and Imprint
-    brand rules
-  - Accurate information content calculation (IC = 2 + Σ f·log₂(f)) with correct handling
-    of zero frequencies
-  - Creative dual-panel layout pairing the sequence logo with a seaborn heatmap panel
-    showing raw frequencies — adds quantitative context beyond the logo's symbolic
-    representation
-  - 'Effective data storytelling: annotated arrow + background highlight at position
-    3 (most conserved, 1.4 bits) guides the viewer''s eye to the key insight'
-  - Perfect spec and data quality — 10-position DNA motif with realistic variation
-    from near-uniform (position 8) to highly conserved (positions 2, 3, 4, 10) clearly
-    demonstrates all conservation levels
-  - imprint_seq colormap correctly applied to the frequency heatmap (single-polarity
-    data, green→blue)
-  - Correct canvas (3200×1800) and no bbox_inches='tight' — matches seaborn canvas
-    rules exactly
+  - Technically sophisticated sequence logo implementation using TextPath/PathPatch
+    for properly scaled letter glyphs
+  - Two-panel layout (sequence logo + frequency heatmap) provides both the visual
+    consensus and the underlying numerical data
+  - Semantic DNA color mapping using Imprint palette members (A=#009E73, C=#4467A3,
+    G=#BD8233, T=#AE3030) — biologically standard and palette-compliant
+  - Conservation annotation with highlight span and arrow callout effectively communicates
+    the key biological insight
+  - Both renders fully pass theme-readability — proper chrome token use including
+    the C-label contrast fix for dark mode
+  - 'Perfect spec compliance: IC calculation, letter ordering, axis labels, glyph
+    rendering all match specification exactly'
+  - Canvas correctly 3200x1800 px without bbox_inches=tight — no canvas drift
   weaknesses:
-  - 'Dark theme contrast: Imprint blue #4467A3 (used as C heatmap y-tick label color)
-    has ~3:1 contrast ratio against the #1A1A17 dark background — below WCAG AA (4.5:1)
-    for small 8pt text. Fix: in dark render, lighten the C label to a more luminous
-    blue or override heatmap base labels with INK_SOFT (#B8B7B0) and rely on bold
-    weight + the logo coloring for semantics.'
-  - 'DE-01/DE-02: The heatmap panel is visually basic relative to the sophisticated
-    sequence logo — default seaborn heatmap styling with minimal refinement. Fix:
-    add `annot=True, fmt=''.2f''` to show frequency values in cells, remove all heatmap
-    spines (`sns.despine(ax=ax_heat, top=True, right=True, left=True, bottom=True)`
-    after removing colorbar border), or use a horizontal colorbar below the heatmap
-    to free y-axis space.'
-  - 'LM-01: The primary sequence logo visualization relies entirely on matplotlib
-    primitives (TextPath, PathPatch, Affine2D transforms); seaborn contributes only
-    the supplementary heatmap panel and theme configuration. No native seaborn plot
-    type is used for the main chart — this is expected for sequence logos but limits
-    seaborn mastery score.'
+  - Heatmap cell annotation numbers (annot_kws size=5) are too small at thumbnail/mobile
+    display sizes (~7px at 800px width) — increase to size=7 or 8 for readability
+    at reduced scales
+  - At near-zero IC positions (e.g. positions 1, 6, 8), multiple letters crowd the
+    base of the stack with heights just above the 0.01 threshold — these micro-glyphs
+    are visually noisy; consider raising the minimum render threshold to ~0.03-0.05
+    to hide near-zero letters cleanly
+  - The seaborn-distinctive panel (heatmap) is secondary to the matplotlib-rendered
+    sequence logo — LM score is limited by this architecture, which is unavoidable
+    but worth noting
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "sequence-logo-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable at ~65% of plot width (fontsize=12). Y-axis label "Information content (bits)" and X-axis "Position" in dark ink at fontsize=10 — readable. Tick labels at 8pt in INK_SOFT — readable. Annotation "Most conserved (1.4 bits)" in italics with arrow pointing to position 3 — visible and informative. Colorbar "Freq." label visible on the right.
-      Data: Sequence logo (top panel) shows stacked letter glyphs at 10 positions. A=green (#009E73), C=blue (#4467A3), G=ochre (#BD8233), T=red (#AE3030). First series (A) is brand green ✓. Position 3 (G, ~1.4 bits) is the tallest, positions 2 (T), 4 (A), 5 (C), 9 (T), 10 (C) show moderate conservation. Position 8 shows near-uniform distribution (short stack). Subtle gray background highlight at position 3. Heatmap panel (bottom) shows frequencies via imprint_seq colormap (green→blue). Only ~15% of canvas height, compact but readable.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures observed.
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: Title "sequence-logo-basic · python · seaborn · anyplot.ai" at 12pt clearly readable in dark ink. Axis labels "Position" and "Information content (bits)" at 10pt readable. Tick labels at 8pt readable. Annotation text at 7pt italic readable.
+      Data: Letter glyphs A=#009E73 (green), C=#4467A3 (blue), G=#BD8233 (ochre), T=#AE3030 (red). All clearly visible. Heatmap uses imprint_seq (green-to-blue) colormap with annotated cell values. Colorbar labeled "Freq." visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8) — clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — readable. Annotation text in INK_SOFT — visible. Colorbar labels in INK_SOFT — readable.
-      Data: Sequence logo data colors are identical to light render — A (green), C (blue), G (ochre), T (red) — correct, only chrome flipped. Heatmap colormap colors identical. Dark-mode highlight at position 3 appears as a dark gray box rather than light gray — still visible as a highlight region.
-      Legibility verdict: PASS with one minor concern — the C base label (#4467A3 blue) in the heatmap y-axis has ~3:1 contrast against the #1A1A17 dark background, which falls below WCAG AA (4.5:1) for 8pt text. All other text passes. No "dark-on-dark" catastrophic failure; this is a marginal contrast issue for one specific label.
+      Background: warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, and tick labels flip to light text (INK=#F0EFE8 / INK_SOFT=#B8B7B0). All text clearly readable against dark background. Annotation text uses INK_SOFT (#B8B7B0) — readable. Colorbar tick labels and label use INK_SOFT. No dark-on-dark failures observed.
+      Data: Letter glyph colors identical to light render (A=green, C=blue, G=ochre, T=red — data colors do not change with theme). Heatmap imprint_seq colormap identical. Heatmap cell annotation text uses INK_SOFT (light gray) — readable on colored cells.
+      Special note: C y-axis label in heatmap uses INK_SOFT instead of the base blue (#4467A3) in dark mode — correctly handled in code to address ~3:1 contrast limitation.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt).
-          Readable in both themes. Title fits without clipping. Balanced layout.
+        comment: 'Title 12pt, axis labels 10pt, tick labels 8pt, annotation 7pt —
+          all explicitly set. Minor deduction: heatmap annot_kws size=5 is too small
+          (~7px at 800px thumbnail width)'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or elements. Annotation with arrow is placed
-          at (pos+3, 1.80) with no collisions.
+        comment: At low-IC positions (1, 6, 8), near-zero-height letter glyphs crowd
+          together at stack base — expected for sequence logos but slightly noisy
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Letter glyphs clearly visible and appropriately scaled by information
-          content. Heatmap cells clearly color-coded.
+        comment: High-IC letter glyphs bold and prominent; heatmap cells clearly colored;
+          all elements visible at canvas scale
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: C base label (#4467A3 blue) on dark background (#1A1A17) has ~3:1
-          contrast ratio — below WCAG AA (4.5:1) for 8pt text. Other elements pass.
-          DNA bases use distinct Imprint palette colors (green/blue/ochre/red) — CVD-safe.
+        passed: true
+        comment: Semantic DNA base colors are Imprint palette members; letter shapes
+          provide redundant CVD-safe encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct. Two-panel layout with height_ratios=[3.5,1]
-          well-proportioned. subplots_adjust provides adequate margins. No clipping
-          observed.
+        comment: Two-panel layout with height_ratios=[3.5, 1] appropriate. Canvas
+          3200x1800 correct. Margins well-balanced with subplots_adjust.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Information content (bits)'' with units. X-axis: ''Position''.
-          Title in correct format.'
+        comment: 'X: ''Position'', Y: ''Information content (bits)'' — matches spec
+          exactly'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'DNA bases use Imprint palette (A=#009E73, C=#4467A3, G=#BD8233,
-          T=#AE3030) — semantic exception correctly applied. Heatmap uses imprint_seq
-          (single-polarity). Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors
-          identical across themes.'
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Heatmap uses imprint_seq. DNA
+          colors are Imprint members with valid semantic exception. Chrome theme-adaptive
+          in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: semantic DNA color coding, custom
-          glyph rendering, annotation with arrow, dual-panel layout. Not quite at
-          strong-design (6) level — heatmap panel is functional but not polished,
-          letter proportions at dense positions can look cluttered.'
+        comment: Well above defaults — TextPath/PathPatch glyph rendering is technically
+          sophisticated, two-panel design is intentional, conservation highlight/annotation
+          adds professional polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Logo panel: top/right spines removed, subtle y-grid (alpha=0.15),
-          clean layout via subplots_adjust. Heatmap panel: thin linewidths=0.3 but
-          retains default seaborn grid structure. Good but not perfect.'
+        comment: Spines removed (top/right on logo, all on heatmap), grid subtle at
+          alpha=0.15, thin heatmap cell separators — clearly above library defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Background highlight + annotation arrow clearly direct viewer to
-          the most conserved position. DNA semantic coloring creates immediate visual
-          vocabulary. Dual panel adds quantitative context. Clear focal point.
+        comment: Most conserved position highlighted with span + annotation arrow.
+          Two-panel layout connects visual consensus to numerical frequencies. Clear
+          focal point at position 3.
     spec_compliance:
       score: 15
       max: 15
@@ -159,29 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sequence logo with stacked letter glyphs scaled by information
-          content.
+        comment: Correct sequence logo with scaled stacked letter glyphs via TextPath/PathPatch
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: vertical letter stacking, IC scaling,
-          DNA color scheme, x=positions, y=bits, scaled glyphs, axis labels.'
+        comment: 'All spec features present: stacked letters, IC-scaled heights, DNA
+          color scheme, scaled glyphs, IC y-axis, position x-axis, axis labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=positions 1-10, Y=0-2.1 bits. All 10 positions shown correctly.
+        comment: Positions 1-10 on x-axis, IC 0-2.1 bits on y-axis, frequency*IC for
+          heights, most-frequent on top
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sequence-logo-basic · python · seaborn · anyplot.ai' in exact
-          format. No legend needed for main logo. Heatmap colorbar labeled 'Freq.'
-          appropriately.
+        comment: Title 'sequence-logo-basic · python · seaborn · anyplot.ai' correct.
+          Heatmap colorbar provides frequency scale.
     data_quality:
       score: 15
       max: 15
@@ -191,23 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: near-uniform (pos 8, ~0 bits), low conservation
-          (pos 1, 6, 7), moderate (pos 5, 9), high (pos 2, 4, 10), very high (pos
-          3, ~1.4 bits). All 4 DNA bases appear as dominant letters at different positions.'
+        comment: 'Full IC spectrum: near-uniform, moderately conserved, and highly
+          conserved positions. Conserved core (pos 2-5) biologically realistic.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 10-position DNA transcription factor binding site motif with biologically
-          plausible frequency distributions. Neutral scientific domain.
+        comment: 10-position DNA transcription factor binding site motif — canonical
+          bioinformatics use case, neutral and scientifically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies sum to 1 per position. IC range 0-2 bits correct for
-          DNA. Position numbers 1-10. IC formula implemented correctly.
+        comment: Y-axis 0-2.1 bits appropriate (DNA max=2 bits). Frequencies sum to
+          1 per position. IC = 2 + sum(f*log2(f)) correctly computed.
     code_quality:
       score: 10
       max: 10
@@ -217,34 +200,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme tokens → data → IC calculation → plot →
-          save. No functions or classes.'
+        comment: 'Linear flat script: imports -> theme tokens -> data -> IC -> canvas
+          -> logo -> heatmap -> save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded numpy arrays, no random sampling.
+        comment: Deterministic data (manually defined frequency array)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 10 imports (os, pyplot, transforms, numpy, pandas, seaborn, LinearSegmentedColormap,
-          FontProperties, PathPatch, TextPath) are actively used.
+        comment: 'All 10 imports used: os, matplotlib.pyplot, matplotlib.transforms,
+          numpy, pandas, seaborn, LinearSegmentedColormap, FontProperties, PathPatch,
+          TextPath'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: TextPath/PathPatch/Affine2D loop is the correct approach for letter
-          glyph rendering. Appropriate complexity for the visualization type.
+        comment: Appropriate complexity for the plot type. Nested loop for letter
+          rendering is necessary and well-structured. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current API.
+        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches='tight'
     library_mastery:
       score: 6
       max: 10
@@ -254,23 +238,23 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.heatmap(), sns.set_theme(), sns.despine() all used correctly
-          and idiomatically. Main sequence logo uses matplotlib primitives (necessary
-          since seaborn has no native sequence logo type).
+        comment: sns.set_theme() with full rc dict, sns.heatmap(), sns.despine() are
+          idiomatic. Core sequence logo uses matplotlib primitives (unavoidable for
+          this plot type).
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.heatmap with custom imprint_seq colormap and base-colored y-tick
-          labels is a seaborn-distinctive use. The dual-panel combination (logo +
-          seaborn heatmap) is a creative design choice.
-  verdict: REJECTED
+        comment: sns.heatmap() with annotated cells, imprint_seq colormap, colored
+          y-tick labels per DNA base, and colorbar customization. Seaborn distinctive
+          features confined to secondary panel.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - subplots
+  - annotations
   - colorbar
   - patches
   - manual-ticks
