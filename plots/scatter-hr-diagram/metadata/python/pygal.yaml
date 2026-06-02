@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:46:55Z'
-updated: '2026-06-02T18:10:33Z'
+updated: '2026-06-02T18:23:19Z'
 generated_by: claude-sonnet
 workflow_run: 26837869853
 issue: 4558
@@ -15,48 +15,46 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-h
 quality_score: 85
 review:
   strengths:
-  - 'Excellent spec compliance: all required HR diagram features implemented correctly
-    — reversed x-axis, log luminosity scale, four region labels, Sun reference, all
-    stellar populations with 285 stars'
-  - 'Outstanding data quality: scientifically accurate stellar populations with realistic
-    temperature/luminosity ranges, correct regional clustering, and factually correct
-    Sun position at 5778 K / 1 L☉'
-  - 'Perfect code quality: clean flat KISS structure, np.random.seed(42) set, correct
-    PNG + interactive HTML output format'
-  - 'Good use of distinctive pygal features: interactive HTML output, CSS injection
-    for bold region labels, custom dict-format x-axis labels, per-series dot size
-    control'
-  - CVD-safe spectral color mapping with documented semantic exception; spectral color
-    gradient naturally reinforces the temperature direction
+  - Correct HR diagram with reversed X-axis using -log10(T) transformation following
+    astrophysical convention
+  - All four stellar regions labeled (Main Sequence, Red Giants, Supergiants, White
+    Dwarfs) with bold, CSS stroke-outlined text readable in both themes
+  - Full Imprint palette compliance with theme-adaptive chrome — backgrounds, ink
+    tokens, and CSS-injected label fills all adapt correctly
+  - Sun reference point distinctly marked with prominent marker (dots_size=16) and
+    descriptive tooltip label
+  - Excellent data quality — all stellar populations represented with physically realistic
+    parameters; np.random.seed(42) ensures reproducibility
+  - Creative use of pygal null-series technique (chart.add(None, ...)) for region
+    labels — a genuinely library-specific pattern
   weaknesses:
-  - 'VQ-07 partial compliance: amber #DDCC77 (F/G Stars series) is outside the Imprint
-    categorical pool — reserved for warning/caution role only. Replace with an unused
-    Imprint categorical color (#C475FD lavender or #99B314 lime) to achieve full VQ-07
-    compliance'
-  - 'VQ-07 first-series deviation: O/B Stars use #4467A3 rather than the required
-    brand green #009E73; semantic exception documented but strictly deviates from
-    the first-series rule'
-  - 'DE-02 refinement gap: plot retains full box frame (all four spines visible) and
-    default dashed grid style. Add CSS via css=["inline:..."] to dim or remove top/right
-    borders for a cleaner L-frame look'
-  - 'VQ-02 label placement: ''Main Sequence'' annotation placed at -log10(18000),
-    3.8 — sits within the dense O/B/A star scatter causing minor overlap. Move to
-    a less-dense position (e.g., higher luminosity ~4.5 at mid-temperature)'
-  - 'DE-01 moderate: overall aesthetic still ''well-configured default''; the main
-    sequence diagonal could receive additional emphasis (larger markers or higher
-    opacity) to create a stronger focal point'
+  - '"Main Sequence" and "Red Giants" region labels are placed horizontally adjacent
+    in the lower-right quadrant, close to K/M star scatter points; the crowding makes
+    the region boundary unclear — move "Red Giants" label further right (toward cooler
+    temperatures, e.g. rx=-log10(3500)) to separate the two labels visually'
+  - 'Spectral type colors deviate from the conventional astrophysical assignment (spec
+    requested blue for O/B, white for A, yellow for F/G); while the Imprint first-series
+    hard rule correctly forces O/B→#009E73, the remaining assignments could better
+    exploit available Imprint members that are closer to the astronomical convention
+    (e.g. A Stars could use #4467A3 blue instead of cyan, which reads more like the
+    A-type white/blue)'
+  - 'The plot area retains a visible bounding box frame from pygal — add CSS rule
+    `.chart-background { stroke: none !important; } .plot { stroke: none !important;
+    }` and consider removing the top/right portions via `.y.axis line, .x.axis line`
+    overrides to achieve the L-shaped or frameless aesthetic expected by the style
+    guide (DE-02)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
-      Chrome: Title "scatter-hr-diagram · python · pygal · anyplot.ai" in dark ink at top, clearly visible. X-axis label "Hot ← Surface Temperature (K) → Cool" and Y-axis label "log₁₀ Luminosity (L☉)" in dark ink, both readable. Tick labels (40,000 K through 2,500 K rotated, -5.0 to 7.0 on Y) in dark ink. Region labels (Supergiants, Main Sequence, Red Giants, White Dwarfs) in bold dark ink. Legend at bottom in 6-column layout, all text dark and readable.
-      Data: O/B Stars in Imprint blue #4467A3, A Stars in Imprint cyan #2ABCCD, F/G Stars in amber #DDCC77, K Stars in Imprint ochre #BD8233, M Stars in Imprint matte red #AE3030, Sun as large dark ink dot. Main sequence diagonal visible top-left to lower-right. Red giant clump at cool/luminous region. Supergiants at upper range. White dwarf scatter at hot/dim lower portion. 285 stars at alpha=0.70.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct; clearly not pure white.
+      Chrome: Title "scatter-hr-diagram · python · pygal · anyplot.ai" in dark ink, fully readable. X-axis label "Hot ← Surface Temperature (K) → Cool" and Y-axis label "log₁₀ Luminosity (L☉)" both visible and clearly legible. Tick labels (40,000 K down to 2,500 K on X; -5 to 7 on Y) readable. All font sizes explicitly set.
+      Data: O/B Stars in #009E73 brand green (upper-left, high-temp high-lum), A Stars in #2ABCCD cyan, F/G Stars in #C475FD lavender, K Stars in #BD8233 ochre, M Stars in #AE3030 matte red (lower-right). Sun marker in near-black INK (#1A1A17) at (5778 K, 0 log-lum) with label "The Sun (5,778 K, 1 L☉)". Region labels "Supergiants" (upper-middle), "White Dwarfs" (lower-middle), "Main Sequence" and "Red Giants" (lower-right, somewhat crowded). Main sequence diagonal clearly visible. Bottom legend shows all 6 series.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels, region labels, and legend all rendered in light/near-white ink against dark background. No dark-on-dark failures detected. All elements clearly visible. Sun ☉ legend swatch correctly shows as near-white (INK token in dark mode = #F0EFE8).
-      Data: All spectral type colors identical to light render — O/B Stars blue, A Stars cyan, F/G Stars amber-yellow, K Stars ochre-brown, M Stars matte red. Sun marker appears as a large near-white/light-grey dot (theme-adaptive INK) with visible label. Data colors are unchanged between themes as expected.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues found
+      Background: Warm near-black #1A1A17 — correct; clearly not pure black.
+      Chrome: Title in near-white ink (#F0EFE8), clearly visible. Axis labels and tick labels rendered in light color against dark background — all readable. Region labels use CSS fill:{INK} where INK=#F0EFE8 in dark mode with dark stroke outline — legible. No dark-on-dark failures observed.
+      Data: All Imprint palette data colors identical to light render (#009E73, #2ABCCD, #C475FD, #BD8233, #AE3030). Sun marker appears as near-white dot (INK in dark mode = #F0EFE8), still distinct. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -67,52 +65,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; readable in both themes. Minor: legend
-          text small at mobile width.'
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44, region labels CSS 38px). Readable in both themes. Minor crowding
+          in lower-right where region labels and data points compete.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Generally clear; 'Main Sequence' label sits within dense O/B/A star
-          cluster causing slight visual overlap with data points.
+        comment: '''Main Sequence'' and ''Red Giants'' region labels placed horizontally
+          adjacent in lower-right quadrant near K/M star scatter points. Not fully
+          overlapping but crowded enough to reduce clarity.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good marker visibility at alpha=0.70; O/B cluster dense but individual
-          points distinguishable. Varying dot sizes (7-16) appropriate.
+        comment: 285 total data points (medium density). Per-series dot sizes 7-16.
+          Opacity=0.70. All spectral groups and Sun marker clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette with documented spectral-color mappings.
-          No red-green sole signal.
+        comment: Imprint palette is CVD-safe. Adequate luminance contrast between
+          all 5 spectral groups.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape, good canvas utilization, well-proportioned margins
-          (top=60, bottom=120, left=90, right=60).
+        comment: 3200x1800 confirmed. Balanced margins (margin_bottom=120, margin_left=90).
+          Bottom legend with 6 columns doesn't crowd data. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Hot ← Surface Temperature (K) → Cool''; Y: ''log₁₀ Luminosity
-          (L☉)'' — descriptive with units and direction indicators.'
+        comment: 'X: ''Hot ← Surface Temperature (K) → Cool'' — descriptive with direction
+          indicator. Y: ''log₁₀ Luminosity (L☉)'' — descriptive with units. Both excellent.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Semantic exception for astrophysical spectral colors documented;
-          all colors from Imprint palette/anchors; chrome theme-correct. However:
-          (1) first series O/B Stars uses #4467A3 not #009E73; (2) F/G Stars use amber
-          #DDCC77 which is outside categorical pool (warning/caution anchor only).'
+        passed: true
+        comment: 'First series O/B Stars = #009E73 brand green. All other series from
+          Imprint palette. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive
+          chrome via Style object and CSS injection. Both renders pass.'
     design_excellence:
       score: 12
       max: 20
@@ -122,27 +121,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: domain-appropriate spectral color mapping, Sun marker
-          emphasised at dots_size=16, region labels embedded in plot, alpha=0.70 for
-          depth. Not yet publication-level.'
+        comment: 'Above library defaults: custom Imprint palette, theme-adaptive chrome,
+          bold region labels with paint-order stroke for dual-theme readability, subtle
+          grid via CSS. Not quite publication-ready but clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Custom font sizes and alpha set. Plot retains full box frame (top/right
-          borders visible), dashed default grid style. Removing box spines and softening
-          grid would increase polish.
+        passed: true
+        comment: Grid softened via CSS inline (stroke-opacity:0.18, stroke-width:1.5px).
+          Background frame stroke removed via CSS (.background,.chart-background {stroke:none}).
+          Moderate refinement but visible axis bounding box remains; L-shaped or frameless
+          aesthetic not achieved.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Region labels guide viewers; spectral color gradient (blue→yellow→red)
-          reinforces temperature direction; Sun provides familiar reference. Could
-          further emphasize main sequence diagonal.
+        comment: Main sequence diagonal immediately apparent. All four stellar populations
+          labeled. Sun reference creates a personal anchor point. Temperature gradient
+          across spectral types creates natural visual flow from hot-blue (upper-left)
+          to cool-red (lower-right). Clear astrophysical narrative.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -150,29 +151,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter HR diagram with all stellar populations.
+        comment: XY scatter (pygal.XY) is the correct chart type for a Hertzsprung-Russell
+          diagram.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: X-axis reversed, log luminosity scale, spectral-type color coding,
-          all four region labels, Sun reference, 285 stars in 100-500 range. Secondary
-          spectral-class axis optional and not required.
+        comment: X-axis reversed ✅ (via -log10(T) transformation). Y-axis log scale
+          ✅ (via log10 pre-transform of luminosity). Four regions labeled ✅. Sun position
+          marked ✅. Spec requested 'conventional colors (blue O/B, white A, yellow
+          F/G, orange K, red M)' — implementation uses Imprint palette instead (first-series
+          hard rule forces green for O/B). Correct per style guide but deviates from
+          explicit spec requirement.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on reversed X-axis, log10 luminosity on Y-axis, axes
-          cover full data range.
+        comment: X = -log10(T) for reversed temperature axis (hot left, cool right).
+          Y = log10(luminosity). All stellar populations and Sun correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'scatter-hr-diagram · python · pygal · anyplot.ai'.
-          Legend lists all six series with correct labels.
+        comment: Title is 'scatter-hr-diagram · python · pygal · anyplot.ai' — exact
+          required format. Legend shows all 6 series with correct labels.
     data_quality:
       score: 15
       max: 15
@@ -182,23 +187,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four stellar populations shown; all spectral types O through
-          M; Sun as reference point.
+        comment: 'All four stellar populations shown: main sequence (200 stars), red
+          giants (40), supergiants (15), white dwarfs (30). Sun as reference. Spectral
+          classification O/B/A/F/G/K/M all represented.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Astrophysics/stellar classification; neutral scientific domain; not
-          controversial.
+        comment: Standard astronomical HR diagram data. Neutral scientific context.
+          No controversial topics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sun at 5778 K/1 L☉ factually correct; temperature 2000-40000 K and
-          luminosity 10^-4 to 10^5.8 physically accurate; main sequence slope, giant
-          clump, and white dwarf positions astronomically correct.
+        comment: Temperature range 2500-40000K physically correct for stellar populations.
+          Sun at T=5778K, L=1 solar luminosity — correct. Main sequence luminosity
+          follows realistic T-L relation via np.interp. Log luminosity range -4 to
+          5.8 covers all populations appropriately.
     code_quality:
       score: 10
       max: 10
@@ -208,35 +215,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential: imports → theme → colors → data → style → chart
-          → series → save. No functions or classes.'
+        comment: No functions or classes. Clear imports → data generation → style
+          → chart → save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style.'
+        comment: 'Only used imports: os, sys (for path manipulation), numpy, pygal,
+          pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. CSS injection for label styling necessary given
-          pygal architecture; well-documented.
+        comment: Appropriate complexity. CSS injection for label styling is a legitimate
+          pygal technique. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png (render_to_png) and plot-{THEME}.html (render()).
+          Correct for interactive pygal library.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,18 +253,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses XY scatter with dict-format data points, custom x_labels with
-          value/label dicts, xrange, per-series dots_size, x_value_formatter, value_formatter,
-          CSS injection, legend_at_bottom_columns, js=[]. Sophisticated pygal usage.
+        comment: Uses pygal.XY for scatter, custom Style with all theme tokens, x_labels
+          as list of {value, label} dicts, print_labels, per-series dots_size override
+          in chart.add(), xrange/range for axis bounds, x_value_formatter and value_formatter.
+          Good idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses distinctive pygal features: interactive HTML output alongside
-          PNG (render()), CSS injection via css=[''inline:...''], custom label format
-          in XY coordinates, print_labels=True for region annotations.'
-  verdict: REJECTED
+        comment: CSS injection for custom label styles (pygal-specific). Null-series
+          technique (chart.add(None, ...)) for region annotation labels is a creative
+          pygal-specific pattern. HTML export for interactive output. legend_at_bottom
+          with column control. x_value_formatter for custom tick display.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
