@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-02
@@ -31,6 +31,11 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 COLOR_HIGH = "#009E73"  # green — high/upside scenario (Imprint position 1)
 COLOR_LOW = "#4467A3"  # blue — low/downside scenario (Imprint position 3)
 
+# Subtle region tints
+POS_BAND = "rgba(0,158,115,0.04)"
+NEG_BAND = "rgba(174,48,48,0.04)"
+TOP_ROW_BAND = "rgba(0,158,115,0.07)"  # highlight for the widest-range driver row
+
 # Data — NPV sensitivity for a capital investment project
 base_npv = 12.5  # Base case NPV in $M
 
@@ -58,6 +63,10 @@ sorted_indices = sorted(range(len(parameters)), key=lambda i: ranges[i], reverse
 sorted_params = [parameters[i] for i in sorted_indices]
 sorted_low = [round(low_values[i] - base_npv, 1) for i in sorted_indices]
 sorted_high = [round(high_values[i] - base_npv, 1) for i in sorted_indices]
+n_params = len(sorted_params)
+top_driver = sorted_params[0]
+# The widest bar tip value (max absolute delta) for callout anchor
+max_positive = max(sorted_low[0], sorted_high[0])
 
 # Chart
 chart = Chart(container="container")
@@ -94,6 +103,8 @@ chart.options.x_axis = {
     "lineWidth": 1,
     "lineColor": INK_SOFT,
     "tickWidth": 0,
+    # Subtle highlight band for the top-driver row (widest range, index 0 at top)
+    "plotBands": [{"from": -0.5, "to": 0.5, "color": TOP_ROW_BAND}],
 }
 
 chart.options.y_axis = {
@@ -106,6 +117,35 @@ chart.options.y_axis = {
     "tickInterval": 1,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    # Shade the positive and negative NPV-change half-planes
+    "plotBands": [
+        {
+            "from": -8,
+            "to": 0,
+            "color": NEG_BAND,
+            "label": {
+                "text": "Negative Impact",
+                "style": {"fontSize": "26px", "color": "rgba(174,48,48,0.35)", "fontStyle": "italic"},
+                "align": "right",
+                "x": -20,
+                "verticalAlign": "bottom",
+                "y": -16,
+            },
+        },
+        {
+            "from": 0,
+            "to": 8,
+            "color": POS_BAND,
+            "label": {
+                "text": "Positive Impact",
+                "style": {"fontSize": "26px", "color": "rgba(0,158,115,0.35)", "fontStyle": "italic"},
+                "align": "left",
+                "x": 20,
+                "verticalAlign": "bottom",
+                "y": -16,
+            },
+        },
+    ],
     "plotLines": [
         {
             "value": 0,
@@ -168,6 +208,20 @@ chart.options.plot_options = {
     }
 }
 
+# Responsive rules — degrade gracefully for smaller viewports
+chart.options.responsive = {
+    "rules": [
+        {
+            "condition": {"maxWidth": 1600},
+            "chartOptions": {
+                "legend": {"itemStyle": {"fontSize": "22px"}},
+                "xAxis": {"labels": {"style": {"fontSize": "22px"}}},
+                "yAxis": {"labels": {"style": {"fontSize": "20px"}}, "title": {"style": {"fontSize": "22px"}}},
+            },
+        }
+    ]
+}
+
 # High scenario first → gets #009E73 (Imprint first series, green = upside)
 high_series = BarSeries()
 high_series.name = "High Scenario"
@@ -199,7 +253,35 @@ html_content = f"""<!DOCTYPE html>
     <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>
     document.addEventListener('DOMContentLoaded', function() {{
-        Highcharts.chart('container', {config_json});
+        var hcChart = Highcharts.chart('container', {config_json});
+
+        // Use chart.renderer.label (callout shape) to highlight the top sensitivity driver.
+        // toPixels converts data values to absolute pixel coordinates at render time.
+        var tipX = hcChart.yAxis[0].toPixels({max_positive});
+        var rowY = hcChart.xAxis[0].toPixels(0);  // center y of first row (Discount Rate)
+
+        hcChart.renderer.label(
+            '★ Top Driver: {top_driver}',
+            tipX - 340,
+            rowY - 44,
+            'callout',
+            tipX + 5,
+            rowY
+        )
+        .attr({{
+            fill: 'rgba(0,158,115,0.10)',
+            stroke: '{COLOR_HIGH}',
+            'stroke-width': 1.5,
+            padding: 14,
+            r: 4,
+            zIndex: 7,
+        }})
+        .css({{
+            color: '{COLOR_HIGH}',
+            fontSize: '28px',
+            fontWeight: '700',
+        }})
+        .add();
     }});
     </script>
 </body>
