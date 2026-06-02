@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -39,17 +39,12 @@ for year, dip in volcanic_events.items():
 anomalies = trend + noise + volcanic_dips
 vmax = max(abs(anomalies.min()), abs(anomalies.max()))
 
-# Colorscale: classic warming stripes (deep blue → neutral → deep red)
-# Midpoint is theme-adaptive so near-zero bars harmonise with the page surface
-mid_color = "#E8E4D8" if THEME == "light" else "#3A3A35"
+# Colorscale: imprint_div diverging (reversed: cold=blue at zmin, warm=red at zmax)
+# Midpoint is PAGE_BG so near-zero bars blend with the page surface (theme-adaptive)
 colorscale = [
-    [0.0, "#08306b"],
-    [0.25, "#2171b5"],
-    [0.45, "#6baed6"],
-    [0.5, mid_color],
-    [0.55, "#fb6a4a"],
-    [0.75, "#cb181d"],
-    [1.0, "#67000d"],
+    [0.0, "#4467A3"],  # cool / negative anomaly → Imprint blue
+    [0.5, PAGE_BG],  # neutral / zero anomaly  → theme-adaptive page surface
+    [1.0, "#AE3030"],  # warm / positive anomaly → Imprint matte red
 ]
 
 # Hover labels per bar
