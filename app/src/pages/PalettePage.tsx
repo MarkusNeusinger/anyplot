@@ -270,7 +270,7 @@ color <- IMPRINT$hues[1]  # first series = slot 0, brand green (R is 1-based: in
 
 # continuous data — ggplot2 gradient scales
 scale_color_gradientn(colours = IMPRINT$seq)        # sequential
-scale_color_gradientn(colours = IMPRINT$div$light)  # diverging (light theme)`;
+scale_color_gradient2(low = IMPRINT$div$light[1], mid = IMPRINT$div$light[2], high = IMPRINT$div$light[3], midpoint = 0)  # diverging — 0 maps to the neutral midpoint (light theme)`;
     case 'julia':
       return `using Colors  # colorant"#..."
 
