@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:25:01Z'
-updated: '2026-06-02T02:06:01Z'
+updated: '2026-06-02T02:16:34Z'
 generated_by: claude-sonnet
 workflow_run: 26791933969
 issue: 4427
@@ -12,50 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint palette order: brand green #009E73 as first series (roots of
-    unity), lavender #C475FD second, blue #4467A3 third'
-  - 'Full spec compliance: unit circle (dashed), vectors from origin with arrowhead
-    approximation, data labels with both rectangular (a+bi) and polar (r∠θ) forms,
-    parallelogram construction lines for geometric addition'
-  - 'Perfect data quality: mathematically accurate 3rd roots of unity, educational
-    context covering all Argand diagram features'
-  - Theme-adaptive chrome correctly wired through all chart elements in both light
-    and dark renders
-  - 'Clean deterministic code with proper Highcharts idioms: Chart(container=container),
-    add_series(), to_js_literal()'
-  - Square 2400×2400 canvas appropriate for equal-aspect complex plane
+  - 'Perfect spec compliance: all required Argand diagram features present and working
+    (axes through origin, dashed unit circle, vectors with arrowheads, equal aspect
+    ratio, rectangular+polar annotations, distinct color/marker categories)'
+  - Excellent Imprint palette usage with canonical order (green → lavender → blue)
+    and correct theme-adaptive chrome in both renders
+  - 'Creative multi-layer composition: unit circle + transparency-graded vectors +
+    custom arrowheads + parallelogram construction lines'
+  - 'Redundant encoding (color + marker shape: circle/diamond/triangle) for full CVD
+    accessibility without relying on hue alone'
+  - Square 2400×2400 canvas correctly chosen for symmetric complex plane; equal aspect
+    ratio achieved via symmetric ±3.7 axis range
+  - Dual annotation format (rectangular a+bi + polar r∠θ°) matches spec requirements
+    exactly
+  - Both light and dark renders pass readability checks with no dark-on-dark or light-on-light
+    failures
   weaknesses:
-  - 'Upper-half label crowding: z2, z5, and sum (z1+z2) data labels are close together
-    with overlapping vector arrows in the upper quadrant — reduce font size of data
-    labels from 32-36px to 28px, and increase label offsets to spread them further
-    from each other'
-  - 'Equal aspect ratio not perfectly enforced: asymmetric margins (left=240, right=160,
-    top=160, bottom=200) make the plot area 2000×2040px rather than square, which
-    can distort the unit circle from a circle into a slight ellipse — set all margins
-    to the same value (e.g. marginLeft=220, marginRight=220, marginTop=180, marginBottom=180)
-    or use chart plotOptions to enforce equal axis unit size'
-  - 'Design excellence headroom: the overall aesthetic is functional but could be
-    elevated with a more intentional focal hierarchy — consider slightly larger markers
-    for the roots-of-unity series to visually emphasize them as the primary subject,
-    and add a light radial emphasis around the origin point'
+  - Point data labels at 28px are noticeably smaller than the 44px tick label baseline;
+    consider raising to 34-36px for better readability at mobile-scaled widths
+  - Minor density/crowding in the upper quadrant (z5 near z1+z2 sum) — current label
+    offsets manage this but leave little breathing room
+  - Arrowhead construction SplineSeries creation is repeated three times (roots loop,
+    arbitrary numbers, sum) — moderate code verbosity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface.
-      Chrome: Title "scatter-complex-plane · python · highcharts · anyplot.ai" bold dark text, fully readable. Subtitle "Argand Diagram — Roots of Unity, Complex Addition, and Polar Coordinates" in lighter secondary text. X-axis label "Real Axis (Re)" and Y-axis label "Imaginary Axis (Im)" clearly visible in dark ink. Tick labels (-3 to 3 on both axes) in dark-grey, readable. Legend (top-right) shows Unit Circle, 3rd Roots of Unity, Complex Numbers, z1+z2 Addition — all entries readable.
-      Data: 3rd roots of unity as large green circles (#009E73) at (1,0), (-0.5,0.87), (-0.5,-0.87) with ω labels in green. Five arbitrary complex numbers as lavender diamonds (#C475FD) with z-labels showing rectangular and polar forms. Sum point as blue triangle (#4467A3) at (0.8, 3.5) near top. Unit circle visible as grey dashed circle. Vector arrows (SplineSeries chevrons) from origin to each point. Parallelogram construction lines (long-dashed blue) from z1 and z2 to the sum point. Origin marked with small "O" circle.
-      Legibility verdict: PASS — all text readable against light background. Minor crowding of z2, z5, and sum labels in upper portion with overlapping vector lines, but all readable.
+      Background: Warm off-white (#FAF8F1) — confirmed, not pure white
+      Chrome: Title "scatter-complex-plane · python · highcharts · anyplot.ai" in dark bold text — readable. Subtitle in dark secondary text — readable. Axis labels "Real Axis (Re)" and "Imaginary Axis (Im)" in dark text at 56px — readable. Tick labels -3 to 3 on both axes in dark secondary text at 44px — readable. Legend text in dark ink with elevated background — readable.
+      Data: 3rd Roots of Unity as large green (#009E73) circles with green dashed vectors and green arrowheads. Complex Numbers as lavender (#C475FD) diamonds with lavender vectors. z1+z2 as blue (#4467A3) triangle with blue vector. Parallelogram construction lines in transparent blue. Dashed grey unit circle. Point labels show rectangular+polar forms at 28px.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title in near-white F0EFE8 text, fully readable. Axis labels and tick labels in light-grey, readable. Legend box uses elevated dark background #242420 with light text — all entries readable. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — green roots (#009E73), lavender diamonds (#C475FD), blue triangle (#4467A3). Unit circle dashed in muted grey. All vector arrows and construction lines visible against dark background. Brand green #009E73 clearly visible.
-      Legibility verdict: PASS — all text readable against dark background. Chrome correctly adapts to dark theme. No dark-on-dark text issues.
+      Background: Warm near-black (#1A1A17) — confirmed, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text all render in light/off-white text (#F0EFE8 / #B8B7B0 tokens) — readable. No dark-on-dark issues detected anywhere. Legend uses elevated dark surface (#242420) with light text.
+      Data: Colors are identical to light render — green roots (#009E73), lavender arbitrary (#C475FD), blue sum (#4467A3). Unit circle appears as light dashed line against dark background. All vectors and construction lines maintain correct colors.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,82 +59,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 66px, axis labels 56px, tick
-          labels 44px, data labels 32-36px). Both themes readable. Minor: data labels
-          in crowded upper region are tight on mobile.'
+        comment: All font sizes explicitly set (title 66px, axis 56px, ticks 44px).
+          Point data labels at 28px are noticeably smaller than the 44px baseline
+          — readable but below optimal for mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Notable crowding in upper quadrant where z2, z5, and sum labels are
-          close together with overlapping vector arrow lines. No catastrophic text-on-text
-          overlap but layout is not clean.
+        comment: allowOverlap:false manages positioning well. Minor density in upper
+          quadrant (z5 near z1+z2 sum) creates slight visual crowding but labels remain
+          distinct.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 9 data points with appropriate large markers (radius 15-20). Vectors
-          visible as SplineSeries chevrons. Unit circle clear as dashed line.
+        comment: Markers excellently sized for ~9 data points (roots radius=24, arbitrary
+          radius=15, sum radius=17). Vectors and arrowheads clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three-series scheme with redundant shape encoding (circle, diamond,
-          triangle). Imprint CVD-safe palette.
+        comment: Imprint palette (green/lavender/blue) with redundant marker-shape
+          encoding (circle/diamond/triangle) — full CVD safety.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 appropriate for complex plane. Asymmetric margins
-          (left=240, right=160, top=160, bottom=200) create a 2000x2040px plot area
-          which slightly distorts the unit circle.
+        comment: Square 2400x2400 canvas correct for symmetric complex plane. 200px
+          margins on all sides. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with mathematical convention (Re/Im). Subtitle
-          adds educational context.
+        comment: Real Axis (Re) and Imaginary Axis (Im) are descriptive. Title follows
+          mandated format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (roots), second #C475FD (arbitrary), third
-          #4467A3 (sum). Background #FAF8F1/#1A1A17. Chrome adapts correctly in both
-          themes.'
+        comment: 'First series #009E73, subsequent positions 2-3 in canonical order.
+          Background #FAF8F1/#1A1A17. All chrome tokens theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: intentional Imprint palette, distinct marker shapes
-          per category, subtitle context, origin marker. Parallelogram construction
-          lines add geometric sophistication. Not yet publication-ready.'
+        comment: Multi-layer composition with transparency-graded vectors, custom
+          arrowheads, parallelogram construction lines, shape+color encoding. Clearly
+          above default output. Not quite FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (lineWidth:0), subtle dotted grid, elevated legend
-          background with rounded corners, plotLines for coordinate axes, origin marker
-          labeled O.
+        comment: Tick marks disabled, axis borders removed, subtle 10% opacity dotted
+          grid, plotLines for true axis crossing. Some Highcharts defaults remain.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear educational story: roots on unit circle -> arbitrary complex
-          numbers -> geometric addition via parallelogram construction. Dual-representation
-          labels (rectangular + polar) guide the viewer.'
+        comment: 'Geometric story is clear: roots on unit circle, arbitrary numbers
+          spread through plane, parallelogram construction illustrates addition. Color+shape
+          encoding guides viewer through categories.'
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram / complex plane scatter plot.
+        comment: Correct Argand diagram with scatter points, vectors, unit circle,
+          equal aspect ratio.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: unit circle (dashed), vectors with arrows, equal-aspect-ratio
-          canvas, rectangular+polar annotations, distinct colors/markers, complex
-          addition with parallelogram.'
+        comment: 'All features present: axes through origin, dashed unit circle, vectors
+          with arrowheads, equal aspect ratio, rectangular+polar annotations, distinct
+          color/marker categories.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x-axis, imaginary on y-axis. Symmetric range covers
-          all data including sum at (0.8, 3.5).
+        comment: Real part on x-axis, imaginary on y-axis. All 9 points visible within
+          ±3.7 range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''scatter-complex-plane · python · highcharts
-          · anyplot.ai''. Legend labels descriptive.'
+        comment: Title is exactly 'scatter-complex-plane · python · highcharts · anyplot.ai'.
+          Legend shows all three named series correctly.
     data_quality:
       score: 15
       max: 15
@@ -180,25 +174,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent coverage: roots of unity on unit circle, arbitrary complex
-          numbers in all quadrants, complex addition with geometric construction,
-          both rectangular and polar representations.'
+        comment: Shows roots of unity, arbitrary complex numbers in all quadrants,
+          geometric complex addition with parallelogram, both rectangular and polar
+          representations.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematically rigorous educational context. 3rd roots of unity correctly
-          computed at e^(2pik/3). Neutral STEM topic.
+        comment: Standard educational mathematical context (3rd roots of unity, geometric
+          complex addition). Neutral and comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically accurate complex number values. Roots of unity correctly
-          on the unit circle. Arbitrary points spread across quadrants.
+        comment: Roots of unity mathematically correct on unit circle at 120° intervals.
+          Sum z1+z2=(0.8, 3.5) arithmetically verified. Range ±3.7 appropriate.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -206,35 +200,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Sequential structure: imports -> tokens -> data -> chart config
-          -> series -> screenshot. No functions or classes.'
+        comment: 'Linear flow: imports → theme tokens → data → chart config → series
+          → screenshot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data mathematically computed, no random
-          elements.
+        comment: All data deterministically computed from mathematics. No random seed
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, os, tempfile, time, urllib.request, pathlib,
-          numpy, highcharts_core.*, PIL, selenium.'
+        comment: All imported modules are used in the implementation.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Well-organized with creative arrow approximation via SplineSeries.
-          CDN fallback with retry is good defensive pattern. PIL safety net is appropriate.
+        passed: false
+        comment: Vector+arrowhead drawing pattern repeated three times (roots loop,
+          arbitrary loop, sum) with nearly identical code. Acceptable but verbose.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Highcharts
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current highcharts-core
           API.
     library_mastery:
       score: 7
@@ -245,25 +238,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct highcharts_core API: Chart(container=''container''), HighchartsOptions,
-          ScatterSeries, SplineSeries, add_series(), to_js_literal(). Per-point dataLabels
-          offsets. Multiple series types combined.'
+        comment: Good usage of Chart, HighchartsOptions, ScatterSeries, SplineSeries
+          with z_index, enable_mouse_tracking, show_in_legend, plotLines, HTML data
+          labels.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: plotLines for mathematical coordinate axes through origin, per-point
-          dataLabel offsets for fine placement, symbol-based markers (circle/diamond/triangle),
-          mixing ScatterSeries+SplineSeries, CDN fallback with retry.
-  verdict: REJECTED
+        comment: PlotLines for axes through origin, HTML-formatted dual annotation
+          (rectangular+polar), SplineSeries for arrowhead construction. Could further
+          leverage Highcharts renderer API for native SVG arrows.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
+  - hover-tooltips
   - custom-legend
   patterns:
   - data-generation
