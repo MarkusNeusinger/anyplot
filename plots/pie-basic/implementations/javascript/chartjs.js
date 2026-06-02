@@ -6,7 +6,9 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// Data — global cloud-infrastructure market share (illustrative 2025 figures)
+// Data — global cloud-infrastructure market share (illustrative 2025 figures).
+// Real categories in descending share, "Others" pinned at the end as the
+// catch-all bucket.
 const labels = [
   "AWS",
   "Microsoft Azure",
@@ -17,18 +19,57 @@ const labels = [
 ];
 const shares = [31, 25, 11, 4, 3, 26];
 
-// Imprint palette positions 1→6 — first slice is always brand green (#009E73).
-const sliceColors = shares.map((_, i) => t.palette[i % t.palette.length]);
+// --- Color helpers ----------------------------------------------------------
+const hexToRgb = (h) => [
+  parseInt(h.slice(1, 3), 16),
+  parseInt(h.slice(3, 5), 16),
+  parseInt(h.slice(5, 7), 16),
+];
+const blendRgb = (hex, bgHex, w) => {
+  const [r, g, b] = hexToRgb(hex);
+  const [br, bg, bb] = hexToRgb(bgHex);
+  return [
+    Math.round(r * w + br * (1 - w)),
+    Math.round(g * w + bg * (1 - w)),
+    Math.round(b * w + bb * (1 - w)),
+  ];
+};
+const relLuminance = ([r, g, b]) => {
+  const norm = [r, g, b].map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * norm[0] + 0.7152 * norm[1] + 0.0722 * norm[2];
+};
 
-// Spec invites a slight explode on the largest (or smallest) slice. Pulling the
-// leader out by a constant pixel offset draws the eye without distorting angle.
+// Imprint palette positions 1→6 — first slice (the AWS leader) is brand green.
+// The "Others" bucket is blended 60% toward the page background so it reads as
+// "rest", letting the named categories carry the narrative.
+const sliceRgb = shares.map((_, i) => {
+  const hex = t.palette[i % t.palette.length];
+  return labels[i] === "Others" ? blendRgb(hex, t.pageBg, 0.6) : hexToRgb(hex);
+});
+const sliceColors = sliceRgb.map(([r, g, b]) => `rgb(${r}, ${g}, ${b})`);
+
+// Per-slice label color: white on dark wedges, dark ink on light wedges.
+// Threshold 0.3 routes lavender + cyan (and the bg-blended Others in light
+// theme) to dark ink — the borderline white-on-light-slice contrast called out
+// in the previous review.
+const labelColors = sliceRgb.map((rgb) =>
+  relLuminance(rgb) > 0.3 ? "#1A1A17" : "#FAF8F1",
+);
+
+// Spec invites a slight explode on the largest (or smallest) slice. Pulling
+// the leader out by a constant pixel offset draws the eye without distorting
+// angle.
 const maxIdx = shares.indexOf(Math.max(...shares));
 const sliceOffsets = shares.map((_, i) => (i === maxIdx ? 30 : 0));
 
 const total = shares.reduce((a, b) => a + b, 0);
 
 // Custom plugin — percent label at each slice's geometric midpoint. Slivers
-// (< 4%) defer to the legend, which spells out the percentage anyway.
+// (< 5%) defer to the legend, which spells out the percentage anyway, so the
+// narrow 3% / 4% wedges don't have to crowd their own digits.
 const percentLabels = {
   id: "percentLabels",
   afterDatasetsDraw(chart) {
@@ -39,14 +80,14 @@ const percentLabels = {
     ctx.textBaseline = "middle";
     ctx.font =
       '600 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-    ctx.fillStyle = "#FAF8F1";
     meta.data.forEach((arc, i) => {
       const pct = (shares[i] / total) * 100;
-      if (pct < 4) return;
+      if (pct < 5) return;
       const mid = (arc.startAngle + arc.endAngle) / 2;
       const r = (arc.innerRadius + arc.outerRadius) / 2;
       const x = arc.x + Math.cos(mid) * r;
       const y = arc.y + Math.sin(mid) * r;
+      ctx.fillStyle = labelColors[i];
       ctx.fillText(`${pct.toFixed(0)}%`, x, y);
     });
     ctx.restore();
