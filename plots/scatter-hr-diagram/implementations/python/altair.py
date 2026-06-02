@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: altair | Python
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-06-02
 """
 
 import os
