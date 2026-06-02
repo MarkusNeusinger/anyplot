@@ -19,6 +19,19 @@ const points = Array.from({ length: n }, () => {
   return { x: +rainfall.toFixed(1), y: +Math.max(0.2, yield_val).toFixed(2) };
 });
 
+// OLS linear regression to surface the r≈0.7 correlation
+const meanX = points.reduce((s, p) => s + p.x, 0) / n;
+const meanY = points.reduce((s, p) => s + p.y, 0) / n;
+const slope = points.reduce((s, p) => s + (p.x - meanX) * (p.y - meanY), 0) /
+              points.reduce((s, p) => s + (p.x - meanX) ** 2, 0);
+const intercept = meanY - slope * meanX;
+const minX = Math.min(...points.map(p => p.x));
+const maxX = Math.max(...points.map(p => p.x));
+const trendLine = [
+  { x: minX, y: +(slope * minX + intercept).toFixed(3) },
+  { x: maxX, y: +(slope * maxX + intercept).toFixed(3) },
+];
+
 // Canvas background plugin — fills with pageBg so dark theme renders correctly
 const bgPlugin = {
   id: "canvasBg",
@@ -35,19 +48,32 @@ const bgPlugin = {
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// Chart
+// Chart — mixed scatter + trend line
 new Chart(canvas, {
   type: "scatter",
   plugins: [bgPlugin],
   data: {
-    datasets: [{
-      label: "Agricultural Region",
-      data: points,
-      backgroundColor: t.palette[0] + "b3",  // Imprint brand green at 70% opacity
-      borderColor: t.pageBg,
-      borderWidth: 1.5,
-      pointRadius: 6,
-    }],
+    datasets: [
+      {
+        label: "Agricultural Region",
+        data: points,
+        backgroundColor: t.palette[0] + "b3",  // Imprint brand green at 70% opacity
+        borderColor: t.pageBg,
+        borderWidth: 1.5,
+        pointRadius: 6,
+      },
+      {
+        type: "line",
+        label: "Linear Trend (r ≈ 0.7)",
+        data: trendLine,
+        borderColor: t.amber,
+        borderWidth: 3,
+        borderDash: [10, 5],
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      },
+    ],
   },
   options: {
     responsive: true,
@@ -60,14 +86,21 @@ new Chart(canvas, {
         text: "scatter-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 32, weight: "normal" },
-        padding: { top: 8, bottom: 20 },
+        padding: { top: 8, bottom: 6 },
+      },
+      subtitle: {
+        display: true,
+        text: "Annual Rainfall vs Wheat Yield across 150 agricultural regions — dashed line shows positive correlation (r ≈ 0.7)",
+        color: t.inkSoft,
+        font: { size: 18, style: "italic" },
+        padding: { bottom: 16 },
       },
       legend: { display: false },
     },
     scales: {
       x: {
         ticks: { color: t.inkSoft, font: { size: 18 }, maxTicksLimit: 8 },
-        grid: { color: t.grid },
+        grid: { display: false },  // Y-axis-only grid reduces visual noise
         border: { color: t.inkSoft },
         title: {
           display: true,
