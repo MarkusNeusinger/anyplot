@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -113,7 +113,7 @@ plot = (
         y=max_daily * 0.88,
         ha="left",
         nudge_x=1.5,
-        size=3,
+        size=4,
         color=INK_MUTED,
         fontstyle="italic",
     )
@@ -124,7 +124,7 @@ plot = (
         label=cumul_label,
         ha="right",
         va="bottom",
-        size=3,
+        size=3.5,
         color=IMPRINT_PALETTE[3],
         fontstyle="italic",
         fontweight="bold",
@@ -136,7 +136,7 @@ plot = (
         label=f"Wave 1 peak\n{wave1_peak} cases/day",
         ha="center",
         va="bottom",
-        size=2.5,
+        size=3.5,
         color=INK,
         fontweight="bold",
     )
@@ -147,7 +147,7 @@ plot = (
         label=f"Wave 2 peak\n{wave2_peak} cases/day",
         ha="center",
         va="bottom",
-        size=2.5,
+        size=3.5,
         color=INK,
         fontweight="bold",
     )
@@ -164,11 +164,12 @@ plot = (
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         axis_text_x=element_text(rotation=45, ha="right", color=INK_SOFT),
-        plot_title=element_text(size=12, color=INK),
+        plot_title=element_text(size=13, color=INK, fontweight="bold"),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=8, color=INK),
         legend_position="top",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        panel_border=element_blank(),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
