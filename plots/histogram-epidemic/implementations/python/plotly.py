@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-02
@@ -113,7 +113,7 @@ for evt_date, evt_label, evt_color in [
         arrowwidth=1.5,
         arrowcolor=evt_color,
         ax=0,
-        ay=-18,
+        ay=-30,
         font={"size": 10, "color": evt_color, "family": "Arial"},
         align="center",
         bgcolor=ELEVATED_BG,
@@ -129,7 +129,7 @@ fig.update_layout(
         "font": {"size": 16, "color": INK, "family": "Arial"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
+        "y": 0.93,
         "yanchor": "top",
     },
     hovermode="x unified",
@@ -141,9 +141,7 @@ fig.update_layout(
         "tickangle": -30,
         "showgrid": False,
         "zeroline": False,
-        "showline": True,
-        "linecolor": INK_SOFT,
-        "linewidth": 1,
+        "showline": False,
         "spikemode": "across",
         "spikethickness": 1,
         "spikecolor": INK_SOFT,
@@ -178,14 +176,14 @@ fig.update_layout(
         "orientation": "h",
         "traceorder": "normal",
         "yanchor": "bottom",
-        "y": -0.20,
+        "y": 1.02,
         "xanchor": "center",
         "x": 0.5,
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 80, "t": 70, "b": 100},
+    margin={"l": 80, "r": 80, "t": 90, "b": 100},
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
