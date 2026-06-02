@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -41,15 +41,15 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Spectral type colors follow astrophysical convention (semantic exception to Imprint order)
+# Spectral type colors — closest Imprint palette members to astrophysical convention
 spectral_colors = {
-    "O": "#6644CC",
-    "B": "#6699FF",
-    "A": "#C8D8FF",
-    "F": "#FFF4D6",
-    "G": "#FFD866",
-    "K": "#FF9944",
-    "M": "#FF5533",
+    "O": "#C475FD",  # lavender — nearest Imprint member to hot-violet O-type
+    "B": "#4467A3",  # blue
+    "A": "#2ABCCD",  # cyan — lighter blue-white A-type
+    "F": "#BD8233",  # ochre — nearest to yellow-white F-type
+    "G": "#99B314",  # lime — nearest to solar-yellow G-type
+    "K": "#954477",  # rose — closest Imprint member to orange K-type
+    "M": "#AE3030",  # matte red — cool red M-type
 }
 
 # Data — synthetic stellar populations
@@ -105,8 +105,8 @@ sun_label_df = pd.DataFrame({"temperature": [7800], "luminosity": [4.0], "label"
 
 region_labels = pd.DataFrame(
     {
-        "temperature": [25000, 5200, 14000, 18000],
-        "luminosity": [0.012, 6000, 120000, 0.0005],
+        "temperature": [25000, 4500, 14000, 18000],
+        "luminosity": [0.012, 8000, 120000, 0.0005],
         "label": ["Main Sequence", "Red Giants", "Supergiants", "White Dwarfs"],
     }
 )
@@ -130,7 +130,7 @@ plot = (
         size=4.5,
         alpha=0.75,
         shape=21,
-        stroke=0.4,
+        stroke=1.0,
         mapping=aes(fill="spectral_type"),
         color=INK_MUTED,
         tooltips=layer_tooltips()
