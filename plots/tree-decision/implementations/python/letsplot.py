@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-02
@@ -277,7 +277,7 @@ p = (
     + scale_x_continuous(limits=[-2, 23])
     + scale_y_continuous(limits=[0.0, 14.5])
     + labs(
-        title="tree-decision · letsplot · pyplots.ai",
+        title="tree-decision · python · letsplot · anyplot.ai",
         subtitle="Product Launch Strategy — Two-stage EMV rollback analysis",
     )
     + theme_void()
