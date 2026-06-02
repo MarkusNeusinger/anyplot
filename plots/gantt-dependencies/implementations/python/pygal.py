@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -138,9 +138,9 @@ custom_style = Style(
     colors=("rgba(0,0,0,0)",) + tuple(CAT_COLORS[c] for c in categories),
     font_family="Consolas, monospace",
     title_font_size=title_fs,
-    label_font_size=26,
-    major_label_font_size=34,
-    legend_font_size=30,
+    label_font_size=38,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=22,
     stroke_width=2,
 )
@@ -246,7 +246,7 @@ for i, (row_type, row_data) in enumerate(display_rows):
     x_e = plot_left + ((pe - reference).days - start_day) / day_range * plot_w
     yc = plot_top + plot_h - (i + 0.5) * row_h
     color = CAT_COLORS[cat]
-    ds = 9
+    ds = 15
     for dx in [x_s, x_e]:
         custom.append(
             f'<polygon points="{dx:.1f},{yc - ds:.1f} {dx + ds:.1f},{yc:.1f} '
@@ -281,7 +281,7 @@ for tid, _, _, _, _, deps in tasks:
 tl_x = plot_left + plot_w / 2
 tl_y = plot_top + plot_h + 90
 custom.append(
-    f'<text x="{tl_x:.1f}" y="{tl_y:.1f}" font-size="32" fill="{INK}" '
+    f'<text x="{tl_x:.1f}" y="{tl_y:.1f}" font-size="42" fill="{INK}" '
     f'font-family="Consolas, monospace" text-anchor="middle" font-weight="600">'
     "Project Timeline (Jan – Jun 2025)</text>"
 )
@@ -289,25 +289,25 @@ custom.append(
 # Bottom legend — category color swatches + critical path indicator
 ly = plot_top + plot_h + 145
 lx = plot_left + 10
-sp = 475
+sp = min(475, int((3200 - lx - 360) // 5))
 
 for idx, cat in enumerate(categories):
     x = lx + idx * sp
     color = CAT_COLORS[cat]
-    custom.append(f'<rect x="{x:.1f}" y="{ly:.1f}" width="20" height="20" fill="{color}" rx="3"/>')
+    custom.append(f'<rect x="{x:.1f}" y="{ly:.1f}" width="30" height="30" fill="{color}" rx="3"/>')
     custom.append(
-        f'<text x="{x + 28:.1f}" y="{ly + 15:.1f}" font-family="Consolas, monospace" '
-        f'font-size="26" fill="{INK}">{cat}</text>'
+        f'<text x="{x + 38:.1f}" y="{ly + 24:.1f}" font-family="Consolas, monospace" '
+        f'font-size="42" fill="{INK}">{cat}</text>'
     )
 
 cpx = lx + 5 * sp
 custom.append(
-    f'<line x1="{cpx:.1f}" y1="{ly + 10:.1f}" x2="{cpx + 34:.1f}" y2="{ly + 10:.1f}" '
+    f'<line x1="{cpx:.1f}" y1="{ly + 13:.1f}" x2="{cpx + 40:.1f}" y2="{ly + 13:.1f}" '
     f'stroke="{CRITICAL_COLOR}" stroke-width="3.5" marker-end="url(#arr_crit)"/>'
 )
 custom.append(
-    f'<text x="{cpx + 46:.1f}" y="{ly + 15:.1f}" font-family="Consolas, monospace" '
-    f'font-size="26" fill="{INK}">Critical Path</text>'
+    f'<text x="{cpx + 52:.1f}" y="{ly + 24:.1f}" font-family="Consolas, monospace" '
+    f'font-size="42" fill="{INK}">Critical Path</text>'
 )
 
 # Inject custom SVG elements into pygal's rendered output
