@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -51,28 +50,36 @@ df <- params |>
     y_pos     = as.integer(parameter)
   )
 
-# Build bar segments: one row per (parameter x scenario)
-bar_h    <- 0.35
-n_params <- nrow(df)
+# Bold the top parameter (widest range = most sensitive) to guide viewer's eye
+y_faces <- c(rep("plain", nrow(df) - 1L), "bold")
+
+# Build bar segments: one row per (parameter x scenario) with tip label coords
+bar_h <- 0.35
 
 df_bars <- bind_rows(
   df |> transmute(
     y_pos,
-    xmin     = pmin(low_value,  base_npv),
-    xmax     = pmax(low_value,  base_npv),
-    scenario = "Low Input"
+    xmin        = pmin(low_value,  base_npv),
+    xmax        = pmax(low_value,  base_npv),
+    outer_x     = low_value,
+    label_hjust = if_else(low_value  > base_npv, 0, 1),
+    scenario    = "Low Input"
   ),
   df |> transmute(
     y_pos,
-    xmin     = pmin(high_value, base_npv),
-    xmax     = pmax(high_value, base_npv),
-    scenario = "High Input"
+    xmin        = pmin(high_value, base_npv),
+    xmax        = pmax(high_value, base_npv),
+    outer_x     = high_value,
+    label_hjust = if_else(high_value > base_npv, 0, 1),
+    scenario    = "High Input"
   )
 ) |>
   mutate(
     ymin     = y_pos - bar_h,
     ymax     = y_pos + bar_h,
-    scenario = factor(scenario, levels = c("Low Input", "High Input"))
+    scenario = factor(scenario, levels = c("Low Input", "High Input")),
+    label    = sprintf("$%.1fM", outer_x),
+    label_x  = if_else(label_hjust == 0L, outer_x + 0.5, outer_x - 0.5)
   )
 
 title_text <- "bar-tornado-sensitivity · r · ggplot2 · anyplot.ai"
@@ -82,6 +89,11 @@ p <- ggplot(df_bars) +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = scenario),
     color = NA,
     alpha = 0.88
+  ) +
+  geom_text(
+    aes(x = label_x, y = y_pos, label = label, hjust = label_hjust),
+    color = INK_SOFT,
+    size  = 1.9
   ) +
   geom_vline(
     xintercept = base_npv,
@@ -104,7 +116,7 @@ p <- ggplot(df_bars) +
   ) +
   scale_x_continuous(
     labels = function(x) sprintf("$%gM", x),
-    expand = expansion(mult = 0.06)
+    expand = expansion(mult = 0.12)
   ) +
   scale_y_continuous(
     breaks = df$y_pos,
@@ -124,12 +136,14 @@ p <- ggplot(df_bars) +
     panel.grid.major.y = element_blank(),
     panel.grid.minor   = element_blank(),
     panel.border       = element_blank(),
+    axis.line          = element_blank(),
     axis.title.x       = element_text(color = INK,        size = 10),
     axis.text.x        = element_text(color = INK_SOFT,   size = 8),
-    axis.text.y        = element_text(color = INK,        size = 9,  hjust = 1),
+    axis.text.y        = element_text(color = INK,        size = 9,  hjust = 1,
+                                      face = y_faces),
     axis.ticks.y       = element_blank(),
     plot.title         = element_text(color = INK,        size = 12, hjust = 0.5),
-    legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.background  = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text        = element_text(color = INK_SOFT,   size = 8),
     legend.title       = element_text(color = INK,        size = 9),
     legend.key.size    = unit(0.4, "cm"),
