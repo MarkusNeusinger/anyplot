@@ -1,19 +1,47 @@
-""" pyplots.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-06
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Range1d
-from bokeh.plotting import figure, output_file, save
+import sys
 
+
+# Script is named bokeh.py; move its directory to end of path so the
+# real bokeh package in site-packages is found first.
+if sys.path and sys.path[0] != "":
+    sys.path.append(sys.path.pop(0))
+
+import os
+import time
+from pathlib import Path
+
+import numpy as np
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Range1d
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# DNA base colors — Imprint palette, semantic mapping (A=green, C=blue, G=ochre, T=red)
+BASE_COLORS = {
+    "A": "#009E73",  # Imprint green (brand)
+    "C": "#4467A3",  # Imprint blue
+    "G": "#BD8233",  # Imprint ochre
+    "T": "#AE3030",  # Imprint matte red
+}
 
 # Data: CREB1 transcription factor binding site motif (10 positions)
 positions = list(range(1, 11))
 bases = ["A", "C", "G", "T"]
-base_colors = {"A": "#2CA02C", "C": "#1F77B4", "G": "#FF7F0E", "T": "#D62728"}
 
 frequencies = np.array(
     [
@@ -30,82 +58,87 @@ frequencies = np.array(
     ]
 )
 
-# Calculate information content at each position
+# Information content per position: IC = log2(4) - Shannon_entropy
 max_bits = np.log2(len(bases))
 entropy = np.array([-np.sum(f * np.log2(np.where(f > 0, f, 1))) for f in frequencies])
 information_content = max_bits - entropy
 
-# Build letter stacks: stretched letter glyphs filling colored rectangles
+# Build glyph data for colored rectangles and letter overlays
 rect_x, rect_y, rect_w, rect_h, rect_color = [], [], [], [], []
+rect_base, rect_freq, rect_ic, rect_pos = [], [], [], []
 text_x, text_y, text_letter, text_size = [], [], [], []
-hover_base, hover_freq, hover_ic, hover_pos = [], [], [], []
 
-# Y-range: tight fit around actual data
 max_ic = float(np.max(information_content))
-y_top = max_ic + 0.05
+y_top = max_ic + 0.10
 
-# Minimum visible height threshold — skip letters too small to render
-MIN_HEIGHT = 0.005
-
-# Plot area pixel height (~2200px effective for 2700 canvas minus margins)
-PLOT_PX_HEIGHT = 2200.0
+# Canvas: 3200×1800, borders: top=110, bottom=160 → effective plot height ≈ 1530 px
+PLOT_PX_HEIGHT = 1530.0
 PX_PER_UNIT = PLOT_PX_HEIGHT / y_top
-# Font scaling: letter cap-height ≈ 72% of em-height, 1pt ≈ 1.33px
-# We want the letter to visually fill the rectangle height
-PT_SCALE = PX_PER_UNIT / (1.33 * 0.72)
-
+# CSS 1pt ≈ 1.333 px; cap-height ≈ 70% of em; fill_factor=0.85 for visual fit
+PT_SCALE = PX_PER_UNIT / (1.333 * 0.70)
+# Show letter glyphs only for rectangle heights large enough to be legible
+MIN_RECT_HEIGHT = 0.005
+MIN_TEXT_HEIGHT = 0.04
 COLUMN_WIDTH = 0.82
 
 for i, pos in enumerate(positions):
     ic = information_content[i]
     freqs = frequencies[i]
+    # Ascending sort: least frequent letter at bottom of stack
     sorted_indices = np.argsort(freqs)
     y_bottom = 0.0
 
     for idx in sorted_indices:
         letter = bases[idx]
         height = freqs[idx] * ic
-        if height < MIN_HEIGHT:
+        if height < MIN_RECT_HEIGHT:
             y_bottom += height
             continue
 
         center_y = y_bottom + height / 2
 
-        # Colored rectangle filling the allocated space
         rect_x.append(pos)
         rect_y.append(center_y)
         rect_w.append(COLUMN_WIDTH)
         rect_h.append(height)
-        rect_color.append(base_colors[letter])
+        rect_color.append(BASE_COLORS[letter])
+        rect_base.append(letter)
+        rect_freq.append(f"{freqs[idx]:.0%}")
+        rect_ic.append(f"{height:.3f}")
+        rect_pos.append(str(pos))
 
-        # Letter glyph scaled to fill the rectangle
-        text_x.append(pos)
-        text_y.append(center_y)
-        text_letter.append(letter)
-        font_pt = max(14, min(int(height * PT_SCALE * 0.92), 260))
-        text_size.append(f"{font_pt}pt")
-
-        # Hover data
-        hover_base.append(letter)
-        hover_freq.append(f"{freqs[idx]:.0%}")
-        hover_ic.append(f"{height:.3f}")
-        hover_pos.append(str(pos))
+        # Only overlay letter text when the bar is tall enough to read
+        if height >= MIN_TEXT_HEIGHT:
+            text_x.append(pos)
+            text_y.append(center_y)
+            text_letter.append(letter)
+            font_pt = max(14, min(int(height * PT_SCALE * 0.85), 300))
+            text_size.append(f"{font_pt}pt")
 
         y_bottom += height
 
+# Title — scale fontsize down for 71-char title (floor 34pt per bokeh prompt)
+title_text = "CREB1 Binding Motif · sequence-logo-basic · python · bokeh · anyplot.ai"
+title_n = len(title_text)
+title_fontsize = f"{max(34, round(50 * 67 / title_n))}pt"
+
 # Plot
 p = figure(
-    width=4800,
-    height=2700,
-    title="CREB1 Binding Motif · sequence-logo-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title_text,
     x_axis_label="Position",
     y_axis_label="Information content (bits)",
-    toolbar_location="right",
+    toolbar_location=None,
     x_range=Range1d(0.3, 10.7),
     y_range=Range1d(-0.02, y_top),
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=80,
 )
 
-# Colored rectangles — the "stretched glyph" background
+# Colored rectangles — the primary visual element of the sequence logo
 rect_source = ColumnDataSource(
     data={
         "x": rect_x,
@@ -113,10 +146,10 @@ rect_source = ColumnDataSource(
         "width": rect_w,
         "height": rect_h,
         "color": rect_color,
-        "base": hover_base,
-        "freq": hover_freq,
-        "ic": hover_ic,
-        "pos": hover_pos,
+        "base": rect_base,
+        "freq": rect_freq,
+        "ic": rect_ic,
+        "pos": rect_pos,
     }
 )
 rects = p.rect(
@@ -127,18 +160,18 @@ rects = p.rect(
     source=rect_source,
     fill_color="color",
     fill_alpha=0.92,
-    line_color="white",
-    line_width=1.5,
+    line_color=PAGE_BG,
+    line_width=1.0,
 )
 
-# HoverTool — distinctive Bokeh interactive feature
+# HoverTool — interactive tooltips for the HTML artifact
 hover_tool = HoverTool(
     renderers=[rects],
     tooltips=[("Position", "@pos"), ("Base", "@base"), ("Frequency", "@freq"), ("IC contribution", "@ic bits")],
 )
 p.add_tools(hover_tool)
 
-# White letter glyphs on top of colored rectangles (stretched to fill)
+# White letter glyphs centered on each visible rectangle
 text_source = ColumnDataSource(data={"x": text_x, "y": text_y, "text": text_letter, "size": text_size})
 p.text(
     x="x",
@@ -152,46 +185,91 @@ p.text(
     text_baseline="middle",
 )
 
-# Legend: colored squares for each base
+# Legend — off-screen dummy glyphs map each base to its color
 legend_items = []
 for base in bases:
-    src = ColumnDataSource(data={"x": [-100], "y": [-100]})
+    src = ColumnDataSource(data={"x": [-9999], "y": [-9999]})
     r = p.rect(
-        x="x", y="y", width=0.01, height=0.01, source=src, fill_color=base_colors[base], line_color=base_colors[base]
+        x="x", y="y", width=0.01, height=0.01, source=src, fill_color=BASE_COLORS[base], line_color=BASE_COLORS[base]
     )
     legend_items.append(LegendItem(label=base, renderers=[r]))
 
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="24pt",
-    glyph_width=40,
-    glyph_height=40,
-    spacing=12,
+    label_text_font_size="34pt",
+    label_text_color=INK_SOFT,
+    glyph_width=50,
+    glyph_height=50,
+    spacing=14,
     padding=20,
     margin=20,
-    background_fill_alpha=0.8,
-    border_line_alpha=0,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.9,
+    border_line_color=INK_SOFT,
+    border_line_alpha=0.3,
 )
 p.add_layout(legend, "right")
 
-# Style
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "normal"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "24pt"
-p.yaxis.major_label_text_font_size = "24pt"
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_font_size = title_fontsize
+p.title.text_font_style = "bold"
+p.title.text_color = INK
+
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
 p.xaxis.ticker = positions
-p.xaxis.major_tick_line_color = None
-p.yaxis.minor_tick_line_color = None
-p.outline_line_color = None
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_color = None
-p.background_fill_color = "#FAFAFA"
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
 
-# Save
-export_png(p, filename="plot.png")
-output_file("plot.html", title="sequence-logo-basic · bokeh · pyplots.ai")
+# Save interactive HTML (catalog artifact)
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome — Selenium 4 auto-resolves driver
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+
+# Headless Chrome reserves ~139 px for internal UI even with no visible toolbar.
+# Measure the actual viewport height and compensate so the rendered figure
+# fills exactly W × H pixels before taking the screenshot.
+inner_h = driver.execute_script("return window.innerHeight")
+if inner_h != H:
+    driver.set_window_size(W, H + (H - inner_h))
+    time.sleep(1)
+
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
