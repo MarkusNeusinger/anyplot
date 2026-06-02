@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-06
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-02
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -10,22 +12,44 @@ import pandas as pd
 import seaborn as sns
 
 
-# Style using seaborn's consolidated theme API
-sns.set_theme(context="talk", style="white", font_scale=1.2, palette="colorblind")
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Colorblind-safe palette via seaborn
-cb_palette = sns.color_palette("colorblind", 6)
-decision_color = "#306998"  # Python Blue for decision nodes
-chance_color = cb_palette[1]  # orange from colorblind palette
-terminal_pos_color = cb_palette[0]  # blue for positive payoffs
-terminal_neg_color = cb_palette[5]  # brown/dark for negative payoffs
-branch_color = "#555555"
-prune_mark_color = cb_palette[3]  # red-ish from colorblind palette
+# Imprint categorical palette (canonical order — position 1 always first series)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-pruned_alpha = 0.35
-normal_alpha = 1.0
+DECISION_COLOR = IMPRINT_PALETTE[0]  # #009E73 brand green — first series / decision nodes
+CHANCE_COLOR = IMPRINT_PALETTE[1]  # #C475FD lavender — chance nodes
+TERMINAL_POS = IMPRINT_PALETTE[2]  # #4467A3 blue — positive payoff terminals
+TERMINAL_NEG = IMPRINT_PALETTE[4]  # #AE3030 matte red — semantic anchor for loss/negative
+PRUNE_COLOR = IMPRINT_PALETTE[4]  # #AE3030 for X marks on pruned branches
 
-# Decision tree data (two-stage investment decision)
+PRUNED_ALPHA = 0.30
+NODE_TEXT = "#FFFDF6"  # warm white — legible inside colored node markers
+
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Decision tree data — two-stage R&D investment decision (go / no-go)
 tree = [
     {
         "id": "D1",
@@ -36,8 +60,8 @@ tree = [
         "payoff": None,
         "emv": 130,
         "pruned": False,
-        "x": 1.0,
-        "y": 5.0,
+        "x": 1.5,
+        "y": 3.0,
     },
     {
         "id": "C1",
@@ -48,8 +72,8 @@ tree = [
         "payoff": None,
         "emv": 130,
         "pruned": False,
-        "x": 5.5,
-        "y": 7.5,
+        "x": 6.0,
+        "y": 4.8,
     },
     {
         "id": "C2",
@@ -60,8 +84,8 @@ tree = [
         "payoff": None,
         "emv": 80,
         "pruned": True,
-        "x": 5.5,
-        "y": 2.0,
+        "x": 6.0,
+        "y": 1.2,
     },
     {
         "id": "T1",
@@ -72,8 +96,8 @@ tree = [
         "payoff": 300,
         "emv": None,
         "pruned": False,
-        "x": 11.0,
-        "y": 9.0,
+        "x": 11.5,
+        "y": 5.8,
     },
     {
         "id": "T2",
@@ -84,8 +108,8 @@ tree = [
         "payoff": -125,
         "emv": None,
         "pruned": False,
-        "x": 11.0,
-        "y": 6.0,
+        "x": 11.5,
+        "y": 3.8,
     },
     {
         "id": "T3",
@@ -96,8 +120,8 @@ tree = [
         "payoff": 150,
         "emv": None,
         "pruned": True,
-        "x": 11.0,
-        "y": 3.5,
+        "x": 11.5,
+        "y": 2.0,
     },
     {
         "id": "T4",
@@ -108,14 +132,14 @@ tree = [
         "payoff": -25,
         "emv": None,
         "pruned": True,
-        "x": 11.0,
-        "y": 0.5,
+        "x": 11.5,
+        "y": 0.4,
     },
 ]
 
 node_map = {n["id"]: n for n in tree}
 
-# Build branch DataFrame for seaborn lineplot with units parameter
+# Branch DataFrame — sns.lineplot with units draws one polyline per segment (idiomatic seaborn)
 branch_rows = []
 for node in tree:
     if node["parent"] is None:
@@ -123,7 +147,7 @@ for node in tree:
     parent = node_map[node["parent"]]
     px, py = parent["x"], parent["y"]
     nx, ny = node["x"], node["y"]
-    mid_x = px + (nx - px) * 0.4
+    mid_x = px + (nx - px) * 0.45
     seg_id = f"{parent['id']}-{node['id']}"
     style = "pruned" if node["pruned"] else "optimal"
     branch_rows.append({"seg": seg_id, "x": px, "y": py, "style": style})
@@ -131,8 +155,10 @@ for node in tree:
     branch_rows.append({"seg": seg_id, "x": nx, "y": ny, "style": style})
 
 branch_df = pd.DataFrame(branch_rows)
+# seaborn size aesthetic maps to linewidth — encodes branch importance in single call
+branch_df["lw"] = branch_df["style"].map({"optimal": 2.5, "pruned": 1.8})
 
-# Build node DataFrame for seaborn scatterplot with hue/style mapping
+# Node DataFrame — sns.scatterplot with hue/style gives categorical shape + color encoding
 node_rows = []
 for node in tree:
     if node["type"] == "decision":
@@ -145,56 +171,50 @@ for node in tree:
 
 node_df = pd.DataFrame(node_rows)
 
-# Seaborn marker and palette mappings for node types
 marker_map = {
-    "Decision": "s",  # square for decision nodes
-    "Chance": "o",  # circle for chance nodes
-    "Positive Payoff": ">",  # right triangle for positive terminal
-    "Negative Payoff": ">",  # right triangle for negative terminal
+    "Decision": "s",  # square — decision nodes
+    "Chance": "o",  # circle — chance nodes
+    "Positive Payoff": ">",  # right-pointing triangle — positive terminal
+    "Negative Payoff": ">",  # right-pointing triangle — negative terminal
 }
 color_map = {
-    "Decision": decision_color,
-    "Chance": chance_color,
-    "Positive Payoff": terminal_pos_color,
-    "Negative Payoff": terminal_neg_color,
+    "Decision": DECISION_COLOR,
+    "Chance": CHANCE_COLOR,
+    "Positive Payoff": TERMINAL_POS,
+    "Negative Payoff": TERMINAL_NEG,
 }
 
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw branches using sns.lineplot with units parameter (idiomatic seaborn)
-optimal_branches = branch_df[branch_df["style"] == "optimal"]
-pruned_branches = branch_df[branch_df["style"] == "pruned"]
-
+# Branches — single seaborn call with hue+style+size+units (all four seaborn aesthetics)
+# Combines branch type, line style, and line weight encoding in one idiomatic call
+n_lines_before = len(ax.lines)
 sns.lineplot(
-    data=optimal_branches,
+    data=branch_df,
     x="x",
     y="y",
+    hue="style",
+    style="style",
+    size="lw",
+    dashes={"optimal": (1, 0), "pruned": (4, 2)},
+    palette={"optimal": INK_SOFT, "pruned": INK_MUTED},
+    sizes=(1.8, 2.5),
     units="seg",
     estimator=None,
-    color=branch_color,
-    linewidth=2.5,
     sort=False,
     ax=ax,
     legend=False,
 )
-sns.lineplot(
-    data=pruned_branches,
-    x="x",
-    y="y",
-    units="seg",
-    estimator=None,
-    color=branch_color,
-    linewidth=1.8,
-    alpha=pruned_alpha,
-    linestyle="--",
-    sort=False,
-    ax=ax,
-    legend=False,
-)
+# Dim pruned lines — hue draws "optimal" before "pruned" (alphabetical), so pruned lines are last
+n_optimal_segs = branch_df[branch_df["style"] == "optimal"]["seg"].nunique()
+for line in ax.lines[n_lines_before + n_optimal_segs :]:
+    line.set_alpha(0.65)
 
-# Draw nodes using sns.scatterplot with hue/style mapping (replaces matplotlib patches)
+# Nodes — active at full opacity, pruned faded
 active_nodes = node_df[~node_df["pruned"]]
-pruned_node_df = node_df[node_df["pruned"]]
+pruned_nodes = node_df[node_df["pruned"]]
 
 sns.scatterplot(
     data=active_nodes,
@@ -204,49 +224,48 @@ sns.scatterplot(
     style="category",
     markers=marker_map,
     palette=color_map,
-    s=5000,
-    edgecolor="white",
-    linewidth=3,
+    s=1800,
+    edgecolor=PAGE_BG,
+    linewidth=1.5,
     ax=ax,
     legend=False,
     zorder=3,
 )
-
 sns.scatterplot(
-    data=pruned_node_df,
+    data=pruned_nodes,
     x="x",
     y="y",
     hue="category",
     style="category",
     markers=marker_map,
     palette=color_map,
-    s=5000,
-    edgecolor="white",
-    linewidth=3,
-    alpha=pruned_alpha,
+    s=1800,
+    edgecolor=PAGE_BG,
+    linewidth=1.5,
+    alpha=PRUNED_ALPHA,
     ax=ax,
     legend=False,
     zorder=3,
 )
 
-# Add EMV and payoff text labels
+# EMV labels inside active nodes; above pruned nodes
 for node in tree:
     nx, ny = node["x"], node["y"]
-    alpha = pruned_alpha if node["pruned"] else normal_alpha
+    al = PRUNED_ALPHA if node["pruned"] else 1.0
 
     if node["type"] in ("decision", "chance"):
-        node_color = decision_color if node["type"] == "decision" else chance_color
+        node_color = DECISION_COLOR if node["type"] == "decision" else CHANCE_COLOR
         if node["pruned"]:
             ax.text(
                 nx,
-                ny + 0.8,
+                ny + 0.58,
                 f"EMV ${node['emv']}K",
-                fontsize=13,
+                fontsize=8,
                 fontweight="bold",
                 ha="center",
                 va="bottom",
                 color=node_color,
-                alpha=max(alpha, 0.6),
+                alpha=max(al, 0.55),
                 zorder=4,
             )
         else:
@@ -254,96 +273,108 @@ for node in tree:
                 nx,
                 ny,
                 f"EMV\n${node['emv']}K",
-                fontsize=14,
+                fontsize=9,
                 fontweight="bold",
                 ha="center",
                 va="center",
-                color="white",
-                alpha=alpha,
+                color=NODE_TEXT,
                 zorder=4,
             )
-
     elif node["type"] == "terminal":
-        color = terminal_pos_color if node["payoff"] >= 0 else terminal_neg_color
+        tc = TERMINAL_POS if node["payoff"] >= 0 else TERMINAL_NEG
         sign = "+" if node["payoff"] >= 0 else ""
         ax.text(
-            nx + 0.65,
+            nx + 0.55,
             ny,
             f"${sign}{node['payoff']}K",
-            fontsize=15,
+            fontsize=10,
             fontweight="bold",
             ha="left",
             va="center",
-            color=color,
-            alpha=alpha,
+            color=tc,
+            alpha=al,
             zorder=4,
         )
 
-# Branch labels and pruned marks
+# Branch labels + pruned X marks
 for node in tree:
     if node["parent"] is None:
         continue
     parent = node_map[node["parent"]]
     px, py = parent["x"], parent["y"]
     nx, ny = node["x"], node["y"]
-    alpha = pruned_alpha if node["pruned"] else normal_alpha
-    mid_x = px + (nx - px) * 0.4
+    al = PRUNED_ALPHA if node["pruned"] else 1.0
+    mid_x = px + (nx - px) * 0.45
 
-    branch_text = node["label"]
+    label_text = node["label"]
     if node["prob"] is not None:
-        branch_text = f"{node['label']}\n(p={node['prob']:.1f})"
-    label_x = (px + mid_x) / 2 + 0.15
-    label_y = (py + ny) / 2
+        label_text = f"{node['label']}\n(p={node['prob']:.1f})"
+        # Place on horizontal segment past the elbow — avoids overlapping parent chance node
+        label_x = mid_x + (nx - mid_x) * 0.4
+        label_y = ny + (0.28 if ny >= py else -0.28)
+    else:
+        label_x = (px + mid_x) / 2 + 0.1
+        label_y = (py + ny) / 2
     ax.text(
         label_x,
         label_y,
-        branch_text,
-        fontsize=13,
+        label_text,
+        fontsize=9,
         fontweight="bold",
         ha="center",
         va="center",
-        alpha=alpha,
-        color="#333333",
-        bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.8 * alpha},
+        color=INK,
+        alpha=al,
+        bbox={"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.90 * al},
     )
 
-    # Pruned mark (X)
+    # Double-strike X mark for pruned branches
     if node["pruned"]:
-        mark_x = mid_x - 0.15
+        mark_x = mid_x - 0.1
         mark_y = ny
         ax.plot(
-            [mark_x - 0.12, mark_x + 0.12],
-            [mark_y - 0.18, mark_y + 0.18],
-            color=prune_mark_color,
-            linewidth=2.5,
-            alpha=0.7,
+            [mark_x - 0.10, mark_x + 0.10],
+            [mark_y - 0.16, mark_y + 0.16],
+            color=PRUNE_COLOR,
+            linewidth=2.2,
+            alpha=0.85,
             zorder=5,
         )
         ax.plot(
-            [mark_x - 0.12, mark_x + 0.12],
-            [mark_y + 0.18, mark_y - 0.18],
-            color=prune_mark_color,
-            linewidth=2.5,
-            alpha=0.7,
+            [mark_x - 0.10, mark_x + 0.10],
+            [mark_y + 0.16, mark_y - 0.16],
+            color=PRUNE_COLOR,
+            linewidth=2.2,
+            alpha=0.85,
             zorder=5,
         )
 
-# Legend
+# Style
 legend_elements = [
-    mpatches.Patch(facecolor=decision_color, edgecolor="white", label="Decision Node"),
-    mpatches.Patch(facecolor=chance_color, edgecolor="white", label="Chance Node"),
-    mpatches.Patch(facecolor=terminal_pos_color, edgecolor="white", label="Positive Payoff"),
-    mpatches.Patch(facecolor=terminal_neg_color, edgecolor="white", label="Negative Payoff"),
-    plt.Line2D([0], [0], color=branch_color, linestyle="--", linewidth=2, alpha=0.5, label="Pruned Branch"),
+    mpatches.Patch(facecolor=DECISION_COLOR, edgecolor=PAGE_BG, label="Decision Node"),
+    mpatches.Patch(facecolor=CHANCE_COLOR, edgecolor=PAGE_BG, label="Chance Node"),
+    mpatches.Patch(facecolor=TERMINAL_POS, edgecolor=PAGE_BG, label="Positive Payoff"),
+    mpatches.Patch(facecolor=TERMINAL_NEG, edgecolor=PAGE_BG, label="Negative Payoff"),
+    plt.Line2D([0], [0], color=INK_MUTED, linestyle="--", linewidth=2, alpha=0.7, label="Pruned Branch"),
 ]
-ax.legend(handles=legend_elements, loc="lower right", fontsize=13, framealpha=0.9, edgecolor="#cccccc", fancybox=True)
+ax.legend(
+    handles=legend_elements,
+    loc="lower right",
+    fontsize=8,
+    framealpha=0.9,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    fancybox=False,
+)
 
-# Title and styling
-ax.set_title("tree-decision \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+title = "tree-decision · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=12, color=INK)
 ax.set_xlim(-0.5, 14.5)
-ax.set_ylim(-1.0, 10.5)
+ax.set_ylim(-0.4, 6.8)
 ax.axis("off")
-sns.despine(left=True, bottom=True)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches="tight" (seaborn canvas rule: figsize × dpi must land exactly)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
