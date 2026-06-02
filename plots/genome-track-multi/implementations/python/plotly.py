@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -258,27 +258,37 @@ fig.add_trace(
     col=1,
 )
 
-# Track 4: Regulatory elements (colored rectangles)
+# Track 4: Regulatory elements (add_shape for clean rectangles; invisible traces for legend)
 reg_color_map = {"Promoter": PROMOTER_COLOR, "Enhancer": ENHANCER_COLOR, "CTCF": CTCF_COLOR}
 added_legend = set()
 for reg_start, reg_end, reg_type in reg_elements:
-    show = reg_type not in added_legend
-    added_legend.add(reg_type)
-    fig.add_trace(
-        go.Scatter(
-            x=[reg_start, reg_start, reg_end, reg_end, reg_start],
-            y=[0.1, 0.9, 0.9, 0.1, 0.1],
-            fill="toself",
-            fillcolor=reg_color_map[reg_type],
-            line={"color": reg_color_map[reg_type], "width": 1},
-            opacity=0.85,
-            name=reg_type,
-            showlegend=show,
-            hovertemplate=f"{reg_type}<br>{reg_start:,}–{reg_end:,}<extra></extra>",
-        ),
+    color = reg_color_map[reg_type]
+    fig.add_shape(
+        type="rect",
+        x0=reg_start,
+        y0=0.1,
+        x1=reg_end,
+        y1=0.9,
+        fillcolor=color,
+        line={"color": color, "width": 1},
+        opacity=0.85,
         row=4,
         col=1,
     )
+    if reg_type not in added_legend:
+        added_legend.add(reg_type)
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker={"color": color, "size": 12, "symbol": "square"},
+                name=reg_type,
+                showlegend=True,
+            ),
+            row=4,
+            col=1,
+        )
 
 # Track y-axis labels
 for row, label in [(1, "Genes"), (2, "Coverage"), (4, "Regulatory")]:
@@ -309,11 +319,11 @@ fig.update_layout(
         "font": {"size": 10, "color": INK_SOFT},
         "orientation": "h",
         "yanchor": "top",
-        "y": -0.16,
+        "y": -0.12,
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 90, "r": 40, "t": 70, "b": 150},
+    margin={"l": 90, "r": 40, "t": 70, "b": 100},
 )
 
 # X-axis (bottom track only shows labels and title)
@@ -328,7 +338,9 @@ fig.update_xaxes(
     col=1,
 )
 for row in range(1, 4):
-    fig.update_xaxes(tickfont={"size": 10}, tickformat=",", showticklabels=False, linecolor=INK_SOFT, row=row, col=1)
+    fig.update_xaxes(
+        tickfont={"size": 10}, tickformat=",", showticklabels=False, showgrid=False, linecolor=INK_SOFT, row=row, col=1
+    )
 
 # Y-axes per track
 fig.update_yaxes(range=[-0.2, 1.4], showticklabels=False, showgrid=False, linecolor=INK_SOFT, row=1, col=1)
