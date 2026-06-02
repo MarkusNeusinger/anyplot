@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: altair | Python
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-02
 """
 
 import os
