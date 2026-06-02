@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:26:04Z'
-updated: '2026-06-02T12:04:35Z'
+updated: '2026-06-02T12:17:28Z'
 generated_by: claude-sonnet
 workflow_run: 26817819621
 issue: 4421
@@ -12,49 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - 'Excellent data quality: scientifically accurate TATA-box motif with correctly
-    computed information content and entropy, full coverage of conservation patterns
-    (highly conserved positions 2-5, moderate 6-8, uniform 1/9/10)'
-  - 'Perfect code quality: clean KISS structure, deterministic hardcoded data, all
-    imports used, correct plot-{THEME}.png + .html output format'
-  - 'Both themes render correctly with proper theme-adaptive chrome — backgrounds,
-    text, grid tokens all flip correctly between #FAF8F1 and #1A1A17'
-  - 'Effective use of lets-plot interactive features: layer_tooltips() with .format()
-    and .line() directives for rich frequency and info-content display'
-  - Title format, axis labels with units (Information content (bits)), and legend
-    labels are all correct
-  - Clean lets-plot idiom for the invisible-point legend workaround to render colored
-    square swatches
+  - 'Semantically correct Imprint palette for nucleotides (A=green #009E73, C=blue
+    #4467A3, G=ochre #BD8233, T=red #AE3030) — proper use of the semantic exception
+    rule with biologically recognized color conventions'
+  - Proportional letter label sizing (height / max_info * 9) cleanly communicates
+    letter dominance within blocks; height threshold guard (>0.08) prevents rendering
+    unreadably small labels
+  - Correct information content calculation (IC = 2 - entropy) with biologically accurate
+    TATA-box motif as dataset
+  - Fully theme-adaptive chrome in both renders with no dark-on-dark or light-on-light
+    failures
+  - 'Excellent code quality: clean flat structure, KISS pattern, deterministic data,
+    all imports used'
+  - 'letsplot-specific features: layer_tooltips() with formatted content for interactive
+    exploration, HTML export, scale_size_identity() with mapped size aesthetic'
   weaknesses:
-  - 'VQ-07 = 0: color_map uses matplotlib tab10 hexes (#2CA02C, #1F77B4, #FF7F0E,
-    #D62728) instead of Imprint palette members. Replace with: A->#009E73 (brand green),
-    C->#4467A3 (blue), G->#BD8233 (ochre), T->#AE3030 (matte red). This also fixes
-    VQ-04 CVD safety (Imprint palette is CVD-optimised for red-green discrimination).'
-  - 'SC-02 partial: geom_text size is fixed at 4mm regardless of block height, so
-    small blocks show disproportionately large letters relative to their height. Compute
-    per-row text size proportional to block height (e.g. clip(2, 9) based on height/max_info
-    ratio) and pass as aesthetic to make letters visually fill their allocated space.'
-  - 'DE-01 / DE-02 visual polish room: once palette is corrected, add explicit axis_line=element_blank()
-    or spine removal for the right/top frame to create a cleaner L-shaped frame; slightly
-    increase plot_margin for more breathing room.'
+  - Letters rendered as proportionally-sized centered plain text, not as stretched
+    glyphs that fill their allocated height — the spec requires 'scaled glyphs (stretched
+    to fill their allocated height), not plain text'; current approach is the best
+    letsplot approximation but loses the iconic stacked-letter sequence logo appearance
+  - No visual emphasis on conserved positions — adding a subtle annotation at peak
+    conservation positions (e.g., positions 3 and 5 with >1.1 bits) would improve
+    storytelling without clutter
+  - Positions 1, 9, 10 are completely empty due to low information content; a faint
+    shading or indicator could better communicate 'measured but no conservation' vs.
+    missing data
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "sequence-logo-basic · python · letsplot · anyplot.ai" in bold dark text; axis labels "Position" and "Information content (bits)" in dark INK; tick labels in INK_SOFT gray — all clearly readable
-      Data: Stacked colored rectangles at positions 2-8; near-zero bars at positions 1, 9, 10. Colors: A=green (#2CA02C, non-Imprint), C=blue (#1F77B4, non-Imprint), G=orange (#FF7F0E, non-Imprint), T=red (#D62728, non-Imprint). White bold letter labels in blocks taller than 0.08 units. Subtle Y-axis grid only.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "sequence-logo-basic · python · letsplot · anyplot.ai" in bold dark ink, clearly readable. Axis labels "Position" (x) and "Information content (bits)" (y) in dark INK color, size 12, well-balanced. Tick labels in INK_SOFT (#4A4A44), size 10, readable. Legend "Nucleotide" header bold, A/C/G/T labels in INK_SOFT. Subtle horizontal-only grid lines at RULE opacity.
+      Data: Stacked colored blocks — A in brand green (#009E73), C in blue (#4467A3), G in ochre (#BD8233), T in matte red (#AE3030). Block heights correctly reflect information content. White bold letter labels inside blocks, proportionally sized. Positions 1, 9, 10 empty (correct — low/zero info content).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct
-      Chrome: Title and axis labels in light/white text; tick labels in light gray (INK_SOFT dark variant); grid lines subtle; legend box uses elevated dark (#242420) — all readable, no dark-on-dark failures detected
-      Data: Colors identical to light render (same green/blue/orange/red for A/C/G/T) — only chrome flips
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light text (#F0EFE8), clearly readable. Axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) — all light-colored against dark background, no dark-on-dark failures. Legend box has elevated dark background (#242420) with light text. Subtle grid lines visible.
+      Data: Identical nucleotide colors to light render — brand green (A), blue (C), ochre (G), matte red (T). Color identity preserved across themes. White letter labels inside blocks remain readable. Same conservation pattern visible.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,80 +62,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
-          legend=10/11). Good proportions both themes. Minor: title scaling formula
-          doesn''t upsize for shorter-than-67-char titles.'
+        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, legend=10-11).
+          Proportional letter sizing in blocks. Minor: very small letter labels in
+          short blocks may be marginal at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap in either render. Height threshold (0.08)
-          filters labels correctly.
+        comment: No overlapping elements; blocks cleanly separated; letter labels
+          within their blocks.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked blocks clearly visible; letter labels readable in all blocks
-          meeting the 0.08 height threshold.
+        comment: Blocks clearly visible in both themes; white letter labels contrast
+          well against all nucleotide colors.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Red (T) and green (A) as distinguishing colors concerns deuteranopes/protanopes.
-          Letter labels provide partial redundant encoding but palette is not CVD-optimised.
-          Would improve with Imprint members.
+        passed: true
+        comment: Imprint palette nucleotide assignment is CVD-safe; white labels inside
+          blocks ensure contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good overall proportions. Positions 9-10 empty (uniform distribution)
-          create slight visual imbalance on right side.
+        comment: Canvas correctly 3200x1800. Plot fills canvas well. Minor dead space
+          from empty positions 1, 9, 10.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Position'' and ''Information content (bits)'' — descriptive with
-          units.'
+        comment: Position (x) and Information content (bits) (y) are descriptive with
+          units.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-compliant: color_map uses matplotlib tab10 hexes (#2CA02C, #1F77B4,
-          #FF7F0E, #D62728). Must use Imprint palette members: A->#009E73, C->#4467A3,
-          G->#BD8233, T->#AE3030. Backgrounds and chrome ARE correctly theme-adaptive.'
+        passed: true
+        comment: 'Correct semantic exception: A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030.
+          Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Professional-looking clean layout with consistent theme chrome. Non-Imprint
-          palette reduces brand coherence. Would score higher with correct Imprint
-          members.
+        passed: true
+        comment: Professional, well-configured. Custom nucleotide color mapping, proportional
+          labels, clean layout. Well-configured library default tier.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed; Y-major grid only (subtle). theme_minimal() applied.
-          Could explicitly remove right/top spines for cleaner L-frame.
+        comment: X-grid removed, Y-grid at RULE opacity, legend with ELEVATED_BG token,
+          axis lines styled. Clearly above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: TATA-box data choice creates natural visual hierarchy — conserved
-          positions 2-5 immediately draw the eye through taller bars. Scientifically
-          meaningful context.
+        comment: TATA-box motif naturally creates visual hierarchy through varying
+          heights. No additional emphasis on conserved core positions.
     spec_compliance:
       score: 13
       max: 15
@@ -145,58 +141,53 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct sequence logo type: stacked colored rectangles per position,
-          heights proportional to information content. Minor: spec requires ''scaled
-          glyphs (stretched to fill their allocated height)'' — implementation uses
-          colored blocks + centered text.'
+        comment: Correct sequence logo with info content scaling and nucleotide colors.
+          -1 for proportional text instead of stretched glyphs.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Stacks letters ✓, orders by frequency ✓, scales by info content
-          ✓, DNA color scheme ✓, correct axis labels ✓. Scaled glyphs: approximated
-          with colored blocks + fixed-size centered text, not height-stretched letter
-          shapes.'
+        comment: Stacking, info content, DNA colors, position axis, bits axis all
+          present. -1 for letters not being stretched glyphs.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position (1-10), Y=information content in bits. All 10 positions
-          rendered.
+        comment: X=position 1-10, Y=information content in bits. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''sequence-logo-basic · python · letsplot · anyplot.ai''
-          ✓. Legend: ''Nucleotide'' with A, C, G, T labeled ✓.'
+        comment: Title sequence-logo-basic · python · letsplot · anyplot.ai correct.
+          Legend Nucleotide with A/C/G/T in correct colors.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Full range: highly conserved positions 2-5, moderately conserved
-          6-8, variable/uniform 1/9/10. All 4 nucleotides represented.'
+        comment: Varied information content, all 4 nucleotides, correct zero-IC positions.
+          No position reaches maximum 2.0 bits.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: TATA-box transcription factor binding site motif — scientifically
-          accurate, neutral, well-known bioinformatics context.
+        comment: TATA-box transcription factor binding site — specific, real, scientifically
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: DNA max 2 bits correctly applied; entropy formula correct; frequencies
-          biologically plausible for TATA-box.
+        comment: Correct IC = 2 - entropy calculation. Frequencies sum to 1 per position.
+          Biologically plausible values.
     code_quality:
       score: 10
       max: 10
@@ -206,34 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear: imports → tokens → data → compute → plot → save. No
-          functions or classes.'
+        comment: Imports -> data -> calculation loop -> plot -> save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (hardcoded frequencies). No random seed needed.
+        comment: 'Fully deterministic: frequencies hardcoded.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extras.
+        comment: os, numpy, pandas, lets_plot - all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Invisible-point legend workaround is a necessary
-          lets-plot idiom.
+        comment: Clean, appropriate complexity. Height threshold guard is thoughtful.
+          Invisible-points legend trick is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current lets-plot
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API.
     library_mastery:
       score: 7
       max: 10
@@ -243,17 +233,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage: multiple geom layers, scale_fill_manual,
-          guides(fill=guide_legend(override_aes=...)), ggsave(scale=4). Solid idiomatic
-          lets-plot.'
+        comment: 'Grammar of graphics well applied: multi-layer composition, scale_fill_manual,
+          scale_size_identity, guides with override_aes.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with custom .format() and .line() directives
-          (distinctive lets-plot feature); HTML output for full interactivity.
-  verdict: REJECTED
+        comment: layer_tooltips() with format() calls, HTML export, scale_size_identity
+          with mapped size aesthetic.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -262,8 +251,9 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
