@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: genome-track-multi
 created: '2026-06-02T08:14:40Z'
-updated: '2026-06-02T08:23:29Z'
+updated: '2026-06-02T08:33:28Z'
 generated_by: claude-sonnet
 workflow_run: 26806832055
 issue: 4422
@@ -12,48 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-tr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Excellent Makie layout system usage: linkxaxes!, rowsize!(Relative/Fixed), hidexdecorations!
-    and rowgap! are all used idiomatically to build the multi-track browser'
-  - 'Deliberate semantic color choices: brand green (#009E73) for exons, blue (#4467A3)
-    for sequencing coverage, matte red (#AE3030) for variants — all domain-appropriate
-    bioinformatics conventions'
-  - 'Proper theme-adaptive chrome across all four axes: INK, INK_SOFT, INK_MUTED tokens
-    wired through every label, tick, and spine in both themes'
-  - Realistic CFTR locus genomic data with correlated coverage peaks over exon positions,
-    telling a clear biological story
-  - Lollipop variant track using height-encoded quality scores is more informative
-    than a simple scatter; band!+lines! combination for coverage is idiomatic CairoMakie
+  - Excellent multi-track genome browser with four track types fully implemented (gene
+    annotations with exon rectangles, intron backbone, strand arrows; filled area
+    coverage; lollipop variant quality scores; regulatory element rectangles)
+  - 'Semantic color use: matte red for variants (mutations), brand green for gene
+    exons, Imprint blue for coverage — all palette-correct'
+  - Idiomatic CairoMakie layout using linkxaxes!, rowsize! with Relative sizing, and
+    rowgap! for track spacing
+  - Alternating track backgrounds (PAGE_BG / ELEVATED_BG) provide clean visual separation
+    between all four tracks
+  - Full theme-adaptive chrome with all text tokens set on every axis — both renders
+    are clean and readable
+  - Realistic CFTR locus data with biologically accurate coverage peaks aligned over
+    exon positions
+  - Title formula is correct with optional descriptive prefix and automatic fontsize
+    scaling
   weaknesses:
-  - 'Gene name labels ''CFTR-A (+)'' and ''CFTR-B (-)'' are positioned just outside
-    the y-axis limits (y=1.27 vs limit=1.2; y=-1.18 vs limit=-1.1), causing them to
-    be clipped by the axis viewport and appear only partially (lower strokes of characters
-    visible). Fix: either expand ylimits to (-1.3, 1.4) or reposition labels to y=ga_y+0.60
-    / y=gb_y-0.60.'
-  - 'Missing subtle background shading to visually separate adjacent tracks, as explicitly
-    required by spec notes (''Consider using subtle background shading to visually
-    separate adjacent tracks''). Fix: alternate the axis backgroundcolor between PAGE_BG
-    and ELEVATED_BG for odd/even tracks.'
-  - Coverage track uses IMPRINT_PALETTE[3] (blue, position 3) rather than IMPRINT_PALETTE[2]
-    (lavender, position 2), skipping the canonical second slot without explicit semantic
-    justification in the code.
-  - '''Quality score'' annotation text in the Variants track is fontsize=10 — borderline
-    readable when PNG is scaled to ~400 px mobile width. Fix: increase to fontsize=11
-    or 12.'
+  - Strand direction arrow markers are somewhat small (markersize=7, rendered as 14px
+    on 3200x1800) — slightly hard to see at thumbnail size; consider increasing to
+    markersize=9-10
+  - 'DE-01/DE-03: No focal-point emphasis or annotation highlighting a key biological
+    insight (e.g., which exon region has the highest coverage, or an arrow indicating
+    the CFTR promoter connection to coverage) — the data is displayed correctly but
+    viewer must find the story unaided'
+  - 'DE-02: Coverage y-grid (subtle) is the only grid; consider adding a faint horizontal
+    rule to separate the gene track from the coverage track more cleanly since the
+    alternating background contrast is quite subtle on light render'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white.
-      Chrome: Title "CFTR Locus · genome-track-multi · julia · makie · anyplot.ai" in bold dark (#1A1A17) at top — fully readable. Y-axis labels (Genes, Read Depth, Variants, Regulatory) in dark text — all readable. X-axis label "chr7 position (bp)" at bottom — readable. Tick labels in INK_SOFT muted dark tone — readable. Gene name labels "CFTR-A (+)" and "CFTR-B (-)" appear partially clipped at axis y-limits (center positioned ~0.07 units outside limit). All other chrome elements legible.
-      Data: Gene track shows 5 brand-green (#009E73) exon rectangles for CFTR-A on a thin intron backbone with right-pointing triangle strand markers; 4 green exon blocks for CFTR-B with left-pointing strand markers. Coverage track shows a semi-transparent blue (#4467A3, alpha 0.30) filled area with a solid blue line on top — peaks clearly aligned with exon positions. Variant track shows 13 red (#AE3030) lollipop markers with dark stems at varying quality-score heights. Regulatory track shows 4 labeled colored rectangles: green Promoter, 2 blue Enhancers, ochre CTCF — each with inline labels.
-      Legibility verdict: PASS — all primary text elements are readable against the light background; gene name labels near axis boundary are the only minor concern.
+      Background: Warm off-white #FAF8F1 for gene and variant tracks; slightly lighter #FFFDF6 elevated background for coverage and regulatory tracks — alternating backgrounds cleanly separate the four panels.
+      Chrome: Title "CFTR Locus · genome-track-multi · julia · makie · anyplot.ai" in bold dark text, clearly readable at the top. Track Y-axis labels ("Genes", "Read Depth", "Variants", "Regulatory") in dark INK_SOFT, all legible. X-axis tick labels and "chr7 position (bp)" label in INK_SOFT, readable. "Quality score" annotation and gene name labels ("CFTR-A (+)", "CFTR-B (−)") are visible.
+      Data: Gene exon rectangles in #009E73 brand green. Coverage band in #4467A3 blue with 30% alpha fill and solid blue outline line. Variant lollipop circles in #AE3030 matte red (semantic: mutations). Regulatory elements in #009E73 (Promoter), #4467A3 (Enhancer), #BD8233 (CTCF). Strand direction arrows as small right/left triangles in INK_MUTED.
+      Legibility verdict: PASS — all text is clearly readable against the light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title in light (#F0EFE8-equivalent) bold text on dark background — clearly readable, no dark-on-dark issues. Y-axis labels and track labels render in light tones — readable. X-axis ticks and labels use muted light (INK_SOFT dark-mode) — readable. No instances of dark text on dark background detected in any track.
-      Data: All data colors are identical to the light render — gene exons remain #009E73 green, coverage fill remains blue, variant markers remain #AE3030 red, regulatory rectangles retain their green/blue/ochre palette colors. Chrome correctly flipped while data colors held constant.
-      Legibility verdict: PASS — all text is readable against the dark background; the same minor gene-label clipping applies as in the light render.
+      Background: Warm near-black #1A1A17 for gene and variant tracks; slightly lighter #242420 for coverage and regulatory tracks — the same alternating pattern.
+      Chrome: Title in light #F0EFE8 on dark background, clearly readable. Track labels in #B8B7B0 (INK_SOFT dark), all legible. X-axis tick labels and bottom axis label visible in INK_SOFT token. Gene name labels and "Quality score" annotation in theme-correct light colors.
+      Data: Gene exon rectangles remain #009E73 (identical to light render). Coverage band remains #4467A3 blue. Variant circles remain #AE3030 red. Regulatory elements retain identical palette colors. Data colors are identical between themes — only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements use correctly themed tokens.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -61,58 +60,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout; all primary labels, ticks,
-          and title readable in both themes. Minor deduction: gene name labels (''CFTR-A
-          (+)'', ''CFTR-B (-)'') positioned at y=1.27 and y=-1.18, just outside axis
-          limits of 1.2 and -1.1, causing partial axis clipping.'
+        comment: 'All font sizes explicitly set; title, axis labels, tick labels,
+          gene name annotations all readable in both themes. Minor: strand arrow triangles
+          somewhat small at thumbnail size.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements across any of the four tracks.
+        comment: No overlap between any text or data elements across all four tracks.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All genomic features clearly visible: exon blocks are prominently
-          sized, coverage area and line are easily read, lollipop markers are appropriate
-          size for 13 data points, regulatory rectangles are clearly visible.'
+        comment: Coverage fill, lollipop circles, exon rectangles all clearly visible.
+          Strand direction triangles (markersize=7) are slightly small.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette applied; multiple tracks use distinct hue families
-          (green/blue/red) for robust discrimination. No red-green-only encoding.
+        comment: Imprint palette is CVD-safe; distinct hue families used across tracks.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 confirmed). Row proportions are well-calibrated.
-          No overflow or canvas-edge clipping. Title proportionally sized.
+        comment: Canvas gate passed (3200x1800). Four tracks with Relative row proportions
+          fill the canvas well. rowgap provides clean separation.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with prefix; x-axis labeled 'chr7 position (bp)'
-          with chromosome and units; each track has a descriptive y-axis label.
+        comment: 'X-axis: ''chr7 position (bp)''. Y-axes: ''Genes'', ''Read Depth'',
+          ''Variants'', ''Regulatory''. All descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Gene track uses #009E73 (brand green) as first data series. Coverage
-          uses #4467A3 (blue) — domain-appropriate for sequencing reads. Variants
-          use #AE3030 (red) — correct semantic anchor for variants/mutations. Regulatory
-          uses palette members. Both renders: data colors identical, chrome correctly
-          flipped.'
+        comment: 'First categorical series (gene exons) uses #009E73. Coverage in
+          #4467A3, variants in #AE3030 (semantic red for mutations). Backgrounds #FAF8F1/#1A1A17.
+          Full theme-adaptive chrome. Both renders correct.'
     design_excellence:
       score: 13
       max: 20
@@ -122,29 +116,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): deliberate semantic color choices, multi-track
-          layout with appropriate proportions, lollipop chart for variants is more
-          sophisticated than a simple scatter. Not publication-ready; no custom typography
-          or exceptional visual polish.'
+        comment: Intentional semantic color choices, alternating track backgrounds,
+          thoughtful hierarchy. Above configured defaults but not publication-Nature
+          level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: spines managed per-track (only left spine, no top/right/bottom
-          on intermediate tracks), grid only in coverage track where relevant, y-decorations
-          hidden for tracks where numeric scale isn''t meaningful (gene/regulatory).'
+        comment: Spines removed on all tracks, subtle grid only on coverage track,
+          rowgap spacing. Alternating backgrounds add refinement. Good but not perfect.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: coverage peaks visually align with exon blocks
-          directly above, telling a clear expression story. Variant quality heights
-          encode effect magnitude. Direct labeling of regulatory elements avoids legend
-          lookup. No focal-point annotation to guide the eye to a key insight.'
+        comment: Multi-track structure tells a coherent genomics story; coverage peaks
+          align with gene A exons visually. No active emphasis drawing attention to
+          key insight.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,32 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-track genome browser with 4 tracks (genes, coverage,
-          variants, regulatory) stacked on shared genomic x-axis.
+        comment: Correct multi-track genome browser with 4 tracks stacked vertically
+          on shared x-axis.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Gene track with exon rectangles, intron lines, strand arrows present.
-          Coverage as filled area. Variants as lollipop markers with quality encoding.
-          Regulatory colored rectangles with labels. Missing: subtle background shading
-          to visually separate adjacent tracks (explicitly mentioned in spec notes).'
+        comment: Gene track (exons+introns+strand arrows), coverage area, lollipop
+          variants, regulatory rectangles — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shared x-axis with genomic coordinates (bp). All tracks aligned.
-          Coverage y-axis shows read depth. Variant y-axis shows quality scores.
+        comment: Linked x-axes with shared genomic coordinates. Y-axes appropriate
+          per track type.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'CFTR Locus · genome-track-multi · julia · makie · anyplot.ai'
-          matches required format with descriptive prefix. Tracks are self-labeled
-          via y-axis labels rather than a legend.
+          matches required format with optional descriptive prefix.
     data_quality:
       score: 15
       max: 15
@@ -187,27 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four track types present. Gene track includes exons, introns,
-          and strand-direction indicators for two genes on opposite strands. Coverage
-          shows correlated expression over exons. Variants span the region with varied
-          quality scores. Regulatory includes three element types (Promoter, Enhancer,
-          CTCF).
+        comment: 'All track types fully implemented with realistic variation: two
+          genes on opposite strands, coverage peaks over exons, 13 variants with quality
+          scores, four regulatory element types.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CFTR locus (chr7) is a real, biologically meaningful gene. Data is
-          scientifically plausible, medically neutral, and appropriate for an educational
-          genome browser example.
+        comment: 'CFTR locus is a real, well-known genomic region. Biologically accurate:
+          two genes on opposite strands, coverage peaks at exons, PHRED-scale quality
+          scores, Promoter/Enhancer/CTCF regulatory elements.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 kb genomic window is realistic for a multi-track view. Read depths
-          (8-70x) are biologically plausible. Quality scores (28-99) fall within typical
-          SNP caller ranges. Exon/intron proportions are realistic.
+        comment: 10kb genomic window realistic for single-locus view. Coverage depth
+          0-56 plausible for RNA-seq. Variant quality 28-99 matches real PHRED range.
     code_quality:
       score: 10
       max: 10
@@ -217,34 +202,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → data → figure/axes → track primitives
-          → save. No functions or classes.'
+        comment: 'No functions or classes. Linear flow: theme tokens → data → figure
+          → tracks → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set at top.
+        comment: Random.seed!(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three used.
+        comment: CairoMakie, Colors, Random — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, organized by track sections. Loops for exon rectangles and
-          lollipops avoid repetition. No fake UI elements.
+        comment: Clean, appropriate complexity. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot-$(THEME).png' with px_per_unit=2. Current CairoMakie
-          API used.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Current CairoMakie
+          API.
     library_mastery:
       score: 9
       max: 10
@@ -254,28 +238,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Exemplary Makie idiom: fig[row,col] grid layout, linkxaxes!, hidexdecorations!,
-          rowsize!(Relative/Fixed), rowgap!, band!, poly! with Point2f coordinates,
-          RGBAf for alpha, colorant"" literals. All Makie-recommended patterns.'
+        comment: 'Expert CairoMakie: Figure grid layout, Axis with full attribute
+          set, linkxaxes!, rowsize! with Fixed/Relative, rowgap!, hidexdecorations!,
+          band!, poly!, RGBAf.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: linkxaxes! (Makie-native linked axes), rowsize! with Relative() proportions
-          (Makie-specific layout control), band! for filled area, and poly! for precise
-          polygons are all features that distinguish Makie from other plotting libraries.
-  verdict: REJECTED
+        comment: linkxaxes! for synchronized multi-panel axes, rowsize! Relative for
+          proportional track heights, band! for coverage fill — all Makie-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome

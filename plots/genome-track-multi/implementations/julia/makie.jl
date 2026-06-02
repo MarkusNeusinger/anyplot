@@ -1,7 +1,7 @@
 # anyplot.ai
 # genome-track-multi: Genome Track Viewer
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-06-02
+# Quality: 90/100 | Created: 2026-06-02
 
 using CairoMakie
 using Colors
