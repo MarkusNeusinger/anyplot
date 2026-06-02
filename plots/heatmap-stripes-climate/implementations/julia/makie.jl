@@ -16,7 +16,8 @@ const INK     = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const TITLE   = "heatmap-stripes-climate · julia · makie · anyplot.ai"
 
 # Imprint diverging colormap: Imprint blue (cold) → neutral → Imprint red (warm)
-const div_mid     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+# Midpoint must contrast against background so near-zero anomaly stripes are visible
+const div_mid     = THEME == "light" ? colorant"#BDBBB4" : colorant"#6B6A63"
 const ANYPLOT_DIV = cgrad([colorant"#4467A3", div_mid, colorant"#AE3030"])
 
 # Data: simulated global temperature anomalies 1850–2023
@@ -56,7 +57,7 @@ ylims!(ax, 0.5, 1.5)
 
 # Mandated anyplot title (52 chars — no font scaling needed)
 Label(fig[2, 1], TITLE;
-    fontsize  = 20,
+    fontsize  = 26,
     color     = INK,
     tellwidth = false,
     padding   = (0, 0, 10, 6),
