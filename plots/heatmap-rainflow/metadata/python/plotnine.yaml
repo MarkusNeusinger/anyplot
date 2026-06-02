@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:07:42Z'
-updated: '2026-06-02T09:57:16Z'
+updated: '2026-06-02T10:09:37Z'
 generated_by: claude-sonnet
 workflow_run: 26811721058
 issue: 4465
@@ -12,126 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: colorbar, log scale, zero-bin distinction, axis labels
-    with MPa units, and data mapping all fully implemented'
-  - 'Imprint sequential palette used correctly — #009E73 to #4467A3 gradient is the
-    canonical imprint_seq cmap for single-polarity data'
-  - 'Theme-adaptive chrome fully correct in both renders: text, backgrounds, legend,
-    and borders all flip properly between light and dark'
-  - Two-layer tile composition (zero vs nonzero bins with separate data sources per
-    geom) leverages plotnine grammar of graphics elegantly
-  - Realistic physics-based data with exponential amplitude distribution and secondary
-    cluster makes the plot tell a genuine fatigue engineering story
-  - Code quality is clean, reproducible (np.random.seed(42)), and idiomatic throughout
-    with a documented sys.path workaround
+  - 'Perfect spec compliance: 2D heatmap with amplitude on y-axis, mean stress on
+    x-axis, imprint_seq colormap with log₁₀ scale, colorbar with physical units, and
+    visually distinct zero-count bins.'
+  - 'Correct imprint_seq colormap (#009E73 → #4467A3) with fully theme-adaptive chrome
+    in both light and dark renders.'
+  - Realistic fatigue-analysis data with exponential amplitude decay plus secondary
+    vibration cluster at ~60 MPa / +30 MPa mean — physically plausible and clearly
+    annotated.
+  - 'Distinctive plotnine usage: layered geom_tile approach for zero-count bins, stepped
+    colorbar via guide_colorbar(display=''rectangles''), and coord_fixed for enforcing
+    square cells.'
+  - 'Perfect code quality: np.random.seed(42), clean imports with valid noqa justification,
+    KISS flat structure, correct plot-{THEME}.png output.'
+  - Amber dashed-rectangle annotation creates a clear focal point for the secondary
+    vibration cluster and elevates storytelling beyond a plain data dump.
   weaknesses:
-  - 'DE-01: Design lacks publication-ready polish — functionally correct but visually
-    plain with no visual focal point to distinguish it from a default-configuration
-    output'
-  - 'DE-03: The secondary cluster at moderate amplitude / positive mean (~60 MPa amplitude,
-    +30 MPa mean) is present in the data but not highlighted for the viewer — a subtle
-    annotation or labeled rectangle would immediately elevate the storytelling'
-  - 'LM-01: DataFrame construction uses row-by-row Python loop (rows.append inside
-    nested for loops) instead of idiomatic numpy array flattening from the already-computed
-    meshgrid'
-  - 'LM-02: No advanced plotnine features used — coord_fixed() (critical for symmetric
-    rainflow matrices to enforce square cells) is absent, which is a plotnine-specific
-    feature with no direct matplotlib equivalent in this grammar'
+  - Annotation text 'Vibration cluster' is very small (size=3.0mm ≈ 8.5pt) — may not
+    be readable at mobile viewport widths (~400 px). Increase to size=3.5 or 4.0 mm.
+  - 'DE-01 limited to 5/8: while annotation and stepped colorbar show design thought,
+    overall aesthetic impact could be elevated — consider refining typography hierarchy
+    and polishing colorbar-to-plot spacing.'
+  - 'LM-02 limited to 3/5: the stepped colorbar and layered geom_tile are plotnine-distinctive
+    but deeper features (e.g. labeller functions, custom stat transforms, or theme
+    element inheritance) could further differentiate from other libraries.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white
-      Chrome: Title "heatmap-rainflow · python · plotnine · anyplot.ai" in bold dark ink, ~70% canvas width. Axis labels "Stress Amplitude (MPa)" and "Mean Stress (MPa)" in dark text. Tick labels in dark secondary ink (#4A4A44). Legend "Cycle Count (log10)" with dark title and medium ink values. All readable.
-      Data: Imprint sequential gradient #009E73 (low count) to #4467A3 (high count). Zero-count bins rendered in off-white (PAGE_BG = #FAF8F1), clearly distinct from the colored tiles. High-count concentration visible at low amplitude / near-zero mean. Secondary cluster visible around 60 MPa amplitude / +30 MPa mean.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct light surface.
+      Chrome: Bold dark title "heatmap-rainflow · python · plotnine · anyplot.ai" spans ~75% of canvas width; dark axis labels "Mean Stress (MPa)" and "Stress Amplitude (MPa)" with units; dark tick labels at -100/-50/0/50/100 and 0/50/100/150/200; all clearly readable against the light background.
+      Data: 20×20 geom_tile heatmap. Tiles transition from brand-green #009E73 (low count, sparse high-amplitude region) to deep blue #4467A3 (high count, low-amplitude near-zero-mean region), implementing the imprint_seq sequential colormap. Zero-count bins rendered with PAGE_BG (#FAF8F1) fill — appear as bright white squares, clearly distinct from colored tiles. Amber (#DDCC77) dashed rectangle annotation highlights the secondary vibration cluster at approximately (0–55 MPa mean, 35–85 MPa amplitude); "Vibration cluster" label in amber at size=3.0mm (small but visible). Stepped colorbar on the right labeled "Cycle Count (log₁₀)" with 8 discrete rectangles from 0.0 to 2.5.
+      Legibility verdict: PASS — all main text readable; annotation text is small but acceptable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, no pure black
-      Chrome: Title in light #F0EFE8, axis labels and tick labels in light secondary ink (#B8B7B0). Legend title in light ink, values in secondary. No dark-on-dark text failures — all chrome elements flip correctly.
-      Data: Colors are identical to light render — same #009E73 to #4467A3 gradient for nonzero bins. Zero-count bins appear as near-black cells (PAGE_BG = #1A1A17) with light gray tile outlines (INK_SOFT = #B8B7B0) making them distinguishable from colored tiles via grid structure.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Light-colored title text (#F0EFE8) fully readable; light axis labels and tick labels (#B8B7B0 INK_SOFT) clearly visible against the dark background — no dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — imprint_seq green→blue gradient is unchanged; zero-count bins rendered with PAGE_BG (#1A1A17) which blends with the panel background, appearing as dark "holes" clearly distinguishable from the colored tiles by contrast with adjacent green/teal tiles and subtle grid outlines. Amber annotation visible against dark background. Colorbar legend box uses elevated dark background (#242420) with correctly themed text.
+      Legibility verdict: PASS — all chrome elements readable; data colors identical to light render; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12pt, axis=10pt, ticks=8pt,
-          legend=8pt). Well-proportioned at 2400x2400px. Readable in both themes.
+        comment: All font sizes explicitly set; title, axis labels, ticks well-proportioned.
+          Annotation text size=3.0mm is small and may be hard to read at mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap tiles clearly visible. Gradient well-differentiated across
-          full range. Zero-count bins distinguishable via background color and grid
-          outlines.
+        comment: Heatmap tiles clearly visible; zero-count bins visually distinct
+          in both themes; stepped colorbar clearly shows scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe. Gradient traverses distinct lightness levels.
+        comment: Green→blue sequential gradient is colorblind-safe; amber annotation
+          provides good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (square 2400x2400). Plot fills ~75% of canvas,
-          balanced margins, legend well-placed.
+        comment: Square canvas appropriate for symmetric heatmap; plot fills ~70%
+          of canvas; balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stress Amplitude (MPa) and Mean Stress (MPa) — descriptive with units.
+        comment: Both axes include physical units (MPa); title follows correct format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient(low=#009E73, high=#4467A3) = imprint_seq for
-          single-polarity count data. Backgrounds #FAF8F1/#1A1A17. All chrome theme-adaptive.'
+        comment: 'imprint_seq colormap (#009E73→#4467A3); light background #FAF8F1,
+          dark #1A1A17; theme-adaptive chrome throughout both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correct palette, clean layout, two-layer tile approach is thoughtful.
-          Reads as well-configured library default — no intentional typographic hierarchy
-          beyond basics, no focal-point annotations.
+        passed: true
+        comment: 'Above well-configured defaults: Imprint cmap, zero-count handling,
+          amber annotation, stepped colorbar. Not yet at strong-design / publication
+          level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid removed from panel (appropriate), panel border retained, explicit
-          legend key sizing. Some visible refinement above defaults. Minimal margin
-          (plot_margin=0.02).
+        passed: true
+        comment: Grid removed (appropriate for heatmap), panel border retained, legend
+          background styled, good whitespace. Not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Log10 scale is deliberate and appropriate. Secondary cluster visible
-          in data but not highlighted. Viewer must discover the story without visual
-          guidance.
+        passed: true
+        comment: Amber annotation with dashed rectangle creates a clear focal point
+          for the secondary vibration cluster; color gradient storytelling between
+          high/low count regions.
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap with amplitude on Y, mean on X.
+        comment: Correct 2D heatmap via geom_tile.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, log scale applied, zero-count bins visually distinct,
-          axis labels with MPa units, tick labels on bin centers.
+        comment: 'All spec requirements met: amplitude on y-axis, mean on x-axis,
+          sequential colormap, colorbar, log scale, physical units, visually distinct
+          zero bins.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned per spec. All 20x20 bins visible.
+        comment: Amplitude on y, mean stress on x, color encodes cycle count. 20×20
+          grid within specified range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-rainflow · python · plotnine · anyplot.ai' correct.
-          Legend 'Cycle Count (log10)' correct.
+        comment: Title 'heatmap-rainflow · python · plotnine · anyplot.ai' correct;
+          colorbar labeled 'Cycle Count (log₁₀)'.
     data_quality:
       score: 15
       max: 15
@@ -171,23 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows low-amplitude dominance, high-count concentration, secondary
-          cluster at moderate amplitude/positive mean, and sparse high-amplitude periphery.
+        comment: 'Shows all aspects: high-frequency low-amplitude cycles, sparse high-amplitude
+          region, zero-count bins, secondary vibration cluster.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: MPa units, 0-200 MPa amplitude, -100 to +100 MPa mean stress. Secondary
-          cluster at ~60 MPa / +30 MPa physically realistic for vibration loading
-          on steel.
+        comment: Fatigue analysis context is real and neutral; MPa units appropriate
+          for structural steel; distribution shape physically realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20x20 bins within spec's 10x10-64x64 range. Count range 0-500+ cycles.
-          Log10 scale applied to compress dynamic range.
+        comment: Amplitude 0–200 MPa and mean ±100 MPa are realistic for variable-amplitude
+          fatigue loading; cycle counts realistic in magnitude.
     code_quality:
       score: 10
       max: 10
@@ -197,8 +196,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data generation -> plot -> save. No functions
-          or classes.'
+        comment: Flat Imports→Data→Plot→Save; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,52 +208,51 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All plotnine symbols used. os/sys used for path manipulation workaround.
-          numpy/pandas used.
+        comment: All imports used; noqa justified by sys.path workaround for naming
+          conflict.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. sys.path workaround for naming conflict is
-          legitimate and documented.
+        comment: Clean, readable; vectorized numpy; no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=6, height=6, units='in')
-          correct.
+        comment: Saves plot-{THEME}.png; current plotnine API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'ggplot() without default data, per-geom data= and mapping= arguments
-          is idiomatic grammar-of-graphics layering. Minor deduction: DataFrame built
-          row-by-row via nested loops instead of numpy array flattening.'
+        comment: 'Expert plotnine usage: proper aes() mappings, guides() for colorbar,
+          theme() with element_* classes, coord_fixed(), layered geom_tile approach.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Two-layer tile composition with separate data sources per geom is
-          distinctly plotnine/ggplot2. No coord_fixed() for symmetric matrix, no advanced
-          plotnine features (stat functions, guide customization).
-  verdict: REJECTED
+        passed: true
+        comment: guide_colorbar with display='rectangles' and draw_ulim/llim is distinctively
+          plotnine; layered geom_tile for zero-count is grammar-native. Deeper library-specific
+          features could further differentiate.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - layer-composition
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap
   - alpha-blending
