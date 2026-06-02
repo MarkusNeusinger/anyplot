@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -23,6 +23,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_point,
+    geom_smooth,
     geom_text,
     ggplot,
     guide_legend,
@@ -105,6 +106,16 @@ sun = pd.DataFrame({"temperature": [5778], "luminosity": [1.0], "label": ["Sun"]
 plot = (
     ggplot(df, aes(x="temperature", y="luminosity", color="spectral_type"))
     + geom_point(size=2.5, alpha=0.65, stroke=0.3)
+    + geom_smooth(
+        data=df[df["region"] == "Main Sequence"],
+        mapping=aes(x="temperature", y="luminosity"),
+        method="lm",
+        color=INK_SOFT,
+        fill=INK_SOFT,
+        alpha=0.12,
+        size=0.7,
+        inherit_aes=False,
+    )
     + geom_point(
         data=sun,
         mapping=aes(x="temperature", y="luminosity"),
@@ -191,7 +202,8 @@ plot = (
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
+        panel_border=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
         plot_margin=0.04,
     )
 )
