@@ -113,6 +113,10 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
+            chartjs|d3|echarts)
+              LANGUAGE="javascript"
+              EXT=".js"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"

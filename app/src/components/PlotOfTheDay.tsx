@@ -103,11 +103,11 @@ export function PlotOfTheDay() {
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: colors.primary, fontWeight: 600 }}>$</Typography>
           {(() => {
             // Per-language file extension + runner command. Anyplot ships Python
-            // for nine libraries, R for ggplot2, and Julia for makie; the chip
-            // mimics what a user would actually type into a shell, so the
-            // runner label flips too.
-            const ext = data.language === 'r' ? '.R' : data.language === 'julia' ? '.jl' : '.py';
-            const runner = data.language === 'r' ? 'Rscript' : data.language === 'julia' ? 'julia --project=.' : 'python';
+            // for nine libraries, R for ggplot2, Julia for makie, and JavaScript
+            // for chartjs/d3/echarts; the chip mimics what a user would actually
+            // type into a shell, so the runner label flips too.
+            const ext = data.language === 'r' ? '.R' : data.language === 'julia' ? '.jl' : data.language === 'javascript' ? '.js' : '.py';
+            const runner = data.language === 'r' ? 'Rscript' : data.language === 'julia' ? 'julia --project=.' : data.language === 'javascript' ? 'node' : 'python';
             return (
               <Typography
                 component="a"
@@ -265,7 +265,7 @@ export function PlotOfTheDay() {
             │
           </Typography>
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
-            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · {data.language === 'r' ? 'R' : data.language === 'julia' ? 'Julia' : 'Python'} {data.language_version || data.python_version || (data.language === 'r' ? '4.4' : data.language === 'julia' ? '1.11' : '3.13')}
+            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · {data.language === 'r' ? 'R' : data.language === 'julia' ? 'Julia' : data.language === 'javascript' ? 'JavaScript' : 'Python'} {data.language_version || data.python_version || (data.language === 'r' ? '4.4' : data.language === 'julia' ? '1.11' : data.language === 'javascript' ? '22' : '3.13')}
           </Typography>
         </Box>
       </Box>

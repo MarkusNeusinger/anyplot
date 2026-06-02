@@ -311,8 +311,8 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 | Phase | Adds                                | New languages | Cumulative library count | Status   |
 |-------|-------------------------------------|---------------|--------------------------|----------|
 | 0     | —                                   | Python        |  9                       | shipped  |
-| 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 12                       | planned  |
-| 2     | Highcharts (replaces Python entry)  | —             | 12                       | planned  |
+| 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 14                       | **in progress** — JS runtime (Node 22 + Playwright render harness), registry, workflows, prompts, and frontend landed; plot implementations generated next via `bulk-generate`. Cumulative count is 14 (the Phase-3/5 R+Julia entries already shipped). |
+| 2     | Highcharts (replaces Python entry)  | —             | 14                       | planned  |
 | 3     | **ggplot2**                         | **+ R**       | **10**                   | **shipped** (Phase 3 was implemented before Phases 1+2; net total was 10 until Phase 5 landed Julia) |
 | 4     | Recharts, Observable Plot           | —             | TBD                      | planned  |
 | 5     | **Makie.jl** (ApexCharts deferred)  | **+ Julia**   | **11**                   | **shipped** (Phase 5 was implemented before Phases 1+2+4 to validate the multi-language pipeline on a second non-Python runtime; ApexCharts split to a later phase) |

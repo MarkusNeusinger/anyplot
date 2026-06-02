@@ -31,6 +31,9 @@ on:
           - letsplot
           - ggplot2
           - makie
+          - chartjs
+          - d3
+          - echarts
       issue_number:
         description: "Issue number (optional, for tracking)"
         required: false
@@ -123,6 +126,10 @@ jobs:
             makie)
               LANGUAGE="julia"
               EXT=".jl"
+              ;;
+            chartjs|d3|echarts)
+              LANGUAGE="javascript"
+              EXT=".js"
               ;;
             *)
               LANGUAGE="python"
@@ -254,6 +261,10 @@ jobs:
       - name: Setup Julia + Makie
         if: steps.inputs.outputs.language == 'julia'
         uses: ./.github/actions/setup-julia
+
+      - name: Setup Node + browser render harness
+        if: steps.inputs.outputs.language == 'javascript'
+        uses: ./.github/actions/setup-node
 
       # ========================================================================
       # Generate: Create implementation branch and code
@@ -526,6 +537,10 @@ jobs:
             # if julia exits non-zero after partial stdout.
             LANGUAGE_VERSION=$(julia -e 'print(VERSION)' 2>/dev/null | tail -n1)
             is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
+          elif [ "$LANGUAGE" = "javascript" ]; then
+            # `node --version` prints `v22.x.y`; strip the leading `v`.
+            LANGUAGE_VERSION=$(node --version 2>/dev/null | sed 's/^v//' | tail -n1)
+            is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
           else
             LANGUAGE_VERSION="$PYTHON_VERSION"
           fi
@@ -558,6 +573,14 @@ jobs:
             " 2>/dev/null | tail -n1)
             is_version "$v" && printf '%s' "$v"
           }
+          get_npm_version() {
+            # Read the installed version straight out of the package's own
+            # package.json (restored by `npm ci` from the committed lockfile).
+            # `require('<pkg>/package.json')` resolves the subpath reliably.
+            local v
+            v=$(node -p "require('$1/package.json').version" 2>/dev/null | tail -n1)
+            is_version "$v" && printf '%s' "$v"
+          }
 
           if [ "$LANGUAGE" = "r" ]; then
             LIBRARY_VERSION=$(get_r_version "$LIBRARY")
@@ -570,6 +593,17 @@ jobs:
                 ;;
               *)
                 LIBRARY_VERSION=$(get_julia_version "$LIBRARY")
+                ;;
+            esac
+          elif [ "$LANGUAGE" = "javascript" ]; then
+            # Catalogue id `chartjs` maps to the npm package `chart.js`; `d3` and
+            # `echarts` match their npm names directly.
+            case "$LIBRARY" in
+              chartjs)
+                LIBRARY_VERSION=$(get_npm_version "chart.js")
+                ;;
+              *)
+                LIBRARY_VERSION=$(get_npm_version "$LIBRARY")
                 ;;
             esac
           else

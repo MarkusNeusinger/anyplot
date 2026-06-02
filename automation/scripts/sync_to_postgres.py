@@ -38,7 +38,7 @@ from sqlalchemy import delete, select, tuple_  # noqa: E402
 from sqlalchemy.dialects.postgresql import insert  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
-from core.constants import LANGUAGE_FILE_EXTENSIONS  # noqa: E402
+from core.constants import language_file_extensions  # noqa: E402
 from core.database import LANGUAGES_SEED, LIBRARIES_SEED, Impl, Language, Library, Spec  # noqa: E402
 from core.database.connection import close_db_sync, get_db_context_sync, init_db_sync, is_db_configured  # noqa: E402
 
@@ -294,14 +294,21 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
             if not language_dir.is_dir() or language_dir.name.startswith("_") or language_dir.name.startswith("."):
                 continue
             language_id = language_dir.name
-            ext = LANGUAGE_FILE_EXTENSIONS.get(language_id)
-            if ext is None:
+            # A language directory may hold more than one extension (e.g.
+            # JavaScript: `.js` for framework-agnostic libs, `.tsx` for a React
+            # lib). language_file_extensions() returns the language default plus
+            # any per-library overrides; we scan for each.
+            exts = language_file_extensions(language_id)
+            if not exts:
                 logger.warning(f"Unknown language directory '{language_id}' in {implementations_dir} — skipping")
                 continue
-            for impl_file in sorted(language_dir.glob(f"*{ext}")):
-                if impl_file.name.startswith("_"):
-                    continue
-                impl_file_pairs.append((language_id, impl_file))
+            seen: set[Path] = set()
+            for ext in sorted(exts):
+                for impl_file in sorted(language_dir.glob(f"*{ext}")):
+                    if impl_file.name.startswith("_") or impl_file in seen:
+                        continue
+                    seen.add(impl_file)
+                    impl_file_pairs.append((language_id, impl_file))
 
         # Legacy layout: flat .py files under implementations/ are implicitly python
         for impl_file in sorted(implementations_dir.glob("*.py")):

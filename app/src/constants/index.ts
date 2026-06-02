@@ -6,7 +6,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // sent with fetch. Falls back to API_URL locally where there's no Worker.
 export const DEBUG_API_URL = import.meta.env.VITE_DEBUG_API_URL || API_URL;
 export const GITHUB_URL = 'https://github.com/MarkusNeusinger/anyplot';
-export const LIBRARIES = ['altair', 'bokeh', 'ggplot2', 'highcharts', 'letsplot', 'makie', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
+export const LIBRARIES = ['altair', 'bokeh', 'chartjs', 'd3', 'echarts', 'ggplot2', 'highcharts', 'letsplot', 'makie', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
 export const BATCH_SIZE = 36;
 
 // Image size: 'normal' or 'compact' (half size)
@@ -25,6 +25,9 @@ export const LIB_ABBREV: Record<string, string> = {
   letsplot: 'lp',
   ggplot2: 'gg',
   makie: 'mk',
+  chartjs: 'cjs',
+  d3: 'd3',
+  echarts: 'ec',
 };
 
 // Static library → language map, mirroring core/constants.py LIBRARIES_METADATA.
@@ -36,6 +39,9 @@ export const LIB_ABBREV: Record<string, string> = {
 export const LIB_TO_LANG: Record<string, string> = {
   altair: 'python',
   bokeh: 'python',
+  chartjs: 'javascript',
+  d3: 'javascript',
+  echarts: 'javascript',
   ggplot2: 'r',
   highcharts: 'python',
   letsplot: 'python',
@@ -52,6 +58,7 @@ export const LANG_DISPLAY: Record<string, string> = {
   python: 'Python',
   r: 'R',
   julia: 'Julia',
+  javascript: 'JavaScript',
 };
 
 // File-extension token for a language id (e.g. used as the suffix in compact
@@ -62,4 +69,5 @@ export const LANG_EXT: Record<string, string> = {
   python: 'py',
   r: 'r',
   julia: 'jl',
+  javascript: 'js',
 };
