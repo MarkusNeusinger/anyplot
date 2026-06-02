@@ -1,106 +1,146 @@
 library: pygal
+language: python
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:45:34Z'
-updated: '2026-03-07T09:04:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22795810087
+updated: '2026-06-02T23:21:35Z'
+generated_by: claude-sonnet
+workflow_run: 26853001720
 issue: 4566
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/pygal/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Perfect tornado diagram shape with clear visual hierarchy (widest bars at top)
-  - 'Polished aesthetic: custom colors, rounded bars, subtle grid, prominent zero
-    line'
-  - Excellent data choice with realistic NPV sensitivity analysis scenario
-  - Clean linear code with good use of pygal distinctive dict-based tooltip feature
-  - All text highly legible with explicitly set font sizes
+  - 'Correct tornado chart shape: horizontal stacked bars sorted by total range (widest
+    at top), zero reference line at base case deviation'
+  - 'Full Imprint palette compliance: Low Input Effect = #009E73 (brand green) as
+    first series, High Input Effect = #C475FD (position 2), both theme-correct backgrounds'
+  - Theme-adaptive chrome works perfectly in both renders — all text light on dark,
+    dark on light, no dark-on-dark failures
+  - Dict-based data values provide rich interactive tooltip labels — idiomatic, distinctive
+    pygal feature
+  - Value labels inside bars with signed +/- formatting and top-driver '*' annotation
+    add storytelling context
+  - 'Title follows required optional-prefix format: ''NPV Sensitivity Analysis · bar-tornado-sensitivity
+    · python · pygal · anyplot.ai'''
+  - Title fontsize scaled linearly for the longer title (67-char baseline formula
+    applied)
+  - 'Complete spec compliance: all 5 required features present (reference line, sorted
+    order, dual colors, y-axis labels, value labels)'
+  - Realistic NPV sensitivity analysis domain with 9 plausible financial parameters
+  - Saves both HTML (interactive) and PNG (static) — correct for an interactive library
   weaknesses:
-  - Could push design excellence further with more sophisticated typography or additional
-    visual emphasis on top drivers
-  image_description: 'The plot is a horizontal tornado diagram showing NPV sensitivity
-    analysis for 9 financial parameters. Bars extend left (negative) and right (positive)
-    from a central zero reference line representing the base case ($2.5M NPV). The
-    widest bars (Discount Rate, Revenue Growth) are at the top, tapering to narrowest
-    (Inflation Rate) at bottom, creating the characteristic tornado shape. Two colors
-    are used: coral/salmon (#D95F4E) for "Low Input Effect" and steel blue (#3A7CA5)
-    for "High Input Effect." Each bar displays its deviation value (e.g., -1.1, +1.3).
-    The background is light gray (#f8f9fa) with subtle dashed vertical grid lines
-    and a prominent solid zero line. Bars have rounded corners. The x-axis is labeled
-    "Change in NPV ($M)" with range -1.4 to +1.4. Legend is at the bottom with two
-    entries.'
+  - 'DE-01 moderate: design is above library defaults (rounded bars, value labels,
+    legend columns) but lacks a distinguishing ''wow'' factor — e.g. a thin INK_MUTED
+    spine border or a subtle horizontal band highlighting the top driver would elevate
+    it further'
+  - 'DE-02 moderate: no grid lines is clean, but custom margins are the main refinement;
+    spines (top/right frame) are still visible in pygal''s default SVG frame — suppressing
+    or softening them would improve polish'
+  - 'LM-02 partial: dict-based tooltip labels and dual HTML+PNG output use pygal distinctively,
+    but the implementation doesn''t exploit pygal''s interactive JS tooltip styling
+    or custom CSS theming'
+  - 'VQ-01 minor: all font sizes explicitly set and readable, but bar-value labels
+    (value_font_size=36) inside the narrowest bars (e.g. ''Inflation Rate'' +0.1)
+    are tight — a slightly larger value_font_size (40-42) would improve comfort'
+  - The reference line (zero line) is implicit from the zero=0 parameter — an explicit
+    vertical rule annotation would make it more visually prominent as the spec requests
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "NPV Sensitivity Analysis · bar-tornado-sensitivity · python · pygal · anyplot.ai" in dark ink, fully readable, spans ~80% of width (expected for the long mandated title). Y-axis parameter labels (e.g. "* Discount Rate", "Revenue Growth") in dark text, well-spaced. X-axis title "Change in NPV ($M) | * = top driver" readable. Tick labels (-1.4 to +1.4) clear and legible. Legend at bottom: "Low Input Effect" and "High Input Effect" with color swatches, readable.
+      Data: Two-color horizontal stacked bars. Low Input Effect bars in #009E73 (brand green), High Input Effect bars in #C475FD (lavender). Bars extend left (negative) and right (positive) from zero baseline. Sorted widest-at-top: Discount Rate at top, Inflation Rate at bottom — creates characteristic tornado shape. Rounded bars with value labels (+1.3, -1.1, etc.) inside each bar. Zero reference line visible as natural boundary between stacked segments.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title, y-axis labels, x-axis title, tick labels all rendered in light cream/off-white text — clearly readable against dark background. No dark-on-dark failures observed. Legend text light-colored and readable.
+      Data: Bar colors identical to light render — #009E73 (green) for Low Input Effect, #C475FD (lavender) for High Input Effect. Only chrome elements (background, text colors) have changed. Bar layout, sorting, and value labels unchanged.
+      Legibility verdict: PASS — all text readable in both themes, brand green #009E73 visible and distinct on dark background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, label=44, major_label=48,
-          legend=42, value=36). All text clearly readable.
+        comment: 'All font sizes explicitly set; title, labels, ticks all readable
+          in both themes. Minor: value labels (size=36) inside narrowest bars slightly
+          tight.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Parameter labels, bar values, and axis labels
-          all cleanly separated.
+        comment: No overlapping text. Y-axis labels, bar values, legend all fully
+          readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with spacing=24, rounded corners, 9 parameters fit
-          well.
+        comment: Bars clearly visible in both themes. Rounded bars with internal value
+          labels work well.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Coral red and steel blue are colorblind-safe with strong contrast.
+        comment: Green and lavender are perceptually distinct and CVD-safe from Imprint
+          palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 4800x2700 canvas well. Balanced margins, legend at bottom.
+        comment: Good canvas utilization, balanced margins, legend well-placed at
+          bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units. Y-axis shows descriptive parameter names.
+        comment: 'X-axis title includes units: ''Change in NPV ($M)''. Descriptive
+          prefix in main title.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second series #C475FD (Imprint
+          position 2). Backgrounds #FAF8F1 / #1A1A17. Full compliance.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, font families, light plot background, rounded bars,
-          printed values. Professional look clearly above defaults.
+        comment: 'Above library defaults: rounded bars, value labels, font family,
+          legend at bottom with columns. Not extraordinary but clearly intentional.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Custom grid dasharray, y-guides hidden, prominent zero line, rounded
-          bars, adjusted spacing.
+        comment: No grid lines is clean; custom margins, spacing, and legend formatting
+          show refinement. Pygal frame/spine still visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Tornado shape sorted by range creates natural visual hierarchy. Biggest
-          drivers immediately prominent.
+        comment: '''*'' annotation for top driver, sorted ordering creating tornado
+          shape, and value labels create clear visual hierarchy and focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -110,28 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal tornado diagram using HorizontalStackedBar.
+        comment: 'Correct tornado chart: HorizontalStackedBar with zero reference,
+          sorted descending by range.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: zero reference, sorted bars, two colors,
-          parameter labels, printed values.'
+        comment: 'All 5 spec features: reference line at base case, sorted by range,
+          two distinct colors, y-axis parameter labels, value labels at bar ends.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Parameters on y-axis, NPV change on x-axis. Deviations correctly
-          computed.
+        comment: X-axis = change in NPV output, Y-axis = parameter names. Low/high
+          effects clearly distinguished.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix. Legend labels match
-          data.
+        comment: 'Title: ''NPV Sensitivity Analysis · bar-tornado-sensitivity · python
+          · pygal · anyplot.ai'' (optional prefix format). Legend labels ''Low Input
+          Effect'' / ''High Input Effect''.'
     data_quality:
       score: 15
       max: 15
@@ -141,20 +183,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 9 parameters with varying ranges, clear tornado shape, asymmetric
-          effects.
+        comment: 'Shows all aspects: both low and high scenario effects, zero reference,
+          sorted magnitude, value annotations, 9 parameters providing varied range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity for capital investment with real financial parameters.
+        comment: NPV sensitivity for capital investment is a well-known real financial
+          analysis domain. All parameters (Discount Rate, Revenue Growth, etc.) are
+          standard business assumptions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base $2.5M with sensible variations for capital investment.
+        comment: Base NPV $2.5M, deviations ±$0.1M to ±$1.3M. Discount Rate as top
+          driver is factually correct for NPV analysis.
     code_quality:
       score: 10
       max: 10
@@ -164,31 +209,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, style, chart, save.'
+        comment: 'Clear linear flow: import workaround → theme tokens → data → compute
+          deviations → sort → style → chart → data series → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data.
+        comment: All data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used.
+        comment: importlib.util, os, sys all used for the shadow-file workaround.
+          Clean.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic with good list comprehensions.
+        comment: Pythonic list comprehensions for series data, lambda formatter, clean
+          title scaling formula.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (both required for interactive
+          pygal library).
     library_mastery:
       score: 7
       max: 10
@@ -198,22 +247,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of HorizontalStackedBar, Style, x_labels, chart.add() pattern.
+        comment: HorizontalStackedBar, Style object, x_labels, zero=, range=, print_values,
+          value_formatter — all idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Dict-based values for custom tooltips, dual HTML+PNG export, rounded_bars.
+        comment: Dict-based data values with descriptive label= strings for rich interactive
+          tooltips is distinctively pygal. Dual HTML+PNG output. rounded_bars= parameter.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
-  - edge-highlighting
+  styling: []
