@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-06
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint diverging colormap — blue=cold, red=warm (reversed imprint_div for semantic clarity)
+midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#4467A3", midpoint, "#AE3030"])
 
 # Data
 np.random.seed(42)
@@ -25,24 +38,18 @@ baseline_trend = np.concatenate(
 )
 noise = np.random.normal(0, 0.12, n_years)
 anomalies = baseline_trend + noise
-
 anomaly_matrix = anomalies.reshape(1, -1)
 
-# Plot
-sns.set_style("white")
-sns.set_context("talk", font_scale=1.2)
+# Plot — landscape 3200×1800 px (stripes need wide format per spec)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-cmap = sns.diverging_palette(h_neg=240, h_pos=15, s=85, l=35, sep=1, as_cmap=True)
 vmax = max(abs(anomalies.min()), abs(anomalies.max()))
-
-fig, ax = plt.subplots(figsize=(18, 6))
-
-ax.set_position([0.01, 0.05, 0.98, 0.75])
 
 sns.heatmap(
     anomaly_matrix,
     ax=ax,
-    cmap=cmap,
+    cmap=imprint_div,
     center=0,
     vmin=-vmax,
     vmax=vmax,
@@ -54,26 +61,20 @@ sns.heatmap(
     linecolor="none",
 )
 
-# Style
+# Style — pure stripe visualization: no axes, no labels, no gridlines per spec
 ax.set_axis_off()
-sns.despine(fig=fig, left=True, bottom=True, right=True, top=True)
-fig.patch.set_facecolor("#f0f0f0")
+ax.set_position([0.01, 0.14, 0.98, 0.70])
 
-fig.text(
-    0.5,
-    0.90,
-    "heatmap-stripes-climate \u00b7 seaborn \u00b7 pyplots.ai",
-    ha="center",
-    va="center",
-    fontsize=24,
-    fontweight="medium",
-    color="#333333",
-    fontstyle="italic",
-)
+# Title
+title = "heatmap-stripes-climate · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(round(12 * ratio), 8)
+fig.text(0.5, 0.92, title, ha="center", va="center", fontsize=title_fontsize, fontweight="medium", color=INK)
 
 # Year markers
-fig.text(0.02, 0.02, str(years[0]), fontsize=16, color="#555555", ha="left")
-fig.text(0.98, 0.02, str(years[-1]), fontsize=16, color="#555555", ha="right")
+fig.text(0.015, 0.06, str(years[0]), fontsize=8, color=INK_SOFT, ha="left")
+fig.text(0.985, 0.06, str(years[-1]), fontsize=8, color=INK_SOFT, ha="right")
 
-# Save
-plt.savefig("plot.png", dpi=300, facecolor=fig.get_facecolor())
+# Save — no bbox_inches='tight' to preserve exact 3200×1800 canvas
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
