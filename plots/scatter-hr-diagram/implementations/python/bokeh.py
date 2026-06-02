@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -31,20 +31,21 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Spectral type colors — conventional astronomy palette (blue=hot, red=cool)
+# Spectral type colors — closest Imprint palette members (blue=hot, red=cool)
+# O/B hot blue → cyan → lavender transition → ochre warm → matte red/rose cool
 SPECTRAL_COLORS = {
-    "O": "#5588FF",
-    "B": "#88AAFF",
-    "A": "#CCD8FF",
-    "F": "#FFF4C8",
-    "G": "#FFD700",
-    "K": "#FF8C00",
-    "M": "#FF3300",
+    "O": "#4467A3",  # Imprint blue — hot blue-type stars
+    "B": "#2ABCCD",  # Imprint cyan — slightly cooler blue
+    "A": "#C475FD",  # Imprint lavender — blue-white transition
+    "F": "#99B314",  # Imprint lime — warm-ish transition
+    "G": "#BD8233",  # Imprint ochre — warm yellow, Sun-like
+    "K": "#AE3030",  # Imprint matte red — orange-red
+    "M": "#954477",  # Imprint rose — cool dark red
 }
 
-# Darkened label colors for light theme — ensures text legibility on cream background
+# Label colors for light theme — #2ABCCD and #C475FD need darkening on cream bg
 SPECTRAL_LABEL_COLORS = (
-    {"O": "#2244CC", "B": "#4466BB", "A": "#5577AA", "F": "#CC9922", "G": "#BB7700", "K": "#CC4400", "M": "#AA2200"}
+    {"O": "#2A3D6B", "B": "#1A7A88", "A": "#7A40AA", "F": "#667800", "G": "#8A5A1A", "K": "#8A2020", "M": "#6B2A50"}
     if THEME == "light"
     else SPECTRAL_COLORS
 )
@@ -193,11 +194,13 @@ for spec_type in spectral_order:
             "region": regions[mask].tolist(),
         }
     )
+    # A and F types use larger markers — previously near-invisible on cream bg
+    marker_size = 18 if spec_type in ("A", "F") else 14
     renderer = p.scatter(
         x="temperature",
         y="luminosity",
         source=src,
-        size=14,
+        size=marker_size,
         marker=SPECTRAL_MARKERS[spec_type],
         fill_color=SPECTRAL_COLORS[spec_type],
         line_color=MARKER_EDGE,
@@ -232,7 +235,7 @@ p.scatter(
     y="luminosity",
     source=sun_src,
     size=32,
-    fill_color="#FFD700",
+    fill_color="#DDCC77",  # amber anchor — distinctive golden reference for the Sun
     line_color=INK,
     line_width=2,
     marker="star",
@@ -255,9 +258,9 @@ p.add_layout(
     )
 )
 
-# Region labels
+# Region labels — Main Sequence repositioned above dense data cloud
 region_labels = [
-    ("Main Sequence", 8500, 8, INK_MUTED),
+    ("Main Sequence", 12000, 60, INK_MUTED),
     ("Red Giants", 3600, 800, SPECTRAL_LABEL_COLORS["K"]),
     ("Supergiants", 6000, 150000, SPECTRAL_LABEL_COLORS["B"]),
     ("White Dwarfs", 15000, 0.001, SPECTRAL_LABEL_COLORS["B"]),
@@ -301,7 +304,7 @@ p.title.text_font_style = "bold"
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # remove full box outline — L-shaped spine (left+bottom) via axis lines
 
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
