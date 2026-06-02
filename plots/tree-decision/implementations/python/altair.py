@@ -1,12 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-06
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-02
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order for node types
+DECISION_COLOR = "#009E73"  # position 1 (green) — first categorical series
+CHANCE_COLOR = "#C475FD"  # position 2 (lavender)
+TERMINAL_COLOR = "#4467A3"  # position 3 (blue)
+PRUNE_RED = "#AE3030"  # semantic anchor — bad/loss/error
 
 # Data - Two-stage investment decision tree
 nodes_df = pd.DataFrame(
@@ -30,7 +47,7 @@ nodes_df = pd.DataFrame(
             "emv": "$152K",
             "label": "Invest\nLarge",
             "payoff": "",
-            "detail": "Chance | EMV=$152K | 0.40x300+0.35x120+0.25x(-40)",
+            "detail": "Chance | EMV=$152K | 0.40×300+0.35×120+0.25×(-40)",
             "pruned": False,
         },
         {
@@ -38,10 +55,10 @@ nodes_df = pd.DataFrame(
             "type": "chance",
             "x": 300,
             "y": 470,
-            "emv": "$95K",
+            "emv": "$108K",
             "label": "Invest\nSmall",
             "payoff": "",
-            "detail": "Chance (pruned) | EMV=$95K | 0.40x180+0.35x90+0.25x20",
+            "detail": "Chance (pruned) | EMV=$108K | 0.40×180+0.35×90+0.25×20",
             "pruned": True,
         },
         {
@@ -126,40 +143,30 @@ edges_df = pd.DataFrame(
     ]
 )
 
-# Colorblind-safe palette: blue (decision), orange (chance), teal (terminal)
-DECISION_COLOR = "#306998"
-CHANCE_COLOR = "#E67E22"
-TERMINAL_COLOR = "#1ABC9C"
-DECISION_STROKE = "#1A3A5C"
-CHANCE_STROKE = "#A85A13"
-TERMINAL_STROKE = "#148F77"
-
-# Shared scales
+# Shared scales — inverted y so tree grows downward
 x_scale = alt.Scale(domain=[-30, 680])
 y_scale = alt.Scale(domain=[620, -30])
 x_enc = alt.X("x:Q", scale=x_scale, axis=None)
 y_enc = alt.Y("y:Q", scale=y_scale, axis=None)
 
-# Interactive hover selection (Altair-distinctive feature)
 hover = alt.selection_point(on="pointerover", fields=["id"], empty=False)
-
 node_tooltip = [
     alt.Tooltip("id:N", title="Node"),
     alt.Tooltip("type:N", title="Type"),
     alt.Tooltip("detail:N", title="Info"),
 ]
 
-# --- Subtle background panel behind optimal path (storytelling) ---
-optimal_path_bg = pd.DataFrame([{"x": 20, "y": -10, "x2": 670, "y2": 285}])
+# Subtle background panel behind optimal path (storytelling)
+optimal_path_bg = pd.DataFrame([{"x": 20, "y": -10, "x2": 670, "y2": 300}])
 optimal_bg = (
     alt.Chart(optimal_path_bg)
-    .mark_rect(cornerRadius=16, color="#E8F4F8", opacity=0.45, stroke="#B0D4E3", strokeWidth=1.5, strokeDash=[6, 4])
+    .mark_rect(cornerRadius=14, color=ELEVATED_BG, opacity=0.85, stroke=INK_SOFT, strokeWidth=1.0, strokeDash=[5, 4])
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), x2="x2:Q", y2="y2:Q")
 )
 
 optimal_label = (
-    alt.Chart(pd.DataFrame([{"x": 640, "y": 275}]))
-    .mark_text(fontSize=12, fontStyle="italic", color="#5A9BB5", align="right", fontWeight="bold")
+    alt.Chart(pd.DataFrame([{"x": 640, "y": 18}]))
+    .mark_text(fontSize=13, fontStyle="italic", color=INK_MUTED, align="right", fontWeight="bold")
     .encode(
         x=alt.X("x:Q", scale=x_scale, axis=None),
         y=alt.Y("y:Q", scale=y_scale, axis=None),
@@ -167,47 +174,47 @@ optimal_label = (
     )
 )
 
-# --- Edges ---
+# Edges
 active_edges = edges_df[~edges_df["pruned"]]
 pruned_edges = edges_df[edges_df["pruned"]]
 
 active_lines = (
-    alt.Chart(active_edges).mark_rule(strokeWidth=3.5, color="#3A3A3A").encode(x=x_enc, y=y_enc, x2="x2:Q", y2="y2:Q")
+    alt.Chart(active_edges).mark_rule(strokeWidth=3.0, color=INK).encode(x=x_enc, y=y_enc, x2="x2:Q", y2="y2:Q")
 )
 
 pruned_lines = (
     alt.Chart(pruned_edges)
-    .mark_rule(strokeWidth=2, strokeDash=[8, 6], opacity=0.28, color="#999999")
+    .mark_rule(strokeWidth=1.8, strokeDash=[7, 5], opacity=0.40, color=INK_SOFT)
     .encode(x=x_enc, y=y_enc, x2="x2:Q", y2="y2:Q")
 )
 
-# Pruned cross mark
+# Pruned cross mark — uses Imprint semantic-red anchor
 pruned_cross = (
     alt.Chart(pd.DataFrame([{"cx": 140, "cy": 405}]))
-    .mark_text(fontSize=32, fontWeight="bold", color="#C0392B", text="\u2715")
+    .mark_text(fontSize=26, fontWeight="bold", color=PRUNE_RED, text="✕")
     .encode(x=alt.X("cx:Q", scale=x_scale, axis=None), y=alt.Y("cy:Q", scale=y_scale, axis=None))
 )
 
-# --- Nodes: unified with conditional opacity (reduces repetition) ---
+# Node subsets
 chance_df = nodes_df[nodes_df["type"] == "chance"]
 terminal_df = nodes_df[nodes_df["type"] == "terminal"]
 decision_df = nodes_df[nodes_df["type"] == "decision"]
 
 decision_nodes = (
     alt.Chart(decision_df)
-    .mark_square(size=2200, color=DECISION_COLOR, stroke=DECISION_STROKE, strokeWidth=2.5)
-    .encode(x=x_enc, y=y_enc, size=alt.condition(hover, alt.value(2600), alt.value(2200)), tooltip=node_tooltip)
+    .mark_square(size=900, color=DECISION_COLOR, stroke=INK, strokeWidth=2.0)
+    .encode(x=x_enc, y=y_enc, size=alt.condition(hover, alt.value(1100), alt.value(900)), tooltip=node_tooltip)
     .add_params(hover)
 )
 
 chance_nodes = (
     alt.Chart(chance_df)
-    .mark_circle(size=2200, color=CHANCE_COLOR, stroke=CHANCE_STROKE, strokeWidth=2.5)
+    .mark_circle(size=900, color=CHANCE_COLOR, stroke=INK, strokeWidth=2.0)
     .encode(
         x=x_enc,
         y=y_enc,
-        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.30), alt.value(1.0)),  # noqa: E712
-        size=alt.condition(hover, alt.value(2600), alt.value(2200)),
+        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.40), alt.value(1.0)),  # noqa: E712
+        size=alt.condition(hover, alt.value(1100), alt.value(900)),
         tooltip=node_tooltip,
     )
     .add_params(hover)
@@ -215,48 +222,46 @@ chance_nodes = (
 
 terminal_nodes = (
     alt.Chart(terminal_df)
-    .mark_point(
-        shape="triangle-right", size=1600, filled=True, color=TERMINAL_COLOR, stroke=TERMINAL_STROKE, strokeWidth=2.5
-    )
+    .mark_point(shape="triangle-right", size=700, filled=True, color=TERMINAL_COLOR, stroke=INK, strokeWidth=2.0)
     .encode(
         x=x_enc,
         y=y_enc,
-        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.30), alt.value(1.0)),  # noqa: E712
-        size=alt.condition(hover, alt.value(2000), alt.value(1600)),
+        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.40), alt.value(1.0)),  # noqa: E712
+        size=alt.condition(hover, alt.value(880), alt.value(700)),
         tooltip=node_tooltip,
     )
     .add_params(hover)
 )
 
-# --- Text labels ---
+# Text labels
 emv_labels = (
     alt.Chart(nodes_df)
     .transform_filter(alt.datum.emv != "")
-    .mark_text(fontSize=18, fontWeight="bold", dy=-34, color="#1A1A1A")
+    .mark_text(fontSize=14, fontWeight="bold", dy=-28, color=INK)
     .encode(x=x_enc, y=y_enc, text="emv:N")
 )
 
 payoff_labels = (
     alt.Chart(nodes_df)
     .transform_filter(alt.datum.payoff != "")
-    .mark_text(fontSize=17, fontWeight="bold", dx=55, align="left", color="#1A1A1A")
+    .mark_text(fontSize=14, fontWeight="bold", dx=44, align="left", color=INK)
     .encode(
         x=x_enc,
         y=y_enc,
         text="payoff:N",
-        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.35), alt.value(1.0)),  # noqa: E712
+        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.40), alt.value(1.0)),  # noqa: E712
     )
 )
 
 terminal_desc = (
     alt.Chart(nodes_df)
     .transform_filter(alt.datum.type == "terminal")
-    .mark_text(fontSize=14, dx=55, dy=18, align="left", color="#666666")
+    .mark_text(fontSize=11, dx=44, dy=16, align="left", color=INK_MUTED)
     .encode(
         x=x_enc,
         y=y_enc,
         text="label:N",
-        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.30), alt.value(1.0)),  # noqa: E712
+        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.40), alt.value(1.0)),  # noqa: E712
     )
 )
 
@@ -269,27 +274,27 @@ prob_label_df = edges_df[edges_df["prob"] != ""]
 
 branch_labels = (
     alt.Chart(branch_label_df)
-    .mark_text(fontSize=16, fontWeight="bold", dy=-16, color=DECISION_COLOR)
+    .mark_text(fontSize=12, fontWeight="bold", dy=-13, color=INK)
     .encode(
         x=alt.X("mx:Q", scale=x_scale, axis=None),
         y=alt.Y("my:Q", scale=y_scale, axis=None),
         text="label:N",
-        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.35), alt.value(1.0)),  # noqa: E712
+        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.40), alt.value(1.0)),  # noqa: E712
     )
 )
 
 prob_labels = (
     alt.Chart(prob_label_df)
-    .mark_text(fontSize=15, dy=-14, color=CHANCE_STROKE, fontWeight="bold")
+    .mark_text(fontSize=12, dy=-11, color=INK_SOFT, fontWeight="bold")
     .encode(
         x=alt.X("mx:Q", scale=x_scale, axis=None),
         y=alt.Y("my:Q", scale=y_scale, axis=None),
         text="prob:N",
-        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.30), alt.value(1.0)),  # noqa: E712
+        opacity=alt.condition(alt.datum.pruned == True, alt.value(0.40), alt.value(1.0)),  # noqa: E712
     )
 )
 
-# --- Legend ---
+# Legend
 legend_data = pd.DataFrame(
     [
         {"lx": 100, "ly": 590, "label": "Decision Node", "shape": "square"},
@@ -300,28 +305,26 @@ legend_data = pd.DataFrame(
 
 legend_sq = (
     alt.Chart(legend_data.query("shape == 'square'"))
-    .mark_square(size=550, color=DECISION_COLOR, stroke=DECISION_STROKE, strokeWidth=1.5)
+    .mark_square(size=320, color=DECISION_COLOR, stroke=INK, strokeWidth=1.2)
     .encode(x=alt.X("lx:Q", scale=x_scale, axis=None), y=alt.Y("ly:Q", scale=y_scale, axis=None))
 )
 legend_ci = (
     alt.Chart(legend_data.query("shape == 'circle'"))
-    .mark_circle(size=550, color=CHANCE_COLOR, stroke=CHANCE_STROKE, strokeWidth=1.5)
+    .mark_circle(size=320, color=CHANCE_COLOR, stroke=INK, strokeWidth=1.2)
     .encode(x=alt.X("lx:Q", scale=x_scale, axis=None), y=alt.Y("ly:Q", scale=y_scale, axis=None))
 )
 legend_tr = (
     alt.Chart(legend_data.query("shape == 'triangle'"))
-    .mark_point(
-        shape="triangle-right", size=450, filled=True, color=TERMINAL_COLOR, stroke=TERMINAL_STROKE, strokeWidth=1.5
-    )
+    .mark_point(shape="triangle-right", size=260, filled=True, color=TERMINAL_COLOR, stroke=INK, strokeWidth=1.2)
     .encode(x=alt.X("lx:Q", scale=x_scale, axis=None), y=alt.Y("ly:Q", scale=y_scale, axis=None))
 )
 legend_txt = (
     alt.Chart(legend_data)
-    .mark_text(fontSize=14, dx=20, align="left", color="#555555")
+    .mark_text(fontSize=10, dx=17, align="left", color=INK_SOFT)
     .encode(x=alt.X("lx:Q", scale=x_scale, axis=None), y=alt.Y("ly:Q", scale=y_scale, axis=None), text="label:N")
 )
 
-# Combine all layers
+# Combine all layers — landscape inner view 620×320 → PIL-padded to 3200×1800
 chart = (
     alt.layer(
         optimal_bg,
@@ -343,12 +346,30 @@ chart = (
         legend_txt,
     )
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("tree-decision \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="start", offset=12),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title(
+            "tree-decision · python · altair · anyplot.ai", fontSize=16, color=INK, anchor="start", offset=12
+        ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_title(color=INK)
 )
 
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")

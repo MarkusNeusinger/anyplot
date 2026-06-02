@@ -1,89 +1,113 @@
 library: bokeh
+language: python
 specification_id: tree-decision
 created: '2026-03-06T21:38:55Z'
-updated: '2026-03-06T22:09:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22782764651
+updated: '2026-06-02T16:13:28Z'
+generated_by: claude-sonnet
+workflow_run: 26830528298
 issue: 4569
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/tree-decision/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/tree-decision/bokeh/plot.html
-quality_score: 85
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Perfect spec compliance with all required features (decision/chance/terminal nodes,
-    EMV values, pruned branches, probabilities)
-  - Excellent data quality with realistic business scenario and correct EMV rollback
-    calculations
-  - Good use of Bokeh-specific features (HoverTool, BoxAnnotation, HTML export)
-  - Clean visual storytelling with optimal path emphasis through solid/dashed lines
-    and background band
-  - Well-organized clean code following KISS principles
+  - 'Perfect spec compliance: all three node types with correct shapes (squares/circles/triangles),
+    EMV rollback arithmetic verified correct, pruned branches clearly marked with
+    dashed lines and red X markers'
+  - 'Imprint palette correctly applied: decision green #009E73 (pos 1), chance lavender
+    #C475FD (pos 2), terminal blue #4467A3 (pos 3), semantic red #AE3030 for pruned
+    markers only'
+  - 'Full theme-adaptive chrome in both renders — light bg #FAF8F1 and dark bg #1A1A17
+    both pass legibility checks with no dark-on-dark failures'
+  - Right-angle connectors and BoxAnnotation optimal-path highlight add professional
+    decision-tree styling above generic defaults
+  - Interactive HoverTool with custom HTML tooltip (node name/type/EMV) is a distinctive
+    Bokeh feature leveraged effectively; HTML output also saved as required catalog
+    artifact
   weaknesses:
-  - EMV labels overlap with node shapes at decision nodes D1 and D2
-  - Significant empty space at the bottom of the canvas reduces layout efficiency
-  - Terminal triangle markers are slightly small relative to other node shapes
-  image_description: 'The plot displays a two-stage investment decision tree with
-    a left-to-right layout on a light blue-grey background (#F7F9FB). The root decision
-    node (blue square, left side) shows EMV $248K and branches into three options:
-    "Launch Product" (solid line, optimal path), "License Tech" (dashed, pruned with
-    red X), and "Do Nothing" (dashed, pruned with red X). The "Launch Product" branch
-    leads to a purple chance node (EMV $248K) splitting into "High Demand (p=0.6)"
-    and "Low Demand (p=0.4)". High Demand leads to a second blue decision node (EMV
-    $380K) with "Expand" (optimal) and "Don''t Expand" (pruned) options. The Expand
-    branch leads to another purple chance node (EMV $380K) splitting into "Success
-    (p=0.7)" yielding $500K and "Failure (p=0.3)" yielding $100K. Terminal nodes are
-    amber right-pointing triangles with payoff values. A top-left legend shows Decision
-    Node (blue square), Chance Node (purple circle), Terminal Node (amber triangle),
-    and Pruned (suboptimal) with dashed line and red X. Title reads "tree-decision
-    · bokeh · pyplots.ai" in dark blue.'
+  - 'EMV label and branch label overlap at C2 node: ''EMV $185K'' (at x=850, y=535,
+    centered) and ''Strong Partner (p=0.5)'' branch label (at x=1175, y=537.5, right-aligned)
+    share nearly identical y-coordinates causing visible crowding and overlap — fix
+    by increasing chance-node EMV offset from +60 to +90 data units (line: offset
+    = 75 if nd[''type''] == ''decision'' else 60 -> change 60 to 90)'
+  - Branch label font size 21pt is on the small side for this chart's complexity —
+    consider increasing to 24–26pt for better readability at scale
+  - C2 sub-tree area (nodes C2/T3/T4) is vertically cramped — spreading T3 from y=600
+    to y=675 and T4 from y=350 to y=275 would give more vertical space for branch
+    labels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "tree-decision · python · bokeh · anyplot.ai" in dark ink at top — readable. No axis labels (correct for tree diagram). Branch labels (e.g. "Launch Product", "High Demand (p=0.6)") in INK_SOFT — readable. EMV labels (e.g. "EMV $248K") in INK — readable. Legend in top-left with four entries — readable.
+      Data: Decision nodes as green (#009E73) squares; Chance nodes as lavender (#C475FD) circles; Terminal nodes as blue (#4467A3) right-pointing triangles. Pruned branches as dashed lines with red (#AE3030) X markers. Subtle green BoxAnnotation highlights the optimal path region.
+      Issues: Near C2, "EMV $185K" (y≈535) and "Strong Partner (p=0.5)" branch label (y≈537.5) overlap at the same y-coordinate.
+      Legibility verdict: PASS (all text readable; minor overlap at C2 area)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title visible in light text (#F0EFE8 range) — readable. Branch and EMV labels adapt to light ink colors — readable. Legend text adapts to light ink — readable. No dark-on-dark failures observed.
+      Data: Decision green (#009E73), chance lavender (#C475FD), terminal blue (#4467A3) — all identical to light render. Pruned red (#AE3030) markers unchanged. BoxAnnotation still visible as subtle tint.
+      Legibility verdict: PASS (all text readable against dark background; same C2 overlap present)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 20pt, values 19-20pt).
-          Minor size inconsistency between value labels.
+        comment: All font sizes explicitly set (title 50pt, branch labels 21pt, node
+          labels 19-20pt, legend 20pt); readable in both themes. Branch labels slightly
+          small for chart complexity.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: EMV labels overlap or sit very close to decision node shapes at D1
-          and D2. Branch labels well-placed.
+        passed: false
+        comment: EMV label for C2 ('EMV $185K' at y=535) and 'Strong Partner (p=0.5)'
+          branch label (y=537.5) share nearly identical y-coordinates causing visible
+          crowding/overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Node shapes clearly visible with good sizing. Terminal triangles
-          slightly small compared to decision squares.
+        comment: All node types clearly visible; distinct colors and appropriately
+          sized shapes; pruned markers clearly rendered.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, purple, amber palette is colorblind-safe with good contrast.
-          Red cross marks distinct.
+        comment: Three CVD-safe hue families (green/purple/blue); red used only for
+          semantic pruned markers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Tree occupies top 70% of canvas with significant empty space at bottom.
-          Horizontal spread good.
+        comment: Canvas gate passed (3200x1800). Tree fills most of canvas in left-to-right
+          layout. Minor crowding in C2 branch cluster.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for tree diagram. Title correctly formatted.
+        comment: Correct title format; axes appropriately hidden for tree diagram.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Decision=#009E73 (pos 1), Chance=#C475FD (pos 2), Terminal=#4467A3
+          (pos 3), Pruned=#AE3030 (semantic). Light bg #FAF8F1, dark bg #1A1A17. Chrome
+          fully theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -93,22 +117,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette with intentional border colors, subtle background
-          band, clean background. Above defaults but not publication-level.
+        comment: 'Clearly above generic defaults: custom Imprint-palette node colors,
+          right-angle connectors, BoxAnnotation optimal-path highlight, pruned branch
+          dashed+X styling, interactive hover tooltips. Crowding in C2 area reduces
+          overall polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes and grid hidden, outline removed, min borders set, right-angle
-          connectors look professional.
+        comment: Axes/grid hidden (correct for tree diagrams), subtle outline border,
+          consistent text styling, theme-adaptive backgrounds.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Optimal path emphasized through solid vs dashed lines, reduced opacity,
-          red cross marks, and subtle background band.
+        comment: 'Visual hierarchy guides reader: subtle background highlight for
+          optimal path, dashed+X marks for pruned branches, EMV rollback at every
+          non-terminal node. The optimal path is traceable.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,28 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct decision tree with proper node shapes: squares, circles,
-          triangles.'
+        comment: Correct decision tree with squares (decision), circles (chance),
+          right-pointing triangles (terminal) in left-to-right layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: node shapes, branch labels, probabilities,
-          EMV values, pruned branches.'
+        comment: Probabilities on chance branches, EMV via rollback at each non-terminal
+          node, pruned branches marked, multi-stage structure.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Left-to-right layout, probabilities sum to 1.0, EMV calculations
-          correct.
+        comment: Correct two-stage investment decision tree. Left-to-right progression.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend includes all four entry types.
+        comment: 'Title ''tree-decision · python · bokeh · anyplot.ai'' correct. Legend
+          has all four entries: Decision Node, Chance Node, Terminal Node, Pruned
+          (suboptimal).'
     data_quality:
       score: 15
       max: 15
@@ -149,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two-stage tree with all node types, multiple decision points, pruned
-          branches at both levels.
+        comment: All three node types, multiple pruned branches, probabilities summing
+          to 1.0, EMV rollback, two-stage structure.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Investment/product launch scenario with realistic business decisions.
-          Neutral context.
+        comment: 'Plausible business scenario: product launch vs license vs do-nothing
+          with market-demand uncertainty and expansion decision.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in $K range plausible for business decisions. Probabilities
-          consistent. EMV calculations verified.
+        comment: Payoffs $0K-$500K with probabilities 0.3-0.7. EMV rollback arithmetic
+          verified correct.
     code_quality:
       score: 10
       max: 10
@@ -174,33 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, styling, save. No functions or
-          classes.'
+        comment: 'Linear script: imports -> data dicts -> figure -> edges -> nodes
+          -> labels -> legend -> theme -> save/screenshot.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic (hardcoded values).
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting.'
+        comment: 'All imports used: os, time, pathlib, numpy, bokeh models, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code with appropriate complexity for tree
-          visualization.
+        comment: Clean structure with dicts for nodes/edges; no over-engineering;
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Bokeh API.
+        comment: Saves plot-THEME.html + plot-THEME.png via current Bokeh API + Selenium
+          screenshot.
     library_mastery:
       score: 7
       max: 10
@@ -210,28 +239,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure API, Label, BoxAnnotation. Good Bokeh
-          patterns.
+        comment: ColumnDataSource for hover interactivity, HoverTool with custom HTML
+          tooltips, BoxAnnotation for background region, add_layout for Labels, min_border_*
+          settings, toolbar_location=None.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool for interactive inspection, HTML export, BoxAnnotation.
-          Bokeh-specific features adding genuine interactivity.
-  verdict: REJECTED
+        comment: HoverTool with custom HTML tooltips (distinctively Bokeh), HTML output
+          as interactive catalog artifact, BoxAnnotation for background annotations.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
+  - annotations
+  - custom-legend
   patterns:
   - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
