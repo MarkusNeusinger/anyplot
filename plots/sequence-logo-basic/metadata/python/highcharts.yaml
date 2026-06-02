@@ -1,49 +1,50 @@
 library: highcharts
+language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:29:10Z'
-updated: '2026-03-06T21:06:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22780525150
+updated: '2026-06-02T12:11:09Z'
+generated_by: claude-sonnet
+workflow_run: 26817718193
 issue: 4421
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/highcharts/plot.html
-quality_score: 80
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Creative stacked column approach to sequence logo in Highcharts with CSS-scaled
-    letter glyphs
-  - Excellent biologically realistic data with real ETS-family TF binding site and
-    proper GGAATT consensus
-  - Clean well-structured code with correct information content calculation
-  - 'Good use of Highcharts-specific features: HTML data labels, CallbackFunction,
-    per-point styling'
-  - Effective data storytelling with subtitle and natural visual hierarchy from IC
-    scaling
-  - Thoughtful visual refinement with subtle grid, styled typography, and appropriate
-    margins
+  - 'Perfect spec compliance: IC calculation (2 − entropy), stacking order (most frequent
+    on top), DNA color conventions, and axes with correct labels'
+  - Semantic Imprint palette mapping (A=green/slot 1, C=blue/slot 3, G=ochre/slot
+    4, T=red/slot 5) with documented biology semantic exception
+  - Dynamic letter glyph scaling via JS formatter with scaleY transform — faithful
+    stretched-glyph sequence logo rendering in Highcharts
+  - 'Full theme adaptation: correct PAGE_BG, INK, INK_SOFT, GRID tokens across both
+    renders; no dark-on-dark failures in dark theme'
+  - Excellent data storytelling — GGAATT motif immediately identifiable at a glance;
+    clear focal point at high-IC positions 2–7
   weaknesses:
-  - Minor nucleotides render as thin colored strips rather than readable letter glyphs
-  - T letters at positions 6-7 show CSS scaleY distortion
-  - Green/red A/T color pairing not ideal for colorblind accessibility
-  - White letter approach creates slightly washed-out aesthetic compared to traditional
-    colored-letter logos
-  image_description: 'The plot displays a stacked column chart implementing a DNA
-    sequence logo for an ETS-family transcription factor binding site across 10 positions.
-    The x-axis shows "Position" (1-10) and the y-axis shows "Information content (bits)"
-    (0-2). The conserved GGAATT core motif is clearly visible: G (orange bars) dominates
-    positions 2-3, A (green bars) dominates positions 4-5, and T (red/dark bars) dominates
-    positions 6-7 with tall stacks reaching ~1.5 bits. Positions 1, 8, and 10 have
-    low information content with small multi-colored bar stacks. Position 9 is essentially
-    empty (uniform distribution = 0 IC). Letters are rendered as white CSS-scaled
-    glyphs inside colored bars with text-shadow. Minor nucleotides appear as thin
-    colored strips at stack tops. The background is light grey (#fafafa) with subtle
-    dashed gridlines. Title reads "sequence-logo-basic · highcharts · pyplots.ai"
-    with a subtitle identifying the ETS-family motif and conserved GGAATT core.'
+  - Positions 8, 9, 10 show only small color segments without letter glyphs (0.10
+    bit threshold suppresses glyphs); per-nucleotide letter identity at low-IC positions
+    is incomplete for a full sequence logo read-through — acceptable but limits biological
+    completeness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "sequence-logo-basic · python · highcharts · anyplot.ai" in dark ink, fully readable. Subtitle "ETS-family transcription factor binding site — conserved GGAATT core motif" visible below. X-axis label "Position" and Y-axis label "Information content (bits)" in dark ink. Tick labels (1–10, 0–0.5–1–1.5–2) in secondary ink color — all readable.
+      Data: Stacked column sequence logo at 10 positions. Position 2–3: large white "G" glyphs on ochre/brown (#BD8233) bars. Position 4–5: large white "A" glyphs on green (#009E73) bars. Position 6–7: white "T" glyphs on matte red (#AE3030) bars. Position 8/10: small multicolored segments (A/C/G/T mixed). Position 1: near-invisible bar (~0 IC). Position 9: tiny stack. No letter glyphs at positions below 0.10 bits threshold — correct behavior. First series (A) correctly uses #009E73 brand green.
+      Legibility verdict: PASS — all chrome text clearly readable against warm off-white background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title and axis labels appear in light-colored text (#F0EFE8 equivalent) — fully readable against dark background. Tick labels use secondary light ink (#B8B7B0 equivalent). Grid lines are subtle semi-transparent light lines. No dark-on-dark failures detected.
+      Data: A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030 — identical to light render, confirming only chrome flips. Same letter glyph positions visible. White letter glyphs on colored bars remain readable. Brand green #009E73 is distinctly visible on dark surface.
+      Legibility verdict: PASS — all chrome text clearly readable against warm near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,46 +52,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set for all text elements. Letter glyphs clear
-          for dominant nucleotides but unreadable for minor contributors.
+        comment: 'Title, axis labels, tick labels, and letter glyphs all readable
+          in both themes. Minor: no glyph shown at low-IC positions by design (below
+          0.10 bit threshold).'
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap. Stacked bars clean and well-separated.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor visual clutter at stack tops where thin strips overlap with
-          data labels. Main content fully readable.
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Dominant letters clearly visible. Minor nucleotide bars render as
-          thin colored strips without legible glyphs. T letters show some CSS scaleY
-          distortion.
+        comment: Dominant letter glyphs at positions 2–7 large and clear. Positions
+          8/10 show only small colored segments. Position 9 nearly invisible (expected,
+          ~0 bits IC).
       - id: VQ-04
         name: Color Accessibility
         score: 2
-        max: 4
+        max: 2
         passed: true
-        comment: Standard DNA colors with green/red A/T pairing problematic for colorblind
-          viewers. White letter overlay partially mitigates.
+        comment: Standard DNA colors from Imprint palette. White letter glyphs on
+          colored bars provide strong contrast. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization ~55-60%. Appropriate margins. Slight imbalance
-          with position 9 dead space.
+        comment: Canvas passes dimension gate (3200x1800). Generous margins. No overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Position and Information content
-          (bits).'
+        comment: 'Title matches required format. X: ''Position'', Y: ''Information
+          content (bits)'' — both correct with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030. Semantic exception for
+          biology documented. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -98,80 +106,80 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom nucleotide palette, styled subtitle, light background, thoughtful
-          typography. Above defaults but white-on-colored-bar approach slightly washed
-          out.
+        comment: Semantic Imprint color mapping, dynamic JS letter-glyph formatter
+          with scaleY, contextual subtitle. Above average for specialized viz.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed grid lines with 0.06 opacity, removed tick marks, clean axis
-          styling, generous margins.
+        comment: Borderless bars, subtle semi-transparent grid (0.15 opacity), no
+          legend, generous margins. Clean result.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtitle identifies GGAATT core. IC-based heights create natural
-          visual hierarchy showing conservation pattern.
+        comment: GGAATT motif immediately identifiable. Clear visual hierarchy between
+          conserved and variable positions. Subtitle reinforces the story.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Creative stacked column approach to sequence logo. Correct concept
-          but not traditional SVG glyph-based logo.
+        comment: Correct sequence logo using stacked column chart with per-nucleotide
+          letter glyphs.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Stacked letters ordered by frequency, IC-scaled heights, standard
-          DNA colors. CSS scaleY works for dominant letters but small bars lack proper
-          glyphs.
+        comment: Letters stacked vertically, stack height scaled by IC, standard DNA
+          colors, letter glyphs with scaleY, stacking ordered by frequency (most frequent
+          on top).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=IC in bits. Correctly calculated entropy and information
-          content.
+        comment: 'X: positions 1–10, Y: IC 0–2 bits (correct DNA max), per-nucleotide
+          heights proportional to frequency × IC.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend appropriately disabled.
+        comment: Title matches required format. Legend disabled — appropriate since
+          letter glyphs + color encode nucleotide identity.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows conserved positions (2-7), variable positions (1, 8, 10), and
-          uniform distribution (9). Good range of conservation levels.
+        comment: IC variation across all 10 positions, four-nucleotide distributions,
+          frequency-proportional stacking, dominant motif letters all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ETS-family TF binding site is a real, well-characterized biological
-          motif with established GGAATT consensus.
+        comment: ETS-family TF binding site is a real, commonly studied motif. GGAATT
+          core is biologically meaningful. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC 0-2 bits correct for DNA. Frequencies sum to 1 per position. Biologically
-          plausible conservation levels.
+        comment: Y-axis 0–2 bits correct for DNA (log2(4)=2 bits max). 10-position
+          motif is standard length. Frequencies sum to ~1 per position.
     code_quality:
       score: 10
       max: 10
@@ -181,34 +189,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: No functions or classes. Flat procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded frequency matrix.
+        comment: Fully deterministic — hardcoded frequency matrix, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured. JavaScript callbacks complex but necessary for the
-          approach.
+        comment: Appropriate complexity. JS callback formatters well-structured. No
+          fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via container screenshot. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct Highcharts
+          interactive library output.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -216,26 +225,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper use of highcharts-core API: Chart with container, HighchartsOptions,
-          ColumnSeries, CallbackFunction, to_js_literal.'
+        comment: ColumnSeries with stacking=normal, CallbackFunction for formatters,
+          Chart+HighchartsOptions pattern, per-point custom data.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses HTML data labels with CSS transforms, per-point color, CallbackFunction
-          for custom formatters, useHTML tooltips.
-  verdict: REJECTED
+        comment: Custom HTML data label renderer with scaleY transform, custom tooltip
+          formatter, per-point color override, useHTML data labels.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
   - hover-tooltips
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
