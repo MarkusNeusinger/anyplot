@@ -489,6 +489,62 @@ Test plot.
         assert len(result["implementations"]) == 1
         assert result["implementations"][0]["library_id"] == "matplotlib"
 
+    def test_scan_javascript_language_subdir(self, tmp_path):
+        """JavaScript impls live under implementations/javascript/*.js and are discovered."""
+        plot_dir = tmp_path / "bar-basic"
+        plot_dir.mkdir()
+
+        (plot_dir / "specification.md").write_text("""# bar-basic: Basic Bar
+
+## Description
+A bar chart.
+
+## Applications
+- Testing
+
+## Data
+- Values
+""")
+
+        # Language-aware layout: implementations/{language}/{library}{ext}
+        js_dir = plot_dir / "implementations" / "javascript"
+        js_dir.mkdir(parents=True)
+        (js_dir / "chartjs.js").write_text("// chartjs code")
+        (js_dir / "d3.js").write_text("// d3 code")
+        (js_dir / "_scratch.js").write_text("// underscore — skipped")
+
+        result = scan_plot_directory(plot_dir)
+
+        assert result is not None
+        impls = {(i["language_id"], i["library_id"]) for i in result["implementations"]}
+        assert impls == {("javascript", "chartjs"), ("javascript", "d3")}
+
+    def test_scan_skips_unknown_language_dir(self, tmp_path):
+        """A language directory with no known extensions is skipped, not crashed."""
+        plot_dir = tmp_path / "weird"
+        plot_dir.mkdir()
+
+        (plot_dir / "specification.md").write_text("""# weird: Weird
+
+## Description
+Test.
+
+## Applications
+- Testing
+
+## Data
+- Values
+""")
+
+        impl_dir = plot_dir / "implementations"
+        (impl_dir / "cobol").mkdir(parents=True)
+        (impl_dir / "cobol" / "something.cob").write_text("* not a known language")
+
+        result = scan_plot_directory(plot_dir)
+
+        assert result is not None
+        assert result["implementations"] == []
+
     def test_scan_without_implementations(self, tmp_path):
         """Test scanning a plot with only specification, no implementations."""
         plot_dir = tmp_path / "spec-only"
