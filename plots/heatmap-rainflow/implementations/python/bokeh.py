@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -93,7 +93,7 @@ p = figure(
     min_border_right=200,
 )
 
-# Heatmap rectangles
+# Heatmap rectangles — thin cell border aids visual hierarchy at transition zones
 r = p.rect(
     x="mean",
     y="amplitude",
@@ -101,7 +101,8 @@ r = p.rect(
     height=amp_bin_width,
     source=source,
     fill_color={"field": "count", "transform": color_mapper},
-    line_color=None,
+    line_color=INK_SOFT,
+    line_alpha=0.2,
 )
 
 # Color bar — wider for 2400px canvas, theme-adaptive text
@@ -145,8 +146,8 @@ p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 
-p.xaxis.axis_line_color = INK_SOFT
-p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.axis_line_color = None
+p.yaxis.axis_line_color = None
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 p.axis.minor_tick_line_color = None
@@ -157,26 +158,27 @@ p.ygrid.grid_line_color = None
 
 # Annotations — storytelling guides viewer to dominant cluster and rare events (theme-adaptive)
 dominant_label = Label(
-    x=120,
+    x=100,
     y=25,
     text="↑ Dominant loading cluster (~5000 cycles)",
-    text_font_size="28pt",
+    text_font_size="34pt",
     text_color=INK,
     text_font_style="bold",
-    text_align="left",
+    text_align="center",
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.9,
 )
 p.add_layout(dominant_label)
 
+# Rare events cluster is centered at amplitude ~150 MPa; label placed above it pointing down
 rare_label = Label(
-    x=-60,
-    y=185,
-    text="Rare severe events →",
-    text_font_size="28pt",
+    x=150,
+    y=193,
+    text="↓ Rare severe events",
+    text_font_size="34pt",
     text_color=INK,
     text_font_style="bold",
-    text_align="left",
+    text_align="center",
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.9,
 )
