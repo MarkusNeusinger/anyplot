@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:35:55Z'
-updated: '2026-06-02T05:55:06Z'
+updated: '2026-06-02T06:08:30Z'
 generated_by: claude-sonnet
 workflow_run: 26800780697
 issue: 4423
@@ -12,50 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec compliance: no axes, no labels, no tick marks, no gridlines, equal-width
-    bars with no gaps — the warming stripes aesthetic is faithfully executed'
-  - 'Theme-adaptive diverging colormap built from Imprint palette colors (#4467A3
-    blue, #AE3030 red) with adaptive neutral midpoint; TwoSlopeNorm ensures symmetric
-    scaling around zero anomaly'
-  - Path effects (stroke) on the title provide subtle visual depth that reads cleanly
-    in both themes
-  - Correct 3:1 stripe aspect ratio achieved via ax.set_position; data spans 175 years
-    (1850-2024) with realistic piecewise trend and seeded noise
-  - 'Perfect code quality: clean KISS structure, np.random.seed(42), all imports used,
-    idiomatic matplotlib patterns throughout'
+  - Faithful minimalist warming stripes format with no extraneous chrome
+  - 'Custom Imprint-derived diverging colormap (blue #4467A3 / red #AE3030) with theme-adaptive
+    midpoint preventing near-zero stripe invisibility'
+  - Path effects on title ensure readability against both light and dark backgrounds
+  - 'Excellent layout proportions: stripe panel, title, and colorbar well-balanced'
+  - TwoSlopeNorm ensures true visual symmetry around zero regardless of data asymmetry
+  - 'Perfect spec compliance: all 5 required features present and correct'
   weaknesses:
-  - Large whitespace gap (~25% of canvas height) between the title and the top of
-    the stripes — ax.set_position top is 0.61 while title sits at y=0.86, leaving
-    a sizeable empty zone; raise the stripes or lower the title (e.g. ax.set_position([0.02,
-    0.04, 0.96, 0.68]) and title at y=0.92) to reduce dead space
-  - 'Dark render midpoint (#4A4844) is very close to the near-black background (#1A1A17),
-    producing a murky brownish transition zone for near-zero anomalies (roughly 1950s-1975);
-    consider a slightly lighter midpoint such as #5C5852 to preserve visual separation
-    between near-zero stripes and the background'
-  - 'Design excellence could be elevated: the implementation is correct but adds no
-    distinctive artistic layer beyond what the spec mandates — consider adding subtle
-    decade tick marks below the stripes (hair-line rules or small year labels at 1900,
-    1950, 2000) to ground the viewer in time without violating the minimalist aesthetic'
-  - 'Library mastery: TwoSlopeNorm and patheffects are used but more distinctive matplotlib
-    features are available — e.g., using fig.colorbar() with a thin horizontal colorbar
-    beneath the stripes to provide a temperature anomaly scale would leverage both
-    a library-specific feature and improve data storytelling'
+  - Colorbar tick labels at fontsize=7 are at the lower limit of mobile legibility
+    — consider fontsize=8
+  - Cold-blue stripes in dark render appear as muted grey-blue due to warm-neutral
+    dark midpoint (#5C5852) — a cooler midpoint could preserve more blue contrast
+  - 'LM-02: path effects and manual axes positioning are sophisticated but not uniquely
+    distinctive to matplotlib'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "heatmap-stripes-climate · python · matplotlib · anyplot.ai" rendered in dark INK (#1A1A17) at fontsize=12 via fig.text; subtle path-effect stroke visible; positioned at y=0.86. No axes, tick labels, or gridlines — by design per spec.
-      Data: Warming stripes span full canvas width; occupy roughly the lower 57% of figure height. Left ~40%: cool blue-gray bands (pre-1940 cold anomalies from #4467A3 side of diverging cmap). Middle ~20%: warm neutral beige/cream tones (#D4CFC6 midpoint) for near-zero anomalies around 1960-1975. Right ~30%: progressively warmer reds through #AE3030 (post-1975 warming trend). Blue-to-red progression clearly communicates the warming narrative.
-      Legibility verdict: PASS. Title is dark on off-white background, fully readable. No other text elements.
-      Layout note: There is a noticeable whitespace gap (~25% of canvas height) between the top of the stripes band and the title — this is the primary layout weakness.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "heatmap-stripes-climate · python · matplotlib · anyplot.ai" in dark #1A1A17 at fontsize=12, ~61% canvas width, fully readable. Colorbar labels (−1.0°C, 0, +1.0°C) in INK_SOFT at fontsize=7 — small but legible.
+      Data: 175 vertical stripes (1850–2024) in blue→cream→red diverging colormap. Blues at left (cold period), reds at right (warm period). Colorbar below stripes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title "heatmap-stripes-climate · python · matplotlib · anyplot.ai" rendered in light (#F0EFE8) INK token; clearly readable against the dark background. No dark-on-dark text failure.
-      Data: Same stripe layout. Cold stripes (left): dusty steel blue-gray (the #4467A3 anchor appears muted but distinguishable). Midpoint zone: dark brownish-gray (#4A4844) — noticeably darker and denser-looking than the light render's warm cream midpoint; near-zero anomaly stripes merge somewhat into a murky brownish band but remain individually distinguishable. Warm stripes (right): clear #AE3030 red progression — data colors match the light render (Imprint palette constants, only chrome flips). The blue-to-red trend is still clearly communicated.
-      Legibility verdict: PASS (with note). Title is light-on-dark, fully readable. No dark-on-dark failure. However, the dark midpoint (#4A4844) is visually heavier than ideal — near-zero stripes sit close to the background value and the transitional zone looks muddier than in the light render.
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light #F0EFE8 — clearly readable against dark surface, no dark-on-dark failures. Colorbar labels in INK_SOFT (light) — readable.
+      Data: Same colormap endpoints (#4467A3 blue, #AE3030 red) as light render. Cold-blue stripes appear as muted blue-grey due to dark midpoint (#5C5852) — readable but less vivid than light render. Warm reds are vivid.
+      Legibility verdict: PASS — minor note: cold-blue period has reduced visual contrast in dark mode
   criteria_checklist:
     visual_quality:
       score: 28
@@ -66,86 +51,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: fontsize=12 explicitly set, INK token used, readable in both themes.
-          Single text element (title) well-proportioned. -1 for fig.text positioning
-          leaving a large whitespace gap above stripes.
+        comment: All font sizes explicitly set. Title=12pt at 61% canvas width, colorbar
+          ticks=7pt small but readable. Slight deduction for 7pt colorbar labels at
+          mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap possible — only one text element, no axis labels or tick
-          marks by spec design.
+        comment: No overlapping elements. Stripes, title, and colorbar occupy distinct
+          areas.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stripes clearly visible in both themes. Blue-to-red progression unmistakable.
-          Dark midpoint creates denser appearance but stripes remain distinguishable.
+        comment: 'Stripes clearly visible in light render. Dark render: cold-blue
+          period muted due to dark-theme midpoint. Still readable.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette diverging cmap (blue/red) is CVD-optimized. Blue
-          and red are maximally distinct under deuteranopia/protanopia. No red-green
-          pairing.
+        comment: Blue-to-red, not red-green. Good luminance contrast between extremes.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Stripes achieve correct ~3:1 aspect ratio (ax spans 96% width × 57%
-          height of 16:9 canvas). However, ~25% of canvas height is empty space between
-          the stripe top and the title. -1 for the excessive dead zone.
+        comment: Canvas exactly 3200x1800. Stripe panel, title, colorbar well-proportioned.
+          Balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows exact mandated format. No axis labels by spec design
-          (warming stripes have no axes/labels). Applicable criterion (title) is fully
-          correct.
+        comment: No axis labels required per spec. Title correctly formatted. Colorbar
+          scale serves as quantitative reference.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Diverging cmap built from Imprint colors #4467A3 (blue) and #AE3030
-          (red) with theme-adaptive neutral midpoint. Direction reversed to blue->red
-          per spec (cold=blue, warm=red) — still Imprint-derived. Background #FAF8F1
-          light / #1A1A17 dark correct. Title chrome theme-adaptive via INK token.'
+        comment: 'Uses reversed imprint_div (#4467A3 blue to #AE3030 red) with theme-adaptive
+          midpoint. Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive in
+          both renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured and correct. Custom Imprint diverging cmap, theme-adaptive
-          midpoint, path effects on title show thoughtfulness. But no distinctive
-          artistic layer beyond spec requirements — no year annotations, no colorbar,
-          no typographic hierarchy beyond the single title.
+        comment: Strong design faithful to iconic warming stripes format. Custom Imprint
+          colormap, path effects on title, theme-adaptive midpoint. Above configured
+          default.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimalism is required by spec, not a bonus choice. Careful ax.set_position
-          for 3:1 ratio is a refinement. Path effects on title are a nice detail.
-          The whitespace gap above the stripes is an unrefined layout choice.
+        comment: All axes hidden per spec. Colorbar given refined treatment (thin
+          0.5pt outline, clean tick marks). Path effects add polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The warming stripes pattern inherently communicates the climate story
-          through color. Blue-to-red progression from 1850 to 2024 is immediately
-          readable. No additional visual hierarchy elements (e.g., decade markers,
-          annotation of record warm year) that would elevate storytelling.
+        comment: 175-year blue-to-red progression communicates warming trend immediately.
+          Colorbar contextualizes magnitude without breaking minimalist aesthetic.
     spec_compliance:
       score: 15
       max: 15
@@ -155,30 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct warming stripes implementation using imshow with no-gap vertical
-          bars.
+        comment: 'Correct warming stripes: vertical colored bars one per year, no
+          gaps.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: no axes/labels/ticks/gridlines, blue-to-red
-          diverging cmap, equal-width bars with no gaps, symmetric color scale via
-          TwoSlopeNorm.'
+        comment: No axes/labels/ticks/gridlines on stripe panel, blue-to-red diverging
+          colormap, equal-width bars, ~3:1 ratio, symmetric around zero via TwoSlopeNorm.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Year on x-axis (extent mapped correctly), temperature anomaly mapped
-          to color. All 175 data points (1850-2024) visible.
+        comment: 175 data points (1850-2024, within 100-175 spec range). Color encodes
+          temperature anomaly correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'heatmap-stripes-climate · python · matplotlib ·
-          anyplot.ai'. No legend required for single continuous variable.
+        comment: Title correct format. Colorbar labels match data scale.
     data_quality:
       score: 15
       max: 15
@@ -188,25 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Data shows full range: cold negative anomalies (blue, early period),
-          near-zero neutral (mid-century), warm positive anomalies (red, recent decades).
-          Variation across all 175 years.'
+        comment: Full temporal coverage showing cool early period, transitional, and
+          accelerating warm period. Both colormap extremes utilized.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global mean temperature anomalies 1850-2024 relative to 1961-1990
-          baseline — real-world scenario, neutral, scientifically grounded (HadCRUT/GISS
-          framing).
+        comment: Synthetic data modeled after HadCRUT/NASA GISS patterns with piecewise
+          trend + Gaussian noise. Scientifically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomaly range approximately -0.5°C to +1.0°C is realistic for global
-          mean surface temperature anomalies. Piecewise trend captures known historical
-          warming phases accurately.
+        comment: Anomalies ~±1°C relative to 1961-1990 baseline, consistent with observed
+          global mean temperature records.
     code_quality:
       score: 10
       max: 10
@@ -216,66 +187,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme tokens → data generation → colormap
-          → plot → title → save. No functions or classes.'
+        comment: 'Linear: imports -> theme tokens -> data -> colormap -> figure ->
+          colorbar -> save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random calls.
+        comment: np.random.seed(42) set before noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (THEME env), matplotlib.patheffects (title
-          stroke), pyplot, numpy, LinearSegmentedColormap, TwoSlopeNorm.'
+        comment: 'All 5 imports used: os, matplotlib.patheffects, matplotlib.pyplot,
+          numpy, LinearSegmentedColormap, TwoSlopeNorm.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No over-engineering, no
-          fake UI elements.
+        comment: Piecewise trend construction concise and readable. Path effects applied
+          cleanly. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches='tight'. Current
-          matplotlib API.
+        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches=tight. Current
+          matplotlib 3.10+ API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ax.imshow() with aspect='auto', TwoSlopeNorm, LinearSegmentedColormap.from_list(),
-          ax.set_position(), fig.text() — all idiomatic matplotlib patterns. -1 for
-          not using ax.set_title() (uses fig.text instead, which breaks the standard
-          positioning contract).
+        comment: Expert use of ax.imshow with extent/aspect/norm, TwoSlopeNorm, manual
+          ax.set_position, fig.add_axes for colorbar, pe.withStroke path effects.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: TwoSlopeNorm (matplotlib-specific asymmetric norm), matplotlib.patheffects.withStroke
-          on title, ax.set_position() for precise subplot control — these are distinctive.
-          Could go further with FuncFormatter, fig.colorbar(), or axvline for decade
-          markers.
-  verdict: REJECTED
+        comment: Path effects, TwoSlopeNorm, manual axes positioning are sophisticated
+          but achievable in other libraries with adaptation. Not uniquely matplotlib-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - colorbar
+  - manual-ticks
   patterns:
   - data-generation
   - explicit-figure
-  dataprep:
-  - normalization
+  - matrix-construction
+  dataprep: []
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
