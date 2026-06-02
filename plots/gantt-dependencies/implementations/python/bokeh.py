@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -248,59 +248,57 @@ for group in groups:
     r = p.hbar(y="y", left="left", right="right", height=0.7, color=group_colors[group], alpha=0.2, source=src)
     group_renderers[group] = r
 
-# Task bars
-task_ys, task_lefts, task_rights = [], [], []
-task_colors, task_names, task_groups = [], [], []
-task_starts, task_ends, task_durations, task_deps, task_crit = [], [], [], [], []
-
-for _, row in df.iterrows():
-    task_ys.append(y_positions[row["task"]])
-    task_lefts.append(row["start"])
-    task_rights.append(row["end"])
-    task_colors.append(group_colors[row["group"]])
-    task_names.append(row["task"])
-    task_groups.append(row["group"])
-    task_starts.append(row["start"].strftime("%b %d, %Y"))
-    task_ends.append(row["end"].strftime("%b %d, %Y"))
-    task_durations.append(f"{row['duration']} days")
-    deps = row["depends_on"]
-    task_deps.append(", ".join(deps) if deps else "None")
-    task_crit.append("★ Critical Path" if row["task"] in critical_tasks else "")
-
-task_source = ColumnDataSource(
-    data={
-        "y": task_ys,
-        "left": task_lefts,
-        "right": task_rights,
-        "bar_color": task_colors,
-        "task_name": task_names,
-        "group_name": task_groups,
-        "start_str": task_starts,
-        "end_str": task_ends,
-        "duration": task_durations,
-        "dependencies": task_deps,
-        "critical": task_crit,
-    }
-)
-
-task_renderer = p.hbar(
-    y="y",
-    left="left",
-    right="right",
-    height=0.5,
-    fill_color="bar_color",
-    fill_alpha=0.9,
-    line_color=PAGE_BG,
-    line_width=1,
-    source=task_source,
-)
+# Task bars — per-group renderers so legend swatches show full-saturation phase colors
+group_task_renderers = {}
+for group in groups:
+    gdf = df[df["group"] == group]
+    gys, glefts, grights = [], [], []
+    gnames, ggroups, gstarts, gends, gdurations, gdeps, gcrit = [], [], [], [], [], [], []
+    for _, row in gdf.iterrows():
+        gys.append(y_positions[row["task"]])
+        glefts.append(row["start"])
+        grights.append(row["end"])
+        gnames.append(row["task"])
+        ggroups.append(row["group"])
+        gstarts.append(row["start"].strftime("%b %d, %Y"))
+        gends.append(row["end"].strftime("%b %d, %Y"))
+        gdurations.append(f"{row['duration']} days")
+        deps = row["depends_on"]
+        gdeps.append(", ".join(deps) if deps else "None")
+        gcrit.append("★ Critical Path" if row["task"] in critical_tasks else "")
+    gsrc = ColumnDataSource(
+        data={
+            "y": gys,
+            "left": glefts,
+            "right": grights,
+            "task_name": gnames,
+            "group_name": ggroups,
+            "start_str": gstarts,
+            "end_str": gends,
+            "duration": gdurations,
+            "dependencies": gdeps,
+            "critical": gcrit,
+        }
+    )
+    gr = p.hbar(
+        y="y",
+        left="left",
+        right="right",
+        height=0.5,
+        fill_color=group_colors[group],
+        fill_alpha=0.9,
+        line_color=PAGE_BG,
+        line_width=1,
+        source=gsrc,
+    )
+    group_task_renderers[group] = gr
 
 # Critical path border overlay (dark outline on critical tasks)
 for _, row in df.iterrows():
     if row["task"] in critical_tasks:
         y = y_positions[row["task"]]
         src = ColumnDataSource(data={"y": [y], "left": [row["start"]], "right": [row["end"]]})
-        p.hbar(y="y", left="left", right="right", height=0.54, fill_alpha=0, line_color=INK, line_width=3, source=src)
+        p.hbar(y="y", left="left", right="right", height=0.54, fill_alpha=0, line_color=INK, line_width=5, source=src)
 
 # Dependency arrows — improved visibility for non-critical (theme-adaptive INK_SOFT)
 crit_arrow_xs, crit_arrow_ys = [], []
@@ -330,9 +328,9 @@ for _, row in df.iterrows():
                 xs = [dep_end_ms, task_start_ms]
                 ys = [dep_y, task_y]
 
-            arrow_size = 1.5 * 24 * 60 * 60 * 1000
+            arrow_size = 3.5 * 24 * 60 * 60 * 1000
             hxs = [task_start_ms - arrow_size, task_start_ms, task_start_ms - arrow_size]
-            hys = [task_y - 0.12, task_y, task_y + 0.12]
+            hys = [task_y - 0.18, task_y, task_y + 0.18]
 
             if is_crit_dep:
                 crit_arrow_xs.append(xs)
@@ -410,10 +408,10 @@ x_max = df["end"].max() + pd.Timedelta(days=2)
 p.x_range.start = x_min
 p.x_range.end = x_max
 
-# Legend (Imprint-palette phase colors + dependency line styles)
+# Legend — use full-opacity task-bar renderers so swatches show full-saturation phase colors
 legend_items = []
 for group in groups:
-    legend_items.append(LegendItem(label=group, renderers=[group_renderers[group]]))
+    legend_items.append(LegendItem(label=group, renderers=[group_task_renderers[group]]))
 if dep_renderer:
     legend_items.append(LegendItem(label="Dependency", renderers=[dep_renderer]))
 if crit_dep_renderer:
@@ -435,7 +433,7 @@ p.add_layout(legend)
 
 # Hover tool for interactive HTML
 hover = HoverTool(
-    renderers=[task_renderer],
+    renderers=list(group_task_renderers.values()),
     tooltips=[
         ("Task", "@task_name"),
         ("Phase", "@group_name"),
