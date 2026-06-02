@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: matplotlib | Python 3.14
-Quality: 91/100 | Created: 2026-03-06
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-02
 """
 
 import sys
