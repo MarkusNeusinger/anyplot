@@ -75,9 +75,9 @@ motif_df <- motif_df %>%
     y_bottom = cumsum(lag(height, default = 0)),
     y_top    = cumsum(height),
     y_mid    = (y_bottom + y_top) / 2,
-    # Scale text size proportional to bar height in coordinate space
-    # ~35 maps bits to ggplot2 geom_text mm units for 4.5-inch panel height
-    letter_size = pmax(2.0, height * 35)
+    # Scale text size proportional to bar height; ~14 maps bits to mm units
+    # while keeping character width within the 0.9-unit bar slot (~13mm)
+    letter_size = pmax(2.0, height * 14)
   ) %>%
   ungroup()
 
