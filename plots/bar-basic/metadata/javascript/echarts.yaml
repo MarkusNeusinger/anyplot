@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bar-basic
 created: '2026-06-02T23:14:43Z'
-updated: '2026-06-02T23:19:05Z'
+updated: '2026-06-02T23:29:34Z'
 generated_by: claude-opus
 workflow_run: 26853478044
 issue: 612
@@ -12,127 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Theme tokens are wired through cleanly: title/ink uses t.ink, ticks use t.inkSoft,
-    grid uses t.grid, and the bars use t.palette[0] so both light and dark renders
-    are fully legible with identical data color.'
-  - Title follows the mandated format with a descriptive prefix ('Books Borrowed per
-    Month · bar-basic · javascript · echarts · anyplot.ai').
-  - Both axes have descriptive labels with units ('Month', 'Loans (thousands)'), value
-    labels above each bar make precise reading easy, and bar widths are consistent
-    at 62% with adequate spacing.
-  - Realistic, neutral dataset (12 months of library book loans, 18.4–47.1k) with
-    enough variation to make the bar comparison meaningful.
-  - 'Clean idiomatic ECharts: animation disabled, no explicit width/height or devicePixelRatio
-    passed to init, splitLine only on yAxis, axisTick hidden, backgroundColor transparent
-    — follows the library skeleton exactly.'
-  - Canvas renders at exactly 3200×1800; no clipping at any edge.
+  - 'First bar series uses brand green #009E73 with full Imprint palette wired through
+    t.palette; both light and dark renders read cleanly with theme-correct chrome.'
+  - Intentional visual hierarchy via opacity (peak Jul bar at 1.0, others at 0.55)
+    creates a clear focal point without breaking palette compliance.
+  - Distinctive ECharts markLine with type 'average' adds analytical context (Avg
+    32.0 reference) with idiomatic, declarative configuration.
+  - All font sizes explicitly set (title 30, axis names 24, ticks 20, value labels
+    16) and proportions are balanced across X and Y; no overlap or overflow in either
+    render.
+  - 'Title follows the mandated format with a descriptive prefix: ''Books Borrowed
+    per Month · bar-basic · javascript · echarts · anyplot.ai''; axis labels include
+    units (''Loans (thousands)'').'
+  - 'Clean KISS code: no functions/classes, hardcoded deterministic data, animation:false,
+    backgroundColor ''transparent'' so page bg shows through, on(''finished'') for
+    screenshot readiness.'
   weaknesses:
-  - Design feels safe rather than distinctive — single brand-green fill, no emphasis
-    on the peak (Jul=47.1) or off-season trough; could lift DE-03 by de-emphasising
-    non-peak bars (e.g. t.palette[0] for peak, t.inkSoft @ low opacity for the rest)
-    or highlighting peak/trough only.
-  - 'Visual refinement is functional but minimal: x-axis baseline could be styled
-    slightly softer (currently inkSoft, fine) and the grid could be even more subtle;
-    no annotation/callout draws the eye to the seasonal pattern.'
-  - Uses very little ECharts-specific surface area beyond the default bar series —
-    no markPoint for max/min, no markLine for an average reference, no gradient/itemStyle
-    borderRadius. Adding any one of these would lift LM-02 without overcomplicating
-    the chart.
+  - 'DE-01 not yet at publication-tier: aesthetic refinement could go further — e.g.,
+    slightly heavier title weight or letter-spacing for premium feel, or a thin ink-color
+    stroke (1px) on the faded bars to anchor them against the cream surface (the Imprint
+    palette''s known sub-3:1 WCAG cushion).'
+  - 'LM-02 leaves distinctive ECharts surface unused: visualMap (piecewise threshold
+    coloring keyed off Avg), graphic elements for inline callouts, or a dataset+encode
+    mapping would showcase ECharts strengths beyond the markLine reference.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct light surface — not pure white, not dark.
-      Chrome: Title "Books Borrowed per Month · bar-basic · javascript · echarts · anyplot.ai" rendered in dark ink at the top center, clearly readable. X-axis label "Month" below the tick row, Y-axis label "Loans (thousands)" rotated on the left, all in dark ink. Tick labels (Jan–Dec on X; 0/10/20/30/40/50 on Y) in soft dark gray, fully readable. Subtle horizontal split lines on the Y grid — present but not dominant. No tick marks shown (axisTick hidden), consistent with the style guide.
-      Data: Twelve vertical bars filled with brand green (#009E73 = t.palette[0]), identical color across all bars. Value labels (18.4, 21.7, 26.2, 31.5, 35.8, 41.3, 47.1, 44.6, 35.9, 29.8, 24.2, 27.6) above each bar in soft ink — clearly readable.
-      Legibility verdict: PASS — all chrome and data clearly distinguished from the warm off-white background.
+      Background: Warm off-white surface matching #FAF8F1 — not pure white. The chart's transparent backgroundColor lets the page bg show through correctly.
+      Chrome: Title "Books Borrowed per Month · bar-basic · javascript · echarts · anyplot.ai" rendered in dark ink at fontSize 30, centered, fills ~80% of width (expected for the long mandated title). Axis names "Month" and "Loans (thousands)" in dark ink at fontSize 24. Tick labels (Jan..Dec on X; 0/10/20/30/40/50 on Y) in soft gray (#4A4A44 inkSoft) at fontSize 20. Y-axis split lines are subtle at ~15% opacity. Bottom xAxis line visible (L-shaped frame: no top, right, or left axisLine). Value labels (e.g. "47.1", "18.4") in inkSoft fontSize 16 above each bar. Dashed gray markLine labeled "Avg 32.0" at y=32.
+      Data: 12 vertical bars in Imprint brand green #009E73. Peak July bar at opacity 1.0; the other 11 bars at opacity 0.55 — creates clear hierarchy without breaking palette compliance. Bars have subtle borderRadius [4,4,0,0]. Bar width ~62% of slot.
+      Legibility verdict: PASS — every chrome element and value label is comfortably readable against the warm off-white background; no light-on-light text.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct dark surface — not pure black, not light.
-      Chrome: Title appears in light ink against the dark background, fully readable. Axis labels "Month" and "Loans (thousands)" in light ink. Tick labels in soft light gray, no dark-on-dark issues. Grid lines remain subtle but visible on the dark surface.
-      Data: Bars are the SAME brand green (#009E73) as in the light render — only the chrome (background, ink, grid) flipped, exactly as the palette rules require. Value labels above each bar in soft light gray, clearly readable.
-      Legibility verdict: PASS — no dark-on-dark text, no light-on-light text, brand green still reads strongly on near-black.
+      Background: Warm near-black surface matching #1A1A17 — not pure black.
+      Chrome: Title in light ink (#F0EFE8) at the same fontSize 30, identical layout. Axis names in light ink. Tick labels and value labels in soft light gray (#B8B7B0 inkSoft equivalent). Y-axis grid lines subtle at ~15% white opacity. Dashed markLine label "Avg 32.0" in soft light gray, readable.
+      Data: Identical to light render — same 12 bars in #009E73 with the same opacity hierarchy (Jul full, others 0.55). Brand green #009E73 reads cleanly on the dark surface (it's selected for cross-theme stability).
+      Legibility verdict: PASS — no dark-on-dark failures; title, axis names, tick labels, value labels, and the Avg markLine label are all readable. The faded 0.55-opacity green bars stay visible against the near-black bg.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes set explicitly (title 30, axis names 24, ticks 20,
-          value labels 16); both themes legible. Minor: 16pt value labels would still
-          read on mobile but are smallest element.'
+        comment: All sizes explicit (title 30, axis names 24, ticks 20, value labels
+          16); proportions balanced; readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, ticks, value labels, or bars in either render.
+        comment: No overlap between ticks, value labels, bars, or markLine label.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars prominent at 62% bar width with adequate spacing; value labels
-          visible.
+        comment: 12 bars at barWidth 62% well-sized; peak bar at full opacity, others
+          at 0.55 — both still clearly visible on both surfaces.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-color bars; brand green contrasts well against both surfaces,
-          no red-green ambiguity.
+        comment: Single brand-green hue; not relying on red-green discrimination.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas measured at exactly 3200×1800. Title spans ~80% — expected
-          for the mandated long title. Nothing clipped.
+        comment: Plot fills canvas well with balanced margins; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X 'Month', Y 'Loans (thousands)' — both descriptive with units.
+        comment: '''Loans (thousands)'' carries units; ''Month'' is descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series uses t.palette[0] (#009E73). color array bound to t.palette.
-          Backgrounds inherit from t.pageBg via transparent. Both themes correct.
+        comment: 'First series #009E73 from t.palette[0]; backgroundColor transparent
+          so theme bg shows through; chrome theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean minimal styling using brand palette; no top/right spines via
-          axisLine hidden where appropriate. Lacks distinctive polish — no peak/trough
-          emphasis, no markLine reference.
+        comment: 'Thoughtful: opacity hierarchy, borderRadius, average reference.
+          Above defaults but short of FiveThirtyEight-tier.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis line and tick marks hidden, splitLine kept subtle, generous
-          whitespace. Could push refinement further (lighter grid weight, softer X
-          baseline).
+        comment: L-shaped frame (no top/right/left axisLines), tick marks removed,
+          subtle Y-only grid, generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Value labels aid reading but no visual hierarchy guides the eye to
-          the summer peak (Jul=47.1) — every bar is treated equally.
+        comment: Peak-vs-rest opacity + Avg markLine guide the reader to the summer
+          peak and its delta from the mean.
     spec_compliance:
       score: 15
       max: 15
@@ -142,30 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Vertical bar chart with heights proportional to values — exactly
-          the spec.
+        comment: Vertical bar chart with categorical X and numeric Y.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths, value labels above bars, single color across
-          bars, adequate spacing — all spec 'Notes' satisfied.
+        comment: Consistent bar widths, value labels above bars, single color, highlighted
+          bar to draw attention — all spec notes honored.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X (months), values on Y (loans). All 12 categories
-          visible.
+        comment: X=Month categories, Y=Loans values; all 12 bars visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Books Borrowed per Month · bar-basic · javascript · echarts
-          · anyplot.ai' matches required format (descriptive prefix · {spec-id} ·
-          {language} · {library} · anyplot.ai).
+        comment: Title matches '{Descriptive} · {spec-id} · {language} · {library}
+          · anyplot.ai'. Single-series — no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -175,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 categories, clear seasonal variation makes the bar comparison
-          meaningful.
+        comment: 12 categories with strong seasonal variation; clear peak, trough,
+          and gradient — demonstrates bar chart's comparative strength.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly library book loans — completely neutral, plausible, non-controversial.
+        comment: Public library book loans by month — neutral, comprehensible, real-world
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 18.4k–47.1k loans/month sit in a sensible domain range for
-          a city library.
+        comment: 18–47 thousand monthly loans is plausible for a mid-sized city library;
+          summer peak matches known reading-program patterns.
     code_quality:
       score: 10
       max: 10
@@ -199,61 +189,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat script.
+        comment: Data → bars mapping → init → setOption → resize listener. No functions,
+          no classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hard-coded → fully deterministic.
+        comment: Hardcoded data, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (browser globals only, as required by the echarts skeleton).
+        comment: No imports — uses the browser globals exposed by the harness (echarts,
+          ANYPLOT_TOKENS).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Compact and readable; no fake UI.
+        comment: 'Concise, idiomatic JS; no fake interactivity; one chart instance
+          on #container as the contract requires.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Output handled by the browser render harness; snippet correctly
-          initializes on #container and never writes to disk.'
+        comment: Harness writes plot-{theme}.png + plot-{theme}.html; the snippet
+          correctly does not touch the filesystem.
     library_features:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct ECharts pattern: init on mount node, single chart.setOption
+          with animation:false, per-item itemStyle for hierarchy, formatter callbacks
+          for labels.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic ECharts: echarts.init(el) without explicit size or DPR;
-          setOption with animation:false; nameLocation/nameGap for axis titles; series-level
-          label formatter; window resize handler and chart.on(''finished'') ready
-          flag.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: Uses splitLine, axisTick hidden, label formatter callback — but doesn't
-          reach for ECharts distinctives like markPoint(max/min), markLine(average),
-          or itemStyle.borderRadius that would lift the chart above generic bar territory.
+        comment: markLine with type:'average' is a distinctive ECharts feature (auto-computed
+          reference line + label). Could push to 5 with visualMap or graphic callouts.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - value-labels
-  patterns:
-  - hardcoded-data
+  - annotations
+  - html-export
+  patterns: []
   dataprep: []
   styling:
   - publication-ready
-  - theme-adaptive
+  - alpha-blending
