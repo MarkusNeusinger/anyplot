@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-02
 """
+
+import os
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
@@ -10,8 +12,19 @@ import matplotlib.ticker as mticker
 import numpy as np
 
 
-# Data — NPV sensitivity analysis for a capital investment project
-base_npv = 12.5  # Base case NPV in $M
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — positions 1 and 2 for dual-series tornado
+COLOR_LOW = "#009E73"  # Imprint position 1 — brand green (Low Scenario)
+COLOR_HIGH = "#C475FD"  # Imprint position 2 — lavender   (High Scenario)
+
+# Data — NPV sensitivity analysis for a capital investment project ($M)
+base_npv = 12.5
 
 parameters = [
     "Discount Rate",
@@ -25,140 +38,150 @@ parameters = [
     "Project Duration",
     "Salvage Value",
 ]
+low_npv = np.array([17.0, 7.6, 14.7, 15.2, 14.0, 10.3, 13.2, 13.4, 11.4, 11.9])
+high_npv = np.array([8.9, 18.4, 10.8, 10.1, 11.1, 15.6, 11.6, 11.7, 13.9, 13.1])
 
-low_npv = np.array([16.8, 8.2, 14.9, 15.1, 14.0, 10.1, 13.6, 13.4, 10.9, 11.8])
-high_npv = np.array([9.1, 17.3, 10.4, 10.2, 11.2, 15.4, 11.5, 11.7, 14.3, 13.3])
-
-# Sort by total range (widest bar at top)
+# Sort by total range — widest bar at top
 total_range = np.abs(high_npv - low_npv)
 sort_idx = np.argsort(total_range)
 parameters = [parameters[i] for i in sort_idx]
 low_npv = low_npv[sort_idx]
 high_npv = high_npv[sort_idx]
 
-# Compute bar segments relative to base
 low_delta = low_npv - base_npv
 high_delta = high_npv - base_npv
 
 y_pos = np.arange(len(parameters))
+n = len(parameters)
+top_k = 3
 
-# Colorblind-safe palette: teal + warm coral with intensity gradient
-base_low = np.array([0.165, 0.616, 0.561])  # #2A9D8F in RGB
-base_high = np.array([0.906, 0.435, 0.318])  # #E76F51 in RGB
-
-# Compute per-bar alpha for intensity gradient (wider bars → more saturated)
+# Intensity gradient — wider bars are more saturated; floor at 0.55 keeps narrow bars visible
 sorted_range = np.abs(high_npv - low_npv)
 range_norm = sorted_range / sorted_range.max()
-alphas = 0.45 + 0.55 * range_norm  # range 0.45 to 1.0
-
-n = len(parameters)
-top_k = 3  # number of top drivers to emphasize
+alphas = 0.55 + 0.45 * range_norm
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 for i in range(n):
     ax.barh(
         y_pos[i],
         low_delta[i],
         left=base_npv,
-        height=0.6,
-        color=base_low,
+        height=0.62,
+        color=COLOR_LOW,
         alpha=alphas[i],
         label="Low Scenario" if i == n - 1 else None,
-        edgecolor="white",
+        edgecolor=PAGE_BG,
         linewidth=0.5,
     )
     ax.barh(
         y_pos[i],
         high_delta[i],
         left=base_npv,
-        height=0.6,
-        color=base_high,
+        height=0.62,
+        color=COLOR_HIGH,
         alpha=alphas[i],
         label="High Scenario" if i == n - 1 else None,
-        edgecolor="white",
+        edgecolor=PAGE_BG,
         linewidth=0.5,
     )
 
-# Bar-end value labels with PathEffects for readability
-label_outline = [pe.withStroke(linewidth=2.5, foreground="white")]
+# Bar-end value labels with PathEffects halos for legibility
+label_halo = [pe.withStroke(linewidth=2.5, foreground=PAGE_BG)]
 
 for i in range(n):
-    is_top = i >= n - top_k  # top drivers (sorted ascending, so last indices are widest)
-    label_size = 12 if is_top else 11
-    label_weight = "bold" if is_top else "medium"
+    is_top = i >= n - top_k
+    lsize = 9 if is_top else 8
+    lweight = "bold" if is_top else "medium"
 
-    # Low scenario label
+    # Wider nudge for narrow bars so label pairs don't crowd together
+    nudge = 0.30 if sorted_range[i] < 1.5 else 0.12
+
     lx = low_npv[i]
-    offset = -0.15 if low_delta[i] < 0 else 0.15
-    ha = "right" if low_delta[i] < 0 else "left"
+    lo = -nudge if low_delta[i] < 0 else nudge
+    lh = "right" if low_delta[i] < 0 else "left"
     ax.text(
-        lx + offset,
+        lx + lo,
         y_pos[i],
         f"${lx:.1f}M",
         va="center",
-        ha=ha,
-        fontsize=label_size,
-        fontweight=label_weight,
-        color=base_low * 0.75,
-        path_effects=label_outline,
+        ha=lh,
+        fontsize=lsize,
+        fontweight=lweight,
+        color=COLOR_LOW,
+        path_effects=label_halo,
     )
 
-    # High scenario label
     hx = high_npv[i]
-    offset = 0.15 if high_delta[i] > 0 else -0.15
-    ha = "left" if high_delta[i] > 0 else "right"
+    ho = nudge if high_delta[i] > 0 else -nudge
+    hh = "left" if high_delta[i] > 0 else "right"
     ax.text(
-        hx + offset,
+        hx + ho,
         y_pos[i],
         f"${hx:.1f}M",
         va="center",
-        ha=ha,
-        fontsize=label_size,
-        fontweight=label_weight,
-        color=base_high * 0.75,
-        path_effects=label_outline,
+        ha=hh,
+        fontsize=lsize,
+        fontweight=lweight,
+        color=COLOR_HIGH,
+        path_effects=label_halo,
     )
 
-# Base case reference line with annotation using PathEffects
-ax.axvline(x=base_npv, color="#444444", linewidth=1.5, linestyle="-", zorder=3)
+# Base case reference line with styled annotation box (FancyBboxPatch via bbox kwarg)
+ax.axvline(x=base_npv, color=INK_SOFT, linewidth=1.5, linestyle="-", zorder=3)
 ax.text(
-    base_npv + 0.15,
-    n - 0.5,
-    f"  Base Case: ${base_npv:.1f}M",
-    fontsize=13,
+    base_npv + 0.10,
+    n - 0.65,
+    f"Base: ${base_npv:.1f}M",
+    fontsize=8,
     fontweight="bold",
-    color="#444444",
+    color=INK,
     ha="left",
     va="center",
-    path_effects=[pe.withStroke(linewidth=3, foreground="white")],
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9, "boxstyle": "round,pad=0.3"},
 )
 
-# X-axis dollar formatting using FuncFormatter
+# X-axis dollar tick formatting
 ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:.0f}M"))
 
 # Style — bold y-tick labels for top drivers
 ax.set_yticks(y_pos)
-ytick_labels = ax.set_yticklabels(parameters, fontsize=16)
+ytick_labels = ax.set_yticklabels(parameters, fontsize=8, color=INK_SOFT)
 for i in range(n):
     if i >= n - top_k:
         ytick_labels[i].set_fontweight("bold")
-        ytick_labels[i].set_fontsize(17)
-ax.set_xlabel("Net Present Value", fontsize=20)
-ax.set_title("bar-tornado-sensitivity · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="x", labelsize=16)
-ax.tick_params(axis="y", length=0)
-ax.legend(fontsize=16, loc="lower right", frameon=False)
+        ytick_labels[i].set_fontsize(9)
+        ytick_labels[i].set_color(INK)
+
+title = "bar-tornado-sensitivity · python · matplotlib · anyplot.ai"
+title_fs = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+
+ax.set_xlabel("Net Present Value ($M)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="y", length=0, colors=INK_SOFT, labelcolor=INK_SOFT)
+
+leg = ax.legend(fontsize=8, loc="lower right", frameon=True)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_visible(False)
-ax.xaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.spines["bottom"].set_color(INK_SOFT)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-# Tighten x-axis to data range with minimal padding for labels
-xlim = ax.get_xlim()
-ax.set_xlim(xlim[0] - 0.3, xlim[1] + 0.3)
+# Tight x-limits — minimize excess padding while leaving room for bar-end labels
+x_min = min(low_npv.min(), high_npv.min())
+x_max = max(low_npv.max(), high_npv.max())
+x_span = x_max - x_min
+ax.set_xlim(x_min - 0.14 * x_span, x_max + 0.14 * x_span)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.20, right=0.96, top=0.93, bottom=0.12)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
