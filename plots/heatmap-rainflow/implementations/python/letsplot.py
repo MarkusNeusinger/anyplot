@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-02
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -21,7 +23,7 @@ from lets_plot import (
     guide_colorbar,
     labs,
     layer_tooltips,
-    scale_fill_viridis,
+    scale_fill_gradient,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -32,7 +34,15 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
-# Data - Simulate rainflow counting from a variable-amplitude fatigue load signal
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data — simulate rainflow counting from a variable-amplitude fatigue load signal
 np.random.seed(42)
 
 n_bins = 20
@@ -47,16 +57,14 @@ base_counts = 1000 * np.exp(-0.022 * amp_grid) * np.exp(-0.0004 * (mean_grid - 1
 noise = np.random.exponential(scale=0.2, size=base_counts.shape)
 raw_counts = np.round(base_counts * (1 + noise)).astype(int)
 
-# Secondary cluster: resonance-induced loading event at moderate amplitude / higher mean
-# Simulates a distinct operating condition (e.g., resonance at a specific RPM)
+# Secondary cluster: resonance-induced loading at moderate amplitude / higher mean
 resonance_amp = 80.0
 resonance_mean = 55.0
 secondary = 250 * np.exp(-0.008 * (amp_grid - resonance_amp) ** 2) * np.exp(-0.005 * (mean_grid - resonance_mean) ** 2)
 raw_counts = raw_counts + np.round(secondary * (1 + noise * 0.3)).astype(int)
-
 raw_counts[raw_counts < 3] = 0
 
-# Build long-form DataFrame (only non-zero bins)
+# Build long-form DataFrame (only non-zero bins; zero bins show PAGE_BG background)
 rows = []
 for i, amp in enumerate(amplitude_centers):
     for j, mn in enumerate(mean_centers):
@@ -66,19 +74,30 @@ for i, amp in enumerate(amplitude_centers):
 
 df = pd.DataFrame(rows)
 
-# Annotation label for the peak region
+# Pre-compute log10 for fill — gives stable gradient control with manual break labels
+df["log_cycles"] = np.log10(df["cycles"].astype(float))
+log_break_values = [5, 10, 50, 100, 500, 1000]
+log_breaks = [np.log10(v) for v in log_break_values]
+log_labels = ["5", "10", "50", "100", "500", "1,000"]
+
+# Annotations — peak region and resonance cluster
 peak_row = df.loc[df["cycles"].idxmax()]
 peak_label = pd.DataFrame(
     {
         "mean_stress": [peak_row["mean_stress"]],
-        "amplitude": [peak_row["amplitude"] + amp_step * 1.3],
+        "amplitude": [peak_row["amplitude"] + amp_step * 1.4],
         "label": [f"Peak: {int(peak_row['cycles']):,} cycles"],
     }
 )
+resonance_label = pd.DataFrame(
+    {"mean_stress": [resonance_mean + 6], "amplitude": [resonance_amp + amp_step * 2.8], "label": ["Resonance cluster"]}
+)
 
-# Plot - Plasma palette with log10 color scale for clear intensity differentiation
+title = "heatmap-rainflow · python · letsplot · anyplot.ai"
+
+# Plot — Imprint sequential colormap (green → blue) on log₁₀ scale
 plot = (
-    ggplot(df, aes(x="mean_stress", y="amplitude", fill="cycles"))
+    ggplot(df, aes(x="mean_stress", y="amplitude", fill="log_cycles"))
     + geom_tile(
         width=mean_step * 0.92,
         height=amp_step * 0.92,
@@ -94,18 +113,20 @@ plot = (
         aes(x="mean_stress", y="amplitude", label="label"),
         data=peak_label,
         inherit_aes=False,
-        size=12,
-        color="#1a1a2e",
+        size=4,
+        color=INK,
         fontface="bold",
     )
-    + scale_fill_viridis(
-        option="plasma",
+    + geom_text(
+        aes(x="mean_stress", y="amplitude", label="label"), data=resonance_label, inherit_aes=False, size=3.5, color=INK
+    )
+    + scale_fill_gradient(
+        low="#009E73",
+        high="#4467A3",
         name="Cycle Count",
-        trans="log10",
-        format=",d",
-        breaks=[5, 10, 50, 100, 500, 1000],
-        labels=["5", "10", "50", "100", "500", "1,000"],
-        guide=guide_colorbar(barwidth=18, barheight=320, nbin=256),
+        breaks=log_breaks,
+        labels=log_labels,
+        guide=guide_colorbar(barwidth=18, barheight=280, nbin=256),
     )
     + scale_x_continuous(
         name="Mean Stress (MPa)", breaks=[-40, -20, 0, 20, 40, 60, 80, 100], format="d", expand=[0.02, 0]
@@ -118,28 +139,29 @@ plot = (
     )
     + coord_cartesian(xlim=[-60, 110], ylim=[0, 210])
     + labs(
-        title="heatmap-rainflow · letsplot · pyplots.ai",
-        subtitle="Variable-amplitude fatigue load spectrum with resonance-induced secondary cluster",
-        caption="Simulated rainflow matrix · cycle counts on log\u2081\u2080 scale",
+        title=title,
+        subtitle="Variable-amplitude fatigue load spectrum · resonance-induced secondary cluster",
+        caption="Simulated rainflow matrix · cycle counts on log₁₀ scale",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=26, face="bold", color="#1a1a2e"),
-        plot_subtitle=element_text(size=16, color="#5a5a7a", face="italic"),
-        plot_caption=element_text(size=12, color="#8a8aaa"),
-        axis_title=element_text(size=20, color="#2d2d44", face="bold"),
-        axis_text=element_text(size=16, color="#3d3d55"),
-        axis_line=element_line(color="#cccccc", size=0.5),
-        legend_text=element_text(size=14),
-        legend_title=element_text(size=16, face="bold", color="#2d2d44"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
+        plot_caption=element_text(size=9, color=INK_MUTED),
+        axis_title=element_text(size=12, color=INK, face="bold"),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK, face="bold"),
         panel_grid=element_blank(),
-        plot_background=element_rect(fill="white", color="white"),
-        panel_background=element_rect(fill="#f8f8fb", color="#f8f8fb"),
         plot_margin=[40, 20, 20, 20],
     )
-    + ggsize(1600, 900)
+    + ggsize(600, 600)
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
