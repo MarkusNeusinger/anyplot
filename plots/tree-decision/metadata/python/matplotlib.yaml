@@ -1,43 +1,58 @@
 library: matplotlib
+language: python
 specification_id: tree-decision
 created: '2026-03-06T21:34:31Z'
-updated: '2026-03-06T22:02:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22782764506
+updated: '2026-06-02T16:01:41Z'
+generated_by: claude-sonnet
+workflow_run: 26830162042
 issue: 4569
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/tree-decision/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features (node shapes, EMV values,
-    pruned branches, probabilities)
-  - Professional design with custom palette, shadow effects, and refined typography
-  - Strong data storytelling through visual hierarchy (solid vs dashed lines, color-coded
-    node types, red pruned markers)
-  - Mathematically correct EMV rollback calculations
-  - Clean, well-organized flat code structure
+  - Semantic color mapping is excellent — blue (decision/control), ochre (chance/uncertainty),
+    green (terminal/payoff) maps naturally to the business domain and uses the Imprint
+    palette correctly
+  - Path effects (SimplePatchShadow) and FancyBboxPatch with rounded corners create
+    a polished, professional look well above matplotlib defaults
+  - 'All spec requirements met: correct node shapes (square/circle/triangle), left-to-right
+    layout, dashed+muted pruned branches, X markers on pruned paths, EMV values inside
+    non-terminal nodes, probability labels on chance branches'
+  - Theme adaptation is complete — all chrome tokens (background, text, legend frame,
+    branch label boxes) flip correctly between light and dark, with data colors unchanged
+  - EMV rollback is mathematically correct and visually clear; the optimal path is
+    immediately traceable through the solid-line hierarchy
   weaknesses:
-  - Minor text cramping in chance node where $760K is close to edge
-  - High Demand (0.6) label slightly crowds the adjacent decision node
-  - Bottom portion of canvas has more empty space than top
-  image_description: 'The plot displays a decision tree diagram on an off-white background
-    with a left-to-right layout. The root decision node (blue rounded square, labeled
-    "EMV $760K") is on the left, branching into two paths: "Invest" (solid line upward
-    to an orange chance node labeled "EMV $760K") and "Don''t Invest" (dashed gray
-    line downward to a gray pruned terminal triangle showing "$0K" with a red X marker).
-    The chance node branches into "High Demand (0.6)" leading to a second blue decision
-    node ("EMV $1.2M") and "Low Demand (0.4)" leading to a teal terminal triangle
-    showing "$100K". The second decision node branches to "Expand" (solid line to
-    teal triangle "$1.2M") and "Maintain" (dashed pruned line to gray triangle "$800K"
-    with red X). A legend in the lower-right shows Decision Node (blue), Chance Node
-    (orange), Terminal Node (teal), and Pruned Branch (dashed red X). Title reads
-    "tree-decision · matplotlib · pyplots.ai" at the top.'
+  - Branch label font size (fontsize=7) is at the lower bound of mobile readability;
+    consider bumping to fontsize=8 or 8.5 for better legibility at 400px viewport
+    width
+  - The D2 area is slightly crowded with two branch labels ('Expand' and 'Maintain')
+    close to the node — increasing the y-spread of T3/T4 positions by ~0.3 units would
+    add breathing room without changing overall layout
+  - 'LM-02 could be higher: the path effects (SimplePatchShadow) and FancyArrowPatch
+    with connectionstyle are distinctively matplotlib, but the overall shape-drawing
+    loop is hand-rolled rather than using any matplotlib higher-level diagramming
+    pattern'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "tree-decision · python · matplotlib · anyplot.ai" in dark ink, clearly readable. No axis labels (ax.axis("off") appropriate for diagram). Branch label boxes use light elevated-bg fill (#FFFDF6) with dark muted text — fully readable.
+      Data: Decision nodes (blue #4467A3 squares with rounded corners and drop shadows) show EMV values in white. Chance node (ochre #BD8233 circle) shows EMV $760K in white. Active terminal nodes (brand green #009E73 right-pointing triangles) label payoffs in matching green. Pruned branches use dashed grey lines with red X markers (#AE3030); pruned terminals are grey (INK_MUTED), payoffs labelled in grey. Layout flows left-to-right: D1 → C1/T1 → D2/T2 → T3/T4. Legend in bottom-right shows all four categories with correct color swatches.
+      Legibility verdict: PASS — all text readable, all node labels visible, payoff values prominent.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title in light off-white (#F0EFE8) clearly readable against dark background. Branch label boxes use dark elevated-bg fill (#242420) with light-grey text (#B8B7B0 / #A8A79F) — no dark-on-dark issue. Arrow lines are light-grey (INK_SOFT #B8B7B0), visible on dark surface. Legend frame uses dark elevated-bg with light text.
+      Data: Node colors are identical to light render — blue decisions, ochre chance, green active terminals, grey pruned terminals. Red X markers remain the same matte-red (#AE3030). Data palette is theme-invariant as required.
+      Legibility verdict: PASS — all chrome flipped correctly, no dark-on-dark failures, data colors unchanged.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -45,42 +60,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (16-24pt). EMV text inside chance node
-          slightly cramped.
+        comment: All font sizes explicitly set; title (12pt), payoffs (9pt), EMV values
+          (8.5pt) all readable. Branch labels at fontsize=7 are marginally small for
+          400px mobile viewport but readable at desktop size.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: High Demand label slightly crowds D2 node; chance node EMV text near
-          edge.
+        comment: No overlapping text elements. D2 area slightly crowded but all labels
+          are distinct.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All nodes clearly sized and visible, branches well-weighted, pruned
-          markers prominent.
+        comment: All nodes, branches, labels and markers clearly visible. Shadow effects
+          add depth without occluding elements.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; node-type also distinguished by shape (square/circle/triangle),
+          providing redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/teal palette is colorblind-safe with strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good left-to-right spread; slightly more empty space in bottom area.
+        comment: Canvas gate passed (3200x1800). Tree fills ~65% of canvas with balanced
+          margins. Legend positioned near data in lower-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately off for tree diagram, title present.
+        comment: Title correctly formatted as 'tree-decision · python · matplotlib
+          · anyplot.ai'. No axis labels needed for this diagram type (axis off).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette used with justified semantic mapping: green (#009E73)
+          for terminal outcomes, blue (#4467A3) for decision/control, ochre (#BD8233)
+          for chance/uncertainty, matte-red (#AE3030) for pruned/rejection. Backgrounds
+          #FAF8F1 / #1A1A17. All chrome theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -88,22 +116,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, shadow effects, white borders, rounded box styles
-          — clearly above defaults.
+        comment: 'Strong design: semantic color coding, drop shadows (SimplePatchShadow),
+          rounded FancyBboxPatch nodes, polished branch label boxes with semi-transparent
+          fills. Clearly above well-configured defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes off, off-white background, subtle shadows, white node borders,
-          dashed pruned lines.
+        comment: Axis fully hidden (appropriate for diagram), custom shadows, rounded
+          boxes, theme-adaptive styling throughout. Good refinement above minimal
+          defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: solid vs dashed lines, color-coded nodes,
-          red pruned markers guide viewer.'
+        comment: Visual hierarchy clearly separates optimal path (solid lines, colored
+          nodes) from rejected branches (dashed grey lines, muted nodes, red X markers).
+          EMV values guide the viewer. Optimal path immediately traceable.
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree with squares, circles, and right-pointing triangles.
+        comment: 'Correct decision tree with all three node types: decision (squares),
+          chance (circles), terminal (right-pointing triangles).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: node shapes, probabilities, payoffs, EMV,
-          pruned markers.'
+        comment: 'All spec requirements met: L-to-R layout, pruned branches with dashed+muted
+          style and X markers, EMV values on non-terminal nodes, probability labels
+          on chance branches (0.6+0.4=1.0), distinct colors for node types.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Left-to-right layout, correct structure, probabilities sum to 1.0.
+        comment: All 7 nodes correctly placed and connected. Payoffs at terminal nodes,
+          EMVs at decision/chance nodes. Tree structure matches spec data correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend includes all four element types.
+        comment: Title is 'tree-decision · python · matplotlib · anyplot.ai'. Legend
+          correctly shows Decision Node, Chance Node, Terminal Node, Pruned Branch
+          with matching colors.
     data_quality:
       score: 15
       max: 15
@@ -142,21 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all node types, pruned and active paths, two-stage decisions,
-          EMV rollback.
+        comment: 'Two-stage tree showing all aspects: multi-stage decisions, chance
+          nodes with probabilities, pruned branches at both stages, EMV rollback demonstrated.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Investment decision under market demand uncertainty — neutral business
-          scenario.
+        comment: Classic business investment decision analysis scenario. Invest vs.
+          Don't Invest with High/Low Demand outcomes. Neutral, real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $0K-$1.2M realistic; EMV math correct.
+        comment: Payoff values ($1.2M, $800K, $100K, $0) realistic for business investment.
+          Probabilities sum to 1.0. EMV calculation mathematically verified in code
+          comments.
     code_quality:
       score: 10
       max: 10
@@ -166,33 +204,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, layout, colors, draw, save.'
+        comment: 'Clean linear structure: imports → theme tokens → data → positions
+          → canvas → branches → nodes → legend → title → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic — all data is hardcoded, no random generation
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. sys used for sys.path fix, os for ANYPLOT_THEME,
+          all matplotlib imports are exercised.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration, appropriate complexity for custom tree rendering.
+        comment: Clean, Pythonic. The sys.path workaround is a legitimate necessity.
+          Node iteration pattern is appropriate. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          APIs.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -200,23 +243,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Axes API, patches system, and path effects.
+        comment: 'Strong idiomatic matplotlib: FancyBboxPatch, FancyArrowPatch with
+          connectionstyle, path effects (SimplePatchShadow), ax.add_patch(), plt.setp()
+          for batch styling. All correct patterns.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: FancyBboxPatch, FancyArrowPatch, SimplePatchShadow — distinctly matplotlib.
+        comment: Uses matplotlib-specific path effects (pe.SimplePatchShadow), FancyArrowPatch
+          with arc connectionstyle, and FancyBboxPatch with custom boxstyle — features
+          not easily replicated in other plotting libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
   - custom-legend
+  - annotations
   patterns:
+  - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
   - edge-highlighting
