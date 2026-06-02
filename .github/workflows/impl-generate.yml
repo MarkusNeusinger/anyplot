@@ -554,8 +554,9 @@ jobs:
           }
           get_r_version() {
             local v
-            v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1)
-            # if/fi, not `&&`: never return non-zero (would abort under `set -e`).
+            # `|| true` on the read + if/fi (not `&&`) on the check: neither may
+            # propagate a non-zero exit, or it aborts under `set -e`/`-o pipefail`.
+            v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1) || true
             if is_version "$v"; then printf '%s' "$v"; fi
           }
           get_julia_version() {
@@ -571,8 +572,9 @@ jobs:
                   break
                 end
               end
-            " 2>/dev/null | tail -n1)
-            # if/fi, not `&&`: never return non-zero (would abort under `set -e`).
+            " 2>/dev/null | tail -n1) || true
+            # `|| true` on the read + if/fi (not `&&`) on the check: neither may
+            # propagate a non-zero exit, or it aborts under `set -e`/`-o pipefail`.
             if is_version "$v"; then printf '%s' "$v"; fi
           }
           get_npm_version() {
@@ -583,10 +585,11 @@ jobs:
             # with ERR_PACKAGE_PATH_NOT_EXPORTED, while echarts happens to allow
             # it — reading node_modules/<pkg>/package.json directly is uniform.
             local v
-            v=$(node -p "JSON.parse(require('fs').readFileSync('node_modules/$1/package.json','utf8')).version" 2>/dev/null | tail -n1)
-            # if/fi, not `&&`: a failing is_version must not propagate a non-zero
-            # exit, or `LIBRARY_VERSION=$(get_npm_version …)` aborts the whole
-            # step under `set -e` before the `"unknown"` fallback can run.
+            # `|| true` on the read + if/fi (not `&&`) on the check guard BOTH
+            # abort points: otherwise `LIBRARY_VERSION=$(get_npm_version …)`
+            # inherits a non-zero exit and dies under `set -e`/`-o pipefail`
+            # before the `"unknown"` fallback can run.
+            v=$(node -p "JSON.parse(require('fs').readFileSync('node_modules/$1/package.json','utf8')).version" 2>/dev/null | tail -n1) || true
             if is_version "$v"; then printf '%s' "$v"; fi
           }
 
