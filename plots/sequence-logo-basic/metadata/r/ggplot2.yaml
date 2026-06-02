@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: sequence-logo-basic
 created: '2026-06-02T11:59:33Z'
-updated: '2026-06-02T12:06:33Z'
+updated: '2026-06-02T12:16:49Z'
 generated_by: claude-sonnet
 workflow_run: 26817918675
 issue: 4421
@@ -12,54 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Correct semantic color mapping: A=#009E73 (green), C=#4467A3 (blue), G=#BD8233
-    (ochre), T=#AE3030 (red) — matches bioinformatics convention while staying within
-    Imprint palette'
-  - 'Full IC calculation: IC = 2 - H with per-letter height = frequency * IC is mathematically
-    correct'
-  - 'Theme-adaptive chrome: INK/INK_SOFT/PAGE_BG/ELEVATED_BG correctly applied in
-    both light and dark renders'
-  - 'Clean TATA-box dataset: 12-position motif with realistic conservation pattern
-    (TATAAATA core), biologically plausible'
-  - 'Code structure: idiomatic dplyr pipeline (group_by/mutate/cumsum/lag) for stacking
-    positions; scale_size_identity trick avoids legend bleed for letter sizes'
-  - 'Axis labels correct: ''Position'' (x) and ''Information content (bits)'' (y)
-    with units as specified'
+  - Semantic DNA color mapping using Imprint palette positions (A=#009E73, C=#4467A3,
+    G=#BD8233, T=#AE3030) matches bioinformatics convention perfectly
+  - Correct IC formula (IC = 2 - H) applied per position with letter heights proportional
+    to frequency × IC
+  - Clean dplyr pipeline for stacked bar geometry using cumsum for y_bottom/y_top
+    — idiomatic ggplot2
+  - TATA-box motif is a canonical, factually accurate example that demonstrates conserved
+    vs. variable positions clearly
+  - Full theme-adaptive chrome — both renders pass with correct backgrounds, text
+    colors, grid, and legend styling
+  - White bold letter glyphs overlaid on colored bars create genuine sequence-logo
+    appearance with scale_size_identity
   weaknesses:
-  - 'Large letter glyphs overflow their bar widths horizontally and overlap adjacent
-    positions — especially at conserved positions 2-8 where size reaches ~40mm. Fix:
-    switch to a narrow/condensed font family (e.g., fontfamily=''mono'' or similar
-    condensed typeface) or reduce letter_size multiplier from 35 to ~20 so letters
-    stay within their bar boundaries. Alternatively, clip text to each position''s
-    x-range using annotation_custom with a clipping viewport.'
-  - letter_size = pmax(2.0, height * 35) produces letters far wider than the 0.9-unit
-    bar slot at high IC values, causing significant horizontal overlap at conserved
-    positions 2-8. The multiplier 35 maps 1 bit ≈ 35mm text but bar width is ~13mm
-    — letters are 2-3x wider than their slot.
-  - Positions 11 and 12 show empty or near-invisible bars (IC ≈ 0), leaving blank
-    space at the right of the plot — acceptable biologically but slightly imbalanced
-    visually. No fix needed if data is faithful.
-  - Grid lines use color = INK_SOFT (solid color) rather than the RULE token (rgba
-    with 15% opacity) from the style guide — a minor deviation from the reference
-    style.
+  - Minor letters stacked at the bottom of high-IC positions (e.g., G/C/C/A labels
+    at base of positions 2-7) are very small and cramped — at mobile widths (~400px)
+    these bottom-stack labels may become illegible; consider increasing min letter_size
+    from 2.0 to 2.5 or filtering out height < 0.06 instead of 0.04
+  - 'DE-01 moderate: design is correct and semantically thoughtful but lacks additional
+    polish elements (e.g., subtle bar edge separation, position-number emphasis at
+    conserved sites, or a note about the motif name in subtitle/caption)'
+  - Positions 11 and 12 render as effectively invisible bars (near-zero IC from near-uniform
+    frequencies) leaving the right portion of the x-axis visually empty — consider
+    trimming to 10 positions or adding a note that flanking positions have low conservation
+  - 'LM-02: implementation uses ggplot2 grammar correctly but does not leverage any
+    truly distinctive ggplot2 feature — ggseqlogo or coordinate transforms would be
+    more distinctive; the current approach is reproducible in plotnine with nearly
+    identical code'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "sequence-logo-basic · r · ggplot2 · anyplot.ai" in dark bold text, clearly readable. Axis labels "Position" (x) and "Information content (bits)" (y) in dark #1A1A17, readable. Tick labels in #4A4A44 (INK_SOFT), readable. Y-axis gridlines are subtle thin lines; x-axis has no grid. Legend box with elevated #FFFDF6 background shows A (green), C (blue), G (ochre), T (red) clearly.
-      Data: 12 positions shown as stacked colored bars. Positions 2-8 are highly conserved (TATAAATA motif) with tall stacks. White letter glyphs (A, T, A, T, A, A, T, A) overlaid on dominant bars — these letters are VERY large at conserved positions and overflow horizontally beyond their bar boundaries, creating significant overlap with adjacent positions. The bars themselves are visible in the lower portion. Positions 9-10 show moderate conservation; positions 11-12 are near-empty (low IC).
-      Legibility verdict: PASS — all chrome text readable. Data letters readable but significantly overlapping between positions 2-8 (letter glyph overflow).
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: title "sequence-logo-basic · r · ggplot2 · anyplot.ai" in bold dark ink at top-left, readable; y-axis label "Information content (bits)" and x-axis label "Position" in dark ink, readable; tick labels in soft dark gray (#4A4A44), readable; subtle horizontal grid lines; no panel border; legend "Nucleotide" with A/C/G/T color swatches on elevated #FFFDF6 background
+      Data: A=#009E73 (green), C=#4467A3 (blue), G=#BD8233 (ochre), T=#AE3030 (red) — stacked bars scaled by IC; white bold letter glyphs overlaid; TATA-box pattern clearly visible at positions 2-8 with tall conserved bars; positions 1, 11, 12 near-empty (low IC); positions 9-10 moderate
+      Legibility verdict: PASS — all main text readable; very small minority letter labels at base of high-IC positions (G/C/C/A stacked) are small but visible at full resolution
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title in cream/light text (#F0EFE8) clearly readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark), clearly readable. No dark-on-dark failure. Legend box uses elevated dark #242420 background with light text.
-      Data: Identical data colors to light render — A=#009E73 (green), C=#4467A3 (blue), G=#BD8233 (ochre), T=#AE3030 (red). White letter glyphs identical to light render. Same horizontal overflow of large letters at conserved positions 2-8.
-      Legibility verdict: PASS — all chrome elements readable in dark theme. Data letters overflow same as light render.
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title in bold light cream text (#F0EFE8), clearly readable; axis labels in light text, readable; tick labels in soft gray (#B8B7B0), readable; subtle horizontal grid lines; legend on elevated #242420 background with light text; no dark-on-dark issues observed
+      Data: colors identical to light render — A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030; white letter glyphs remain visible on all colored bars
+      Legibility verdict: PASS — all elements readable against dark background; no dark-on-dark failure; data colors identical to light render as required
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,56 +64,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
-          legend.*=8/10). Chrome text fully readable in both themes. Slight deduction:
-          large geom_text glyphs create visual clutter at conserved positions.'
+        comment: All font sizes explicitly set (title=12pt, axis=10pt, ticks=8pt,
+          legend=8/10pt); proportions well-balanced; minor letters stacked at base
+          of high-IC positions get very small and may be cramped at mobile widths
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Letter glyphs at conserved positions (2-8) use letter_size up to
-          ~40mm but bar slot is only ~13mm wide — letters overflow horizontally and
-          overlap adjacent positions. Main content still readable but overlap is significant.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All bars visible including small ones. Letters filtered at height<0.04
-          threshold, appropriate. Low-IC positions (11-12) correctly show minimal/no
-          bars.
+        comment: No overlapping text or data elements; stacked minority letters are
+          vertically separated within each position
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and letter glyphs clearly visible; near-zero IC positions (1,
+          11, 12) correctly show minimal bars — biologically accurate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: A/C/G/T span green-blue-ochre-red with distinct perceptual hues.
-          White text on colored bars adds redundant encoding. CVD-safe combination.
+        comment: Imprint palette DNA mapping (green/blue/ochre/red) is CVD-safe; white
+          letter contrast on colored bars is strong
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800 correct. Plot fills ~70% of canvas. Legend positioned
-          right, not isolated. Positions 11-12 leave some blank space (data-driven,
-          not a layout error). Minor: legend pushes into right margin slightly.'
+        comment: Canvas gate passed; plot fills canvas well; margins balanced; legend
+          positioned appropriately to the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Information content (bits)'' with units. X-axis: ''Position''.
-          Title: correct format ''sequence-logo-basic · r · ggplot2 · anyplot.ai''.'
+        comment: 'X: ''Position'', Y: ''Information content (bits)'' — descriptive
+          with units; title format correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic palette assignment: A=#009E73 (Imprint pos 1, green), C=#4467A3
-          (Imprint pos 3, blue), G=#BD8233 (Imprint pos 4, ochre), T=#AE3030 (Imprint
-          pos 5, red). Matches bioinformatics convention and Imprint palette. Background
-          #FAF8F1/#1A1A17 correct. Chrome tokens correct in both themes.'
+        comment: 'Semantic exception correctly applied: DNA convention A=green(#009E73),
+          C=blue(#4467A3), G=ochre(#BD8233), T=red(#AE3030) — all Imprint palette
+          members; backgrounds correct (#FAF8F1/#1A1A17); chrome theme-correct in
+          both renders'
     design_excellence:
       score: 13
       max: 20
@@ -126,29 +120,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: semantic Imprint color mapping following bioinformatics
-          convention, clean theme, professional legend with elevated background. Deduction:
-          letter glyph overflow reduces visual polish; overall impression is slightly
-          messy at conserved positions.'
+        comment: 'Strong design: semantic DNA color mapping to Imprint palette, white
+          bold letter glyphs, clean composition — clearly above defaults but lacks
+          additional polish (bar edge separation, subtitle/caption, emphasis on conserved
+          region)'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed, x-axis grid removed,
-          only y-axis gridlines kept, no minor grid. Axis lines drawn. Legend frame
-          with elevated bg. Minor: grid uses INK_SOFT color rather than RULE rgba
-          token.'
+        comment: 'Good refinement: y-only subtle grid, no panel border, clean axis
+          lines, elevated legend background — axes lines present, spines reduced'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy clearly communicates the TATAAATA conserved core
-          — tall stacks at positions 2-8, shorter at flanks. Color-coded nucleotide
-          identity is immediately readable. The dominant motif is visually prominent.
+        comment: 'Good storytelling: TATA-box motif choice clearly shows conserved
+          core (pos 2-8) vs. variable flanks; IC-proportional bar heights create natural
+          visual hierarchy; viewer immediately sees TATAAATA pattern'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -156,32 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct sequence logo: stacked bars scaled by IC with letter glyphs
-          overlaid. Correct chart type.'
+        comment: 'Correct sequence logo: stacked colored bars per position, height
+          proportional to IC, individual letter heights = frequency × IC'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Stacking by frequency ✓, IC scaling ✓, standard DNA color scheme
-          ✓, axis labels ✓. Partial deduction: spec requires ''scaled glyphs (stretched
-          to fill allocated height)'' — implementation uses proportionally-sized geom_text
-          which scales uniformly (not stretched to fill bar height), and letters overflow
-          their bar widths.'
+        comment: 'All spec features: vertical letter stacking, IC scaling, standard
+          DNA color scheme, position x-axis, IC bits y-axis, scaled letter glyphs'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Position on X, IC bits on Y. Frequency-to-height mapping via IC correct.
-          Stacking cumsum correct.
+        comment: X=position (1-12), Y=information content (0-2 bits); all positions
+          shown; frequencies sum to 1 per position
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sequence-logo-basic · r · ggplot2 · anyplot.ai' correct. Legend
-          'Nucleotide' with A/C/G/T labels correct.
+        comment: 'Title: ''sequence-logo-basic · r · ggplot2 · anyplot.ai'' — correct
+          format; legend: ''Nucleotide'' with A/C/G/T labeled'
     data_quality:
       score: 15
       max: 15
@@ -191,24 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all sequence logo features: highly conserved positions (near
-          2 bits), partially conserved, and low-information flanks. All 4 nucleotides
-          appear at different positions with varying dominance.'
+        comment: 'Shows full range: highly conserved (~2 bits), moderately conserved
+          (~1.2 bits), weakly conserved (~0.4 bits), and near-zero IC positions'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: TATA-box transcription factor binding site — well-known bioinformatics
-          motif, biologically accurate, neutral scientific context.
+        comment: TATA-box transcription factor binding site — canonical bioinformatics
+          motif, neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC range 0-2 bits (correct max for DNA). Frequencies sum to 1 per
-          position. TATA-box conservation pattern (TATAAATA core at positions 2-8)
-          is biologically realistic.
+        comment: DNA max IC = 2 bits correctly enforced; IC = 2 - H formula correctly
+          applied; TATA-box TATAAATA core pattern is factually accurate biologically
     code_quality:
       score: 10
       max: 10
@@ -218,33 +205,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → IC calculation → plot → save. No functions or classes.
-          Linear KISS flow.
+        comment: 'Linear: imports → seed → tokens → data → IC calculation → plot →
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; data is deterministic.
+        comment: set.seed(42) at top; deterministic frequency data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg all used. No unused imports.
+        comment: ggplot2, dplyr, ragg — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. IC calculation clear. pmax() for letter size
-          floor is elegant. cumsum(lag()) pattern for stacking is idiomatic R/dplyr.
+        comment: Clean dplyr pipeline for IC + cumsum stacking; pmax() for min letter
+          size; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ragg::agg_png. No deprecated API.
+        comment: Saves plot-light.png / plot-dark.png via sprintf; ragg::agg_png device;
+          modern ggplot2 API
     library_mastery:
       score: 7
       max: 10
@@ -254,29 +242,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Creative use of geom_rect + geom_text layers to build a custom visualization.
-          scale_size_identity for pre-computed sizes is idiomatic. dplyr pipeline
-          for IC calculation is idiomatic R. Deduction: could use ggplot2 extension
-          idioms more (faceting, stat layers).'
+        comment: 'Proper ggplot2 grammar: geom_rect for bars, geom_text with scale_size_identity
+          for variable glyphs, scale_fill_manual for semantic colors, grouped dplyr
+          mutate for IC'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Building a sequence logo from first principles using geom_rect +
-          geom_text with size identity scale demonstrates ggplot2 grammar composition.
-          The dplyr cumsum/lag pattern for stacking is R-idiomatic. Deduction: true
-          ggplot2 distinction would use custom stat or geom_* extension.'
-  verdict: REJECTED
+        comment: scale_size_identity with aes(size = computed_value) is a distinctive
+          ggplot2 pattern for variable-sized text; however the implementation could
+          be replicated in plotnine with near-identical code — no truly ggplot2-exclusive
+          feature used
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - groupby-aggregation
   dataprep:
   - cumulative-sum
   styling:
-  - minimal-chrome
+  - grid-styling
