@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 genome-track-multi: Genome Track Viewer
-Library: pygal | Python 3.14
-Quality: pending | Updated: 2026-06-02
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-02
 """
 
 import importlib
