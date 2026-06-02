@@ -1,0 +1,253 @@
+library: echarts
+language: javascript
+specification_id: scatter-basic
+created: '2026-06-02T21:29:39Z'
+updated: '2026-06-02T21:46:34Z'
+generated_by: claude-sonnet
+workflow_run: 26848843637
+issue: 611
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/echarts/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Correct Imprint palette with brand green (#009E73) scatter markers
+  - Amber semantic anchor used appropriately for trend line — excellent color contrast
+    against green data
+  - Theme-adaptive chrome via ANYPLOT_TOKENS throughout — both renders pass readability
+    checks
+  - Realistic health study context (height vs. weight) with proper LCG-seeded deterministic
+    data
+  - Linear regression + markLine with italic r≈0.7 label adds clear data storytelling
+  - All font sizes explicitly set with good proportional hierarchy (title 30 / axis
+    20 / ticks 16)
+  - Generous margins and clean layout with no overlap or overflow
+  weaknesses:
+  - 'DE-01 moderate: strong Imprint usage but no further typographic hierarchy differentiation
+    (e.g. thinner grid, reduced axis line opacity) to reach publication-ready tier'
+  - 'DE-02: top/right spines not explicitly removed in ECharts axisLine config — code
+    should add axisLine show:false on the top/right sides of the grid if visually
+    present, or confirm they are absent'
+  - 'LM-02 limited: markLine is used well but no other ECharts-distinctive features
+    (e.g. emphasis/blur states, visualMap, or richText labels) that cannot be replicated
+    in other charting libraries'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "scatter-basic · javascript · echarts · anyplot.ai" in dark ink, clearly readable, spans ~65% of plot width. X-axis label "Height (cm)" and Y-axis label "Weight (kg)" in dark secondary ink, both readable and well-sized. Tick labels at 16px are clear.
+      Data: 120 scatter points in brand green (#009E73) at opacity 0.65 with a subtle white (pageBg) border — well-sized symbolSize 15, no overplotting. Amber (#DDCC77) trend line spans full x-range with an italic "r ≈ 0.7" label at top-right.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light ink — no dark-on-dark failures observed. Grid lines are subtle against the dark surface.
+      Data: Scatter points are identical brand green (#009E73) — data colors match the light render exactly. Amber trend line and "r ≈ 0.7" label are identically colored and clearly visible against the dark background.
+      Legibility verdict: PASS — all text clearly readable against the warm near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 30, axis labels 20, ticks 16).
+          Both renders readable. Well-proportioned hierarchy.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data overlaps. Trend line label positioned clearly at
+          insideEndTop.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 120 points at symbolSize 15 with opacity 0.65 — optimal for this
+          density. White border adds definition.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in #009E73 on both surfaces. Good luminance contrast.
+          CVD-safe palette.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape orientation, balanced margins (l:120 r:90 t:100 b:95).
+          Plot fills ~70% of canvas with no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Height (cm)'', Y: ''Weight (kg)'' — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73 via t.palette[0]. Transparent background
+          shows page surface correctly. Chrome via t.ink/t.inkSoft/t.grid tokens.
+          Amber trend line uses t.amber semantic anchor.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design: Imprint palette, amber semantic anchor for trend
+          line, marker border for definition. Clearly above defaults but not full
+          publication-ready tier.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: theme-adaptive grid, generous whitespace, ECharts default
+          open-axis appearance. No explicit top/right spine removal.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: amber trend line visually distinct from green scatter, italic
+          ''r ≈ 0.7'' label communicates correlation insight clearly.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot with echarts scatter series.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Transparency (0.65), axis labels with units, title, grid lines, appropriate
+          point size — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Height, Y=Weight, 120 points within 50-500 recommended range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-basic · javascript · echarts · anyplot.ai'' — correct
+          format. No legend (single series, appropriate).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows positive correlation, natural scatter/variance, implied outliers,
+          and correlation trend — all key scatter aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Health study: height vs. weight — real, neutral, comprehensible
+          scenario.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Height 140-205 cm, weight 35-100 kg — realistic adult ranges. r≈0.7
+          correlation is physiologically accurate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data → regression → init → setOption. Helper functions (rng, randn)
+          are minimal and necessary for browser LCG.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with seed=42 — fully deterministic in-browser RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (JavaScript globals). Only t and echarts used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, concise. Box-Muller randn is appropriate for correlated normal
+          generation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ECharts harness emits plot-{THEME}.png + plot-{THEME}.html. Current
+          ECharts 5.5.1 API used.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper echarts.init, animation:false, transparent background, ANYPLOT_TOKENS
+          wired through all chrome elements — fully idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ECharts markLine with coordinate pairs for custom trend line
+          — library-specific feature. Could add emphasis/blur or richText for further
+          distinction.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
