@@ -4,8 +4,6 @@
 #' Quality: 88/100 | Created: 2026-06-02
 
 library(ggplot2)
-library(dplyr)
-library(scales)
 library(ragg)
 
 # --- Theme tokens ---
@@ -74,6 +72,8 @@ all_y_lab <- all_y_lab[y_ord]
 # Dependencies: finish-to-start (from task_id -> to task_id)
 dep_from <- c(2, 2, 3, 4, 5, 6, 7, 8)
 dep_to   <- c(3, 4, 5, 6, 7, 7, 8, 9)
+# Critical path: Requirements Doc -> UI Wireframes -> Frontend -> API -> Unit Testing -> UAT
+is_critical <- c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE)
 
 # Build 3-segment L-shaped dependency arrows
 offset_days <- 3
@@ -89,14 +89,22 @@ for (i in seq_along(dep_from)) {
   x2 <- to_row$start
   y2 <- to_row$y_pos
   mx <- x1 + offset_days
-  seg1_list[[i]] <- data.frame(x = x1, xend = mx, y = y1, yend = y1)
-  seg2_list[[i]] <- data.frame(x = mx, xend = mx, y = y1, yend = y2)
-  seg3_list[[i]] <- data.frame(x = mx, xend = x2, y = y2, yend = y2)
+  crit <- is_critical[i]
+  seg1_list[[i]] <- data.frame(x = x1, xend = mx, y = y1, yend = y1, critical = crit)
+  seg2_list[[i]] <- data.frame(x = mx, xend = mx, y = y1, yend = y2, critical = crit)
+  seg3_list[[i]] <- data.frame(x = mx, xend = x2, y = y2, yend = y2, critical = crit)
 }
 
 seg1_df <- do.call(rbind, seg1_list)
 seg2_df <- do.call(rbind, seg2_list)
 seg3_df <- do.call(rbind, seg3_list)
+
+seg1_crit  <- seg1_df[seg1_df$critical, ]
+seg1_ncrit <- seg1_df[!seg1_df$critical, ]
+seg2_crit  <- seg2_df[seg2_df$critical, ]
+seg2_ncrit <- seg2_df[!seg2_df$critical, ]
+seg3_crit  <- seg3_df[seg3_df$critical, ]
+seg3_ncrit <- seg3_df[!seg3_df$critical, ]
 
 # --- Plot ---
 p <- ggplot() +
@@ -119,32 +127,46 @@ p <- ggplot() +
     alpha = 0.88
   ) +
 
-  # Dependency connectors: horizontal segment from predecessor end
+  # Non-critical dependency connectors (subdued)
   geom_segment(
-    data = seg1_df,
+    data = seg1_ncrit,
     aes(x = x, xend = xend, y = y, yend = yend),
     color = INK_SOFT, linewidth = 0.45
   ) +
-
-  # Dependency connectors: vertical segment linking y levels
   geom_segment(
-    data = seg2_df,
+    data = seg2_ncrit,
     aes(x = x, xend = xend, y = y, yend = yend),
     color = INK_SOFT, linewidth = 0.45
   ) +
-
-  # Dependency arrows: horizontal segment with arrowhead at successor start
   geom_segment(
-    data = seg3_df,
+    data = seg3_ncrit,
     aes(x = x, xend = xend, y = y, yend = yend),
     color = INK_SOFT, linewidth = 0.45,
     arrow = arrow(length = unit(0.12, "cm"), type = "closed")
   ) +
 
+  # Critical-path dependency connectors (emphasized)
+  geom_segment(
+    data = seg1_crit,
+    aes(x = x, xend = xend, y = y, yend = yend),
+    color = INK, linewidth = 0.65
+  ) +
+  geom_segment(
+    data = seg2_crit,
+    aes(x = x, xend = xend, y = y, yend = yend),
+    color = INK, linewidth = 0.65
+  ) +
+  geom_segment(
+    data = seg3_crit,
+    aes(x = x, xend = xend, y = y, yend = yend),
+    color = INK, linewidth = 0.65,
+    arrow = arrow(length = unit(0.14, "cm"), type = "closed")
+  ) +
+
   scale_fill_manual(values = PHASE_COLORS, name = "Phase") +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b",
+    labels      = scales::label_date_short(),
     expand      = expansion(mult = c(0.01, 0.02))
   ) +
   scale_y_continuous(
@@ -154,7 +176,7 @@ p <- ggplot() +
   ) +
   labs(
     title    = "gantt-dependencies · r · ggplot2 · anyplot.ai",
-    subtitle = "Arrows: finish-to-start dependencies",
+    subtitle = "Arrows: finish-to-start dependencies; bold = critical path",
     x        = NULL,
     y        = NULL
   ) +
@@ -167,7 +189,7 @@ p <- ggplot() +
     panel.grid.major.y = element_blank(),
     panel.grid.minor   = element_blank(),
     axis.text.x        = element_text(color = INK_SOFT, size = 8),
-    axis.text.y        = element_text(color = INK_SOFT, size = 7.5, hjust = 1),
+    axis.text.y        = element_text(color = INK_SOFT, size = 8, hjust = 1),
     axis.ticks.x       = element_line(color = INK_SOFT),
     axis.ticks.y       = element_blank(),
     axis.line.x        = element_line(color = INK_SOFT),
@@ -175,8 +197,7 @@ p <- ggplot() +
                                       margin = margin(b = 3)),
     plot.subtitle      = element_text(color = INK_MUTED, size = 8,
                                       margin = margin(b = 10)),
-    legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
-                                      linewidth = 0.3),
+    legend.background  = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_text(color = INK, size = 9),
     legend.position    = "bottom",
