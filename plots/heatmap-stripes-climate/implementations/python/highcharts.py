@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -65,7 +65,7 @@ chart_options = {
         "align": "center",
         "verticalAlign": "bottom",
         "y": -12,
-        "style": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "normal"},
+        "style": {"fontSize": "66px", "color": INK_SOFT, "fontWeight": "normal"},
     },
     "colorAxis": {
         "min": -abs_max,
