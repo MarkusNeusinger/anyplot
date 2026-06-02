@@ -100,15 +100,28 @@ g.append("path")
   ])
   .attr("fill", "none")
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 2.5)
-  .attr("stroke-opacity", 0.5)
+  .attr("stroke-width", 3)
+  .attr("stroke-opacity", 0.8)
   .attr("d", d3.line().x((d) => x(d.x)).y((d) => y(d.y)));
+
+// --- Marginal rug marks (subtle distribution indicators on both axes) ------
+g.selectAll(".rug-x").data(data).join("line")
+  .attr("class", "rug-x")
+  .attr("x1", (d) => x(d.x)).attr("x2", (d) => x(d.x))
+  .attr("y1", ih + 4).attr("y2", ih + 12)
+  .attr("stroke", t.palette[0]).attr("stroke-opacity", 0.35).attr("stroke-width", 1);
+
+g.selectAll(".rug-y").data(data).join("line")
+  .attr("class", "rug-y")
+  .attr("x1", -4).attr("x2", -12)
+  .attr("y1", (d) => y(d.y)).attr("y2", (d) => y(d.y))
+  .attr("stroke", t.palette[0]).attr("stroke-opacity", 0.35).attr("stroke-width", 1);
 
 // --- Scatter markers -------------------------------------------------------
 g.selectAll("circle").data(data).join("circle")
   .attr("cx", (d) => x(d.x))
   .attr("cy", (d) => y(d.y))
-  .attr("r", 8)
+  .attr("r", 7)
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.7)
   .attr("stroke", t.pageBg)
@@ -139,7 +152,7 @@ g.append("text")
   .attr("x", iw - 8).attr("y", 44)
   .attr("text-anchor", "end")
   .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
+  .style("font-size", "16px")
   .text("95% confidence band");
 
 // --- Axis labels -----------------------------------------------------------
