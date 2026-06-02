@@ -1,14 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: altair 6.0.0 | Python 3.14
-Quality: 90/100 | Updated: 2026-02-25
+Library: altair 6.0.0 | Python 3.13
+Quality: 90/100 | Updated: 2026-06-02
 """
+
+import os
+import sys
+
+
+# Remove script dir from sys.path to prevent self-import (file is named altair.py)
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - Software Development Project with Dependencies
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — positions 1-5 for the 5 project phases
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Amber semantic anchor: "caution" role suits dependency lines (delays propagate)
+DEP_COLOR = "#DDCC77"
+
+# Data — Software Development Project with Dependencies
 tasks_data = [
     # Requirements Phase
     {
@@ -126,23 +147,16 @@ df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
 task_lookup = {r["task_id"]: r for _, r in df.iterrows()}
 
-# Distinct colorblind-safe palette (purple for Development instead of similar blue)
-group_colors = {
-    "Requirements": "#306998",
-    "Design": "#E69F00",
-    "Development": "#7B2D8E",
-    "Testing": "#56B4E9",
-    "Deployment": "#009E73",
-}
-dep_color = "#CC5A71"
 group_order = ["Requirements", "Design", "Development", "Testing", "Deployment"]
+# Imprint positions 1→5 in canonical order (green, lavender, blue, ochre, matte-red)
+group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(group_order)}
 
-# Build display rows with ordinal task ordering
+# Build display rows with ordinal task ordering (group headers + indented tasks)
 task_order = []
 chart_rows = []
 for grp in group_order:
     grp_tasks = df[df["group"] == grp]
-    label = f"\u25b8 {grp}"
+    label = f"▸ {grp}"
     task_order.append(label)
     chart_rows.append(
         {
@@ -160,7 +174,7 @@ for grp in group_order:
 
 chart_df = pd.DataFrame(chart_rows)
 
-# Dependency data: 2 points per arrow using "task" field for shared ordinal Y scale
+# Dependency data: 2 points per arrow using shared ordinal Y scale
 dep_line_rows = []
 dep_arrow_rows = []
 dep_id = 0
@@ -174,17 +188,22 @@ for _, r in df.iterrows():
 dep_line_df = pd.DataFrame(dep_line_rows)
 dep_arrow_df = pd.DataFrame(dep_arrow_rows)
 
-# Ordinal Y axis with conditional bold for group headers
+# Title — 49 chars, under 67 baseline → use default 16px
+title_str = "gantt-dependencies · python · altair · anyplot.ai"
+title_fs = round(16 * min(1.0, 67 / len(title_str)))
+
+# Y-axis: conditional bold + larger font for group headers
 y_axis = alt.Axis(
-    labelFontSize=alt.ExprRef("indexof(datum.value, '\u25b8') >= 0 ? 17 : 16"),
-    labelFontWeight=alt.ExprRef("indexof(datum.value, '\u25b8') >= 0 ? 'bold' : 'normal'"),
-    labelLimit=300,
+    labelFontSize=alt.ExprRef("indexof(datum.value, '▸') >= 0 ? 18 : 16"),
+    labelFontWeight=alt.ExprRef("indexof(datum.value, '▸') >= 0 ? 'bold' : 'normal'"),
+    labelColor=INK_SOFT,
+    labelLimit=270,
     ticks=False,
     domain=False,
-    labelPadding=10,
+    labelPadding=8,
 )
 
-# Task bars with color encoding per group
+# Task bars — colored by group, native bottom legend for phases
 task_bars = (
     alt.Chart(chart_df[~chart_df["is_group"]])
     .mark_bar(cornerRadius=4)
@@ -192,12 +211,26 @@ task_bars = (
         x=alt.X(
             "start:T",
             title="Project Timeline (2024)",
-            axis=alt.Axis(format="%b %d", labelFontSize=16, titleFontSize=20),
+            axis=alt.Axis(format="%b %d", labelFontSize=16, titleFontSize=18, labelColor=INK_SOFT, titleColor=INK),
         ),
         x2="end:T",
         y=alt.Y("task:N", sort=task_order, title=None, axis=y_axis),
         color=alt.Color(
-            "group:N", scale=alt.Scale(domain=group_order, range=[group_colors[g] for g in group_order]), legend=None
+            "group:N",
+            scale=alt.Scale(domain=group_order, range=[group_colors[g] for g in group_order]),
+            legend=alt.Legend(
+                orient="bottom",
+                direction="horizontal",
+                title=None,
+                labelFontSize=16,
+                symbolSize=280,
+                symbolType="square",
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                padding=8,
+                labelColor=INK_SOFT,
+                cornerRadius=4,
+            ),
         ),
         tooltip=[
             "task:N",
@@ -208,65 +241,78 @@ task_bars = (
     )
 )
 
-# Group summary bars (thinner, dark charcoal)
+# Group summary bars — thin, INK-colored to sit on the structural layer
 group_bars = (
     alt.Chart(chart_df[chart_df["is_group"]])
-    .mark_bar(cornerRadius=3, size=14, opacity=0.85)
+    .mark_bar(cornerRadius=3, size=12, opacity=0.9)
     .encode(
         x="start:T",
         x2="end:T",
         y=alt.Y("task:N", sort=task_order),
-        color=alt.value("#2C3E50"),
+        color=alt.value(INK),
         tooltip=["task:N", alt.Tooltip("start:T", format="%Y-%m-%d"), alt.Tooltip("end:T", format="%Y-%m-%d")],
     )
 )
 
-# Dependency lines (prominent dashed, shared ordinal Y)
+# Dependency lines — amber dashed (caution: delays propagate)
 dep_lines = (
     alt.Chart(dep_line_df)
-    .mark_line(strokeWidth=3.5, opacity=0.85, color=dep_color, strokeDash=[8, 4])
+    .mark_line(strokeWidth=3.5, opacity=0.9, color=DEP_COLOR, strokeDash=[8, 4])
     .encode(x="x:T", y=alt.Y("task:N", sort=task_order), detail="dep_id:N")
 )
 
-# Arrowheads at successor start
+# Arrowheads at successor start — size=300 for clear visibility
 arrow_heads = (
     alt.Chart(dep_arrow_df)
-    .mark_point(shape="triangle-right", size=200, filled=True, color=dep_color, opacity=0.9)
+    .mark_point(shape="triangle-right", size=300, filled=True, color=DEP_COLOR, opacity=0.95)
     .encode(x="x:T", y=alt.Y("task:N", sort=task_order))
 )
 
-# Custom legend with phases and dependency indicator
-legend_data = pd.DataFrame(
-    [{"phase": g, "color": group_colors[g], "order": i} for i, g in enumerate(group_order)]
-    + [{"phase": "Dependency", "color": dep_color, "order": 5}]
+# Dependency label — positioned above the chart area as a subtitle line
+dep_label_df = pd.DataFrame([{"x": "2024-04-01", "label": "── ── ▶  Finish-to-start dependency"}])
+dep_label = (
+    alt.Chart(dep_label_df)
+    .mark_text(fontSize=14, color=DEP_COLOR, align="right", fontStyle="italic")
+    .encode(x=alt.X("x:T", axis=None), text="label:N")
+    .properties(width=500, height=22)
 )
-legend_marks = (
-    alt.Chart(legend_data)
-    .mark_rect(width=22, height=16, cornerRadius=3)
-    .encode(
-        x=alt.X("phase:N", sort=alt.EncodingSortField(field="order"), axis=None, title=None),
-        color=alt.Color("color:N", scale=None),
-    )
-)
-legend_text = (
-    alt.Chart(legend_data)
-    .mark_text(dy=24, fontSize=16)
-    .encode(x=alt.X("phase:N", sort=alt.EncodingSortField(field="order"), axis=None, title=None), text="phase:N")
-)
-legend = alt.layer(legend_marks, legend_text).properties(width=600, height=50)
 
-# Combine layers
+# Main chart — inner view sized to land within 3200×1800 after vl-convert padding
 main = alt.layer(group_bars, task_bars, dep_lines, arrow_heads).properties(
-    width=1400,
-    height=700,
-    title=alt.Title("gantt-dependencies \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
+    width=500, height=280, title=alt.Title(title_str, fontSize=title_fs, color=INK, anchor="middle")
 )
 
 chart = (
-    alt.vconcat(main, legend, spacing=20)
-    .configure_axisX(grid=True, gridOpacity=0.15, gridDash=[3, 3])
+    alt.vconcat(main, dep_label, spacing=2)
+    .configure_axisX(grid=True, gridOpacity=0.15, gridDash=[3, 3], gridColor=INK)
     .configure_axisY(grid=False)
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        labelFontSize=16,
+        symbolSize=280,
+        padding=8,
+        cornerRadius=4,
+    )
+    .properties(background=PAGE_BG)
 )
 
-chart.save("plot.png", scale_factor=3.0)
+# Save PNG then pad to exact 3200×1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        "Shrink chart .properties(width=, height=) and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
