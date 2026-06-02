@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -55,10 +55,10 @@ y_pos = np.arange(len(parameters))
 n = len(parameters)
 top_k = 3
 
-# Intensity gradient — wider bars are more saturated
+# Intensity gradient — wider bars are more saturated; floor at 0.55 keeps narrow bars visible
 sorted_range = np.abs(high_npv - low_npv)
 range_norm = sorted_range / sorted_range.max()
-alphas = 0.40 + 0.60 * range_norm
+alphas = 0.55 + 0.45 * range_norm
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -96,8 +96,11 @@ for i in range(n):
     lsize = 9 if is_top else 8
     lweight = "bold" if is_top else "medium"
 
+    # Wider nudge for narrow bars so label pairs don't crowd together
+    nudge = 0.30 if sorted_range[i] < 1.5 else 0.12
+
     lx = low_npv[i]
-    lo = -0.12 if low_delta[i] < 0 else 0.12
+    lo = -nudge if low_delta[i] < 0 else nudge
     lh = "right" if low_delta[i] < 0 else "left"
     ax.text(
         lx + lo,
@@ -112,7 +115,7 @@ for i in range(n):
     )
 
     hx = high_npv[i]
-    ho = 0.12 if high_delta[i] > 0 else -0.12
+    ho = nudge if high_delta[i] > 0 else -nudge
     hh = "left" if high_delta[i] > 0 else "right"
     ax.text(
         hx + ho,
