@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-02
@@ -267,7 +267,7 @@ if arrows_df is not None and not arrows_df.empty:
                 size=1.5,
                 color=color,
                 alpha=0.88,
-                arrow=arrow(angle=25, length=8, type="closed"),
+                arrow=arrow(angle=25, length=6, type="closed"),
                 tooltips=layer_tooltips().line("@from_task → @to_task").line("Type: @dep_type"),
             )
 
@@ -309,7 +309,7 @@ for dep_type, color in dep_colors.items():
             data=seg,
             size=1.5,
             color=color,
-            arrow=arrow(angle=25, length=8, type="closed"),
+            arrow=arrow(angle=25, length=6, type="closed"),
         )
 
 plot += geom_text(
@@ -329,7 +329,7 @@ plot += scale_y_continuous(breaks=[], labels=[], limits=[-3.8, n + 0.5])
 plot += labs(
     x="Project Timeline (2024)",
     y="",
-    title="gantt-dependencies · letsplot · anyplot.ai",
+    title="gantt-dependencies · python · letsplot · anyplot.ai",
     subtitle="Software development lifecycle — task dependencies and critical path across phases",
 )
 
@@ -347,6 +347,7 @@ plot += theme(
     panel_grid_major_y=element_blank(),
     panel_grid_minor=element_blank(),
     panel_grid_major_x=element_line(color=INK_SOFT, size=0.3),
+    panel_border=element_blank(),
     plot_margin=[20, 15, 15, 80],
 )
 plot += ggsize(800, 450)
