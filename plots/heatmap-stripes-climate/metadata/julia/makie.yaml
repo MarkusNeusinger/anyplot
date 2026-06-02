@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: heatmap-stripes-climate
+created: '2026-06-02T06:10:55Z'
+updated: '2026-06-02T06:36:24Z'
+generated_by: claude-sonnet
+workflow_run: 26801533518
+issue: 4423
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: no axes, no labels, pure color encoding as required
+    for warming stripes'
+  - 'Thoughtful theme-adaptive diverging colormap midpoints (#BDBBB4 light / #6B6A63
+    dark) — standard background-color midpoint would make near-zero stripes invisible'
+  - Symmetric colorrange via max_abs ensures equal visual weight for positive and
+    negative anomalies
+  - Realistic simulated data with embedded volcanic cooling events at representative
+    intervals
+  - Clean idiomatic Makie grid-layout composition using Label row below the stripe
+    axis
+  weaknesses:
+  - 'Dark render neutral zone (near-zero anomaly years) has reduced contrast — stripes
+    near #6B6A63 midpoint blend somewhat with #1A1A17 background; a slightly lighter
+    dark midpoint (e.g. #857F78) would improve differentiation'
+  - Title fontsize=26 (52 effective px at px_per_unit=2) may render slightly small
+    at mobile/thumbnail widths (~400 px) — consider 28-30pt
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "heatmap-stripes-climate · julia · makie · anyplot.ai" in dark ink below stripes — clearly readable. No axis labels, no tick labels, no gridlines (per spec).
+      Data: 174 vertical stripes spanning full canvas height. Left half shows steel-blue stripes (cold early years 1850-~1950), transitioning through warm gray (#BDBBB4 midpoint zone ~1950-1980), then salmon-pink to muted-red stripes on right (warm recent years ~1990-2023). Full gradient clearly visible with good contrast across all stripe values.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light off-white text — clearly readable against dark background. No dark-on-dark failure.
+      Data: Same 174 stripes. Blue stripes appear as deeper saturated steel-blues on left. Neutral transition zone renders as very dark brownish-gray (#6B6A63 midpoint) — perceptible but with lower internal contrast than light render. Deep burgundy-reds on right. Data colors (blue #4467A3 and red #AE3030 endpoints) consistent with light render — only apparent brightness shifts with dark surface.
+      Legibility verdict: PASS (minor: neutral-zone stripes are subdued in dark render, inherent to diverging colormap on dark surface)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title explicitly sized at fontsize=26 (52 effective px), readable
+          in both themes. Warming stripes format has no axis labels by spec design.
+          Minor: title may be slightly small at 400px mobile width.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Only element is the title; no overlap possible in minimalist format.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Light render: full gradient from deep blue through warm gray to
+          muted red — excellent. Dark render: blue and red zones clear; neutral-zone
+          stripes (near-zero anomaly years) render as near-black with lower contrast
+          but gradient still perceptible.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Blue #4467A3 and red #AE3030 are Imprint palette colors; diverging
+          scale is not red/green confusion; CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape; rowsize Relative(0.88) gives stripes 88% of
+          height; title row below; no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'No axis labels per spec. Title format correct: heatmap-stripes-climate
+          · julia · makie · anyplot.ai.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Diverging colormap uses Imprint endpoints #4467A3 (blue, pos 3)
+          and #AE3030 (matte red, pos 5). Theme-adaptive midpoints justified. Backgrounds
+          correct: #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom Imprint-derived diverging colormap and
+          theme-adaptive midpoints. Clean minimalist execution clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All decorations removed, no axes/gridlines per spec. Layout precisely
+          balanced with rowsize!. Near-perfect for this plot type.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Warming stripes inherently tell climate change story. Includes simulated
+          volcanic cooling events adding realism. Progression from cool blues to warm
+          reds immediately striking.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: vertical colored bars (1xn heatmap), one per year, no gaps.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No axes/labels/ticks/gridlines; blue-to-red diverging colormap centered
+          at 0; equal-width gapless bars; symmetric colorrange (max_abs); ~3:1 aspect
+          ratio.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year mapped to X axis (174 columns, 1850-2023); anomaly mapped to
+          color; full range displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: heatmap-stripes-climate · julia · makie · anyplot.ai — exact
+          required format. No legend needed.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows cold years (blue), warm recent years (red), and transition.
+          Volcanic cooling events at representative intervals add realism.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real scientific visualization (Ed Hawkins warming stripes). Simulated
+          data mimics HadCRUT-like global temperature anomalies. Neutral scientific
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomaly range ~±0.5-0.8C over 174 years, consistent with HadCRUT
+          records. Quadratic warming trend is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean top-level script: imports -> constants -> data -> plot ->
+          save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise and purposeful. Thoughtful constants with clear comments
+          explaining the midpoint design choice.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) — correct output filename
+          and current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses heatmap! with colormap/colorrange, hidedecorations!, hidespines!,
+          Label in grid layout, rowsize! with Relative — all idiomatic CairoMakie
+          patterns. cgrad for custom colormap construction is idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Makie-specific: grid-layout composition (Label in fig[2,1] below
+          Axis in fig[1,1]), rowsize! with Relative for proportional layout, cgrad
+          for multi-stop colormap. The nx1 heatmap-as-stripes approach is clever.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
