@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -237,14 +237,17 @@ sns.scatterplot(
 )
 
 # Dependency arrows: predecessor end → successor start, theme-adaptive ink color
+# Cross-phase arrows use larger arc radius to reduce clutter in busy transition zones
 for _, row in df.iterrows():
     if row["depends_on"]:
         for dep in row["depends_on"]:
             dep_row = df[df["task"] == dep].iloc[0]
+            same_phase = dep_row["group"] == row["group"]
+            rad = 0.15 if same_phase else 0.3
             arrow = FancyArrowPatch(
                 (dep_row["end_num"], task_to_y[dep]),
                 (row["start_num"], task_to_y[row["task"]]),
-                connectionstyle="arc3,rad=0.1",
+                connectionstyle=f"arc3,rad={rad}",
                 arrowstyle="->,head_width=0.4,head_length=0.3",
                 color=INK_SOFT,
                 linewidth=1.2,
@@ -270,7 +273,7 @@ ax.invert_yaxis()
 for label in ax.get_yticklabels():
     if label.get_text().startswith("▪"):
         label.set_fontweight("bold")
-        label.set_fontsize(8)
+        label.set_fontsize(9)
 
 # X-axis: biweekly date ticks
 max_day = int(df["end_num"].max()) + 7
@@ -280,8 +283,18 @@ ax.set_xticks(date_ticks)
 ax.set_xticklabels(date_labels, fontsize=8, rotation=45, ha="right")
 ax.set_xlim(-2, max_day)
 
-# Title and axis labels
-ax.set_title("gantt-dependencies · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+# Title, subtitle, and axis labels
+ax.set_title("gantt-dependencies · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=22)
+ax.annotate(
+    "Software Development Project  ·  Q1–Q2 2024",
+    xy=(0.5, 1.02),
+    xycoords="axes fraction",
+    ha="center",
+    va="bottom",
+    fontsize=9,
+    color=INK_SOFT,
+    style="italic",
+)
 ax.set_xlabel("Project Timeline (2024)", fontsize=10, color=INK)
 ax.set_ylabel("Tasks by Phase", fontsize=10, color=INK)
 
@@ -290,18 +303,25 @@ ax.grid(True, axis="x", alpha=0.15, linewidth=0.8, color=INK)
 ax.grid(False, axis="y")
 ax.set_axisbelow(True)
 
-# Legend: phase colors + dependency arrow symbol
+# Legend: phase color patches, dotted divider, then dependency arrow indicator
 legend_patches = [mpatches.Patch(color=phase_colors[g], alpha=0.85, label=g) for g in groups]
+divider = plt.Line2D([], [], linewidth=0.5, color=INK_SOFT, linestyle=":", alpha=0.6, label=" ")
 arrow_legend = plt.Line2D([0], [0], color=INK_SOFT, linewidth=1.5, marker=">", markersize=7, label="Dependency")
-legend_patches.append(arrow_legend)
 ax.legend(
-    handles=legend_patches, loc="upper right", fontsize=7.5, framealpha=0.9, title="Project Phases", title_fontsize=8
+    handles=legend_patches + [divider, arrow_legend],
+    loc="upper right",
+    fontsize=7.5,
+    framealpha=0.9,
+    title="Phases & Flow",
+    title_fontsize=8,
+    handlelength=1.5,
+    labelspacing=0.35,
 )
 
 # Remove left spine for cleaner look; keep bottom for time axis reference
 sns.despine(left=True, bottom=False, ax=ax)
 
-# Manual padding — avoids bbox_inches="tight" canvas drift
-fig.subplots_adjust(left=0.25, right=0.97, top=0.92, bottom=0.14)
+# Manual padding — avoids bbox_inches="tight" canvas drift; bottom raised for x-label clearance
+fig.subplots_adjust(left=0.25, right=0.97, top=0.89, bottom=0.17)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
