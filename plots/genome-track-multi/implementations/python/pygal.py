@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -182,7 +182,8 @@ var_chart = pygal.XY(
     margin=0,
     dots_size=10,
     stroke=False,
-    range=(0, 105),
+    range=(40, 105),
+    x_range=(0, 1),
 )
 snp_series = [
     {"value": (float(nv), float(v["quality"])), "label": f"SNP at {v['pos']:,} (Q={v['quality']})"}
@@ -424,10 +425,17 @@ parts.append('<g clip-path="url(#plotArea)">')
 for reg in regulatory:
     rx1 = MARGIN_LEFT + (reg["start"] - region_start) / region_length * PLOT_W
     rx2 = MARGIN_LEFT + (reg["end"] - region_start) / region_length * PLOT_W
+    mid_x = (rx1 + rx2) / 2
+    # Right-align label when the element center is within 60px of the plot left edge
+    # to avoid the label being clipped by the plotArea clip-path
+    if mid_x - MARGIN_LEFT < 60:
+        label_x, anchor = rx2 + 4, "start"
+    else:
+        label_x, anchor = mid_x, "middle"
     parts.append(
-        f'<text x="{(rx1 + rx2) / 2:.1f}" y="{reg_ty + 30:.1f}" '
+        f'<text x="{label_x:.1f}" y="{reg_ty + 30:.1f}" '
         f'font-family="sans-serif" font-size="17" fill="{INK_MUTED}" '
-        f'text-anchor="middle">{reg["type"]}</text>'
+        f'text-anchor="{anchor}">{reg["type"]}</text>'
     )
 parts.append("</g>")
 
