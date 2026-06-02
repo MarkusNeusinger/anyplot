@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -130,6 +130,31 @@ unit_circle_r = p.line(
 p.add_layout(Span(location=0, dimension="width", line_color=INK_SOFT, line_width=2, line_alpha=0.7))
 p.add_layout(Span(location=0, dimension="height", line_color=INK_SOFT, line_width=2, line_alpha=0.7))
 
+# Focal-point annotation: dotted line connecting conjugate pair + callout label
+p.line(
+    [z_base.real, z_base.real],
+    [z_base.imag, -z_base.imag],
+    line_color=IMPRINT_PALETTE[2],
+    line_dash="dotted",
+    line_width=3,
+    line_alpha=0.5,
+)
+p.add_layout(
+    Label(
+        x=z_base.real + 0.15,
+        y=0.2,
+        text="Conjugate pair: symmetric about Re-axis",
+        text_font_size="21pt",
+        text_color=IMPRINT_PALETTE[2],
+        text_font_style="italic",
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.85,
+        border_line_color=IMPRINT_PALETTE[2],
+        border_line_alpha=0.65,
+        padding=10,
+    )
+)
+
 # Vectors from origin to each complex number — visual hierarchy via alpha
 alpha_map = {"5th Root of Unity": 0.75, "Arbitrary": 0.55, "Conjugate Pair": 0.65, "Product": 0.70, "Sum": 0.70}
 for i, (rx, iy) in enumerate(zip(real_parts, imag_parts, strict=True)):
@@ -171,7 +196,7 @@ for i, (rx, iy, lbl) in enumerate(zip(real_parts, imag_parts, labels, strict=Tru
     angle = np.arctan2(iy, rx)
     cat = categories[i]
     # Larger offset for roots of unity (clustered on the unit circle)
-    base_dist = 42 if cat == "5th Root of Unity" else 30
+    base_dist = 55 if cat == "5th Root of Unity" else 30
     ox = base_dist * np.cos(angle)
     oy = base_dist * np.sin(angle)
     # Push left-half labels further left to clear axis
@@ -191,7 +216,7 @@ for i, (rx, iy, lbl) in enumerate(zip(real_parts, imag_parts, labels, strict=Tru
         dx = (rx + ox * 0.012) - px
         dy = (iy + oy * 0.012) - py
         if abs(dx) < 0.55 and abs(dy) < 0.55:
-            oy += 20 if iy >= py else -20
+            oy += 35 if iy >= py else -35
     placed.append((rx + ox * 0.012, iy + oy * 0.012))
     p.add_layout(Label(x=rx, y=iy, text=lbl, x_offset=ox, y_offset=oy, text_font_size="24pt", text_color=INK_SOFT))
 
@@ -239,7 +264,7 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.12
 p.ygrid.grid_line_alpha = 0.12
 
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
