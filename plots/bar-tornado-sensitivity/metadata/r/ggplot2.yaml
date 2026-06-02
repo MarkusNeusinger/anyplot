@@ -1,0 +1,243 @@
+library: ggplot2
+language: r
+specification_id: bar-tornado-sensitivity
+created: '2026-06-02T23:13:55Z'
+updated: '2026-06-02T23:31:47Z'
+generated_by: claude-sonnet
+workflow_run: 26853247244
+issue: 4566
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Correct tornado diagram: bars sorted by sensitivity range (widest at top), perfect
+    tornado shape'
+  - Bold y-axis label for 'Discount Rate' immediately guides viewer attention to the
+    most impactful parameter
+  - 'Base case reference line + ''Base: $42.5M'' annotation provides clear context
+    without crowding'
+  - 'Full theme adaptation: all chrome tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED,
+    ELEVATED_BG) correctly applied in both renders'
+  - Realistic solar energy NPV dataset with 9 well-chosen, domain-appropriate parameters
+  - 'Correct Imprint palette: Low Input = brand green (#009E73), High Input = lavender
+    (#C475FD)'
+  - 'Clean minimal chrome: x-only grid, no y-ticks, no panel border, theme_minimal
+    base'
+  weaknesses:
+  - Bar end labels use geom_text(size=1.9) mm (~5.4pt); increase to 2.2-2.5 mm to
+    improve readability at mobile-scaled widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct per style guide
+      Chrome: Title "bar-tornado-sensitivity · r · ggplot2 · anyplot.ai" centered in dark ink (#1A1A17), readable. X-axis label "Net Present Value (USD Millions)" in dark ink, readable. Y-axis parameter names in dark ink, with "Discount Rate" bold at top. Tick labels in INK_SOFT (#4A4A44), readable. Bar end dollar labels in INK_SOFT, small but legible at full resolution. Base annotation "Base: $42.5M" in INK_MUTED above reference line. Legend text readable.
+      Data: Green bars (#009E73, Low Input) and lavender bars (#C475FD, High Input) clearly visible and distinct. Vertical reference line at $42.5M in dark ink. All 9 parameters visible with correct tornado ordering (Discount Rate widest at top, Land Lease Cost narrowest at bottom).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct per style guide
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Axis labels in light cream, readable. Tick labels in warm grey (#B8B7B0), readable. Bar end labels in warm grey, readable. Base annotation visible in muted cream. Vertical reference line flipped to near-white, clearly visible. Legend text readable. No dark-on-dark failures observed.
+      Data: Colors identical to light render — same green (#009E73) and lavender (#C475FD) bars in same positions with same values. Reference line and all data elements clearly visible against dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text readable in both themes; bar end labels at size=1.9mm
+          (~5.4pt) slightly small for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels correctly offset from bar ends; no overlap even in tight Land
+          Lease Cost row
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars, reference line, annotations, and legend swatches clearly
+          visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing is CVD-safe per Imprint palette design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 landscape canvas; no clipping; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; x-axis label descriptive with units; y-axis
+          uses parameter names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Low Input=#009E73 (position 1); High Input=#C475FD (position 2);
+          backgrounds theme-correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: bold focal parameter, clean solar dataset, correct
+          Imprint usage, alpha=0.88'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid only (correct for horizontal bars), no y-ticks, no panel border,
+          clean legend at bottom
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tornado shape, bold top label, base annotation create clear sensitivity
+          narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tornado diagram with sorted horizontal bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reference line, sorted bars, dual colors, parameter labels, end-value
+          labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis NPV output, y-axis parameters, bars extend from base case
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''bar-tornado-sensitivity · r · ggplot2 · anyplot.ai''; legend:
+          Input Scenario / Low Input / High Input'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All tornado aspects: sorting, dual-direction bars, reference line,
+          dual colors, end labels'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Solar energy NPV sensitivity — plausible, domain-appropriate, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 9 parameters (within 6-15 range); NPV $26M-$58M realistic for utility-scale
+          solar
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg — all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: bind_rows+transmute for wide-to-long, pmin/pmax for bar direction,
+          y_faces for boldness
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via sprintf; ragg::agg_png device
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar-of-graphics layering; correct scale_fill_manual, scale_y_continuous,
+          expansion()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Factor-ordered y-axis, y_faces boldness vector, pmin/pmax bar logic,
+          Inf placement for annotation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - wide-to-long
+  styling:
+  - alpha-blending
+  - minimal-chrome
