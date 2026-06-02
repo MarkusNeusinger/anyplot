@@ -1,95 +1,112 @@
 library: seaborn
+language: python
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:35Z'
-updated: '2026-02-25T15:32:15Z'
-generated_by: claude-opus-4-6
-workflow_run: 21046151686
+updated: '2026-06-02T13:51:24Z'
+generated_by: claude-sonnet
+workflow_run: 26822662828
 issue: 3830
-python_version: '3.14'
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/seaborn/plot.png
-preview_html: null
-quality_score: 89
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent data design with sequential, parallel, multi-dependency, and cross-phase
-    dependency examples
-  - Creative use of sns.lineplot with units parameter to render Gantt bars idiomatically
-    within seaborn
-  - 'Strong visual hierarchy: bold group headers, indented tasks, aggregate phase
-    bars, milestone diamonds'
-  - All font sizes explicitly set for high-resolution output
-  - Clean code structure with no functions/classes and deterministic data
-  - Professional design with custom palette, subtitle context, and refined grid styling
+  - 'Perfect spec compliance: all five required Gantt-dependencies features present
+    (task bars, group aggregates, dependency arrows, milestone markers, legend)'
+  - Idiomatic seaborn usage via sns.lineplot with units parameter for per-task bar
+    rendering
+  - 'Strong theme adaptation: both renders pass the readability check with all chrome
+    tokens correctly wired'
+  - 'Thoughtful visual hierarchy: bold group headers vs lighter task labels, higher
+    alpha task bars vs lower alpha aggregates'
+  - Differentiated arc radii (same-phase 0.15 vs cross-phase 0.3) shows careful arrow
+    design
   weaknesses:
-  - 'Color palette not fully colorblind-safe: red-orange (#CC553D) and teal (#2A9D8F)
-    could converge under deuteranopia/protanopia'
-  - Milestone diamond markers (s=120) are small relative to the canvas size
-  - Heavy reliance on matplotlib for core Gantt features limits the seaborn library
-    mastery score
-  image_description: 'The plot displays a Gantt chart for a software development project
-    spanning January through mid-June 2024. Four project phases are color-coded: Requirements
-    (deep blue), Design (golden yellow), Development (coral/red-orange), and Testing
-    (teal). Each phase has a bold header prefixed with a square bullet symbol and
-    indented child tasks beneath it. Semi-transparent aggregate bars span each phase''s
-    total duration. Individual task bars are drawn as thick colored horizontal lines.
-    Curved dependency arrows in dark gray connect predecessor task endpoints to successor
-    task start points, showing finish-to-start relationships. Diamond milestone markers
-    appear at each phase''s completion point. A subtitle provides project-level context
-    about the critical path. The x-axis shows biweekly date labels rotated 45 degrees,
-    and the y-axis lists all tasks organized by phase. A legend in the upper right
-    identifies the four phases and the dependency arrow style. Vertical dashed grid
-    lines at subtle opacity mark time intervals. The left spine is removed for a clean
-    look.'
+  - 'Bottom margin tight: bottom=0.17 leaves the x-axis label barely clear of the
+    canvas edge — increase bottom to ~0.19 for more breathing room'
+  - Subtitle annotation at xycoords=axes fraction position (0.5, 1.02) sits very close
+    to the main title in the compressed top margin — hard to distinguish at normal
+    viewing distance
+  - Arrow routing in the Development to Testing transition zone produces a cluster
+    of crossing arcs that adds visual noise; adjusting arc angles or adding minor
+    vertical offsets could reduce clutter
+  - Critical path not highlighted — viewers must trace the longest dependency chain
+    manually; a subtle visual emphasis on the critical path would improve data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white.
+      Chrome: Title "gantt-dependencies · python · seaborn · anyplot.ai" in dark INK (#1A1A17) clearly readable at top. Subtitle annotation in italic INK_SOFT just above axes. Axis labels "Tasks by Phase" (y) and "Project Timeline (2024)" (x) in dark ink, readable. Y-axis tick labels show bold group headers (9pt) and indented task names (7.5pt), all readable. X-axis date ticks rotated 45°, readable. Legend at upper right readable.
+      Data: Task bars in Imprint palette — Requirements in brand green #009E73 (first series, correct), Design in lavender #C475FD, Development in blue #4467A3, Testing in ochre #BD8233. Diamond milestone markers at phase ends in matching colours. Curved dependency arrows in dark INK_SOFT. Semi-transparent phase aggregate bars at lower alpha.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title and all labels rendered in light #F0EFE8/#B8B7B0 ink, clearly readable against dark background. No dark-on-dark text failures detected. Legend box uses elevated dark background #242420. Dependency arrows render in lighter grey, distinguishable. Grid lines subtle and visible.
+      Data: Imprint palette data colours (green, lavender, blue, ochre) are identical to the light render — only chrome flips. Diamond markers, task bars, and aggregate bars maintain same colours.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, group
-          headers=17, legend=14/16. All text clearly readable.'
+        comment: 'All font sizes explicitly set; clear hierarchy (9pt group headers,
+          7.5pt task labels, 8pt ticks, 12pt title, 10pt axis labels); readable in
+          both themes. Minor: subtitle annotation and title compete in tight top margin;
+          bottom x-axis label tight to canvas edge.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text overlap. Y-axis labels well-spaced, x-axis rotated 45 degrees,
-          legend in upper right doesn't obscure text.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Task bars (lw=14) and arrows (lw=2.2) clearly visible. Milestone
-          diamonds (s=120) are somewhat small for the canvas size.
+        comment: Dependency arrows occasionally arc through semi-transparent phase
+          aggregate bars creating minor visual clutter; no text-on-text collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Task bars (linewidth=10), dependency arrows, diamond milestones (s=280),
+          and phase aggregates all clearly visible and well-sized.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with four distinct hue families; adequate luminance
+          spread; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Curated 4-color palette with good luminance contrast. Red-orange
-          and teal could converge under deuteranopia/protanopia. Spatial separation
-          compensates.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Good canvas utilization with balanced margins and tight layout. Nothing
-          cut off.
+        comment: Canvas 3200x1800 confirmed; subplots_adjust margins adequate; left=0.25
+          gives room for task labels. Bottom=0.17 leaves x-axis label tight to canvas
+          edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Project Timeline (2024) and Tasks by Phase are descriptive with context.
+        comment: 'Descriptive labels: ''Tasks by Phase'' (y), ''Project Timeline (2024)''
+          (x); title follows exact required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Requirements) in #009E73; subsequent phases in canonical
+          Imprint order; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -97,22 +114,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom curated palette, phase-colored bars, milestone markers, bold
-          group headers, subtitle context. Professional appearance clearly above defaults.
+        comment: 'Strongly above defaults: diamond milestone markers, differentiated
+          arc radii (same vs cross-phase), typographic hierarchy, semi-transparent
+          aggregate vs solid task bars. Not publication-ready due to busy arrow cluster
+          in Development/Testing zone.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Left spine removed, vertical-only subtle dashed grid, y-grid disabled,
-          background phase shading via aggregate bars. Clean whitespace.
+        comment: Left spine removed; x-axis-only subtle grid (alpha=0.15); well-calibrated
+          alpha values; legend framealpha=0.9. Multiple refined choices above default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy through phase grouping, dependency arrows
-          create narrative flow, milestone markers serve as phase focal points.
+        comment: Visual hierarchy through bold group headers and diamond phase-completion
+          markers; sequential progression clear. Critical path not highlighted; arrow
+          cluster in Development/Testing obscures story.
     spec_compliance:
       score: 15
       max: 15
@@ -122,28 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with task dependencies.
+        comment: Correct Gantt chart with task bars, group headers, aggregate timelines,
+          and dependency arrows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: task timelines, dependency arrows, group
-          headers with aggregate bars, task hierarchy, milestone markers, legend.'
+        comment: Dependency arrows from predecessor end to successor start; group
+          headers with aggregate bars; visual distinction between groups and tasks;
+          legend with dependency indicator; arc routing to avoid overlap.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Timeline on X-axis, tasks grouped by phase on Y-axis. All data correctly
-          mapped.
+        comment: Tasks on y-axis with correct hierarchy; timeline on x-axis; all 15
+          tasks visible; dependencies correctly encoded.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend shows all 4 phases and dependency
-          arrow style.
+        comment: Title exactly 'gantt-dependencies · python · seaborn · anyplot.ai';
+          legend lists all four phase colour patches plus dependency arrow indicator.
     data_quality:
       score: 15
       max: 15
@@ -153,22 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows sequential, parallel, multi-dependency, and cross-phase dependency
-          examples. Excellent variety.
+        comment: 'All Gantt-dependencies features demonstrated: task bars, group headers,
+          phase aggregate spans, dependency arrows (including cross-phase), diamond
+          milestones, hierarchical y-axis.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development project with standard SDLC phases. Neutral,
-          professional context.
+        comment: Realistic software development project (Requirements/Design/Development/Testing
+          phases), Q1-Q2 2024, plausible task names and sequencing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 6-month timeline with realistic durations (3-19 days). 15 tasks provides
-          good density.
+        comment: 15 tasks within spec's 10-50 range; task durations (1-18 days) realistic;
+          date range Jan-Jun 2024 appropriate.
     code_quality:
       score: 10
       max: 10
@@ -178,33 +201,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save flow. No functions or classes.
+        comment: Flat imports → data → plot → save; no classes or helper functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data, no random elements.
+        comment: All data hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mpatches, plt, np, pd, sns, FancyArrowPatch.'
+        comment: All imports (os, mpatches, plt, np, pd, sns, FancyArrowPatch) are
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity. No over-engineering.
+        comment: Elegant FancyArrowPatch usage with dynamic arc radius; sns.lineplot
+          with units parameter is clean idiomatic approach.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight. Current API.
+        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -212,29 +237,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Creative use of sns.lineplot with units parameter for task bars,
-          sns.scatterplot for milestones, sns.set_theme for theming, sns.despine for
-          cleanup.
+        comment: sns.lineplot with units/estimator=None, sns.scatterplot for milestones,
+          sns.set_theme with full rc dict, sns.despine. Some core rendering falls
+          back to raw matplotlib (FancyArrowPatch, ax.plot for aggregates).
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Units parameter in lineplot and seaborn theming are somewhat distinctive,
-          but core Gantt features rely heavily on matplotlib.
-  verdict: REJECTED
+        passed: true
+        comment: The units parameter in sns.lineplot is a seaborn-specific pattern
+          for drawing one line per categorical unit within a hue group — not trivially
+          replicable in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - custom-legend
   - patches
+  - custom-legend
+  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
