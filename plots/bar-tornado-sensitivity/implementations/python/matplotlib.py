@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-02
+Quality: 92/100 | Updated: 2026-06-02
 """
 
 import os
