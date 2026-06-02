@@ -1,36 +1,58 @@
-""" pyplots.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-06
+Library: bokeh | Python
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label
-from bokeh.plotting import figure, output_file, save
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Two-stage investment decision tree
-# EMV calculations (rollback):
-#   Expand chance: 0.7*500 + 0.3*100 = 380
-#   Expand decision: max(380, 300) = 380 -> Don't Expand pruned
-#   Launch chance: 0.6*380 + 0.4*50 = 248
-#   License chance: 0.5*250 + 0.5*120 = 185
-#   Root decision: max(248, 185, 0) = 248 -> License & Do Nothing pruned
+THEME = os.getenv("ANYPLOT_THEME", "light")
 
+# Theme-adaptive chrome tokens (Imprint palette)
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — node types in canonical order
+COLOR_DECISION = "#009E73"  # position 1, brand green
+COLOR_CHANCE = "#C475FD"  # position 2, lavender
+COLOR_TERMINAL = "#4467A3"  # position 3, blue
+COLOR_PRUNE = "#AE3030"  # position 5, semantic: error/rejected
+
+# Data — Two-stage investment decision tree
+# EMV rollback:
+#   C3: 0.7*500 + 0.3*100 = 380
+#   D2: max(380, 300) = 380  → Don't Expand pruned
+#   C1: 0.6*380 + 0.4*50  = 248
+#   C2: 0.5*250 + 0.5*120 = 185
+#   D1: max(248, 185, 0)  = 248 → License & Do Nothing pruned
+#
+# Layout designed for 3200×1800 canvas (data units ≈ pixels at 1:1 scale).
+# Columns at x ∈ {220, 850, 1500, 2150, 2800}; rows spread across y ∈ [100, 1700].
 nodes = {
-    "D1": {"type": "decision", "x": 100, "y": 520, "value": 248},
-    "C1": {"type": "chance", "x": 330, "y": 800, "value": 248},
-    "C2": {"type": "chance", "x": 330, "y": 320, "value": 185},
-    "T1": {"type": "terminal", "x": 330, "y": 80, "value": 0},
-    "D2": {"type": "decision", "x": 570, "y": 950, "value": 380},
-    "T2": {"type": "terminal", "x": 570, "y": 640, "value": 50},
-    "T3": {"type": "terminal", "x": 570, "y": 410, "value": 250},
-    "T4": {"type": "terminal", "x": 570, "y": 230, "value": 120},
-    "C3": {"type": "chance", "x": 810, "y": 1060, "value": 380},
-    "T5": {"type": "terminal", "x": 810, "y": 830, "value": 300},
-    "T6": {"type": "terminal", "x": 1040, "y": 1130, "value": 500},
-    "T7": {"type": "terminal", "x": 1040, "y": 980, "value": 100},
+    "D1": {"type": "decision", "x": 220, "y": 750, "value": 248},
+    "C1": {"type": "chance", "x": 850, "y": 1050, "value": 248},
+    "C2": {"type": "chance", "x": 850, "y": 475, "value": 185},
+    "T1": {"type": "terminal", "x": 850, "y": 125, "value": 0},
+    "D2": {"type": "decision", "x": 1500, "y": 1300, "value": 380},
+    "T2": {"type": "terminal", "x": 1500, "y": 750, "value": 50},
+    "T3": {"type": "terminal", "x": 1500, "y": 600, "value": 250},
+    "T4": {"type": "terminal", "x": 1500, "y": 350, "value": 120},
+    "C3": {"type": "chance", "x": 2150, "y": 1475, "value": 380},
+    "T5": {"type": "terminal", "x": 2150, "y": 1100, "value": 300},
+    "T6": {"type": "terminal", "x": 2800, "y": 1620, "value": 500},
+    "T7": {"type": "terminal", "x": 2800, "y": 1350, "value": 100},
 }
 
 edges = [
@@ -47,232 +69,263 @@ edges = [
     ("C3", "T7", "Failure", 0.3, False),
 ]
 
-# Colorblind-safe palette: blue (decision), teal (chance), amber (terminal)
-COLOR_DECISION = "#306998"
-COLOR_CHANCE = "#8E6BBF"
-COLOR_TERMINAL = "#D4A03C"
-BORDER_DECISION = "#1B3D5E"
-BORDER_CHANCE = "#6A4D96"
-BORDER_TERMINAL = "#A67C1E"
-COLOR_EDGE = "#3D3D3D"
-COLOR_PRUNE = "#C0392B"
+# Canvas: 3200×1800 landscape (Imprint catalog standard)
+W, H = 3200, 1800
 
-# Plot
 p = figure(
-    width=4800,
-    height=2700,
-    title="tree-decision · bokeh · pyplots.ai",
-    x_range=(-30, 1150),
-    y_range=(-10, 1220),
-    toolbar_location=None,
+    width=W,
+    height=H,
+    title="tree-decision · bokeh · anyplot.ai",
+    x_range=(-120, 3150),
+    y_range=(-30, 1800),
+    toolbar_location=None,  # omit toolbar so exported PNG height == H
+    min_border_bottom=60,
+    min_border_left=60,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Subtle background band to highlight optimal path region
-optimal_band = BoxAnnotation(bottom=580, top=1180, fill_color="#306998", fill_alpha=0.03)
-p.add_layout(optimal_band)
+# Subtle fill highlighting the optimal-path region (upper portion)
+p.add_layout(BoxAnnotation(bottom=850, top=1700, fill_color=COLOR_DECISION, fill_alpha=0.04))
 
-# Draw edges (right-angle connectors)
+# Draw edges: right-angle connectors (horizontal → vertical → horizontal)
 for src, dst, label, prob, pruned in edges:
     sx, sy = nodes[src]["x"], nodes[src]["y"]
     dx, dy = nodes[dst]["x"], nodes[dst]["y"]
     mid_x = (sx + dx) / 2
 
-    alpha = 0.40 if pruned else 0.85
-    dash = [12, 8] if pruned else "solid"
-    lw = 3.5 if pruned else 6
+    lw = 4 if pruned else 7
+    alpha = 0.35 if pruned else 0.80
+    dash = [14, 8] if pruned else "solid"
 
     p.line(
-        [sx, mid_x, mid_x, dx], [sy, sy, dy, dy], line_width=lw, line_alpha=alpha, line_color=COLOR_EDGE, line_dash=dash
+        [sx, mid_x, mid_x, dx], [sy, sy, dy, dy], line_width=lw, line_alpha=alpha, line_color=INK_SOFT, line_dash=dash
     )
 
-    # Branch label
+    # Branch label — placed on the vertical connector segment
     branch_text = f"{label} (p={prob})" if prob is not None else label
-    lbl = Label(
-        x=mid_x,
-        y=(sy + dy) / 2,
-        text=branch_text,
-        text_font_size="20pt",
-        text_alpha=0.50 if pruned else 0.88,
-        text_align="right",
-        text_baseline="middle",
-        x_offset=-14,
+    label_y = (sy + dy) / 2
+    p.add_layout(
+        Label(
+            x=mid_x,
+            y=label_y,
+            text=branch_text,
+            text_font_size="18pt",
+            text_color=INK_MUTED if pruned else INK_SOFT,
+            text_align="right",
+            text_baseline="middle",
+            x_offset=-10,
+        )
     )
-    p.add_layout(lbl)
 
-    # Pruned cross mark on the edge midpoint, offset from label
+    # Red cross mark on pruned branches
     if pruned:
-        cx = mid_x + 38
-        cy = (sy + dy) / 2
-        cs = 15
+        cx, cy, cs = mid_x + 48, label_y, 18
         p.multi_line(
             [[cx - cs, cx + cs], [cx - cs, cx + cs]],
             [[cy - cs, cy + cs], [cy + cs, cy - cs]],
-            line_width=4,
+            line_width=5,
             line_color=COLOR_PRUNE,
-            line_alpha=0.70,
+            line_alpha=0.75,
         )
 
 # Build ColumnDataSources for each node type
-decision_data = {k: v for k, v in nodes.items() if v["type"] == "decision"}
-chance_data = {k: v for k, v in nodes.items() if v["type"] == "chance"}
-terminal_data = {k: v for k, v in nodes.items() if v["type"] == "terminal"}
+decision_nodes = {k: v for k, v in nodes.items() if v["type"] == "decision"}
+chance_nodes = {k: v for k, v in nodes.items() if v["type"] == "chance"}
+terminal_nodes = {k: v for k, v in nodes.items() if v["type"] == "terminal"}
 
-decision_src = ColumnDataSource(
-    data={
-        "x": [n["x"] for n in decision_data.values()],
-        "y": [n["y"] for n in decision_data.values()],
-        "name": list(decision_data.keys()),
-        "emv": [f"${n['value']}K" for n in decision_data.values()],
-        "node_type": ["Decision"] * len(decision_data),
-    }
-)
 
-chance_src = ColumnDataSource(
-    data={
-        "x": [n["x"] for n in chance_data.values()],
-        "y": [n["y"] for n in chance_data.values()],
-        "name": list(chance_data.keys()),
-        "emv": [f"${n['value']}K" for n in chance_data.values()],
-        "node_type": ["Chance"] * len(chance_data),
-    }
-)
+def _src(node_dict, label):
+    return ColumnDataSource(
+        data={
+            "x": [n["x"] for n in node_dict.values()],
+            "y": [n["y"] for n in node_dict.values()],
+            "name": list(node_dict.keys()),
+            "emv": [f"${n['value']}K" for n in node_dict.values()],
+            "node_type": [label] * len(node_dict),
+        }
+    )
 
-terminal_src = ColumnDataSource(
-    data={
-        "x": [n["x"] for n in terminal_data.values()],
-        "y": [n["y"] for n in terminal_data.values()],
-        "name": list(terminal_data.keys()),
-        "emv": [f"${n['value']}K" for n in terminal_data.values()],
-        "node_type": ["Terminal"] * len(terminal_data),
-    }
-)
 
-# Decision nodes - squares
+decision_src = _src(decision_nodes, "Decision")
+chance_src = _src(chance_nodes, "Chance")
+terminal_src = _src(terminal_nodes, "Terminal")
+
+# Decision nodes — squares (width/height in data units ≈ pixels)
 r_dec = p.rect(
     "x",
     "y",
-    width=68,
-    height=68,
+    width=100,
+    height=100,
     source=decision_src,
     fill_color=COLOR_DECISION,
-    fill_alpha=0.92,
-    line_color=BORDER_DECISION,
-    line_width=4,
+    fill_alpha=0.90,
+    line_color=INK,
+    line_width=3,
 )
 
-# Chance nodes - circles
+# Chance nodes — circles (size in screen px)
 r_ch = p.scatter(
     "x",
     "y",
     source=chance_src,
-    size=58,
+    size=80,
     marker="circle",
     fill_color=COLOR_CHANCE,
-    fill_alpha=0.92,
-    line_color=BORDER_CHANCE,
-    line_width=4,
+    fill_alpha=0.90,
+    line_color=INK,
+    line_width=3,
 )
 
-# Terminal nodes - right-pointing triangles
+# Terminal nodes — right-pointing triangles (larger than predecessor)
 r_term = p.scatter(
     "x",
     "y",
     source=terminal_src,
-    size=50,
+    size=78,
     marker="triangle",
     fill_color=COLOR_TERMINAL,
-    fill_alpha=0.92,
-    line_color=BORDER_TERMINAL,
-    line_width=4,
+    fill_alpha=0.90,
+    line_color=INK,
+    line_width=3,
     angle=np.pi / 2,
 )
 
-# HoverTool for interactive node inspection
-hover = HoverTool(
-    renderers=[r_dec, r_ch, r_term],
-    tooltips="""
-    <div style="font-size:16px; padding:8px;">
-        <b>@name</b> (@node_type)<br/>
-        Value: <b>@emv</b>
-    </div>
-    """,
-    point_policy="snap_to_data",
+# Interactive hover
+p.add_tools(
+    HoverTool(
+        renderers=[r_dec, r_ch, r_term],
+        tooltips=f"""
+        <div style="font-size:18px;padding:8px;background:{ELEVATED_BG};
+                    color:{INK};border-radius:4px;border:1px solid {INK_SOFT};">
+            <b>@name</b> (@node_type)<br/>Value: <b>@emv</b>
+        </div>
+        """,
+        point_policy="snap_to_data",
+    )
 )
-p.add_tools(hover)
 
-# Value labels on each node
+# Node labels — placed in data coordinates to avoid overlapping node shapes.
+# Decision/chance: label bottom 70–75 data units above node centre (clears shape top).
+# Terminal: label top 65 data units below node centre (clears triangle bottom).
 for _nid, nd in nodes.items():
     if nd["type"] == "terminal":
-        text = f"${nd['value']}K"
-        y_off = 40
-        fsize = "20pt"
+        p.add_layout(
+            Label(
+                x=nd["x"],
+                y=nd["y"] - 65,  # below triangle
+                text=f"${nd['value']}K",
+                text_font_size="20pt",
+                text_font_style="bold",
+                text_align="center",
+                text_baseline="top",
+                text_color=INK,
+            )
+        )
     else:
-        text = f"EMV ${nd['value']}K"
-        y_off = 46
-        fsize = "19pt"
+        # Square half-height = 50 data units → label bottom at y+75 clears top edge
+        offset = 75 if nd["type"] == "decision" else 60
+        p.add_layout(
+            Label(
+                x=nd["x"],
+                y=nd["y"] + offset,
+                text=f"EMV ${nd['value']}K",
+                text_font_size="19pt",
+                text_font_style="bold",
+                text_align="center",
+                text_baseline="bottom",
+                text_color=INK,
+            )
+        )
 
-    lbl = Label(
-        x=nd["x"],
-        y=nd["y"],
-        text=text,
-        text_font_size=fsize,
-        text_font_style="bold",
-        text_align="center",
-        text_baseline="bottom",
-        y_offset=y_off,
-        text_color="#1A1A1A",
-    )
-    p.add_layout(lbl)
+# Legend — top-left corner
+leg_x = 30
+leg_y0 = 1720
+leg_gap = 62
 
-# Legend (top-left area)
-legend_y_start = 1190
-legend_spacing = 48
-legend_x = 30
-
-legend_entries = [
-    ("decision", COLOR_DECISION, "square", "Decision Node"),
-    ("chance", COLOR_CHANCE, "circle", "Chance Node"),
-    ("terminal", COLOR_TERMINAL, "triangle", "Terminal Node"),
-]
-
-for i, (ntype, color, marker, text) in enumerate(legend_entries):
-    ly = legend_y_start - i * legend_spacing
+for i, (ntype, color, marker, label) in enumerate(
+    [
+        ("decision", COLOR_DECISION, "square", "Decision Node"),
+        ("chance", COLOR_CHANCE, "circle", "Chance Node"),
+        ("terminal", COLOR_TERMINAL, "triangle", "Terminal Node"),
+    ]
+):
+    ly = leg_y0 - i * leg_gap
     angle = np.pi / 2 if ntype == "terminal" else 0
-    p.scatter([legend_x], [ly], size=20, marker=marker, fill_color=color, line_color="#333", line_width=2, angle=angle)
-    p.add_layout(Label(x=legend_x, y=ly, text=text, text_font_size="20pt", x_offset=18, text_baseline="middle"))
+    p.scatter([leg_x + 18], [ly], size=24, marker=marker, fill_color=color, line_color=INK, line_width=2, angle=angle)
+    p.add_layout(
+        Label(
+            x=leg_x + 18,
+            y=ly,
+            text=label,
+            text_font_size="20pt",
+            text_color=INK_SOFT,
+            x_offset=22,
+            text_baseline="middle",
+        )
+    )
 
-# Pruned branch legend entry
-ly = legend_y_start - 3 * legend_spacing
-p.line([legend_x - 12, legend_x + 12], [ly, ly], line_width=4, line_dash=[10, 6], line_color=COLOR_EDGE, line_alpha=0.5)
-cs = 7
+# Pruned legend entry
+ly = leg_y0 - 3 * leg_gap
+p.line([leg_x + 5, leg_x + 32], [ly, ly], line_width=4, line_dash=[10, 6], line_color=INK_SOFT, line_alpha=0.55)
+cs = 9
 p.multi_line(
-    [[legend_x - cs, legend_x + cs], [legend_x - cs, legend_x + cs]],
+    [[leg_x + 18 - cs, leg_x + 18 + cs], [leg_x + 18 - cs, leg_x + 18 + cs]],
     [[ly - cs, ly + cs], [ly + cs, ly - cs]],
     line_width=4,
     line_color=COLOR_PRUNE,
-    line_alpha=0.7,
+    line_alpha=0.75,
 )
 p.add_layout(
-    Label(x=legend_x, y=ly, text="Pruned (suboptimal)", text_font_size="20pt", x_offset=22, text_baseline="middle")
+    Label(
+        x=leg_x + 18,
+        y=ly,
+        text="Pruned (suboptimal)",
+        text_font_size="20pt",
+        text_color=INK_SOFT,
+        x_offset=22,
+        text_baseline="middle",
+    )
 )
 
-# Style
-p.title.text_font_size = "36pt"
+# Theme-adaptive chrome
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "normal"
-p.title.text_color = "#2C3E50"
+p.title.text_color = INK
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
-p.outline_line_color = None
-p.background_fill_color = "#F7F9FB"
-p.border_fill_color = "#F7F9FB"
-p.min_border_left = 60
-p.min_border_right = 60
-p.min_border_top = 40
-p.min_border_bottom = 40
+p.outline_line_color = INK_SOFT
+p.outline_line_alpha = 0.25
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save interactive HTML (required catalog artifact)
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot via headless Chrome — same pattern as highcharts.py.
+# window-size must match figure width/height exactly so the bokeh canvas fills
+# the viewport without white space.
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+# Force exact viewport dimensions via CDP — avoids the ~139 px browser-chrome
+# overhead that headless Chrome subtracts from --window-size height.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh JS render
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
