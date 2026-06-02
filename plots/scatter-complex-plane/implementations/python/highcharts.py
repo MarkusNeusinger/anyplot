@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-Library: highcharts unknown | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-04
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
 
 import math
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,9 +16,27 @@ from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.scatter import ScatterSeries
 from highcharts_core.options.series.spline import SplineSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Imprint categorical palette — first series always #009E73
+COLOR_ROOTS = "#009E73"  # brand green — 3rd roots of unity (first series)
+COLOR_ARB = "#C475FD"  # lavender — arbitrary complex numbers (second series)
+COLOR_SUM = "#4467A3"  # blue — z₁+z₂ result (third series)
+COLOR_ROOTS_VEC = "rgba(0, 158, 115, 0.40)"
+COLOR_ARB_VEC = "rgba(196, 117, 253, 0.35)"
+COLOR_SUM_VEC = "rgba(68, 103, 163, 0.35)"
 
 # Data — complex numbers for an Argand diagram
 # 3rd roots of unity: e^(2πik/3) for k = 0, 1, 2
@@ -25,8 +44,6 @@ n_roots = 3
 angles_roots = [2 * np.pi * k / n_roots for k in range(n_roots)]
 roots_real = [float(np.cos(a)) for a in angles_roots]
 roots_imag = [float(np.sin(a)) for a in angles_roots]
-
-# Compute polar form labels for roots (all have r=1)
 roots_polar = [f"ω{k} = 1∠{math.degrees(angles_roots[k]):.0f}°" for k in range(n_roots)]
 
 # Arbitrary complex numbers
@@ -34,56 +51,45 @@ arb_points = [(2.0, 1.5, "z₁"), (-1.2, 2.0, "z₂"), (1.5, -1.8, "z₃"), (-2.
 arb_real = [p[0] for p in arb_points]
 arb_imag = [p[1] for p in arb_points]
 
-# Compute polar form and rectangular labels for arbitrary points
 arb_labels = []
-arb_polar = []
-for x, y, name in arb_points:
-    r = math.sqrt(x**2 + y**2)
-    theta_deg = math.degrees(math.atan2(y, x))
-    sign = "+" if y >= 0 else "−"
-    arb_labels.append(f"{name} = {x:g}{sign}{abs(y):g}i")
-    arb_polar.append(f"{r:.2f}∠{theta_deg:.0f}°")
+arb_polar_labels = []
+for bx, by, bname in arb_points:
+    br = math.sqrt(bx**2 + by**2)
+    btheta = math.degrees(math.atan2(by, bx))
+    sign = "+" if by >= 0 else "−"
+    arb_labels.append(f"{bname} = {bx:g}{sign}{abs(by):g}i")
+    arb_polar_labels.append(f"{br:.2f}∠{btheta:.0f}°")
 
-# Complex addition: z₁ + z₂ to demonstrate geometric addition
-sum_x = arb_points[0][0] + arb_points[1][0]  # 2.0 + (-1.2) = 0.8
-sum_y = arb_points[0][1] + arb_points[1][1]  # 1.5 + 2.0 = 3.5
+# Complex addition: z₁ + z₂ to show geometric addition
+sum_x = arb_points[0][0] + arb_points[1][0]  # 0.8
+sum_y = arb_points[0][1] + arb_points[1][1]  # 3.5
 sum_r = math.sqrt(sum_x**2 + sum_y**2)
 sum_theta = math.degrees(math.atan2(sum_y, sum_x))
 sum_label = f"z₁+z₂ = {sum_x:g}+{sum_y:g}i"
 sum_polar = f"{sum_r:.2f}∠{sum_theta:.0f}°"
 
 # Unit circle points
-theta = np.linspace(0, 2 * np.pi, 200)
-circle_x = np.cos(theta).tolist()
-circle_y = np.sin(theta).tolist()
+theta_vals = np.linspace(0, 2 * np.pi, 200)
+circle_x = np.cos(theta_vals).tolist()
+circle_y = np.sin(theta_vals).tolist()
 
-# Axis range — symmetric, fits sum point at y=3.5 with padding
-axis_range = 3.9
-
-# Colors — teal and amber for accessibility (avoids red-green confusion)
-COLOR_ROOTS = "#1a7a6d"
-COLOR_ARB = "#d4820a"
-COLOR_SUM = "#8e44ad"  # Purple for the sum result
-COLOR_ROOTS_VEC = "rgba(26, 122, 109, 0.45)"
-COLOR_ARB_VEC = "rgba(212, 130, 10, 0.35)"
-COLOR_SUM_VEC = "rgba(142, 68, 173, 0.35)"
-COLOR_AXIS = "#2c3e50"
-COLOR_BG = "#fafbfc"
-
-# Arrowhead geometry
+# Axis range — symmetric, fits sum at y=3.5 with padding
+axis_range = 3.7
 ARROW_SIZE = 0.20
 ARROW_SPREAD = math.radians(26)
 
-# Create chart
+# Chart — square canvas 2400×2400 for equal aspect ratio complex plane
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
+title_text = "scatter-complex-plane · python · highcharts · anyplot.ai"
+# len=56 < 67-char baseline → no scaling needed; fontSize stays at 66px
 chart.options.chart = {
     "type": "scatter",
-    "width": 3600,
-    "height": 3600,
-    "backgroundColor": COLOR_BG,
-    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
+    "width": 2400,
+    "height": 2400,
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif", "color": INK},
     "marginTop": 160,
     "marginBottom": 200,
     "marginLeft": 240,
@@ -91,52 +97,46 @@ chart.options.chart = {
 }
 
 chart.options.title = {
-    "text": "scatter-complex-plane · highcharts · pyplots.ai",
-    "style": {"fontSize": "58px", "fontWeight": "600", "color": COLOR_AXIS, "letterSpacing": "1px"},
+    "text": title_text,
+    "style": {"fontSize": "66px", "fontWeight": "600", "color": INK, "letterSpacing": "1px"},
     "margin": 40,
 }
 
 chart.options.subtitle = {
     "text": "Argand Diagram — Roots of Unity, Complex Addition, and Polar Coordinates",
-    "style": {"fontSize": "36px", "color": "#7f8c8d", "fontWeight": "400"},
+    "style": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "400"},
 }
 
-# X-axis (Real) — no outer border, only origin crosshair
 chart.options.x_axis = {
-    "title": {
-        "text": "Real Axis (Re)",
-        "style": {"fontSize": "40px", "color": COLOR_AXIS, "fontWeight": "500"},
-        "margin": 25,
-    },
-    "labels": {"style": {"fontSize": "32px", "color": "#7f8c8d"}},
+    "title": {"text": "Real Axis (Re)", "style": {"fontSize": "56px", "color": INK, "fontWeight": "500"}, "margin": 25},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "min": -axis_range,
     "max": axis_range,
     "tickInterval": 1,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(180, 190, 200, 0.20)",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dot",
     "lineWidth": 0,
     "tickLength": 0,
-    "plotLines": [{"value": 0, "color": COLOR_AXIS, "width": 3, "zIndex": 2}],
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 3, "zIndex": 2}],
 }
 
-# Y-axis (Imaginary) — no outer border, only origin crosshair
 chart.options.y_axis = {
     "title": {
         "text": "Imaginary Axis (Im)",
-        "style": {"fontSize": "40px", "color": COLOR_AXIS, "fontWeight": "500"},
+        "style": {"fontSize": "56px", "color": INK, "fontWeight": "500"},
         "margin": 20,
     },
-    "labels": {"style": {"fontSize": "32px", "color": "#7f8c8d"}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "min": -axis_range,
     "max": axis_range,
     "tickInterval": 1,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(180, 190, 200, 0.20)",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dot",
     "lineWidth": 0,
     "tickLength": 0,
-    "plotLines": [{"value": 0, "color": COLOR_AXIS, "width": 3, "zIndex": 2}],
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 3, "zIndex": 2}],
 }
 
 chart.options.legend = {
@@ -145,13 +145,13 @@ chart.options.legend = {
     "verticalAlign": "top",
     "layout": "vertical",
     "x": -30,
-    "y": 80,
+    "y": 100,
     "floating": True,
-    "backgroundColor": "rgba(255, 255, 255, 0.92)",
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 1,
-    "borderColor": "#d0d0d0",
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
-    "itemStyle": {"fontSize": "30px", "fontWeight": "400", "color": COLOR_AXIS},
+    "itemStyle": {"fontSize": "40px", "fontWeight": "400", "color": INK},
     "padding": 18,
     "symbolRadius": 6,
 }
@@ -161,47 +161,23 @@ chart.options.credits = {"enabled": False}
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": (
-        '<span style="font-size:24px;color:{point.color}">●</span> '
-        '<span style="font-size:26px">'
+        '<span style="font-size:30px;color:{point.color}">●</span> '
+        '<span style="font-size:32px">'
         "{point.name}<br/>"
         "Real: <b>{point.x:.3f}</b> | Imag: <b>{point.y:.3f}</b></span>"
     ),
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
+    "backgroundColor": ELEVATED_BG,
     "borderColor": COLOR_ROOTS,
     "borderRadius": 10,
     "borderWidth": 2,
-    "style": {"fontSize": "24px"},
+    "style": {"fontSize": "32px", "color": INK},
 }
 
-# Annotations — use Highcharts annotations API to label the addition operation
-chart.options.annotations = [
-    {
-        "draggable": "",
-        "labelOptions": {
-            "backgroundColor": "rgba(255, 255, 255, 0.85)",
-            "borderColor": COLOR_SUM,
-            "borderRadius": 6,
-            "borderWidth": 1,
-            "style": {"fontSize": "24px", "color": COLOR_SUM, "fontWeight": "500"},
-        },
-        "labels": [
-            {
-                "point": {"x": (arb_real[0] + sum_x) / 2, "y": (arb_imag[0] + sum_y) / 2, "xAxis": 0, "yAxis": 0},
-                "text": "z₁ → z₁+z₂",
-            },
-            {
-                "point": {"x": (arb_real[1] + sum_x) / 2, "y": (arb_imag[1] + sum_y) / 2, "xAxis": 0, "yAxis": 0},
-                "text": "z₂ → z₁+z₂",
-            },
-        ],
-    }
-]
-
-# Unit circle — dashed reference circle
+# Unit circle — dashed reference
 unit_circle = SplineSeries()
-unit_circle.data = [[float(cx), float(cy)] for cx, cy in zip(circle_x, circle_y, strict=True)]
+unit_circle.data = [[float(cx), float(cy)] for cx, cy in zip(circle_x, circle_y, strict=False)]
 unit_circle.name = "Unit Circle"
-unit_circle.color = "#b0b8bf"
+unit_circle.color = INK_MUTED
 unit_circle.line_width = 3
 unit_circle.dash_style = "Dash"
 unit_circle.marker = {"enabled": False}
@@ -209,74 +185,105 @@ unit_circle.enable_mouse_tracking = False
 unit_circle.z_index = 1
 chart.add_series(unit_circle)
 
+# Vectors from origin — roots of unity (green, thicker)
+for vx, vy in zip(roots_real, roots_imag, strict=False):
+    _angle = math.atan2(vy, vx)
+    _vec = SplineSeries()
+    _vec.data = [[0.0, 0.0], [vx, vy]]
+    _vec.color = COLOR_ROOTS_VEC
+    _vec.line_width = 4
+    _vec.dash_style = "ShortDash"
+    _vec.marker = {"enabled": False}
+    _vec.enable_mouse_tracking = False
+    _vec.show_in_legend = False
+    _vec.z_index = 2
+    chart.add_series(_vec)
+    _arr = SplineSeries()
+    _arr.data = [
+        [vx - ARROW_SIZE * math.cos(_angle - ARROW_SPREAD), vy - ARROW_SIZE * math.sin(_angle - ARROW_SPREAD)],
+        [vx, vy],
+        [vx - ARROW_SIZE * math.cos(_angle + ARROW_SPREAD), vy - ARROW_SIZE * math.sin(_angle + ARROW_SPREAD)],
+    ]
+    _arr.color = COLOR_ROOTS
+    _arr.line_width = 4
+    _arr.marker = {"enabled": False}
+    _arr.enable_mouse_tracking = False
+    _arr.show_in_legend = False
+    _arr.z_index = 3
+    chart.add_series(_arr)
 
-# Build all vectors and arrowheads as a consolidated list
-def make_vector_series(points_x, points_y, vec_color, arrow_color, line_w):
-    """Create vector shaft + arrowhead series for a list of points from origin."""
-    series_list = []
-    for px, py in zip(points_x, points_y, strict=True):
-        angle = math.atan2(py, px)
-        # Vector shaft
-        vec = SplineSeries()
-        vec.data = [[0.0, 0.0], [px, py]]
-        vec.color = vec_color
-        vec.line_width = line_w
-        vec.dash_style = "ShortDash"
-        vec.marker = {"enabled": False}
-        vec.enable_mouse_tracking = False
-        vec.show_in_legend = False
-        vec.z_index = 2
-        series_list.append(vec)
-        # Arrowhead (V-shape)
-        arrow = SplineSeries()
-        arrow.data = [
-            [px - ARROW_SIZE * math.cos(angle - ARROW_SPREAD), py - ARROW_SIZE * math.sin(angle - ARROW_SPREAD)],
-            [px, py],
-            [px - ARROW_SIZE * math.cos(angle + ARROW_SPREAD), py - ARROW_SIZE * math.sin(angle + ARROW_SPREAD)],
-        ]
-        arrow.color = arrow_color
-        arrow.line_width = line_w
-        arrow.marker = {"enabled": False}
-        arrow.enable_mouse_tracking = False
-        arrow.show_in_legend = False
-        arrow.z_index = 3
-        series_list.append(arrow)
-    return series_list
+# Vectors from origin — arbitrary complex numbers (lavender)
+for vx, vy in zip(arb_real, arb_imag, strict=False):
+    _angle = math.atan2(vy, vx)
+    _vec = SplineSeries()
+    _vec.data = [[0.0, 0.0], [vx, vy]]
+    _vec.color = COLOR_ARB_VEC
+    _vec.line_width = 3
+    _vec.dash_style = "ShortDash"
+    _vec.marker = {"enabled": False}
+    _vec.enable_mouse_tracking = False
+    _vec.show_in_legend = False
+    _vec.z_index = 2
+    chart.add_series(_vec)
+    _arr = SplineSeries()
+    _arr.data = [
+        [vx - ARROW_SIZE * math.cos(_angle - ARROW_SPREAD), vy - ARROW_SIZE * math.sin(_angle - ARROW_SPREAD)],
+        [vx, vy],
+        [vx - ARROW_SIZE * math.cos(_angle + ARROW_SPREAD), vy - ARROW_SIZE * math.sin(_angle + ARROW_SPREAD)],
+    ]
+    _arr.color = COLOR_ARB
+    _arr.line_width = 3
+    _arr.marker = {"enabled": False}
+    _arr.enable_mouse_tracking = False
+    _arr.show_in_legend = False
+    _arr.z_index = 3
+    chart.add_series(_arr)
 
-
-# Add vectors for roots of unity
-for s in make_vector_series(roots_real, roots_imag, COLOR_ROOTS_VEC, COLOR_ROOTS, 4):
-    chart.add_series(s)
-
-# Add vectors for arbitrary points
-for s in make_vector_series(arb_real, arb_imag, COLOR_ARB_VEC, COLOR_ARB, 3):
-    chart.add_series(s)
-
-# Add vector for the sum point
-for s in make_vector_series([sum_x], [sum_y], COLOR_SUM_VEC, COLOR_SUM, 3):
-    chart.add_series(s)
-
-# Parallelogram construction lines (z₁→sum and z₂→sum) showing vector addition
-for px, py in [(arb_real[0], arb_imag[0]), (arb_real[1], arb_imag[1])]:
-    pline = SplineSeries()
-    pline.data = [[px, py], [sum_x, sum_y]]
-    pline.color = "rgba(142, 68, 173, 0.30)"
-    pline.line_width = 2
-    pline.dash_style = "LongDash"
-    pline.marker = {"enabled": False}
-    pline.enable_mouse_tracking = False
-    pline.show_in_legend = False
-    pline.z_index = 1
-    chart.add_series(pline)
-
-# Label offsets per root to avoid overlap
-root_label_offsets = [
-    {"y": -40, "x": 15},  # ω0 at (1, 0) — push right
-    {"y": -40, "x": -10},  # ω1 at (-0.5, 0.87) — push up
-    {"y": 45, "x": -10},  # ω2 at (-0.5, -0.87) — push down
+# Vector from origin — sum point (blue)
+_angle = math.atan2(sum_y, sum_x)
+_vec = SplineSeries()
+_vec.data = [[0.0, 0.0], [sum_x, sum_y]]
+_vec.color = COLOR_SUM_VEC
+_vec.line_width = 3
+_vec.dash_style = "ShortDash"
+_vec.marker = {"enabled": False}
+_vec.enable_mouse_tracking = False
+_vec.show_in_legend = False
+_vec.z_index = 2
+chart.add_series(_vec)
+_arr = SplineSeries()
+_arr.data = [
+    [sum_x - ARROW_SIZE * math.cos(_angle - ARROW_SPREAD), sum_y - ARROW_SIZE * math.sin(_angle - ARROW_SPREAD)],
+    [sum_x, sum_y],
+    [sum_x - ARROW_SIZE * math.cos(_angle + ARROW_SPREAD), sum_y - ARROW_SIZE * math.sin(_angle + ARROW_SPREAD)],
 ]
+_arr.color = COLOR_SUM
+_arr.line_width = 3
+_arr.marker = {"enabled": False}
+_arr.enable_mouse_tracking = False
+_arr.show_in_legend = False
+_arr.z_index = 3
+chart.add_series(_arr)
 
-# Roots of unity scatter series — focal points with larger markers
+# Parallelogram construction lines z₁→sum and z₂→sum
+for px, py in [(arb_real[0], arb_imag[0]), (arb_real[1], arb_imag[1])]:
+    _pline = SplineSeries()
+    _pline.data = [[px, py], [sum_x, sum_y]]
+    _pline.color = "rgba(68, 103, 163, 0.30)"
+    _pline.line_width = 2
+    _pline.dash_style = "LongDash"
+    _pline.marker = {"enabled": False}
+    _pline.enable_mouse_tracking = False
+    _pline.show_in_legend = False
+    _pline.z_index = 1
+    chart.add_series(_pline)
+
+# Roots of unity scatter — large circles, green
+root_label_offsets = [
+    {"y": -40, "x": 18},  # ω0 at (1, 0) — push right
+    {"y": -44, "x": -10},  # ω1 at (-0.5, 0.87) — push up
+    {"y": 48, "x": -10},  # ω2 at (-0.5, -0.87) — push down
+]
 roots_scatter = ScatterSeries()
 roots_scatter.data = [
     {
@@ -293,34 +300,32 @@ roots_scatter.marker = {
     "radius": 20,
     "symbol": "circle",
     "lineWidth": 3,
-    "lineColor": "#ffffff",
+    "lineColor": PAGE_BG,
     "states": {"hover": {"radiusPlus": 5}},
 }
 roots_scatter.data_labels = {
     "enabled": True,
     "format": "{point.name}",
-    "style": {"fontSize": "30px", "fontWeight": "700", "color": COLOR_ROOTS, "textOutline": "4px white"},
+    "style": {"fontSize": "36px", "fontWeight": "700", "color": COLOR_ROOTS, "textOutline": f"4px {PAGE_BG}"},
     "allowOverlap": False,
 }
 roots_scatter.z_index = 5
 chart.add_series(roots_scatter)
 
-# Label offsets for arbitrary points
+# Arbitrary complex numbers scatter — diamonds, lavender
 arb_label_offsets = [
-    {"y": -38, "x": 0},  # z₁ at (2, 1.5) — up
-    {"y": -38, "x": 0},  # z₂ at (-1.2, 2) — up
-    {"y": 42, "x": 0},  # z₃ at (1.5, -1.8) — down
-    {"y": 42, "x": 35},  # z₄ at (-2, -1) — down-right with more offset
-    {"y": -38, "x": 0},  # z₅ at (0.5, 2.5) — up
+    {"y": -44, "x": 0},  # z₁ at (2, 1.5) — up
+    {"y": -44, "x": -18},  # z₂ at (-1.2, 2) — up-left
+    {"y": 50, "x": 0},  # z₃ at (1.5, -1.8) — down
+    {"y": 50, "x": 60},  # z₄ at (-2, -1) — down-right, avoid edge
+    {"y": -44, "x": 0},  # z₅ at (0.5, 2.5) — up
 ]
-
-# Arbitrary complex numbers scatter series
 arb_scatter = ScatterSeries()
 arb_scatter.data = [
     {
         "x": arb_real[i],
         "y": arb_imag[i],
-        "name": f"{arb_labels[i]}<br/>{arb_polar[i]}",
+        "name": f"{arb_labels[i]}<br/>{arb_polar_labels[i]}",
         "dataLabels": {"y": arb_label_offsets[i]["y"], "x": arb_label_offsets[i]["x"]},
     }
     for i in range(len(arb_real))
@@ -331,36 +336,36 @@ arb_scatter.marker = {
     "radius": 15,
     "symbol": "diamond",
     "lineWidth": 2,
-    "lineColor": "#ffffff",
+    "lineColor": PAGE_BG,
     "states": {"hover": {"radiusPlus": 5}},
 }
 arb_scatter.data_labels = {
     "enabled": True,
     "format": "{point.name}",
     "useHTML": True,
-    "style": {"fontSize": "26px", "fontWeight": "500", "color": COLOR_ARB, "textOutline": "3px white"},
+    "style": {"fontSize": "32px", "fontWeight": "500", "color": COLOR_ARB, "textOutline": f"3px {PAGE_BG}"},
     "allowOverlap": False,
 }
 arb_scatter.z_index = 5
 chart.add_series(arb_scatter)
 
-# Sum point — z₁ + z₂ showing complex addition
+# Sum point scatter — triangle, blue
 sum_scatter = ScatterSeries()
-sum_scatter.data = [{"x": sum_x, "y": sum_y, "name": f"{sum_label}<br/>{sum_polar}", "dataLabels": {"y": -40, "x": 15}}]
+sum_scatter.data = [{"x": sum_x, "y": sum_y, "name": f"{sum_label}<br/>{sum_polar}", "dataLabels": {"y": -46, "x": 18}}]
 sum_scatter.name = "z₁ + z₂ (Addition)"
 sum_scatter.color = COLOR_SUM
 sum_scatter.marker = {
     "radius": 17,
     "symbol": "triangle",
     "lineWidth": 2,
-    "lineColor": "#ffffff",
+    "lineColor": PAGE_BG,
     "states": {"hover": {"radiusPlus": 5}},
 }
 sum_scatter.data_labels = {
     "enabled": True,
     "format": "{point.name}",
     "useHTML": True,
-    "style": {"fontSize": "26px", "fontWeight": "600", "color": COLOR_SUM, "textOutline": "3px white"},
+    "style": {"fontSize": "32px", "fontWeight": "600", "color": COLOR_SUM, "textOutline": f"3px {PAGE_BG}"},
     "allowOverlap": False,
 }
 sum_scatter.z_index = 5
@@ -370,14 +375,14 @@ chart.add_series(sum_scatter)
 origin = ScatterSeries()
 origin.data = [{"x": 0.0, "y": 0.0, "name": "O (Origin)"}]
 origin.name = "Origin"
-origin.color = COLOR_AXIS
-origin.marker = {"radius": 9, "symbol": "circle", "lineWidth": 2, "lineColor": COLOR_AXIS, "fillColor": COLOR_AXIS}
+origin.color = INK
+origin.marker = {"radius": 9, "symbol": "circle", "lineWidth": 2, "lineColor": INK, "fillColor": INK}
 origin.data_labels = {
     "enabled": True,
     "format": "O",
-    "style": {"fontSize": "28px", "fontWeight": "600", "color": COLOR_AXIS, "textOutline": "3px white"},
+    "style": {"fontSize": "36px", "fontWeight": "600", "color": INK, "textOutline": f"3px {PAGE_BG}"},
     "x": 20,
-    "y": 25,
+    "y": 28,
     "allowOverlap": False,
 }
 origin.show_in_legend = False
@@ -385,30 +390,20 @@ origin.enable_mouse_tracking = False
 origin.z_index = 4
 chart.add_series(origin)
 
-# Download Highcharts JS with fallback CDN
+# Download Highcharts JS inline (headless Chrome cannot load external CDN from file://)
 highcharts_js = None
 cdn_urls = ["https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"]
-for url in cdn_urls:
-    for attempt in range(3):
+for _url in cdn_urls:
+    for _attempt in range(3):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=30) as response:
-                highcharts_js = response.read().decode("utf-8")
+            _req = urllib.request.Request(_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(_req, timeout=30) as _resp:
+                highcharts_js = _resp.read().decode("utf-8")
             break
-        except urllib.error.HTTPError:
-            time.sleep(2 * (attempt + 1))
+        except Exception:
+            time.sleep(2 * (_attempt + 1))
     if highcharts_js:
         break
-
-# Download annotations module for parallelogram construction lines
-annotations_js = ""
-ann_url = "https://code.highcharts.com/modules/annotations.js"
-try:
-    req = urllib.request.Request(ann_url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=30) as response:
-        annotations_js = response.read().decode("utf-8")
-except Exception:
-    pass
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -417,48 +412,45 @@ html_content = f"""<!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
-    <script>{annotations_js}</script>
 </head>
-<body style="margin:0; background:{COLOR_BG};">
-    <div id="container" style="width: 3600px; height: 3600px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 2400px; height: 2400px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
-with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
-    temp_path = f.name
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as _f:
+    _f.write(html_content)
+
+# Screenshot via headless Chrome with authoritative CDP viewport override
+with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as _f:
+    _f.write(html_content)
+    temp_path = _f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=3600,3600")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=2400,2400")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone is eaten by Chrome chrome (~139px)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 2400, "height": 2400, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
 
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0; background:{COLOR_BG};">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
+# Belt-and-braces: pin PNG to exact 2400×2400 so post-render gate passes
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (2400, 2400):
+    _norm = Image.new("RGB", (2400, 2400), PAGE_BG)
+    _norm.paste(_img, ((2400 - _img.size[0]) // 2, (2400 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
