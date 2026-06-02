@@ -1,92 +1,107 @@
 library: bokeh
+language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:26:34Z'
-updated: '2026-03-06T21:07:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22780525045
+updated: '2026-06-02T12:13:43Z'
+generated_by: claude-sonnet
+workflow_run: 26817320468
 issue: 4421
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/bokeh/plot.html
-quality_score: 79
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - 'Excellent data choice: real CREB1 binding motif with scientifically accurate
-    frequencies'
-  - Y-range now tightly fits the data, fixing the major layout issue from previous
-    attempts
-  - HoverTool adds genuine Bokeh-distinctive interactivity
-  - Legend correctly maps all four bases to colors
-  - 'Perfect code quality: clean KISS structure, deterministic data, all imports used'
-  - Font scaling math (PT_SCALE) is a sophisticated approach to approximate glyph
-    filling
+  - Fully theme-adaptive chrome; both renders pass legibility check without any dark-on-dark
+    or light-on-light failure
+  - Semantic Imprint palette mapping (A=green, C=blue, G=ochre, T=red) correct per
+    both DNA convention and Imprint spec
+  - Box highlights for conserved positions and 1-bit reference line add meaningful
+    interpretive context
+  - Rich HoverTool with per-segment data (position, base, frequency, IC contribution)
+    makes HTML artifact genuinely useful
+  - Deterministic CREB1 data is scientifically accurate and professionally contextualized
+  - Dynamic letter font sizing with MIN_TEXT_HEIGHT gating correctly prevents unreadable
+    micro-labels
   weaknesses:
-  - Letters are white text on colored rectangles rather than colored stretched letter
-    glyphs — Bokeh limitation
-  - Low-IC positions (1, 10) have cramped, barely readable tiny letter stacks
-  - No visual emphasis or annotation highlighting the conserved core motif region
-  image_description: The plot displays a CREB1 transcription factor binding motif
-    as a sequence logo across 10 positions. Each position shows vertically stacked
-    colored rectangles (A=green, C=blue, G=orange, T=red) with white bold letter labels
-    centered on them. The y-axis shows "Information content (bits)" ranging from 0
-    to approximately 1.2 bits, tightly fitting the data. The x-axis shows "Position"
-    numbered 1-10. Position 3 (G dominant) is the tallest stack at ~1.15 bits. Positions
-    4, 5, 6, and 8 reach ~0.97 bits showing strong C, G, and A conservation. Positions
-    2 and 7 show moderate conservation (~0.53-0.65 bits) with T dominant. Positions
-    1 and 10 have very low information content with small cramped letter blocks near
-    the baseline. The background is light gray (#FAFAFA) with no grid lines or outline.
-    A legend on the right maps colored squares to each base (A, C, G, T). The title
-    reads "CREB1 Binding Motif · sequence-logo-basic · bokeh · pyplots.ai". The column
-    width is well-proportioned at 0.82 units with thin white separators between rectangles.
+  - Letter glyphs use proportionally-sized text overlaid on colored rectangles rather
+    than truly vertically-stretched letter shapes (spec requires stretched glyphs
+    to fill allocated height) — colored rect + text approach is the practical Bokeh
+    solution but does not achieve the distorted-glyph aesthetic of canonical sequence
+    logos
+  - PT_SCALE / WIDTH_BASED_PT pixel arithmetic block is verbose and could be condensed
+    without loss of function
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "CREB1 Binding Motif · sequence-logo-basic · python · bokeh · anyplot.ai" in dark ink, bold, fully readable. Axis labels "Position" and "Information content (bits)" in dark INK (42pt). Tick labels in INK_SOFT (34pt), clearly readable. "1 bit" reference annotation visible in INK_SOFT italic.
+      Data: A=#009E73 (brand green), C=#4467A3 (Imprint blue), G=#BD8233 (Imprint ochre), T=#AE3030 (Imprint matte red). White letter glyphs overlaid on bar segments. Tall conserved bars at positions 3 (G), 4 (A), 5 (C), 6 (G), 8 (C), 9 (A). Short near-random bars at positions 1, 7, 10.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failure
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light #F0EFE8 ink, clearly readable. Axis labels and tick labels in light INK/INK_SOFT tokens. Legend background switches to #242420 (ELEVATED_BG). "1 bit" annotation visible against dark background.
+      Data: Colors identical to light render — A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030. White letter glyphs still readable on colored backgrounds.
+      Legibility verdict: PASS — no dark-on-dark failure detected; all chrome elements correctly flip to light theme tokens
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (36pt title, 28pt labels, 24pt ticks).
-          Dynamic letter sizing 14-260pt. Tiny letters at low-IC positions 1 and 10.
+        comment: All font sizes explicitly set (title scaled by length formula, axis
+          42pt, ticks 34pt, dynamic letter sizing). Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: High-IC positions clean. Positions 1 and 10 have cramped tiny letter
-          stacks.
+        comment: No text collisions. MIN_TEXT_HEIGHT gating prevents unreadable micro-labels.
+          Base-stack letters in separate colored rectangles, no overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Dominant letters at conserved positions large and visible. Minor
-          bases at low-IC positions barely distinguishable.
+        comment: Colored bar segments and white letter glyphs clearly visible. Dynamic
+          sizing ensures legibility where bar height permits.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Standard DNA colors generally distinguishable. Green-red pairing
-          not ideal for deuteranopia.
+        comment: Imprint palette is CVD-safe. White-on-color letter text has sufficient
+          contrast. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Y-range tightly fits data. Good horizontal utilization. Legend outside
-          on right is clean.
+        comment: 3200x1800 canvas gate passed. Good margins with min_border settings.
+          Legend well-placed right. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units.
+        comment: Position (x), Information content (bits) (y) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'A=#009E73 (slot 1), C=#4467A3 (slot 3), G=#BD8233 (slot 4), T=#AE3030
+          (slot 5). Semantic exception correct. Backgrounds #FAF8F1/#1A1A17. Chrome
+          fully theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -94,80 +109,84 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bioinformatics-convention colors, clean background, intentional column
-          width and alpha. Above defaults.
+        comment: 'Intentional domain design: semantic base-color mapping, 1-bit reference
+          line, conserved-position box highlights, dynamic letter sizing. Above generic
+          default but not FiveThirtyEight publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, outline removed, ticks cleaned, subtle background,
-          clean legend styling.
+        comment: No x-grid, subtle y-grid (alpha=0.15), outline_line_color=None, clean
+          L-shaped spine setup, generous margins. Solid refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: CREB1 TGACGTCA core visually apparent through height variation. No
-          additional emphasis or annotation.
+        comment: Box highlights on conserved positions create focal points. CREB1
+          core motif (positions 3-9) immediately visible from bar height. 1-bit reference
+          aids interpretation.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Sequence logo using colored rectangles with text overlays. Approximates
-          stretched glyphs but Bokeh cannot natively stretch text.
+        comment: 'Correct sequence logo: stacked bars per position, letter overlays,
+          IC-scaled heights.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Stacking, ordering, IC scaling, standard colors, axis labels all
-          present. Stretched glyph rendering is the gap.
+        comment: 'Letters sorted by frequency ascending from bottom, IC scaling correct,
+          standard DNA color scheme, axes correct. Partial: letters are proportionally-sized
+          text on colored rects rather than truly stretched/distorted glyphs as spec
+          requires.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=information content in bits. Correct mapping.
+        comment: X-axis positions 1-10, Y-axis IC in bits up to ~1.15. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix. Legend shows all four
-          bases with matching colors.
+        comment: 'Title: CREB1 Binding Motif · sequence-logo-basic · python · bokeh
+          · anyplot.ai — correct format. Legend A/C/G/T with correct Imprint colors.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Highly conserved, moderately conserved, and variable positions all
-          represented.
+        comment: Full IC range from near-zero (positions 1, 10) to high (~1.15 bits,
+          position 3). All 4 nucleotides represented across positions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CREB1 is a real transcription factor with scientifically accurate
-          TGACGTCA consensus.
+        comment: CREB1 TF binding site is a well-known real biological motif. Neutral,
+          scientifically plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC values 0-1.15 bits appropriate for DNA. Frequencies sum to 1 per
-          position.
+        comment: Frequencies sum to 1.0 per position. Max IC ~1.15 bits plausible
+          for a 10-position TF binding site. TGACG core reflected in positions 2-6.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -175,35 +194,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, IC calculation, glyph construction,
-          figure, styling, save.'
+        comment: Imports -> tokens -> data -> glyph construction -> plot -> save.
+          No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded frequency matrix.
+        comment: Fully deterministic hardcoded data; no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. No extraneous imports.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean loop logic, elegant np.where guard, well-commented font scaling
-          math.
+        comment: PT_SCALE / WIDTH_BASED_PT pixel arithmetic block is verbose (~15
+          lines of calculation for font sizing). Justified for dynamic letter sizing
+          but could be condensed.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also generates HTML.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh API throughout.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -211,28 +231,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, figure, rect/text glyphs, Legend/LegendItem,
-          HoverTool. Idiomatic Bokeh.
+        comment: ColumnDataSource, HoverTool with per-glyph data, Legend/LegendItem
+          construction, BoxAnnotation, Span, Label — all idiomatic Bokeh patterns
+          correctly applied.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool with tooltips, dual PNG+HTML export, off-screen dummy glyph
-          legend pattern.
-  verdict: REJECTED
+        comment: Interactive HTML artifact with rich HoverTool tooltips (position,
+          base, frequency, IC) is distinctively Bokeh. Selenium viewport height compensation
+          is a solid production detail.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
-  - custom-legend
   - html-export
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - edge-highlighting
   - alpha-blending
