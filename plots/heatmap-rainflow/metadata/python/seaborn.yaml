@@ -1,108 +1,135 @@
 library: seaborn
+language: python
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:05:38Z'
-updated: '2026-03-02T21:24:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22595466381
+updated: '2026-06-02T09:49:15Z'
+generated_by: claude-sonnet
+workflow_run: 26811308314
 issue: 4465
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual quality with all font sizes explicitly set and no overlap
-  - Inferno colormap with LogNorm creates effective visualization of cycle count distribution
-  - Peak annotation with styled arrow provides clear data storytelling focal point
-  - Realistic engineering data with appropriate fatigue analysis context and MPa units
-  - Clean code structure with proper seaborn idioms (mask, cbar_kws, despine)
+  - Perfect spec compliance — all required features (colorbar, log scale, physical
+    units, zero-count masking, y-axis inversion) correctly implemented
+  - Imprint sequential colormap used correctly for continuous data, with fully theme-adaptive
+    chrome throughout both renders (warm backgrounds, INK/INK_SOFT tokens on all text
+    and grid elements)
+  - Realistic, neutral fatigue engineering data with physically accurate distribution
+    (exponential amplitude decay, Gaussian mean peak in mean stress)
+  - Seaborn mask= parameter elegantly handles zero-count bins by showing the page
+    background as fill — idiomatic seaborn usage
+  - Annotation with callout box and directional arrow provides a data storytelling
+    focal point identifying the peak cycle count region
   weaknesses:
-  - 'Minor: colorbar label set redundantly (cbar_kws and cbar.set_label)'
-  - LM-02 could be higher with additional seaborn-specific features
-  image_description: 'The plot displays a 20x20 rainflow counting matrix heatmap for
-    a steel shaft under variable-amplitude loading. The x-axis shows "Mean Stress
-    (MPa)" ranging from -42 to ~243, and the y-axis shows "Stress Amplitude (MPa)"
-    ranging from 10 to ~195, with amplitudes increasing upward (inverted y-axis per
-    engineering convention). The inferno colormap is used with a logarithmic color
-    scale: bright yellow indicates the highest cycle counts (~4,000+), transitioning
-    through orange to dark red/purple for lower counts (~1-10). A colorbar on the
-    right is labeled "Cycle Count (log scale)" with logarithmic tick marks. Zero-count
-    bins appear as light gray background, primarily in the upper rows (high amplitude),
-    where sparse isolated orange/red cells indicate rare high-stress cycles. The lower
-    region (low amplitude) is densely filled with bright yellow, showing the expected
-    exponential decay pattern. A white annotation box with "Peak: 4,073 cycles" and
-    a curved arrow points to the peak cell location at low amplitude. Subtle gray
-    cell borders separate individual bins. All spines are removed for a clean appearance.'
+  - Dense lower-half region (low amplitude, high cycle count) appears visually monotone
+    — LogNorm compresses a similar-magnitude count range into near-identical blue,
+    making individual cell count differences invisible. Consider increasing data variation
+    in the low-amplitude bins or annotating key count values directly on cells.
+  - The annotation arrow points to the peak cell inside the uniform-blue dense region,
+    but that cell is visually indistinguishable from its neighbors. Add a thin Rectangle
+    border patch around the peak cell to create a clear focal point.
+  - Tick labels at 8pt with every-other-bin labeling is at minimum size for mobile
+    readability on the 2400x2400 canvas. Consider raising to 9pt for better legibility
+    when scaled to 400px width.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white.
+      Chrome: Title "heatmap-rainflow · python · seaborn · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Stress Amplitude (MPa)" and "Mean Stress (MPa)" in INK at 10pt, readable. Tick labels in INK_SOFT (#4A4A44) at 8pt, readable (every-other-bin labeling). Colorbar label "Cycle Count (log scale)" readable. Annotation box "Peak: 4,073 cycles" with ELEVATED_BG (#FFFDF6) fill and dark text, readable.
+      Data: Imprint sequential colormap (brand green #009E73 to blue #4467A3) with LogNorm. Lower half of heatmap (low amplitude bins) shows uniformly blue high-count cells. Upper half shows sparse coverage with zero-count bins appearing as the warm off-white page background. 20x20 grid with 0.3px INK_SOFT cell borders.
+      Legibility verdict: PASS — all text clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title and axis labels in light INK (#F0EFE8), clearly readable. Tick labels in INK_SOFT (#B8B7B0), readable. Colorbar label and ticks in light colors, readable. Annotation callout box with ELEVATED_BG (#242420) fill and light text — readable. No dark-on-dark text failures.
+      Data: Data colors are identical to light render — same green-to-blue gradient. Zero-count bins appear as the near-black page background (#1A1A17), distinct from teal/blue data cells. Grid lines between cells appear as subtle light-gray lines (INK_SOFT #B8B7B0).
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar 18pt/16pt, annotation 14pt'
+        comment: 'All text readable in both themes at explicit sizes. Minor deduction:
+          8pt tick labels with every-other-bin labeling is at minimum for mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Every-other-bin labels prevent crowding, annotation well-placed
+        comment: No text overlaps. Annotation box well-positioned within the dense
+          region.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Cells clearly visible with subtle borders, log scale distinguishes
-          value ranges, zero bins distinct
+        comment: 'Non-zero bins clearly visible. Minor deduction: dense lower half
+          appears visually monotone — LogNorm compresses similar-magnitude counts
+          to near-identical blue, reducing per-cell legibility.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Inferno is perceptually uniform and colorblind-safe
+        comment: imprint_seq is perceptually uniform and CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure, balanced margins, colorbar proportional, tight_layout
-          applied
+        comment: Square canvas 2400x2400 correct for symmetric heatmap. Canvas gate
+          passed. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with MPa units on both axes
+        comment: Stress Amplitude (MPa), Mean Stress (MPa), Cycle Count (log scale)
+          all include units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (brand green to blue) correct for single-polarity continuous
+          data. Backgrounds #FAF8F1 / #1A1A17 correct in both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Inferno colormap with warm tones, professional annotation styling,
-          clean zero-bin contrast
+        comment: 'Custom Imprint colormap, LogNorm, annotation callout, theme-adaptive
+          chrome. Above generic defaults. Deduction: dense lower half is visually
+          flat — uniform blue rectangle limits visual interest.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle cell borders, custom facecolor, generous labelpad,
-          colorbar shrunk
+        comment: All four spines removed via sns.despine. Cell grid lines at 0.3 linewidth
+          with INK_SOFT. Colorbar shrink well-tuned. Above default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Peak annotation creates focal point, color gradient guides eye from
-          high to low frequency
+        comment: 'Annotation with callout and arrow. Y-axis inversion per engineering
+          convention. Log scale. Deduction: annotation arrow points to peak cell that
+          is visually indistinguishable from surrounding high-count cells.'
     spec_compliance:
       score: 15
       max: 15
@@ -112,27 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap for rainflow counting matrix
+        comment: Correct 2D heatmap, amplitude on Y (inverted), mean on X.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log colormap, colorbar, MPa units, tick
-          labels, zero-bin distinction'
+        comment: Colorbar, log scale, physical units, zero-count masking, y-axis inversion
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Amplitude on y-axis, mean on x-axis, color = count, y inverted per
-          convention
+        comment: Amplitude Y (inverted upward), Mean X, Count color.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format, colorbar label describes data mapping
+        comment: Title correct format. Colorbar serves as legend.
     data_quality:
       score: 15
       max: 15
@@ -142,22 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Exponential decay, Gaussian mean distribution, sparse high-amplitude,
-          zero bins, density variation
+        comment: 20x20 bins, full amplitude-mean coverage, sparsity at high amplitudes,
+          peak annotation, log color scale.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel shaft fatigue analysis with MPa units, neutral engineering
-          domain
+        comment: Steel shaft under variable-amplitude loading — neutral and physically
+          plausible. Exponential decay with amplitude, Gaussian peak in mean are physically
+          accurate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude 5-200 MPa, mean -50 to 250 MPa, counts up to ~4000 all
-          realistic for steel fatigue
+        comment: Amplitude 5-200 MPa, mean -50 to 250 MPa, peak ~4000 cycles — realistic
+          for measured load spectrum on steel structural component.
     code_quality:
       score: 10
       max: 10
@@ -167,49 +194,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
+        comment: No functions or classes. Flat linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.pyplot, numpy, seaborn, LogNorm'
+        comment: All five imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight, current API
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG), no
+          bbox_inches=tight.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.heatmap() with mask, norm, cbar_kws; sns.set_theme(); sns.despine().
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sns.heatmap with mask, norm, cbar_kws; sns.despine; axes-level API
-          with explicit figure
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: mask for zero bins, sns.despine, cbar_kws integration are seaborn-distinctive
-          features
+        comment: mask= for zero-bin transparency, linewidths/linecolor for cell borders,
+          cbar_kws for colorbar control, LogNorm integration with seaborn heatmap.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -219,6 +246,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap
