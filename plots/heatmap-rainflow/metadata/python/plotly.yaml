@@ -1,47 +1,47 @@
 library: plotly
+language: python
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:05:10Z'
-updated: '2026-03-02T21:25:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22595465969
+updated: '2026-06-02T09:55:11Z'
+generated_by: claude-sonnet
+workflow_run: 26811411430
 issue: 4465
-python_version: 3.14.3
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/python/plotly/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling with three domain-specific annotations explaining
-    the engineering significance of loading patterns
-  - Professional typography using Palatino serif font family with intentional text
-    color hierarchy
-  - Plasma colorscale provides excellent colorblind-safe visualization with clear
-    distinction between zero-count and low-count bins
-  - Realistic dual-cluster fatigue loading pattern with appropriate physical units
-  - Clean, well-commented code structure with proper reproducibility (seed=42)
-  - Smart use of NaN for zero-count bins creating white gaps that contrast effectively
-    with the Plasma palette
+  - Physically realistic two-regime rainflow data (exponential amplitude decay + dual
+    Gaussian mean clusters) with clear scientific motivation
+  - sqrt-transform with matching colorbar tick labels is technically elegant and perceptually
+    correct for this data range
+  - 'customdata + hovertemplate decoupling: sqrt-transformed z drives color but hover
+    shows original cycle counts — excellent plotly idiom'
+  - Data-coordinate annotation placement (axref/ayref=x/y) is robust to zoom and keeps
+    arrows stable
+  - Full theme-adaptive chrome with all tokens applied correctly — both renders pass
+    readability check
   weaknesses:
-  - Minor annotation font size inconsistency (13pt for Rare overload events vs 15pt
-    for other annotations)
-  - Some visual dead space in upper rows (amplitudes 160-200) where most bins are
-    zero
-  - Could leverage Plotly unique interactive capabilities more deeply (custom buttons,
-    dropdown filters, range sliders)
-  image_description: 'The plot displays a 1200x1200 (3600x3600 at scale=3) square
-    heatmap using the Plasma colorscale against a white background. The x-axis shows
-    "Cycle Mean Stress (MPa)" ranging from -50 to 250, and the y-axis shows "Cycle
-    Amplitude (MPa)" ranging from ~15 to 200. Two prominent clusters are visible:
-    a bright yellow primary cluster centered around amplitude ~60 MPa / mean ~100
-    MPa (reaching ~800 cycles), and a secondary pink/magenta cluster at lower amplitude
-    (~25-30 MPa) / higher mean (~160 MPa). Three callout annotations with arrows explain
-    the engineering significance: "Primary loading - High-cycle fatigue from main
-    service loads", "Vibration fatigue - Low-amplitude, high-mean resonance-induced
-    cycles", and "Rare overload events". Zero-count bins render as white gaps. The
-    colorbar on the right is labeled "Cycle Count". The title reads "heatmap-rainflow
-    · plotly · pyplots.ai" with a subtitle. Typography uses Palatino/Georgia serif.
-    Cell gaps (xgap/ygap=1) provide clean visual separation between bins.'
+  - 'The bulk of the heatmap (~80% of cells) maps to nearly identical teal shades,
+    making it visually hard to distinguish moderate count differences; consider adding
+    a mid-stop to imprint_seq (e.g. #009E73 → #2ABCCD → #4467A3) to improve perceptual
+    separation across the full count range'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "heatmap-rainflow · python · plotly · anyplot.ai" in dark Palatino serif, clearly readable. Axis labels "Cycle Amplitude (MPa)" and "Cycle Mean Stress (MPa)" in dark text at size 12. Tick labels in INK_SOFT (#4A4A44) at size 10 — all readable. Colorbar labeled "Cycle Count" with ticks 2, 25, 100, 200, 400, 610 — readable.
+      Data: imprint_seq colorscale (green #009E73 at low counts → blue #4467A3 at high counts). High-count cluster (blue) in bottom-center of matrix at low amplitude / mean ~100–175 MPa. Bulk of matrix is near-uniform teal-green. Zero-count bins in upper-right corners are transparent. Two annotation boxes with arrows identify primary service loads and tensile-dominated regime.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and axis labels in light cream (#F0EFE8), tick labels in #B8B7B0 — all readable against dark surface. Colorbar panel uses ELEVATED_BG (#242420), distinct from page. Annotation boxes flip to dark fill (#242420) with light text — readable. No dark-on-dark failure anywhere.
+      Data: Colors identical to light render — same green-to-blue gradient, same cluster positions, same transparent zero-count bins. Data colors unchanged between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -49,70 +49,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All major font sizes explicitly set (title 28, axes 22, ticks 18,
-          colorbar 20/16). Minor inconsistency with 13pt annotation font.
+        comment: Title, axis labels, tick labels, colorbar text, and annotations all
+          legible at appropriate sizes in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All annotations well-positioned without overlap. Semi-transparent
-          backgrounds prevent collisions.
+        comment: Annotations well-positioned with arrows; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible with good color differentiation. Cell
-          gaps make bins distinguishable.
+        comment: Color gradient visible at extremes but bulk of matrix is near-uniform
+          teal, limiting perceptual discrimination of moderate count differences
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe; differs in hue and luminance
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plasma is perceptually uniform and colorblind-safe. Good contrast
-          between zero-count and low-count bins.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout with balanced margins. Minor dead space in upper amplitude
-          rows (160-200 MPa).
+        comment: Square 2400x2400 correctly chosen; margins adequate; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes include physical units (MPa). Colorbar labeled Cycle Count.
+        comment: Cycle Mean Stress (MPa), Cycle Amplitude (MPa), Cycle Count colorbar
+          — all descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq for continuous data; correct backgrounds #FAF8F1/#1A1A17;
+          full theme-adaptive chrome'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom serif typography (Palatino), Plasma colorscale, multi-level
-          text color hierarchy, styled HTML subtitle. Clearly above defaults.
+        comment: Palatino serif font, sqrt-transform with matched colorbar ticks,
+          styled annotations — above average but near-uniform green field limits visual
+          impact
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, cell gaps, custom colorbar (no outline), custom
-          margins. Good refinement visible.
+        comment: xgap/ygap cell separation, clean colorbar styling (outlinewidth=0),
+          annotation padding/borders, minimal chrome
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three annotations explain engineering significance of dual-cluster
-          loading pattern. Primary cluster as natural focal point.
+        comment: Two targeted annotations guide viewer to physically meaningful clusters;
+          sqrt transform reveals structure; realistic two-regime data adds narrative
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap representation of rainflow counting matrix.
+        comment: Correct 2D rainflow heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: heatmap with correct axes, sequential
-          colormap, colorbar, units, bin centers, zero-count distinction.'
+        comment: Sequential colormap, colorbar, MPa units, bin-center tick labels,
+          transparent zero-count bins
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Amplitude on y-axis, mean on x-axis, color represents cycle frequency.
+        comment: Amplitude on Y, mean on X, full range displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Colorbar serves as legend with Cycle
-          Count label.
+        comment: Title exactly matches required format; colorbar correctly labeled
     data_quality:
       score: 15
       max: 15
@@ -152,22 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: high-frequency, medium-frequency, low-frequency,
-          and zero-count bins. Two distinct clusters plus sparse overloads.'
+        comment: Full 20x20 matrix, exponential amplitude decay, dual Gaussian mean
+          regimes, transparent zero-count bins
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fatigue analysis is genuine engineering application. Dual-cluster
-          pattern realistic for mechanical components.
+        comment: Amplitude 10-200 MPa, mean -50 to 250 MPa, counts 2-610 — physically
+          plausible fatigue measurement; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude 10-200 MPa and mean -50 to 250 MPa realistic for fatigue
-          loading. Cycle counts plausible.
+        comment: 20x20 within spec range; count magnitudes realistic; sqrt transform
+          appropriate for 2-600 span
     code_quality:
       score: 10
       max: 10
@@ -177,50 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, plot, save. No functions
-          or classes.'
+        comment: Flat procedural script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both fully used.
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with helpful comments. Appropriate complexity.
+        comment: Vectorized data generation; sqrt-transform with matched colorbar
+          ticks; data-coordinate annotations
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Plotly API used.
+        comment: plot-{THEME}.png + plot-{THEME}.html; autosize=False; current plotly
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Heatmap with customdata+hovertemplate; data-coordinate annotations;
+          connectgaps=False; explicit margins
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure with go.Heatmap, update_layout, add_annotation.
-          Idiomatic GO pattern.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses hovertemplate, xgap/ygap, connectgaps, HTML in title, and dual
-          PNG+HTML output.
+        comment: customdata trick for original counts in hover despite sqrt-transformed
+          z; axref/ayref data-coord annotations; xgap/ygap cell separation
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -232,6 +238,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
