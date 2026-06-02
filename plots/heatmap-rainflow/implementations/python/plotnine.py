@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -22,12 +22,16 @@ if "." in sys.path:
 
 from plotnine import (  # noqa: E402
     aes,
+    annotate,
+    coord_fixed,
     element_blank,
     element_line,
     element_rect,
     element_text,
     geom_tile,
     ggplot,
+    guide_colorbar,
+    guides,
     labs,
     scale_fill_gradient,
     scale_x_continuous,
@@ -43,6 +47,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ANYPLOT_AMBER = "#DDCC77"  # caution anchor — secondary cluster annotation
 
 # Data — simulate rainflow counting results from variable-amplitude loading
 np.random.seed(42)
@@ -63,21 +68,17 @@ cycle_counts = np.random.poisson(lam=cycle_rate * 500)
 cluster = 80 * np.exp(-0.01 * (amp_grid - 60) ** 2 - 0.002 * (mean_grid - 30) ** 2)
 cycle_counts += np.random.poisson(lam=cluster)
 
-# Build long-form DataFrame
-rows = []
-for i in range(n_amp_bins):
-    for j in range(n_mean_bins):
-        rows.append(
-            {
-                "Amplitude (MPa)": amplitude_centers[i],
-                "Mean Stress (MPa)": mean_centers[j],
-                "Cycle Count": cycle_counts[i, j],
-            }
-        )
-df = pd.DataFrame(rows)
+# Build long-form DataFrame via vectorized numpy array flattening
+df = pd.DataFrame(
+    {
+        "Amplitude (MPa)": amp_grid.flatten(),
+        "Mean Stress (MPa)": mean_grid.flatten(),
+        "Cycle Count": cycle_counts.flatten(),
+    }
+)
 
-tile_w = mean_centers[1] - mean_centers[0]
-tile_h = amplitude_centers[1] - amplitude_centers[0]
+tile_w = float(mean_centers[1] - mean_centers[0])
+tile_h = float(amplitude_centers[1] - amplitude_centers[0])
 
 # Separate zero and nonzero for visual distinction
 df_nonzero = df[df["Cycle Count"] > 0].copy()
@@ -106,10 +107,30 @@ plot = (
         width=tile_w,
         height=tile_h,
     )
-    # Imprint sequential colormap: brand green → blue (single-polarity data)
+    # Imprint sequential colormap: brand green → blue (single-polarity count data)
     + scale_fill_gradient(
         low="#009E73", high="#4467A3", name="Cycle Count\n(log₁₀)", limits=(0, df_nonzero["Log Count"].max())
     )
+    # Advanced plotnine: stepped colorbar with discrete rectangles (nbin steps)
+    + guides(fill=guide_colorbar(nbin=8, display="rectangles", draw_ulim=True, draw_llim=True))
+    # Highlight the secondary vibration-loading cluster (~60 MPa amp / +30 MPa mean)
+    + annotate(
+        "rect",
+        xmin=5.0,
+        xmax=55.0,
+        ymin=35.0,
+        ymax=85.0,
+        fill=ANYPLOT_AMBER,
+        color=ANYPLOT_AMBER,
+        size=0.8,
+        linetype="dashed",
+        alpha=0.08,
+    )
+    + annotate(
+        "text", x=57.0, y=60.0, label="Vibration\ncluster", color=ANYPLOT_AMBER, size=3.0, ha="left", fontweight="bold"
+    )
+    # coord_fixed: enforces square cells for symmetric amplitude/mean-stress ranges
+    + coord_fixed(ratio=1)
     + scale_x_continuous(expand=(0, 2))
     + scale_y_continuous(expand=(0, 2))
     + labs(x="Mean Stress (MPa)", y="Stress Amplitude (MPa)", title="heatmap-rainflow · python · plotnine · anyplot.ai")
@@ -134,7 +155,7 @@ plot = (
         panel_border=element_rect(color=INK_SOFT, fill=None),
         panel_background=element_rect(fill=PAGE_BG),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_margin=0.02,
+        plot_margin=0.05,
     )
 )
 
