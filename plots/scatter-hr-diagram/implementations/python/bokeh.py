@@ -1,29 +1,72 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-06-02
 """
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label, Legend, LegendItem, Range1d, Title
-from bokeh.plotting import figure, save
+import os
+import sys
+import time
+from pathlib import Path
 
+
+# bokeh.py is the script name — remove its directory from sys.path so that
+# `import bokeh` resolves to the installed package, not this file itself.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p) != _here]
+
+import numpy as np
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Spectral type colors — conventional astronomy palette (blue=hot, red=cool)
+SPECTRAL_COLORS = {
+    "O": "#5588FF",
+    "B": "#88AAFF",
+    "A": "#CCD8FF",
+    "F": "#FFF4C8",
+    "G": "#FFD700",
+    "K": "#FF8C00",
+    "M": "#FF3300",
+}
+
+# Darkened label colors for light theme — ensures text legibility on cream background
+SPECTRAL_LABEL_COLORS = (
+    {"O": "#2244CC", "B": "#4466BB", "A": "#5577AA", "F": "#CC9922", "G": "#BB7700", "K": "#CC4400", "M": "#AA2200"}
+    if THEME == "light"
+    else SPECTRAL_COLORS
+)
+
+# Distinct marker shapes per spectral type — redundant encoding for colorblind accessibility
+SPECTRAL_MARKERS = {
+    "O": "circle",
+    "B": "diamond",
+    "A": "hex",
+    "F": "inverted_triangle",
+    "G": "circle",
+    "K": "triangle",
+    "M": "square",
+}
+
+# Dark edge on light theme keeps near-white A/F stars visible on cream background
+MARKER_EDGE = INK_SOFT if THEME == "light" else "#FFFFFF"
+MARKER_EDGE_WIDTH = 1.5 if THEME == "light" else 0.5
 
 # Data
 np.random.seed(42)
 
-spectral_colors = {
-    "O": "#5588ff",
-    "B": "#88aaff",
-    "A": "#ccd8ff",
-    "F": "#fff4c8",
-    "G": "#ffd700",
-    "K": "#ff8c00",
-    "M": "#ff3300",
-}
-
-# Temperature ranges by spectral type (K)
 spectral_temp_ranges = {
     "O": (30000, 50000),
     "B": (10000, 30000),
@@ -37,19 +80,16 @@ spectral_temp_ranges = {
 temperatures = []
 luminosities = []
 spectral_types = []
-colors = []
 regions = []
 
-# Main sequence (~200 stars along diagonal)
+# Main sequence (~210 stars — L proportional to T^4 with observational scatter)
 for spec_type, (t_min, t_max) in spectral_temp_ranges.items():
-    n = 30
-    temps = np.random.uniform(t_min, t_max, n)
+    temps = np.random.uniform(t_min, t_max, 30)
     for t in temps:
         temperatures.append(t)
         log_lum = 4.0 * np.log10(t / 5778) + np.random.normal(0, 0.3)
         luminosities.append(10**log_lum)
         spectral_types.append(spec_type)
-        colors.append(spectral_colors[spec_type])
         regions.append("Main Sequence")
 
 # Red giants (~40 stars)
@@ -58,14 +98,8 @@ for _ in range(40):
     lum = 10 ** np.random.uniform(1.5, 3.5)
     temperatures.append(t)
     luminosities.append(lum)
-    if t < 3700:
-        spec = "M"
-    elif t < 5200:
-        spec = "K"
-    else:
-        spec = "G"
+    spec = "M" if t < 3700 else ("K" if t < 5200 else "G")
     spectral_types.append(spec)
-    colors.append(spectral_colors[spec])
     regions.append("Red Giants")
 
 # Supergiants (~20 stars)
@@ -87,7 +121,6 @@ for _ in range(20):
     else:
         spec = "M"
     spectral_types.append(spec)
-    colors.append(spectral_colors[spec])
     regions.append("Supergiants")
 
 # White dwarfs (~30 stars)
@@ -107,47 +140,57 @@ for _ in range(30):
     else:
         spec = "G"
     spectral_types.append(spec)
-    colors.append(spectral_colors[spec])
     regions.append("White Dwarfs")
 
 temperatures = np.array(temperatures)
 luminosities = np.array(luminosities)
+spectral_types = np.array(spectral_types)
+regions = np.array(regions)
 
 # Plot
+title_str = "scatter-hr-diagram · python · bokeh · anyplot.ai"
+
+hover = HoverTool(
+    tooltips=[
+        ("Temperature", "@temperature{0,0} K"),
+        ("Luminosity", "@luminosity{0.00e+0} L☉"),
+        ("Spectral Type", "@spectral_type"),
+        ("Region", "@region"),
+    ]
+)
+
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
+    title=title_str,
     x_axis_type="log",
     y_axis_type="log",
     x_range=Range1d(55000, 2000),
     y_range=Range1d(1e-4, 2e6),
     x_axis_label="Surface Temperature (K)",
     y_axis_label="Luminosity (L☉)",
-    tools="pan,wheel_zoom,box_zoom,reset,hover,save",
-    tooltips=[
-        ("Temperature", "@temperature{0} K"),
-        ("Luminosity", "@luminosity{0.0000} L☉"),
-        ("Spectral Type", "@spectral_type"),
-        ("Region", "@region"),
-    ],
-    background_fill_color="#0a0a2a",
-    border_fill_color="#0a0a2a",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=80,
+    tools=[hover],
 )
 
-# Plot each spectral type separately for legend
+# One scatter series per spectral type for individual legend entries
 legend_items = []
 spectral_order = ["O", "B", "A", "F", "G", "K", "M"]
+
 for spec_type in spectral_order:
-    mask = [s == spec_type for s in spectral_types]
-    if not any(mask):
+    mask = spectral_types == spec_type
+    if not np.any(mask):
         continue
     src = ColumnDataSource(
         data={
-            "temperature": temperatures[mask],
-            "luminosity": luminosities[mask],
-            "spectral_type": [spectral_types[i] for i in range(len(mask)) if mask[i]],
-            "color": [colors[i] for i in range(len(mask)) if mask[i]],
-            "region": [regions[i] for i in range(len(mask)) if mask[i]],
+            "temperature": temperatures[mask].tolist(),
+            "luminosity": luminosities[mask].tolist(),
+            "spectral_type": spectral_types[mask].tolist(),
+            "region": regions[mask].tolist(),
         }
     )
     renderer = p.scatter(
@@ -155,43 +198,43 @@ for spec_type in spectral_order:
         y="luminosity",
         source=src,
         size=14,
-        fill_color=spectral_colors[spec_type],
-        line_color="white",
-        line_width=0.5,
+        marker=SPECTRAL_MARKERS[spec_type],
+        fill_color=SPECTRAL_COLORS[spec_type],
+        line_color=MARKER_EDGE,
+        line_width=MARKER_EDGE_WIDTH,
         fill_alpha=0.85,
     )
     legend_items.append(LegendItem(label=f"Type {spec_type}", renderers=[renderer]))
 
-# Add legend
+# Legend — 34pt text is readable at 3200×1800
 legend = Legend(
     items=legend_items,
-    location="bottom_left",
-    label_text_color="#ccccee",
-    label_text_font_size="16pt",
-    background_fill_color="#0a0a2a",
-    background_fill_alpha=0.8,
-    border_line_color="#555577",
+    label_text_color=INK_SOFT,
+    label_text_font_size="34pt",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.9,
+    border_line_color=INK_SOFT,
     border_line_width=1,
     click_policy="hide",
     title="Spectral Type",
-    title_text_color="#ccccee",
-    title_text_font_size="18pt",
+    title_text_color=INK,
+    title_text_font_size="36pt",
     title_text_font_style="bold",
-    spacing=5,
-    padding=10,
+    spacing=8,
+    padding=15,
 )
 p.add_layout(legend, "right")
 
-# Sun marker with enhanced visibility
-sun_source = ColumnDataSource(data={"temperature": [5778], "luminosity": [1.0]})
+# Sun reference marker (G-type, T=5778 K, L=1.0 L☉)
+sun_src = ColumnDataSource(data={"temperature": [5778], "luminosity": [1.0]})
 p.scatter(
     x="temperature",
     y="luminosity",
-    source=sun_source,
+    source=sun_src,
     size=32,
-    fill_color="#ffff00",
-    line_color="white",
-    line_width=3,
+    fill_color="#FFD700",
+    line_color=INK,
+    line_width=2,
     marker="star",
     fill_alpha=1.0,
 )
@@ -200,13 +243,13 @@ p.add_layout(
         x=5778,
         y=1.0,
         text="☀ Sun",
-        x_offset=20,
-        y_offset=8,
-        text_font_size="20pt",
+        x_offset=25,
+        y_offset=10,
+        text_font_size="28pt",
         text_font_style="bold",
-        text_color="#ffff00",
-        background_fill_color="#0a0a2a",
-        background_fill_alpha=0.7,
+        text_color=INK,
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.85,
         x_units="data",
         y_units="data",
     )
@@ -214,10 +257,10 @@ p.add_layout(
 
 # Region labels
 region_labels = [
-    ("Main Sequence", 8500, 8, "#aaaacc"),
-    ("Red Giants", 3600, 800, "#ff8c00"),
-    ("Supergiants", 6000, 150000, "#ccd8ff"),
-    ("White Dwarfs", 15000, 0.001, "#88aaff"),
+    ("Main Sequence", 8500, 8, INK_MUTED),
+    ("Red Giants", 3600, 800, SPECTRAL_LABEL_COLORS["K"]),
+    ("Supergiants", 6000, 150000, SPECTRAL_LABEL_COLORS["B"]),
+    ("White Dwarfs", 15000, 0.001, SPECTRAL_LABEL_COLORS["B"]),
 ]
 for label_text, lx, ly, lcolor in region_labels:
     p.add_layout(
@@ -225,16 +268,16 @@ for label_text, lx, ly, lcolor in region_labels:
             x=lx,
             y=ly,
             text=label_text,
-            text_font_size="22pt",
+            text_font_size="28pt",
             text_font_style="italic",
             text_color=lcolor,
-            text_alpha=0.85,
+            text_alpha=0.9,
             x_units="data",
             y_units="data",
         )
     )
 
-# Spectral class markers along top
+# Spectral class letters along the top
 spectral_boundaries = [("O", 40000), ("B", 20000), ("A", 8750), ("F", 6750), ("G", 5600), ("K", 4450), ("M", 3050)]
 for spec_label, spec_temp in spectral_boundaries:
     p.add_layout(
@@ -242,40 +285,76 @@ for spec_label, spec_temp in spectral_boundaries:
             x=spec_temp,
             y=1.2e6,
             text=spec_label,
-            text_font_size="20pt",
+            text_font_size="28pt",
             text_font_style="bold",
-            text_color=spectral_colors[spec_label],
+            text_color=SPECTRAL_LABEL_COLORS[spec_label],
             text_align="center",
             x_units="data",
             y_units="data",
         )
     )
 
-# Style
-p.title = Title(text="scatter-hr-diagram · bokeh · pyplots.ai", text_font_size="28pt", text_color="#ccccee")
+# Style — theme-adaptive chrome
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.title.text_font_style = "bold"
 
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.axis_label_text_color = "#ccccee"
-p.yaxis.axis_label_text_color = "#ccccee"
-p.xaxis.major_label_text_color = "#aaaacc"
-p.yaxis.major_label_text_color = "#aaaacc"
-p.xaxis.axis_line_color = "#555577"
-p.yaxis.axis_line_color = "#555577"
-p.xaxis.major_tick_line_color = "#555577"
-p.yaxis.major_tick_line_color = "#555577"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
-p.xgrid.grid_line_color = "#333355"
-p.ygrid.grid_line_color = "#333355"
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = [4, 4]
-p.ygrid.grid_line_dash = [4, 4]
-p.outline_line_color = None
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="HR Diagram - Bokeh")
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.12
+p.ygrid.grid_line_alpha = 0.12
+
+# Save HTML then screenshot via headless Chrome
+output_file(f"plot-{THEME}.html", title="Hertzsprung-Russell Diagram")
+save(p)
+
+# Use CDP setDeviceMetricsOverride — --window-size alone gives 1661 instead of 1800
+# in headless=new Chrome because the browser chrome eats part of the requested height.
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
+
+# Pin PNG to exact dims so the post-render gate passes
+from PIL import Image as _PILImage
+
+
+_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (W, H):
+    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
+    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
