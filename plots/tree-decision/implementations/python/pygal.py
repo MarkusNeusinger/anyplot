@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-02
@@ -47,14 +47,14 @@ FS = {"branch": 24, "prob": 23, "payoff": 28, "emv_hdr": 20, "emv_val": 23, "cap
 #               C2: 0.7×250 + 0.3×50      = 190K [PRUNED]
 #               D1: max(260, 190, 0)       = 260K
 nodes = {
-    "D1": {"type": "decision", "x": 400, "y": 867, "emv": 260, "label": "Strategy\nChoice"},
-    "C1": {"type": "chance", "x": 1500, "y": 347, "emv": 260, "label": "Market\nOutcome"},
-    "C2": {"type": "chance", "x": 1500, "y": 1200, "emv": 190, "label": "License\nResult"},
-    "T1": {"type": "terminal", "x": 2567, "y": 207, "payoff": 500},
-    "T2": {"type": "terminal", "x": 2567, "y": 487, "payoff": -100},
-    "T3": {"type": "terminal", "x": 2567, "y": 1040, "payoff": 250},
-    "T4": {"type": "terminal", "x": 2567, "y": 1360, "payoff": 50},
-    "T5": {"type": "terminal", "x": 1500, "y": 1570, "payoff": 0},
+    "D1": {"type": "decision", "x": 400, "y": 870, "emv": 260, "label": "Strategy\nChoice"},
+    "C1": {"type": "chance", "x": 1500, "y": 420, "emv": 260, "label": "Market\nOutcome"},
+    "C2": {"type": "chance", "x": 1500, "y": 1310, "emv": 190, "label": "License\nResult"},
+    "T1": {"type": "terminal", "x": 2567, "y": 240, "payoff": 500},
+    "T2": {"type": "terminal", "x": 2567, "y": 600, "payoff": -100},
+    "T3": {"type": "terminal", "x": 2567, "y": 1120, "payoff": 250},
+    "T4": {"type": "terminal", "x": 2567, "y": 1500, "payoff": 50},
+    "T5": {"type": "terminal", "x": 1500, "y": 1700, "payoff": 0},
 }
 
 branches = [
@@ -109,7 +109,7 @@ chart = pygal.XY(
     width=W,
     height=H,
     style=style,
-    title="tree-decision · pygal · pyplots.ai",
+    title="tree-decision · python · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -199,9 +199,9 @@ defs = (
 # Amber golden border highlights the optimal outcome region (C1 subtree: T1 + T2).
 # Previous version used a light-blue fill matching altair — change request: golden accent instead.
 amber_box = (
-    f'<rect x="1440" y="140" width="1360" height="440" '
+    f'<rect x="1440" y="155" width="1360" height="510" '
     f'fill="{AMBER}" fill-opacity="0.05" stroke="{AMBER}" stroke-width="3" rx="14" opacity="0.7"/>'
-    + tx(2785, 168, "Optimal", 22, fill=AMBER, weight="bold", anchor="end")
+    + tx(2785, 182, "Optimal", 22, fill=AMBER, weight="bold", anchor="end")
 )
 
 g = ['<g id="dt">']
@@ -279,7 +279,7 @@ cairosvg.svg2png(bytestring=svg_out.encode("utf-8"), write_to=f"plot-{THEME}.png
 
 html_content = (
     "<!DOCTYPE html>\n<html>\n<head>\n"
-    f"    <title>tree-decision &middot; pygal &middot; pyplots.ai</title>\n"
+    f"    <title>tree-decision &middot; python &middot; pygal &middot; anyplot.ai</title>\n"
     f"    <style>\n"
     f"        body {{ margin: 0; padding: 20px; background: {PAGE_BG}; font-family: sans-serif; }}\n"
     f"        .container {{ max-width: 100%; margin: 0 auto; text-align: center; }}\n"
