@@ -1,0 +1,268 @@
+library: echarts
+language: javascript
+specification_id: pie-basic
+created: '2026-06-02T23:39:24Z'
+updated: '2026-06-02T23:54:42Z'
+generated_by: claude-opus
+workflow_run: 26854317048
+issue: 678
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'First series (Engineering) renders in brand green #009E73 — exact palette spec
+    match, identical in both renders.'
+  - Imprint palette positions 1-6 used in canonical order (green, lavender, blue,
+    ochre, matte red, cyan) — colors unchanged across themes; only chrome flips.
+  - Largest slice (Engineering, 42%) is exploded outward via selectedMode + selectedOffset,
+    satisfying the spec's emphasis requirement and creating a clear focal point.
+  - 'Smart per-slice label policy: tiny 3% slice gets an outside label with a leader
+    line so the percentage isn''t squeezed, while larger slices keep crisp inside
+    labels — uses avoidLabelOverlap as backup.'
+  - 'Theme chrome is correct in both renders: warm off-white #FAF8F1 (light) / warm
+    near-black #1A1A17 (dark) backgrounds, ink/inkSoft tokens threaded through title/legend/outside-labels
+    with no dark-on-dark or light-on-light failures.'
+  - Title format matches the mandated 'pie-basic · javascript · echarts · anyplot.ai'
+    pattern exactly, centered with explicit fontSize.
+  - 'Idiomatic ECharts: uses high-level setOption, per-item label overrides, selectedMode/selectedOffset
+    for explode, animation:false, and wires chart.on(''finished'') to window.__anyplotReady
+    so the harness screenshots a fully-drawn frame.'
+  - 'Canvas square orientation declared via //# anyplot-orientation: square directive
+    — saved PNGs are exactly 2400×2400.'
+  - Realistic, neutral data (FY25 operating budget allocation across 6 departments,
+    summing to 100%) — within the spec's 3-8 category range with good size variation
+    including small slices (3%, 7%) that exercise the label-handling logic.
+  weaknesses:
+  - DE-01 Aesthetic Sophistication at 5/8 — design is solid (exploded focal slice,
+    leader-line labels, white slice borders for separation) but stops short of FiveThirtyEight-level
+    polish. To push higher, consider a subtle subtitle/footnote line in inkMuted (e.g.,
+    'Engineering claims 42% of the FY25 operating budget') or a refined weight hierarchy
+    on the legend.
+  - DE-03 Data Storytelling at 4/6 — the explosion creates a focal point, but the
+    chart could lean further into the story (e.g., a faint muted halo or a single
+    annotation calling out the 42% headline, or muting non-focal slice opacity slightly
+    to deepen the focal contrast).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white matching #FAF8F1 — not pure white, theme-correct.
+      Chrome: title "pie-basic · javascript · echarts · anyplot.ai" centered in dark ink (#1A1A17), fully readable above the chart. Legend at bottom with 6 rounded-rect color swatches and category names in soft ink — all readable, comfortable spacing.
+      Data: 6-slice pie centered in the square canvas. Engineering 42% in brand green #009E73 (exploded outward via selectedOffset), Sales & Marketing 23% in lavender #C475FD, Operations 14% in blue #4467A3, Customer Success 11% in ochre #BD8233, R&D 7% in matte red #AE3030, General & Admin 3% in cyan #2ABCCD. Larger slices show white #FFFDF6 percentage labels inside; the 3% sliver uses an outside label with a leader line in soft ink. Thin pageBg-colored borders separate slices cleanly.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black matching #1A1A17 — not pure black, theme-correct.
+      Chrome: title in light ink #F0EFE8, centered, fully readable. Legend at bottom uses light soft-ink text — readable; no dark-on-dark failures.
+      Data: pie colors are pixel-identical to the light render — Engineering green, Sales lavender, Operations blue, Customer Success ochre, R&D matte red, General & Admin cyan, in the same canonical Imprint order. Inside white labels still read well on the saturated slice fills; the outside 3% label in soft light ink is visible against the dark background. The slice borders now follow the dark pageBg, so the visual separation reads as a subtle dark gap (intended).
+      Legibility verdict: PASS
+
+    Theme check: data colors identical across themes (only chrome flips). No dark-on-dark or light-on-light. Brand green #009E73 readable on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 32, legend 22, inside labels 24, outside
+          labels 22) and well-proportioned at 2400x2400; readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap — avoidLabelOverlap on, tiny slice pushed outside with
+          leader line, legend cleanly separated from pie.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Slices clearly visible with 3px pageBg borders providing separation;
+          small slices handled via outside labels.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; slice luminance differences strong on
+          both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pie centered with balanced top/bottom margins for title and legend;
+          canvas filled to ~60% radius — good proportion. Saved as 2400x2400; canvas
+          gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes (pie). Title is the descriptive mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with thoughtful palette use, exploded focal slice,
+          white slice borders, dual label-placement strategy. Falls short of publication-level
+          polish (no subtitle/refined hierarchy).
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Polished details: pageBg slice borders, leader-line labels for small
+          slices, generous whitespace, distinct inside/outside label styling.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Exploded largest slice creates a clear focal point and visual hierarchy;
+          could push storytelling further with a callout or muted secondary slices.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pie chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage labels on slices, distinct colors, legend, exploded largest
+          slice — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 6 categories rendered with angles proportional to values; values
+          sum to 100.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format exact: ''pie-basic · javascript · echarts · anyplot.ai''.
+          Legend labels match data names.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 categories (within 3-8 spec range) with strong size variation including
+          small slices (3%, 7%) and one dominant (42%) — exercises label-handling
+          logic and shows pie's parts-to-whole nature.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: FY25 operating budget allocation by department — real-world, neutral
+          business scenario per spec applications.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum to exactly 100; proportions plausible for a tech-company
+          budget breakdown.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data -> per-item label overrides -> init -> setOption.
+          No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data — no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses the pinned echarts global and ANYPLOT_TOKENS as
+          documented.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise, idiomatic ECharts; small-slice threshold is a clean abstraction.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness saves plot-{theme}.png/.html; impl follows the mount-node
+          contract with no manual file IO and no devicePixelRatio override.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level setOption with proper top-level color, animation:false,
+          per-item label/labelLine, selectedMode/selectedOffset, avoidLabelOverlap,
+          and chart.on('finished') signal for harness — textbook ECharts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Leverages ECharts-specific features: selectedMode:''single'' + selectedOffset
+          for explode emphasis, per-data-item label overrides for hybrid inside/outside
+          labeling, finished-event hook to coordinate with the screenshot harness.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
