@@ -1,14 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: plotly 6.5.2 | Python 3.14
-Quality: 90/100 | Updated: 2026-02-25
+Library: plotly | Python
 """
 
-import pandas as pd
-import plotly.graph_objects as go
+import os
+import sys
 
 
-# Data - Software Development Project with phases and dependencies
+# Prevent this file from shadowing the installed plotly package
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir]
+
+import pandas as pd  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Imprint palette — theme-adaptive chrome
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint categorical palette — positions 1–5, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data — Software Development Project with phases and dependencies
 tasks = [
     # Requirements Phase
     {
@@ -147,14 +167,9 @@ df = pd.DataFrame(tasks)
 df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
 
-# Colorblind-safe palette (avoids red-green pairing)
-group_colors = {
-    "Requirements": "#306998",
-    "Design": "#FFD43B",
-    "Development": "#4ECDC4",
-    "Testing": "#AB63FA",
-    "Deployment": "#FF7F0E",
-}
+# Group colors — Imprint palette canonical order
+group_order = ["Requirements", "Design", "Development", "Testing", "Deployment"]
+group_colors = dict(zip(group_order, IMPRINT_PALETTE))
 
 # Compute critical path by backward traversal from project end
 task_deps = {row["task"]: row["depends_on"] for _, row in df.iterrows()}
@@ -177,13 +192,12 @@ while current:
     current = binding
 
 # Build ordered task list (group headers + indented tasks)
-group_order = ["Requirements", "Design", "Development", "Testing", "Deployment"]
 groups_agg = df.groupby("group").agg({"start": "min", "end": "max"}).reset_index()
 
 ordered_items = []
 task_y_labels = {}
 for group in group_order:
-    ordered_items.append({"label": f"\u25bc {group}", "is_group": True, "group": group})
+    ordered_items.append({"label": f"▼ {group}", "is_group": True, "group": group})
     for _, row in df[df["group"] == group].sort_values("start").iterrows():
         label = f"   {row['task']}"
         ordered_items.append({"label": label, "is_group": False, "task": row})
@@ -194,7 +208,7 @@ y_categories = [item["label"] for item in ordered_items]
 # Create figure
 fig = go.Figure()
 
-# Draw bars using go.Bar with horizontal orientation and base parameter
+# Draw bars
 for group in group_order:
     color = group_colors[group]
     g = groups_agg[groups_agg["group"] == group].iloc[0]
@@ -203,9 +217,9 @@ for group in group_order:
     # Group summary bar (wider, shown in legend)
     fig.add_trace(
         go.Bar(
-            y=[f"\u25bc {group}"],
+            y=[f"▼ {group}"],
             x=[dur_ms],
-            base=[g["start"]],
+            base=[g["start"].isoformat()],
             orientation="h",
             name=group,
             legendgroup=group,
@@ -223,25 +237,25 @@ for group in group_order:
     for _, task in df[df["group"] == group].sort_values("start").iterrows():
         is_cp = task["task"] in critical_path
         label = task_y_labels[task["task"]]
-        dur_ms = (task["end"] - task["start"]).total_seconds() * 1000
+        dur_ms_task = (task["end"] - task["start"]).total_seconds() * 1000
         dur_days = (task["end"] - task["start"]).days
 
         fig.add_trace(
             go.Bar(
                 y=[label],
-                x=[dur_ms],
-                base=[task["start"]],
+                x=[dur_ms_task],
+                base=[task["start"].isoformat()],
                 orientation="h",
                 showlegend=False,
                 legendgroup=group,
                 marker={
                     "color": color,
-                    "opacity": 0.95 if is_cp else 0.55,
+                    "opacity": 0.95 if is_cp else 0.6,
                     "line": {"width": 1.5 if is_cp else 0, "color": "rgba(0,0,0,0.25)" if is_cp else "rgba(0,0,0,0)"},
                 },
                 width=0.45,
                 hovertemplate=(
-                    f"<b>{task['task']}</b>" + (" \u26a1 Critical Path" if is_cp else "") + f"<br>Phase: {group}<br>"
+                    f"<b>{task['task']}</b>" + (" ⚡ Critical Path" if is_cp else "") + f"<br>Phase: {group}<br>"
                     f"Start: {task['start'].strftime('%b %d, %Y')}<br>"
                     f"End: {task['end'].strftime('%b %d, %Y')}<br>"
                     f"Duration: {dur_days} days<extra></extra>"
@@ -249,7 +263,8 @@ for group in group_order:
             )
         )
 
-# Dependency arrows (critical path edges highlighted)
+# Dependency arrows (critical path edges highlighted in Imprint matte-red)
+CP_RED = "#AE3030"
 for _, task in df.iterrows():
     for dep in task["depends_on"]:
         if dep in task_y_labels:
@@ -257,9 +272,9 @@ for _, task in df.iterrows():
             is_cp_edge = (dep, task["task"]) in critical_edges
 
             fig.add_annotation(
-                x=task["start"],
+                x=task["start"].isoformat(),
                 y=task_y_labels[task["task"]],
-                ax=pred["end"],
+                ax=pred["end"].isoformat(),
                 ay=task_y_labels[dep],
                 xref="x",
                 yref="y",
@@ -268,69 +283,78 @@ for _, task in df.iterrows():
                 showarrow=True,
                 arrowhead=3,
                 arrowsize=1.3,
-                arrowwidth=2.8 if is_cp_edge else 1.3,
-                arrowcolor="#C0392B" if is_cp_edge else "#BBBBBB",
-                opacity=0.9 if is_cp_edge else 0.4,
+                arrowwidth=2.5 if is_cp_edge else 1.3,
+                arrowcolor=CP_RED if is_cp_edge else INK_SOFT,
+                opacity=0.9 if is_cp_edge else 0.6,
             )
 
 # Layout
 fig.update_layout(
-    title={
-        "text": "gantt-dependencies \u00b7 plotly \u00b7 pyplots.ai",
-        "font": {"size": 32, "color": "#2C3E50"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    xaxis={
-        "title": {"text": "Timeline (2024)", "font": {"size": 24}},
-        "tickfont": {"size": 16},
-        "type": "date",
-        "tickformat": "%b %d",
-        "gridcolor": "rgba(0,0,0,0.06)",
-        "showgrid": True,
-        "dtick": 7 * 24 * 60 * 60 * 1000,
-        "tickangle": 45,
-    },
-    yaxis={"tickfont": {"size": 16}, "categoryorder": "array", "categoryarray": y_categories[::-1], "showgrid": False},
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    title=dict(
+        text="gantt-dependencies · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
+    ),
+    xaxis=dict(
+        title=dict(text="Timeline (2024)", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
+        type="date",
+        tickformat="%b %d",
+        gridcolor=GRID,
+        showgrid=True,
+        dtick=7 * 24 * 60 * 60 * 1000,
+        tickangle=0,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
+    ),
+    yaxis=dict(
+        tickfont=dict(size=9, color=INK_SOFT),
+        categoryorder="array",
+        categoryarray=y_categories[::-1],
+        showgrid=False,
+        linecolor=INK_SOFT,
+    ),
     barmode="overlay",
-    template="plotly_white",
-    legend={
-        "title": {"text": "Project Phases", "font": {"size": 20}},
-        "font": {"size": 16},
-        "orientation": "h",
-        "yanchor": "bottom",
-        "y": 1.02,
-        "xanchor": "center",
-        "x": 0.5,
-        "itemwidth": 30,
-    },
-    margin={"l": 240, "r": 50, "t": 120, "b": 110},
-    height=900,
-    width=1600,
+    legend=dict(
+        title=dict(text="Project Phases", font=dict(size=10, color=INK)),
+        font=dict(size=10, color=INK_SOFT),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="center",
+        x=0.5,
+        itemwidth=30,
+    ),
+    margin=dict(l=160, r=40, t=80, b=90),
 )
 
-# Dependency legend annotations
+# Dependency type legend (bottom-right annotation)
 fig.add_annotation(
     x=0.99,
-    y=-0.12,
+    y=-0.13,
     xref="paper",
     yref="paper",
-    text="\u2501\u2501\u25b6 Critical Path",
+    text="━━▶ Critical Path",
     showarrow=False,
-    font={"size": 15, "color": "#C0392B"},
+    font=dict(size=9, color=CP_RED),
     xanchor="right",
 )
 fig.add_annotation(
     x=0.99,
-    y=-0.16,
+    y=-0.19,
     xref="paper",
     yref="paper",
-    text="\u2500\u2500\u25b6 Dependency (finish-to-start)",
+    text="──▶ Dependency (finish-to-start)",
     showarrow=False,
-    font={"size": 15, "color": "#999999"},
+    font=dict(size=9, color=INK_SOFT),
     xanchor="right",
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+# Save — landscape 3200×1800
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
