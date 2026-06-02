@@ -1,41 +1,53 @@
 library: matplotlib
+language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:25:27Z'
-updated: '2026-03-06T20:36:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22780524847
+updated: '2026-06-02T11:46:52Z'
+generated_by: claude-sonnet
+workflow_run: 26817024898
 issue: 4421
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent glyph rendering using TextPath + Affine2D transforms — the proper matplotlib
-    technique for sequence logos
-  - Conserved core highlight with FancyBboxPatch adds meaningful data storytelling
-  - Biologically realistic ETS-family binding site data with clear conservation patterns
-  - 'Full spec compliance: all required features implemented correctly'
-  - Clean, well-structured code with all font sizes explicitly set
+  - Excellent use of matplotlib's path/transform system (TextPath + PathPatch + Affine2D)
+    to render correctly scaled letter glyphs -- the right technique for sequence logos
+  - 'Semantic color exception correctly applied: all four DNA letters mapped to Imprint
+    palette members matching the spec''s mandated standard color scheme (A->#009E73,
+    C->#4467A3, G->#BD8233, T->#AE3030)'
+  - Conserved core highlight with amber rectangle and annotation creates genuine data
+    storytelling and guides the viewer to the key GAGT motif
+  - 'Perfect spec compliance: glyph stacking order (most frequent on top), information
+    content scaling, axis labels all match spec requirements exactly'
+  - 'Full theme-adaptive chrome: both renders pass legibility checks with no dark-on-dark
+    failures; legend and annotation text correctly use INK/INK_SOFT/INK_MUTED tokens'
   weaknesses:
-  - Color comment claims teal for A but uses standard green (#1b7837) — minor inconsistency
-  - Very small letters at low-information positions are hard to distinguish individually
-  image_description: 'The plot displays a DNA sequence logo for a 10-position transcription
-    factor binding site motif. Positions 1-10 are shown on the x-axis, with information
-    content (bits) on the y-axis ranging from 0 to 2.0. At each position, nucleotide
-    letters (A, C, G, T) are stacked vertically as scaled glyphs, with height proportional
-    to their contribution to information content. Colors are: A=green, C=blue, G=orange,
-    T=purple. Positions 3-6 form a highly conserved core (highlighted with a pale
-    yellow rounded rectangle and labeled "Conserved core"), showing dominant G, A,
-    G, T letters reaching ~1.4-1.6 bits. Positions 1, 8, and 10 show near-zero information
-    (uniform distribution). Position 2 has moderate conservation (dominant C). Position
-    9 shows a strong T. A color legend in the upper right identifies all four nucleotides.
-    Top and right spines are removed, with a subtle y-axis grid. The title reads "sequence-logo-basic
-    · matplotlib · pyplots.ai".'
+  - Dense tiny-glyph stacks at near-uniform low-IC positions (1, 7, 8, 10) create
+    minor visual clutter near y=0; raise minimum height threshold from 0.01 to 0.03
+    bits to suppress visually uninformative micro-glyphs
+  - Subplot padding is tight after tight_layout; add fig.subplots_adjust(left=0.10,
+    right=0.97, top=0.93, bottom=0.12) before tight_layout for more generous margins
+    and cleaner chrome
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 -- correct, not pure white
+      Chrome: Title "sequence-logo-basic · python · matplotlib · anyplot.ai" in dark INK (#1A1A17), fills ~70% width -- readable. Axis labels "Position" (x) and "Information content (bits)" (y) in dark INK at 10pt -- readable and balanced. Tick labels (1-10 x-axis, 0.00-2.00 y-axis) in INK_SOFT at 8pt -- readable. "Conserved core" annotation in INK_MUTED -- readable.
+      Data: A=teal-green #009E73, C=blue #4467A3, G=ochre #BD8233, T=matte-red #AE3030 rendered as scaled glyphs. Dominant letters at conserved positions (GAGT motif) are tall and prominent. Amber highlight rectangle at positions 3-6 (alpha 0.18). Legend shows all four letters with correct colors.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 -- correct, not pure black
+      Chrome: Title in light #F0EFE8 -- readable against dark surface. Axis labels and tick labels in light #B8B7B0 -- readable. "Conserved core" annotation in muted light color -- readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render -- A=green, C=blue, G=ochre, T=red, all visually the same as light version. Highlight patch slightly darker olive tone, still distinct. Legend frame uses elevated dark #242420 background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -43,42 +55,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, legend 14pt'
+        comment: All font sizes explicitly set; title computed, axis 10pt, ticks 8pt,
+          legend 8pt; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text collisions anywhere
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Letter glyphs well-sized at conserved positions; very small at low-info
-          positions but correct behavior
+        comment: Low-IC positions produce dense tiny-glyph stacks near y=0; main content
+          fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dominant glyphs prominent and optimally scaled; minor letter heights
+          correctly reflect low frequency
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Green/blue/orange/purple avoids red-green conflict; comment claims
-          teal but uses standard green
+        comment: Imprint palette hues well-separated; CVD-safe by design
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, tight_layout, plot fills canvas well
+        comment: Canvas gate passed; 3200x1800; balanced margins; bbox_inches=None
+          confirmed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Position, Information content (bits)'
+        comment: Information content (bits) with units; Position descriptive; correct
+          title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic exception correctly applied; all DNA letters use Imprint
+          palette members; backgrounds correct; full theme-adaptive chrome
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -86,22 +107,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom nucleotide palette, highlighted conserved core, refined legend,
-          clean typography hierarchy
+        comment: 'Clearly above defaults: custom TextPath glyph rendering, semantic
+          Imprint color mapping, annotated highlight region'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid, rounded highlight box, generous
-          whitespace
+        comment: Top/right spines removed, subtle y-axis grid alpha=0.15, legend styled
+          with elevated background
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Yellow highlight on conserved core with annotation creates clear
-          focal point and biological story
+        comment: Conserved core highlight and annotation guide viewer; glyph height
+          creates visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -111,27 +132,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sequence logo with stacked letters scaled by information
-          content
+        comment: Correct sequence logo with scaled glyphs via TextPath+PathPatch
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: vertical stacking, frequency ordering, info content
-          scaling, standard colors, scaled glyphs'
+        comment: Stacking order, IC scaling, DNA colors, axis labels all correct
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position (1-10), Y=information content (0-2 bits)
+        comment: X=position 1-10, Y=information content 0-2 bits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and nucleotide color legend
+        comment: Correct title format; legend shows A/C/G/T with correct colors
     data_quality:
       score: 15
       max: 15
@@ -141,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full range: uniform, moderate, and highly conserved positions'
+        comment: Shows near-uniform low-IC positions AND highly conserved core; full
+          IC range demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ETS-family transcription factor binding site motif with plausible
-          GAGT core
+        comment: ETS-family transcription factor binding site; genuine biological
+          scenario; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies sum to 1, information content correct for DNA (max 2
-          bits)
+        comment: Max 2.0 bits correct for DNA; Shannon entropy calculation correct;
+          biologically realistic
     code_quality:
       score: 10
       max: 10
@@ -165,13 +185,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, compute, plot, style, save'
+        comment: Flat structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded frequency data
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -183,13 +203,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean TextPath + Affine2D + PathPatch approach
+        comment: TextPath+Affine2D is appropriate approach; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png; bbox_inches=None
     library_mastery:
       score: 8
       max: 10
@@ -199,14 +219,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Ax-based API, TextPath with Affine2D transforms for glyph rendering
+        comment: Axes methods throughout; proper Affine2D transform pipeline
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: TextPath, Affine2D, FancyBboxPatch, PathPatch, custom Line2D legend
-          handles
+        comment: TextPath + PathPatch + Affine2D for scaled glyph rendering is distinctly
+          matplotlib
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -217,7 +237,8 @@ impl_tags:
   - manual-ticks
   patterns:
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
