@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: d3 | JavaScript
-// Quality: pending | Created: 2026-06-02
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-02
 
 //# anyplot-orientation: landscape
 
