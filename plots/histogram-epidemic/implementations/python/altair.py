@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -116,7 +116,7 @@ rules = alt.Chart(events).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color=IN
 # Event labels — horizontal at staggered heights, avoiding bar interference
 rule_labels = (
     alt.Chart(events)
-    .mark_text(align="left", dx=4, fontSize=9, fontStyle="italic", color=INK_MUTED)
+    .mark_text(align="left", dx=4, fontSize=11, fontStyle="italic", color=INK_MUTED)
     .encode(x="date:T", y="y_pos:Q", text="event:N")
 )
 
@@ -132,7 +132,7 @@ peak_data = pd.DataFrame(
 
 peak_label = (
     alt.Chart(peak_data)
-    .mark_text(fontSize=9, fontWeight="bold", color=CUMULATIVE_COLOR, dy=-10)
+    .mark_text(fontSize=11, fontWeight="bold", color=CUMULATIVE_COLOR, dy=-10, dx=30)
     .encode(x="onset_date:T", y="peak_val:Q", text="label:N")
 )
 
@@ -167,6 +167,7 @@ chart = (
         gridOpacity=0.15,
         gridColor=INK,
         domainColor=INK_SOFT,
+        domainWidth=0,
         tickColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
