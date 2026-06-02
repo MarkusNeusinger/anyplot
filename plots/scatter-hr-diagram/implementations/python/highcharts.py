@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: highcharts | Python 3.14.3
-Quality: 93/100 | Updated: 2026-06-02
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-02
 """
 
 import os
