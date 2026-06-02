@@ -1,45 +1,53 @@
 library: altair
+language: python
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:48:09Z'
-updated: '2026-03-07T07:13:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22794049042
+updated: '2026-06-02T18:18:16Z'
+generated_by: claude-sonnet
+workflow_run: 26837648575
 issue: 4558
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/python/altair/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Domain-appropriate spectral type color palette matching astrophysical convention
-  - 'Clean visual refinement: removed view strokes, hidden ticks, very subtle grid
-    (0.12 opacity)'
-  - Excellent data quality with realistic stellar populations and the Sun as a reference
-    anchor
-  - Interactive legend selection (selection_point) is a distinctive Altair feature
-  - Region labels positioned thoughtfully in clear areas to guide the viewer
+  - 'Full spec compliance: all required features (reversed x-axis, log y-axis, spectral
+    color coding, 4 region labels, Sun reference) correctly implemented'
+  - 'Genuine Altair interactivity: selection_point(bind=legend) enables click-to-highlight
+    spectral type exploration with conditional opacity — not simulated'
+  - Redundant shape encoding (7 distinct shapes) makes the chart fully CVD-accessible
+    even without color
+  - 'Proper canvas handling: vl-convert size management with PIL padding to exact
+    3200x1800 target'
+  - 'Thoughtful semantic exception: Imprint palette members mapped to astrophysical
+    temperature color convention with code comment explaining the rationale'
+  - 'Both themes correctly adapted: all chrome (text, grid, legend borders, backgrounds)
+    uses correct theme-adaptive tokens'
   weaknesses:
-  - A-type stars (light steel blue at 0.5 opacity) are somewhat faint against the
-    white background
-  - F and G spectral type colors are close in hue, reducing colorblind accessibility
-    slightly
-  - Region label font size (15pt) slightly below ideal for the canvas size
-  image_description: 'The plot displays a Hertzsprung-Russell diagram as a scatter
-    plot with reversed x-axis (high temperature ~40k K on left, low ~2k K on right)
-    and logarithmic y-axis for luminosity (1e-5 to 1e+7 solar luminosities). Stars
-    are colored by spectral type: O (dark blue), B (medium blue), A (light steel blue),
-    F (dark gold), G (bright yellow), K (orange), M (red-orange). The main sequence
-    runs diagonally from upper-left to lower-right. Four region labels in italic gray
-    identify Main Sequence, Red Giants, Supergiants, and White Dwarfs. The Sun is
-    marked with a gold cross marker and labeled "Sun ☉" at approximately 5778 K, 1.0
-    L☉. Title reads "scatter-hr-diagram · altair · pyplots.ai" in the top-left. A
-    spectral type legend sits in the upper-right. The background is clean white with
-    very subtle grid lines. View strokes and tick marks are removed for a polished
-    appearance.'
+  - Main Sequence region label at (8000 K, 0.015 Solar Lum) overlaps moderately with
+    nearby A/F-type markers — consider adjusting to (6000, 0.01) or adding dy offset
+    to land in a clearer zone
+  - A-type stars displayed in purple (#C475FD) — while constrained by Imprint palette
+    (no white available), this is the weakest mapping in the spectral color convention
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-hr-diagram · python · altair · anyplot.ai" readable in dark ink, left-aligned. X-axis label "Surface Temperature (K)" and Y-axis label "Luminosity (L/L☉)" clearly readable. Tick labels (40k, 20k, 10k, 7k, 5k, 3k, 2k on X; 1e-5 to 1e+7 on Y) readable. Region labels (Main Sequence, Red Giants, Supergiants, White Dwarfs) in italic muted ink readable. Sun label "Sun ☉" in amber (#b07c00) readable.
+      Data: 360 stars plotted with 7 distinct shape+color combinations per spectral type. Main sequence diagonal clearly visible. O=#4467A3, B=#2ABCCD, A=#C475FD, F=#DDCC77, G=#99B314, K=#BD8233, M=#AE3030. Golden cross marks Sun at (5778K, 1.0 Solar Lum).
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all axis labels, tick labels, region labels flip to light-colored text and are clearly readable against dark background. No dark-on-dark failures detected. Sun label switches to bright gold (#FFD700). Legend text in light color. Grid remains subtle at 12% ink opacity.
+      Data: Data point colors identical to light render — same 7 spectral colors, same shapes, same positions. Only chrome (backgrounds, text, borders) changed between themes.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -47,45 +55,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 16pt, legend title 18pt. Region labels at 15pt slightly below ideal.'
+        comment: 'Title, axis labels, tick labels, region labels all readable in both
+          themes. Minor deduction: italic muted region labels may be hard to read
+          at mobile widths (~400px).'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Region labels positioned in clear areas. Minor proximity of Main
-          Sequence label to data points.
+        comment: Main Sequence label at (8000K, 0.015 L/Lsun) overlaps moderately
+          with nearby A/F-type markers. Other region labels avoid dense zones.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Size=40 with opacity=0.5 appropriate for 360 points. A-type stars
-          somewhat faint against white background.
+        comment: '360 stars with 7 distinct shapes clearly visible. Static PNG renders
+          at 0.75 opacity (no active selection). Minor deduction: some sparse white
+          dwarf points small relative to canvas.'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Spectral colors follow astrophysical convention with good luminance
-          variation. F and G types somewhat close.
+        comment: Redundant shape encoding (7 distinct shapes) ensures full CVD accessibility
+          across all spectral classes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well at 1600x900, balanced margins, legend positioned
-          appropriately.
+        comment: Canvas gate passed. Title at ~45% width correct. Axis labels balanced.
+          No clipping or overflow. Canvas padded to exact 3200x1800.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Surface Temperature (K) and Luminosity (L/L☉) both descriptive with
-          units.
+        comment: 'X: Surface Temperature (K), Y: Luminosity (L/L☉), title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied for astrophysical spectral
+          type convention. Imprint palette members mapped to closest approximations.
+          Backgrounds #FAF8F1/#1A1A17 correct. Both themes correct.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -93,22 +110,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom spectral-type color palette matching astrophysical convention.
-          Custom title/axis colors. Clearly above defaults.
+        comment: Custom spectral palette with astrophysical rationale, dual encoding
+          (color+shape), specially styled Sun marker (golden cross), italic muted
+          region labels, interactive legend selection.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View strokes removed, tick marks hidden, very subtle grid (0.12 opacity),
-          muted domain colors.
+        comment: Grid at 12% opacity, strokeWidth=0 removes view border, tickSize=0
+          removes tick marks, theme-adaptive chrome applied consistently.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: HR diagram story clearly told with main sequence diagonal, distinct
-          regions, Sun reference, and region labels guiding the viewer.
+        comment: Four stellar regions labeled, Sun marked as reference, main sequence
+          diagonal naturally visible. Interactive legend selection adds exploration
+          value.
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type.
+        comment: Correct scatter plot on HR diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reversed x-axis, log y-axis, spectral type colors, four region labels,
-          Sun reference point.
+        comment: X-axis reversed, Y-axis log scale, color-coded by spectral type,
+          four region labels, Sun reference point all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on X (reversed), Luminosity on Y (log scale), correct
-          ranges.
+        comment: Temperature on X (reversed log), Luminosity on Y (log), spectral
+          type as color+shape.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows O through M in correct order.
+        comment: 'Title: scatter-hr-diagram · python · altair · anyplot.ai. Legend:
+          Spectral Type with all 7 entries.'
     data_quality:
       score: 15
       max: 15
@@ -148,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four stellar regions represented with appropriate counts. All
-          seven spectral types present.
+        comment: All 4 stellar regions shown. All 7 spectral types represented. Sun
+          at exactly 5778K / 1.0 L☉.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real astrophysics scenario with astronomically accurate parameters.
-          Sun at correct 5778 K, 1.0 L☉.
+        comment: Astrophysically plausible synthetic populations. Main sequence follows
+          mass-luminosity relation.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic stellar parameters for all populations.
+        comment: 360 stars within 100-500 spec range. Log scales appropriate for 10-decade
+          luminosity range.
     code_quality:
       score: 10
       max: 10
@@ -172,60 +193,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-chart-save structure, no functions or classes.
+        comment: Flat script, no unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas.'
+        comment: os, altair, numpy, pandas, PIL all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Good use of np.select for spectral type assignment.
+        comment: Clean declarative Altair API usage, proper layer composition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good use of Altair declarative grammar: encode, Scale, Axis, layer
-          composition, alt.condition for selection.'
+        comment: Declarative encoding with correct type annotations, configure_* methods,
+          layer composition with + operator, Scale type specification for log axes
+          with domain reversal.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Interactive legend selection (selection_point with bind=legend),
-          tooltip encoding, HTML export alongside PNG.
+          tooltip integration, dual encoding with merged legends, conditional opacity,
+          HTML export alongside PNG.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending

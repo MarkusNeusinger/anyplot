@@ -1,0 +1,259 @@
+library: ggplot2
+language: r
+specification_id: scatter-hr-diagram
+created: '2026-06-02T18:12:59Z'
+updated: '2026-06-02T18:35:32Z'
+generated_by: claude-sonnet
+workflow_run: 26838202008
+issue: 4558
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Full spec compliance including the optional secondary spectral-class axis on top
+  - All 7 spectral-type colors drawn from the Imprint palette with a well-justified
+    semantic exception (conventional stellar colors)
+  - Physics-based synthetic data generation using Stefan-Boltzmann luminosity-temperature
+    relationship
+  - 'Excellent data storytelling: Sun reference marker, 3 named stars with labels,
+    4 region annotations'
+  - 'Expert idiomatic ggplot2 usage: sec_axis, scale_x_reverse, scale_y_log10 with
+    trans_format, inherit.aes=FALSE, annotate with angle'
+  weaknesses:
+  - MAIN SEQUENCE annotation placed at (9500, 24) with angle=-20 sits directly in
+    the densest part of the main-sequence scatter, causing visible text-on-data overlap;
+    reposition to a lower-density gap e.g. around 4500K luminosity ~0.08 to eliminate
+    the overlap
+  - 7 spectral types use color alone without redundant shape encoding; at 7 series
+    CVD discrimination is at the floor — consider mapping shape to stellar region
+    (circle=main sequence, triangle-up=red giants, diamond=supergiants, triangle-down=white
+    dwarfs) as secondary redundant encoding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "scatter-hr-diagram · r · ggplot2 · anyplot.ai" centered in dark ink, readable. Axis labels "Surface Temperature (K)" and "Luminosity (solar units)" in dark ink at size=10pt. Tick labels in INK_SOFT at size=8pt, all readable. Secondary x-axis "Spectral Class" with O,B,A,F,G,K,M labels visible. Region annotations (SUPERGIANTS, RED GIANTS, MAIN SEQUENCE, WHITE DWARFS) in italic muted ink — readable though MAIN SEQUENCE overlaps dense scatter.
+      Data: 7 spectral types in Imprint palette — O=#4467A3 (blue), B=#2ABCCD (cyan), A=#C475FD (lavender), F=#99B314 (lime), G=#BD8233 (ochre), K=#954477 (rose), M=#AE3030 (red). Sun marked with amber diamond (#DDCC77). Named stars (Rigel, Betelgeuse, Sirius) with dark-outlined filled triangles.
+      Legibility verdict: PASS — all text readable. Note: MAIN SEQUENCE annotation overlaps dense scatter region.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all axis labels in light cream/silver (INK=#F0EFE8, INK_SOFT=#B8B7B0), all readable. Legend box uses elevated dark background #242420 with light border. Region annotations in muted light tone (INK_MUTED=#A8A79F), readable. No dark-on-dark failures detected.
+      Data: All 7 spectral type colors identical to light render — palette unchanged between themes as required.
+      Legibility verdict: PASS — all text readable against dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; both themes readable. Minor crowding
+          near main-sequence region where annotation, Sirius label, and dense scatter
+          overlap slightly.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: MAIN SEQUENCE annotation at angle=-20 at (9500, 24) sits in dense
+          scatter, causing visible text-on-data overlap. Sirius label and MAIN SEQUENCE
+          text are in close proximity.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 417 points with size=1.8 and alpha=0.72 appropriate for medium density.
+          Sun and named-star markers are prominent and distinctive.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: 7 spectral types use color alone without redundant shape encoding.
+          Domain justification strong but at 7 series CVD discrimination is at the
+          floor.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. Good proportions, balanced margins, legend
+          well placed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Surface Temperature (K), Luminosity (solar units), Spectral Class
+          — all descriptive with context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Valid semantic exception: all 7 spectral-type colors are Imprint
+          palette members. Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical
+          between themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional semantic palette, amber diamond for Sun,
+          italic region annotations in muted ink, named star markers with labeling,
+          secondary spectral class axis. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Very subtle grid (linewidth 0.18/0.09), theme-adaptive chrome throughout,
+          elevated legend background. All 4 spines retained via panel.border — appropriate
+          for enclosed HR diagram frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent narrative: four region annotations guide viewer through
+          stellar populations, Sun provides personal reference anchor, named stars
+          add astrophysical context.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct HR diagram scatter plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, log-scale luminosity, spectral-type color coding,
+          all 4 region labels, Sun reference marker, secondary spectral-class axis
+          implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on reversed x, luminosity on log-y, all populations represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format exactly. Legend labels O-M correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All spec dimensions present: temperature, luminosity, spectral_type,
+          star_name, region; all 4 populations; Sun + 3 named stars.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physics-motivated data generation (Stefan-Boltzmann for main sequence),
+          correct temperature ranges 3100-38000K, neutral astrophysics context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 417 stars within 100-500 spec range; astrophysically realistic luminosity
+          and temperature distributions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Defines spectral_class() helper function; minor KISS deviation, but
+          code is otherwise linear Imports->Data->Plot->Save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) correct.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2: scale_x_reverse with sec_axis, scale_y_log10 with
+          trans_format, inherit.aes=FALSE for overlay layers, annotate with angle,
+          scales::label_comma.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sec_axis for dual spectral-class labels, scale_x_reverse, multiple
+          geom_point layers with different datasets and shapes — all distinctively
+          ggplot2.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  - ragg
+  techniques:
+  - twin-axes
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
