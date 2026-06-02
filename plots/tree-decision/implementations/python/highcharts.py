@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: highcharts unknown | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-02
@@ -184,6 +184,9 @@ optimal_series.data = [
     {"x": 3350, "y": 410, "id": "T4", "name": "$200K"},
 ]
 optimal_series.marker = {"symbol": TRI_OPTIMAL_URL, "width": 48, "height": 48}
+# SVG URL markers are invisible in the Highcharts legend renderer — use rectangle
+# so the legend shows a solid colored box rather than a blank slot
+optimal_series.legend_symbol = "rectangle"
 optimal_series.color = COLOR_TERMINAL
 optimal_series.data_labels = {
     "enabled": True,
@@ -200,10 +203,11 @@ pruned_series = ScatterSeries()
 pruned_series.name = "Terminal · Pruned"
 pruned_series.data = [
     {"x": 3350, "y": 790, "id": "T5", "name": "−$100K"},
-    {"x": 2450, "y": 1300, "id": "T2", "name": "$400K"},
-    {"x": 2450, "y": 2000, "id": "T3", "name": "$250K"},
+    {"x": 3100, "y": 1300, "id": "T2", "name": "$400K"},
+    {"x": 3100, "y": 2000, "id": "T3", "name": "$250K"},
 ]
 pruned_series.marker = {"symbol": TRI_PRUNED_URL, "width": 44, "height": 44}
+pruned_series.legend_symbol = "rectangle"
 pruned_series.color = INK_MUTED
 pruned_series.data_labels = {
     "enabled": True,
@@ -225,8 +229,8 @@ edges_data = [
     {"fx": 1400, "fy": 270, "tx": 2450, "ty": 590, "label": "Low Demand (0.4)", "p": False},
     {"fx": 2450, "fy": 590, "tx": 3350, "ty": 410, "label": "Discount", "p": False},
     {"fx": 2450, "fy": 590, "tx": 3350, "ty": 790, "label": "Withdraw", "p": True},
-    {"fx": 1400, "fy": 1650, "tx": 2450, "ty": 1300, "label": "Market Grows (0.5)", "p": True},
-    {"fx": 1400, "fy": 1650, "tx": 2450, "ty": 2000, "label": "Market Stable (0.5)", "p": True},
+    {"fx": 1400, "fy": 1650, "tx": 3100, "ty": 1300, "label": "Market Grows (0.5)", "p": True},
+    {"fx": 1400, "fy": 1650, "tx": 3100, "ty": 2000, "label": "Market Stable (0.5)", "p": True},
 ]
 edges_json = json.dumps(edges_data)
 
@@ -279,7 +283,7 @@ edge_js = (
     "    ren.label(e.label, lx, ly, null, null, null, false, false).attr({"
     "      align: 'center', zIndex: 6, padding: 6, r: 3"
     "    }).css({"
-    "      fontSize: '30px',"
+    "      fontSize: '40px',"
     "      fontWeight: e.p ? '400' : '600',"
     "      color: lcolor,"
     "      fontFamily: 'system-ui, -apple-system, sans-serif'"
