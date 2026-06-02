@@ -37,7 +37,7 @@ For each, the script:
      ``palette-analysis.py``, so the variant pages are directly comparable
      to the baseline diagnostic.
 
-Output: ``docs/reference/palette-variants/{A..F}-<name>.html`` plus an
+Output: ``docs/reference/palette-variants/v0/{A..F}-<name>.html`` plus an
 ``index.html`` linking the six.
 
 Run::
@@ -96,7 +96,7 @@ from _palette_common import (  # noqa: E402
 )
 
 
-DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants"
+DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants" / "v0"
 
 # ── Paper-ink corridor in CAM02-UCS (J' = lightness, C = chroma, H = hue) ─────
 # Lower J' bound: at 45 the colour is dark enough to read against #F5F3EC light bg.

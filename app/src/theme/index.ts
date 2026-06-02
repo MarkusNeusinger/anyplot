@@ -5,7 +5,7 @@
  * colorblind-safe 8-hue categorical palette plus 3 semantic anchors
  * (amber for warning, theme-adaptive neutral and muted).
  * Brand color: #009E73 (bluish green, slot 0 — always first series).
- * Full design rationale: docs/reference/palette-variants-v3/decision-rationale.md
+ * Full design rationale: docs/reference/palette-variants/v3/decision-rationale.md
  */
 
 export const typography = {
