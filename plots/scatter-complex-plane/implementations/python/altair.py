@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -61,20 +61,31 @@ df = pd.DataFrame(all_points)
 df["annotation"] = df["label"] + " = " + df["rect_form"]
 
 # Label offsets: push labels away from origin by quadrant
-# with special handling to separate nearby Q1 labels (z and z₅)
+# with per-point tuning to separate Q1 cluster (ω0, z, z₅)
 offsets = {"dx": [], "dy": [], "align": []}
 for _, row in df.iterrows():
     rx, iy = row["real"], row["imaginary"]
     dx = 0.18 if rx >= 0 else -0.18
     dy = 0.25 if iy >= 0 else -0.25
     align = "left" if rx >= 0 else "right"
-    # z₅ (2.0+0.5i) sits below z (1.5+0.8i) in Q1 — push further down
+    # ω0 = (1, 0) lies ON the x-axis — push label well above it to avoid the axis line
+    if row["label"] == "ω0":
+        dx = 0.05
+        dy = 0.48
+        align = "center"
+    # z₁ (2.5+1.5i) is near the top-right legend — place below-left, right-aligned, to avoid both
+    if row["label"] == "z₁":
+        dx = -0.20
+        dy = -0.30
+        align = "right"
+    # z₅ (2.0+0.5i) sits close to z (1.5+0.8i) in Q1 — push below x-axis entirely
     if row["label"] == "z₅":
-        dy = -0.32
-        dx = 0.22
-    # z·e^(iπ/4) — push further up-right to avoid the point marker
+        dx = 0.15
+        dy = -0.60
+        align = "left"
+    # z·e^(iπ/4) — push further up-right to clear the point marker
     if row["label"] == "z·e^(iπ/4)":
-        dy = 0.32
+        dy = 0.35
         dx = 0.24
     offsets["dx"].append(rx + dx)
     offsets["dy"].append(iy + dy)
@@ -116,8 +127,8 @@ arc_theta = np.linspace(arc_start, arc_end, 40)
 arc_r = abs(z_original) * 0.55
 arc_df = pd.DataFrame({"x": arc_r * np.cos(arc_theta), "y": arc_r * np.sin(arc_theta), "order": range(40)})
 
-# Axis range (tight to maximize canvas utilization)
-axis_limit = 2.65
+# Axis range — expanded slightly so z₁ annotation label (label_x≈2.68) stays within domain
+axis_limit = 2.75
 
 # Axis lines through origin (real = horizontal, imaginary = vertical)
 axis_line_data = pd.DataFrame(
@@ -168,7 +179,7 @@ arc_label_df = pd.DataFrame(
 )
 arc_label = (
     alt.Chart(arc_label_df)
-    .mark_text(fontSize=11, fontStyle="italic", fontWeight="bold", color=IMPRINT_PALETTE[2], opacity=0.9)
+    .mark_text(fontSize=12, fontStyle="italic", fontWeight="bold", color=INK_SOFT, opacity=0.9)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
