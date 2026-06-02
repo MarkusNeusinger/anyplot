@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-02
@@ -155,6 +155,8 @@ for node in tree:
     branch_rows.append({"seg": seg_id, "x": nx, "y": ny, "style": style})
 
 branch_df = pd.DataFrame(branch_rows)
+# seaborn size aesthetic maps to linewidth — encodes branch importance in single call
+branch_df["lw"] = branch_df["style"].map({"optimal": 2.5, "pruned": 1.8})
 
 # Node DataFrame — sns.scatterplot with hue/style gives categorical shape + color encoding
 node_rows = []
@@ -186,36 +188,29 @@ color_map = {
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Branches — optimal solid, pruned dashed + dimmed
-optimal_df = branch_df[branch_df["style"] == "optimal"]
-pruned_df = branch_df[branch_df["style"] == "pruned"]
-
+# Branches — single seaborn call with hue+style+size+units (all four seaborn aesthetics)
+# Combines branch type, line style, and line weight encoding in one idiomatic call
+n_lines_before = len(ax.lines)
 sns.lineplot(
-    data=optimal_df,
+    data=branch_df,
     x="x",
     y="y",
+    hue="style",
+    style="style",
+    size="lw",
+    dashes={"optimal": (1, 0), "pruned": (4, 2)},
+    palette={"optimal": INK_SOFT, "pruned": INK_MUTED},
+    sizes=(1.8, 2.5),
     units="seg",
     estimator=None,
-    color=INK_SOFT,
-    linewidth=2.5,
     sort=False,
     ax=ax,
     legend=False,
 )
-sns.lineplot(
-    data=pruned_df,
-    x="x",
-    y="y",
-    units="seg",
-    estimator=None,
-    color=INK_MUTED,
-    linewidth=1.8,
-    alpha=0.65,
-    linestyle="--",
-    sort=False,
-    ax=ax,
-    legend=False,
-)
+# Dim pruned lines — hue draws "optimal" before "pruned" (alphabetical), so pruned lines are last
+n_optimal_segs = branch_df[branch_df["style"] == "optimal"]["seg"].nunique()
+for line in ax.lines[n_lines_before + n_optimal_segs :]:
+    line.set_alpha(0.65)
 
 # Nodes — active at full opacity, pruned faded
 active_nodes = node_df[~node_df["pruned"]]
@@ -314,8 +309,12 @@ for node in tree:
     label_text = node["label"]
     if node["prob"] is not None:
         label_text = f"{node['label']}\n(p={node['prob']:.1f})"
-    label_x = (px + mid_x) / 2 + 0.1
-    label_y = (py + ny) / 2
+        # Place on horizontal segment past the elbow — avoids overlapping parent chance node
+        label_x = mid_x + (nx - mid_x) * 0.4
+        label_y = ny + (0.28 if ny >= py else -0.28)
+    else:
+        label_x = (px + mid_x) / 2 + 0.1
+        label_y = (py + ny) / 2
     ax.text(
         label_x,
         label_y,
