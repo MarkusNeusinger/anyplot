@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -90,10 +90,10 @@ chart.options.chart = {
     "height": 2400,
     "backgroundColor": PAGE_BG,
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif", "color": INK},
-    "marginTop": 160,
+    "marginTop": 200,
     "marginBottom": 200,
-    "marginLeft": 240,
-    "marginRight": 160,
+    "marginLeft": 200,
+    "marginRight": 200,
 }
 
 chart.options.title = {
@@ -118,7 +118,7 @@ chart.options.x_axis = {
     "gridLineDashStyle": "Dot",
     "lineWidth": 0,
     "tickLength": 0,
-    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 3, "zIndex": 2}],
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 4, "zIndex": 2}],
 }
 
 chart.options.y_axis = {
@@ -136,7 +136,7 @@ chart.options.y_axis = {
     "gridLineDashStyle": "Dot",
     "lineWidth": 0,
     "tickLength": 0,
-    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 3, "zIndex": 2}],
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 4, "zIndex": 2}],
 }
 
 chart.options.legend = {
@@ -280,9 +280,9 @@ for px, py in [(arb_real[0], arb_imag[0]), (arb_real[1], arb_imag[1])]:
 
 # Roots of unity scatter — large circles, green
 root_label_offsets = [
-    {"y": -40, "x": 18},  # ω0 at (1, 0) — push right
-    {"y": -44, "x": -10},  # ω1 at (-0.5, 0.87) — push up
-    {"y": 48, "x": -10},  # ω2 at (-0.5, -0.87) — push down
+    {"y": -44, "x": 18},  # ω0 at (1, 0) — push right
+    {"y": -50, "x": -10},  # ω1 at (-0.5, 0.87) — push up
+    {"y": 52, "x": -10},  # ω2 at (-0.5, -0.87) — push down
 ]
 roots_scatter = ScatterSeries()
 roots_scatter.data = [
@@ -297,7 +297,7 @@ roots_scatter.data = [
 roots_scatter.name = "3rd Roots of Unity"
 roots_scatter.color = COLOR_ROOTS
 roots_scatter.marker = {
-    "radius": 20,
+    "radius": 24,
     "symbol": "circle",
     "lineWidth": 3,
     "lineColor": PAGE_BG,
@@ -306,7 +306,7 @@ roots_scatter.marker = {
 roots_scatter.data_labels = {
     "enabled": True,
     "format": "{point.name}",
-    "style": {"fontSize": "36px", "fontWeight": "700", "color": COLOR_ROOTS, "textOutline": f"4px {PAGE_BG}"},
+    "style": {"fontSize": "28px", "fontWeight": "700", "color": COLOR_ROOTS, "textOutline": f"4px {PAGE_BG}"},
     "allowOverlap": False,
 }
 roots_scatter.z_index = 5
@@ -314,11 +314,11 @@ chart.add_series(roots_scatter)
 
 # Arbitrary complex numbers scatter — diamonds, lavender
 arb_label_offsets = [
-    {"y": -44, "x": 0},  # z₁ at (2, 1.5) — up
-    {"y": -44, "x": -18},  # z₂ at (-1.2, 2) — up-left
-    {"y": 50, "x": 0},  # z₃ at (1.5, -1.8) — down
-    {"y": 50, "x": 60},  # z₄ at (-2, -1) — down-right, avoid edge
-    {"y": -44, "x": 0},  # z₅ at (0.5, 2.5) — up
+    {"y": -48, "x": 0},  # z₁ at (2, 1.5) — up
+    {"y": -70, "x": -20},  # z₂ at (-1.2, 2) — up-left, further from sum/z₅
+    {"y": 54, "x": 0},  # z₃ at (1.5, -1.8) — down
+    {"y": 54, "x": 60},  # z₄ at (-2, -1) — down-right, avoid edge
+    {"y": 68, "x": 0},  # z₅ at (0.5, 2.5) — down, away from sum above
 ]
 arb_scatter = ScatterSeries()
 arb_scatter.data = [
@@ -343,7 +343,7 @@ arb_scatter.data_labels = {
     "enabled": True,
     "format": "{point.name}",
     "useHTML": True,
-    "style": {"fontSize": "32px", "fontWeight": "500", "color": COLOR_ARB, "textOutline": f"3px {PAGE_BG}"},
+    "style": {"fontSize": "28px", "fontWeight": "500", "color": COLOR_ARB, "textOutline": f"3px {PAGE_BG}"},
     "allowOverlap": False,
 }
 arb_scatter.z_index = 5
@@ -351,7 +351,7 @@ chart.add_series(arb_scatter)
 
 # Sum point scatter — triangle, blue
 sum_scatter = ScatterSeries()
-sum_scatter.data = [{"x": sum_x, "y": sum_y, "name": f"{sum_label}<br/>{sum_polar}", "dataLabels": {"y": -46, "x": 18}}]
+sum_scatter.data = [{"x": sum_x, "y": sum_y, "name": f"{sum_label}<br/>{sum_polar}", "dataLabels": {"y": -64, "x": 0}}]
 sum_scatter.name = "z₁ + z₂ (Addition)"
 sum_scatter.color = COLOR_SUM
 sum_scatter.marker = {
@@ -365,7 +365,7 @@ sum_scatter.data_labels = {
     "enabled": True,
     "format": "{point.name}",
     "useHTML": True,
-    "style": {"fontSize": "32px", "fontWeight": "600", "color": COLOR_SUM, "textOutline": f"3px {PAGE_BG}"},
+    "style": {"fontSize": "28px", "fontWeight": "600", "color": COLOR_SUM, "textOutline": f"3px {PAGE_BG}"},
     "allowOverlap": False,
 }
 sum_scatter.z_index = 5
