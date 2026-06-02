@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -55,10 +55,10 @@ nodes_df = pd.DataFrame(
             "type": "chance",
             "x": 300,
             "y": 470,
-            "emv": "$95K",
+            "emv": "$108K",
             "label": "Invest\nSmall",
             "payoff": "",
-            "detail": "Chance (pruned) | EMV=$95K | 0.40×180+0.35×90+0.25×20",
+            "detail": "Chance (pruned) | EMV=$108K | 0.40×180+0.35×90+0.25×20",
             "pruned": True,
         },
         {
@@ -349,7 +349,9 @@ chart = (
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("tree-decision · altair · anyplot.ai", fontSize=16, color=INK, anchor="start", offset=12),
+        title=alt.Title(
+            "tree-decision · python · altair · anyplot.ai", fontSize=16, color=INK, anchor="start", offset=12
+        ),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_title(color=INK)
