@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -103,7 +103,7 @@ sns.histplot(
 y_max = ax.get_ylim()[1]
 
 # Peak period — amber shading only, no text label (reduces visual competition)
-ax.axvspan(pd.Timestamp("2024-02-25"), pd.Timestamp("2024-03-25"), alpha=0.07, color=ANYPLOT_AMBER, zorder=0)
+ax.axvspan(pd.Timestamp("2024-02-25"), pd.Timestamp("2024-03-25"), alpha=0.13, color=ANYPLOT_AMBER, zorder=0)
 
 # Cumulative cases on secondary axis
 ax2 = ax.twinx()
@@ -117,7 +117,7 @@ ax2.spines["bottom"].set_visible(False)
 
 # Intervention markers — staggered labels to avoid overlap with peak shading
 intervention_dates = [
-    (pd.Timestamp("2024-02-20"), "Travel\nRestrictions", -4),
+    (pd.Timestamp("2024-02-20"), "Travel\nRestrictions", 4),
     (pd.Timestamp("2024-03-25"), "Vaccination\nCampaign", 4),
 ]
 for date, label, day_offset in intervention_dates:
