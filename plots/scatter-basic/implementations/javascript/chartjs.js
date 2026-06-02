@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: pending | Updated: 2026-06-02
+// Quality: 90/100 | Created: 2026-06-02
 
 const t = window.ANYPLOT_TOKENS;
 
