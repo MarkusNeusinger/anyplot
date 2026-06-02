@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02

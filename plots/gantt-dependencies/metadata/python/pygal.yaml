@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: gantt-dependencies
 created: '2026-01-15T21:04:11Z'
-updated: '2026-06-02T13:52:00Z'
+updated: '2026-06-02T14:25:18Z'
 generated_by: claude-sonnet
 workflow_run: 26823249198
 issue: 3830
@@ -15,39 +15,42 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dep
 quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance: dependency arrows, phase groupings, critical path, and
-    legend are all present and correctly implemented'
-  - 'Excellent critical path storytelling: matte red arrows immediately communicate
-    scheduling constraints as the primary visual focal point'
-  - Correct Imprint palette with appropriate semantic exception — matte red reserved
-    for critical path indicator rather than a phase category
-  - 'Proper theme adaptation: both light and dark renders are readable with no dark-on-dark
-    failures and identical data colors across themes'
-  - Deterministic, clean linear code structure that handles complex Gantt rendering
-    elegantly via the HorizontalStackedBar offset technique
+  - 'Full spec compliance: all required Gantt features (dependencies, groups, aggregates,
+    critical path) implemented correctly'
+  - Semantic Imprint color assignments per phase with critical path using matte red
+    semantic anchor
+  - Two-tier dependency arrow styling (critical vs. non-critical) with distinct arrowhead
+    markers
+  - Phase outline-only aggregate bars vs. solid task bars create clear visual hierarchy
+  - Diamond milestone markers at phase aggregate start/end dates
+  - Correct dual-theme adaptation across both renders with no dark-on-dark failures
+  - Fully deterministic data with realistic software project lifecycle context
+  - Clean, flat KISS code structure with appropriate SVG post-processing
   weaknesses:
-  - label_font_size=26 is less than half the recommended 56 for pygal; at 400px mobile
-    width Y-axis task labels become unreadable (~3px) — increase canvas height to
-    1900-2000px to allow label_font_size of 36-40px while maintaining row spacing
-  - Diamond milestone markers at ds=9 (9px) are too small to be meaningful at full
-    resolution; increase to ds=14-16
-  - Custom SVG legend uses font-size='26' which is below the recommended 44; increase
-    to 34-38px for bottom legend entries
-  - The Design phase section is visually dense where Architecture/UI-UX/Database/API
-    bars occupy overlapping time windows — alternating row shading helps but cannot
-    fully resolve the crowding
+  - label_font_size=38 is below the recommended 56 for pygal at 3200x1800; while justified
+    by 21 rows, the row labels appear slightly small and may be hard to read on mobile.
+    Consider increasing to ~44-48 and allowing pygal spacing/margin to compress rather
+    than reducing font size.
+  - Non-critical dependency arrows at opacity=0.55 are subtle; some arrows crossing
+    busy Development-phase rows may be hard to trace visually. Consider raising opacity
+    to 0.70 for non-critical arrows.
+  - Diamond milestone markers at ds=15 are small relative to the canvas; increasing
+    to ds=20 would improve visibility without crowding.
+  - Right-edge legend spacing is tight; 'Critical Path' legend entry is positioned
+    close to the right canvas boundary. Reduce sp spacing slightly or move critical
+    path indicator to a new legend row.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "gantt-dependencies · python · pygal · anyplot.ai" in large monospace (Consolas) font, dark #1A1A17, fills ~75% canvas width. Y-axis task and phase labels in dark ink, readable. Month tick labels (Jan–Jun 2025) in dark ink. "Project Timeline (Jan – Jun 2025)" x-axis label is bold and readable.
-      Data: Five phase categories color-coded: Requirements=#009E73 (brand green), Design=#C475FD (lavender), Development=#4467A3 (blue), Testing=#BD8233 (ochre), Deployment=#2ABCCD (cyan). Critical-path bars at 92% opacity, non-critical at 62% with dashed stroke. Elbow-connector dependency arrows: critical in #AE3030 matte red, non-critical in #4A4A44 ink-soft. Diamond markers at phase start/end. Alternating row shading (3% and 7% ink tint). Custom bottom legend with color swatches and critical path arrow indicator.
-      Legibility verdict: PASS — all text readable against light background; label sizes are pragmatically small (26px) for 21 rows but readable at full canvas resolution
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "gantt-dependencies · python · pygal · anyplot.ai" in dark #1A1A17 Consolas monospace at scaled ~66px, spanning ~60% canvas width. Row labels (task and phase names) in dark ink at 38px — readable but compact for 21 rows. Month tick labels (Jan–Jun 2025) in #6B6A63 muted ink at 44px. Bottom legend labels in #1A1A17 at 42px. All text clearly readable against warm off-white background.
+      Data: Requirements bars in #009E73 (brand green) ✓; Design in #C475FD (lavender); Development in #4467A3 (blue); Testing in #BD8233 (ochre); Deployment in #2ABCCD (cyan). Phase aggregate bars use matching colors at 22% fill opacity with colored strokes. Critical path arrows in #AE3030 (matte red) at 88% opacity; non-critical arrows in #4A4A44 at 55% opacity. Diamond milestone markers in phase colors at phase aggregate endpoints.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
-      Chrome: Title and all axis/label/tick text rendered in light #F0EFE8 equivalent, clearly visible against dark surface. Bottom legend text is light-colored. Phase row shading stripes visible as subtler dark overlays. No dark-on-dark text failures observed anywhere in the render.
-      Data: All five phase data colors are identical to the light render — Requirements green, Design lavender, Development blue, Testing ochre, Deployment cyan — confirming only chrome flips between themes. Critical-path red arrows and non-critical gray arrows remain visible on the dark surface. Brand green #009E73 clearly visible in the Requirements bars.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; data color identity across themes confirmed
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title and all row labels in light cream #F0EFE8, clearly readable against dark background. Month tick labels in #A8A79F muted light ink. Bottom legend text in #F0EFE8. No dark-on-dark failures — all chrome tokens correctly adapt from dark theme values. Alternating row backgrounds use INK at low opacity which correctly blends with the dark surface.
+      Data: All data colors identical to light render — Requirements #009E73, Design #C475FD, Development #4467A3, Testing #BD8233, Deployment #2ABCCD. Critical path arrows in #AE3030 remain clearly visible on dark background. Brand green #009E73 is visible and distinctive.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 25
@@ -55,57 +58,56 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set but significantly below guidelines: label_font_size=26
-          (recommended 56), major_label_font_size=34 (recommended 44), legend SVG
-          font-size=26 (recommended 44). Mobile readability compromised for Y-axis
-          task labels.'
+        comment: All font sizes explicitly set. label_font_size=38 below recommended
+          56 but justified by 21-row constraint. Both renders readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps; 21 rows are well-spaced throughout the chart.
+        comment: No text-on-text overlap. Dependency arrows cross task bars intentionally;
+          semi-transparent styling mitigates visual conflict.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Task bars and arrows clearly visible. Diamond milestone markers at
-          9px are too small to be meaningful at full resolution.
+        comment: Task bars clearly visible. Phase aggregate at 22% opacity intentionally
+          subtle. Non-critical arrows at 55% opacity are visible but could be stronger.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette is CVD-safe. Critical path uses redundant encoding:
-          color + stroke-width + opacity.'
+        comment: Imprint palette with semantic assignments; CVD-safe; critical path
+          uses redundant arrow encoding beyond color.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Minor empty space in far-right portion after
-          last bars end.
+        comment: 3200x1800 canvas gate passed. Good canvas utilization. Right edge
+          slightly tight for Critical Path legend entry.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. 'Project Timeline (Jan – Jun 2025)' is descriptive
-          with date range.
+        comment: Title format correct. X-axis label 'Project Timeline (Jan - Jun 2025)'
+          is descriptive with temporal context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Phases use Imprint positions 1-4,6. Matte
-          red (#AE3030) correctly reserved as semantic anchor for critical path. Backgrounds
-          #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+        comment: Background correct for both themes. First series Requirements=#009E73.
+          Phases use Imprint positions 1-4,6 in semantic order. Critical path uses
+          pos 5 as semantic anchor. Chrome adapts correctly.
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -113,25 +115,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: Imprint palette with semantic exception, monospace
-          typography, two-level visual hierarchy, critical path in matte red, alternating
-          row shading. Clearly above defaults.'
+        comment: 'Well above defaults: semantic phase colors, phase outline vs solid
+          task distinction, two-tier dependency styling, diamond milestones, alternating
+          rows, custom legend.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: alternating row tint, custom SVG legend, phase
-          shading differentiation, two dependency line types. Design phase section
-          is visually dense with overlapping time windows.'
+        comment: Monospace typography, subtle alternating row backgrounds, clean custom
+          legend, semantic month grid lines. Some residual default pygal chrome.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Critical path in red immediately draws the eye. Phase grouping makes
-          the project narrative clear. Viewer immediately sees the scheduling constraint
-          story.
+        comment: Critical path is clear focal point via red arrows. Phase hierarchy
+          guides the viewer. Could be stronger with milestone annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -141,30 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart using HorizontalStackedBar with all required
-          sub-features.
+        comment: Correct Gantt chart with dependencies using pygal HorizontalStackedBar
+          offset technique.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Dependency arrows ✓, different styles for critical/non-critical ✓,
-          group headers with aggregate bars ✓, color coding ✓, legend ✓, vertical
-          hierarchy ✓, successor-after-predecessor scheduling ✓.
+        comment: Dependency arrows, two visual styles, group headers with aggregate
+          bars, color coding, legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = time (Jan-Jun 2025), Y-axis = tasks with phase hierarchy.
-          All data visible.
+        comment: Timeline on x-axis, task names on y-axis, finish-to-start dependencies
+          correctly modeled, all 16 tasks visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'gantt-dependencies · python · pygal · anyplot.ai'.
-          Custom bottom legend shows 5 phase colors plus critical path arrow.
+        comment: Title exactly 'gantt-dependencies · python · pygal · anyplot.ai'.
+          Legend covers all 5 phases plus critical path indicator.
     data_quality:
       score: 15
       max: 15
@@ -174,23 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 16 tasks across 5 phases; serial and parallel paths; multi-predecessor
-          dependencies; critical path highlighted; both critical and non-critical
-          tasks; phase aggregate spans.
+        comment: 'All Gantt aspects shown: sequential and parallel dependencies, phase
+          aggregates, critical path, realistic phase boundaries.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development project with real-world phases and plausible
-          task names. 6-month timeline is realistic.
+        comment: Software development project lifecycle is widely understood, neutral,
+          and professionally authentic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Task durations 5-25 business days, realistic. All dependencies logically
-          consistent — no task starts before predecessor ends.
+        comment: 16 tasks in 5 phases within 10-50 range. 6-month timeline plausible.
+          1-4 week task durations realistic.
     code_quality:
       score: 10
       max: 10
@@ -200,36 +198,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → offset calculation → chart → SVG injection
-          → save. No functions or classes.'
+        comment: 'Flat script: imports -> theme tokens -> data -> chart -> SVG post-processing
+          -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; all dates and task data are hardcoded.
+        comment: All data is hardcoded dates; fully deterministic, no random state
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, re, sys (path manipulation), date/timedelta,
-          cairosvg, pygal, Style.'
+        comment: 'All 7 imports are used: os, re, sys, datetime, cairosvg, pygal,
+          pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG injection is complex but justified by spec requirements. No over-engineering
-          beyond what the Gantt+dependencies spec demands.
+        comment: Appropriate complexity for Gantt with custom SVG overlays. No fake
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
+        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html via chart.render().
+          Both required outputs present.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -237,29 +237,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses HorizontalStackedBar correctly as Gantt emulation with transparent
-          offset bar technique. Proper Style object, x_labels, None-value series structure.
-          Slight deduction: bulk of complex rendering bypasses pygal via SVG injection.'
+        comment: HorizontalStackedBar offset-bar Gantt pattern is canonical pygal
+          approach. Style object carries all theme tokens. SVG regex parsing is somewhat
+          fragile but necessary given pygal API.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal's SVG output as post-processing base (pygal-specific leverage).
-          Transparent-bar offset is a pygal Gantt idiom. Advanced visual elements
-          (arrows, legend, diamonds) are pure SVG rather than native pygal features.
-  verdict: REJECTED
+        comment: Exploits pygal SVG text output as base layer for injecting custom
+          SVG defs (arrowhead markers), elbow connector paths, polygon diamonds, and
+          custom legend. HTML interactivity preserved.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - manual-ticks
   - html-export
   - custom-legend
   - annotations
   patterns:
   - iteration-over-groups
-  - data-generation
   dataprep:
   - time-series
   styling:
