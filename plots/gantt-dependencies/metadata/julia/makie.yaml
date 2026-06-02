@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: gantt-dependencies
 created: '2026-06-02T14:04:59Z'
-updated: '2026-06-02T14:11:11Z'
+updated: '2026-06-02T14:31:11Z'
 generated_by: claude-sonnet
 workflow_run: 26823719242
 issue: 3830
@@ -12,48 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dep
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Excellent spec compliance — all Gantt features implemented: dependency arrows,
-    group header aggregate bars, hierarchical task/group visual distinction'
-  - Realistic home construction dataset with 5 phases, 14 tasks, 15 logically correct
-    finish-to-start dependencies
-  - Phase background bands (6% alpha tints) add elegant contextual grouping without
-    visual noise
-  - Proper Imprint palette usage — correctly skips matte-red slot 5 with semantic
-    justification, using positions 1,2,3,4,6
-  - Full theme adaptation — both renders readable with correct chrome flipping and
-    identical data colors
-  - Clean, idiomatic Makie code using poly!/Rect2f for custom bar shapes, lines! for
-    connectors, scatter! for arrowheads
-  - L-shaped dependency connectors clearly encode finish-to-start relationships with
-    triangular arrowheads
+  - 'Complete spec implementation: dependency arrows, group aggregate bars with diamond
+    end-caps, critical path highlighting, and phase color coding all present and correct'
+  - 'Excellent Imprint palette usage: positions 1,2,3,4,6 (correctly skipping slot
+    5 matte red) plus amber for critical path'
+  - 'Full theme adaptation: all chrome tokens applied to every non-data element; both
+    renders PASS legibility checks'
+  - L-shaped dependency connectors with arrowhead markers from right edge of predecessor
+    to left edge of successor — matches spec requirement exactly
+  - PolyElement/LineElement custom legend handles demonstrate Makie-specific knowledge
   weaknesses:
-  - Dependency arrowheads (markersize=8) are small — increase to 10–12 for better
-    visibility especially at mobile scale
-  - No phase legend explaining the 5 color-coded phases — a small legend box mapping
-    phase name to color would aid comprehension for first-time viewers
-  - No critical path or milestone emphasis — consider slightly thicker bars or a highlight
-    color for the longest dependency chain (Foundation Pour → Framing → Roofing →
-    Electrical → HVAC → Insulation → Drywall → Painting → Flooring → Final Inspection)
-  - Group header bars (height=0.26) and task bars (height=0.50) share the same color
-    family; the thin outline-only style on groups is easy to miss — consider a hatched
-    fill or a diamond-end decoration to make group aggregates more visually distinct
-  - Y-tick labels at yticklabelsize=11 are slightly smaller than x-tick labels (12)
-    — a unified 12pt across both axes would balance the typography better
+  - Y-axis tick labels (size 12) are slightly small for 19 rows at the 3200x1800 canvas
+    scale — consider bumping yticklabelsize to 13 or 14 for the crowded row count
+  - Two-space indentation prefix in task labels has no visual effect since Makie tick
+    labels are right-aligned; visual hierarchy still works via UPPERCASE groups but
+    the intended indent is invisible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
-      Chrome: Title "Home Construction · gantt-dependencies · julia · makie · anyplot.ai" in dark ink, fully readable. Y-axis task labels in INK_SOFT (#4A4A44) with UPPERCASE phase headers and indented child tasks — all readable. X-axis "Project Day" label and tick labels (0, 10 … 80) readable.
-      Data: 5 phases in Imprint palette — green (#009E73) for Foundation, lavender (#C475FD) for Structure, blue (#4467A3) for Systems, ochre (#BD8233) for Finishing, cyan (#2ABCCD) for Completion. Subtle 6%-alpha phase background bands tint each phase region. Group header bars are thin with colored stroke; task bars are solid at 85% opacity. L-shaped dependency connectors in INK_MUTED with small right-triangle arrowheads.
-      Legibility verdict: PASS — all text readable against warm-off-white background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Home Construction · gantt-dependencies · julia · makie · anyplot.ai" in dark ink, clearly readable. X-axis label "Project Day" visible. 19 Y-axis tick labels (UPPERCASE group headers + task rows) in INK_SOFT dark grey — all readable. X-axis tick numbers 0-80 in 10-day increments visible.
+      Data: Green (#009E73) for Foundation, lavender (#C475FD) for Structure, blue (#4467A3) for Systems, ochre (#BD8233) for Finishing, cyan (#2ABCCD) for Completion. First series is brand green #009E73. Task bars solid at 0.85 alpha; group bars thin with diamond end-caps. L-shaped dependency arrows in amber (#DDCC77) for critical path, INK_MUTED for others. Very subtle phase background bands at 6% alpha.
+      Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
-      Chrome: Title, axis labels, tick labels all in light-colored text (F0EFE8 / B8B7B0) — clearly readable against dark surface. No dark-on-dark failures observed. Grid lines subtle on dark background.
-      Data: Phase colors are identical to light render — green, lavender, blue, ochre, cyan. Phase background bands slightly less visible on dark surface but present. Dependency connectors render in lighter muted ink.
-      Legibility verdict: PASS — all text readable, data colors identical to light render, chrome correctly inverted
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and all axis/tick labels flip to light tones (#F0EFE8 / #B8B7B0). All 19 Y-axis task/group labels, X-axis "Project Day" label, tick numbers, and legend labels are clearly readable. No dark-on-dark failure observed.
+      Data: Data colors identical to light render — green, lavender, blue, ochre, cyan for phases; amber for critical path. Only chrome flips between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable against dark background
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,82 +52,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, xlabelsize=14, xticklabelsize=12,
-          yticklabelsize=11). Readable in both themes. Y-tick at 11pt is slightly
-          smaller than x-tick 12pt — minor imbalance.
+        comment: All text readable in both themes; 19 Y-axis tick labels at size 12
+          slightly small for row density but legible
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text or data element overlaps. Task labels, dependency connectors,
-          and bars all coexist cleanly.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Task bars well-sized. Group headers distinguishable. Dependency arrowheads
-          (markersize=8) are small but visible at full resolution; may be hard to
-          see at mobile scale.
+        comment: Some dependency arrows pass through task bar regions due to chart
+          complexity; text elements do not overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Task bars, group summary bars with diamond end-caps, and dependency
+          arrows all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-optimised. Task names provide redundant encoding
-          beyond color.
+        comment: Imprint palette CVD-safe; amber for critical path is sufficiently
+          distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed. 19 rows fill the canvas well. Margins balanced.
-          Inherent right-side whitespace for early-phase tasks is expected in Gantt
-          format.
+        comment: Correct 3200x1800 landscape canvas; title proportion ~55%; no overflow;
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Project Day'' — descriptive. No Y-axis label needed (tick
-          labels are the task names). Title includes descriptive prefix and correct
-          format.'
+        comment: Title follows Descriptive·spec-id·julia·makie·anyplot.ai format;
+          Project Day x-axis label present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First phase = #009E73, positions 1,2,3,4,6 used (correctly skipping
-          matte-red slot 5 for semantic reasons). Background #FAF8F1 light / #1A1A17
-          dark. Theme chrome properly flipped.'
+        comment: 'First series #009E73; Imprint positions 1,2,3,4,6; amber for critical
+          path; backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: phase background tints, group/task bar distinction,
-          Imprint palette with semantic justification, L-shaped connectors. Missing:
-          phase legend, critical path emphasis, group aggregate visual decoration.'
+        comment: Phase background bands, differentiated group vs task bar styles,
+          critical path in amber, L-shaped connectors — well above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, y-grid suppressed, x-grid at 0.12 alpha,
-          phase bands add depth. Good refinement but not fully polished.
+        comment: Top/right spines removed, x-grid only at 12% opacity, no legend frame,
+          subtle phase tint bands
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Cascading staircase dependency pattern makes the sequential project
-          flow immediately clear. Phase color coding shows project structure at a
-          glance. No critical path highlighting.
+        comment: Critical path in amber creates clear focal point; group hierarchy
+          via UPPERCASE labels tells project scheduling story
     spec_compliance:
       score: 15
       max: 15
@@ -149,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with dependencies, group headers, and hierarchical
-          layout.
+        comment: Correct Gantt chart with horizontal task bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Dependency arrows (right edge to left edge, finish-to-start), group
-          aggregate header bars, task/group visual distinction, color coding all present.
+        comment: Dependency arrows, group aggregate bars, legend with critical path
+          explanation, phase color coding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = project day (timeline), Y = tasks in hierarchical order. All
-          19 rows (5 groups + 14 tasks) mapped correctly.
+        comment: X-axis covers full 0-80 day range; all 19 rows shown with correct
+          spans
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Home Construction · gantt-dependencies · julia · makie
-          · anyplot.ai'' — correct format with optional descriptive prefix.'
+        comment: Title correctly formatted; legend covers all 5 phases and critical
+          path
     data_quality:
       score: 15
       max: 15
@@ -181,23 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows hierarchical groups, sequential chains, parallel tasks (Roofing
-          + Exterior Walls both depending on Framing), fan-in dependencies (HVAC depends
-          on both Plumbing and Electrical).
+        comment: 'All Gantt aspects: task timelines, group aggregates, finish-to-start
+          dependencies, critical path, phase hierarchy'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Home construction with authentic task names. Neutral, real-world
-          scenario.
+        comment: Home construction project with realistic phases and task durations;
+          neutral real-world domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80-day construction schedule with logically correct dependencies
-          (cannot frame before foundation pour, etc.). Realistic phase durations.
+        comment: 80-day project, 14 tasks, 15 dependencies; realistic construction
+          scheduling cadence
     code_quality:
       score: 10
       max: 10
@@ -207,35 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → constants → data → figure → axes → elements
-          → save. No functions or classes.'
+        comment: Flat script, no functions/classes, well-organized with const declarations
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set. Data is deterministic.
+        comment: Random.seed!(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used.
+        comment: Only CairoMakie, Colors, Random — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No over-engineering.
+        comment: Appropriate complexity for chart type; clean iteration patterns;
+          no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct. Uses modern
-          size= parameter (not deprecated resolution=).
+        comment: save(plot-THEME.png, fig; px_per_unit=2) correct
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -243,28 +221,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses poly!/Rect2f for bars, lines! for connectors, scatter! for arrowheads,
-          yticks with string arrays — all idiomatic Makie. RGBAf for alpha blending
-          is correct.
+        comment: Proper use of Axis, Figure, poly!, scatter!, lines!, Legend, xlims!,
+          ylims!, rowsize! — all idiomatic CairoMakie
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Rect2f + poly! for custom-shaped bars (Makie-native, not just barplot!).
-          Phase bands via poly! fill. Custom ytick strings for hierarchical labels.
-          Somewhat Makie-distinctive but no recipe or Observable usage.
-  verdict: REJECTED
+        comment: RGBAf for alpha color construction, poly!(Rect2f) for shaped bars,
+          PolyElement/LineElement for custom legend handles, :diamond/:rtriangle named
+          markers
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - manual-ticks
   - patches
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
