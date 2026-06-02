@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-06-02
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Range1d
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -80,6 +80,12 @@ PT_SCALE = PX_PER_UNIT / (1.333 * 0.70)
 MIN_RECT_HEIGHT = 0.005
 MIN_TEXT_HEIGHT = 0.04
 COLUMN_WIDTH = 0.82
+# Width-based cap: letters must not overflow column boundaries
+# X inner width: 3200 - 180(left) - 80(right) = 2940 px; x range = 10.7 - 0.3 = 10.4 units
+X_INNER_PX = 3200 - 180 - 80
+X_DATA_RANGE = 10.7 - 0.3
+X_PX_PER_UNIT = X_INNER_PX / X_DATA_RANGE
+WIDTH_BASED_PT = int(COLUMN_WIDTH * X_PX_PER_UNIT / 1.333)
 
 for i, pos in enumerate(positions):
     ic = information_content[i]
@@ -112,7 +118,7 @@ for i, pos in enumerate(positions):
             text_x.append(pos)
             text_y.append(center_y)
             text_letter.append(letter)
-            font_pt = max(14, min(int(height * PT_SCALE * 0.85), 300))
+            font_pt = max(14, min(int(height * PT_SCALE * 0.85), WIDTH_BASED_PT))
             text_size.append(f"{font_pt}pt")
 
         y_bottom += height
@@ -206,15 +212,14 @@ legend = Legend(
     margin=20,
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.9,
-    border_line_color=INK_SOFT,
-    border_line_alpha=0.3,
+    border_line_color=None,
 )
 p.add_layout(legend, "right")
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.title.text_font_size = title_fontsize
 p.title.text_font_style = "bold"
@@ -241,6 +246,25 @@ p.xaxis.ticker = positions
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.15
+
+# Reference line at IC=1 bit — helps readers interpret the conservation scale
+ref_line = Span(location=1.0, dimension="width", line_color=INK_SOFT, line_alpha=0.5, line_width=2, line_dash="dashed")
+p.add_layout(ref_line)
+ref_label = Label(
+    x=10.55,
+    y=1.03,
+    text="1 bit",
+    text_color=INK_SOFT,
+    text_font_size="28pt",
+    text_font_style="italic",
+    text_align="right",
+)
+p.add_layout(ref_label)
+
+# Subtle highlight for the conserved core positions (IC ≥ 0.9)
+for i, pos in enumerate(positions):
+    if information_content[i] >= 0.9:
+        p.add_layout(BoxAnnotation(left=pos - 0.45, right=pos + 0.45, fill_color=INK, fill_alpha=0.04, line_color=None))
 
 # Save interactive HTML (catalog artifact)
 output_file(f"plot-{THEME}.html")
