@@ -1,0 +1,260 @@
+library: makie
+language: julia
+specification_id: scatter-hr-diagram
+created: '2026-06-02T18:13:29Z'
+updated: '2026-06-02T18:40:46Z'
+generated_by: claude-sonnet
+workflow_run: 26838311287
+issue: 4558
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - 'Excellent semantic color mapping: G-type leads with brand green (#009E73), K-type
+    uses ochre, M-type uses matte red — approximates astronomical convention while
+    maintaining Imprint palette compliance'
+  - Dashed main-sequence reference spine is a standout editorial choice that guides
+    the viewer along the expected stellar evolution pathway
+  - Sun reference point (gold star5 with outline at T=5778K, L=1) provides an immediately
+    recognizable scale anchor for non-experts
+  - Full theme adaptation (light/dark) with correct chrome token hierarchy throughout
+    all elements
+  - 'Physically accurate synthetic data: L proportional to T^3.5 main sequence relationship,
+    correct spectral type temperature boundaries, realistic stellar population ratios'
+  - Clean y-only grid at 12% opacity — appropriate for scatter, reduces chart noise
+  weaknesses:
+  - Region annotation labels (Main Sequence, Red Giants) placed within or adjacent
+    to dense star clusters cause partial overlap with data points — consider offset
+    placement or arrows to nearby whitespace
+  - G-type (solar) stars use brand green (#009E73) rather than conventional stellar
+    yellow/gold — spec explicitly requests yellow for F/G types; current mapping is
+    an intentional palette-compliance trade-off but diverges from spec
+  - Optional secondary x-axis with spectral class labels (O, B, A, F, G, K, M) not
+    implemented — would strengthen the astronomical context
+  - spectral_type(T) helper function slightly violates KISS structure principle
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "scatter-hr-diagram · julia · makie · anyplot.ai" in dark INK (#1A1A17), occupying ~65% of canvas width. Axis labels "Surface Temperature (K)" and "Luminosity (L☉)" in INK (14pt). Tick labels in INK_SOFT (12pt). Region annotations ("Main Sequence", "Red Giants", "Supergiants", "White Dwarfs") in INK_SOFT. All readable.
+      Data: G-type main sequence in #009E73 (brand green) — first series correct. K-type in #BD8233 (ochre), M-type in #AE3030 (matte red), F-type in #99B314 (lime), A-type in #C475FD (lavender), B-type in #2ABCCD (cyan), O-type in #4467A3 (blue). Sun as gold star5 (#DDCC77) at T=5778K, L=1. Dashed main-sequence reference spine in INK_SOFT at 30% opacity.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light INK (#F0EFE8) — clearly readable. Axis labels in light INK. Tick labels in INK_SOFT (#B8B7B0) — readable grey against near-black. Region annotations in INK_SOFT light grey. Legend with #242420 elevated background and #B8B7B0 light frame. No dark-on-dark failures detected.
+      Data: All data colors identical to light render — #009E73, #BD8233, #AE3030, #99B314, #C475FD, #2ABCCD, #4467A3 and gold Sun star all unchanged between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, proportions good, readable in both
+          themes; region annotation labels at fontsize=12 slightly modest for mobile
+          readability
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Main Sequence and Red Giants annotations placed within dense star
+          clusters causing partial overlap with data points
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized for ~291 points at alpha=0.70; white dwarf points
+          visible but slightly small given their sparse distribution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; alpha=0.70 prevents harsh overplotting;
+          Sun marker with stroke provides redundant encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 px correct, good canvas utilization, balanced margins,
+          legend well-placed in bottom-right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Surface Temperature (K) and Luminosity (L☉) both descriptive with
+          units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'G-type leads with #009E73 brand green; all series use Imprint palette
+          with semantic exception for astronomical colors; backgrounds #FAF8F1/#1A1A17;
+          chrome fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color assignment approximating astronomical conventions;
+          dashed main-sequence reference spine is an elegant touch; above-default
+          design but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid at 12% opacity appropriate for scatter, top/right spines
+          removed, INK/INK_SOFT text hierarchy applied, marker alpha for depth
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed reference spine guides the eye along expected main sequence;
+          region labels create clear population hierarchy; Sun as focal reference;
+          reversed x-axis follows astronomical convention
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: HR diagram scatter with reversed log-log axes, four stellar populations,
+          spectral type coloring
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: X-axis reversed, log Y-axis, four region labels, Sun reference all
+          present; color convention uses Imprint semantic exception (G=green not yellow);
+          optional secondary spectral-class axis not implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on X, luminosity on Y, all populations covered (291 stars),
+          correct ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title scatter-hr-diagram · julia · makie · anyplot.ai correct; legend
+          entries G-type through O-type + Sun (G2V) match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All four HR diagram regions present: main sequence diagonal, red
+          giant branch, supergiant region, white dwarf sequence; all 7 spectral types;
+          Sun reference'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Astrophysics is a neutral scientific context; synthetic data uses
+          physically correct stellar relationships
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Main sequence follows L~T^3.5; correct temperature ranges per spectral
+          classification; Sun at T=5778K L=1; realistic stellar population counts
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Includes spectral_type(T) helper function (mild KISS deviation);
+          otherwise clean linear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all actively used, no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, semantic color Dict is clean, loop over spectral
+          types is idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic Makie: Figure/Axis keyword args, scatter!/lines!/text!/axislegend,
+          colorant literals, xreversed, xticks with positions+labels pair'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: xreversed=true clean built-in reversal, marker=:star5 named marker,
+          axislegend idiomatic legend, RGBAf for alpha grid color
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
