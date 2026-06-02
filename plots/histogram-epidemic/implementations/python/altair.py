@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-06-02
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-02
 """
 
 import os
