@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bar-basic
 created: '2026-06-02T23:09:41Z'
-updated: '2026-06-02T23:13:52Z'
+updated: '2026-06-02T23:25:50Z'
 generated_by: claude-opus
 workflow_run: 26853284277
 issue: 612
@@ -12,45 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint brand green #009E73 on bars; backgrounds are warm off-white /
-    warm near-black, identical data color across both themes.'
-  - Clean theme-token plumbing — t.ink, t.inkSoft, t.grid, t.pageBg all flow through
-    plugin and scale options; both renders pass legibility.
-  - Title string matches the mandated bar-basic · javascript · chartjs · anyplot.ai
-    format exactly; legend correctly disabled for a single series.
-  - 'Idiomatic Chart.js: responsive: true, maintainAspectRatio: false, animation:
-    false, no import/require, no width/height attributes on the canvas.'
-  - 'Subtle refinement choices: x-grid removed, y-grid kept, borderRadius: 4 on bars,
-    padding tuned, beginAtZero: true.'
+  - 'Clear focal point: Footwear leader bar rendered in brand green #009E73 with bold
+    green value label, matching the spec''s invitation to highlight specific bars.'
+  - Idiomatic Chart.js custom plugin (afterDatasetsDraw) draws per-bar value labels
+    above each bar, giving readers precise figures without depending on interactive
+    tooltips.
+  - Theme tokens threaded throughout — title, axis titles, ticks, grid, and tooltip
+    all read from window.ANYPLOT_TOKENS so chrome flips cleanly between light and
+    dark.
+  - 'Minimal-chrome aesthetic: axis borders hidden, x-axis grid removed, y-axis grid
+    kept subtle, generous top padding (36px) so the leader value label has breathing
+    room.'
+  - 'Idiomatic Chart.js details: categoryPercentage/barPercentage tuned for clean
+    rhythm, borderRadius:4 softens corners, hoverBackgroundColor + custom tooltip
+    callback with formatted currency string.'
+  - 'Title format is correct: ''bar-basic · javascript · chartjs · anyplot.ai''. Single-series
+    chart correctly disables the legend; axes are descriptive (''Product line'', ''Revenue
+    (USD millions)'') with units.'
   weaknesses:
-  - No data storytelling — every bar is the same color and there's no emphasis on
-    the leader (Footwear) or the laggard (Eyewear). Consider a two-tone treatment
-    (top performer in brand green, rest desaturated) or value labels above each bar
-    as the spec suggests.
-  - 'Visual refinement could go further: the y-axis still draws a left border via
-    the spine; hiding it would yield a cleaner Tufte-style look.'
-  - Tick fontsize 14pt is marginal on the 400-px mobile thumbnail. Bump tick fontsize
-    to 16pt or reduce tick density for mobile clarity.
-  - 'Chart.js-distinctive features are underexploited: no custom tooltip config, no
-    datalabels plugin, no per-bar emphasis, no hover styling.'
+  - 'Non-leader bars use t.inkSoft (a chrome token), so their fill flips between themes:
+    dark grey-green in plot-light.png, light cream/grey in plot-dark.png. The Imprint
+    rule requires data colors to be identical across themes — only chrome should flip.
+    Replace t.inkSoft with a stable palette-based muted color (e.g. a fixed hex like
+    ''#9CA3A1'' that reads on both surfaces, or t.palette[0] at alpha ~0.22 via a
+    hex with alpha suffix) so the muted bars look the same in both renders.'
+  - 'Same root cause for the value-label text on non-leader bars: ctx.fillStyle =
+    t.inkSoft means the label color flips with the theme. The leader label correctly
+    uses t.palette[0] (constant). Use a constant muted ink for the non-leader labels
+    too, or accept that label text is chrome and document the tradeoff — but currently
+    the spec treats labels as data-attached annotations, so prefer a constant color.'
+  - Title fontsize 22px is on the small side for a 3200×1800 canvas — the title occupies
+    only ~25% of plot width. Not a hard fail (no overflow, no squeezing), but bumping
+    to ~30–34px would give it more presence and better proportional balance with the
+    bars and axis labels.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at ~#FAF8F1 — clearly not pure white, matches the Imprint light token.
-      Chrome: Title "bar-basic · javascript · chartjs · anyplot.ai" centered top in dark ink; y-axis label "Revenue (USD millions)" rotated on the left; x-axis label "Product line" centered below. Tick labels (0, 10, 20… 60 on y; Apparel/Footwear/Accessories/Equipment/Eyewear/Wellness on x) in slightly softer ink — all clearly readable. Horizontal y-grid hairlines are subtle; x-grid removed.
-      Data: Six vertical bars in Imprint brand green (#009E73) with a small borderRadius. First series IS #009E73 — verified.
-      Legibility verdict: PASS
+      Background: warm off-white around #FAF8F1 — correct.
+      Chrome: Title "bar-basic · javascript · chartjs · anyplot.ai" rendered in dark ink, centered, fully visible. Y-axis ticks (0, 10, 20, 30, 40, 50, 60), x-axis category labels (Apparel, Footwear, Accessories, Equipment, Eyewear, Wellness), axis titles "Product line" and "Revenue (USD millions)" — all in dark ink, clearly readable. Horizontal y-grid lines are subtle (light grey). No spines/borders on axes. Per-bar value labels above each bar.
+      Data: Footwear (leader) bar in brand green #009E73, value label "51.3" in bold green. Remaining five bars (Apparel 42.8, Accessories 18.9, Equipment 33.7, Eyewear 12.4, Wellness 27.1) in dark grey-green (t.inkSoft, the chrome ink token).
+      Legibility verdict: PASS — every element is comfortably readable against the warm off-white.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at ~#1A1A17 — clearly not pure black, matches the Imprint dark token.
-      Chrome: Title, axis titles, and tick labels all render in light ink against the dark surface and are fully visible. No dark-on-dark instances. Grid hairlines remain subtle but visible.
-      Data: Six bars are identical in color (#009E73) to the light render — only the chrome tokens flipped, as required.
-      Legibility verdict: PASS
+      Background: warm near-black around #1A1A17 — correct.
+      Chrome: Title, axis titles, tick labels, category labels all rendered in light cream ink and readable. Horizontal y-grid lines subtle. No dark-on-dark text failures.
+      Data: Footwear leader bar still in brand green #009E73 (identical to light render — good). Value label "51.3" still in bold green. However, the five non-leader bars are now light cream/grey because t.inkSoft flips from dark to light between themes. The non-leader value labels likewise flip color. Brand green is clearly visible on the near-black surface.
+      Legibility verdict: PASS for readability, but data colors are NOT identical across the two renders — the non-leader bar/label fill flips with the theme. That violates the Imprint rule that data colors stay constant; only chrome should flip. Flagged in weaknesses with a concrete fix.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,72 +70,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit fontsizes; ticks at 14pt remain readable in both themes,
-          slightly tight at 400px mobile.
+        comment: Title 22px, axis titles 16px, ticks 16px — all readable in both themes;
+          tight at 400px mobile scale but acceptable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: Value labels sit cleanly above each bar, no collisions with axes
+          or other text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Six bars are prominent; no overplotting at this density.
+        comment: Six prominent bars, well-spaced via categoryPercentage 0.72 / barPercentage
+          0.92.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green hue with strong contrast on both backgrounds;
-          no red-green ambiguity.
+        comment: Brand green vs. ink contrast is high; CVD-safe (single accent color,
+          not red-green pair).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate not flagged; title ~35% width, balanced axis labels,
-          no overflow.
+        comment: Canvas 3200×1800 landscape (gate passed). Title sits ~25% of plot
+          width — small but not squeezed or overflowing, falls inside the chartjs
+          default-fontsize allowance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units; title in mandated format.
+        comment: Correct mandated title format; axis labels are descriptive with units
+          (USD millions).
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; backgrounds correct (#FAF8F1 / #1A1A17); data
-          colors identical across themes.'
+        passed: false
+        comment: 'Leader bar uses palette[0] = #009E73 (correct). Non-leader bars
+          use t.inkSoft, a chrome ink token — so the bar fill flips between light
+          and dark. Imprint rule requires data colors to be identical across themes.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Brand palette, rounded bar corners, hidden x-grid, removed legend
-          — modest polish above defaults.
+        passed: true
+        comment: 'Above default (4): intentional focal-point design with brand color,
+          bold leader label weight, refined bar rhythm via categoryPercentage / borderRadius.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle y-grid, x-grid removed, x-axis border kept; could push further
-          by hiding y-axis spine.
+        passed: true
+        comment: 'Above default (2): axes borders removed, x-grid disabled, y-grid
+          subtle, top padding 36px gives breathing room above the leader label.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Uniform bar color, no focal point, no value labels — no narrative
-          cue.
+        passed: true
+        comment: 'Above default (2): clear focal point through color + weight contrast,
+          value labels guide precise reading, leader Footwear stands out at a glance.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,25 +150,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Vertical bar chart.
+        comment: Vertical bar chart — matches the bar-basic spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths, single color, adequate spacing.
+        comment: Categorical x-axis, numeric y-axis, 6 categories within 3-15 guidance,
+          consistent bar widths, highlighted leader, value labels above bars.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category -> x, value -> y.
+        comment: X = product line, Y = revenue (USD millions); y begins at zero, all
+          six bars visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact mandated format; legend disabled for single series (correct).
+        comment: 'Title format exact: ''bar-basic · javascript · chartjs · anyplot.ai'';
+          legend correctly disabled for single-series.'
     data_quality:
       score: 15
       max: 15
@@ -161,19 +181,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six categories show ranking, spread, and relative comparison.
+        comment: Bars span ~12–51 range — wide enough to show ranking, magnitude differences,
+          and the highlight pattern the spec recommends.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product-line revenue is plausible and neutral.
+        comment: Quarterly revenue by product line — neutral, realistic business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: USD millions, 12-51 range, sensible.
+        comment: USD millions, values plausible for retail product-line revenue; y-axis
+          ticks at every 10 units land on round numbers.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +205,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes.
+        comment: No functions/classes beyond the Chart.js plugin object — idiomatic
+          flat snippet.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data, fully deterministic.
+        comment: Hard-coded data array — fully deterministic, no RNG, no fetch.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses Chart global as required.
+        comment: No imports / requires — relies on Chart global per harness contract.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, no fake UI.
+        comment: Concise, well-commented for non-obvious choices (focal-point + plugin
+          rationale). No fake interactivity (Chart.js is interactive natively).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness writes plot-{theme}.png and plot-{theme}.html.
+        comment: Snippet does not touch the filesystem — correct for the chartjs harness
+          contract. Uses Chart.js 4.x API.
     library_features:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -217,21 +242,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic new Chart(canvas, config); animation: false; responsive;
-          theme-token threading.'
+        comment: Uses new Chart(canvas, config) high-level API, type:'bar', responsive
+          + animation:false per harness contract, plugin via the afterDatasetsDraw
+          hook.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses categoryPercentage/barPercentage/borderRadius; no datalabels
-          plugin or per-bar emphasis.
+        passed: true
+        comment: 'Distinctive Chart.js features used: custom plugin for per-bar annotations,
+          categoryPercentage/barPercentage tuning, hoverBackgroundColor, tooltip callback
+          for currency formatting, borderRadius for softened corners.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
