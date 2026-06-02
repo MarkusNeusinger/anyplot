@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-02
@@ -61,7 +61,8 @@ def _lerp_hex(c0, c1, t):
 
 # Imprint diverging palette: #4467A3 (blue/cold) → neutral midpoint → #AE3030 (red/warm)
 # Negative anomalies = cold = blue; positive anomalies = warm = red
-_midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
+# Dark midpoint uses #3A3A37 (not #1A1A17) so near-zero stripes remain visible against dark bg
+_midpoint = "#FAF8F1" if THEME == "light" else "#3A3A37"
 ANYPLOT_DIV256 = [_lerp_hex("#4467A3", _midpoint, t / 127.0) for t in range(128)] + [
     _lerp_hex(_midpoint, "#AE3030", t / 127.0) for t in range(128)
 ]
