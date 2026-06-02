@@ -1,12 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 genome-track-multi: Genome Track Viewer
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-06
+Library: plotnine | Python
 """
+
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import (
+
+
+# Work around naming conflict with plotnine.py script and plotnine package
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+for _p in [_script_dir, "", "."]:
+    if _p in sys.path:
+        sys.path.remove(_p)
+
+from plotnine import (  # noqa: E402
     aes,
     element_blank,
     element_line,
@@ -23,7 +33,7 @@ from plotnine import (
     guides,
     labs,
     scale_color_manual,
-    scale_fill_brewer,
+    scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -33,26 +43,34 @@ from plotnine import (
 
 np.random.seed(42)
 
+# Theme-adaptive chrome — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — 8 hues, hybrid-v3 sort
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # Genomic region: chr7, EGFR locus (~55kb region)
 chrom = "chr7"
 region_start = 55_086_000
 region_end = 55_141_000
 
-# Track vertical layout (bottom to top): each track gets a band
-# Regulatory: 0 - 1
-# Variants:   1.5 - 3.5
-# Coverage:   4.0 - 6.0
-# Genes:      6.5 - 7.5
+# Track vertical layout (bottom to top):
+# Regulatory:  0.0 – 1.0
+# Variants:    1.5 – 3.5
+# Coverage:    4.0 – 6.0
+# Genes:       6.5 – 7.5
 
-# Background shading for track separation (alternating grey/white)
-track_bg_grey = pd.DataFrame(
+# Shaded track backgrounds for regulatory and coverage tracks (theme-adaptive)
+track_bg_shaded = pd.DataFrame(
     {"xmin": [region_start, region_start], "xmax": [region_end, region_end], "ymin": [0.0, 4.0], "ymax": [1.0, 6.0]}
 )
-track_bg_white = pd.DataFrame(
-    {"xmin": [region_start, region_start], "xmax": [region_end, region_end], "ymin": [1.5, 6.5], "ymax": [3.5, 7.5]}
-)
 
-# Track labels (larger size)
+# Track labels (bold, theme-adaptive ink)
 track_labels = pd.DataFrame(
     {
         "x": [region_start + 800] * 4,
@@ -61,7 +79,7 @@ track_labels = pd.DataFrame(
     }
 )
 
-# --- Gene Track (y: 6.5 - 7.5, center at 7.0) ---
+# --- Gene Track (center at y=7.0) ---
 gene_center = 7.0
 exon_half = 0.25
 
@@ -102,7 +120,6 @@ exons = pd.DataFrame(
 exons["ymin"] = gene_center - exon_half
 exons["ymax"] = gene_center + exon_half
 
-# Intron connector lines
 intron_lines = pd.DataFrame(
     {
         "x": exons["end"].iloc[:-1].values,
@@ -112,7 +129,7 @@ intron_lines = pd.DataFrame(
     }
 )
 
-# Strand direction chevrons (+ strand, pointing right) - increased visibility
+# Strand direction chevrons (+ strand) — more prominent than previous iteration
 chevron_x = np.linspace(region_start + 3000, region_end - 3000, 25)
 chevron_size = 400
 chevrons_up = pd.DataFrame(
@@ -132,10 +149,9 @@ chevrons_down = pd.DataFrame(
     }
 )
 
-# Gene label
 gene_label = pd.DataFrame({"x": [(region_start + region_end) / 2], "y": [gene_center + 0.42], "label": ["EGFR  (+)"]})
 
-# --- Coverage Track (y: 4.0 - 6.0) ---
+# --- Coverage Track (y: 4.0 – 6.0) ---
 cov_base = 4.0
 cov_height = 2.0
 positions = np.arange(region_start, region_end, 150)
@@ -152,7 +168,7 @@ normalized_cov = raw_coverage / max_cov * cov_height
 
 coverage_df = pd.DataFrame({"x": positions, "ymin": [cov_base] * len(positions), "ymax": cov_base + normalized_cov})
 
-# --- Variant Track (y: 1.5 - 3.5) ---
+# --- Variant Track (y: 1.5 – 3.5) ---
 var_base = 1.5
 var_height = 2.0
 n_variants = 18
@@ -160,11 +176,6 @@ variant_positions = np.sort(np.random.randint(region_start + 500, region_end - 5
 variant_quality = np.random.uniform(10, 100, n_variants)
 variant_types = np.random.choice(["SNP", "Indel"], n_variants, p=[0.75, 0.25])
 normalized_quality = variant_quality / 100.0 * var_height
-
-# Colorblind-safe Okabe-Ito palette for variants
-snp_color = "#0072B2"
-indel_color = "#E69F00"
-variant_palette = {"SNP": snp_color, "Indel": indel_color}
 
 variant_stems = pd.DataFrame(
     {
@@ -175,7 +186,6 @@ variant_stems = pd.DataFrame(
     }
 )
 
-# Use mapped color aesthetic for native legend
 variant_heads = pd.DataFrame(
     {
         "x": variant_positions,
@@ -184,11 +194,13 @@ variant_heads = pd.DataFrame(
     }
 )
 
-# --- Regulatory Track (y: 0.0 - 1.0, center at 0.5) ---
+# Imprint positions 1→2: SNP (brand green, first series), Indel (lavender — no proximity with ochre Enhancers)
+variant_palette = {"SNP": IMPRINT[0], "Indel": IMPRINT[1]}
+
+# --- Regulatory Track (y: 0.0 – 1.0, center at 0.5) ---
 reg_center = 0.5
 reg_half = 0.25
 
-# Use mapped fill aesthetic for brewer scale + native legend
 regulatory_elements = pd.DataFrame(
     {
         "start": [55_086_200, 55_088_400, 55_093_100, 55_098_900, 55_112_300, 55_120_000, 55_128_500, 55_135_200],
@@ -203,108 +215,107 @@ regulatory_elements = pd.DataFrame(
 regulatory_elements["ymin"] = reg_center - reg_half
 regulatory_elements["ymax"] = reg_center + reg_half
 
-# Colors
-exon_color = "#306998"
-coverage_fill = "#4B8BBE"
-stem_color = "#999999"
+# Imprint positions 3→5: Promoter (blue), Enhancer (ochre), Insulator (red)
+regulatory_palette = {"Promoter": IMPRINT[2], "Enhancer": IMPRINT[3], "Insulator": IMPRINT[4]}
 
-# Separator lines between tracks
+# Track separator lines (theme-adaptive dashed)
 separators = pd.DataFrame({"yintercept": [1.25, 3.75, 6.25]})
 
-# Build plot using grammar-of-graphics composition with mapped aesthetics
+# Build plot with grammar-of-graphics layer composition
 plot = (
     ggplot()
-    # Track background shading (fixed fill, not aesthetic-mapped)
+    # Shaded track backgrounds (regulatory and coverage tracks)
     + geom_rect(
-        data=track_bg_grey, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill="#F0F0F0", alpha=0.6
+        data=track_bg_shaded,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill=ELEVATED_BG,
+        alpha=0.8,
     )
-    + geom_rect(
-        data=track_bg_white, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill="#FAFAFA", alpha=0.4
-    )
-    # Track separators
-    + geom_hline(data=separators, mapping=aes(yintercept="yintercept"), color="#CCCCCC", size=0.5, linetype="dashed")
-    # Gene track: intron lines
-    + geom_segment(data=intron_lines, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.7)
-    # Gene track: strand chevrons (increased alpha for visibility)
+    # Track separators (theme-adaptive)
+    + geom_hline(data=separators, mapping=aes(yintercept="yintercept"), color=INK_MUTED, size=0.4, linetype="dashed")
+    # Gene track: intron connector lines
+    + geom_segment(data=intron_lines, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.6)
+    # Gene track: strand chevrons — increased size and alpha vs previous iteration
     + geom_segment(
-        data=chevrons_up, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.4, alpha=0.70
+        data=chevrons_up, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.55, alpha=0.85
     )
     + geom_segment(
-        data=chevrons_down, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.4, alpha=0.70
+        data=chevrons_down, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.55, alpha=0.85
     )
-    # Gene track: exon rectangles
+    # Gene track: exon rectangles (Imprint blue)
     + geom_rect(
         data=exons,
         mapping=aes(xmin="start", xmax="end", ymin="ymin", ymax="ymax"),
-        fill=exon_color,
-        color="white",
-        size=0.3,
+        fill=IMPRINT[2],
+        color=PAGE_BG,
+        size=0.25,
     )
-    # Gene track: label
+    # Gene track: EGFR gene label
     + geom_text(
         data=gene_label,
         mapping=aes(x="x", y="y", label="label"),
-        size=13,
-        color="#333333",
+        size=3.5,
+        color=INK,
         fontstyle="italic",
         fontweight="bold",
     )
-    # Coverage track: filled ribbon
+    # Coverage track: filled area (Imprint cyan)
     + geom_ribbon(
         data=coverage_df,
         mapping=aes(x="x", ymin="ymin", ymax="ymax"),
-        fill=coverage_fill,
-        alpha=0.70,
-        color=coverage_fill,
-        size=0.3,
+        fill=IMPRINT[5],
+        alpha=0.65,
+        color=IMPRINT[5],
+        size=0.2,
     )
-    # Variant track: stems
-    + geom_segment(data=variant_stems, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=stem_color, size=0.6)
-    # Variant track: heads with mapped color aesthetic (generates native legend)
-    + geom_point(data=variant_heads, mapping=aes(x="x", y="y", color="variant_type"), size=4, alpha=0.9)
+    # Variant track: stems (muted structural lines)
+    + geom_segment(data=variant_stems, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_MUTED, size=0.5)
+    # Variant track: lollipop heads with Imprint colors (generates native legend)
+    + geom_point(data=variant_heads, mapping=aes(x="x", y="y", color="variant_type"), size=3, alpha=0.9)
     + scale_color_manual(name="Variant Type", values=variant_palette, guide=guide_legend(order=1))
-    # Regulatory track: rectangles with mapped fill + brewer scale (native legend)
+    # Regulatory track: colored rectangles with Imprint palette (generates native legend)
     + geom_rect(
         data=regulatory_elements, mapping=aes(xmin="start", xmax="end", ymin="ymin", ymax="ymax", fill="feature_type")
     )
-    + scale_fill_brewer(type="qual", palette="Dark2", name="Regulatory", guide=guide_legend(order=2))
-    # Track labels
+    + scale_fill_manual(name="Regulatory", values=regulatory_palette, guide=guide_legend(order=2))
+    # Track labels (theme-adaptive, bold)
     + geom_text(
         data=track_labels,
         mapping=aes(x="x", y="y", label="label"),
-        size=13,
+        size=3.5,
         ha="left",
         fontweight="bold",
-        color="#444444",
+        color=INK_SOFT,
     )
     # Axes
     + scale_x_continuous(
         labels=lambda x: [f"{int(v):,}" for v in x], limits=(region_start, region_end), expand=(0.01, 0)
     )
     + scale_y_continuous(limits=(-0.2, 7.8), breaks=[], expand=(0, 0))
-    + labs(title="genome-track-multi \u00b7 plotnine \u00b7 pyplots.ai", x=f"Genomic Position ({chrom})", y="")
-    # Theme with plotnine-specific grammar-of-graphics styling
+    + labs(title="genome-track-multi · plotnine · anyplot.ai", x=f"Genomic Position ({chrom})", y="")
+    # Theme-adaptive chrome (Imprint palette canonical tokens)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title_x=element_text(size=20),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        axis_title_x=element_text(size=10, color=INK),
         axis_title_y=element_blank(),
-        axis_text_x=element_text(size=16),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
+        legend_title=element_text(size=8, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
-        legend_key_size=18,
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key_size=10,
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_line(color="#E0E0E0", size=0.3, alpha=0.4),
+        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_major_y=element_blank(),
-        panel_background=element_rect(fill="white", color=None),
-        plot_background=element_rect(fill="white", color=None),
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
     + guides(fill=guide_legend(override_aes={"alpha": 1}))
 )
 
-# Save
-plot.save("plot.png", dpi=300, width=16, height=9)
+# Save — landscape 3200×1800 px (8 in × 4.5 in @ 400 dpi)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
