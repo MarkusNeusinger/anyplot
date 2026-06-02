@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: pie-basic
 created: '2026-06-02T23:37:56Z'
-updated: '2026-06-02T23:42:44Z'
+updated: '2026-06-02T23:50:54Z'
 generated_by: claude-opus
 workflow_run: 26854223897
 issue: 678
@@ -12,47 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Faithfully implements spec — pie chart with percentage labels inside slices, distinct
-    Imprint-palette colors, legend, and the largest slice (Netflix 30%) cleanly exploded
-    for emphasis as the spec requested
-  - 'Uses Imprint palette positions 1–5 in canonical order via d3.scaleOrdinal with
-    tokens.palette, first series correctly #009E73 brand green, data colors identical
-    across light and dark themes'
-  - 'Theme-adaptive chrome: title and legend text use t.ink which flips correctly
-    between dark and light; slice strokes use t.pageBg producing clean separations
-    on the warm-cream light surface and dark dividers on the near-black dark surface'
-  - 'Thoughtful color choice for percentage labels — the inline comment explains the
-    deliberate use of #FAF8F1 cream as a constant high-contrast label color across
-    both themes because near-black pageBg would fail contrast on the matte-red and
-    blue slices'
-  - 'Square 2400x2400 canvas via the //# anyplot-orientation: square directive — correct
-    format for a symmetric pie chart'
-  - 'Idiomatic D3: d3.pie() with sort:null preserves data order, d3.arc() generators,
-    labelArc.centroid for label placement, d3.maxIndex to find the largest slice for
-    explosion'
+  - Spec fully satisfied — percentages on every slice, distinct categorical colors,
+    right-side legend, largest slice (Netflix 30%) cleanly exploded for emphasis.
+  - Imprint palette positions 1–5 in canonical order via `d3.scaleOrdinal().range(t.palette)`;
+    first series correctly `#009E73`; data colors pixel-identical across light and
+    dark renders.
+  - Theme-adaptive chrome via `t.ink` / `t.pageBg`; slice strokes flip naturally to
+    the surface color in each theme, giving clean separation in both modes.
+  - Deliberate in-slice label color `#FAF8F1` (instead of `t.ink`) — documented in
+    an inline comment — guarantees readable percentages on the matte-red and blue
+    palette slots in both themes.
+  - 'Strong storytelling: leader-slice percentage label is enlarged to 44px / weight
+    700 (vs 30px / 600 for the rest), reinforcing the explosion focal point with a
+    typographic hierarchy.'
+  - 'Idiomatic D3: `d3.pie().sort(null)`, `d3.arc()` with separate `labelArc` for
+    centroid placement, `d3.maxIndex` for the focal slice, `selection.data().join()`
+    for slices/labels/legend.'
+  - 'Correct square 2400×2400 canvas via the `//# anyplot-orientation: square` directive
+    — canvas gate passed.'
   weaknesses:
-  - 'Minor KISS deviation: a small offset(a) helper function is defined to compute
-    the explosion translation; could be inlined directly in the .attr(''transform'',
-    ...) callbacks to keep the snippet fully top-to-bottom procedural, though the
-    helper is small and readable as-is'
-  - DE-03 storytelling is largely carried by the explosion alone — could be elevated
-    by also bolding/enlarging the leader (Netflix 30%) percentage label or adding
-    a subtle subtitle, but this is a stretch goal and not required by the spec
+  - 'DE-03 storytelling could push further: the explosion + leader-label hierarchy
+    is already good, but a brand-color emphasis on the Netflix legend row (e.g. bolder
+    text or a left-edge color bar) would create a stronger viewer entry point.'
+  - LM-02 distinctive features are conservative — the implementation uses `d3.pie`
+    / `d3.arc` / `d3.scaleOrdinal` competently but does not lean on more distinctive
+    D3 capabilities (e.g. polyline leader lines for outside labels, `d3.interpolate`
+    for any computed style, hierarchy/partition for a richer composition).
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — correct light theme surface, not pure white.
-      Chrome: Title "pie-basic · javascript · d3 · anyplot.ai" centered at the top in dark ink (t.ink), bold and clearly readable against the cream background. Legend on the right side lists Netflix, Disney+, Amazon Prime, HBO Max, Hulu with rounded color swatches and dark text — all readable.
-      Data: Five pie slices in Imprint palette positions 1–5 — Netflix brand green (#009E73, 30%, slightly exploded radially outward), Disney+ lavender (22%), Amazon Prime blue (18%), HBO Max ochre (16%), Hulu matte-red (14%). Percentage labels inside each slice are bold cream/white text, centered, very readable against every saturated slice. White-cream strokes (t.pageBg) between slices give clean separation.
-      Legibility verdict: PASS — every text element is unambiguously readable, no dark-on-cream contrast issues, the exploded Netflix slice creates a clear focal point.
+      Background: Warm off-white at #FAF8F1, exactly as specified.
+      Chrome: Title "pie-basic · javascript · d3 · anyplot.ai" centered at the top in dark ink (t.ink), 34px bold, fully readable against the cream surface. Right-side legend rows have rounded color swatches (rx=6) followed by category labels in t.ink at 24px — Netflix, Disney+, Amazon Prime, HBO Max, Hulu — all clearly readable.
+      Data: Five pie slices in Imprint palette positions 1–5 in canonical order — Netflix brand green (#009E73, 30%, exploded radially outward by ~36px), Disney+ lavender (22%), Amazon Prime blue (18%), HBO Max ochre (16%), Hulu matte-red (14%). In-slice percentage labels are cream-white (#FAF8F1), centroid-placed; the leader (Netflix 30%) is rendered at 44px / weight 700, the others at 30px / 600 — the size jump creates a clear typographic focal point reinforcing the explosion. Cream pageBg strokes between slices give clean separation. First series correctly #009E73.
+      Legibility verdict: PASS — every element (title, legend, percentages) is unambiguously readable on the light surface; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Same title now in light ink (t.ink flipped) on the dark background, fully readable. Legend swatches retain their data colors; legend text flipped to light ink — readable. No dark-on-dark failures anywhere.
-      Data: Slice colors are pixel-identical to the light render (Imprint palette positions 1–5 in the same order) — only chrome flipped, exactly as required. Slice strokes are now dark (t.pageBg) which renders as near-black dividers between the saturated slice fills — visually clean. Percentage labels remain cream-white and still read clearly against every slice (the implementer explicitly chose #FAF8F1 instead of t.ink for the labels to guarantee high contrast against the saturated palette in both themes — good call).
-      Legibility verdict: PASS — title, legend, and in-slice percentages all clearly readable. The brand green Netflix slice still pops against the dark surface.
+      Background: Warm near-black at #1A1A17, exactly as specified.
+      Chrome: Title and legend text flipped to light ink (t.ink) and read cleanly. Legend swatches retain their data-color fills.
+      Data: Slice fills are pixel-identical to the light render (only chrome flipped, exactly as required). Slice dividers are now near-black (t.pageBg = #1A1A17), reading as dark separators between the saturated slice fills. In-slice percentage labels remain cream-white (#FAF8F1) — the implementer's deliberate choice (documented inline) keeps contrast strong on the matte-red and blue slots in dark mode. Leader-slice size/weight hierarchy is preserved.
+      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 reads cleanly against the dark surface; percentages and legend all clearly readable.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -63,54 +63,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 34px bold, legend 24px, percentages 30px bold — all comfortably
-          readable at full resolution and would scale fine to 400px mobile width;
-          readable in both themes.
+        comment: Title 34px bold, legend 24px, leader-slice percentage 44px bold,
+          other percentages 30px bold — all readable in both themes and would scale
+          fine to 400px mobile.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Pie sits left, legend on the right with clear gap; in-slice percentage
-          labels are centroid-placed and never overlap each other or the legend.
+        comment: Pie / legend / in-slice labels never collide; legend is fully to
+          the right of the pie area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Five sparse slices each occupy substantial area; cream stroke between
-          slices in light theme / dark stroke in dark theme provides clean separation.
+        comment: Five sparse slices clearly distinguishable; theme-keyed strokes (t.pageBg)
+          provide clean separation in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; categories are also redundantly identified
-          by the legend, so color alone isn't load-bearing.
+        comment: Imprint palette is CVD-safe; legend provides redundant identification
+          next to color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas (correct for pie). Title at top, pie centered-left,
-          legend right — no overflow, no clipping, balanced composition.
+        comment: Square 2400×2400 (canvas gate passed), well-balanced pie-left / legend-right
+          composition, no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches mandated format `pie-basic · javascript · d3 · anyplot.ai`.
-          No axes (pie chart) — N/A for axis labels.
+        comment: Exact title 'pie-basic · javascript · d3 · anyplot.ai'; no axes (N/A
+          for pie).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses t.palette positions 1–5 in canonical order via d3.scaleOrdinal;
-          first series is brand green #009E73; data colors identical across themes;
-          backgrounds are correct theme surfaces (#FAF8F1 / #1A1A17).'
+        comment: 't.palette positions 1–5 in canonical order; first series #009E73;
+          data colors identical across themes; backgrounds #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -118,25 +117,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Polished composition with deliberate use of palette tokens; explosion
-          adds visual interest; modest above-default for the thoughtful label color
-          decision.
+        comment: Polished, deliberate use of tokens; explosion + label-size hierarchy
+          give intentional focal point.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Stroke between slices keyed to pageBg creates clean separation in
-          both themes; rounded legend swatches (rx=6); good whitespace around the
-          pie.
+        comment: Clean theme-keyed slice strokes, rounded (rx=6) legend swatches,
+          generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Largest slice (Netflix 30%) exploded which creates a clear focal
-          point as the spec requested, but otherwise no further hierarchy (label size,
-          emphasis color) to guide the eye.
+        comment: Exploded leader + larger/bolder leader-percentage label create a
+          clearer focal point than attempt 1 — but color emphasis on the Netflix legend
+          row would push storytelling further.
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +143,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart via d3.pie() + d3.arc().
+        comment: Correct d3.pie() + d3.arc() pie chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All four spec features present: percentage labels on slices, distinct
-          per-category colors, legend, largest slice exploded for emphasis.'
+        comment: Percentages on every slice, distinct colors, legend, largest slice
+          (Netflix 30%) exploded.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Slice angle proportional to value via .value(d => d.value); all 5
-          categories rendered; legend matches slice colors.
+        comment: Slice angle proportional to value; all 5 categories rendered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exact `pie-basic · javascript · d3 · anyplot.ai`; legend
-          labels match the data categories in slice order.
+        comment: Exact title format; legend labels match category names.
     data_quality:
       score: 15
       max: 15
@@ -177,62 +172,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 slices (well within spec's 3–8 range), values sum to a meaningful
-          whole (100), all aspects of pie chart present including parts-to-whole emphasis.
+        comment: 5 slices (within spec's 3–8 range); values sum to a meaningful whole
+          (100).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Streaming subscriber share is a textbook pie-chart use case; values
-          are plausible and the dataset is neutral/uncontroversial.
+        comment: Streaming-subscriber market share, plausible and neutral; values
+          labeled 'illustrative, 2024'.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Market-share percentages in 14–30% range — sensible spread that produces
-          clearly distinguishable slice angles.
+        comment: 14–30% spread produces clearly distinguishable slice angles.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly procedural top-to-bottom; small `offset(a)` helper defined
-          for the explosion math — readable but could be inlined to be strict KISS.
+        comment: Fully procedural top-to-bottom; no helper functions or classes (the
+          prior offset() helper from attempt 1 has been inlined).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data array — no randomness; identical output
-          every run.
+        comment: Hard-coded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses the `d3` global and `window.ANYPLOT_*` per the
-          harness contract, as required.
+        comment: d3 global only, per harness contract; no extraneous packages.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Compact ~140 lines; clear sectioning via comment banners; no fake
-          interactivity.
+        comment: Compact, well-sectioned, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts a single <svg> into #container sized to window.ANYPLOT_SIZE
-          — harness saves plot-light/dark.png + .html. No bare `plot.png`.'
-    library_features:
+        comment: 'Single <svg> into #container, sized to window.ANYPLOT_SIZE; no manual
+          filesystem writes.'
+    library_mastery:
       score: 6
       max: 10
       items:
@@ -241,26 +232,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic D3 — d3.pie() (sort:null), d3.arc(), d3.scaleOrdinal, d3.maxIndex,
-          d3.sum, centroid-based label placement, selection.data().join() pattern.
+        comment: d3.pie().sort(null), d3.arc(), separate labelArc with centroid placement,
+          d3.scaleOrdinal, d3.maxIndex, d3.sum, selection.data().join().
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses D3-specific arc centroid and a separate labelArc for label positioning,
-          plus d3.maxIndex for the focal slice; doesn't push into more distinctive
-          territory (transitions disabled by design, no force layout / hierarchy /
-          interpolators beyond ordinal scale).
+        passed: false
+        comment: Solid but conservative — no polyline leader lines, no computed interpolation,
+          no hierarchy/partition; the implementation stays in the basic d3-shape toolkit.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
   - patches
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - publication-ready
   - edge-highlighting
