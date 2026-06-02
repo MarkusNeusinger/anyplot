@@ -1,38 +1,54 @@
 library: plotly
+language: python
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:45:38Z'
-updated: '2026-03-07T08:56:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22795810074
+updated: '2026-06-02T23:19:54Z'
+generated_by: claude-sonnet
+workflow_run: 26852679661
 issue: 4566
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Creative gradient opacity by influence rank creates natural visual hierarchy
-  - Largest Swing annotation and base case label provide immediate context
-  - Complete spec compliance with all required features
-  - Clean deterministic data with a realistic NPV scenario
-  - Good use of plotly go.Bar base parameter for bidirectional tornado bars
+  - Gradient opacity by influence rank adds a second visual encoding of importance
+    alongside bar width — a creative technique that goes beyond defaults
+  - Semantic color assignment (green=#009E73 for High/upside, blue=#4467A3 for Low/downside)
+    is intentional and appropriate for the financial NPV context
+  - 'Full spec compliance: sorted bars create proper tornado shape, vertical base-case
+    reference line is clear, dual-scenario colors are distinct, value labels at bar
+    ends enable precise reading'
+  - 'Plotly interactive features fully leveraged: hovertemplate with formatted delta
+    values, cliponaxis=False for outside text labels, HTML export alongside PNG'
+  - Both light and dark renders are theme-correct with all chrome tokens wired through
+    to annotations and legend
   weaknesses:
-  - Bar-end value labels at 16pt could be slightly larger for optimal readability
-  - Feature coverage could show more varied asymmetric distributions across parameters
-  image_description: 'The plot displays a horizontal tornado/sensitivity chart for
-    NPV (Net Present Value) analysis of a capital investment project. Eight financial
-    parameters are sorted by total range with the widest bar (Revenue Growth, ~$7.2M
-    swing) at the top and the narrowest (Working Capital, ~$1.1M swing) at the bottom.
-    Blue bars represent the "Low Scenario" and orange bars represent the "High Scenario",
-    extending left and right from a dotted vertical base case reference line at $12.5M.
-    Each bar has dollar value labels at its ends (e.g., "$9.1M", "$16.3M"). A gradient
-    opacity effect makes wider, more influential bars appear more vivid. An annotation
-    in red-orange highlights "Largest Swing: $7.2M" for Revenue Growth. The title
-    reads "bar-tornado-sensitivity · plotly · pyplots.ai" in bold. A horizontal legend
-    at top distinguishes Low and High scenarios. The x-axis is labeled "Net Present
-    Value ($M)" with tick marks from $9M to $17M. The background is clean white with
-    very subtle vertical grid lines.'
+  - 'Minor crowding in the top-right corner: the ''Largest swing: $8.0M'' annotation
+    (yshift=20) and the ''$16.0M'' outside text label for the Revenue Growth high
+    bar are positioned very close together horizontally — consider increasing right
+    margin or adjusting annotation x/y to create clearer separation'
+  - Legend border (borderwidth=1) adds visual weight that could be removed or made
+    hairline for a cleaner look; spines are correctly removed but bar bargap=0.25
+    could be tightened slightly to 0.3 for denser grouping
+  - Annotation for 'Largest swing' uses INK_SOFT color which is intentionally secondary,
+    but given it's meant as the key focal-point annotation, using INK (primary) or
+    even the green palette color for emphasis would reinforce its storytelling role
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "bar-tornado-sensitivity · python · plotly · anyplot.ai" centered in dark ink, clearly readable. X-axis label "Net Present Value ($M)" in dark ink at 12px. Y-axis parameter names (Revenue Growth, Discount Rate, etc.) in secondary gray as tick labels. X-axis tick labels "$6M"–"$18M" in secondary gray. Dashed vertical reference line at $12.5M with "Base: $12.5M" annotation. "Largest swing: $8.0M" bold annotation in upper-right margin. Dollar value labels at bar ends ($8.0M–$16.2M) in secondary gray. Legend box with elevated background above the plot showing "Low Scenario" (blue) and "High Scenario" (teal-green).
+      Data: 8 horizontal bars sorted widest-at-top (Revenue Growth at top, Salvage Value at bottom). Blue bars (#4467A3 at varying 50–100% opacity) for Low Scenario, green bars (#009E73 at varying 50–100% opacity) for High Scenario. Gradient opacity increases with influence rank — top bars are fully opaque, bottom bars are semi-transparent. Bars extend left and right from the $12.5M base case reference. All bars clearly distinguishable with good size and contrast.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background. Minor crowding near Revenue Growth's "$16.0M" label and the "Largest swing" annotation in the upper-right corner (close vertical proximity) but no definitive overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light text (#F0EFE8), clearly readable against dark background. X-axis label and y-axis parameter names in secondary light gray (#B8B7B0). Tick labels in secondary gray. "Base: $12.5M" annotation in secondary gray. "Largest swing: $8.0M" in secondary gray (slightly less prominent than in light render due to lower luminance contrast, but still readable). Legend box with dark elevated background (#242420) and light text — no dark-on-dark failure. Dashed reference line visible against dark background.
+      Data: Identical bar colors to light render — same green (#009E73) and blue (#4467A3) at same gradient opacity levels. Data colors are theme-independent as required. Bars clearly visible against dark background with good contrast.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures detected. Chrome correctly inverted from light theme.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -40,65 +56,91 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, axis title 22, ticks 18,
-          bar text 16). Bar-end labels slightly small but legible.
+        comment: 'All font sizes explicitly set: title 16px, axis labels 12px, ticks
+          10px, bar text 11px, legend 10px, annotations 10px. Well-proportioned in
+          both themes, readable at desktop and mobile widths.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlap anywhere. All text fully readable.
+        comment: Near-overlap in top-right corner between Revenue Growth '$16.0M'
+          outside label and 'Largest swing' annotation (yshift=20 provides vertical
+          separation but horizontal proximity is tight). No definitive overlap elsewhere.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with bargap=0.25. All elements clearly visible.
+        comment: All bars clearly visible. Gradient opacity (50–100%) is intentional
+          design encoding influence rank, not a visibility problem — even lowest-opacity
+          bars are clearly distinguishable in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange palette is colorblind-safe with good contrast.
+        comment: Green (#009E73) and blue (#4467A3) are CVD-safe Imprint palette members
+          with good luminance contrast. Reference line in muted INK_MUTED for structural
+          role.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Margins accommodate annotations well.
+        comment: Canvas gate passed (3200×1800). Right margin 140px provides room
+          for outside value labels. automargin=True on y-axis correctly accommodates
+          long parameter names. Title, legend, and plot area well-balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units. Y-axis has descriptive parameter names.
+        comment: 'X-axis: ''Net Present Value ($M)'' with units. Y-axis: parameter
+          names serve as categorical labels. Title in correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'High Scenario uses #009E73 (Imprint position 1, brand green); Low
+          Scenario uses #4467A3 (Imprint position 3, blue). Valid semantic exception:
+          finance context where high/upside=green and low/downside=blue is standard.
+          Backgrounds #FAF8F1 / #1A1A17 correct.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Gradient opacity by rank, custom palette, Arial Black title. Above
-          defaults.
+        comment: 'Above default (4): gradient opacity encoding by influence rank is
+          a creative design choice, semantic color assignment is intentional, ''Largest
+          swing'' annotation creates focal point. Not at publication-ready level (8)
+          but clearly above well-configured defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle x-grid, no y-grid, plotly_white, generous whitespace.
+        comment: Spines removed (showline=False on both axes), x-axis grid only with
+          subtle GRID token at 15% opacity, y-axis grid off (appropriate for horizontal
+          bars), elevated legend background. Some refinement visible but not every
+          detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Gradient opacity creates hierarchy. Largest Swing annotation highlights
-          key finding.
+        comment: Sorting creates classic tornado visual hierarchy. Gradient opacity
+          reinforces the ranking narrative. 'Largest swing' annotation highlights
+          the dominant parameter. Base case reference line provides essential context.
+          Good storytelling above the default display-only level.
     spec_compliance:
       score: 15
       max: 15
@@ -108,48 +150,60 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal tornado chart.
+        comment: Correct horizontal bar chart in tornado configuration. barmode='overlay'
+          with base parameter creates proper dual-sided bars from base case.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reference line, sorting, dual colors, labels,
-          value annotations.'
+        comment: 'All features present: vertical reference line at base case, sorted
+          by total range (widest at top), two distinct colors for low/high scenarios,
+          parameter names on y-axis, value labels at bar ends.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to NPV, Y maps to parameters.
+        comment: X-axis shows NPV output metric, y-axis shows all 8 parameters. Low/high
+          deltas correctly computed from base case.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match.
+        comment: 'Title: ''bar-tornado-sensitivity · python · plotly · anyplot.ai''
+          — correct format. Legend: ''Low Scenario'' and ''High Scenario'' — appropriate
+          labels.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 8 parameters with good variety. Some asymmetric effects shown.
+        comment: 'Shows all tornado chart features: dual scenarios per parameter,
+          asymmetric sensitivities (some parameters reverse direction), base case
+          reference, 8 parameters spanning the recommended 6-15 range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity for capital investment. Real, neutral financial scenario.
+        comment: NPV sensitivity analysis for capital investment project — a canonical
+          real-world use case. Parameter names (Discount Rate, Revenue Growth, Initial
+          Investment, etc.) are realistic financial assumptions. Neutral business
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NPV values $9M-$17M, realistic for capital project.
+        comment: 'NPV values $8M–$16.2M around a $12.5M base case are plausible for
+          a mid-size capital project. Asymmetric sensitivities add realism (Discount
+          Rate: low rate=high NPV, high rate=low NPV).'
     code_quality:
       score: 10
       max: 10
@@ -159,31 +213,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow. No functions or classes.
+        comment: 'Linear: imports → theme tokens → data → sorting/deltas → traces
+          → layout → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data.
+        comment: All data hardcoded — fully deterministic, no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Both numpy and plotly.graph_objects used.
+        comment: Only os, numpy, and plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. Gradient opacity via list comprehension is elegant.
+        comment: Clean numpy argsort for sorting, list comprehensions for gradient
+          color generation, well-organized sections.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at correct dimensions. Also exports HTML.
+        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4 → 3200×1800)
+          and plot-{THEME}.html. Current plotly API.
     library_mastery:
       score: 7
       max: 10
@@ -193,13 +250,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Bar with base parameter, overlay mode, hovertemplate.
+        comment: 'Idiomatic Plotly: go.Bar with orientation=''h'' and base parameter
+          for starting position, barmode=''overlay'' for dual-sided tornado, add_vline
+          for reference line, add_annotation for callouts. Above default (3).'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Hovertemplate, cliponaxis, HTML CDN export are plotly-distinctive.
+        comment: 'Uses Plotly-specific features: cliponaxis=False for outside text
+          labels, hovertemplate with formatted delta values (interactive), HTML export
+          alongside PNG, base parameter for bar starting position. Raised above default
+          (1).'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -211,5 +273,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - gradient-fill
-  - grid-styling
+  - alpha-blending
