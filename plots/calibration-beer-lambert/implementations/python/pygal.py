@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-03
@@ -14,6 +14,7 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir and p != ""]
 os.chdir(_script_dir)  # ensure output files land in the implementation directory
 
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -24,6 +25,7 @@ from scipy import stats
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint categorical palette — first series always brand green
@@ -83,6 +85,14 @@ custom_style = Style(
     opacity_hover=1.0,
 )
 
+# Remove chart border box and axis lines for cleaner look
+border_css = (
+    "inline:"
+    ".chart-background { stroke: none !important; fill: none !important; }"
+    " .axis > .line { stroke: transparent !important; }"
+    " .plot > .background { stroke: none !important; }"
+)
+
 # Chart
 chart = pygal.XY(
     style=custom_style,
@@ -109,7 +119,7 @@ chart = pygal.XY(
     print_labels=False,
     x_value_formatter=lambda x: f"{x:.1f}",
     y_value_formatter=lambda y: f"{y:.3f}",
-    css=["file://style.css", "file://graph.css", "inline:.axis > .line { stroke: transparent !important; }"],
+    css=["file://style.css", "file://graph.css", border_css],
 )
 
 # Calibration standards with interactive tooltips
@@ -131,7 +141,7 @@ chart.add(
     stroke_style={"width": 5},
 )
 
-# 95% prediction interval — upper + lower bands as single series with None gap
+# 95% prediction interval — thicker strokes for clear visual band
 pi_points = [
     {"value": (float(x), float(y)), "label": f"Upper 95% PI: {y:.4f} at C = {x:.1f}"}
     for x, y in zip(conc_fit, upper_band, strict=False)
@@ -141,7 +151,7 @@ pi_points.extend(
     {"value": (float(x), float(y)), "label": f"Lower 95% PI: {y:.4f} at C = {x:.1f}"}
     for x, y in zip(conc_fit, lower_band, strict=False)
 )
-chart.add("95% Prediction Interval", pi_points, show_dots=False, stroke_style={"width": 4}, stroke_dasharray="10,5")
+chart.add("95% Prediction Interval", pi_points, show_dots=False, stroke_style={"width": 9}, stroke_dasharray="8,4")
 
 # Unknown sample crosshair — horizontal then vertical dashed lines with None gap
 unknown_points = [
@@ -162,7 +172,27 @@ chart.add(
     stroke_style={"width": 4},
 )
 
-# Save PNG and HTML for pygal interactive output
-chart.render_to_png(f"plot-{THEME}.png")
+# Render to SVG, inject regression equation as in-plot text annotation, then convert to PNG
+chart.render_to_file(f"plot-{THEME}-tmp.svg")
+with open(f"plot-{THEME}-tmp.svg", encoding="utf-8") as f:
+    svg_str = f.read()
+os.remove(f"plot-{THEME}-tmp.svg")
+
+# Inject equation annotation into the upper-left plot area (above the calibration trend)
+# SVG position tuned for 3200×1800 with margins: data coords (x≈0.4, y≈0.54) map here
+eq_label = f"A = {slope:.4f}·C + {intercept:.4f}   R² = {r_squared:.4f}"
+annotation_svg = (
+    f'<text x="530" y="340" '
+    f'font-size="48" font-family="sans-serif" font-style="italic" '
+    f'fill="{INK_SOFT}">{eq_label}</text>'
+)
+svg_annotated = svg_str.replace("</svg>", f"{annotation_svg}\n</svg>")
+
+# Save PNG with injected annotation
+cairosvg.svg2png(
+    bytestring=svg_annotated.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800
+)
+
+# Save interactive HTML (original SVG + pygal JS interactivity)
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
