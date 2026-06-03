@@ -1,7 +1,7 @@
 // anyplot.ai
 // pictogram-basic: Pictogram Chart (Isotype Visualization)
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-03
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-03
 
 //# anyplot-orientation: landscape
 
