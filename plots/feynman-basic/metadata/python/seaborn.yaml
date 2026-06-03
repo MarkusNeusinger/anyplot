@@ -1,40 +1,58 @@
 library: seaborn
+language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:23:32Z'
-updated: '2026-03-07T21:52:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22807440241
+updated: '2026-06-03T06:15:11Z'
+generated_by: claude-sonnet
+workflow_run: 26866193220
 issue: 4667
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent physics accuracy with correct particle/antiparticle arrow conventions
-  - Comprehensive reference legend showing all 4 particle line types with color-matched
-    labels
-  - Professional clean layout with thoughtful color-coding throughout
-  - Perfect text legibility with all font sizes explicitly set
-  - Creative use of sns.lineplot with parametric DataFrames for wavy and curly lines
+  - Mathematically correct wavy photon lines using perpendicular sinusoidal displacement,
+    and genuine cycloid parameterization for gluon curly lines — not placeholder drawings
+  - 'Full Imprint palette applied semantically: fermion green (#009E73), photon lavender
+    (#C475FD), gluon blue (#4467A3), scalar ochre (#BD8233) — all four positions used
+    correctly'
+  - Reference legend at the bottom renders each particle type in its actual style
+    (arrow, wavy, curly, dashed) with an elevated card background for visual separation
+  - Directional fermion arrows with LaTeX-rendered particle symbols (e⁻, γ) and italic
+    'virtual' propagator label — matches Feynman diagram convention precisely
+  - 'Theme-adaptive chrome fully correct in both renders: background, text, separator
+    line, time arrow all flip with ANYPLOT_THEME; data colors identical across themes'
+  - 'Title format correct: ''Compton Scattering · feynman-basic · python · seaborn
+    · anyplot.ai'' — descriptive prefix, then spec-id · language · library · anyplot.ai'
+  - Canvas at exactly 3200×1800 px (figsize=(8,4.5) dpi=400), no bbox_inches='tight'
+    — gate passed
   weaknesses:
-  - Library mastery limited by the inherently matplotlib-centric nature of Feynman
-    diagrams
-  - Gluon and scalar boson only appear in reference legend, not in an actual interaction
-    diagram
-  image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
-    into a muon-antimuon pair (e-e+ to gamma to mu-mu+). The main diagram shows two
-    blue fermion lines entering from the upper-left (e-) and lower-left (e+) converging
-    at a left vertex dot, connected by an orange wavy photon line (gamma) to a right
-    vertex dot, from which two blue fermion lines exit to the upper-right (mu-) and
-    lower-right (mu+). Arrows on fermion lines follow correct convention (forward
-    for particles, backward for antiparticles). A gray time arrow runs left-to-right
-    below the diagram with italic "time" label. Below a thin separator line, a reference
-    legend shows all four particle line types: Fermion (blue solid + arrow), Photon
-    (orange wavy), Gluon (teal curly), and Scalar Boson (pink dashed), each with color-matched
-    labels. The title reads "feynman-basic · seaborn · pyplots.ai" at the top. The
-    background is clean white with all axes removed.'
+  - 'Library Mastery is limited: most diagram drawing uses matplotlib primitives (ax.annotate,
+    ax.text, ax.plot, mpatches); seaborn contribution is primarily theming + sns.lineplot
+    with sort=False for the parametric curves — unavoidable for this plot type but
+    scores lower on LM-02'
+  - 'Design Excellence ceiling: the elevated card for the reference legend and the
+    separator line are good refinements, but the layout could push further — e.g.
+    a subtle directional label (''Incoming'' / ''Outgoing'') or a physics-context
+    annotation would elevate the storytelling'
+  - The γ and e⁻ corner labels sit very close to canvas edges (x≈0.01 and x≈0.99 with
+    xlim=[-0.05, 1.05]); not clipped, but tight margins reduce mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, clearly not pure white
+      Chrome: Title "Compton Scattering · feynman-basic · python · seaborn · anyplot.ai" in dark ink (#1A1A17), fontsize=12, spans approx 65-70% of plot width — well-proportioned. Time arrow and "time" label in muted ink. Particle labels (e⁻, γ) in their respective particle colors at fontsize=10. All text clearly readable against the light background.
+      Data: Two vertices connected by horizontal green (#009E73) virtual electron line with arrow. Incoming/outgoing electron lines in green with arrows. Photon wavy lines in lavender (#C475FD). Vertex dots in green. Reference legend panel at bottom shows all 4 particle types (fermion arrow, photon wavy, gluon curly, scalar dashed) in their respective Imprint palette colors, inside an elevated card.
+      Legibility verdict: PASS — all text readable at full resolution, first series is #009E73
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, clearly not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Time arrow and labels in muted light tone. All text uses theme-correct light colors — no dark-on-dark failure observed. The elevated reference legend card uses #242420 (ELEVATED_BG dark token), subtly differentiated from the page background.
+      Data: Data colors are IDENTICAL to the light render — fermion lines #009E73, photon lines #C475FD, gluon #4467A3, scalar #BD8233. Vertex dots remain green and visible with a subtle lighter outline. All data elements clearly distinguishable from the dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failure, brand green clearly visible on dark surface
   criteria_checklist:
     visual_quality:
       score: 30
@@ -45,40 +63,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, particle labels 22-24pt
-          bold, reference labels 16pt bold, time label 16pt'
+        comment: All font sizes explicitly set (title=12, particle labels=10, annotations=8);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere
+        comment: No text collisions; reference legend cleanly separated from main
+          diagram
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at lw=3, vertex dots at s=250, arrows well-sized
+        comment: Lines at linewidth=2.5, vertex dots at s=100, arrows at mutation_scale=18
+          — all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Seaborn colorblind palette used throughout
+        comment: Green/lavender/blue/ochre have good contrast on both backgrounds;
+          no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized with balanced margins
+        comment: Main diagram occupies upper 3/4, reference legend in lower section;
+          canvas well-utilized
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately off for Feynman diagram, time axis labeled
+        comment: Axis off (appropriate for diagram); particle symbols, virtual label,
+          and time arrow all present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fermion=#009E73 (first series), photon=#C475FD, gluon=#4467A3, scalar=#BD8233;
+          backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -86,22 +116,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful color-coding, professional physics diagram aesthetic above
-          defaults
+        comment: 'Strong design: mathematical curves, LaTeX symbols, color-coded labels,
+          reference legend with actual line styles — clearly above configured defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes hidden, despine applied, generous whitespace, subtle separator
-          line
+        comment: Axis hidden, subtle separator line, elevated card background for
+          reference panel — good refinement but not fully polished
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear physics story with time arrow and directional fermion arrows
-          guiding viewer
+        comment: Reference legend explains visual language; time arrow orients viewer;
+          'virtual' label adds physics insight; layout guides input→interaction→output
     spec_compliance:
       score: 15
       max: 15
@@ -111,48 +141,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with vertices and propagators
+        comment: Correct Feynman diagram with vertices, propagators, external legs,
+          and distinct line styles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 4 line styles, arrows, vertex dots, labels, time axis present
+        comment: All 4 line styles implemented; arrows on fermion lines; vertex dots;
+          particle labels; time axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time flows left-to-right, correct arrow conventions
+        comment: Time left-to-right, vertices correctly placed, propagators and external
+          legs correctly drawn
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format, reference legend labels all particle types
+        comment: Title 'Compton Scattering · feynman-basic · python · seaborn · anyplot.ai'
+          correct format; reference legend shows all particle types
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Main diagram shows fermions and photon; reference legend shows all
-          4 types
+        comment: All 4 particle types demonstrated; 2 vertices; virtual propagator;
+          external legs; full Feynman diagram vocabulary
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real QED process: electron-positron annihilation to muon pair'
+        comment: Compton scattering (e⁻ + γ → e⁻ + γ) is a real, well-known QED process
+          — neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Schematic proportions standard for Feynman diagrams
+        comment: t-channel diagram topology is physically correct for Compton scattering;
+          arrow conventions match physics convention
     code_quality:
       score: 10
       max: 10
@@ -162,31 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes
+        comment: 'Linear: imports → theme setup → geometry → plot elements → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no random data
+        comment: 'Fully deterministic: hardcoded geometry, mathematical curves — no
+          random data'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, matplotlib, seaborn'
+        comment: mpatches, plt, np, pd, sns — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with parametric curves for wavy/curly lines
+        comment: Clean, Pythonic. Mathematical curve generation is appropriate complexity.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'; current
+          seaborn API
     library_mastery:
       score: 5
       max: 10
@@ -196,24 +236,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses set_context, set_style, color_palette, lineplot, scatterplot,
-          despine
+        comment: Uses sns.lineplot with DataFrames and sort=False for parametric curves;
+          sns.scatterplot for vertices; sns.set_theme/set_palette for theming — idiomatic
+          where applicable
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Seaborn theming and DataFrame-driven lineplot used, but core drawing
-          relies on matplotlib
+        comment: sort=False in sns.lineplot and DataFrame-oriented curve drawing are
+          seaborn-specific, but core diagram drawing uses matplotlib primitives —
+          inherent limitation for this plot type
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - patches
   patterns:
   - data-generation
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
