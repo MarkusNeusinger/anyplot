@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
@@ -188,7 +188,7 @@ chart = (
         height=380,
         background=PAGE_BG,
         title=alt.Title(
-            "heatmap-loss-triangle · altair · anyplot.ai",
+            "heatmap-loss-triangle · python · altair · anyplot.ai",
             subtitle=[
                 "Cumulative paid claims development triangle with chain-ladder projections.",
                 "Full opacity = actual observed  |  Faded + dashed border = projected (IBNR)  |  Bottom row = age-to-age factors.",
