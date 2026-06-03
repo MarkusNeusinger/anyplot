@@ -18,7 +18,7 @@ const lerpColor = (hex1, hex2, ratio) => {
   const parse = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const [r1, g1, b1] = parse(hex1);
   const [r2, g2, b2] = parse(hex2);
-  return `rgb(${Math.round(r1 + (r2 - r1) * ratio)},${Math.round(g1 + (g2 - g1) * ratio)},${Math.round(b1 + (b2 - b1) * ratio)})`;
+  return [Math.round(r1 + (r2 - r1) * ratio), Math.round(g1 + (g2 - g1) * ratio), Math.round(b1 + (b2 - b1) * ratio)];
 };
 
 // MIDI data: 8-measure classical phrase in C major (4/4 time, 32 beats total)
@@ -121,8 +121,13 @@ const MAX_PITCH = Math.max(...notes.map((n) => n.pitch)) + 1;
 const MIN_VEL = Math.min(...notes.map((n) => n.velocity));
 const MAX_VEL = Math.max(...notes.map((n) => n.velocity));
 
-const velColor = (vel) =>
-  lerpColor(t.seq[0], t.seq[1], (vel - MIN_VEL) / (MAX_VEL - MIN_VEL));
+// Velocity → rgba: hue shifts green→blue, alpha scales with loudness (soft=60%, loud=100%)
+const velColor = (vel) => {
+  const ratio = (vel - MIN_VEL) / (MAX_VEL - MIN_VEL);
+  const [r, g, b] = lerpColor(t.seq[0], t.seq[1], ratio);
+  const alpha = (0.60 + 0.40 * ratio).toFixed(2);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
 
 // Integer bounds so stepSize:1 generates integer ticks (non-integer min+stepSize = non-integer ticks)
 const DISPLAY_MIN = MIN_PITCH - 1;
@@ -179,7 +184,7 @@ const pianoRollPlugin = {
     }
   },
   afterDraw(chart) {
-    const { ctx, scales: { x, y } } = chart;
+    const { ctx, chartArea: { left, right }, scales: { x, y } } = chart;
     const borderCol = THEME === 'light' ? 'rgba(0,0,0,0.30)' : 'rgba(0,0,0,0.55)';
 
     notes.forEach((note) => {
@@ -196,6 +201,32 @@ const pianoRollPlugin = {
       ctx.lineWidth = 0.5;
       ctx.strokeRect(x1, y1, nw, nh);
     });
+
+    // --- Velocity colorbar ---
+    const cbW = right - left;
+    const cbH = 16;
+    const cbTop = chart.height - 52;
+
+    const grad = ctx.createLinearGradient(left, 0, left + cbW, 0);
+    grad.addColorStop(0, t.seq[0]);
+    grad.addColorStop(1, t.seq[1]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(left, cbTop, cbW, cbH);
+    ctx.strokeStyle = THEME === 'light' ? 'rgba(26,26,23,0.20)' : 'rgba(240,239,232,0.20)';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(left, cbTop, cbW, cbH);
+
+    // Labels: "ppp" left, title center, "fff" right
+    const labelY = cbTop + cbH + 5;
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = '12px sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText('ppp', left, labelY);
+    ctx.textAlign = 'center';
+    ctx.fillText('Velocity (dynamics)', left + cbW / 2, labelY);
+    ctx.textAlign = 'right';
+    ctx.fillText('fff', left + cbW, labelY);
   },
 };
 
@@ -219,7 +250,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 16, right: 32, bottom: 8, left: 0 } },
+    layout: { padding: { top: 16, right: 32, bottom: 65, left: 0 } },
     plugins: {
       title: {
         display: true,
@@ -261,9 +292,9 @@ new Chart(canvas, {
         border: { color: t.inkSoft },
         ticks: {
           stepSize: 1,
-          callback: (val) => Number.isInteger(val) ? pitchName(val) : null,
+          callback: (val) => (Number.isInteger(val) && !isBlackKey(val)) ? pitchName(val) : null,
           color: t.inkSoft,
-          font: { size: 11 },
+          font: { size: 13 },
           autoSkip: false,
           maxTicksLimit: 100,
         },
