@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:49:28Z'
-updated: '2026-06-03T08:04:19Z'
+updated: '2026-06-03T08:25:51Z'
 generated_by: claude-sonnet
 workflow_run: 26871037949
 issue: 4410
@@ -12,39 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Complete spec compliance: regression equation, R² value, prediction interval,
-    and unknown sample determination with dashed guide lines all present'
-  - 'Excellent theme adaptation: all chrome tokens flip correctly in dark render;
-    data colors are identical across both'
-  - matplotlib.patheffects.withStroke halo on the fit line is a distinctive, idiomatic
+  - 'All spec requirements fully implemented: regression equation, R² annotation,
+    prediction interval band, dashed guide lines, and axis intercept markers for unknown
+    concentration determination'
+  - PathEffects.withStroke halo on the fit line creates visual depth — a distinctive
     matplotlib technique
-  - Monospace font on the regression equation annotation is an apt typographic choice
-    for scientific coefficient display
-  - Canvas correctly sized (3200x1800) without bbox_inches='tight' drift
-  - 'Perfect data quality: realistic Beer-Lambert law data with appropriate noise,
-    blank at zero, and high R²'
+  - FancyBboxPatch with two-level typography (monospace equation + bold R² in brand
+    green) is polished and professional
+  - 'Correct Imprint palette usage: #009E73 for calibration standards, #C475FD for
+    unknown sample — both consistent across light/dark renders'
+  - Full theme-adaptive chrome — backgrounds, text, grid, legend, annotation box all
+    flip correctly between light (#FAF8F1) and dark (#1A1A17)
+  - scipy prediction interval computation (t-distribution) is statistically correct
+  - All font sizes explicitly set (title scaled by length formula, labels 10pt, ticks
+    8pt), tick marks removed (length=0)
+  - 'Data storytelling is excellent: dashed guide lines + arrow annotation + axis
+    intercept labels explicitly demonstrate the concentration-determination procedure'
   weaknesses:
-  - 'Mild crowding in the upper-right: ''Unknown: 9.4 mg/L'' annotation text and arrow
-    are visually close to the 12 mg/L calibration standard circle — slight vertical
-    separation would improve clarity'
-  - Axis-intercept callout labels ('0.43' at left, '9.4' at bottom) add useful context
-    but contribute to visual density at the axis boundaries; minor whitespace tightness
-    around the axis edges in both renders
+  - Scatter markers at s=100 are below the recommended 200-400 range for fewer than
+    30 data points — for 7 calibration standards, increase to s=150–200 for more prominent
+    markers
+  - DE-02 refinement is good but not perfect — the axis intercept annotations (0.43,
+    9.4) are placed very close to the axis spine, creating tight spacing; could be
+    offset slightly to improve breathing room
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "calibration-beer-lambert · python · matplotlib · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Concentration (mg/L)" and "Absorbance" in dark INK at fontsize=10. Tick labels in INK_SOFT (#4A4A44), clearly readable. Legend in lower right with ELEVATED_BG frame.
-      Data: Seven calibration standards as circles in #009E73 (brand green, Imprint position 1). Linear fit line in same green with PathEffects halo. Prediction interval band in translucent green (alpha=0.12). Unknown sample as lavender diamond (#C475FD, Imprint position 2) with dashed guide lines. Regression annotation box in ELEVATED_BG fill, #009E73 border, monospace text.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Chrome: Title "calibration-beer-lambert · python · matplotlib · anyplot.ai" readable at top in dark ink; X-axis label "Concentration (mg/L)" and Y-axis label "Absorbance" clearly visible at 10pt; tick labels in INK_SOFT (#4A4A44) clearly legible; regression annotation box with ELEVATED_BG fill and green border in upper-left
+      Data: Calibration standards as green (#009E73) scatter circles with white edge; linear fit line in #009E73 with PathEffects halo for visual pop; 95% prediction band as light-green fill (alpha=0.12); unknown sample as lavender (#C475FD) diamond marker; dashed guide lines in #C475FD extending to both axes; "Unknown: 9.4 mg/L" arrow annotation in lavender; "0.43" y-intercept and "9.4" x-intercept marker labels in lavender
+      Legibility verdict: PASS — all elements readable against warm off-white background; no light-on-light text failures
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in F0EFE8 (near-white), clearly readable against dark surface. Tick labels in B8B7B0. Legend frame in #242420. Regression annotation box uses elevated dark background. No dark-on-dark failures observed — all chrome elements are properly theme-adapted.
-      Data: Colors identical to light render — brand green #009E73 for standards/fit, lavender #C475FD for unknown. Prediction band becomes darker green tint on dark bg but data series colors unchanged.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures
+      Chrome: Title readable in light INK (#F0EFE8) against dark bg; axis labels and tick labels in INK_SOFT (#B8B7B0) — clearly visible; legend frame uses ELEVATED_BG (#242420) fill; annotation box uses same dark elevated background; no dark-on-dark text failures detected
+      Data: Calibration standards still render in identical #009E73 green; unknown sample still in identical #C475FD lavender — data colors are perfectly consistent with the light render; only chrome elements have flipped
+      Legibility verdict: PASS — all text elements readable against near-black background; brand green #009E73 remains clearly visible on dark surface
   criteria_checklist:
     visual_quality:
       score: 28
@@ -55,76 +60,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text theme-adaptive and readable in both renders. Minor annotation
-          density in axis-intercept region with '0.43' and '9.4' callout labels.
+        comment: 'All font sizes explicitly set (title scaled by formula, labels 10pt,
+          ticks 8pt, legend 8pt). Both themes readable. Minor: intercept annotations
+          at 8pt are at minimum readable size.'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Mild crowding between ''Unknown: 9.4 mg/L'' annotation text and
-          12 mg/L calibration standard point in upper right. No actual pixel overlap.'
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly distinguishable: green circles on fit line,
-          lavender diamond, dashed guide lines, prediction band.'
+        comment: 'No significant overlaps detected. Annotations are carefully placed:
+          regression box in upper-left clears data, arrow annotation in mid-upper
+          area, axis intercept labels on different sides of the spine from tick labels.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible but s=100 is below the 200-400 recommended range
+          for < 30 data points. PathEffects halo on fit line compensates but markers
+          could be larger.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1 and 2; redundant encoding via shape (circle
-          vs diamond).
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe per Imprint palette
+          design. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; 3200x1800 px. savefig omits bbox_inches (correct).
-          Layout proportions good.
+        comment: Canvas gate passed. Plot fills the canvas well from x=-0.5 to 14,
+          full vertical range. Good balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Concentration (mg/L)'' with units; ''Absorbance'' (dimensionless);
-          correct title format.'
+        comment: 'X: ''Concentration (mg/L)'' with units. Y: ''Absorbance'' (dimensionless
+          per spec). Title: correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Standards/fit use #009E73 (Imprint position 1); unknown uses #C475FD
-          (position 2). Backgrounds #FAF8F1/#1A1A17. All chrome tokens properly themed.'
+        comment: 'First series #009E73, second #C475FD — canonical Imprint order.
+          Backgrounds #FAF8F1/#1A1A17. Chrome fully adaptive. Data colors identical
+          across themes.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Lifts above default-4: PathEffects halo on fit line, monospace font
-          in annotation box, deliberate zorder stacking. Functional-scientific register,
-          not visually ambitious.'
+        comment: PathEffects.withStroke halo, FancyBboxPatch with rounded corners,
+          two-level text hierarchy in annotation box (monospace + bold brand-green
+          R²) — clearly above configured defaults. Strong design.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; y-axis grid 15% alpha, x-axis 8%; legend
-          frame uses ELEVATED_BG. Solid execution of style guide defaults.
+        comment: 'Top/right spines removed, tick marks removed (length=0), dual-grid
+          (y: alpha=0.15, x: alpha=0.08), elevated BG for legend and annotation box.
+          Good refinement, not quite perfect.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dashed guide lines + axis-intercept callouts tell calibration story
-          clearly. Functional narrative, not sophisticated hierarchy.
+        comment: Dual-color hierarchy (green=calibration, lavender=unknown), guide
+          lines + intercept labels + arrow annotation form a complete visual narrative
+          demonstrating the calibration procedure. Above default.
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter + linear fit calibration curve; correct chart type.
+        comment: 'Correct: scatter calibration standards + linear regression + prediction
+          interval + unknown determination.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Regression equation, R², 95% prediction interval, unknown sample
-          with dashed guide lines — all present.
+        comment: 'All spec features present: equation annotation, R² display, 95%
+          prediction interval band, dashed guide lines to both axes, axis intercept
+          labels, Beer-Lambert linear data.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on x-axis, Absorbance on y-axis; full range including
-          blank at zero.
+        comment: 'X: concentration (independent variable), Y: absorbance (dependent).
+          All data visible within axes.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'calibration-beer-lambert · python · matplotlib · anyplot.ai';
-          legend entries match data series.
+        comment: 'Title: ''calibration-beer-lambert · python · matplotlib · anyplot.ai''
+          — correct format. Legend: ''95% Prediction Interval'', ''Linear Fit'', ''Standards'',
+          ''Unknown Sample'' — all match.'
     data_quality:
       score: 15
       max: 15
@@ -165,21 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects: scatter, regression line, prediction interval, unknown
-          sample determination with guide lines and axis annotations.'
+        comment: 7 calibration standards from 0 to 12 mg/L including blank, prediction
+          interval, and complete unknown determination workflow all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Beer-Lambert law; concentrations 0-12 mg/L and absorbances 0-0.56
-          realistic for UV-Vis; R²=0.9990 realistic for high-quality calibration.
+        comment: Real analytical chemistry scenario (UV-Vis spectrophotometry calibration).
+          Neutral scientific context. Beer-Lambert law correctly applied.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Molar absorptivity 0.045, blank at zero, realistic noise (sigma=0.008).
+        comment: Molar absorptivity 0.045 L/mg·cm, absorbance 0-0.54, R²=0.999 — all
+          realistic for UV-Vis calibration. Instrument noise std=0.008 AU is realistic.
     code_quality:
       score: 10
       max: 10
@@ -189,35 +204,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script, no functions or classes.
+        comment: 'Linear structure: imports → theme tokens → data → regression → plot
+          elements → style → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.patheffects, matplotlib.pyplot,
-          matplotlib.ticker, numpy, scipy.stats.'
+        comment: 'All imports used: os (THEME), patheffects (halo), pyplot, ticker
+          (formatter), numpy, FancyBboxPatch, scipy.stats (linregress + t.ppf).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity; deliberate zorder layering.
+        comment: Clean Pythonic code, appropriate complexity. PathEffects and FancyBboxPatch
+          are sophisticated but not over-engineered.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight' on savefig; current
-          matplotlib 3.9+ API.
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', current matplotlib
+          3.10 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -225,22 +242,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.* methods throughout; ax.annotate with arrowprops; ax.fill_between
-          for prediction interval; ticker.FormatStrFormatter for custom y-tick format.
+        comment: Consistent Axes method usage, transform=ax.transAxes, plt.setp for
+          legend text, fill_between for band — above default idiomatic usage.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: matplotlib.patheffects.withStroke (halo on fit line) is a genuinely
-          distinctive matplotlib feature. fill_between for prediction interval band
-          and custom FormatStrFormatter add library specificity.
+        comment: matplotlib.patheffects.withStroke for halo effect, FancyBboxPatch
+          with boxstyle='round', ax.annotate with arrowprops — genuinely distinctive
+          matplotlib features.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - patches
+  - path-effects
   patterns:
   - data-generation
   - explicit-figure
@@ -249,3 +268,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-03
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
