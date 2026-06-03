@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-basic: Basic Heatmap
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-02
+// Quality: 92/100 | Updated: 2026-06-03
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
