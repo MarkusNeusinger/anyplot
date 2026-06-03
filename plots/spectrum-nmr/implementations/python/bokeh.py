@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
@@ -62,7 +62,13 @@ spectrum += 0.3 * w**2 / ((ppm - (3.69 + 1.5 * j)) ** 2 + w**2)
 spectrum += np.random.normal(0, 0.003, len(ppm))
 spectrum = np.maximum(spectrum, 0)
 
-source = ColumnDataSource(data={"ppm": ppm, "intensity": spectrum})
+# Molecular group label for each data point (enriches interactive tooltip)
+_peak_centers = [(0.0, "TMS"), (1.18, "CH₃ triplet"), (2.61, "OH singlet"), (3.69, "CH₂ quartet")]
+groups = np.array(["baseline"] * len(ppm), dtype=object)
+for _center, _name in _peak_centers:
+    groups[np.abs(ppm - _center) < 0.6] = _name
+
+source = ColumnDataSource(data={"ppm": ppm, "intensity": spectrum, "group": groups})
 
 # Title with length-scaled fontsize (bokeh default '50pt' baseline at 67 chars)
 title_text = "¹H NMR Spectrum of Ethanol · spectrum-nmr · python · bokeh · anyplot.ai"
@@ -84,6 +90,11 @@ p = figure(
     min_border_top=110,
     min_border_right=50,
 )
+
+# Subtle functional-group region shading (behind data layer)
+_region_coords = [(-0.25, 0.25), (0.90, 1.50), (2.20, 3.05), (3.30, 4.10)]
+for r_left, r_right in _region_coords:
+    p.quad(top=1.45, bottom=-0.02, left=r_left, right=r_right, fill_color=BRAND, fill_alpha=0.06, line_color=None)
 
 # Filled area under spectrum — Imprint brand green with light alpha
 p.varea(x="ppm", y1=0, y2="intensity", source=source, fill_color=BRAND, fill_alpha=0.12)
@@ -110,7 +121,7 @@ for ppm_val, y_val, text in peak_labels:
             x=ppm_val,
             y=y_val + 0.06,
             text=text,
-            text_font_size="28pt",
+            text_font_size="22pt",
             text_color=INK,
             text_font_style="bold",
             text_align="center",
@@ -119,7 +130,10 @@ for ppm_val, y_val, text in peak_labels:
 
 # HoverTool for interactive HTML exploration
 p.add_tools(
-    HoverTool(tooltips=[("Chemical Shift", "@ppm{0.00} ppm"), ("Intensity", "@intensity{0.000}")], mode="vline")
+    HoverTool(
+        tooltips=[("Group", "@group"), ("Chemical Shift", "@ppm{0.00} ppm"), ("Intensity", "@intensity{0.000}")],
+        mode="vline",
+    )
 )
 
 # Theme-adaptive chrome
