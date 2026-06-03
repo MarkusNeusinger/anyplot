@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: highcharts | Python 3.14.3
+Library: highcharts unknown | Python 3.13.13
 Quality: 93/100 | Updated: 2026-06-03
 """
 
