@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-03
@@ -68,6 +68,7 @@ chart = pygal.Dot(
     height=1800,
     style=custom_style,
     title=title,
+    x_title="Thousands of tonnes  ·  each dot = 5k t",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -78,9 +79,9 @@ chart = pygal.Dot(
     spacing=35,
     margin=50,
     margin_left=110,
-    margin_right=40,
+    margin_right=80,
     margin_top=80,
-    margin_bottom=150,
+    margin_bottom=170,
     x_label_rotation=0,
     truncate_label=-1,
     truncate_legend=-1,
