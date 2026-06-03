@@ -1,36 +1,100 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-11
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from scipy.spatial import ConvexHull
 
 
-# Data - Density (kg/m^3) vs Young's Modulus (GPa) for material families
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+MINOR_GRID = "rgba(26,26,23,0.07)" if THEME == "light" else "rgba(240,239,232,0.07)"
+GUIDE_LINE = "rgba(26,26,23,0.20)" if THEME == "light" else "rgba(240,239,232,0.20)"
+
+# Imprint categorical palette — canonical order, 7 families
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+
+# Data — Density (kg/m³) vs Young's Modulus (GPa) for material families
 np.random.seed(42)
 
-# Colorblind-safe palette avoiding red-green confusion
 families = {
-    "Metals": {"density": (5000, 11000), "modulus": (50, 220), "n": 30, "color": "#306998", "corr": 0.4},
-    "Ceramics": {"density": (2200, 4000), "modulus": (180, 500), "n": 25, "color": "#C44E52", "corr": 0.3},
-    "Polymers": {"density": (900, 1500), "modulus": (0.2, 4), "n": 25, "color": "#8172B3", "corr": 0.5},
-    "Composites": {"density": (1400, 2200), "modulus": (10, 180), "n": 22, "color": "#17BECF", "corr": 0.6},
-    "Elastomers": {"density": (900, 1300), "modulus": (0.001, 0.1), "n": 20, "color": "#E5A94F", "corr": 0.3},
-    "Foams": {"density": (20, 300), "modulus": (0.001, 1), "n": 20, "color": "#A1A832", "corr": 0.7},
-    "Natural Materials": {"density": (150, 1300), "modulus": (0.5, 20), "n": 18, "color": "#8C564B", "corr": 0.5},
+    "Metals": {
+        "density": (5000, 11000),
+        "modulus": (50, 220),
+        "n": 30,
+        "color": IMPRINT_PALETTE[0],
+        "corr": 0.4,
+        "symbol": "circle",
+    },
+    "Ceramics": {
+        "density": (2200, 4000),
+        "modulus": (180, 500),
+        "n": 25,
+        "color": IMPRINT_PALETTE[1],
+        "corr": 0.3,
+        "symbol": "square",
+    },
+    "Polymers": {
+        "density": (900, 1500),
+        "modulus": (0.2, 4),
+        "n": 25,
+        "color": IMPRINT_PALETTE[2],
+        "corr": 0.5,
+        "symbol": "diamond",
+    },
+    "Composites": {
+        "density": (1400, 2200),
+        "modulus": (10, 180),
+        "n": 22,
+        "color": IMPRINT_PALETTE[3],
+        "corr": 0.6,
+        "symbol": "triangle-up",
+    },
+    "Elastomers": {
+        "density": (700, 1500),
+        "modulus": (0.001, 0.1),
+        "n": 20,
+        "color": IMPRINT_PALETTE[4],
+        "corr": 0.3,
+        "symbol": "cross",
+    },
+    "Foams": {
+        "density": (20, 300),
+        "modulus": (0.001, 1),
+        "n": 20,
+        "color": IMPRINT_PALETTE[5],
+        "corr": 0.7,
+        "symbol": "star",
+    },
+    "Natural Materials": {
+        "density": (150, 1300),
+        "modulus": (0.5, 20),
+        "n": 18,
+        "color": IMPRINT_PALETTE[6],
+        "corr": 0.5,
+        "symbol": "x",
+    },
 }
 
 # Generate log-uniform data with realistic intra-family correlations
 data = {}
 for family, props in families.items():
-    log_d_min, log_d_max = np.log10(props["density"][0]), np.log10(props["density"][1])
-    log_m_min, log_m_max = np.log10(props["modulus"][0]), np.log10(props["modulus"][1])
+    log_d_min = np.log10(props["density"][0])
+    log_d_max = np.log10(props["density"][1])
+    log_m_min = np.log10(props["modulus"][0])
+    log_m_max = np.log10(props["modulus"][1])
     n = props["n"]
     r = props["corr"]
-    # Correlated bivariate normal in log-space, then clip to range
     mean = [0.5 * (log_d_min + log_d_max), 0.5 * (log_m_min + log_m_max)]
     std_d = (log_d_max - log_d_min) / 4
     std_m = (log_m_max - log_m_min) / 4
@@ -47,8 +111,14 @@ for family, props in families.items():
     d = data[family]["density"]
     m = data[family]["modulus"]
     color = props["color"]
+    symbol = props["symbol"]
 
-    # Draw convex hull envelope for each family
+    r_val = int(color[1:3], 16)
+    g_val = int(color[3:5], 16)
+    b_val = int(color[5:7], 16)
+    fill_color = f"rgba({r_val}, {g_val}, {b_val}, 0.15)"
+
+    # Convex hull envelope for each family region
     log_pts = np.column_stack([np.log10(d), np.log10(m)])
     if len(log_pts) >= 3:
         hull = ConvexHull(log_pts)
@@ -62,16 +132,14 @@ for family, props in families.items():
                 mode="lines",
                 line={"color": color, "width": 2},
                 fill="toself",
-                fillcolor=color.replace(")", ", 0.15)")
-                if "rgba" in color
-                else f"rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.15)",
+                fillcolor=fill_color,
                 showlegend=False,
                 hoverinfo="skip",
             )
         )
 
-    # Scatter points with E/rho performance index in hover
-    e_over_rho = m / (d / 1000)  # GPa per (Mg/m³)
+    # Scatter points — distinct shape per family (7 series requires redundant encoding)
+    e_over_rho = m / (d / 1000)
     fig.add_trace(
         go.Scatter(
             x=d,
@@ -79,7 +147,13 @@ for family, props in families.items():
             mode="markers",
             name=family,
             legendgroup=family,
-            marker={"size": 12, "color": color, "line": {"width": 1.5, "color": "white"}, "opacity": 0.82},
+            marker={
+                "size": 12,
+                "color": color,
+                "symbol": symbol,
+                "line": {"width": 1.5, "color": PAGE_BG},
+                "opacity": 0.85,
+            },
             customdata=np.column_stack([e_over_rho]),
             hovertemplate=(
                 f"<b>{family}</b><br>"
@@ -91,9 +165,14 @@ for family, props in families.items():
         )
     )
 
-    # Family label at centroid
+    # Family label at log-space centroid
     centroid_d = 10 ** np.mean(np.log10(d))
     centroid_m = 10 ** np.mean(np.log10(m))
+    # Adjust labels to avoid crowding — Composites lower, Metals further left
+    if family == "Composites":
+        centroid_m /= 2.0
+    if family == "Metals":
+        centroid_d /= 1.8
     fig.add_annotation(
         x=np.log10(centroid_d),
         y=np.log10(centroid_m),
@@ -101,10 +180,10 @@ for family, props in families.items():
         yref="y",
         text=f"<b>{family}</b>",
         showarrow=False,
-        font={"size": 18, "color": "#333333", "family": "Arial, Helvetica, sans-serif"},
-        bgcolor="rgba(255, 255, 255, 0.85)",
+        font={"size": 12, "color": INK, "family": "Arial, Helvetica, sans-serif"},
+        bgcolor=ELEVATED_BG,
         borderpad=5,
-        bordercolor="rgba(0, 0, 0, 0.08)",
+        bordercolor=INK_SOFT,
         borderwidth=1,
     )
 
@@ -120,7 +199,7 @@ for gv in guide_values:
                 x=density_range[mask],
                 y=modulus_line[mask],
                 mode="lines",
-                line={"color": "rgba(0, 0, 0, 0.18)", "width": 1.2, "dash": "dot"},
+                line={"color": GUIDE_LINE, "width": 1.2, "dash": "dot"},
                 showlegend=False,
                 hoverinfo="skip",
             )
@@ -134,71 +213,75 @@ fig.add_annotation(
     yref="y",
     text="<i>E/ρ = const</i>",
     showarrow=False,
-    font={"size": 16, "color": "#666666", "family": "Arial, Helvetica, sans-serif"},
-    bgcolor="rgba(255, 255, 255, 0.85)",
+    font={"size": 12, "color": INK_SOFT, "family": "Arial, Helvetica, sans-serif"},
+    bgcolor=ELEVATED_BG,
     borderpad=4,
     textangle=-38,
 )
 
-# Layout
+# Title length scaling (floor 11px per plotly family rule)
+title = "scatter-ashby-material · python · plotly · anyplot.ai"
+title_fontsize = max(11, round(16 * min(1.0, 67 / len(title))))
+
+# Layout — canvas 800×450 @ scale=4 → 3200×1800
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    template="plotly_white",
+    margin={"l": 80, "r": 60, "t": 100, "b": 80},
     title={
-        "text": "scatter-ashby-material · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#2B2B2B", "family": "Arial, Helvetica, sans-serif"},
+        "text": title,
+        "font": {"size": title_fontsize, "color": INK, "family": "Arial, Helvetica, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
     },
     xaxis={
-        "title": {"text": "Density (kg/m³)", "font": {"size": 22, "color": "#444444"}},
-        "tickfont": {"size": 18, "color": "#555555"},
+        "title": {"text": "Density (kg/m³)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
-        "gridcolor": "rgba(0, 0, 0, 0.04)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "showline": True,
-        "linecolor": "#AAAAAA",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
         "mirror": False,
         "range": [np.log10(10), np.log10(20000)],
         "dtick": 1,
-        "minor": {"showgrid": True, "gridcolor": "rgba(0, 0, 0, 0.02)"},
+        "minor": {"showgrid": True, "gridcolor": MINOR_GRID},
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Young's Modulus (GPa)", "font": {"size": 22, "color": "#444444"}},
-        "tickfont": {"size": 18, "color": "#555555"},
+        "title": {"text": "Young's Modulus (GPa)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
-        "gridcolor": "rgba(0, 0, 0, 0.04)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "showline": True,
-        "linecolor": "#AAAAAA",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
         "mirror": False,
         "range": [np.log10(0.0005), np.log10(1000)],
-        "minor": {"showgrid": True, "gridcolor": "rgba(0, 0, 0, 0.02)"},
+        "minor": {"showgrid": True, "gridcolor": MINOR_GRID},
+        "zerolinecolor": INK_SOFT,
     },
-    template="plotly_white",
-    plot_bgcolor="#F8F9FA",
-    paper_bgcolor="#FFFFFF",
     legend={
-        "title": {"text": "Material Family", "font": {"size": 18, "color": "#333333"}},
-        "font": {"size": 16},
-        "bgcolor": "rgba(255, 255, 255, 0.94)",
-        "bordercolor": "rgba(0, 0, 0, 0.1)",
+        "title": {"text": "Material Family", "font": {"size": 12, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "x": 0.98,
-        "y": 0.02,
-        "xanchor": "right",
-        "yanchor": "bottom",
+        "x": 0.01,
+        "y": 0.99,
+        "xanchor": "left",
+        "yanchor": "top",
         "itemsizing": "constant",
     },
-    width=1600,
-    height=900,
-    margin={"l": 80, "r": 60, "t": 100, "b": 80},
-    font={"family": "Arial, Helvetica, sans-serif"},
+    font={"family": "Arial, Helvetica, sans-serif", "color": INK},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — canvas: 3200×1800 (landscape)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
