@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-ashby-material: Ashby Material Selection Chart
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-03
+// Quality: 90/100 | Created: 2026-06-03
 
 //# anyplot-orientation: landscape
 
