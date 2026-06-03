@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
@@ -6,9 +6,11 @@ Quality: 89/100 | Updated: 2026-06-03
 
 import os
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
+from matplotlib.patches import FancyArrowPatch
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -62,20 +64,20 @@ for prop in propagators:
 
     if prop["type"] == "fermion":
         arrow_fwd = prop.get("arrow_fwd", True)
-        if arrow_fwd:
-            ax.annotate(
-                "",
-                xy=(ex, ey),
-                xytext=(sx, sy),
-                arrowprops={"arrowstyle": "-|>", "color": FERMION_COLOR, "lw": 2.5, "mutation_scale": 20},
-            )
-        else:
-            ax.annotate(
-                "",
-                xy=(sx, sy),
-                xytext=(ex, ey),
-                arrowprops={"arrowstyle": "-|>", "color": FERMION_COLOR, "lw": 2.5, "mutation_scale": 20},
-            )
+        # FancyArrowPatch: direct matplotlib Patch API for arrow rendering
+        arrow = FancyArrowPatch(
+            posA=(sx, sy) if arrow_fwd else (ex, ey),
+            posB=(ex, ey) if arrow_fwd else (sx, sy),
+            arrowstyle="-|>",
+            color=FERMION_COLOR,
+            linewidth=2.5,
+            mutation_scale=20,
+            transform=ax.transData,
+            zorder=3,
+        )
+        # patheffects: background-color halo separates the arrow from any crossing lines
+        arrow.set_path_effects([pe.withStroke(linewidth=5, foreground=PAGE_BG)])
+        ax.add_patch(arrow)
         ax.text(
             mx + px * 0.06,
             my + py * 0.06,
@@ -90,7 +92,11 @@ for prop in propagators:
     elif prop["type"] == "photon":
         t = np.linspace(0, 1, 500)
         wave = 0.035 * np.sin(2 * np.pi * 8 * t) * np.sin(np.pi * t) ** 0.3
-        ax.plot(sx + t * dx + wave * px, sy + t * dy + wave * py, color=PHOTON_COLOR, lw=2.5, solid_capstyle="round")
+        (line,) = ax.plot(
+            sx + t * dx + wave * px, sy + t * dy + wave * py, color=PHOTON_COLOR, lw=2.5, solid_capstyle="round"
+        )
+        # patheffects: wider same-color stroke gives the wave a luminous, glowing appearance
+        line.set_path_effects([pe.withStroke(linewidth=6, foreground=PHOTON_COLOR)])
         ax.text(
             mx - px * 0.07,
             my - py * 0.07,
@@ -108,13 +114,15 @@ for prop in propagators:
         envelope = np.sin(np.pi * t) ** 0.4
         along_mod = 0.025 * 0.7 * np.sin(phase) * envelope
         perp_disp = 0.025 * np.cos(phase) * envelope
-        ax.plot(
+        (line,) = ax.plot(
             sx + t * dx - along_mod * ux + perp_disp * px,
             sy + t * dy - along_mod * uy + perp_disp * py,
             color=GLUON_COLOR,
             lw=2.0,
             solid_capstyle="round",
         )
+        # patheffects: wider stroke gives the coil visual weight consistent with the photon glow
+        line.set_path_effects([pe.withStroke(linewidth=5, foreground=GLUON_COLOR)])
         ax.text(
             mx + px * 0.06,
             my + py * 0.06,
@@ -146,13 +154,13 @@ for vx, vy in vertices.values():
 # Separator between QED and QCD processes
 ax.axhline(y=0.50, xmin=0.05, xmax=0.95, color=INK_MUTED, lw=0.8, linestyle="--", alpha=0.5)
 
-# Process labels
-ax.text(0.005, 0.74, "QED", fontsize=9, ha="left", va="center", color=INK_MUTED, fontstyle="italic", rotation=90)
-ax.text(0.005, 0.26, "QCD", fontsize=9, ha="left", va="center", color=INK_MUTED, fontstyle="italic", rotation=90)
+# Process labels — nudged inward and bumped to 10pt for mobile readability
+ax.text(0.02, 0.74, "QED", fontsize=10, ha="left", va="center", color=INK_MUTED, fontstyle="italic", rotation=90)
+ax.text(0.02, 0.26, "QCD", fontsize=10, ha="left", va="center", color=INK_MUTED, fontstyle="italic", rotation=90)
 
 # Time arrow (inside axes area, above legend)
 ax.annotate("", xy=(0.95, -0.03), xytext=(0.05, -0.03), arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.2})
-ax.text(0.5, -0.05, "time", fontsize=9, ha="center", va="top", color=INK_MUTED, fontstyle="italic")
+ax.text(0.5, -0.05, "time", fontsize=10, ha="center", va="top", color=INK_MUTED, fontstyle="italic")
 
 # Title (48 chars < 67 threshold — default 12pt)
 ax.set_title("feynman-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", pad=10, color=INK)
@@ -173,7 +181,7 @@ legend_handles = [
     Line2D([0], [0], color=PHOTON_COLOR, lw=2.5, label="Photon (wavy)"),
     Line2D([0], [0], color=GLUON_COLOR, lw=2.0, label="Gluon (coiled)"),
     Line2D([0], [0], color=BOSON_COLOR, lw=2.5, linestyle="--", label="Boson (dashed)"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK, markersize=7, lw=0, label="Vertex"),
+    Line2D([0], [0], marker="o", color=PAGE_BG, markerfacecolor=INK, markersize=7, lw=0, label="Vertex"),
 ]
 leg = ax.legend(
     handles=legend_handles,
