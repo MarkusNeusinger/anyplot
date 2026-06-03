@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:11Z'
-updated: '2026-06-03T10:15:08Z'
+updated: '2026-06-03T10:28:16Z'
 generated_by: claude-sonnet
 workflow_run: 26877428768
 issue: 4581
@@ -12,47 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (triangular structure, actual/projected
-    differentiation, cell annotations, factor row, legend) correctly implemented.'
-  - Semantically correct use of ANYPLOT_AMBER for the projected/IBNR region — matches
-    its warning/caution role precisely.
-  - Clever text-color contrast split (white vs. INK tokens) across the gradient ensures
-    cell annotation readability on both dark and light cells.
-  - flavor_darcula() as the dark-theme base layer is a library-exclusive feature used
-    appropriately.
-  - Factor row with ELEVATED_BG is visually well-differentiated from the data triangle.
-  - Both themes render correctly with no dark-on-dark failures.
+  - 'Full spec compliance: triangular matrix with actual/projected distinction, amber
+    borders, factor row, color-gradient magnitude encoding, and cell annotations all
+    implemented correctly.'
+  - 'Clever adaptive text contrast: cell annotations split into two layers by gradient
+    threshold so white text sits on dark cells and INK on light cells — ensures readability
+    across the entire color range.'
+  - 'Data storytelling: Peak IBNR callout annotation and factor row provide actuarial
+    context and a clear focal point beyond mere data display.'
+  - 'Perfect palette compliance: imprint_seq gradient (#009E73→#4467A3) for continuous
+    heatmap magnitude, amber borders for projected region distinction, correct warm
+    backgrounds (#FAF8F1 / #1A1A17) in both themes.'
+  - 'Idiomatic letsplot usage: guide_legend(override_aes={...}) for invisible-point
+    legend trick, flavor_darcula() for dark theme, scale_y_discrete(limits=y_order)
+    for custom Y-axis ordering — all letsplot/ggplot2-distinctive idioms.'
   weaknesses:
-  - 'Cell annotation text (geom_text size=3.5) is too small for mobile readability
-    (400px viewport): at that scale each cell is ~20-25px and the text becomes near-illegible.
-    Increase to size=4.5-5.0.'
-  - Axis titles at size=18 (bold) are oversized relative to the style-guide recommendation
-    (12px for scale-based lets-plot). While readable, they dominate the axis slightly.
-    Reduce axis_title to size=14, axis_text to size=12.
-  - 'Design Excellence lacks a strong focal point: the amber projected-region boundary
-    is good structural storytelling, but the plot could guide the viewer more explicitly
-    — e.g., a subtle annotation on the latest-diagonal or a brief callout on the highest
-    IBNR estimate.'
-  - 'No spine/panel border removal: adding panel_border=element_blank() and removing
-    axis_line for a clean floating-grid aesthetic would improve DE-02.'
+  - 'Peak IBNR callout overlaps the regular cell label on the same (x, y) position:
+    geom_text for df_light_text/df_dark_text places ''82,312'' (white) at the peak
+    cell center, then df_peak places ''Peak IBNR\n$82,312'' (amber) at the same center
+    — both are anchored identically. Fix: filter the peak cell out of df_light_text
+    and df_dark_text so only the amber callout appears on that cell, OR use nudge_y
+    on df_peak to shift the callout above/below the cell center without removing the
+    regular label.'
+  - Cell annotation font (size=4.5 mm) is adequate at full 2400×2400 resolution but
+    pushes legibility limits when the plot is downscaled to mobile widths (~400 px);
+    consider reducing to 3.8–4.0 mm to give more breathing room at small sizes.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "heatmap-loss-triangle · python · letsplot · anyplot.ai" in bold dark ink (INK=#1A1A17); italic subtitle "Chain-Ladder Loss Triangle · Actual (grey border) vs Projected (amber border)"; axis labels "Development Period (Years)" and "Accident / Origin Year" in bold dark ink; tick labels for years/periods in INK_SOFT (#4A4A44). All chrome elements clearly readable.
-      Data: 10x10 triangular heatmap with imprint_seq green (#009E73) to blue (#4467A3) gradient encoding cumulative claims. Actual cells have thin grey borders (INK_SOFT); projected IBNR cells have amber/gold borders (ANYPLOT_AMBER=#DDCC77) at alpha=0.75. Each cell annotated with comma-formatted number; white text on high-value cells, dark INK text on low-value cells. Factor row at bottom on elevated cream background (#FFFDF6) with bold factor labels. Legend shows Cumulative Claims ($) colorbar and Cell Region squares (dark for Actual, amber for Projected).
-      Legibility verdict: PASS — all text readable; cell annotations are small but legible at full resolution; potential mobile readability concern at 400px scale.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "heatmap-loss-triangle · python · letsplot · anyplot.ai" in bold dark INK (#1A1A17), clearly readable. Subtitle in italic INK_SOFT. Y-axis label "Accident / Origin Year" and X-axis label "Development Period (Years)" in bold INK, both well-sized and readable. Axis tick labels (years 2015–2024 and periods 1–10) in INK_SOFT at size 12, legible. Caption "Bottom row: Age-to-Age Development Factors" at bottom in INK_MUTED.
+      Data: 10×10 heatmap cells colored by imprint_seq gradient from #009E73 (brand green, low values ~8K) to #4467A3 (blue, high values ~80K). Cell labels formatted with thousands separator. Actual cells have grey/INK_SOFT borders; projected cells have amber (#DDCC77) borders at slightly increased width. Factor row at bottom has elevated #FFFDF6 background with bold INK text showing development factors 2.500→1.008→—. Peak IBNR callout in amber on the max projected cell (2022, period 9, ~82,312). Legends: "Cumulative Claims ($)" colorbar on right; "Cell Region" legend with Actual (grey square) and Projected (amber square).
+      Legibility verdict: PASS — all text elements visible and readable against the warm off-white background. Minor note: Peak IBNR callout overlaps the same cell's regular numeric label (both on same (x,y) center). Text is distinguishable by color (white vs amber) but spatially confused at that one cell.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title, subtitle, axis labels, tick labels all rendered in light cream/off-white tones (INK=#F0EFE8, INK_SOFT=#B8B7B0). Legend box elevated to #242420. All chrome adapts correctly to dark theme — no dark-on-dark failures.
-      Data: Gradient colors identical to light render (green-to-blue unchanged). Amber borders for projected cells remain clearly visible on the dark background. Factor row elevated background (#242420) still distinguishable from main triangle (#1A1A17). Cell Region legend: grey square (INK_SOFT in dark=#B8B7B0) for Actual, amber square for Projected.
-      Legibility verdict: PASS — all text visible and readable; data colors identical to light render; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title, axis labels, and tick labels all rendered in light-colored text (INK=#F0EFE8 for primary, INK_SOFT=#B8B7B0 for secondary), clearly readable against dark background. No dark-on-dark failures observed. Legend backgrounds use ELEVATED_BG=#242420 — slightly lighter than page background, ensuring legend box is distinguishable.
+      Data: Identical imprint_seq gradient (green to blue) as light render — data colors unchanged as required. Actual cell borders in INK_SOFT (#B8B7B0 in dark), projected borders in amber (#DDCC77). Factor row tiles use #242420 fill with light INK text. Peak IBNR callout in amber remains visible on dark background.
+      Legibility verdict: PASS — all text readable against dark background. Data colors identical to light render. Chrome elements (text, borders, legend) correctly flip to theme-appropriate light values. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -60,50 +62,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly set; axis titles at size=18 and tick labels at
-          size=15 are above style-guide recommendations (12/10px) for lets-plot scale-based
-          libs; cell annotations at geom_text size=3.5 are readable at full resolution
-          but small at mobile widths (~400px)
+        comment: All font sizes explicitly set; readable in both themes. Dense cell
+          annotations (size=4.5mm) adequate at full res, marginally tight at mobile
+          scale.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No overlapping text or data elements in either render
+        passed: false
+        comment: Peak IBNR callout (amber, anchored at cell center) overlaps regular
+          cell label ('82,312' white) on same (x,y) coordinate — one affected cell,
+          main content still readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cells, borders, gradient, factor row, and legend clearly visible
+        comment: All heatmap cells, border distinctions, factor row, and annotations
+          clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe; actual/projected has redundant encoding
-          (border color + legend)
+        comment: imprint_seq is CVD-safe; amber/grey border distinction provides redundant
+          encoding for actual vs projected.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400 square); good utilization, no clipping
+        comment: Square 2400x2400 canvas (ggsize(600,600) scale=4) appropriate for
+          heatmap; canvas gate passed; proportions balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context; subtitle and caption add explanation
+        comment: 'X: ''Development Period (Years)'', Y: ''Accident / Origin Year''
+          — descriptive with context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (#009E73->#4467A3) for single-polarity data; ANYPLOT_AMBER
-          as semantic anchor; correct backgrounds both themes
+        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') = imprint_seq.
+          Backgrounds #FAF8F1/#1A1A17. All chrome theme-adaptive. Both renders correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,25 +117,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): text-color contrast split, semantic amber borders,
-          ELEVATED_BG factor row show deliberate design intent; falls short of editorial-polish
-          level'
+        comment: 'Above well-configured default: split text contrast layer, amber
+          border region distinction, peak IBNR focal point, factor row with elevated
+          bg — intentional design choices throughout.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: No grid (element_blank) appropriate for dense heatmap; no tick marks;
-          factor row elevated background. Above default but no spine removal or fine
-          margin tuning
+        comment: Grid removed, spines removed, ticks removed, plot_margin set, elevated
+          factor row bg, border weight differentiation — multiple deliberate refinements.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Amber borders create clear actual/projected visual boundary; subtitle
-          reinforces narrative; gradient communicates magnitude. Above default but
-          no focal point or explicit insight emphasis
+        comment: Peak IBNR callout creates focal point; factor row adds actuarial
+          context; subtitle explains actual vs projected distinction; color gradient
+          tells magnitude story.
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap structure
+        comment: 'Correct triangular matrix heatmap: upper-left actual, lower-right
+          projected, diagonal evaluation boundary.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: distinct styling, cell annotations with thousands
-          separator, factor row, color-intensity encoding, actual/projected legend'
+        comment: 'All spec features: actual/projected distinction, cell annotations
+          with thousands formatting, development factors row, color intensity encoding,
+          region legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dev periods, Y=accident years+Factor, fill=cumulative claims
+        comment: X=dev period, Y=accident year, fill=cumulative amount. Correct triangular
+          structure with is_projected=(i+j)>=n_years.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match data regions
+        comment: Title 'heatmap-loss-triangle · python · letsplot · anyplot.ai' matches
+          required format. Legend labels Actual/Projected correct.
     data_quality:
       score: 15
       max: 15
@@ -168,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 10x10 triangle (~55 actual + ~45 projected), factor row, full
-          color range
+        comment: 'Shows all triangle aspects: actual region, projected/IBNR region,
+          development factors, magnitude gradient, evaluation diagonal.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Insurance reserving / chain-ladder method; canonical actuarial application,
-          neutral
+        comment: 'Real actuarial scenario: insurance cumulative paid claims 2015-2024,
+          chain-ladder development, realistic IBNR projection. Neutral topic.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Initial claims $8k-$15k; factors 2.50->1.008; final cumulative ~$20k-$80k
-          — realistic for mid-sized commercial lines
+        comment: Initial claims 8K-15K, cumulative up to ~80K with realistic development
+          factors 2.50→1.008 — matches real P&C insurance loss triangle proportions.
     code_quality:
       score: 10
       max: 10
@@ -193,33 +202,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens -> data generation -> triangle loop -> dataframes
-          -> plot layers -> save'
+        comment: 'Flat script: imports → tokens → data generation → dataframes → plot
+          layers → save. No classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; clean separation of actual/projected/factor
-          data; text-color split logic is correct
+        comment: Appropriate complexity for a dense heatmap with multiple annotation
+          layers; no over-engineering or fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave with scale=4.
     library_mastery:
       score: 7
       max: 10
@@ -229,29 +238,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar; guide_legend(override_aes={...}) is an advanced
-          pattern; scale_y_discrete(limits=y_order) for custom ordering
+        comment: Grammar-of-graphics layering, guide_legend(override_aes={...}) for
+          invisible-point legend trick, scale_y_discrete(limits=...) for ordered axis
+          — clearly beyond basic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: flavor_darcula() is lets-plot-exclusive (JetBrains dark flavor);
-          invisible-points legend trick with override_aes demonstrates library-specific
-          knowledge
-  verdict: REJECTED
+        comment: flavor_darcula() is letsplot-exclusive dark theme; guide_legend(override_aes={...})
+          is ggplot2/letsplot-specific; split geom_text layers for adaptive contrast
+          are idiomatic to this grammar.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - custom-legend
-  - layer-composition
-  - html-export
   - annotations
+  - custom-legend
+  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
