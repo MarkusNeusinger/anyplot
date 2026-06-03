@@ -5,63 +5,73 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 80, right: 50, bottom: 90, left: 100 };
+const margin = { top: 110, right: 50, bottom: 90, left: 100 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// --- Data: synthetic vocal phrase — three syllables, fully deterministic, 1.7 s at 8 kHz ---
 const SR = 8000;
 const DUR = 1.7;
-const N = Math.ceil(SR * DUR);  // 13600 samples
+const N = Math.ceil(SR * DUR);
 
-// Three voiced syllables: start/end seconds, fundamental F0 (Hz), attack/release durations (s)
 const SYLS = [
-  { start: 0.10, end: 0.55, f0: 130, atk: 0.04, rel: 0.12 },
-  { start: 0.65, end: 1.10, f0: 155, atk: 0.04, rel: 0.12 },
-  { start: 1.20, end: 1.60, f0: 145, atk: 0.04, rel: 0.10 },
+  { start: 0.10, end: 0.55, f0: 130, atk: 0.04, rel: 0.12, label: 'Syl. 1' },
+  { start: 0.65, end: 1.10, f0: 155, atk: 0.04, rel: 0.12, label: 'Syl. 2' },
+  { start: 1.20, end: 1.60, f0: 145, atk: 0.04, rel: 0.10, label: 'Syl. 3' },
 ];
 
-function envAt(time, syl) {
-  const tl = time - syl.start;
-  const dur = syl.end - syl.start;
-  if (tl < 0 || tl >= dur) return 0;
-  if (tl < syl.atk) return tl / syl.atk;
-  if (dur - tl < syl.rel) return (dur - tl) / syl.rel;
-  return 1;
-}
-
-function signalAt(time) {
+// 4-harmonic vocal synthesis with per-syllable trapezoidal amplitude envelope
+const rawAmp = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  const time = i / SR;
   let s = 0;
   for (const syl of SYLS) {
-    const env = envAt(time, syl);
-    if (env === 0) continue;
+    const tl = time - syl.start;
+    const dur = syl.end - syl.start;
+    if (tl < 0 || tl >= dur) continue;
+    let env;
+    if (tl < syl.atk) env = tl / syl.atk;
+    else if (dur - tl < syl.rel) env = (dur - tl) / syl.rel;
+    else env = 1;
     const tau = 2 * Math.PI * time;
-    const f = syl.f0;
     s += env * (
-      0.45 * Math.sin(f * tau) +
-      0.28 * Math.sin(2 * f * tau) +
-      0.16 * Math.sin(3 * f * tau) +
-      0.11 * Math.sin(4 * f * tau)
+      0.45 * Math.sin(syl.f0 * tau) +
+      0.28 * Math.sin(2 * syl.f0 * tau) +
+      0.16 * Math.sin(3 * syl.f0 * tau) +
+      0.11 * Math.sin(4 * syl.f0 * tau)
     );
   }
-  return s;
+  rawAmp[i] = s;
 }
 
-// Build raw signal, then downsample to display-width bins (min/max envelope per pixel column)
-const rawAmp = new Float32Array(N);
-for (let i = 0; i < N; i++) rawAmp[i] = signalAt(i / SR);
-
+// Downsample to display-width bins: min/max envelope per pixel column
 const nBins = Math.round(iw);
 const bSz = N / nBins;
 const waveData = Array.from({ length: nBins }, (_, b) => {
-  const s = Math.floor(b * bSz);
-  const e = Math.min(Math.ceil((b + 1) * bSz), N);
+  const s0 = Math.floor(b * bSz);
+  const e0 = Math.min(Math.ceil((b + 1) * bSz), N);
   let lo = Infinity, hi = -Infinity;
-  for (let j = s; j < e; j++) {
+  for (let j = s0; j < e0; j++) {
     if (rawAmp[j] < lo) lo = rawAmp[j];
     if (rawAmp[j] > hi) hi = rawAmp[j];
   }
-  return { tPos: s / SR, lo, hi };
+  return { tPos: s0 / SR, lo, hi };
+});
+
+// Smooth amplitude envelope (200 pts) for overlay curves
+const envCurve = Array.from({ length: 200 }, (_, i) => {
+  const tv = i / 199 * DUR;
+  let peak = 0;
+  for (const syl of SYLS) {
+    const tl = tv - syl.start;
+    const dur = syl.end - syl.start;
+    if (tl < 0 || tl >= dur) continue;
+    let env;
+    if (tl < syl.atk) env = tl / syl.atk;
+    else if (dur - tl < syl.rel) env = (dur - tl) / syl.rel;
+    else env = 1;
+    peak = Math.max(peak, env);
+  }
+  return { t: tv, env: peak };
 });
 
 // --- SVG mount ---
@@ -73,7 +83,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const xScale = d3.scaleLinear().domain([0, DUR]).range([0, iw]);
 const yScale = d3.scaleLinear().domain([-1.05, 1.05]).range([ih, 0]);
 
-// --- Horizontal gridlines (y-axis only, subtle) ---
+// --- Horizontal gridlines ---
 g.selectAll(".hg").data([-1, -0.5, 0, 0.5, 1]).join("line")
   .attr("class", "hg")
   .attr("x1", 0).attr("x2", iw)
@@ -81,7 +91,16 @@ g.selectAll(".hg").data([-1, -0.5, 0, 0.5, 1]).join("line")
   .attr("stroke", t.grid)
   .attr("stroke-width", 0.5);
 
-// --- Waveform filled area (min/max envelope per display column) ---
+// --- Syllable onset markers (dashed verticals at each syllable start) ---
+g.selectAll(".sg").data(SYLS).join("line")
+  .attr("class", "sg")
+  .attr("x1", syl => xScale(syl.start)).attr("x2", syl => xScale(syl.start))
+  .attr("y1", 0).attr("y2", ih)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 0.75)
+  .attr("stroke-dasharray", "5,3");
+
+// --- Waveform filled area (min/max envelope per pixel column) ---
 g.append("path")
   .datum(waveData)
   .attr("d", d3.area()
@@ -94,7 +113,22 @@ g.append("path")
   .attr("stroke-width", 0.4)
   .attr("stroke-opacity", 0.9);
 
-// --- Zero reference line (slightly more visible than gridlines) ---
+// --- Amplitude envelope overlay — positive and negative arms ---
+for (const sign of [1, -1]) {
+  g.append("path")
+    .datum(envCurve)
+    .attr("d", d3.line()
+      .defined(d => d.env > 0.001)
+      .x(d => xScale(d.t))
+      .y(d => yScale(sign * d.env))
+      .curve(d3.curveCatmullRom.alpha(0.5)))
+    .attr("fill", "none")
+    .attr("stroke", t.palette[0])
+    .attr("stroke-width", 2)
+    .attr("stroke-opacity", 0.9);
+}
+
+// --- Zero reference line ---
 g.append("line")
   .attr("x1", 0).attr("x2", iw)
   .attr("y1", yScale(0)).attr("y2", yScale(0))
@@ -105,15 +139,30 @@ g.append("line")
 const xAxis = g.append("g")
   .attr("transform", `translate(0,${ih})`)
   .call(d3.axisBottom(xScale).ticks(9).tickFormat(d => d.toFixed(1)));
-
 const yAxis = g.append("g")
   .call(d3.axisLeft(yScale).tickValues([-1, -0.5, 0, 0.5, 1]));
-
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
   ax.selectAll("line").attr("stroke", t.inkSoft).attr("stroke-width", 0.5);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
+
+// --- Syllable labels (mid-margin above chart, with small tick connectors) ---
+g.selectAll(".syl-lbl").data(SYLS).join("text")
+  .attr("class", "syl-lbl")
+  .attr("x", syl => xScale((syl.start + syl.end) / 2))
+  .attr("y", -26)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text(syl => `${syl.label} · ${syl.f0} Hz`);
+g.selectAll(".syl-tick").data(SYLS).join("line")
+  .attr("class", "syl-tick")
+  .attr("x1", syl => xScale((syl.start + syl.end) / 2))
+  .attr("x2", syl => xScale((syl.start + syl.end) / 2))
+  .attr("y1", -14).attr("y2", -4)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
 
 // --- Axis labels ---
 svg.append("text")
@@ -123,7 +172,6 @@ svg.append("text")
   .attr("fill", t.ink)
   .style("font-size", "20px")
   .text("Time (s)");
-
 svg.append("text")
   .attr("transform", `translate(22, ${margin.top + ih / 2}) rotate(-90)`)
   .attr("text-anchor", "middle")
@@ -133,7 +181,7 @@ svg.append("text")
 
 // --- Title ---
 svg.append("text")
-  .attr("x", width / 2).attr("y", 48)
+  .attr("x", width / 2).attr("y", 52)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "28px")
