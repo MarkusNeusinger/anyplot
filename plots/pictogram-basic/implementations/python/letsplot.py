@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
@@ -30,6 +30,8 @@ icon_value = 5  # Each icon represents 5 thousand metric tonnes
 
 max_icons = max(v // icon_value + (1 if v % icon_value else 0) for v in values)
 
+MIN_ALPHA = 0.33  # floor so faintest partial icon remains clearly visible
+
 # Build pictogram grid — full icons at alpha=1.0, partial via fractional alpha
 tile_data = {"category": [], "col": [], "row": [], "alpha": [], "value": []}
 
@@ -47,7 +49,7 @@ for i, (cat, val) in enumerate(zip(categories, values)):
         tile_data["category"].append(cat)
         tile_data["col"].append(float(full_icons))
         tile_data["row"].append(float(y_pos))
-        tile_data["alpha"].append(remainder / icon_value)
+        tile_data["alpha"].append(max(MIN_ALPHA, remainder / icon_value))
         tile_data["value"].append(val)
 
 # Alternating background lanes for readability (even category indices)
@@ -66,6 +68,9 @@ label_data = {
 # Top producer annotation for data storytelling
 anno_data = {"col": [float(max_icons) + 0.3], "row": [float(len(categories) - 1) + 0.42], "label": ["★ Top producer"]}
 
+# Icon scale legend note in bottom-left corner for self-contained chart
+scale_note = {"col": [-0.45], "row": [-0.44], "label": ["● = 5k MT"]}
+
 y_breaks = [float(len(categories) - 1 - i) for i in range(len(categories))]
 
 title = "pictogram-basic · python · letsplot · anyplot.ai"
@@ -77,13 +82,13 @@ plot = (
     + geom_rect(
         aes(ymin="ymin", ymax="ymax"), data=even_lanes, xmin=-0.6, xmax=float(max_icons) + 2.2, fill=LANE_BG, size=0
     )
-    + geom_tile(
+    + geom_point(
         aes(x="col", y="row", alpha="alpha", fill="category"),
         data=tile_data,
-        width=0.82,
-        height=0.82,
+        shape=21,
+        size=12,
         color=PAGE_BG,
-        size=2.5,
+        stroke=1.5,
         tooltips=layer_tooltips().line("@category").line("Total: @value thousand metric tonnes").format("@value", "d"),
     )
     + scale_alpha_identity()
@@ -96,6 +101,9 @@ plot = (
         color=IMPRINT_PALETTE[0],
         hjust=0,
         fontface="italic",
+    )
+    + geom_text(
+        aes(x="col", y="row", label="label"), data=scale_note, size=3.5, color=INK_SOFT, hjust=0, fontface="italic"
     )
     + scale_y_continuous(breaks=y_breaks, labels=categories, limits=[-0.6, len(categories) - 0.3], expand=[0, 0])
     + scale_x_continuous(limits=[-0.6, float(max_icons) + 2.3], expand=[0, 0])
