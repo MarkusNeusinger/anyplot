@@ -1,3 +1,8 @@
+""" anyplot.ai
+heatmap-loss-triangle: Actuarial Loss Development Triangle
+Library: plotnine 0.15.5 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-03
+"""
 import os
 
 import numpy as np
