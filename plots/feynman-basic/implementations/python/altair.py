@@ -1,36 +1,46 @@
-""" pyplots.ai
+""" anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-07
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-06-03
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette positions 1-4 mapped to the four particle types
+color_scale = alt.Scale(
+    domain=["fermion", "photon", "gluon", "boson"], range=["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+)
 
 # Higgs boson production via gluon fusion: g + g → [t loop] → H → γ + γ
-# Shows all 4 particle types: fermion (straight), photon (wavy), gluon (curly), boson (dashed)
+# All 4 particle types: fermion (straight+arrows), photon (wavy), gluon (curly), boson (dashed)
 
-# Vertex positions — spread to maximize canvas utilization
+# Vertex positions spread across canvas
 v1 = (2.5, 5.5)  # upper-left triangle vertex (g-t-t)
 v2 = (2.5, 1.5)  # lower-left triangle vertex (g-t-t)
 v3 = (5.2, 3.5)  # right triangle vertex (t-t-H)
 v4 = (7.5, 3.5)  # Higgs decay vertex (H-γ-γ)
 
-# Shared scales — tighter domain to fill more canvas
 x_scale = alt.Scale(domain=[-0.3, 9.8])
 y_scale = alt.Scale(domain=[-0.3, 7.2])
 
-color_scale = alt.Scale(
-    domain=["fermion", "photon", "gluon", "boson"], range=["#306998", "#D4A017", "#C0392B", "#8E44AD"]
-)
-
-# Interactive selection bound to legend
 highlight = alt.selection_point(fields=["particle_type"], bind="legend")
 opacity_cond = alt.condition(highlight, alt.value(1.0), alt.value(0.25))
 
-# --- Straight lines: fermion edges + Higgs boson ---
+# Straight lines: fermion triangle edges + dashed Higgs boson propagator
 fermion_edges = [(v1, v2, "t1"), (v2, v3, "t2"), (v3, v1, "t3")]
 straight_df = pd.DataFrame(
     [
@@ -54,7 +64,7 @@ arrows_df = pd.DataFrame(
     ]
 )
 
-# --- Wavy paths (photon) — vectorized sinusoidal offset ---
+# Wavy paths (photon) — sinusoidal transverse offset
 n_wavy = 200
 wavy_paths = []
 for x0, y0, x1, y1, lid in [(*v4, 9.2, 5.8, "γ1"), (*v4, 9.2, 1.2, "γ2")]:
@@ -76,7 +86,7 @@ for x0, y0, x1, y1, lid in [(*v4, 9.2, 5.8, "γ1"), (*v4, 9.2, 1.2, "γ2")]:
         )
     )
 
-# --- Curly paths (gluon) — vectorized looped offset ---
+# Curly paths (gluon) — helical loop offset
 n_curly, n_loops, loop_r = 400, 7, 0.18
 curly_paths = []
 for x0, y0, x1, y1, lid in [(0.3, 5.5, *v1, "g1"), (0.3, 1.5, *v2, "g2")]:
@@ -101,7 +111,7 @@ for x0, y0, x1, y1, lid in [(0.3, 5.5, *v1, "g1"), (0.3, 1.5, *v2, "g2")]:
 
 path_df = pd.concat(wavy_paths + curly_paths, ignore_index=True)
 
-# --- Labels colored by particle type ---
+# Particle labels colored by type
 label_df = pd.DataFrame(
     [
         {"x": 3.1, "y": 3.5, "label": "t", "particle_type": "fermion"},
@@ -113,7 +123,7 @@ label_df = pd.DataFrame(
     ]
 )
 
-# --- Vertex dots ---
+# Vertex interaction points
 vertex_df = pd.DataFrame(
     [
         {"x": v1[0], "y": v1[1], "vertex": "g-t-t"},
@@ -123,21 +133,19 @@ vertex_df = pd.DataFrame(
     ]
 )
 
-# --- Process annotation and time axis ---
 process_df = pd.DataFrame([{"x": 5.0, "y": 6.8, "text": "g + g  →  H  →  γ + γ"}])
 time_line_df = pd.DataFrame([{"x": 1.5, "y": 0.2, "x2": 8.5, "y2": 0.2}])
 time_arrow_df = pd.DataFrame([{"x": 8.5, "y": 0.2, "angle": 90}])
 time_label_df = pd.DataFrame([{"x": 5.0, "y": -0.1, "label": "time"}])
 
-# --- Subtle background panel for the interaction region ---
+# Subtle elevated background panel for the interaction region
 bg_df = pd.DataFrame([{"x": 0.0, "y": 0.5, "x2": 9.6, "y2": 6.5}])
 bg_layer = (
     alt.Chart(bg_df)
-    .mark_rect(color="#f7f9fc", cornerRadius=18, stroke="#e0e4ea", strokeWidth=1)
+    .mark_rect(color=ELEVATED_BG, cornerRadius=18, stroke=INK_SOFT, strokeWidth=0.5)
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), x2="x2:Q", y2="y2:Q")
 )
 
-# --- Chart layers ---
 straight_layer = (
     alt.Chart(straight_df)
     .mark_rule(strokeWidth=3)
@@ -149,9 +157,7 @@ straight_layer = (
         color=alt.Color(
             "particle_type:N",
             scale=color_scale,
-            legend=alt.Legend(
-                title="Particle Type", titleFontSize=18, labelFontSize=16, symbolSize=200, orient="right", offset=10
-            ),
+            legend=alt.Legend(title="Particle Type", symbolSize=150, orient="top-right", offset=8),
         ),
         strokeDash=alt.StrokeDash(
             "particle_type:N", scale=alt.Scale(domain=["fermion", "boson"], range=[[1, 0], [10, 6]]), legend=None
@@ -192,13 +198,13 @@ arrow_layer = (
 
 vertex_shadow = (
     alt.Chart(vertex_df)
-    .mark_circle(size=700, color="#00000015")
+    .mark_circle(size=700, color=INK, opacity=0.08)
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None))
 )
 
 vertex_layer = (
     alt.Chart(vertex_df)
-    .mark_circle(size=500, color="#1a1a1a", stroke="white", strokeWidth=2.5)
+    .mark_circle(size=500, color=INK, stroke=PAGE_BG, strokeWidth=2.5)
     .encode(
         x=alt.X("x:Q", scale=x_scale, axis=None),
         y=alt.Y("y:Q", scale=y_scale, axis=None),
@@ -223,19 +229,19 @@ label_layer = (
 
 process_layer = (
     alt.Chart(process_df)
-    .mark_text(fontSize=22, font="serif", fontStyle="italic", color="#444444")
+    .mark_text(fontSize=22, font="serif", fontStyle="italic", color=INK_MUTED)
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
 )
 
 time_line_layer = (
     alt.Chart(time_line_df)
-    .mark_rule(strokeWidth=1.5, color="#999999", strokeDash=[6, 4])
+    .mark_rule(strokeWidth=1.5, color=INK_MUTED, strokeDash=[6, 4])
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), x2="x2:Q", y2="y2:Q")
 )
 
 time_arrow_layer = (
     alt.Chart(time_arrow_df)
-    .mark_point(shape="triangle", size=200, filled=True, color="#999999")
+    .mark_point(shape="triangle", size=200, filled=True, color=INK_MUTED)
     .encode(
         x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), angle=alt.Angle("angle:Q")
     )
@@ -243,11 +249,13 @@ time_arrow_layer = (
 
 time_label_layer = (
     alt.Chart(time_label_df)
-    .mark_text(fontSize=18, color="#999999", fontStyle="italic")
+    .mark_text(fontSize=18, color=INK_MUTED, fontStyle="italic")
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="label:N")
 )
 
-# Combine all layers
+# Title: 44 chars — shorter than 67-char baseline, keep at default 16px
+title_str = "feynman-basic · python · altair · anyplot.ai"
+
 chart = (
     alt.layer(
         bg_layer,
@@ -263,19 +271,39 @@ chart = (
         time_label_layer,
     )
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(
-            "feynman-basic \u00b7 altair \u00b7 pyplots.ai",
-            fontSize=28,
-            fontWeight="normal",
-            anchor="middle",
-            offset=20,
-        ),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title(title_str, fontSize=16, fontWeight="normal", anchor="middle", color=INK, offset=10),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.15, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=10,
+        labelFontSize=10,
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG and pad to exact 3200×1800 canvas
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
