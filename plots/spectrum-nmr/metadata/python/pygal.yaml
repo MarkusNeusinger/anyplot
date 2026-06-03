@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: spectrum-nmr
 created: '2026-03-09T12:52:06Z'
-updated: '2026-06-03T12:11:53Z'
+updated: '2026-06-03T12:23:46Z'
 generated_by: claude-sonnet
 workflow_run: 26883037268
 issue: 4676
@@ -12,61 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Scientifically accurate Lorentzian line shapes with realistic 1:2:1 triplet and
-    1:3:3:1 quartet splitting patterns for ethanol
-  - 'Near-perfect spec compliance: x-axis correctly reversed, all multiplets present,
-    TMS reference peak included, clean baseline, peaks labeled with chemical shift
-    values'
-  - Excellent data quality with accurate ethanol chemical shifts (CH3 ~1.18 ppm, CH2
-    ~3.69 ppm, OH ~2.61 ppm) and realistic NMR conventions
-  - 'Imprint palette applied correctly — first series (#009E73) is the spectrum line,
-    peak markers use positions 2–5 in canonical order, backgrounds are #FAF8F1/#1A1A17'
-  - All font sizes explicitly set (title=66, axis labels=56, major labels=44, legend=44,
-    value=40)
-  - Interactive HTML output leverages pygal's interactive advantage; on-chart peak
-    labels using print_labels=True with custom per-point label text is idiomatic pygal
-    usage
+  - Physically accurate Lorentzian peak shapes with correct 1H NMR multiplet patterns
+    (1:2:1 triplet, 1:3:3:1 quartet) — the data model is genuinely correct, not just
+    decorative
+  - 'Perfect Imprint palette usage: spectrum in brand green (#009E73) first, peak
+    markers use positions 2-5 in order'
+  - Full spec compliance including reversed x-axis with abs-value formatter, TMS reference,
+    and all ethanol 1H NMR peaks labeled
+  - Theme-adaptive chrome works correctly in both renders — no dark-on-dark or light-on-light
+    failures
+  - 'Excellent code quality: seeded, clean imports, flat structure, elegant loop for
+    peak annotation'
   weaknesses:
-  - 'Peak marker dots (especially CH3 triplet at y≈1.03 and CH2 quartet at y≈0.78)
-    float visibly above the spectrum line because peak position is found from the
-    original 6000-point data but the spectrum line uses downsampled 1000-point (every-6th)
-    data that misses the exact Lorentzian maximum — the dot should snap to the spectrum
-    line, not hover above it. Fix: find peak in the downsampled cs_plot/int_plot arrays
-    instead of original chemical_shift/intensity arrays.'
-  - 'Right-edge annotation labels (''TMS (0.00 ppm)'' and ''CH3 triplet (1.18 ppm)'')
-    crowd the right canvas boundary — margin_right=140 is insufficient for the label
-    lengths at value_font_size=40. Calculated available space for TMS label is ~303px
-    but the text needs ~374px. Fix: increase margin_right to at least 260, or position
-    labels to the LEFT of their dots for points near the right axis edge.'
-  - Design excellence is moderate — the bottom legend lists all 5 series including
-    4 peak markers that are already labeled on the chart, making it redundant and
-    visually heavy. Removing peak markers from the legend (or setting legend_at_bottom=False
-    and using only on-chart labels) would improve visual refinement. Also consider
-    a subtle shaded baseline fill to emphasize peak contrast.
-  - 'DE-02 styling could go further: the default pygal dotted horizontal grid, the
-    visible border frame, and the all-spines appearance detract from scientific polish.
-    Consider: removing all border spines (keep only the bottom axis line via CSS),
-    reducing grid opacity, and using a lighter grid line style.'
+  - Peak inline label font (38px CSS override) is slightly small for the 3200x1800
+    canvas — borderline at mobile-scaled display; consider raising to 44-48px
+  - OH singlet (2.61 ppm) and TMS (0.00 ppm) peak markers land at nearly the same
+    intensity (~0.30 vs ~0.30), placing labels at the same vertical height in the
+    lower-right corner; slight crowding — consider adjusting label y-offsets or using
+    a connector line to separate them
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light-theme surface.
-      Chrome: Title "Ethanol ¹H NMR · spectrum-nmr · python · pygal · anyplot.ai" clearly visible in dark ink, spanning ~65% of canvas width. Y-axis label "Intensity (a.u.)" and X-axis label "Chemical Shift (ppm)" both readable. Tick labels (0.0–12.0 on x, 0–1.1 on y) clearly visible. Horizontal dotted grid lines subtle.
-      Data: Spectrum line in #009E73 (brand green) dominates the display with sharp Lorentzian peaks — CH3 triplet cluster at ~1.1–1.25 ppm, CH2 quartet at ~3.63–3.75 ppm, OH singlet at ~2.61 ppm, TMS at ~0.00 ppm. Peak marker dots: lavender (#C475FD) for TMS, blue (#4467A3) for CH3, ochre (#BD8233) for OH, red (#AE3030) for CH2 — correct Imprint palette positions 2–5. On-chart labels present: "CH3 triplet (1.18 ppm)", "CH2 quartet (3.69 ppm)", "OH singlet (2.61 ppm)", "TMS (0.00 ppm)". Legend at bottom shows all 5 series.
-      Issue: The CH3 triplet (blue) and CH2 quartet (red) peak marker dots float slightly above the spectrum line because peak positions are found from full-resolution data while the spectrum line uses downsampled data that misses the exact peak maximum. Right-edge labels (TMS, CH3) are tight against the canvas right boundary.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Ethanol 1H NMR · spectrum-nmr · python · pygal · anyplot.ai" in dark ink, clearly readable. Axis labels "Chemical Shift (ppm)" and "Intensity (a.u.)" with units, readable. Tick labels on both axes visible and legible. Y-axis grid lines subtle.
+      Data: Main spectrum line in brand green (#009E73) — first Imprint palette color. Four peak markers: lavender (#C475FD) for TMS, blue (#4467A3) for CH3 triplet, ochre (#BD8233) for OH singlet, matte red (#AE3030) for CH2 quartet. Lorentzian peaks clearly visible with proper multiplet structure.
+      Legibility verdict: PASS — all text elements readable against light background. Minor crowding of OH singlet and TMS labels in lower-right area (both peaks near intensity 0.30).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark-theme surface.
-      Chrome: Title, axis labels, and tick labels rendered in light cream/off-white text, clearly visible against the dark background. No dark-on-dark failures observed. Subtle horizontal grid lines adapt to dark theme. Bottom legend text is light-colored and readable.
-      Data: Spectrum line color identical to light render (#009E73 green). Peak marker dot colors identical to light render (lavender, blue, ochre, red). On-chart labels visible in light text. The overall chromatic identity is preserved — only chrome (background, text) has flipped.
-      Issue: Same right-edge label crowding and floating dot issues as light render.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels flip to light ink (~#F0EFE8 range), all clearly readable against the dark background. No dark-on-dark failures detected. Grid lines are subtle and visible.
+      Data: Spectrum line remains brand green (#009E73), identical to light render. All four peak marker colors (lavender, blue, ochre, matte red) are identical to light render — only chrome flipped. Brand green reads well on dark background.
+      Legibility verdict: PASS — all text elements readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -74,88 +55,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; text readable in both themes. Minor
-          deduction for right-edge annotation labels crowding the canvas boundary
-          (TMS and CH3 labels tight at right edge).
+        comment: Title, axis labels, tick labels clearly sized and readable in both
+          themes. Peak inline labels at 38px CSS override are slightly small for 3200x1800
+          — readable but borderline at mobile-scaled display.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'No significant text overlap. Minor deduction: OH singlet (~y=0.34)
-          and TMS (~y=0.30) labels are close in y-space at the right side; peak marker
-          dots float above the spectrum line due to downsampling mismatch.'
+        comment: Mostly clean. OH singlet (2.61 ppm) and TMS (0.00 ppm) markers land
+          at nearly identical intensities (~0.30-0.32), placing labels at same vertical
+          height in lower-right; slight crowding but no pixel-level overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Spectrum line stroke_width=4 is clearly visible. Peak marker dots
-          (dots_size=14) are prominent. Dense data (1000 points) rendered as a continuous
-          line is appropriate.
+        comment: Spectrum line crisp at stroke_width=4; peak marker dots (dots_size=14)
+          are prominent and clearly distinguishable from baseline.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette applied correctly. Brand green #009E73 has excellent
-          contrast against both backgrounds. CVD-safe palette used throughout.'
+        comment: Imprint palette is CVD-safe; redundant encoding via peak labels means
+          color is not the sole distinguishing signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800 used effectively. Legend at bottom is properly
-          placed. Minor deduction: margin_right=140 is insufficient for right-edge
-          label texts; TMS and CH3 labels are likely partially clipped at canvas right
-          boundary.'
+        comment: Canvas gate passed (3200x1800). Generous right margin (300px) provides
+          space for labels. Proportions well balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Chemical Shift (ppm)'' with units. Y: ''Intensity (a.u.)''
-          with units. Title follows Descriptive · spec-id · python · pygal · anyplot.ai
-          format.'
+        comment: x_title='Chemical Shift (ppm)' and y_title='Intensity (a.u.)' both
+          include units. Title includes spec-id, language, library, anyplot.ai.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (spectrum line) = #009E73. Peak markers use Imprint
-          positions 2–5 in canonical order. Background #FAF8F1 (light) / #1A1A17 (dark).
-          Data colors identical across themes. Chrome adapts correctly.'
+        comment: 'Main spectrum uses #009E73 (brand green, position 1). Peak markers
+          use positions 2-5 in order. Backgrounds are #FAF8F1 light / #1A1A17 dark.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Well-configured implementation with thoughtful scientific design:
-          Imprint palette, theme-adaptive chrome, correct NMR conventions. Visually
-          resembles a configured library default rather than exceptional publication-ready
-          design.'
+        comment: Above default (4). Professional scientific styling with Imprint palette,
+          multi-color peak annotations, and physically accurate Lorentzian lineshapes.
+          Limited room for additional sophistication given the scientific chart type.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-axis grid only (good). Axis line hidden via CSS (good). Custom
-          font sizes throughout. Bottom legend is somewhat heavy with 5 entries including
-          4 peak markers already labeled on-chart. Default dotted grid style and full
-          border frame reduce polish.
+        comment: Above default (2). CSS injection for transparent axis spine, y-only
+          guide lines appropriate for spectra, generous right margin for label breathing
+          room. Pygal's limited styling API constrains further refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Peak labels effectively guide the viewer to functional groups. Reversed
-          x-axis follows NMR convention. Multi-series design (spectrum + 4 labeled
-          peaks) creates functional hierarchy. No exceptional storytelling elements
-          beyond annotation, which is spec-required.
+        comment: Above default (2). Colored peak markers with functional-group labels
+          guide the viewer through chemical assignments. Reversed x-axis follows NMR
+          convention.
     spec_compliance:
       score: 15
       max: 15
@@ -165,30 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line chart for NMR spectrum — intensity vs. chemical shift.
+        comment: XY line chart correctly implements an NMR spectrum.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X-axis reversed (NMR convention), realistic splitting patterns (singlet/triplet/quartet
-          via Lorentzian shapes), key peaks labeled with ppm values, TMS reference
-          at 0 ppm, clean baseline with subtle noise.
+        comment: X-axis reversed, realistic multiplet splitting (1:2:1 triplet, 1:3:3:1
+          quartet), peak labels with ppm values, TMS reference at 0 ppm, clean low-noise
+          baseline.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Chemical shift on X (reversed, high ppm on left), intensity on Y.
-          All peaks visible in correct ppm ranges.
+        comment: Chemical shift on x (reversed), intensity on y, full 0-12 ppm range
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Ethanol 1H NMR · spectrum-nmr · python · pygal · anyplot.ai''
-          — correct Descriptive · spec-id · lang · lib · anyplot.ai format. Legend
-          labels match series names.'
+        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai format. No legend needed; peak assignments via inline labels.
     data_quality:
       score: 15
       max: 15
@@ -198,24 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key NMR features: singlet (TMS, OH), triplet (CH3, 1:2:1
-          pattern), quartet (CH2, 1:3:3:1 pattern), subtle baseline noise, clean regions
-          between peaks.'
+        comment: 'All standard ethanol 1H NMR features: CH3 triplet, CH2 quartet,
+          OH singlet, TMS reference. Lorentzian lineshapes and correct J-coupling
+          splittings.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol 1H NMR is a classic, neutral chemistry teaching example.
-          Real-world molecule with well-known spectral properties.
+        comment: Ethanol 1H NMR is a canonical, neutral chemistry textbook example.
+          Chemical shift values and relative peak intensities are physically accurate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chemical shifts match literature values (CH3 ~1.18, CH2 ~3.69, OH
-          ~2.61, TMS 0.00 ppm). Range 0–12 ppm standard for 1H NMR. Lorentzian half-widths
-          (w=0.010) realistic for high-field NMR.
+        comment: 0-12 ppm covers standard 1H NMR window. Intensity normalized to ~1.0
+          with realistic relative heights reflecting proton count.
     code_quality:
       score: 10
       max: 10
@@ -225,8 +196,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: Imports → theme tokens → data generation → Style → Chart
-          → Save. No functions or classes.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -238,22 +208,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Imports: os, numpy, pygal, pygal.style.Style — all used.'
+        comment: os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop for peak markers, proper numpy vectorization for Lorentzian
-          shapes, list comprehension for spectrum points, CSS injection is an accepted
-          pygal pattern.
+        comment: Elegant Lorentzian peak generation; CSS inline injection appropriate
+          for pygal; peak loop is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current pygal
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -263,22 +231,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY with custom Style, per-point label dict, stroke_style,
-          dots_size, x_value_formatter, CSS injection for axis line hiding. Good but
-          not expert-level — doesn't exploit pygal's full featureset.
+        comment: pygal.XY for scatter/line, Style object for all theming, x_value_formatter
+          for abs-value axis display, stroke_style for line width, render_to_png +
+          render() for HTML.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses print_labels=True with custom per-point label text (distinctly
-          pygal), interactive HTML output (pygal's key strength), CSS inline injection
-          for fine-grained SVG styling. These are genuinely pygal-specific features.
-  verdict: REJECTED
+        comment: Interactive HTML export (pygal's signature feature), tooltip_fancy_mode=True,
+          print_labels=True for inline labels, CSS injection for spine transparency.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
