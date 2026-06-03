@@ -1,0 +1,254 @@
+library: d3
+language: javascript
+specification_id: feynman-basic
+created: '2026-06-03T06:18:02Z'
+updated: '2026-06-03T06:48:30Z'
+generated_by: claude-sonnet
+workflow_run: 26866983672
+issue: 4667
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom wavyPath and gluonPath functions using d3.line() with parametric geometry
+    produce physically accurate Feynman line styles — sophisticated D3 path generation
+  - 'Correct Imprint palette assignment with intentional physics semantics: green
+    for matter (fermions), purple for electromagnetic force (photon), blue for strong
+    force (gluon), ochre for scalar bosons'
+  - 'Full theme adaptivity: vertex dots, time axis, panel dividers, and all text correctly
+    use t.ink / t.inkSoft / t.grid tokens — both renders are crisp and readable'
+  - Three distinct quantum processes (QED, QCD, Higgs) in a single composition with
+    clear section labels and time axis creates a strong educational narrative
+  - Legend built from actual SVG path samples (not colored rectangles) matches the
+    diagram lines exactly
+  weaknesses:
+  - Section labels ('QED · e⁻e⁺ → γ* → μ⁻μ⁺', 'QCD · q q̄ → g', 'Higgs · q q̄ → H')
+    at 15px CSS (30px actual at 2×dsr) are slightly small for the 3200px canvas —
+    bumping to 17–18px would improve mobile readability
+  - Right sub-panels (QCD and Higgs) feel slightly compact relative to the dominant
+    QED panel; allocating slightly more horizontal space to the right (e.g., shift
+    divider from 62.5% to 58%) would balance the composition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "feynman-basic · javascript · d3 · anyplot.ai" in dark bold ink, ~75% canvas width. Subtitle "QED & QCD Feynman Diagrams · All Four Particle Types" in secondary ink below. Section labels ("QED · e⁻e⁺ → γ* → μ⁻μ⁺", "QCD · q q̄ → g", "Higgs · q q̄ → H") in t.inkSoft. Time axis arrow in t.inkSoft. Panel dividers as dashed grid-colored lines. Particle labels in respective particle colors.
+      Data: Fermion lines in #009E73 (palette[0]) with directional arrows. Photon propagator as wavy line in #C475FD (palette[1]). Gluon propagator as curly/looped line in #4467A3 (palette[2]). Higgs scalar boson as dashed line in #BD8233 (palette[3]). Vertex dots filled with t.ink (dark). Legend at bottom with SVG path samples for each type.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background. No contrast failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and all text render in light/cream ink (t.ink = #F0EFE8 in dark theme). Section labels and time axis in t.inkSoft (lighter tone). Panel dividers in subtle t.grid. All chrome correctly flipped for dark theme.
+      Data: Data colors IDENTICAL to light render — fermion lines remain #009E73, photon wavy lines remain #C475FD, gluon curly lines remain #4467A3, Higgs dashed lines remain #BD8233. Vertex dots flip to light-colored (t.ink in dark = #F0EFE8) — correct theme adaptation.
+      Legibility verdict: PASS — all text clearly readable against near-black background. No dark-on-dark failures detected. Brand green #009E73 clearly visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px subtitle, 20px particle
+          labels, 17px legend, 15px section labels). Readable in both themes. Section
+          labels at 15px CSS slightly small for 3200px canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four line types clearly visible. Vertex dots prominent at r=7px
+          CSS. Arrows distinctly rendered.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-optimised. Four distinct hue families (green/purple/blue/ochre).
+          No red-green conflict.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Three-panel layout fills 3200x1800 well. Balanced
+          whitespace. No cut-off content.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted. Time axis labeled. Section labels provide
+          context in lieu of traditional axis labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fermion #009E73 (palette[0]), Photon #C475FD (palette[1]), Gluon
+          #4467A3 (palette[2]), Boson #BD8233 (palette[3]). Light bg #FAF8F1, dark
+          bg #1A1A17. Data colors identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Above typical default territory. Custom SVG path generators produce
+          Feynman-correct line styles. Physics-motivated color assignment. Multi-panel
+          layout with dashed dividers. Not quite publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean — no axes, spines, or grid clutter. Subtle dashed panel dividers.
+          Theme-adaptive vertex dots. Right sub-panels slightly compact.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three distinct quantum interactions with section labels and time
+          arrow. QED in dominant left panel. Educational narrative through legend.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Feynman diagram with all four particle types: fermion (solid+arrow),
+          photon (wavy), gluon (curly), boson (dashed).'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct line styles, directional arrows on fermions, vertex dots,
+          particle labels, time axis — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: QED, QCD, Higgs processes correctly constructed. Particle/antiparticle
+          arrow directions correct by physics convention.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''feynman-basic · javascript · d3 · anyplot.ai'' correct.
+          Legend shows all four line types with SVG path samples.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four particle types shown. Both particles and antiparticles.
+          Three distinct interaction types (QED, QCD, Higgs).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Standard textbook Feynman processes: e⁻e⁺ annihilation (QED), quark-gluon
+          interaction (QCD), quark-Higgs coupling — all real and well-known.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Arrow directions follow standard Feynman diagram convention. Vertex
+          topology physically correct for each process.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Two helper functions (wavyPath, gluonPath) justified by spec requirements.
+          No unnecessary abstraction or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic. All positions hard-coded, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (d3 is global). No unused declarations.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean chaining idiom. forEach loops for labels and legend are idiomatic.
+          No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 is interactive library; harness emits both .png and .html correctly.
+          No filesystem writes in snippet.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary D3 idioms: select→append→attr chains, SVG defs for reusable
+          markers, theme tokens from window.ANYPLOT_TOKENS, SVG sized from window.ANYPLOT_SIZE.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom path generation via d3.line() with parametric geometry (sine-wave
+          and cycloidal arches) is distinctively D3. SVG marker elements for arrowheads.
+          Not quite 5/5 as path functions are standalone helpers rather than leveraging
+          D3 data binding for diagram structure.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
