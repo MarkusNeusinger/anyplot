@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' piano-roll-midi: MIDI Piano Roll Visualization
 #' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 89/100 | Created: 2026-06-03
 
 library(ggplot2)
 library(ragg)

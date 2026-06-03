@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: piano-roll-midi
 created: '2026-06-03T03:44:41Z'
-updated: '2026-06-03T03:51:16Z'
+updated: '2026-06-03T04:01:51Z'
 generated_by: claude-sonnet
 workflow_run: 26862063235
 issue: 4565
@@ -12,41 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-rol
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all required piano roll features (keyboard background,
-    note names, two-weight grid, velocity colormap, auto-fitted pitch range) are present
-    and correct'
-  - Musical dynamics labels (pp/p/mf/f/ff) on the velocity colorbar — domain-appropriate
-    and reader-friendly
-  - Correct Imprint seq colormap (#009E73→#4467A3) for velocity; both renders are
-    fully theme-adaptive with no chrome failures
-  - Rich, realistic musical data with a clear dynamic arc (mf→ff→p) that creates natural
-    visual hierarchy through color
-  - Clean idiomatic ggplot2 grammar-of-graphics composition with properly weighted
-    beat/measure grid lines
+  - 'Perfect spec compliance: all four required features (note names, black/white
+    key rows, beat+measure grid differentiation, velocity colormap) correctly implemented'
+  - Musically authentic data with realistic C-major progression, proper MIDI note
+    numbers, and convincing dynamic arc (mf→ff climax→p resolution)
+  - 'Effective storytelling: climax highlight overlay + ff annotation create a clear
+    narrative focal point'
+  - Correct Imprint sequential palette (green→blue) for continuous velocity data;
+    full theme-adaptive chrome with no dark-on-dark or light-on-light failures
   weaknesses:
-  - 'DE-03 below potential: the dynamic climax at m6–m7 is visible in color but not
-    accented — add a subtle translucent highlight or annotation near the climax measure
-    to guide the viewer to the dynamic peak'
-  - Y-axis tick labels at size 7 are at the minimum acceptable threshold; increase
-    axis.text.y from 7 to 8 for better mobile readability
-  - Two helper functions (midi_to_name, is_black_key) deviate from strict KISS — could
-    be inlined as named vectors/logical masks
+  - 'Piano keyboard row contrast is low in both themes (light: #EBE7DC vs #D3CDB8;
+    dark: #222220 vs #1D1D1B) — spec asks for white and dark alternation but rows
+    look nearly identical; increase contrast (e.g., light theme KEY_BLACK → #C8C2AE)
+    for better piano keyboard readability'
+  - ff annotation at size=2.5 (~7pt on 3200×1800 canvas) is small — bump to size=3.5–4
+    for better catalog-scale visibility
+  - Beat subdivision lines (alpha=0.35, linewidth=0.12) may be imperceptible on some
+    displays — raise alpha to 0.5 or linewidth to 0.18
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "piano-roll-midi · r · ggplot2 · anyplot.ai" bold in dark ink (#1A1A17), clearly readable. Axis labels "Measure" (x) and "Pitch" (y) in dark ink, size 10. Tick labels (note names G5..B2 on y-axis, m1-m9 on x-axis) in INK_SOFT (#4A4A44), size 7-8. All text readable.
-      Data: Right-hand melody notes rendered as near-square green-to-teal rectangles (velocity ~55-80, color near #009E73). As velocity increases toward climax (m6), notes shift from teal to blue (#4467A3). Left-hand bass notes (C3, F3, A3, G3 rows) appear as longer teal rectangles. Piano keyboard alternation visible as warm beige rows.
-      First series / primary data color: #009E73 (brand green) at low velocity end — correct.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct light surface.
+      Chrome: Title "piano-roll-midi · r · ggplot2 · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Pitch" and X-axis label "Measure" in dark ink at 10pt. Tick labels (note names C3–G5 on Y; m1–m9 on X) in INK_SOFT at 8pt — all readable. Legend "Velocity" title and pp/p/mf/f/ff labels visible.
+      Data: MIDI note rectangles colored on Imprint sequential (green #009E73 for low velocity → blue #4467A3 for high velocity). Alternating beige row shading (white keys #EBE7DC, black keys #D3CDB8 — subtle contrast). Beat lines faint (alpha=0.35), measure boundaries darker. Climax overlay (m6) in translucent blue. "ff" annotation at peak.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in near-white (#F0EFE8), clearly readable. Axis labels in #F0EFE8. Tick labels in #B8B7B0 (INK_SOFT dark variant). Legend box has elevated dark background (#242420) with subtle border. All text readable — no dark-on-dark failure.
-      Data: Identical velocity color gradient (green #009E73 to blue #4467A3) as light render. Only chrome flips between themes. Keyboard row alternation visible in dark gray tones (#222220 vs #1D1D1B). Measure boundary lines visible as faint-white vertical lines.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title and axis labels render in light ink (#F0EFE8), tick labels in #B8B7B0 — fully readable against dark background. Legend text readable. No dark-on-dark failures detected.
+      Data: MIDI note colors IDENTICAL to light render — Imprint sequential green→blue unchanged. Row alternation visible but very subtle in dark theme (#222220 vs #1D1D1B). "ff" annotation legible in dark context.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,79 +54,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
-          axis.text.y=7); well-proportioned. Y-axis at size 7 is minimum acceptable
-          — may be small at mobile widths.
+        comment: All text at correct style-guide sizes; ff annotation at size=2.5
+          (~7pt) is slightly small for canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text or element collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Notes clearly visible; right-hand melody notes are near-square (0.45
-          beat duration) rather than clearly horizontal — realistic for eighth notes
-          but reduces the characteristic piano-roll rectangle feel.
+        comment: Note rectangles clearly visible; beat lines intentionally faint (alpha=0.35)
+          may be imperceptible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq colormap (green→blue) is CVD-safe; keyboard row contrast
-          adequate.
+        comment: Imprint sequential (green→blue) is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins; legend well-positioned;
-          no content cut off.
+        comment: 3200x1800 canvas confirmed, generous margins, legend well-placed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Measure and Pitch are descriptive for the domain.
+        comment: Pitch with note names, Measure with m1-m9, correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Velocity uses imprint_seq (CMAP_LOW=#009E73, CMAP_HIGH=#4467A3);
-          backgrounds are #FAF8F1 (light) / #1A1A17 (dark); chrome is theme-correct
-          in both renders.'
+        comment: imprint_seq (green→blue) for velocity; correct backgrounds; identical
+          data colors across themes
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic defaults: piano keyboard background alternation, musical
-          dynamics labels (pp/p/mf/f/ff), clean velocity gradient. Not quite publication-ready
-          — no focal-point emphasis at dynamic climax.'
+        comment: Domain-specific piano key row shading, dynamic labels on colorbar,
+          climax highlight overlay show clear design intent
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed and replaced with two-weight beat/measure lines; legend
-          styled with elevated background; note rectangles have thin PAGE_BG borders.
-          All four panel borders retained appropriately for enclosed piano roll grid.
+        comment: Custom beat/measure lines replace default grid; elevated legend;
+          piano row alternation — but row contrast is subtle
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Velocity arc (mf→ff→p) visible in color gradient; melodic ascent/descent
-          spatially clear. Above default of 2 but no annotation or visual accent guides
-          viewer to the climax.
+        comment: Velocity arc narrated by color; climax highlight and ff annotation
+          create clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll / DAW-style visualization with all required structural
-          elements.
+        comment: 'Correct piano roll: horizontal rectangles at pitch x time'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Note names on Y-axis, black/white key background alternation, beat+measure
-          grid lines with two visual weights, sequential velocity colormap, pitch
-          range auto-fitted with 1-semitone margin — all present.
+        comment: Note names on Y-axis, black/white key rows, beat+measure grid differentiation,
+          sequential velocity colormap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=start time in beats, Y=pitch (MIDI→note names), width=duration,
-          fill=velocity — all correctly mapped.
+        comment: X=time, Y=pitch, fill=velocity — all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'piano-roll-midi · r · ggplot2 · anyplot.ai' exactly correct.
-          Velocity colorbar with pp/p/mf/f/ff labels is domain-correct.
+        comment: Correct title format; velocity colorbar with pp/p/mf/f/ff labels
     data_quality:
       score: 15
       max: 15
@@ -172,60 +157,55 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Right-hand melody + left-hand bass, varying durations (0.45 vs 0.85
-          beats), dynamic arc (mf→ff→p), 3+ octave range, 96 total notes covering
-          all aspects of the piano roll format.
+        comment: Onset, duration, pitch, velocity; right-hand melody + left-hand bass;
+          full dynamic arc
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 8-measure C-major piano piece with C-F-Am-G bass progression; realistic
-          MIDI pitch numbers and velocity values.
+        comment: Authentic C-major piano piece; C-F-Am-G progression; realistic MIDI
+          velocity progression
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 48-79 (C3-G5, sensible piano range); velocities 30-127
-          (realistic dynamic arc); 32 beats / 4/4 time. All proportions factually
-          correct.
+        comment: 96 notes in 20-200 range; pitch C3-G5 appropriate; velocity 30-127
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two small helper functions (midi_to_name, is_black_key) deviate from
-          strict no-functions pattern; both are compact (2-3 lines) and justified
-          for this plot type.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic R; no over-engineering; no fake functionality.
+        comment: Clean layered grammar, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-${THEME}.png via ragg; correct API usage.
+        comment: Saves as plot-{THEME}.png via ragg::agg_png at 3200x1800
     library_mastery:
       score: 7
       max: 10
@@ -235,29 +215,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar-of-graphics layer composition is idiomatic: multiple geom_rect()
-          layers with separate data frames, scale_fill_gradient(), explicit breaks/labels,
-          guides(fill=guide_colorbar()). Very clean ggplot2 usage.'
+        comment: Multiple geom layers, scale_fill_gradient, guide_colorbar, expansion()
+          — idiomatic ggplot2 grammar
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot2's layered grammar to compose background rects + vlines
-          + note rects from different data sources in a single plot — a distinctive
-          ggplot2 strength.
-  verdict: REJECTED
+        comment: Good layered composition but no especially distinctive ggplot2 features
+          beyond standard geoms
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
