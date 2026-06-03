@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -137,7 +137,7 @@ plot = (
     ggplot(df, aes(x="Time (s)", y="mel_band", fill="Power (dB)"))
     + geom_raster(interpolate=True)
     + scale_fill_gradientn(colors=spectrogram_colors, name="Power (dB)")
-    + guides(fill=guide_colorbar(nbin=256, display="raster"))
+    + guides(fill=guide_colorbar(nbin=256))
     # Spectral peak trajectory — grammar-of-graphics second data layer
     + geom_line(
         aes(x="time", y="mel_band"),
@@ -152,13 +152,13 @@ plot = (
         aes(x="x", xend="xend", y="y", yend="yend"),
         data=df_refline,
         inherit_aes=False,
-        color=IMPRINT_PALETTE[0],
-        alpha=0.6,
+        color=IMPRINT_PALETTE[5],  # cyan — distinct from green heatmap, CVD-accessible
+        alpha=0.75,
         size=0.7,
         linetype="dashed",
     )
     # F0 label
-    + geom_text(aes(x="x", y="y", label="label"), data=df_label, inherit_aes=False, color=INK_SOFT, size=3.0, ha="left")
+    + geom_text(aes(x="x", y="y", label="label"), data=df_label, inherit_aes=False, color=INK_SOFT, size=3.5, ha="left")
     + scale_x_continuous(expand=(0, 0))
     + scale_y_continuous(breaks=y_ticks_band.tolist(), labels=[str(f) for f in y_ticks_hz], expand=(0, 0))
     + coord_cartesian(ylim=(0, n_mels - 1))
@@ -167,7 +167,7 @@ plot = (
     + theme(
         figure_size=(8, 4.5),
         text=element_text(family="sans-serif"),
-        plot_title=element_text(size=12, ha="center", color=INK),
+        plot_title=element_text(size=12, ha="center", color=INK, weight="bold"),
         axis_title_x=element_text(size=10, color=INK),
         axis_title_y=element_text(size=10, color=INK),
         axis_text_x=element_text(size=8, color=INK_SOFT),
