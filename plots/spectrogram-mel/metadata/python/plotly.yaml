@@ -1,84 +1,116 @@
 library: plotly
+language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:38:21Z'
-updated: '2026-03-11T19:50:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22970857444
+updated: '2026-06-03T18:03:20Z'
+generated_by: claude-sonnet
+workflow_run: 26902802978
 issue: 4672
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling with four well-placed annotations guiding viewer through
-    key spectral features
-  - Manual STFT and mel filterbank computation avoids external dependencies while
-    producing accurate results
-  - Strong visual design with Inferno colorscale, clean layout, and subtle reference
-    lines
-  - Full spec compliance with all required parameters and features implemented correctly
+  - Full dual-theme implementation with correct Imprint sequential colorscale (imprint_seq
+    green→blue) applied to dB intensity
+  - Manual STFT and mel filterbank construction without external audio libraries —
+    demonstrates deep signal processing knowledge
+  - Four thematic annotations with arrow indicators (Harmonics A4, Decaying tone,
+    Chirp sweep, Noise floor) guide viewer through spectral features
+  - Reference lines at perceptually meaningful frequencies (440 Hz = A4, 1 kHz, 4
+    kHz) add musicological storytelling context
+  - All chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) correctly applied to colorbar,
+    annotation boxes, axis labels, and reference lines in both themes
+  - Synthesized signal combines four distinct audio phenomena (steady harmonics, chirp
+    sweep, decaying tone, noise floor) for pedagogically rich demo
+  - Interactive hovertemplate with time/frequency/power on hover plus write_html output
+    — full use of Plotly's interactive strengths
+  - Canvas correctly set to 3200×1800 via width=800, height=450, scale=4 with autosize=False
   weaknesses:
-  - Library mastery could be stronger — the heavy lifting is in numpy with Plotly
-    mainly rendering a heatmap
-  - Annotation font size (14pt) is slightly small relative to axis labels
-  image_description: 'The plot displays a mel-spectrogram using the Inferno colorscale
-    on a white background. The x-axis shows "Time (s)" from 0 to ~3.8 seconds, and
-    the y-axis shows "Frequency (Hz)" on a logarithmic scale with custom tick labels
-    at 50, 100, 200, 500, 1k, 2k, 4k, and 8k Hz. The colorbar on the right is labeled
-    "dB" with a range from -80 to 0. Bright yellow-white horizontal bands are clearly
-    visible at the harmonic frequencies (440 Hz, 880 Hz, 1320 Hz), and a diagonal
-    bright sweep rises from lower-left to upper-right representing the chirp signal.
-    A decaying tone near 3000-4000 Hz fades over the first ~2 seconds. The lower frequencies
-    show a noisy texture. Four white-arrow annotations with dark background boxes
-    label key features: "Harmonics (A4)", "Chirp sweep", "Decaying tone", and "Noise
-    floor". Subtle dotted white reference lines appear at 440 Hz, 1 kHz, and 4 kHz.
-    Title reads "spectrogram-mel · plotly · pyplots.ai" centered at the top.'
+  - 'imprint_seq (green #009E73 → blue #4467A3) spans a narrow luminance range compared
+    to spectral colormaps — the dynamic range across -80 dB to 0 dB is subtler than
+    ideal; the difference between -60 dB and -10 dB regions can be hard to distinguish
+    at a glance. This is a required constraint of the Imprint colorscale, but note
+    it limits perceptual clarity on the spectrogram.'
+  - Left-side annotations ('Harmonics A4' and 'Noise floor') are positioned closely
+    in x-space with ax offsets pushing both boxes toward the left edge of the plot;
+    while not overlapping in the current render, the positioning is slightly crowded
+    and could become an issue at different zoom levels.
+  - DE-02 could be elevated by removing spines (all four sides) for a fully open heatmap
+    aesthetic — the L-shaped spine default adds unnecessary frame lines around a heatmap
+    that is better served by a borderless presentation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
+      Chrome: Title "spectrogram-mel · python · plotly · anyplot.ai" in dark #1A1A17 ink, centered, fully readable. Y-axis label "Frequency (Hz)" in dark ink, readable. X-axis label "Time (s)" in dark ink, readable. Tick labels (50, 100, 200, 500, 1k, 2k, 4k, 8k on y-axis; 0–3.5s on x-axis) in secondary ink #4A4A44, readable. Colorbar titled "dB" in dark ink, tick labels in secondary ink, all readable.
+      Data: Heatmap spans full 4-second window (0–~3.75s) across 128 mel bands (~50 Hz to ~11 kHz on log scale). Color encodes power in dB using imprint_seq (teal #009E73 at -80 dB to blue #4467A3 at 0 dB). Three bright horizontal harmonic lines visible at 440/880/1320 Hz, diagonal chirp sweep feature visible rising from ~200 Hz to ~600 Hz, strong early decay at ~3000 Hz, subtle noise floor at low frequencies. Four annotation boxes in elevated cream background (#FFFDF6) with dark text: "Harmonics (A4)", "Noise floor", "Decaying tone", "Chirp sweep" — all readable with border and arrow. Three dotted reference lines at 440/1000/4000 Hz in subtle REF_COLOR overlay.
+      Legibility verdict: PASS — all title, axis, tick, colorbar, and annotation text is readable against the light background. First series color is correctly #009E73.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title in light #F0EFE8 ink — clearly readable against dark background. Axis labels "Frequency (Hz)" and "Time (s)" in light ink, readable. Tick labels in secondary light ink #B8B7B0, readable. Colorbar "dB" label and ticks in light ink, readable. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — same teal-to-blue imprint_seq colorscale, same harmonic line positions, same chirp sweep and decay features. Only chrome flipped: title/labels/ticks are now light-on-dark. Annotation boxes use elevated dark background #242420 with light text (#F0EFE8) — correctly themed and readable. Reference dotted lines use lighter REF_COLOR overlay (rgba(184,183,176,0.35)), subtly visible against the dark heatmap. Colorbar frame uses elevated dark background with light border.
+      Legibility verdict: PASS — all text elements adapt correctly to dark theme, no dark-on-dark failures, no light-on-light failures.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          16-18pt'
+        comment: All text explicitly sized and readable in both themes; slight annotation
+          crowding on left side
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text, annotations well-positioned with arrow offsets
+        comment: Annotations slightly crowded in x-space on left side (Harmonics A4
+          and Noise floor both pushing toward left edge) but no actual overlap in
+          renders
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap clearly visible, Inferno provides excellent dynamic range
+        comment: Heatmap features distinguishable; imprint_seq limited luminance range
+          makes fine dB distinctions subtler than a wider-range colormap would
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Inferno is perceptually uniform and colorblind-safe
+        comment: imprint_seq is CVD-safe (green→blue); no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins
+        comment: Canvas gate passed (3200×1800), autosize=False, explicit margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) and Frequency (Hz) both descriptive with units
+        comment: Time (s), Frequency (Hz), dB colorbar — all descriptive with units;
+          title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly applied; light bg #FAF8F1, dark bg #1A1A17;
+          both themes chrome-correct'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -86,22 +118,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: Inferno colorscale, custom annotations with dark
-          backgrounds, refined colorbar'
+        comment: 'Professional polish: intentional typography hierarchy (16/12/10/11pt),
+          styled annotation boxes with theme-adaptive borders, custom hovertemplate,
+          refined colorbar (thickness=16, len=0.85)'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, plotly_white template, subtle reference lines, generous
-          whitespace
+        comment: Grid disabled, explicit margins, colorbar refined with custom border/thickness,
+          annotation opacity=0.9; spines retained (could be removed for cleaner heatmap
+          aesthetic)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Four annotations guide viewer to key spectral features with reference
-          lines at meaningful frequencies
+        comment: Annotations guide viewer through four distinct spectral features;
+          reference lines at musically meaningful A4/1kHz/4kHz; intentional synthetic
+          signal design showcases multiple phenomena
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram with mel-scaled frequency axis
+        comment: Correct mel-spectrogram as heatmap with mel-scaled log y-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dB scale, sequential colormap, correct
-          parameters'
+        comment: dB scale conversion, sequential colormap (imprint_seq), time x-axis,
+          mel-freq y-axis with Hz labels, colorbar in dB, n_fft=2048/hop=512/n_mels=128,
+          synthesized audio
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=mel-frequency with Hz labels, full data range covered
+        comment: X=time(s), Y=mel-freq(Hz log scale), Z=power(dB) — correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correctly formatted and centered, no legend needed
+        comment: Title is exactly 'spectrogram-mel · python · plotly · anyplot.ai';
+          colorbar labeled 'dB'
     data_quality:
       score: 15
       max: 15
@@ -140,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Rich signal with harmonics, chirp, decaying tone, noise, amplitude
-          envelope
+        comment: Shows harmonics (440/880/1320 Hz), chirp sweep, decaying tone at
+          3kHz, noise floor — full mel range 50Hz to ~11kHz
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Audio analysis is a real, neutral scientific domain with standard
-          components
+        comment: Realistic synthesized audio signal at sr=22050 Hz, 4 seconds, industry-standard
+          parameters — neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22050 Hz sample rate, 4s duration, audible frequencies, -80 to 0
-          dB range
+        comment: zmin=-80/zmax=0 dB standard for audio; 0-4s time window; 50Hz-11kHz
+          frequency coverage — all appropriate
     code_quality:
       score: 10
       max: 10
@@ -165,48 +202,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, signal, STFT, mel filterbank, plot, save'
+        comment: No functions or classes; clean top-level imperative code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before noise generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both fully used
+        comment: os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured manual STFT and mel filterbank, appropriate complexity
+        comment: Appropriate complexity for manual STFT/mel filterbank; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current API
+        comment: write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
+          and write_html(f'plot-{THEME}.html') — correct
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Heatmap with z/x/y mapping, update_layout, add_shape, add_annotation
+          — all idiomatic Plotly patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Heatmap, update_layout, add_shape, add_annotation
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Custom hovertemplate, hoverlabel styling, HTML export, annotation
-          arrows
+        comment: Custom hovertemplate, write_html interactive export, hoverlabel customization,
+          shape annotations — good Plotly-specific feature use
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -220,7 +259,7 @@ impl_tags:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
