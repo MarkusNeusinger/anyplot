@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-03
@@ -91,16 +91,14 @@ chart = pygal.XY(
     print_values=False,
     show_x_guides=False,
     show_y_guides=True,
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_box_size=20,
+    show_legend=False,
     xrange=(-12.5, 0.8),
     range=(-0.02, 1.12),
     margin=35,
     margin_top=60,
-    margin_bottom=150,
+    margin_bottom=80,
     margin_left=75,
-    margin_right=140,
+    margin_right=300,
     tooltip_fancy_mode=True,
     tooltip_border_radius=8,
     x_value_formatter=lambda x: f"{abs(x):.1f}",
@@ -110,7 +108,8 @@ chart = pygal.XY(
         "file://style.css",
         "file://graph.css",
         "inline:.axis > .line { stroke: transparent !important; }",
-        f"inline:.text-overlay .series .label {{ font-size: 40px !important; fill: {INK} !important; font-weight: bold !important; }}",
+        "inline:.chart-background { rx: 0; ry: 0; }",
+        f"inline:.text-overlay .series .label {{ font-size: 38px !important; fill: {INK} !important; font-weight: bold !important; }}",
     ],
 )
 
@@ -118,13 +117,13 @@ chart = pygal.XY(
 spectrum_points = [(float(cs), float(inten)) for cs, inten in zip(cs_negated, int_plot, strict=False)]
 chart.add("¹H NMR Spectrum", spectrum_points, stroke_style={"width": 4}, fill=False)
 
-# Peak markers — each as its own series for legend and on-chart annotation
+# Peak markers — search in downsampled arrays so dots snap to spectrum line
 for ppm, group_name in peak_info:
-    mask = np.abs(chemical_shift - ppm) < 0.15
+    mask = np.abs(cs_plot - ppm) < 0.15
     region_idx = np.where(mask)[0]
-    idx = int(region_idx[np.argmax(intensity[region_idx])])
-    peak_x = -float(chemical_shift[idx])
-    peak_y = float(intensity[idx])
+    idx = int(region_idx[np.argmax(int_plot[region_idx])])
+    peak_x = -float(cs_plot[idx])
+    peak_y = float(int_plot[idx])
     label_text = f"{group_name} ({ppm:.2f} ppm)"
     legend_label = f"{group_name} ({ppm:.1f})"
     point = {"value": (peak_x, peak_y), "label": label_text}
