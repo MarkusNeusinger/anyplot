@@ -1,162 +1,186 @@
 library: pygal
+language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:41:49Z'
-updated: '2026-03-10T23:06:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22927470299
+updated: '2026-06-03T14:17:00Z'
+generated_by: claude-sonnet
+workflow_run: 26889498323
 issue: 4674
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/pygal/plot.html
-quality_score: 87
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Clever use of pygal.Dot as a pictogram approximation with dot matrix data construction
-  - 'Strong data storytelling: title communicates the insight, descending order, saturated
-    leader color'
-  - Clean visual design with hidden guides, white background, and custom color palette
-  - Well-structured, deterministic code with clear comments explaining design choices
-  - Good feature coverage showing both exact multiples and remainders
+  - 'Correct Imprint palette applied with brand green #009E73 as first series (Apples),
+    full canonical order across all 5 categories'
+  - Font sizes all explicitly set — title, label, major_label, legend, value — with
+    length-aware title scaling formula
+  - Partial icons correctly implemented via proportional dot sizes (remainder/icon_unit
+    fraction fed to pygal.Dot)
+  - Data sorted descending creating clear visual hierarchy from top (Apples 35k) to
+    bottom (Mangoes 8k)
+  - Both themes render correctly — warm off-white background in light (#FAF8F1), near-black
+    in dark (#1A1A17), all text theme-adaptive; no dark-on-dark failures
+  - HTML output generated alongside PNG, leveraging pygal interactivity
+  - Clean KISS code structure with deterministic data; sys.path guard prevents self-shadowing
   weaknesses:
-  - Partial values shown as smaller dots rather than partially-filled icons — less
-    intuitive for the pictogram concept
-  - Some empty canvas space to the right for shorter rows creates slight visual imbalance
-  image_description: 'The plot displays a dot chart (pygal.Dot) used as a pictogram
-    approximation for fruit production data. Five categories are arranged as horizontal
-    rows: Apples (top), Oranges, Bananas, Grapes, and Mangoes (bottom). Each category
-    has large circular dots where each full dot represents 5,000 tonnes of production.
-    Apples has 7 full-sized steel blue dots spanning to 35k; Oranges has 4 full gold
-    dots plus 1 smaller partial dot (22k); Bananas has 3 full teal dots plus 1 small
-    partial dot (18k); Grapes has 3 full purple dots (15k); Mangoes has 1 full brick-red
-    dot plus 1 smaller partial dot (8k). The x-axis shows cumulative values (5k through
-    35k). The title reads "Fruit Production — Apples Lead at 4× Mangoes (each dot
-    ≈ 5 000 tonnes)" with a subtitle "pictogram-basic · pygal · pyplots.ai". A horizontal
-    legend at the bottom shows all five categories with their respective colors. The
-    background is clean white with no grid lines.'
+  - 'DE-01/DE-02: Layout retains the default pygal chart border/frame outline visible
+    in the dark render — removing or blending this frame edge into the background
+    would improve polish'
+  - 'DE-02: Spines/chart border not explicitly removed; a thin rectangular outline
+    persists around the plot area, adding unnecessary chrome'
+  - 'LM-02: pygal.Dot is correctly used but deeper library-specific features (e.g.
+    value_formatter hover display, show_minor_x_labels, or interactive legend) are
+    not exploited'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
+      Chrome: Title "Fruit Production · pictogram-basic · python · pygal · anyplot.ai" is clearly readable at top center. Y-axis category labels (Apples, Oranges, Bananas, Grapes, Mangoes) are dark ink on cream, fully legible. X-axis tick labels (5k–35k) visible. X-axis title "Thousands of tonnes · each dot = 5k t" readable below the chart. Legend at bottom shows five color swatches with category names.
+      Data: Dot-grid layout — Apples row has 7 full green circles (#009E73), Oranges 4 full lavender + 1 partial (~40%), Bananas 3 full blue + 1 partial (~60%), Grapes 3 full ochre (exact), Mangoes 1 full red + 1 partial (~60%). All colors from Imprint palette in canonical order.
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and all labels render in light ink (#F0EFE8) against dark background — fully readable. No dark-on-dark failures. Legend at bottom with light text legible. Thin chart border outline is slightly more visible on dark surface but doesn't affect readability.
+      Data: All dot colors are identical to light render — green for Apples, lavender for Oranges, blue for Bananas, ochre for Grapes, red for Mangoes. Only chrome (background, text, legend) flipped; data colors unchanged as required.
+      Legibility verdict: PASS — all text readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=54, labels=48, major_label=38,
-          legend=38). Clearly readable. Title could be marginally larger.
+        comment: All font sizes explicitly set (title=66 with length-aware formula,
+          labels=56, major_labels=44, legend=44, value=36). Well-proportioned in both
+          themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No text overlaps; dots, labels, and legend are all non-overlapping.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full dots large and prominent. Smallest partial dots (0.6 ratio)
-          are noticeably tiny.
+        comment: dot_size=46 creates clearly visible icons; partial icons distinguishable
+          from full ones.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; good luminance contrast for all 5 series.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Five distinct hues distinguishable for colorblind viewers
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good utilization with generous margins. Some empty space to the right
-          for shorter rows.
+        comment: 3200×1800 landscape, generous margins, balanced utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with units, x-axis with scale, category labels
-          on y-axis
+        comment: x_title includes units ('Thousands of tonnes · each dot = 5k t').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Canonical Imprint order. Backgrounds
+          #FAF8F1/#1A1A17. Chrome theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom palette with intentional hierarchy, sans-serif typography,
-          clean white background
+        passed: false
+        comment: Well-configured library default. Clean and professional but not publication-exceptional.
+          Thin chart border persists.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Guides hidden, foreground_subtle transparent, generous margins, minimal
-          chrome
+        passed: false
+        comment: Grid turned off (show_x_guides=False, show_y_guides=False). Generous
+          margins. Chart outline/frame not removed — minor chrome excess.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Title tells story, descending order, saturated leader color creates
-          focal point
+        passed: false
+        comment: Descending order (Apples→Mangoes) creates clear visual hierarchy.
+          Size comparison across rows is immediately readable.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: pygal.Dot as pictogram approximation. Partial values as smaller dots
-          rather than partially-filled icons.
+        comment: pygal.Dot creates variable-sized dot grid — valid pictogram representation
+          per spec guidance on using simple shapes.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Consistent unit, legend, partial representation, grid-like rows,
-          left labels all present
+        comment: Unit legend in x_title, partial icons via proportional values, grid-row
+          layout, category labels on left axis.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, values by dot count on x-axis, all data visible
+        comment: Categories on y-axis, cumulative scale on x-axis, all 5 fruit production
+          values correctly represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id · library · pyplots.ai. Legend shows all categories.
+        comment: 'Title: ''Fruit Production · pictogram-basic · python · pygal · anyplot.ai''
+          — correct prefixed format. Legend labels match data.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 categories with good variation, exact multiples and remainders
-          shown
+        comment: Covers full icons, partial icons, varying row lengths — all pictogram
+          features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fruit production in thousands of tonnes, neutral real-world topic
+        comment: Fruit production in thousands of tonnes — real, neutral, comprehensible
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for fruit production volumes
+        comment: Values 8–35k tonnes per category are plausible for regional agricultural
+          production.
     code_quality:
       score: 10
       max: 10
@@ -166,31 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Imports → tokens → data → dot matrix → chart config → save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data
+        comment: Fully deterministic hardcoded data — no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: os, sys, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, elegant dot_data construction
+        comment: Clean Pythonic code; sys.path guard is an appropriate workaround
+          for the self-shadowing issue.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html as required for pygal.
     library_mastery:
       score: 7
       max: 10
@@ -200,20 +226,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.Dot, Style config, idiomatic chart.add() and render_to_png
+        comment: Uses pygal.Dot with Style object correctly. legend_at_bottom, dot_size,
+          value_formatter — idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: pygal.Dot is distinctive, uses dot_size, legend_at_bottom_columns,
-          dual output
-  verdict: REJECTED
+        passed: false
+        comment: pygal.Dot is library-specific and well-matched to the pictogram use
+          case. HTML interactive export is a pygal hallmark. Deeper interactive features
+          (hover formatter, minor labels) not explored.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []
