@@ -1,6 +1,7 @@
-"""piano-roll-midi: MIDI Piano Roll Visualization
-Library: seaborn | Python
-Jazz ii-V-I-turnaround progression (Dm7-G7-Cmaj7-A7)
+""" anyplot.ai
+piano-roll-midi: MIDI Piano Roll Visualization
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-03
 """
 
 import os
