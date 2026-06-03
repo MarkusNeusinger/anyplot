@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -123,10 +123,11 @@ for midi in all_midi_range:
     categories.append(f"{name}{octave}")
 pitch_to_index = {midi: i for i, midi in enumerate(all_midi_range)}
 
-# Velocity → color: teal (soft) → amber (medium) → crimson (loud)
-# Inline stop triplets — no function
+# Velocity → color: imprint_div reversed — blue (soft/piano) → theme midpoint → red (loud/forte)
 vel_min, vel_max = 60, 127
-_s0, _s1, _s2 = (20, 130, 150), (255, 165, 0), (185, 25, 40)
+_s0 = (68, 103, 163)  # #4467A3 blue at vel=60
+_s1 = (250, 248, 241) if THEME == "light" else (26, 26, 23)  # #FAF8F1 / #1A1A17 midpoint
+_s2 = (174, 48, 48)  # #AE3030 red at vel=127
 
 # Role config: distinct pointWidth + opacity + border for colorblind safety
 role_config = {
@@ -280,7 +281,7 @@ chart.options.tooltip = {
     "style": {"color": INK},
 }
 
-series_configs = [("Melody", "melody", "#d94040"), ("Bass", "bass", "#2a7a8a"), ("Harmony", "harmony", "#c0a030")]
+series_configs = [("Melody", "melody", "#009E73"), ("Bass", "bass", "#C475FD"), ("Harmony", "harmony", "#4467A3")]
 series_list = []
 for label, role, legend_color in series_configs:
     cfg = role_config[role]
@@ -325,7 +326,7 @@ chord_labels = [("C", 2), ("C", 6), ("Am", 10), ("Am", 14), ("F", 18), ("F", 22)
 chord_labels_js = ""
 for text, beat in chord_labels:
     chord_labels_js += f"""
-    r.text('{text}', chart.xAxis[0].toPixels({beat}), 148)
+    r.text('{text}', chart.xAxis[0].toPixels({beat}), 168)
       .attr({{'text-anchor': 'middle'}})
       .css({{fontSize: '32px', color: '{INK_SOFT}', fontWeight: '600', fontStyle: 'italic'}}).add();"""
 
