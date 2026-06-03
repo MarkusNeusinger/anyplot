@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:42:01Z'
-updated: '2026-06-03T14:04:29Z'
+updated: '2026-06-03T14:14:32Z'
 generated_by: claude-sonnet
 workflow_run: 26888898606
 issue: 4674
@@ -12,39 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order with first series #009E73'
-  - Elegant use of sns.stripplot with jitter=False for deterministic icon placement
-  - Partial icon technique via color blending clearly communicates fractional remainders
-    in light mode
-  - Python row highlighted with axhspan band and bold percentage annotation — clear
-    focal point
-  - 'Full Imprint theme-adaptive chrome: backgrounds, text, legend all correctly themed'
-  - Clean code with strict=True zip, deterministic data, no functions/classes
-  - Descriptive x-axis label with unit context; unit legend at bottom
+  - 'Full spec compliance: correct isotype layout with left-aligned icon rows, partial
+    icons for fractional remainders, unit annotation, and value labels'
+  - 'Imprint palette applied in canonical order with Python = #009E73 as required;
+    both theme backgrounds correct (#FAF8F1 light / #1A1A17 dark)'
+  - Creative use of sns.stripplot with jitter=False for precise icon positioning —
+    smart seaborn adaptation for a non-standard chart type
+  - Python row highlight band + bold percentage annotation creates clear visual hierarchy
+    and focal point
+  - 'Perfect code quality: linear structure, deterministic data, clean imports, correct
+    output filename, no bbox_inches=''tight'''
   weaknesses:
-  - 'Partial icons in dark mode have very low contrast for warm palette colors: Go
-    partial (#4E2120 approx) and C++ partial (#533E20 approx) nearly disappear against
-    the #1A1A17 background — use alpha-based transparency (ax.scatter with alpha=0.35)
-    instead of blending toward PAGE_BG so dark mode partial dots retain more luminance'
-  - Design is functional but not exceptional — no annotations, callouts, or additional
-    storytelling elements beyond the highlight band
-  - X-axis tick labels hidden but x-axis label retained, creating a slight visual
-    inconsistency — the axis label floats without any scale reference ticks
+  - 'Partial icons use alpha=0.35, which works on light background but makes them
+    nearly invisible in the dark render — alpha-transparent colored dots on #1A1A17
+    produce very dark brownish/olive smudges that barely read as icons (especially
+    Go red → near-black, C++ ochre → near-black). Use an additive tint approach instead:
+    mix 35% category color + 65% PAGE_BG as a computed hex to get a light muted version
+    that reads in both themes.'
+  - 'Y-axis tick labels use colors=INK (primary text) instead of INK_SOFT (secondary
+    text); the style guide specifies tick labels as secondary text (#4A4A44 light
+    / #B8B7B0 dark). Minor inconsistency with the token hierarchy.'
+  - 'Design excellence has headroom: slightly larger icons for the Python row (size=16
+    vs 14) could reinforce the visual hierarchy already established by the highlight
+    band.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface.
-      Chrome: Title "pictogram-basic · python · seaborn · anyplot.ai" in dark near-black text at 12pt — readable. Y-axis category labels (Python, JavaScript, Java, C++, Go) in dark ink at 8pt — readable. X-axis label "Icons (each = 10% of respondents)" in INK_SOFT at 10pt — readable. Bottom unit annotation in muted gray — readable.
-      Data: Five horizontal rows of colored circles. Python row: 6 full #009E73 green + 1 faded partial (lighter greenish) + bold "67%". JavaScript: 5 full #C475FD lavender + 1 faded partial. Java: 4 full #4467A3 blue + 1 faded partial. C++: 3 full #BD8233 ochre + 1 faded partial. Go: 2 full #AE3030 red + 1 faded partial. Python row has a subtle green highlight band. Partial icons appear clearly as lighter/faded versions of full icons.
-      Legibility verdict: PASS — all text readable, partial icons clearly distinct from full icons.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "pictogram-basic · python · seaborn · anyplot.ai" in dark ink — clearly readable. Category labels (Python, JavaScript, Java, C++, Go) on Y-axis in dark ink — readable. Value annotations (67%, 55%, 43%, 32%, 25%) in dark ink — readable. X-axis label "Icons (each = 10% of respondents)" — readable. Unit footnote "● = 10% of respondents   (lighter = partial unit)" at fontsize=8 — readable.
+      Data: Five rows of colored circles using Imprint palette in canonical order: Python=#009E73 (green), JavaScript=#C475FD (purple), Java=#4467A3 (blue), C++=#BD8233 (ochre), Go=#AE3030 (red). Partial icons appear as faded (alpha=0.35) versions of the same color — clearly distinguishable as lighter/faded versions on the cream background. Subtle green background band highlights Python row.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title in light cream text (#F0EFE8 approx) — readable. Y-axis category labels in light text — readable. X-axis label in INK_SOFT (#B8B7B0) — readable. Bottom annotation in #A8A79F muted gray — readable. No dark-on-dark text failures.
-      Data: Full icon colors are identical to light render — #009E73 green for Python, #C475FD lavender for JavaScript, #4467A3 blue for Java, #BD8233 ochre for C++, #AE3030 red for Go. Data palette is theme-constant. HOWEVER, partial icons in dark mode are very low contrast: the color blending formula uses PAGE_BG=#1A1A17 as the blend target at 35% opacity, so Go's partial blends to approximately #4E2120 (very dark red) and C++'s partial blends to approximately #533E20 (very dark brown) — both nearly invisible against the near-black background. Python partial (dark teal) and JavaScript partial (dark purple) are more visible but still subtle.
-      Legibility verdict: PASS for text — all chrome readable. PARTIAL FAIL for Go and C++ partial icons — very low contrast against dark background.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light text (#F0EFE8-ish) — clearly readable. Category labels in light text — readable. Value annotations in light text — readable. X-axis label in light text — readable. Unit footnote in light/muted text — readable. No dark-on-dark text failures.
+      Data: Data colors are identical to the light render — Python green (#009E73), JavaScript purple (#C475FD), Java blue (#4467A3), C++ ochre (#BD8233), Go red (#AE3030) — all consistent across themes as required. Python row highlight band visible as subtle dark-green tint. HOWEVER: partial icons at alpha=0.35 on #1A1A17 background are nearly invisible — Go partial (matte red × 0.35 blended on near-black ≈ rgb(79,34,32)), C++ partial (ochre × 0.35 on near-black), Java partial (blue × 0.35 on near-black) all render as very dark near-black smudges that barely read as icons.
+      Legibility verdict: PASS for text chrome. MARGINAL for partial icon visibility in dark mode.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -55,56 +60,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Title 12pt, x-label 10pt, tick/annotation
-          labels 8pt. All readable in both themes. Bottom annotation in INK_MUTED
-          (#A8A79F on dark) is borderline tertiary but legible.
+        comment: 'All font sizes explicitly set (title=12, xlabel=10, ticks=8, annotations=8).
+          Readable in both themes. Minor: unit footnote at fontsize=8 is at lower
+          edge of mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Icons are well-spaced in rows. Percentage annotations positioned
-          0.3 units right of last icon with adequate clearance. No text overlaps data
-          elements.
+        comment: Clean row-based layout, no text/data collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Full icons clearly visible at size=14 in both themes. Partial icons
-          clearly distinct in light mode (faded to #FAF8F1 bg). In dark mode, Go partial
-          (~#4E2120) and C++ partial (~#533E20) are low contrast against #1A1A17 —
-          visible but barely.'
+        comment: Full icons prominent at size=14. Partial icons (alpha=0.35) work
+          on light render but blend into near-black dark background for Go, C++, Java
+          partial dots.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used, CVD-safe. Redundant encoding via position and
-          value labels eliminates sole red-green reliance.
+        comment: Imprint palette is CVD-safe; PAGE_BG edge color on dots adds definition.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (gate passed). Good row spacing, no clipping. Bottom
-          annotation at axes fraction -0.10 remains within canvas. Title well-positioned
-          with adequate top margin.
+        comment: Correct 3200x1800 canvas (figsize=(8,4.5), dpi=400, no bbox_inches=tight).
+          Good row spacing, no overflow, no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label 'Icons (each = 10% of respondents)' is descriptive with
-          unit. Y-axis empty but category labels on ticks serve as legend.
+        comment: X-axis label includes unit context; Y-axis uses category names directly
+          (no redundant label needed).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Python=#009E73. Multi-series follows canonical Imprint
-          order. Backgrounds #FAF8F1 / #1A1A17 correct. Chrome tokens fully theme-adaptive.
-          Data colors identical across both renders.'
+        comment: 'Python=#009E73 (canonical first). Multi-series follows Imprint order:
+          green→purple→blue→ochre→red. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
       score: 13
       max: 20
@@ -114,24 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: per-category Imprint colors, highlight band for Python
-          row, bold annotation for top entry. Not publication-quality but clearly
-          above generic defaults.'
+        comment: 'Above default: intentional color hierarchy (Python highlighted),
+          bold value for leading entry, Imprint palette, edge-highlighted dots. Not
+          yet FiveThirtyEight-level polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Full despining (left+bottom removed), no grid lines, white icon edges
-          for definition, generous whitespace. Solid refinement above defaults.
+        comment: Full spine removal, no grid (appropriate), subtle row highlight band,
+          PAGE_BG edge color on dots. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Python row highlighted with axhspan band and bold '67%' — clear focal
-          point. Partial icons add precision. Value labels at row ends enable immediate
-          reading. Good visual hierarchy.
+        comment: Python row highlight + bold annotation creates clear focal point.
+          Descending order implies ranking. Viewer immediately sees Python dominance.
     spec_compliance:
       score: 15
       max: 15
@@ -141,30 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram/isotype chart. Circles as icons, horizontal rows
-          per category, left axis labels.
+        comment: 'Correct isotype/pictogram chart: repeated icon dots in horizontal
+          rows, aligned left, categories on Y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent unit value (1 icon = 10%), unit legend, partial icons
-          for fractional remainders, grid-like rows, left-axis category labels — all
-          spec features present.
+        comment: Consistent unit value (1 icon = 10%), partial icons for fractional
+          remainder, left-axis category labels, unit legend annotation all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories mapped to rows. Icon counts correct (67=6+1partial, 55=5+1partial,
-          43=4+1partial, 32=3+1partial, 25=2+1partial).
+        comment: X position encodes icon count; Y encodes category; value annotations
+          confirm mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'pictogram-basic · python · seaborn · anyplot.ai' correct format.
-          Unit legend at bottom.
+        comment: Title exactly 'pictogram-basic · python · seaborn · anyplot.ai'.
+          Unit legend annotation present and informative.
     data_quality:
       score: 15
       max: 15
@@ -174,23 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multiple categories with varying icon counts, partial icons,
-          unit legend, value annotations — all pictogram features covered.
+        comment: 'Shows all pictogram features: multiple categories, full icons, partial
+          icons, value annotations, category highlighting.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Developer survey data for programming language usage — realistic,
-          neutral, technology domain. No controversial content.
+        comment: Developer survey (Stack Overflow-style) language usage percentages.
+          Real, neutral, technology domain. Not controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentage values (67, 55, 43, 32, 25) are plausible for developer
-          survey. Unit=10% gives 2-7 icons per row — good visual density. 5 categories
-          within 3-8 spec recommendation.
+        comment: Values (25-67%) are realistic for developer survey data. 5 categories
+          within 3-8 spec range. 10% unit value yields 2-7 icons per row — ideal density.
     code_quality:
       score: 10
       max: 10
@@ -200,37 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → constants → data → build DataFrame → plot → style
+        comment: 'Linear flow: imports → data → setup → plot → annotations → style
           → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded data lists, no random operations.
+        comment: Hardcoded data; fully deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, matplotlib.colors, matplotlib.pyplot, pandas, seaborn —
-          all used.
+        comment: Only os, sys, matplotlib, pandas, seaborn imported and all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean logic for DataFrame construction and color blending. strict=True
-          in zip is good practice. No fake UI.
+        comment: Clean and appropriate complexity. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
-          API.
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'. Current API
+          throughout.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -238,17 +232,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() with rc dict for theming, sns.stripplot for dot placement,
-          sns.despine — idiomatic seaborn patterns. Good hue/palette/order usage.
+        comment: 'Uses sns.stripplot with jitter=False for precise categorical dot
+          placement — idiomatic seaborn: hue+palette, sns.set_theme, sns.despine all
+          used correctly.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Creative repurposing of sns.stripplot with jitter=False for deterministic
-          icon grid — this is a genuine seaborn-specific technique. hue+palette+order
-          for multi-category coloring. Above default but not uniquely seaborn.
-  verdict: REJECTED
+        passed: false
+        comment: Creative use of sns.stripplot for isotype-style icon rows is a good
+          seaborn adaptation. However highlight band, text annotations, and partial
+          icon loop are matplotlib primitives. Seaborn's distinctive contribution
+          is primarily stripplot positioning.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
