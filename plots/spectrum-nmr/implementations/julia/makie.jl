@@ -90,8 +90,11 @@ ax = Axis(
     xgridvisible       = false,
     ygridvisible       = false,
     xreversed          = true,
-    limits             = (ppm_min, ppm_max, -0.1, 4.0),
+    limits             = (ppm_min, ppm_max, -0.1, 3.8),
 )
+
+# Shaded area under spectrum trace (filled before the line to stay behind it)
+band!(ax, ppm_vals, zeros(n_pts), intensity; color = (IMPRINT_PALETTE[1], 0.15))
 
 # NMR spectrum trace
 lines!(ax, ppm_vals, intensity; color = IMPRINT_PALETTE[1], linewidth = 1.5)
@@ -101,25 +104,25 @@ text!(ax, 1.18, 2.2;
     text     = "1.18 ppm\nCH₃ (t)",
     align    = (:center, :bottom),
     color    = INK_SOFT,
-    fontsize = 11,
+    fontsize = 13,
 )
 text!(ax, 2.61, 1.65;
     text     = "2.61 ppm\nOH (s)",
     align    = (:center, :bottom),
     color    = INK_SOFT,
-    fontsize = 11,
+    fontsize = 13,
 )
-text!(ax, 3.69, 3.2;
+text!(ax, 3.69, 3.15;
     text     = "3.69 ppm\nCH₂ (q)",
     align    = (:center, :bottom),
     color    = INK_SOFT,
-    fontsize = 11,
+    fontsize = 13,
 )
 text!(ax, 0.0, 0.4;
     text     = "TMS",
     align    = (:center, :bottom),
     color    = INK_MUTED,
-    fontsize = 10,
+    fontsize = 11,
 )
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
