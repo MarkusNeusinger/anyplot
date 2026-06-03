@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:51Z'
-updated: '2026-06-03T10:04:34Z'
+updated: '2026-06-03T10:13:32Z'
 generated_by: claude-sonnet
 workflow_run: 26877120016
 issue: 4581
@@ -12,38 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Adaptive cell text color (light on dark cells, dark on light cells) improves readability
-    across the full magnitude range
-  - Alpha-based actual/projected distinction is clean and semantically correct — fading
-    visually communicates uncertainty in projected values
-  - 'Development factors row is well-positioned and styled distinctively (bold green
-    #009E73) to separate it from the main data grid'
-  - 'Excellent data quality: realistic actuarial scenario with a plausible catastrophe
-    year (2019) and authentic chain-ladder factors (2.50→1.01)'
-  - Both light and dark themes correctly implemented with full chrome token coverage
-    (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
+  - 'Correct imprint_seq colormap (#009E73 → #4467A3) for continuous heatmap fill'
+  - Alpha-based Actual vs Projected distinction clearly communicates the triangular
+    structure
+  - Development factors row below the triangle adds actuarial storytelling value
+  - 'Correct theme-adaptive chrome in both renders: light ink on light bg, light text
+    on dark bg'
+  - 'All required spec features implemented: cell annotations with thousands separator,
+    development factors, triangular structure, color-encoded magnitude'
+  - Realistic actuarial scenario with accurate chain-ladder development pattern (decreasing
+    factors from 2.50 → 1.01)
+  - Perfect KISS code structure with np.random.seed(42) reproducibility
+  - Idiomatic plotnine grammar-of-graphics usage with scale_alpha_manual for categorical
+    alpha encoding
   weaknesses:
-  - Title is missing the required 'python' language token — must be 'heatmap-loss-triangle
-    · python · plotnine · anyplot.ai' (currently 'heatmap-loss-triangle · plotnine
-    · anyplot.ai')
-  - Cell annotation text (size=3.0 mm ≈ 8.5pt) is slightly small for a dense 10×10
-    grid; consider increasing to size=3.5 for better readability when plot is scaled
-    to web thumbnails
+  - geom_text size=3.0mm for cell annotations is on the small end — mobile viewers
+    at ~400px width may struggle to read the thousands-formatted values; consider
+    increasing to size=3.5-4.0 to improve readability
+  - 'VQ-05 minor: visible empty space between subtitle and first heatmap row due to
+    scale_y_reverse expand parameters; could tighten the top expansion'
+  - 'DE-01/DE-02: While above defaults, the design remains at a configured-library
+    level — removing the legend box border and adding more whitespace padding around
+    the plot could improve polish'
+  - 'LM-02: No distinctive plotnine-specific feature beyond standard geom_tile + scale_alpha_manual
+    layering; consider faceting or stat_summary for a more library-distinctive approach'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "heatmap-loss-triangle · plotnine · anyplot.ai" bold dark INK (#1A1A17), clearly readable. Subtitle in INK_SOFT. Axis labels "Accident Year" and "Development Period (Years)" in INK, readable. Tick labels (years 2015–2024, periods 1–10) in INK_SOFT. Legend title and text readable.
-      Data: 10×10 heatmap tiles colored with imprint_seq gradient (brand green #009E73 low → blue #4467A3 high). Actual cells (upper-left triangle) at full opacity alpha=1.0. Projected cells (lower-right triangle) at alpha=0.35 (faded). Cell annotations in comma-formatted numbers; text color adapts (light ink on dark/high cells, dark INK on lighter/low cells). Dev Factor row below in bold green #009E73. First series color is #009E73 ✓.
-      Legibility verdict: PASS — all title, axis, tick, legend, and cell annotation text readable. Catastrophe year 2019 visually prominent.
+      Background: Warm off-white (#FAF8F1), confirmed non-pure-white cream tone
+      Chrome: Bold dark title "heatmap-loss-triangle · python · plotnine · anyplot.ai" readable; subtitle in softer dark ink; Y-axis "Accident Year" and X-axis "Development Period (Years)" clearly legible; tick labels (accident years 2015-2024, development periods 1-10) in muted dark ink; "Dev Factor" label and green (#009E73) development factor values below the triangle all readable
+      Data: Sequential gradient from brand green (#009E73) at low cumulative amounts to blue (#4467A3) at high amounts; Actual region has full opacity 1.0 — darker, saturated tiles; Projected region at alpha=0.35 — visually lighter, washed-out appearance clearly distinguishing it from Actual; 2019 catastrophe year shows deeper blue tones in Actual region; cell annotations formatted with thousands separator (e.g., "3,250", "32,417") in theme-adaptive text color (light ink on dark tiles, dark ink on lighter tiles); development factors in green below the heatmap body
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures; cell annotations at geom_text size=3.0mm are legible but slightly small
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and subtitle in light off-white (INK = #F0EFE8 for dark theme), clearly readable against dark background. Axis labels and tick labels visible (INK_SOFT = #B8B7B0 for dark theme). No dark-on-dark failures detected. Legend text readable. Legend background elevated (#242420).
-      Data: Data colors identical to light render — same green→blue gradient, same alpha transparency for projected cells. Dev Factor row in bold #009E73, clearly visible on dark surface. Cell annotation text adapts correctly (light_ink = #F0EFE8 for dark theme on dark cells).
-      Legibility verdict: PASS — all chrome text readable, no dark-on-dark failures. Data colors preserved identically between themes.
+      Background: Warm near-black (#1A1A17), confirmed non-pure-black dark tone
+      Chrome: Bold light title readable against dark background; subtitle in muted light ink; axis labels and tick labels in light ink — no dark-on-dark failures observed; legend box has elevated dark background (#242420) with light text for "Cumulative Amount" and "Region" labels; "Dev Factor" row below the heatmap uses green (#009E73) labels visible on dark background
+      Data: Colors are identical to light render — same #009E73→#4467A3 gradient; Actual region retains full-opacity green-to-blue tiles; Projected region at 0.35 alpha appears noticeably lighter/more transparent; 2019 row remains visually prominent as the darkest actual row; cell annotations adapt to dark text-color tokens, remaining readable; development factor values in #009E73 clearly visible
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures; data colors identical to light render confirming only chrome flipped
   criteria_checklist:
     visual_quality:
       score: 28
@@ -51,50 +58,58 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick/legend text readable in both themes. Cell annotation
-          size=3.0mm is borderline small at mobile scale for a dense 10x10 grid.
+        comment: All font sizes explicitly set; title 12pt, subtitle 9pt, axis titles
+          10pt, tick labels 8pt, legend 7-8pt; geom_text size=3.0mm for cell annotations
+          is slightly small but readable at canvas resolution; both themes pass legibility
+          check
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions. Dev Factor row well-separated.
+        comment: No text overlap in either render; 10x10 cell grid has sufficient
+          spacing for labels; dev factor row well-separated below main triangle
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All tiles visible; projected cells legible at alpha=0.35. Color gradient
-          clearly encodes magnitude.
+        comment: Heatmap tiles fully visible; color gradient clearly differentiates
+          magnitude; alpha transparency clearly separates Actual from Projected; cell
+          annotations visible; dev factor labels in green visible on both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe. Alpha provides redundant encoding.
+        comment: 'imprint_seq (#009E73 to #4467A3) is CVD-safe; alpha provides redundant
+          encoding for Actual/Projected distinction'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas appropriate. No clipping or overflow. Canvas
-          gate passed.
+        comment: 'Square 2400x2400 canvas appropriate for symmetric heatmap; layout
+          uses good canvas proportion; minor: slight excess vertical whitespace between
+          subtitle and first heatmap row due to scale_y_reverse expand settings'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units. Subtitle adds analytical context.
+        comment: 'X: ''Development Period (Years)'' descriptive with units; Y: ''Accident
+          Year'' descriptive; title correctly formatted'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73→#4467A3). Backgrounds #FAF8F1/#1A1A17. Full
-          chrome token coverage.'
+        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') is correct
+          imprint_seq; light background #FAF8F1, dark background #1A1A17; all chrome
+          tokens theme-adaptive in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -104,24 +119,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Adaptive cell text color, themed cell borders, intentional alpha-based
-          distinction. Above baseline.
+        comment: 'Above defaults: intentional alpha for Actual/Projected distinction,
+          imprint_seq gradient, catastrophe year naturally creates visual interest;
+          not quite publication-ready level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel grid removed. Cell borders use PAGE_BG. Elevated legend background.
-          Clean minimal theme.
+        comment: Grid fully removed (element_blank); clean panel background matching
+          plot background; legend box styled with elevated bg and soft border; plot_margin=0.02
+          is tight but functional
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Catastrophe year 2019 stands out naturally. Actual/projected fading
-          creates clear diagonal boundary. Dev factors add analytical context.
+        comment: Clear actual vs projected narrative via alpha transparency; 2019
+          catastrophe year visually prominent; development factors as green labels
+          add actuarial context; subtitle explains both data regions
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,29 +147,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular matrix heatmap using geom_tile.
+        comment: Correct heatmap loss triangle type; triangular structure implemented
+          via is_projected alpha; all 10x10 cells rendered
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: actual/projected distinction, cell annotations,
-          dev factors, color intensity, legend.'
+        comment: Upper-left actual / lower-right projected distinction via alpha;
+          cell annotations with thousands separator; dev factors below; color-encoded
+          magnitude; Region legend; row/column labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=development_period, Y=accident_year (reversed), fill=cumulative_amount.
-          All correct.
+        comment: X=development_period, Y=accident_year, fill=cumulative_amount, alpha=region
+          — all correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing 'python' language token. Should be 'heatmap-loss-triangle
-          · python · plotnine · anyplot.ai'. Legend labels (Actual, Projected) are
-          correct.
+        passed: true
+        comment: 'Title: ''heatmap-loss-triangle · python · plotnine · anyplot.ai''
+          correct format; legends: Cumulative Amount (colorbar) and Region (Actual/Projected)
+          both present and labeled correctly'
     data_quality:
       score: 15
       max: 15
@@ -161,21 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 10x10 triangular matrix, actual/projected, cumulative amounts,
-          dev factors, color magnitude encoding.
+        comment: 'Shows all aspects: actual vs projected, chain-ladder development,
+          dev factors, catastrophe year, cumulative progression'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible insurance loss development triangle. 2019 catastrophe year
-          realistic. Chain-ladder factors are actuarially reasonable.
+        comment: Real actuarial scenario, accident years 2015-2024, realistic insurance
+          context, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Claims $3k-5k growing to $20k-35k over 10 dev years. Realistic scale.
+        comment: Development factors 2.50→1.01 realistic chain-ladder pattern; base
+          claims ~3,000-5,200; final cumulative amounts ~20,000-36,000 plausible
     code_quality:
       score: 10
       max: 10
@@ -185,56 +206,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear code, no functions or classes.
+        comment: Clean imports → data generation → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) before data generation.
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used.
+        comment: All imports used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI.
+        comment: Clean Pythonic code; appropriate complexity for the visualization;
+          well-structured with clear comments
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png using current plotnine API.
+        comment: Saves as plot-{THEME}.png; current plotnine API used
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Proper grammar of graphics: layered geoms, declarative scales, theme
-          composition. scale_y_reverse and scale_alpha_manual used correctly.'
+        comment: 'Expert plotnine grammar: geom_tile + multiple geom_text layers,
+          scale_alpha_manual for categorical alpha, scale_y_reverse with custom breaks/labels,
+          comprehensive theme() styling'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_alpha_manual for region, scale_color_identity for adaptive
-          text, inherit_aes=False for secondary data layer, custom Y-axis labels with
-          mixed types.
+        comment: 'Uses several plotnine-specific features: scale_alpha_manual for
+          dual-encoding, scale_y_reverse with complex expand parameters, inherit_aes=False
+          for secondary data layer; not uniquely distinctive compared to other grammar-of-graphics
+          libraries'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
