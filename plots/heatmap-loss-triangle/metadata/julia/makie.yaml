@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-loss-triangle
 created: '2026-06-03T10:22:18Z'
-updated: '2026-06-03T10:29:16Z'
+updated: '2026-06-03T10:45:32Z'
 generated_by: claude-sonnet
 workflow_run: 26877635348
 issue: 4581
@@ -12,54 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - 'Full spec compliance — all required features present: triangular heatmap with
-    actual vs projected regions, diagonal step-line boundary, cell annotations, age-to-age
-    factors row, and horizontal legend'
-  - Two-colormap approach (imprint_seq for actual, ochre-based gradient for projected)
-    creates clear visual differentiation as the spec requires
-  - 'Makie idiomatic usage: poly! with Point2f for custom cells, PolyElement for legend,
-    Makie layout system (rowsize!, GridLayout)'
-  - Theme-adaptive chrome correctly implemented — all text and spines use INK/INK_SOFT
-    tokens, backgrounds match FAF8F1 / 1A1A17
-  - Both renders pass legibility checks — title, axis labels, tick labels, and cell
-    annotations all readable in both light and dark themes
+  - Full spec compliance — all 8 required features present (actual/projected triangle,
+    diagonal separator, cell annotations, dev-factor row, legend, color-intensity
+    encoding, triangular structure, distinct visual styling)
+  - Luminance-adaptive cell text color elegantly handles contrast in both green and
+    red cell regions without hard-coding a single text color
+  - Two-colormap design (imprint_seq for actual, red-half of imprint_div for projected)
+    creates an immediately readable actual-vs-IBNR distinction that aligns with actuarial
+    convention
+  - Correctly models chain-ladder loss development with realistic development factors
+    (3.421 → 1.003 convergence) and per-year noise, producing a professionally plausible
+    triangle
+  - 'Perfect code quality: KISS structure, Random.seed!(42), clean imports, no over-engineering'
+  - Makie Figure-grid layout used distinctively — Label rows for title and factor
+    row, rowsize! ratios, horizontal Legend with PolyElement swatches are all CairoMakie-idiomatic
+  - Theme chrome fully applied across all elements (PAGE_BG, INK, INK_SOFT tokens
+    on axis, spines, legend frame, label colors) — both renders pass the theme-readability
+    check
   weaknesses:
-  - 'ANYPLOT_PROJ gradient (cgrad([PROJ_MID, ochre])) is a third continuous colormap
-    not in the approved imprint_seq / imprint_div set — VQ-07 partial. Fix: use imprint_seq
-    for actual cells and imprint_div (or a hatching / stroke pattern) for projected,
-    or confirm with a second ANYPLOT_SEQ variant anchored at ochre'
-  - 'Displayed age-to-age factors fall below 1.0 in later periods (0.998 → 0.991 →
-    0.973 → 0.917), which is physically impossible for cumulative paid losses. This
-    is caused by column means mixing accident years with different ultimates rather
-    than computing link ratios. Fix: compute factors as the weighted average link
-    ratio (sum of col k+1 actuals / sum of col k actuals for matching year-pairs)'
-  - 'CQ-01: helper functions pct_paid and fmt_val break the KISS linear structure.
-    Inline the formatting with a one-liner and unroll pct_paid into the data loop'
-  - 'CQ-04: dead code — `noise = THEME == "light" ? 0.0 : 0.0` always evaluates to
-    0.0 and is unused; also data generation loop runs twice (first pass values are
-    overwritten by second). Consolidate into a single seeded pass'
-  - 'DE-01 / DE-03: visual hierarchy is functional but could be elevated — the projected
-    region lacks a subtle hatching or stipple overlay to reinforce the actual/projected
-    distinction beyond color alone; adding a thin crosshatch pattern on projected
-    cells would make the boundary obvious even for colorblind viewers'
+  - Cell annotation fontsize=9 (18 source px) is borderline for mobile readability
+    at 400 px viewport width — consider bumping to fontsize=10 or 11 in a future pass
+    if the grid allows
+  - 'Design excellence is strong but not publication-ready: no focal-point annotation
+    (e.g. calling out the IBNR total on the diagonal or the largest projected cell)
+    that would elevate storytelling to 6/6'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, not pure white
-      Chrome: title "Loss Development Triangle · heatmap-loss-triangle · julia · makie · anyplot.ai" in bold dark ink (~85–90% of canvas width, long due to descriptive prefix but no clipping); Y-axis label "Accident Year" and X-axis label "Development Period (Years)" in dark INK; tick labels (1–10, 2015–2024) in INK_SOFT — all clearly readable
-      Data: actual cells (upper-left triangle) in green→blue imprint_seq gradient; projected cells (lower-right) in a cream→ochre gradient; cell annotations in white/dark depending on luminance contrast; step-line diagonal clearly delineates boundary; age-to-age factors row and horizontal legend below
-      Legibility verdict: PASS — all text elements readable against warm off-white background; cell annotations legible at 9pt (effectively 18px on the 2400×2400 canvas)
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Loss Development Triangle · heatmap-loss-triangle · julia · makie · anyplot.ai" in dark bold text (~70% canvas width, no overflow). X-axis label "Development Period (Years)" and Y-axis label "Accident Year" in dark INK at 14pt — balanced and readable. Tick labels (development periods 1–10, accident years 2015–2024) in INK_SOFT at 12pt — clearly visible. Age-to-Age factor row in INK_SOFT at 11pt visible below grid. Legend labels "Actual (observed)" and "Projected (IBNR estimate)" readable at 12pt.
+      Data: Upper-left triangle cells rendered in imprint_seq (brand green #009E73 → blue #4467A3) gradient encoding cumulative magnitude. Lower-right (projected/IBNR) cells rendered in the red portion of imprint_div — a dark matte-red to brownish gradient. Cell values annotated with thousands-separated dollar amounts (e.g., "8,173", "21,119"). A bold diagonal separator line marks the actual/projected boundary. Color intensity clearly encodes claim magnitude across both regions.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background. No light-on-light issues. Cell annotations at fontsize=9 are small but visible at 2400×2400 px.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, not pure black
-      Chrome: title and axis labels render in light F0EFE8 / B8B7B0 tokens — clearly visible against dark background; tick labels in INK_SOFT (B8B7B0) — readable; no dark-on-dark text failures detected
-      Data: actual cell colors (green→blue) are identical to light render — Imprint data colors unchanged; projected cells show the ochre gradient, but the low-value projected cells near the diagonal boundary (e.g. row 2024, dev period 2) render in PROJ_MID = #2E2E28 which is very close to the #1A1A17 background — these cells are the least distinguishable element in the dark render, though white cell text annotations remain readable
-      Legibility verdict: PASS with minor concern — all text is readable; the near-background projected low-value cells reduce element visibility slightly but do not render any text illegible
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light INK (#F0EFE8 / #B8B7B0) — clearly readable against near-black background. Age-to-age factor row and legend labels similarly light-colored. Legend frame uses ELEVATED_BG (#242420) — a subtly lighter dark box. No dark-on-dark text failures detected.
+      Data: Heatmap cell colors appear identical to the light render — imprint_seq teal-to-blue for actual cells and red-portion-of-imprint_div for projected cells. The data colors are fully theme-invariant as required. The diagonal separator line is rendered in INK (#F0EFE8) and stands out clearly on the dark background.
+      Legibility verdict: PASS — all text readable against the dark background. No dark-on-dark failures. Cell annotations remain visible. Brand green #009E73 is visible in the first development-period column for early accident years.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,76 +61,90 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; long title (~90% canvas width) remains
-          unclipped; cell annotations at fontsize=9 readable on 2400×2400 canvas
+        comment: 'All font sizes explicitly set (title 14, axis labels 14, tick labels
+          12, cell text 9, factors 11, legend 12). Title ~70% width, balanced axis
+          labels. Minor deduction: cell annotations at fontsize=9 (18 source px) are
+          borderline for mobile 400px viewport.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; cell gaps prevent annotation collision; age-to-age
-          row fits within canvas
+        comment: No overlapping text in either render. Cell values center-aligned
+          within cells. Tick labels well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible in both themes; dark-mode low-value projected
-          cells (PROJ_MID ≈ background) slightly reduce distinction from background
+        comment: Heatmap cells clearly visible with strong color contrast between
+          actual (teal-blue) and projected (red) regions. Diagonal separator line
+          prominent at linewidth=2.5.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; green→blue actual and ochre projected are CVD-distinguishable;
-          cell text luminance-contrast adapted
+        comment: imprint_seq and imprint_div are CVD-optimized. Luminance-adaptive
+          cell text color ensures contrast in both green and red cells. No red-green
+          sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400×2400 square canvas correct for heatmap; rowsize proportions
-          keep chart large, supplements compact; balanced layout
+        comment: Square 2400x2400 canvas (appropriate for symmetric heatmap). Plot
+          fills ~85% of canvas. Three layout rows (factor row, legend) are proportionally
+          sized with rowsize! ratios. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Development Period (Years)'', Y: ''Accident Year'' — descriptive
-          with units'
+        comment: 'X: ''Development Period (Years)'' — descriptive with units. Y: ''Accident
+          Year'' — descriptive. Title includes full spec-id format with descriptive
+          prefix.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'ANYPLOT_SEQ = imprint_seq (correct); ANYPLOT_PROJ = cgrad([PROJ_MID,
-          #BD8233]) is a third continuous cmap not in the approved imprint_seq / imprint_div
-          set — partial compliance'
+        passed: true
+        comment: 'Actual cells use imprint_seq (green #009E73 → blue #4467A3). Projected
+          cells use red portion of imprint_div — valid Imprint continuous colormap.
+          Backgrounds: #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive.
+          Both renders correct.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Two-colormap approach for actual/projected differentiation shows
-          design intent; above configured default; step-line adds professional polish
+        comment: 'Strong design clearly above defaults: two-colormap system creates
+          intuitive actual/projected distinction, luminance-adaptive cell text prevents
+          contrast failures, diagonal boundary adds structural clarity. Not quite
+          publication-ready (no focal annotation, no typographic hierarchy beyond
+          sizes), but confidently above ''well-configured default''.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid off, top/right spines removed, cell borders use PAGE_BG for
-          clean separation, horizontal legend well-placed
+        comment: Grid disabled (correct for heatmap), top/right spines removed, cell
+          borders use PAGE_BG color for subtle separation, horizontal legend saves
+          vertical space. Generous rowsize! proportions. Above the default of 2.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Diagonal step-line clearly tells the observation boundary story;
-          color intensity encodes magnitude; age-to-age factors add analytical context
+        comment: 'The actual/projected two-color system immediately tells the actuarial
+          story. Diagonal boundary highlights the evaluation date. Magnitude gradient
+          within each region shows development patterns. Factor row provides quantitative
+          context. Missing: no single focal point (e.g., IBNR total annotation on
+          diagonal) that would guide the viewer to the key insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -146,30 +154,35 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap with actual vs projected regions
+        comment: Correct triangular heatmap matrix — actuarial loss development triangle
+          implemented faithfully.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: triangular pattern, visual differentiation,
-          diagonal boundary, cell annotations, development factors, legend'
+        comment: 'All 8 spec features present: actual upper-left triangle, projected
+          lower-right, distinct visual styling (two colormaps), diagonal separator,
+          cell annotations with thousands separator, age-to-age factor row, color-intensity
+          encoding, legend distinguishing actual vs projected.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=development periods 1–10, Y=accident years 2015–2024; yreversed
-          correct
+        comment: 'X: development periods 1-10. Y: accident years 2015-2024 (yreversed=true
+          puts 2024 at top per actuarial convention). Triangle orientation correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Loss Development Triangle · heatmap-loss-triangle · julia
-          · makie · anyplot.ai' correct; legend labels match
+        comment: 'Title: ''Loss Development Triangle · heatmap-loss-triangle · julia
+          · makie · anyplot.ai'' — valid {Descriptive Title} · {spec-id} · julia ·
+          makie · anyplot.ai format. Legend: ''Actual (observed)'' and ''Projected
+          (IBNR estimate)'' with correct swatches.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -177,60 +190,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 10×10 triangle, observed vs projected split,
-          varying amounts across years and periods'
+        comment: 'Shows all triangle aspects: both actual and projected regions, magnitude
+          variation through both regions, triangular structure, convergent development
+          factors.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Insurance loss development triangle is a real, neutral actuarial
-          context; accident years 2015–2024 plausible
+        comment: Professional actuarial scenario — commercial insurance loss development
+          triangle with 10 accident years (2015-2024). Realistic and neutral domain.
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Amounts ($3.5K–$81K) and early factors realistic; but displayed age-to-age
-          factors drop below 1.0 (0.998, 0.991, 0.973, 0.917) — physically impossible
-          for cumulative paid losses which can only increase. Caused by column means
-          mixing accident years with different ultimates.
+        passed: true
+        comment: Ultimate losses $42.5M-$78.5M plausible for commercial lines. Development
+          factors 3.421→1.003 are a realistic chain-ladder pattern (rapid early development,
+          convergence to tail). Year-specific noise adds realism.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Helper functions pct_paid and fmt_val break the linear no-functions
-          structure
+        passed: true
+        comment: Clean Imports → Constants → Data → Plot → Save structure. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set; second seeded pass is authoritative
+        comment: Random.seed!(42) set before any random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used
+        comment: CairoMakie (plotting), Colors (colorant syntax, red/green/blue functions),
+          Random (seed) — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dead code: `noise = THEME == "light" ? 0.0 : 0.0` always 0.0; data
-          generation loop duplicated (first pass overwritten)'
+        passed: true
+        comment: Clean, idiomatic Julia. Luminance calculation for adaptive text is
+          concise. No over-engineering, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) correct
+        comment: Saves as plot-$(THEME).png. Current CairoMakie API (size= not deprecated
+          resolution=). No HTML needed (static library).
     library_mastery:
       score: 7
       max: 10
@@ -240,23 +255,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: poly! with Point2f for individual cells, PolyElement for legend,
-          Makie GridLayout rowsize! — idiomatic Makie patterns
+        comment: 'Correct use of Figure layout grid, Axis configuration, poly! for
+          per-cell rectangles, text! for annotations, lines! for separator, rowsize!
+          for proportional layout. Above default usage. Minor: uses low-level poly!
+          rather than heatmap! (justified by two-colormap requirement).'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: cgrad colormap creation, poly! cell drawing, yreversed axis, Makie
-          layout system with rowsize! — distinctive Makie features used
-  verdict: REJECTED
+        comment: 'Uses distinctively Makie features: Figure[row, col] layout grid
+          for multi-row composition, Label objects in grid cells, PolyElement in Legend
+          for custom swatches, rowsize! for proportional layout. These patterns are
+          specific to Makie''s layout grammar.'
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - colors
   techniques:
   - annotations
   - custom-legend
   - patches
-  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
