@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -20,6 +20,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+PP_COLOR = "#4467A3" if THEME == "light" else "#8AAAD6"
 
 # Imprint sequential colormap for MIDI velocity (single-polarity continuous data)
 imprint_seq = mcolors.LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
@@ -164,17 +165,20 @@ heatmap_df = pd.DataFrame(matrix_flipped, index=pitch_labels)
 
 # Black key mask for background shading
 black_key_mask = np.array([p % 12 in BLACK_KEY_INDICES for p in pitches_flipped])
-BLACK_KEY_BG = "#EDE9E2" if THEME == "light" else "#232320"
+BLACK_KEY_BG = "#E8E3DB" if THEME == "light" else "#252522"
+BLACK_KEY_EDGE = "#D8D2C8" if THEME == "light" else "#2E2E2A"
 
 # Canvas: landscape 3200 × 1800 (figsize=(8, 4.5) × dpi=400)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 fig.patch.set_facecolor(PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Background shading for black key rows
+# Background shading for black key rows — slightly darker edge gives subtle depth
 for i, is_black in enumerate(black_key_mask):
     if is_black:
         ax.axhspan(i, i + 1, color=BLACK_KEY_BG, zorder=0)
+        ax.axhspan(i, i + 0.08, color=BLACK_KEY_EDGE, zorder=0, alpha=0.6)
+        ax.axhspan(i + 0.92, i + 1, color=BLACK_KEY_EDGE, zorder=0, alpha=0.6)
 
 # Seaborn heatmap with Imprint sequential colormap
 sns.heatmap(
@@ -215,7 +219,7 @@ ax.set_xticklabels([f"M{i + 1}" for i in range(len(measure_positions))], fontsiz
 chord_sequence = ["Dm⁷", "G⁷", "Cmaj⁷", "A⁷", "Dm⁷", "G⁷", "Cmaj⁷", "A⁷"]
 for measure_idx, chord_label in enumerate(chord_sequence):
     x_center = measure_idx * 4 / resolution + 2 / resolution
-    ax.text(x_center, -0.7, chord_label, ha="center", va="bottom", fontsize=7, color=INK_MUTED, clip_on=False)
+    ax.text(x_center, -0.7, chord_label, ha="center", va="bottom", fontsize=8, color=INK_MUTED, clip_on=False)
 
 ax.tick_params(axis="y", labelsize=8, length=0, pad=3, colors=INK_SOFT)
 ax.tick_params(axis="x", length=0, pad=5, colors=INK_SOFT)
@@ -248,17 +252,19 @@ if pp_y is not None:
         xy=(22 / resolution, pp_y - 0.7),
         fontsize=8,
         fontstyle="italic",
-        color="#4467A3",
+        color=PP_COLOR,
         ha="center",
         va="bottom",
-        alpha=0.85,
+        alpha=0.9,
     )
 
 ax.set_xlabel("Measure (4/4 time, jazz ii–V–I)", fontsize=10, labelpad=14, color=INK)
 ax.set_ylabel("Pitch", fontsize=10, labelpad=8, color=INK)
-ax.set_title("piano-roll-midi · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=14, color=INK)
+ax.set_title("piano-roll-midi · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=20, color=INK)
 
 sns.despine(ax=ax, left=True, bottom=True)
+for spine in ax.spines.values():
+    spine.set_visible(False)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
