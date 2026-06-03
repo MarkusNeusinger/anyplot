@@ -1,0 +1,267 @@
+library: echarts
+language: javascript
+specification_id: heatmap-basic
+created: '2026-06-02T23:46:48Z'
+updated: '2026-06-02T23:52:41Z'
+generated_by: claude-opus
+workflow_run: 26854585726
+issue: 691
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct 2400x2400 square canvas (orientation directive set, canvas gate passed).
+  - Imprint diverging palette used via t.div with theme-adaptive midpoint; data colors
+    identical between light and dark renders.
+  - Cell-value labels stay readable across all cell colors and in both themes thanks
+    to textBorderColor=t.pageBg with a 3px halo.
+  - Semantic feature grouping (demographics, engagement, friction, outcomes) produces
+    visible block structure - genuine data storytelling rather than alphabetical filler.
+  - 'All four specification notes addressed: diverging colormap, in-cell value annotations,
+    vertical colorbar (visualMap), logical row/column ordering.'
+  - Title exactly matches required format 'heatmap-basic · javascript · echarts ·
+    anyplot.ai'.
+  - Theme-adaptive chrome correctly threads t.ink / t.inkSoft / t.pageBg through title,
+    axis labels, ticks, and colorbar text.
+  - 'Idiomatic ECharts usage: visualMap for colorbar, inverse y-axis, animation:false,
+    init with no explicit size, no devicePixelRatio.'
+  - 12x12 matrix with symmetric values and diagonal=1.0 is statistically plausible
+    and within the spec's 5-50 size range.
+  weaknesses:
+  - 'VisualMap shows mildly redundant range labels: the explicit text [''+1'',''−1'']
+    sits next to the calculable handle''s ''1.0''/''-1.0'' position labels, creating
+    visual noise on the right edge - either drop the explicit text array or set calculable:false.'
+  - calculable:true visualMap renders decorative arrow handles that have no function
+    in the static PNG screenshot; set calculable:false to clean up the colorbar.
+  - Cell-value text on the most saturated diagonal cells (dark-blue '1.00') shows
+    a slight halo from the 3px textBorderWidth that reads as chunky at full resolution
+    - reduce textBorderWidth to 1-2 for tighter typography.
+  - Implementation uses standard ECharts heatmap pattern but does not explore distinctive
+    ECharts features beyond visualMap (e.g. markArea to visually highlight the semantic
+    feature blocks, or itemStyle borderRadius for softened cells).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1, transparent ECharts canvas over the page background. PASS.
+      Chrome: title "heatmap-basic · javascript · echarts · anyplot.ai" centered at top in dark ink (fontSize 26, normal weight), clearly readable. X-axis tick labels (feature names) rotated 35 degrees in inkSoft, all readable. Y-axis tick labels horizontal in inkSoft, all readable. Vertical colorbar on the right edge with "1.0" / "-1.0" position labels and "+1" / "−1" range text in inkSoft, fully readable.
+      Data: 12x12 correlation matrix on Imprint diverging scale - deep blue for strong positive (~+1.0), warm cream-ish midpoint near 0, matte red for strong negative (~-0.7). Diagonal cells uniformly deep blue (1.00). First categorical signal (the diverging palette) starts from t.div which is the spec-mandated continuous scale. Cell-value numbers rendered in dark ink with a 3px light off-white text-border for halo readability across all cell colors. Cells separated by 2px borders in pageBg.
+      Legibility verdict: PASS. No "light on light" text. Cell numbers on the darkest blue/red cells are slightly chunky from the wide textBorder halo but still clearly readable.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17, transparent ECharts canvas over the page background. PASS.
+      Chrome: title in light ink at top, clearly readable against the dark background. Axis tick labels in light inkSoft, all readable. Colorbar text in light inkSoft, readable.
+      Data: SAME 12x12 matrix with SAME data colors as light render - the Imprint div palette is identical between themes (verified visually: same blues, same reds, same midpoint band). Only chrome flipped. Cell-value numbers now rendered in light ink with a dark pageBg text-border, mirroring the light-render approach.
+      Legibility verdict: PASS. No "dark on dark" text - the implementation correctly threads t.ink (light in dark theme) through both the title and the in-cell labels, and t.inkSoft through axis ticks and colorbar text. Brand green is not used (continuous data, not categorical), but the diverging palette remains visible in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 26pt, axis labels 16pt, cell labels 14pt - all readable in
+          both themes via textBorderColor halo. Slight chunkiness on saturated diagonal
+          cells from 3px border halo.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells separated by 2px borders, x-tick rotation 35deg prevents collision,
+          colorbar sits in dedicated right margin (right:180).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 144 cells visible with distinct values; colorbar visible; midpoint
+          and extreme colors distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint diverging palette is CVD-safe; signed correlations use color
+          (red/blue) plus numeric label so color is not the sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square - canvas gate passed. Good margins (left:150 right:180
+          top:110 bottom:140). No overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in mandated format. Axis tick labels ARE the feature names
+          - explicit axis-name labels would be redundant for a symmetric correlation
+          matrix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses t.div (Imprint divergent), t.pageBg backgrounds, t.ink / t.inkSoft
+          chrome. No named colormaps. Both renders theme-correct.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Diverging palette, 12x12 square layout, intentional feature grouping,
+          custom text-border for cell-label contrast. Raised above 4 default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: splitArea/splitLine off, axisTick off, subtle 2px cell borders in
+          pageBg create grid look without clutter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Features ordered into semantic blocks (demographics / engagement
+          / friction / outcomes) so block structure is visible - this is data storytelling,
+          not just rendering.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: ECharts heatmap series, correct type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All four spec notes addressed: diverging colormap, value annotations,
+          colorbar, logical ordering.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = features (columns), Y = features (rows, inverse so origin top-left
+          like a matrix), value = correlation. All 144 cells shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'heatmap-basic · javascript · echarts · anyplot.ai'.
+          visualMap acts as the legend with +1/-1 labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 12x12 matrix with positive, negative, and near-zero values; symmetric;
+          diagonal=1.0; shows full diverging range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer-feature correlation matrix is a canonical heatmap use case,
+          neutral, and the values are statistically plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation values bounded in [-1, 1] as required by the Pearson-correlation
+          domain; visualMap min/max match.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script - features array, corr matrix, double loop to build
+          data array, single setOption call. No classes or helper functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data hard-coded; no RNG involved; deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports - uses ANYPLOT_TOKENS and echarts globals exactly as the
+          harness contract requires.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Comments document the semantic block structure and the finished-event
+          hook. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness writes plot-{theme}.png + .html (echarts is interactive).
+          Implementation correctly emits the finished event so Playwright screenshots
+          a settled frame.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic ECharts: heatmap series, visualMap colorbar, inverse y-axis,
+          animation:false, init with no explicit size and no devicePixelRatio. Raised
+          above 3 default.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: visualMap is the canonical ECharts colorbar; textBorderColor on labels
+          is an ECharts-specific halo trick. Could have used markArea or echarts-specific
+          tooltip/grid layout features to push further.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
