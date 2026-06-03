@@ -1,90 +1,121 @@
 library: highcharts
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:49:41Z'
-updated: '2026-03-07T20:22:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912217
+updated: '2026-06-03T04:03:18Z'
+generated_by: claude-sonnet
+workflow_run: 26861938850
 issue: 4565
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent musical data with realistic C-Am-F-G chord progression, three distinct
-    roles, and varied dynamics
-  - Professional velocity colorbar with teal-amber-crimson gradient and labeled intensity
-    levels
-  - Strong visual hierarchy through role-based opacity, border styling, and bar width
-    differentiation
-  - Chord labels above the chart provide musical context and narrative
-  - Black key row shading faithfully mirrors piano keyboard layout
+  - 'Perfect spec compliance — all piano roll requirements implemented: pitch-labeled
+    Y-axis, alternating black/white key shading, beat grid lines with stronger measure
+    boundaries, velocity-based diverging colormap'
+  - 'Sophisticated per-role visual differentiation: melody bars wider and fully opaque,
+    harmony bars narrower at 60% opacity, bass bars widest with dark border — provides
+    musical hierarchy without a separate encoding channel'
+  - 'Custom velocity colorbar built via Highcharts renderer API with correct imprint_div
+    colors (#4467A3 blue → #FAF8F1/#1A1A17 midpoint → #AE3030 red)'
+  - Chord annotations (C, Am, F, G) rendered above plot via Highcharts renderer, providing
+    musical storytelling context
+  - 'Correct canvas size (3200×1800), CDP override + PIL pin in place, both renders
+    properly themed (#FAF8F1 light / #1A1A17 dark)'
+  - 'Excellent code quality: flat KISS structure, seed set, all imports used, correct
+    output files saved'
   weaknesses:
-  - Unused annotations module downloaded and embedded in HTML (minor code bloat)
-  - vel_to_rgb helper function breaks strict KISS structure (minor)
-  - Harmony and bass colors may blend at certain velocity ranges for colorblind viewers
-  image_description: 'The plot displays a MIDI piano roll visualization as horizontal
-    rectangles on a grid. The y-axis shows pitch names from C3 to C5, and the x-axis
-    shows beats from 0 to 32 (quarter notes). Notes are colored by velocity using
-    a teal (soft/piano) to amber (mezzo) to crimson (forte) gradient, with a vertical
-    colorbar on the right labeled "Velocity" with annotations for 127 (forte), 93
-    (mezzo), and 60 (piano). Three series are distinguished: Melody (orange/red tones,
-    white borders, prominent), Bass (teal/green tones, wider bars), and Harmony (olive/amber
-    tones, more transparent). Chord labels (C, C, Am, Am, F, F, G, G) appear above
-    the plot area in italic gray text. Black key rows (C#, D#, F#, G#, A#) have subtle
-    gray shading to distinguish from white keys. Beat grid lines are visible with
-    stronger lines at measure boundaries (every 4 beats). The title reads "piano-roll-midi
-    · highcharts · pyplots.ai" with a subtitle "C – Am – F – G chord progression ·
-    8 measures · velocity-colored dynamics". The background is a light off-white.
-    A legend in the top-left shows Melody, Bass, and Harmony series.'
+  - Supplementary annotation text below the 44px floor — chord labels at 32px and
+    colorbar labels (forte/mezzo/piano at 30px, values at 28px) would be hard to read
+    when the plot is scaled down to mobile width (~400px); raise to at least 36–40px
+  - DE-03 storytelling could be stronger — no single visual focal point or climax
+    moment highlighted (e.g. the high-velocity G-measure peak at beat 29–30 with velocity
+    120–125 could be annotated or emphasized)
+  - Harmony bars at opacity=0.6 on the dark background become noticeably dim; consider
+    bumping opacity to 0.72–0.78 for dark theme to maintain readability without losing
+    the hierarchy contrast
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct. Plot area has alternating slightly-darker horizontal bands marking black keys on the piano keyboard, visible against the cream background.
+      Chrome: Title "piano-roll-midi · python · highcharts · anyplot.ai" in dark ink at 66px, clearly readable. Subtitle "C – Am – F – G · 8 measures of 4/4 · velocity-colored dynamics" at 38px, readable. Y-axis label "Pitch" and X-axis label "Beats (quarter notes)" both at 56px, readable. Pitch tick labels (C3–C5 range) at 44px clearly readable. Beat tick labels (0, 4, 8 … 32) at 44px readable. Chord annotations (C, C, Am, Am, F, F, G, G) at 32px visible but small. Colorbar labels (forte/mezzo/piano at 30px, 127/93/60 at 28px) are readable at full resolution but small. Legend (Melody, Bass, Harmony) at 44px clearly readable at bottom.
+      Data: Note bars are velocity-colored using a diverging blue (#4467A3) → cream midpoint → red (#AE3030) scale. Low-velocity notes appear cool blue, high-velocity notes (G-measure climax at beats 28–31) are deep red. Melody bars are widest and fully opaque with white border. Bass bars are widest (52px) with dark border at 90% opacity. Harmony bars are narrowest at 60% opacity. Velocity colorbar on right correctly runs from red (forte/127) at top to blue (piano/60) at bottom. Beat grid lines visible with stronger lines at measures (beats 0, 4, 8, 12, 16, 20, 24, 28, 32). First series legend swatch is #009E73 green (Melody).
+      Legibility verdict: PASS — all primary text is readable; supplementary colorbar text (28–30px) and chord labels (32px) are slightly small but legible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct. Same alternating black-key row shading at 7% white opacity, subtly visible against the dark background.
+      Chrome: Title, axis labels, tick labels all appear in light ink (#F0EFE8/INK) against the dark background. Readable. Chord annotations and colorbar labels similarly readable in their INK_SOFT color (#B8B7B0). Legend text readable with elevated-dark background (#242420). No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — same velocity-based blue-to-red diverging scale. The note bars maintain the same hue and saturation regardless of theme (Imprint palette identity preserved). Harmony bars at 60% opacity appear slightly more muted on dark background than on light but remain distinguishable. Colorbar gradient identical. Melody white-border note bars pop cleanly against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable. Harmony bars at opacity=0.6 are somewhat less prominent in the dark render but still visible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 44px, axis titles 28px, tick
-          labels 22px, legend 22px, subtitle 26px'
+        comment: Primary labels (title 66px, axis titles 56px, tick labels 44px, legend
+          44px) all correctly sized and readable in both themes. Chord annotations
+          at 32px and colorbar labels at 28-30px are below the 44px floor — readable
+          at full resolution but would struggle at mobile 400px scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap anywhere. Chord labels, axis labels, legend, and
-          title all well-spaced
+        comment: No overlapping text or data elements in either render. Per-role pointWidth
+          differentiation prevents bar overlap confusion.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Note rectangles well-sized with role-based widths (melody 56px, harmony
-          48px, bass 64px)
+        comment: All note bars clearly visible. Velocity colorbar gradient renders
+          correctly. Alternating key shading visible in both themes. Chord annotations
+          above plot area visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Teal-amber-crimson avoids red-green conflicts but harmony and bass
-          may blend at certain velocities for colorblind viewers
+        comment: Imprint diverging colormap (blue-to-red) is used for a continuous
+          velocity scale with labeled anchors (forte/mezzo/piano), providing non-color
+          cues. Role differentiation uses pointWidth and opacity as redundant encodings
+          beyond color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas with balanced margins and well-placed colorbar
+        comment: 'Canvas 3200x1800 confirmed. Margins: left=175, top=160, bottom=155,
+          right=245 — sufficient for all labels. No clipping observed in either render.
+          Title at expected width. Canvas gate passed.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Beats (quarter notes) and Pitch (note name)'
+        comment: Title matches required format 'piano-roll-midi · python · highcharts
+          · anyplot.ai'. Y-axis 'Pitch' is concise and appropriate. X-axis 'Beats
+          (quarter notes)' includes units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Velocity uses imprint_div (blue #4467A3 → PAGE_BG midpoint → red
+          #AE3030) — correct diverging cmap. Backgrounds #FAF8F1 (light) / #1A1A17
+          (dark). First legend series (Melody) uses #009E73 brand green. All chrome
+          tokens theme-adaptive.'
     design_excellence:
-      score: 17
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -92,22 +123,27 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Custom velocity palette, role-based opacity/sizing, white melody
-          borders, chord labels, hand-drawn colorbar. Professional design.
+        comment: 'Genuinely sophisticated: per-note velocity color interpolation,
+          per-role visual differentiation (pointWidth + opacity + border), piano keyboard
+          alternating row shading, custom velocity colorbar via Highcharts renderer,
+          chord annotations above plot, meaningful subtitle. Well above default.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Off-white background, subtle grid, axis lines removed, plot bands
-          for black keys, rounded corners. Very polished.
+        comment: Axes cleaned (lineWidth=0, tickLength=0). Credits disabled. Subtle
+          grid. Legend with rounded corners and proper padding. Black-key shading
+          subtle (7% opacity). Harmony opacity differentiation adds musical refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three roles create visual hierarchy; chord labels add musical narrative;
-          velocity gradient tells dynamics story
+        comment: 'Chord progression annotations (C-Am-F-G) narrate the harmonic journey.
+          Velocity colorbar explains the dynamics arc. Subtitle contextualizes the
+          data. Missing: no explicit focal point or highlighted climax (the high-velocity
+          G-measure peak at beats 28-31 with velocity 115-125 could be emphasized).'
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +153,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct xrange chart type for horizontal note rectangles
+        comment: Correct piano roll using xrange chart type. Horizontal rectangles
+          positioned by pitch (Y) and time (X) with bar length = duration.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: note names, black/white key shading,
-          beat grid, velocity colors, auto-fit pitch range'
+        comment: 'All spec features present: note names on Y-axis, black/white key
+          row shading, beat division grid lines, stronger lines at measure boundaries,
+          velocity-to-color mapping.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in beats, Y=pitch. Correct mapping with full data range
+        comment: Start on X, pitch on Y, duration as bar width (x to x2), velocity
+          as color. Pitch range auto-fit to data (C3-C5) with no excess.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and clear legend labels for Melody, Bass, Harmony
+        comment: Title exactly 'piano-roll-midi · python · highcharts · anyplot.ai'.
+          Legend shows Melody/Bass/Harmony with correct first-series green swatch.
     data_quality:
       score: 15
       max: 15
@@ -146,90 +186,99 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying durations, velocities, three roles, chord progression, rhythmic
-          variation
+        comment: 'Full coverage: multiple pitch octaves (C3-C5), varied note durations
+          (0.5 to 4.0 beats), velocity range 60-125, three musical roles (melody/bass/harmony),
+          8 measures of 4/4, C-Am-F-G chord progression with 68 notes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real C-Am-F-G chord progression with melody, harmony, and bass. Authentic
-          to DAW workflows
+        comment: C-Am-F-G is an iconic, neutral pop chord progression. Note velocities,
+          durations, and pitch ranges are authentic MIDI values. No controversial
+          or biased content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 48-72 (C3-C5), velocities 60-125, 8 measures of 4/4
-          time. All sensible
+        comment: 32 beats = 8 measures of 4/4. MIDI pitches 48-72 (C3-C5, appropriate
+          range around middle C). 68 notes total (within spec's 20-200 range).
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly linear but contains vel_to_rgb function definition
+        comment: Flat, linear structure. No unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set and all data is hardcoded/deterministic
+        comment: np.random.seed(42) set. Data is fully hardcoded so deterministic
+          regardless.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Annotations Highcharts module downloaded and embedded but never used
+        passed: true
+        comment: All imports (os, tempfile, time, urllib.request, pathlib, numpy,
+          highcharts_core, PIL, selenium) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with pre-computed colorbar gradient and
-          role-based config
+        comment: Clean velocity interpolation logic. Inline JS for custom renderer
+          features is complex but unavoidable for this library's annotation pattern.
+          No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot. Current Highcharts API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Uses highcharts-core
+          Python API idiomatically.
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of xrange series, HighchartsOptions, plotBands, plotLines,
-          tooltip formatting, to_js_literal()
+        comment: xrange chart type used correctly. chart.options object API used throughout.
+          Container='container' correctly set. Selenium CDP viewport override applied.
+          PIL pin for exact canvas dims. All Highcharts best practices followed.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: xrange chart type, renderer API for colorbar and chord labels, plotBands
-          for black keys, rich tooltips
+        comment: Highcharts renderer API used for custom colorbar and chord annotations
+          (not possible in static libs). plotBands for alternating key shading. plotLines
+          for beat/measure grid. Per-point color assignment in xrange data. JS cache
+          with /tmp for faster re-runs.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - hover-tooltips
   - html-export
-  - custom-legend
+  - annotations
   - colorbar
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
