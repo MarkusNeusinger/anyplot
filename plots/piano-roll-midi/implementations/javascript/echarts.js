@@ -1,7 +1,7 @@
 // anyplot.ai
 // piano-roll-midi: MIDI Piano Roll Visualization
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-03
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 92/100 | Created: 2026-06-03
 
 const t = window.ANYPLOT_TOKENS;
 
