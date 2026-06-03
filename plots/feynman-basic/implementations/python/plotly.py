@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-06-03
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-03
 """
 
 import os
