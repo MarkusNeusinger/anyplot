@@ -16,20 +16,13 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint sequential colormap for velocity (blue=soft → green=loud, both Imprint positions)
-const VEL_CMAP = cgrad([colorant"#4467A3", colorant"#009E73"])
+# Imprint sequential colormap: green (#009E73) → blue (#4467A3), lookup inverted so blue=soft
+const VEL_CMAP = cgrad([colorant"#009E73", colorant"#4467A3"])
+const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 # Piano keyboard row backgrounds
 const WHITE_KEY_BG = THEME == "light" ? RGBAf(0.980, 0.973, 0.945, 1.0) : RGBAf(0.130, 0.130, 0.112, 1.0)
 const BLACK_KEY_BG = THEME == "light" ? RGBAf(0.900, 0.891, 0.858, 1.0) : RGBAf(0.082, 0.082, 0.070, 1.0)
-
-is_black_key(pitch) = mod(pitch, 12) in (1, 3, 6, 8, 10)
-
-function midi_to_name(pitch)
-    names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-    octave = div(pitch, 12) - 1
-    return string(names[mod(pitch, 12) + 1], octave)
-end
 
 # Data: C major generative phrase over 4 measures (4/4, 16 beats total)
 # Each tuple: (pitch, start, duration, velocity)
@@ -135,7 +128,7 @@ ax = Axis(
 
 # Background rows: alternate white/black key shading
 for pitch in pitch_min:pitch_max
-    bg = is_black_key(pitch) ? BLACK_KEY_BG : WHITE_KEY_BG
+    bg = mod(pitch, 12) in (1, 3, 6, 8, 10) ? BLACK_KEY_BG : WHITE_KEY_BG
     poly!(ax, Rect2f(0.0f0, pitch - 0.5f0, total_beats, 1.0f0); color = bg)
 end
 
@@ -153,7 +146,7 @@ end
 # Note rectangles, colored by velocity
 note_rects  = [Rect2f(starts[i], pitches[i] - 0.42f0, durations[i] - 0.04f0, 0.84f0)
                for i in eachindex(notes_raw)]
-note_colors = [get(VEL_CMAP, velocities[i] / 127.0) for i in eachindex(notes_raw)]
+note_colors = [get(VEL_CMAP, 1.0 - velocities[i] / 127.0) for i in eachindex(notes_raw)]
 
 poly!(ax, note_rects;
     color       = note_colors,
@@ -162,8 +155,8 @@ poly!(ax, note_rects;
 )
 
 # Y-axis ticks: show names for white-key pitches only (avoid crowding)
-white_pitches = [p for p in pitch_min:pitch_max if !is_black_key(p)]
-ax.yticks = (white_pitches, [midi_to_name(p) for p in white_pitches])
+white_pitches = [p for p in pitch_min:pitch_max if !(mod(p, 12) in (1, 3, 6, 8, 10))]
+ax.yticks = (white_pitches, [string(NOTE_NAMES[mod(p, 12) + 1], div(p, 12) - 1) for p in white_pitches])
 
 # X-axis ticks: beats 0, 4, 8, 12, 16
 ax.xticks = (0:4:16, string.(0:4:16))
@@ -184,7 +177,7 @@ ylims!(ax, pitch_min - 0.5f0, pitch_max + 0.8f0)
 
 # Velocity colorbar
 Colorbar(fig[1, 2];
-    colormap        = VEL_CMAP,
+    colormap        = reverse(VEL_CMAP),
     limits          = (0.0, 127.0),
     label           = "Velocity",
     labelsize       = 13,
