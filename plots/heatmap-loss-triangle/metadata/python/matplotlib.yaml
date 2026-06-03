@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:31Z'
-updated: '2026-06-03T10:11:01Z'
+updated: '2026-06-03T10:25:08Z'
 generated_by: claude-sonnet
 workflow_run: 26876602017
 issue: 4581
@@ -15,132 +15,115 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required actuarial features present (actual/projected
-    triangle, hatching, cell annotations, development factors, colorbar, legend)'
-  - Dual encoding (color gradient + hatching) for actual vs. projected provides both
-    aesthetic distinction and accessibility
-  - Brightness-adaptive cell text color logic is conceptually correct and handles
-    the imprint_seq range appropriately
-  - Correct imprint_seq colormap selection for single-polarity continuous data; both
-    theme renders are correct
-  - 'Clean code structure: no over-engineering, deterministic seed, explicit font
-    sizes throughout'
-  - Development factors on twin X-axis enhance data storytelling for the actuarial
-    domain
+  - Staircase diagonal boundary is an excellent actuarial-domain design choice that
+    immediately communicates the actual/projected divide
+  - Brightness-aware cell text color logic (RGBA luminance check) produces readable
+    annotations across the full colormap range in both themes
+  - Dark-mode hatching uses INK_SOFT instead of the light-mode PAGE_BG, correctly
+    solving the visibility problem on dark cells
+  - 'Complete spec compliance: all seven required features implemented and visible'
+  - imprint_seq correctly chosen for single-polarity cumulative claim magnitudes
   weaknesses:
-  - 'Cell annotation text uses PAGE_BG for all cells (both imprint_seq endpoints have
-    brightness < 0.5), resulting in near-black text in dark mode on medium-green/blue
-    cells at marginal 3.4-3.7:1 contrast for 7pt text. Fix: use INK (light cream)
-    as the dark-cell text color in dark mode.'
-  - 'Top of plot is slightly crowded: title pad=30 and twin-axis label (Age-to-Age
-    Dev. Factors LDF) compete for vertical space. Fix: reduce title pad or increase
-    top subplots margin to 0.92-0.93.'
-  - 'Hatching edgecolor=PAGE_BG means near-black hatch lines on medium-colored cells
-    in dark mode, reducing hatch visibility. Fix: use INK_SOFT for hatching in dark
-    mode or make hatch color theme-adaptive.'
-  - 'No focal-point emphasis on the diagonal or IBNR region. Fix: add a subtle alpha
-    overlay on projected triangle or thicker border on diagonal cells to direct viewer
-    attention.'
+  - 'Title area is tight at the top: with top=0.92 and the twin-axis label + 9 tick
+    values occupying the same space, the main plot title has minimal margin from the
+    canvas edge — increase top to ~0.94-0.95 or reduce twin-axis labelpad to give
+    the title more room'
+  - Boundary cells at the staircase diagonal have cell annotations that compete slightly
+    with the diagonal line (fontsize 7 + hatching + step-line overlap) — consider
+    raising annotation zorder or a small clip on the diagonal line
+  - ax.imshow(..., aspect=auto) stretches cells to fill the axes; ax.set_aspect(equal)
+    would produce perfectly square cells for a symmetric grid
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "heatmap-loss-triangle · python · matplotlib · anyplot.ai" clearly readable in dark ink. Axis labels "Accident Year" (Y) and "Development Period (Years)" (X) at 10pt in dark ink. Twin-axis label "Age-to-Age Dev. Factors (LDF)" visible above. Colorbar label "Cumulative Claims ($)" readable. Tick labels at 8pt visible. Legend ("Actual (Observed)" / "Projected (IBNR)") visible below heatmap.
-      Data: Imprint sequential colormap green (#009E73) for low values to blue (#4467A3) for high values. Upper-left triangle (actual) is solid-colored. Lower-right triangle (projected) has diagonal hatching overlay. 7pt comma-formatted cell annotations in off-white text; projected cells use italic. Development factors 2.50 to 1.01 displayed on twin axis.
-      Legibility verdict: PASS — all text readable; 7pt annotations are at the small-text limit but acceptable for a 10x10 grid at 2400x2400 resolution.
+      Background: Warm off-white #FAF8F1 — correct for light theme
+      Chrome: Title "heatmap-loss-triangle · python · matplotlib · anyplot.ai" at 12pt visible but tight near canvas top edge. Axis labels "Accident Year" (y) and "Development Period (Years)" (x) at 10pt — readable. Tick labels at 8pt — readable. Twin-axis header "Age-to-Age Dev. Factors (LDF)" and tick values (2.50 → 1.01) at 7–8pt — readable. All chrome is dark-colored. Cell annotations at 7pt — readable.
+      Data: imprint_seq colormap (brand green #009E73 → blue #4467A3) for solid actual cells; diagonal-hatch overlay (PAGE_BG color) on projected cells. Staircase step-line marks boundary. Colorbar on right with comma-formatted tick labels.
+      Legibility verdict: PASS — all text readable; minor concern is title proximity to canvas top edge
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title and axis labels rendered in near-cream (#F0EFE8), tick labels and colorbar ticks in #B8B7B0. All chrome elements correctly flipped for dark mode. No dark-on-dark failures for chrome text.
-      Data: Imprint sequential colormap colors are identical to light render — green to blue gradient unchanged. Hatching pattern uses PAGE_BG (#1A1A17) as edgecolor, making hatch lines near-black on medium-colored cells; hatching is visible but less prominent than in light render. Cell annotation text is near-black (#1A1A17) on medium-green/blue cells (all imprint_seq colors have brightness < 0.5, so brightness logic always selects PAGE_BG). Contrast is ~3.4-3.7:1 for 7pt text — marginal but not failing.
-      Legibility verdict: PASS (marginal) — chrome readable; cell text has reduced contrast in dark mode due to brightness-adaptive logic always selecting PAGE_BG (near-black) text.
+      Background: Warm near-black #1A1A17 — correct for dark theme
+      Chrome: Title, axis labels, tick labels, colorbar labels all render in light cream/silver tones (#F0EFE8 / #B8B7B0 / #A8A79F) — clearly readable against dark background. No dark-on-dark failures. Cell annotations use INK (#F0EFE8) for dark-colored cells — readable. Hatching uses INK_SOFT (#B8B7B0) — visible on dark cells.
+      Data: Identical imprint_seq colors as light render — only chrome flips, data colors constant.
+      Legibility verdict: PASS — all text readable in dark theme
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; 7pt cell annotations are at the small-text
-          limit; brightness-adaptive logic always selects PAGE_BG text (near-black
-          in dark mode) since all imprint_seq colors have brightness < 0.5, giving
-          marginal 3.4-3.7:1 contrast in dark mode
+        comment: All font sizes explicitly set; axis labels 10pt, ticks 8pt, annotations
+          7pt readable. Title 12pt is tight with twin-axis header near canvas top.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlap; each cell annotation isolated within its grid cell;
-          legend and colorbar do not intrude on data area
+        comment: Clean layout; staircase diagonal and hatching cause minor annotation
+          readability friction at boundary cells.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells fully visible; color gradient crisp; hatching distinguishable;
-          no density-based visibility issues
+        comment: All heatmap cells, annotations, staircase diagonal, colorbar, and
+          legend clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap is CVD-safe; dual encoding (color + hatching)
-          adds redundant encoding for actual vs. projected
+        comment: imprint_seq is CVD-safe; hatching provides redundant encoding for
+          actual/projected distinction.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for symmetric heatmap; slight crowding at
-          top where title and twin-axis header stack closely
+        comment: Correct 2400x2400 canvas; top margin slightly tight with title +
+          twin-axis label + tick values stacked.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Development Period (Years), Y: Accident Year, twin-X: Age-to-Age
-          Dev. Factors (LDF), colorbar: Cumulative Claims ($) — all descriptive with
-          units'
+        comment: 'All labels descriptive with context: Accident Year, Development
+          Period (Years), Age-to-Age Dev. Factors (LDF).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used correctly for single-polarity continuous data;
-          backgrounds #FAF8F1/#1A1A17 correct; all chrome tokens theme-adaptive; data
-          colors identical across both renders'
+        comment: 'imprint_seq (#009E73→#4467A3) correct for single-polarity continuous
+          data. Backgrounds #FAF8F1 and #1A1A17. Chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic default: custom imprint_seq, brightness-adaptive cell
-          text, twin axis for dev factors, styled colorbar. Clean and professional.
-          Not quite publication-ready — lacks focal point or intentional emphasis
-          hierarchy.'
+        comment: Custom imprint_seq, theme-adaptive brightness-aware cell text, staircase
+          diagonal focal-point, twin-axis LDF. Clearly above configured defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All spines removed; no unnecessary gridlines; cell borders use PAGE_BG
-          for subtle separation; legend frame uses ELEVATED_BG; subplots_adjust controls
-          margins. Top area slightly cramped with two stacked header rows.
+        comment: All spines removed, no grid (appropriate for heatmap), custom FuncFormatter
+          on colorbar, PAGE_BG cell borders.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dual encoding of actual vs. projected (gradient + hatching) creates
-          visual hierarchy. Development factors on twin axis contextualise growth
-          pattern. Progressive color shift guides reader through actuarial development
-          story. No explicit emphasis annotation on key cells.
+        comment: Staircase diagonal creates visual narrative (observed vs IBNR). Color
+          intensity communicates magnitude. LDF twin axis adds analytical depth.
     spec_compliance:
       score: 15
       max: 15
@@ -150,31 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap structure; upper-left actual, lower-right
-          projected
+        comment: Correct triangular heatmap with actual/projected visual differentiation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: actual/projected visual distinction (hatching),
-          per-cell value annotations with thousands separator, age-to-age development
-          factors (twin axis), color-intensity encoding, legend, correct row/column
-          labels'
+        comment: 'All spec features: hatching, comma-formatted annotations, LDF twin
+          axis, imprint_seq color, legend, staircase diagonal, row/column labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Accident years on Y, development periods on X, cumulative amounts
-          encoded via color and annotated in each cell
+        comment: Accident years on Y, development periods on X, full 10x10 triangle
+          displayed correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: heatmap-loss-triangle · python · matplotlib · anyplot.ai;
-          Legend: Actual (Observed) / Projected (IBNR)'
+        comment: 'Title: heatmap-loss-triangle · python · matplotlib · anyplot.ai.
+          Legend: Actual (Observed) / Projected (IBNR).'
     data_quality:
       score: 15
       max: 15
@@ -184,24 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete triangular structure with both actual and projected halves,
-          growing development factors, realistic noise in actual data, deterministic
-          chain-ladder projection
+        comment: Shows actual and projected triangles, age-to-age factors, chain-ladder
+          projection, IBNR concept, realistic development pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Insurance actuarial loss development triangle: professional, neutral
-          domain'
+        comment: Insurance reserving with accident years 2015-2024 and development
+          periods 1-10 is canonical actuarial use case; neutral and professional.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Initial claims 4,200-7,000 with realistic development factors (2.50
-          to 1.01 decreasing as claims mature) yielding cumulative values of ~30,000-50,000;
-          actuarially plausible
+        comment: Initial claims 4,200-7,000 growing to ~30,000-50,000+ via realistic
+          LDFs (2.50 → 1.01) match typical P&C insurance magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -211,35 +189,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: imports -> tokens -> data -> plot -> save; no functions or
-          classes'
+        comment: 'Flat script: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, plt, np, LinearSegmentedColormap, Patch, Rectangle'
+        comment: All imports (os, matplotlib.pyplot, numpy, LinearSegmentedColormap,
+          Patch, Rectangle) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; nested loops appropriate for triangular matrix;
-          FuncFormatter lambda concise
+        comment: Well-structured, brightness-adaptive cell text is the right approach,
+          no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches='tight'
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -247,19 +226,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong idiomatic matplotlib: ax.imshow(), fig.colorbar() with FuncFormatter,
-          ax.twiny(), ax.add_patch() for Rectangle overlays, plt.setp() for batch
-          styling. Minor redundancy: colorbar tick colors set twice.'
+        comment: ax.imshow(), fig.colorbar(), ax.twiny(), axes-method-only usage,
+          FuncFormatter — all idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses matplotlib-specific capabilities: twiny() for dual-header layout,
-          Rectangle patches with hatching overlay, FuncFormatter for number formatting,
-          brightness-adaptive text from cmap RGBA values. Established patterns rather
-          than distinctive creative exploitation.'
-  verdict: REJECTED
+        comment: LinearSegmentedColormap.from_list(), FuncFormatter on colorbar, ax.twiny()
+          for LDF display, brightness-luminance via RGBA, Rectangle patches for hatching.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -272,6 +248,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
