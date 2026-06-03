@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
@@ -122,14 +122,14 @@ for idx, f in enumerate(age_to_age):
     lbl = f"{development_periods[idx]}→{development_periods[idx + 1]}"
     val_str = f"{f:.3f}"
     factor_box_parts.append(
-        f"chart.renderer.rect(x + {idx} * spacing, fy, boxW, 72, 6)"
+        f"chart.renderer.rect(x + {idx} * spacing, fy, boxW, 84, 6)"
         f".attr({{fill: '{ELEVATED_BG}', stroke: '{INK_SOFT}', 'stroke-width': 1.5}}).add();\n"
-        f"    chart.renderer.text('{lbl}', x + {idx} * spacing + boxW/2, fy + 28)"
+        f"    chart.renderer.text('{lbl}', x + {idx} * spacing + boxW/2, fy + 30)"
         f".attr({{align: 'center'}})"
-        f".css({{fontSize: '28px', color: '{INK_SOFT}', fontWeight: '500'}}).add();\n"
-        f"    chart.renderer.text('{val_str}', x + {idx} * spacing + boxW/2, fy + 60)"
+        f".css({{fontSize: '36px', color: '{INK_SOFT}', fontWeight: '500'}}).add();\n"
+        f"    chart.renderer.text('{val_str}', x + {idx} * spacing + boxW/2, fy + 66)"
         f".attr({{align: 'center'}})"
-        f".css({{fontSize: '36px', color: '{INK}', fontWeight: '700'}}).add();"
+        f".css({{fontSize: '40px', color: '{INK}', fontWeight: '700'}}).add();"
     )
 factors_js = "\n    ".join(factor_box_parts)
 
@@ -198,8 +198,8 @@ chart.options.x_axis = {
         "margin": 24,
     },
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
-    "lineColor": INK_SOFT,
-    "tickColor": INK_SOFT,
+    "lineColor": "transparent",
+    "tickColor": "transparent",
     "gridLineColor": "rgba(0,0,0,0)",
 }
 
@@ -208,8 +208,8 @@ chart.options.y_axis = {
     "title": {"text": "Accident Year", "style": {"fontSize": "56px", "color": INK, "fontWeight": "600"}},
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "reversed": True,
-    "lineColor": INK_SOFT,
-    "tickColor": INK_SOFT,
+    "lineColor": "transparent",
+    "tickColor": "transparent",
     "gridLineColor": "rgba(0,0,0,0)",
 }
 
