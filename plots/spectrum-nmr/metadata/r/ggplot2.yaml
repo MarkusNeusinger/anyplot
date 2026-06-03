@@ -1,0 +1,269 @@
+library: ggplot2
+language: r
+specification_id: spectrum-nmr
+created: '2026-06-03T12:07:41Z'
+updated: '2026-06-03T12:24:22Z'
+generated_by: claude-sonnet
+workflow_run: 26883340026
+issue: 4676
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correct NMR spectrum with reversed x-axis (high ppm on left), physically accurate
+    Lorentzian line shapes with realistic J-coupling constants
+  - All four splitting patterns present (triplet, quartet, singlet, TMS reference)
+    with correct relative intensities (1:2:1 triplet, 1:3:3:1 quartet)
+  - 'Scientifically accurate ethanol 1H NMR data: CH3 at 1.17 ppm, CH2 at 3.69 ppm,
+    OH at 2.60 ppm, TMS at 0.00 ppm with appropriate coupling constant 7 Hz at 400
+    MHz'
+  - 'Theme-adaptive chrome correctly implemented: warm off-white (#FAF8F1) light /
+    warm near-black (#1A1A17) dark backgrounds, all chrome tokens flipped correctly'
+  - Clean annotation style with no-border labels (label.size=0) and INK_MUTED coloring
+    — annotations readable in both themes without cluttering the spectrum
+  - 'Perfect code quality: clean KISS structure, reproducible with set.seed(42), idiomatic
+    ggplot2 patterns throughout'
+  - Appropriate canvas (3200x1800), correct ggsave with ragg::agg_png device
+  weaknesses:
+  - 'DE-01/DE-02: Design is competent but follows the anyplot template closely — further
+    aesthetic refinement (e.g. subtle tick marks removal, slightly bolder line for
+    better mobile visibility) would lift the design score'
+  - 'VQ-05: y-axis upper limit of 1.75 with maximum peak height ~1.1 leaves ~37% of
+    vertical space unused above the annotations — reducing upper limit to ~1.45 would
+    improve canvas utilization'
+  - 'LM-02: Usage is idiomatic but relies on standard ggplot2 features (annotate,
+    scale_x_reverse); no truly distinctive ggplot2 capability exploited that could
+    not be approximated in plotnine or lets-plot'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Ethanol ¹H NMR · spectrum-nmr · r · ggplot2 · anyplot.ai" in bold dark ink, spanning ~60% of canvas width. X-axis label "Chemical Shift (δ, ppm)" and Y-axis label "Intensity (a.u.)" in dark ink at size 10pt, clearly readable. Tick labels (0–5 on x, 0/0.5/1.0 on y) in INK_SOFT, readable. Peak annotations in INK_MUTED gray (muted but readable).
+      Data: Single green line (#009E73) showing NMR spectrum. CH2 quartet visible near 3.69 ppm as two merged peaks, OH singlet at ~2.60 ppm, CH3 triplet at ~1.17 ppm as the tallest cluster, TMS reference at 0.00 ppm. Clean flat baseline.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Same title and axis labels now rendered in light (#F0EFE8 / #B8B7B0) ink — all clearly readable against the dark background. Tick labels light-colored. Peak annotations in INK_MUTED (#A8A79F) — still readable on dark. No dark-on-dark failures observed.
+      Data: Green line (#009E73) — identical to light render. Imprint palette data color correctly preserved across themes.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title, axis labels, ticks, annotations
+          all readable in both themes. Minor: y-axis tick size 7pt is slightly below
+          recommended 8pt.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All four peak annotations are well-spaced and do not overlap each
+          other or the data line.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Peaks clearly visible as sharp narrow lines on clean baseline. linewidth=0.65
+          is appropriate for NMR spectra where sharp peaks are scientifically authentic.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single-series green #009E73 on both warm-surface backgrounds; excellent
+          contrast in dark theme, adequate in light. CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good layout overall. Minor: y-axis upper limit 1.75 vs max peak
+          ~1.1 leaves ~37% headroom unused above annotations. Reducing to ~1.45 would
+          improve canvas utilization.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Chemical Shift (δ, ppm)'' with delta symbol and units. Y: ''Intensity
+          (a.u.)'' with units. Both descriptive and complete.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73 (Imprint position 1). Light bg #FAF8F1,
+          dark bg #1A1A17. All chrome tokens theme-adaptive. Data color identical
+          across both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): grid removed, L-frame, annotation boxes without
+          borders, clean baseline. Clearly intentional domain-appropriate design.
+          Not reaching publication-level (6+) as it follows the anyplot template closely.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no grid (correct for NMR), L-spine, borderless
+          annotation labels (label.size=0), geom_hline baseline. Generous margins.
+          Not perfect: tick marks still present.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotations provide more than just ppm values — they include assignment
+          (CH3/CH2/OH), multiplicity (triplet/quartet/singlet), and proton count (3H/2H/1H),
+          creating a genuinely informative self-contained reference. Visual hierarchy
+          (bright green data, muted gray annotations) guides the viewer effectively.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct NMR spectrum: line plot with reversed x-axis (high ppm left),
+          sharp Lorentzian peaks from baseline.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: x-axis reversed, all splitting patterns present (triplet/quartet/singlet),
+          key peaks labeled with ppm values, TMS reference at 0 ppm, clean baseline
+          with minimal noise.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: chemical shift in ppm (reversed 5→0). Y: intensity (a.u.). All
+          data visible in the plotted range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Ethanol ¹H NMR · spectrum-nmr · r · ggplot2 · anyplot.ai''
+          — correct prefix + spec-id + r + library + anyplot.ai format. No legend
+          needed for single series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all NMR features: triplet (1:2:1 ratio), quartet (1:3:3:1
+          ratio), singlet (broad OH), TMS reference, Lorentzian lineshape, J-coupling,
+          baseline noise.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR is a classic, pedagogically important real-world example.
+          Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Chemically accurate: CH3 at 1.17 ppm, CH2 at 3.69 ppm, OH at 2.60
+          ppm, J=7 Hz at 400 MHz (0.0175 ppm), relative intensities 3H:2H:1H are reflected
+          correctly. TMS at 0.00 ppm by convention.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports → theme tokens → data generation
+          → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures reproducible rnorm noise.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean R code. Title fontsize calculation (max(8, round(12*min(1.0,67/title_n))))
+          is a nice adaptive touch. Vectorized Lorentzian computation is idiomatic
+          R.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) naming correct. ragg::agg_png current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly idiomatic: annotate(''label'', ..., label.size=0) for borderless
+          labels, scale_x_reverse() for NMR convention, theme_minimal()+theme() layering,
+          ggsave with ragg device.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ggplot2-specific patterns (annotate with label.size=0, scale_x_reverse,
+          theme overrides) but these are all standard features not exclusive to ggplot2.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
