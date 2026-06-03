@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -80,7 +80,7 @@ eq_text = f"y = {slope:.4f}x + {intercept:.4f}"
 r2_text = f"R² = {r_squared:.5f}"
 
 df_eq = pd.DataFrame({"x": [0.5], "y": [0.52], "label": [eq_text]})
-df_r2 = pd.DataFrame({"x": [0.5], "y": [0.46], "label": [r2_text]})
+df_r2 = pd.DataFrame({"x": [0.5], "y": [0.42], "label": [r2_text]})
 
 # Plot
 plot = (
@@ -151,7 +151,6 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.2, alpha=0.15),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
         axis_line_x=element_line(color=INK_SOFT, size=0.4),
         axis_line_y=element_line(color=INK_SOFT, size=0.4),
         legend_position="bottom",
