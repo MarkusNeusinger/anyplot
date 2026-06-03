@@ -1,116 +1,145 @@
 library: matplotlib
+language: python
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:59:01Z'
-updated: '2026-03-11T15:23:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22958872802
+updated: '2026-06-03T15:56:58Z'
+generated_by: claude-sonnet
+workflow_run: 26895730104
 issue: 4677
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Full spec compliance with all required and optional features including E/rho performance
-    index guide lines with LaTeX rendering
-  - Excellent data quality with realistic engineering material values across 7 families
-    spanning 4+ orders of magnitude
-  - Smooth Bezier convex hull envelopes using matplotlib Path/PathPatch — both visually
-    appealing and a distinctive library feature
-  - Strong design with custom cohesive palette, removed spines, warm background, and
-    subtle dual-level grid
-  - 'Previous review issues resolved: colorblind-safe palette replaces red-green pair,
-    code is now KISS-compliant linear flow, label offsets reduce crowding'
+  - Smooth Bezier-interpolated convex hull envelopes using matplotlib Path/PathPatch
+    API — visually polished and technically impressive
+  - E/ρ performance guide lines with LaTeX labels add genuine engineering data storytelling
+    to the Ashby chart
+  - 'Perfect Imprint palette implementation: Metals as #009E73 first, all 7 families
+    in canonical order, both theme renders correct'
+  - 'Full spec compliance: log-log axes, all material families, direct family labels,
+    guide lines, and units on axes'
+  - Perfect data quality with factually accurate material property values (density,
+    Young's modulus) across all 7 families
+  - 'Advanced matplotlib usage: scipy ConvexHull integration with matplotlib Path
+    CURVE4 Bezier codes and PathPatch rendering'
+  - All spines removed and subtle dual-level grid (major alpha=0.15, minor alpha=0.08)
+    produce a clean publication-quality look
   weaknesses:
-  - Upper-right region still somewhat crowded where Ceramics, Metals, and Composites
-    hulls compete for space despite label offsets
-  - Marker size s=120 slightly exceeds recommended range for 105 points
-  image_description: 'The plot displays a log-log scatter chart of Density (kg/m³)
-    on the x-axis vs Young''s Modulus (GPa) on the y-axis — a classic Ashby material
-    selection chart. Seven material families are shown: Ceramics (brown, upper-center,
-    highest modulus ~60-440 GPa), Metals (steel blue, far right, high density ~1700-11300
-    kg/m³), Composites (teal, upper-middle), Natural Materials (olive/gold, center),
-    Polymers (orange, middle, ~900-1400 kg/m³), Foams (tan/golden, lower-left, very
-    low density 30-200 kg/m³), and Elastomers (purple, lower-center, very low modulus).
-    Each family has scatter points with white edge highlights (s=120, alpha=0.7),
-    smooth Bezier convex hull envelopes with semi-transparent fills and colored borders,
-    and bold colored labels with light background boxes. Two dashed gray guide lines
-    show constant E/rho performance indices with rotated LaTeX text annotations. The
-    title reads "scatter-ashby-material · matplotlib · pyplots.ai" in bold at top.
-    Background is warm off-white (#FAFAFA), all four spines are removed, and subtle
-    major/minor gridlines are visible.'
+  - Guide line labels at fontsize=7pt may be barely readable when the image is scaled
+    to mobile width (~400px); consider increasing to 8pt
+  - With 7 material families, no redundant encoding (marker shape variation) beyond
+    direct labels — adding distinct marker shapes would improve CVD accessibility
+    at scatter point level
+  - DE-01 sits between 'well-configured default' and 'strong design' — a descriptive
+    title prefix (e.g. 'Young's Modulus vs Density · scatter-ashby-material · ...')
+    and slightly larger marker size variation between families would push toward stronger
+    design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — confirmed, not pure white
+      Chrome: Title "scatter-ashby-material · python · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Density (kg/m³)" and Y-axis label "Young's Modulus (GPa)" in dark text at fontsize=10. Tick labels at fontsize=8 in INK_SOFT color, all readable. Subtle dual-level grid (major alpha=0.15, minor alpha=0.08), all spines removed.
+      Data: Seven material families using Imprint palette positions 1–7: Metals (#009E73 green), Polymers (lavender), Ceramics (blue), Composites (ochre), Elastomers (matte red), Foams (cyan), Natural Materials (rose). Smooth Bezier convex hull envelopes with 15% fill alpha and 50% edge alpha. Family labels with warm elevated-surface (#FFFDF6) background boxes. Two dashed E/ρ guide lines in INK_MUTED color with small LaTeX labels. First categorical series (Metals) is #009E73 — correct.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — confirmed, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light text (INK = #F0EFE8 for primary, INK_SOFT = #B8B7B0 for secondary). Family label background boxes use dark elevated surface (#242420). Grid lines are light-on-dark. No dark-on-dark failures observed.
+      Data: All seven family colors are identical to the light render — data colors unchanged. Hull envelopes and scatter points look identical in hue/saturation, only chrome flips.
+      Legibility verdict: PASS — all labels, ticks, and titles legible against dark background
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt bold, axis labels 20pt,
-          ticks 16pt, family labels 13pt bold, guide text 14pt.'
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
+          labels 8pt). All readable in both themes. Guide line labels at 7pt are small
+          but visible at full resolution; minor mobile concern.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Upper-right region has Ceramics/Metals/Composites labels in moderate
-          proximity. Background boxes ensure readability but area is visually busy.
+        comment: No text overlaps — all family labels use background boxes with precise
+          log-space offsets. Ceramics/Metals/Composites hulls overlap (expected for
+          Ashby) but labels are well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers s=120 alpha=0.7 for ~105 points. Slightly above recommended
-          range but log-scale spread makes it work.
+        comment: 105 data points (7 families × 15) with s=80, alpha=0.7 — within the
+          100-300 range recommendation (s=50-100, alpha=0.5-0.7). All points clearly
+          visible across all families.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Previous red-green issue resolved. New palette (blue, orange, brown,
-          teal, purple, tan, olive) is colorblind-safe.
+        comment: 7 families use Imprint palette positions 1–7. Direct family labels
+          on each hull region provide redundant encoding beyond color. Alpha-blended
+          fills don't obscure overlapping regions.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout with tight_layout and bbox_inches=tight. Canvas
-          well-utilized.
+        comment: Canvas gate passed (3200×1800). figsize=(8,4.5) dpi=400 with tight_layout
+          and no bbox_inches='tight'. Plot fills canvas well with balanced margins.
+          Data spans full log-range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Density (kg/m³) and Young's Modulus (GPa) — descriptive with units.
+        comment: 'X: ''Density (kg/m³)'', Y: ''Young''s Modulus (GPa)'' — both descriptive
+          with units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Metals) = #009E73. All 7 families in Imprint canonical
+          order. PAGE_BG = #FAF8F1 (light) / #1A1A17 (dark). All chrome tokens applied
+          correctly. Both renders theme-correct.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom cohesive palette, warm background, white edge highlights,
-          bold colored labels with bbox, smooth Bezier envelopes. Above defaults.
+        comment: 'Above ''well-configured default'' (4): Bezier hull envelopes and
+          E/ρ guide lines with LaTeX labels show real design effort. Not yet ''strong
+          design'' (6): no distinctive typographic hierarchy, could benefit from a
+          descriptive title prefix.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines removed, subtle major/minor grid, generous whitespace,
-          warm background, zorder layering.
+        comment: All spines removed (clean scatter look), dual-level subtle grid (major
+          15%, minor 8%), background boxes for family labels. Near 'every detail polished'
+          but tight_layout padding slightly default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: E/rho guide lines add engineering context. Family groupings via hulls
-          create natural hierarchy. Lacks single strong focal point.
+        comment: Guide lines showing constant E/ρ performance indices create genuine
+          engineering storytelling — viewer immediately understands material selection
+          direction. Good visual hierarchy via color-coded hull regions.
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Log-log scatter with labeled bubble/hull regions — exactly as specified.
+        comment: 'Correct Ashby chart: log-log scatter with convex hull bubble regions
+          for material families.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log scales, convex hulls, labels, colors, guide lines — all present.
+        comment: 'All spec features present: log-log axes, hull envelopes, family
+          labels, axis labels with units, distinct colors, guide lines for E/ρ.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=density, Y=modulus correctly mapped. Full range visible.
+        comment: X=Density (kg/m³), Y=Young's Modulus (GPa). All 7 families visible
+          across correct log ranges.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Direct labeling appropriate for this chart
-          type.
+        comment: Title = 'scatter-ashby-material · python · matplotlib · anyplot.ai'
+          — correct format. No separate legend (direct labeling on chart is better
+          practice for Ashby charts).
     data_quality:
       score: 15
       max: 15
@@ -149,19 +182,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Seven families spanning 4+ orders of magnitude in both properties.
+        comment: '7 material families (spec: 5-8), 105 data points (spec: 50-200).
+          All major Ashby chart families represented with realistic property spreads.
+          Wide range: density 30–12000+ kg/m³, modulus 0.001–440 GPa.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real engineering materials with accurate property values.
+        comment: Classic materials science/engineering scenario — Ashby density vs
+          Young's modulus chart. Neutral, educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values physically realistic for the materials represented.
+        comment: 'Values factually correct: Steel ~7850 kg/m³ / 200 GPa, Al₂O₃ ~3980
+          / 380 GPa, HDPE ~950 / 0.9 GPa, natural rubber ~0.005 GPa, foams ~0.001-0.2
+          GPa. All in correct order of magnitude.'
     code_quality:
       score: 10
       max: 10
@@ -171,37 +209,39 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Pure linear flow: imports, data, plot loop, guide lines, styling,
+        comment: 'Flat structure: imports → tokens → data → plot loop → styling →
           save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Hash-based RandomState for per-family jitter
-          is deterministic.
+        comment: np.random.seed(42) set. Per-family RandomState uses hash(family_name)
+          for deterministic jitter.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patches, matplotlib.path, matplotlib.pyplot,
+        comment: 'All 6 imports used: os, matplotlib.patches, matplotlib.path, matplotlib.pyplot,
           numpy, scipy.spatial.ConvexHull.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for Bezier hull computation. Smart jitter
-          for collinear points.
+        comment: Appropriate complexity for the Bezier hull technique. try/except
+          around hull construction handles degenerate cases. No fake UI elements.
+          Pythonic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight. Current API.
+        comment: Saves to plot-{THEME}.png with dpi=400, no bbox_inches='tight'. Correct
+          API usage throughout.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -209,26 +249,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper fig/ax pattern, ax methods, log scales, zorder management,
-          PathPatch usage.
+        comment: 'Axes-level API for all plot calls (ax.scatter, ax.plot, ax.add_patch,
+          ax.text). Proper tick_params, log scale, spine control. Minor: plt.tight_layout()
+          rather than fig.tight_layout().'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib.path.Path with CURVE4 Bezier commands and PathPatch
-          for smooth envelopes — distinctive matplotlib feature.
+        comment: matplotlib.path.Path with CURVE4 Bezier codes + PathPatch for smooth
+          hull envelopes is a deeply library-specific technique. Requires knowledge
+          of matplotlib's low-level path representation that has no direct equivalent
+          in most other plotting libraries.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - annotations
   - bezier-curves
   - patches
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
