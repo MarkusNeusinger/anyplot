@@ -1,7 +1,7 @@
 // anyplot.ai
-// Plucked String · waveform-audio: Audio Waveform Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-03
+// waveform-audio: Audio Waveform Plot
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 92/100 | Created: 2026-06-03
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
