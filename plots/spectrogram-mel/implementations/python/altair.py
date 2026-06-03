@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
@@ -139,7 +139,7 @@ spectrogram = (
         y2="f2:Q",
         color=alt.Color(
             "dB:Q",
-            scale=alt.Scale(scheme="inferno", domain=[-80, 0]),
+            scale=alt.Scale(range=["#009E73", "#4467A3"], domain=[-80, 0]),
             legend=alt.Legend(
                 title="Power (dB)",
                 gradientLength=200,
@@ -178,7 +178,7 @@ chart = (
         width=620,
         height=320,
         title=alt.Title(
-            "spectrogram-mel · altair · pyplots.ai",
+            "spectrogram-mel · python · altair · anyplot.ai",
             subtitle="Synthesized signal: frequency sweep with harmonics, pulsed 440 Hz tone, and chirp burst",
             fontSize=22,
             subtitleFontSize=14,
