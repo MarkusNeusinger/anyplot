@@ -1,46 +1,59 @@
 library: letsplot
+language: python
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:51:34Z'
-updated: '2026-03-09T11:04:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22849775970
+updated: '2026-06-03T08:31:27Z'
+generated_by: claude-sonnet
+workflow_run: 26871822213
 issue: 4410
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Complete spec compliance with all required features (equation, R², prediction
-    band, unknown sample with dashed lines)
-  - Excellent data storytelling through orange unknown sample focal point with dashed
-    reference lines to both axes
-  - Realistic analytical chemistry context (Cu²⁺ UV-Vis spectrophotometry at 810 nm)
-  - Clean visual design with warm background, subtle grid, and intentional color hierarchy
-  - Well-structured reproducible code following KISS principles
+  - 'Full spec compliance: all required features (prediction band, dashed reference
+    lines to both axes, regression equation, R² annotation) correctly implemented'
+  - Excellent data quality with realistic Cu²⁺ UV-Vis spectrophotometry context and
+    proper Beer-Lambert linearity (R² = 0.999)
+  - Correct and thoughtful Imprint palette usage — brand green for calibration series
+    with semantic red (#AE3030) for the unknown focal point, with redundant shape
+    encoding (circle vs. diamond)
+  - 'Robust theme-adaptive chrome: both renders (#FAF8F1 light / #1A1A17 dark) display
+    correctly with all text in appropriate theme tokens'
+  - 'Good data storytelling: dashed reference lines elegantly demonstrate the Beer-Lambert
+    measurement workflow'
+  - Uses lets-plot's distinctive layer_tooltips() for rich interactive HTML output
+    alongside static PNG
   weaknesses:
-  - Library mastery could be improved by leveraging lets-plot distinctive features
-    (interactive tooltips, hover behavior)
-  - Annotation text sizes (13, 11) are slightly smaller than ideal relative to axis
-    text (16)
-  image_description: 'The plot displays a Beer-Lambert calibration curve on a warm
-    off-white (#FAFAFA) background. Seven blue (#306998) circular markers with white
-    edges represent calibration standards at concentrations 0, 2, 4, 6, 8, 10, and
-    12 mg/L. A solid blue regression line passes through the points, flanked by a
-    light blue semi-transparent prediction interval band. An orange (#D95319) diamond
-    marker indicates an unknown sample at approximately 7.5 mg/L with absorbance 0.34.
-    Dashed orange lines extend horizontally from the y-axis to the unknown point,
-    and vertically from the unknown point down to the x-axis, illustrating concentration
-    determination. The regression equation "y = 0.0453x + 0.0023" and "R² = 0.99901"
-    appear in monospace font in the upper-left area. The unknown sample is labeled
-    in orange italic text "Unknown (7.5 mg/L, A = 0.34)". Title reads "calibration-beer-lambert
-    · letsplot · pyplots.ai" in bold. X-axis: "Concentration (mg/L)", Y-axis: "Absorbance".
-    Only subtle horizontal grid lines are shown; no vertical grid. Layout is clean
-    and well-proportioned.'
+  - '"Unknown" text label (italic, size=4.5mm, color=FOCAL) is positioned at (+0.5,
+    +0.032) offset from the unknown point — this places it directly over the prediction
+    band and regression line in both renders; shift further right (~+1.5) or up (~+0.06)
+    to avoid overlap'
+  - Annotation text sizes (equation size=5mm, unknown label size=4.5mm) are slightly
+    small for mobile readability when the 3200×1800 image is scaled to 400px viewport
+    — increasing to size=6 and size=5.5 respectively would improve legibility at thumbnail
+    scale
+  - Y-axis grid lines use solid INK_SOFT color rather than opacity-based rgba — add
+    alpha=0.15 or use the recommended rule token for subtler grid lines
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "calibration-beer-lambert · python · letsplot · anyplot.ai" bold dark (#1A1A17), fully readable. Axis labels "Concentration (mg/L)" and "Absorbance" in dark INK color, clearly readable. Tick labels in INK_SOFT (#4A4A44), readable. Y-axis horizontal grid lines subtle (INK_SOFT, size=0.3).
+      Data: Seven calibration standard points as green filled circles (#009E73) with white stroke. Green regression line with green-tinted prediction ribbon (alpha=0.12). Dashed red (#AE3030) horizontal and vertical reference lines from unknown sample. Unknown sample as red diamond point. Regression equation in monospace font, upper-left area. Unknown label in italic red text near the unknown point.
+      Legibility verdict: PASS — all text readable. Minor: unknown label slightly overlaps regression band.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black
+      Chrome: Title in light cream (#F0EFE8), fully readable against dark background. Axis labels in INK (#F0EFE8), clearly readable. Tick labels in INK_SOFT (#B8B7B0), readable. Grid lines subtle in adapted tone. No dark-on-dark text failures observed.
+      Data: Calibration standard green circles (#009E73) — identical color to light render. Regression line and ribbon same brand green. Dashed red reference lines and unknown diamond remain #AE3030, visible and readable on dark background. Regression equation in light INK token, legible.
+      Legibility verdict: PASS — all text readable in dark theme. Data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,64 +61,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16).
-          Equation and unknown label text slightly smaller than ideal.
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor: unknown label size=4.5mm slightly small for mobile scale and positioned
+          close to regression band.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text clearly separated, no collisions.
+        comment: Minor overlap of Unknown sample label text with prediction band and
+          regression line in both renders due to small positional offset (+0.5x, +0.032y).
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized for 7 data points, line width appropriate, prediction
-          band visible.
+        comment: 'All data elements clearly visible: 7 calibration circles with white
+          stroke, regression line, prediction ribbon, unknown diamond, dashed reference
+          lines.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange palette is colorblind-safe with excellent contrast.
+        comment: Green/red Imprint palette colors with redundant shape encoding (circle
+          vs diamond) and direct labeling mitigates CVD concern.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 px output, plot fills canvas well with balanced margins.
+        comment: Canvas gate passed. Good canvas utilization, balanced margins (plot_margin=[30,40,20,20]),
+          no overflow, no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) includes units, Absorbance is correct (dimensionless).
+        comment: Concentration (mg/L) with units on x-axis; Absorbance (dimensionless,
+          correct per spec) on y-axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for calibration series; #AE3030 for unknown
+          focal point. Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome correct
+          in both renders. Data colors identical across themes.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom two-color palette, white-edged markers, diamond for unknown,
-          monospace equation, italic labeling — clearly above defaults.
+        comment: 'Above generic defaults: intentional Imprint palette with semantic
+          reasoning, distinct marker shapes, monospace equation font, prediction band.
+          Not publication-ready but clearly designed with intent.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle horizontal-only grid, warm background, generous
-          margins.
+        comment: 'Good refinements: y-axis-only grid, panel border blank, axis ticks
+          blank, generous margins. Could use opacity-based grid lines and explicit
+          axis_line removal for top/right.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Orange dashed lines create focal point for unknown sample. Blue/orange
-          contrast establishes visual hierarchy.
+        comment: 'Good: dashed reference lines demonstrate Beer-Lambert measurement
+          workflow clearly. Regression equation + high R² reinforce the story. Could
+          use more prominent callout for unknown point.'
     spec_compliance:
       score: 15
       max: 15
@@ -115,27 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct calibration curve: scatter points with linear regression
-          fit.'
+        comment: 'Correct: calibration curve with scatter points, linear regression
+          line, prediction band, and reference lines for unknown sample determination.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: equation, R², prediction band, unknown
-          sample with dashed lines.'
+        comment: 'All spec features present: regression equation (y=mx+b), R² value,
+          prediction interval band, dashed horizontal+vertical lines to both axes
+          for unknown sample.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration, Y=absorbance, correct mapping.
+        comment: Concentration (mg/L) on x-axis, Absorbance on y-axis. All 7 standards
+          visible including blank at 0.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed.
+        comment: Title 'calibration-beer-lambert · python · letsplot · anyplot.ai'
+          correct. Unknown sample directly labeled on plot (appropriate for this scientific
+          context).
     data_quality:
       score: 15
       max: 15
@@ -145,20 +179,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows blank, 6 standards, linear relationship, and unknown sample
-          interpolation.
+        comment: 'Full coverage: calibration standards with blank, linear regression,
+          prediction interval, unknown sample concentration determination — all Beer-Lambert
+          features demonstrated.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: UV-Vis spectrophotometry of Cu²⁺ at 810 nm — real analytical chemistry.
+        comment: Cu²⁺ at 810 nm UV-Vis spectrophotometry is a canonical analytical
+          chemistry example. Slope ~0.045 AU·L/mg and R²=0.999 are realistic. Neutral
+          scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Absorbance 0–0.54, concentrations 0–12 mg/L — realistic for UV-Vis.
+        comment: 7 calibration standards (0–12 mg/L), absorbance 0–0.54, residual
+          noise σ=0.008 consistent with instrumental precision. All values physically
+          plausible.
     code_quality:
       score: 10
       max: 10
@@ -168,33 +207,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data → regression → plot → save.'
+        comment: Clean Imports → Data → Plot → Save flow; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic calibration data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, numpy, pandas, lets_plot.*, lets_plot.export,
+          scipy.stats.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, DataFrames for annotations is idiomatic.
+        comment: Clean, well-organized code. layer_tooltips() is genuine interactive
+          functionality, not fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via export_ggsave with scale=3.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly with scale=4
+          for 3200×1800 PNG.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -202,20 +244,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar with layered geoms, aes mappings, theme customization.
+        comment: 'Strong idiomatic ggplot grammar: layered geoms, proper aes() mappings,
+          scale_*_continuous with explicit breaks, coord_cartesian, ggsize+ggsave(scale=4)
+          canonical canvas pattern.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard ggplot grammar without lets-plot distinctive features.
+        passed: true
+        comment: Uses layer_tooltips() with .title() and .line() — distinctive lets-plot
+          interactive tooltip feature. Generates HTML output alongside PNG. Marker
+          shape codes (shape=21, shape=23).
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
@@ -223,4 +270,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
