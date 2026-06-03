@@ -1,7 +1,7 @@
 // anyplot.ai
 // feynman-basic: Feynman Diagram for Particle Interactions
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-03
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-03
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
