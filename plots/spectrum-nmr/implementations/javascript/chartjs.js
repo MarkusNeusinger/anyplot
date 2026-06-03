@@ -17,7 +17,7 @@ const ppmStep = (ppmMax - ppmMin) / (N - 1);
 
 // 1H NMR of ethanol (400 MHz): J = 7 Hz = 0.0175 ppm coupling constant
 const J = 0.0175;
-const hw = 0.012; // Lorentzian half-width (~5 Hz at 400 MHz, slightly broad for display)
+const hw = 0.006; // Lorentzian half-width (~2.4 Hz at 400 MHz; J/hw ≈ 2.9 gives resolved multiplets)
 
 const peakDefs = [
     // TMS internal standard at 0.00 ppm — singlet, small reference peak
@@ -57,6 +57,23 @@ const bgPlugin = {
         ctx.save();
         ctx.fillStyle = t.pageBg;
         ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    },
+};
+
+// Draw only bottom and left axis spines (L-shaped frame, scientific style)
+const spinePlugin = {
+    id: "spines",
+    afterDatasetsDraw({ ctx, chartArea: { top, right, bottom, left } }) {
+        ctx.save();
+        ctx.strokeStyle = t.inkSoft;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(left, top);
+        ctx.lineTo(left, bottom);
+        ctx.moveTo(left, bottom);
+        ctx.lineTo(right, bottom);
+        ctx.stroke();
         ctx.restore();
     },
 };
@@ -120,7 +137,7 @@ new Chart(canvas, {
                 reverse: true,
                 min: ppmMin,
                 max: ppmMax,
-                border: { color: t.inkSoft },
+                border: { display: false },
                 ticks: {
                     color: t.inkSoft,
                     font: { size: 14 },
@@ -138,7 +155,7 @@ new Chart(canvas, {
             y: {
                 min: 0,
                 max: 1.05,
-                border: { color: t.inkSoft },
+                border: { display: false },
                 ticks: {
                     color: t.inkSoft,
                     font: { size: 14 },
@@ -154,5 +171,5 @@ new Chart(canvas, {
             },
         },
     },
-    plugins: [bgPlugin, labelPlugin],
+    plugins: [bgPlugin, spinePlugin, labelPlugin],
 });
