@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 waveform-audio: Audio Waveform Plot
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-07
+Library: plotnine 0.15.5 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -27,6 +29,16 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — positions 1, 2, 3 for Attack, Sustain, Release phases
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # Data - synthetic audio waveform: tone with harmonics and amplitude envelope
 np.random.seed(42)
 sample_rate = 22050
@@ -34,7 +46,6 @@ duration = 1.5
 num_samples = int(sample_rate * duration)
 time = np.linspace(0, duration, num_samples)
 
-# Primary tone at 220 Hz with harmonics
 fundamental = 220
 signal = (
     0.6 * np.sin(2 * np.pi * fundamental * time)
@@ -43,26 +54,23 @@ signal = (
     + 0.05 * np.sin(2 * np.pi * fundamental * 5 * time)
 )
 
-# Amplitude envelope: attack-sustain-release shape
 envelope = np.ones_like(time)
 attack_end = int(0.05 * sample_rate)
 sustain_end = int(1.1 * sample_rate)
 envelope[:attack_end] = np.linspace(0, 1, attack_end)
 envelope[sustain_end:] = np.linspace(1, 0, num_samples - sustain_end)
 
-# Add slight vibrato and noise for realism
 vibrato = 1.0 + 0.03 * np.sin(2 * np.pi * 5 * time)
 noise = np.random.normal(0, 0.02, num_samples)
 amplitude = np.clip((signal * envelope * vibrato) + noise, -1.0, 1.0)
 
-# Downsample for plotting using min/max envelope to avoid aliasing
+# Downsample using min/max envelope to avoid aliasing
 chunk_size = 64
 num_chunks = num_samples // chunk_size
 time_chunks = np.array([time[i * chunk_size] for i in range(num_chunks)])
 amp_min = np.array([amplitude[i * chunk_size : (i + 1) * chunk_size].min() for i in range(num_chunks)])
 amp_max = np.array([amplitude[i * chunk_size : (i + 1) * chunk_size].max() for i in range(num_chunks)])
 
-# Classify each chunk into attack/sustain/release phase for storytelling
 attack_time = 0.05
 sustain_time = 1.1
 phase = []
@@ -83,46 +91,47 @@ df = pd.DataFrame(
     }
 )
 
-# Phase colors: distinct hues to tell the waveform story
-phase_colors = {"Attack": "#E8651A", "Sustain": "#306998", "Release": "#6A4C93"}
+# Imprint palette: Attack=green (pos 1), Sustain=lavender (pos 2), Release=blue (pos 3)
+phase_colors = {"Attack": IMPRINT_PALETTE[0], "Sustain": IMPRINT_PALETTE[1], "Release": IMPRINT_PALETTE[2]}
 phase_alphas = {"Attack": 0.85, "Sustain": 0.65, "Release": 0.55}
 
-# Plot - use fill mapped to phase for data storytelling (DE-03)
+title = "waveform-audio · python · plotnine · anyplot.ai"
+
+# Plot
 plot = (
     ggplot(df, aes(x="time"))
     + geom_ribbon(aes(ymin="amp_min", ymax="amp_max", fill="phase", alpha="phase"), show_legend=False)
     + scale_fill_manual(values=phase_colors)
     + scale_alpha_manual(values=phase_alphas)
-    + geom_hline(yintercept=0, color="#888888", size=0.3, linetype="solid")
-    # Phase boundary markers
-    + geom_vline(xintercept=attack_time, color="#E8651A", size=0.4, linetype="dashed", alpha=0.6)
-    + geom_vline(xintercept=sustain_time, color="#6A4C93", size=0.4, linetype="dashed", alpha=0.6)
-    # Phase labels via annotate (DE-03 storytelling)
-    + annotate("text", x=0.025, y=0.92, label="Attack", size=11, color="#E8651A", fontstyle="italic")
-    + annotate("text", x=0.575, y=0.92, label="Sustain", size=11, color="#306998", fontstyle="italic")
-    + annotate("text", x=1.30, y=0.92, label="Release", size=11, color="#6A4C93", fontstyle="italic")
-    + labs(x="Time (seconds)", y="Amplitude", title="waveform-audio · plotnine · pyplots.ai")
+    + geom_hline(yintercept=0, color=INK_MUTED, size=0.4, linetype="solid")
+    + geom_vline(xintercept=attack_time, color=INK_SOFT, size=0.3, linetype="dashed", alpha=0.5)
+    + geom_vline(xintercept=sustain_time, color=INK_SOFT, size=0.3, linetype="dashed", alpha=0.5)
+    + annotate("text", x=0.025, y=0.90, label="Attack", size=3.5, color=IMPRINT_PALETTE[0], fontstyle="italic")
+    + annotate("text", x=0.575, y=0.90, label="Sustain", size=3.5, color=IMPRINT_PALETTE[1], fontstyle="italic")
+    + annotate("text", x=1.30, y=0.90, label="Release", size=3.5, color=IMPRINT_PALETTE[2], fontstyle="italic")
+    + labs(x="Time (seconds)", y="Amplitude", title=title)
     + scale_x_continuous(
         breaks=np.arange(0, duration + 0.1, 0.25), labels=lambda lst: [f"{v:.2f}" for v in lst], expand=(0.01, 0.01)
     )
     + scale_y_continuous(limits=(-1.0, 1.0), breaks=np.arange(-1.0, 1.1, 0.25))
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14, color="#2d2d2d"),
-        axis_title=element_text(size=20, color="#2d2d2d", margin={"t": 12, "r": 12}),
-        axis_text=element_text(size=16, color="#555555"),
-        plot_title=element_text(size=24, weight="bold", color="#1a1a1a", margin={"b": 12}),
-        panel_background=element_rect(fill="#f5f5f0", color="none"),
-        plot_background=element_rect(fill="#ffffff", color="none"),
-        panel_grid_major_y=element_line(color="#dcdcdc", size=0.25, linetype="dotted"),
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        panel_background=element_rect(fill=PAGE_BG, color="none"),
+        plot_background=element_rect(fill=PAGE_BG, color="none"),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_line_x=element_line(color="#888888", size=0.5),
-        axis_ticks_major_x=element_line(color="#888888", size=0.4),
+        axis_line_x=element_line(color=INK_SOFT, size=0.5),
+        axis_line_y=element_line(color=INK_SOFT, size=0.5),
+        axis_ticks_major_x=element_line(color=INK_SOFT, size=0.4),
         axis_ticks_major_y=element_blank(),
-        plot_margin=0.02,
     )
 )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
