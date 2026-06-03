@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -32,6 +32,8 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 # Imprint palette
 BRAND = "#009E73"  # Imprint position 1 — first categorical series
 UNKNOWN_COLOR = "#AE3030"  # Imprint matte red — semantic anchor for unknown/special point
+# Theme-adaptive prediction band opacity (dark mode needs higher alpha to remain visible)
+BAND_OPACITY = 0.15 if THEME == "light" else 0.22
 
 # Data - calibration standards for UV-Vis spectrophotometry
 np.random.seed(42)
@@ -162,7 +164,7 @@ band_data = [[float(conc_fit[i]), float(lower_band[i]), float(upper_band[i])] fo
 band_series = AreaRangeSeries()
 band_series.data = band_data
 band_series.name = "95% Prediction Interval"
-band_series.color = "rgba(0,158,115,0.15)"
+band_series.color = f"rgba(0,158,115,{BAND_OPACITY})"
 band_series.fill_opacity = 1.0
 band_series.line_width = 0
 band_series.marker = {"enabled": False}
@@ -203,7 +205,7 @@ unknown_series.name = "Unknown Sample"
 unknown_series.color = UNKNOWN_COLOR
 unknown_series.marker = {
     "radius": 16,
-    "symbol": "diamond",
+    "symbol": "triangle",
     "lineColor": PAGE_BG,
     "lineWidth": 3,
     "fillColor": UNKNOWN_COLOR,
