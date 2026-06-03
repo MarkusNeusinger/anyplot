@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' piano-roll-midi: MIDI Piano Roll Visualization
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-06-03
 
 library(ggplot2)
 library(ragg)
@@ -16,22 +15,15 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 # Imprint sequential colormap for velocity: green (quiet) -> blue (loud)
-CMAP_LOW  <- "#009E73"  # Imprint position 1 — pianissimo
-CMAP_HIGH <- "#4467A3"  # Imprint position 3 — fortissimo
+CMAP_LOW  <- "#009E73"
+CMAP_HIGH <- "#4467A3"
 
 # Piano keyboard row background colors
 KEY_WHITE <- if (THEME == "light") "#EBE7DC" else "#222220"
 KEY_BLACK <- if (THEME == "light") "#D3CDB8" else "#1D1D1B"
 
-# MIDI note number -> note name with octave (e.g., 60 -> "C4")
-midi_to_name <- function(midi) {
-  note_names <- c("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-  paste0(note_names[(midi %% 12) + 1], floor(midi / 12) - 1)
-}
-
-is_black_key <- function(midi) {
-  (midi %% 12) %in% c(1L, 3L, 6L, 8L, 10L)
-}
+NOTE_NAMES <- c("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+BLACK_KEYS <- c(1L, 3L, 6L, 8L, 10L)
 
 # --- Data: 8-measure C-major piano piece (32 beats, 4/4 time) ---------------
 
@@ -81,24 +73,21 @@ pitch_max  <- max(notes_df$pitch) + 1L
 all_pitches <- seq(pitch_min, pitch_max)
 
 # Separate background row data by key type
-white_rows <- all_pitches[!is_black_key(all_pitches)]
-black_rows <- all_pitches[ is_black_key(all_pitches)]
+white_rows <- all_pitches[!(all_pitches %% 12 %in% BLACK_KEYS)]
+black_rows <- all_pitches[  all_pitches %% 12 %in% BLACK_KEYS]
 
-bg_white <- data.frame(
-  xmin = 0, xmax = 32,
-  ymin = white_rows - 0.5, ymax = white_rows + 0.5
-)
-bg_black <- data.frame(
-  xmin = 0, xmax = 32,
-  ymin = black_rows - 0.5, ymax = black_rows + 0.5
-)
+bg_white <- data.frame(xmin = 0, xmax = 32, ymin = white_rows - 0.5, ymax = white_rows + 0.5)
+bg_black <- data.frame(xmin = 0, xmax = 32, ymin = black_rows - 0.5, ymax = black_rows + 0.5)
 
 # Y-axis: label only white keys
-y_labels <- sapply(white_rows, midi_to_name)
+y_labels <- paste0(NOTE_NAMES[(white_rows %% 12) + 1], floor(white_rows / 12) - 1)
 
 # Beat / measure grid positions (beat lines exclude measure boundaries)
 beat_xs    <- (1:31)[!(1:31 %% 4 == 0)]
 measure_xs <- seq(0L, 32L, by = 4L)
+
+# Climax highlight: measure 6 (beats 20-24) is the dynamic peak (ff)
+climax_df <- data.frame(xmin = 20, xmax = 24, ymin = pitch_min - 0.5, ymax = pitch_max + 0.5)
 
 plot_title <- "piano-roll-midi · r · ggplot2 · anyplot.ai"
 
@@ -115,6 +104,12 @@ p <- ggplot() +
     data = bg_black,
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
     fill = KEY_BLACK, color = NA
+  ) +
+  # Subtle translucent highlight at dynamic climax (m6, beats 20-24)
+  geom_rect(
+    data = climax_df,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = CMAP_HIGH, color = NA, alpha = 0.10
   ) +
   # Beat subdivision lines (very faint)
   geom_vline(
@@ -135,6 +130,11 @@ p <- ggplot() +
       fill = velocity
     ),
     color = PAGE_BG, linewidth = 0.15
+  ) +
+  # "ff" annotation marking the dynamic peak
+  annotate(
+    "text", x = 22, y = pitch_max - 0.3,
+    label = "ff", color = INK, size = 2.5, fontface = "bold.italic"
   ) +
   # Imprint sequential colormap for velocity (green=quiet, blue=loud)
   scale_fill_gradient(
@@ -167,7 +167,7 @@ p <- ggplot() +
     panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.35),
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
-    axis.text.y       = element_text(color = INK_SOFT, size = 7),
+    axis.text.y       = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK,      size = 12, face = "bold"),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT, size = 8),
