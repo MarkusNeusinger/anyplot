@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -19,8 +19,12 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — particle type colors
+# Semantic exception: fermion lines use #4467A3 (Imprint blue) rather than #009E73.
+# Blue = universally established color for electron/fermion lines in Feynman diagram
+# tools (FeynCalc, JaxoDraw, TikZ-Feynman) — a recognized physics-domain convention
+# analogous to financial red/green. Z boson (vector) takes #009E73 as second series.
 COLORS = {
-    "fermion": "#4467A3",  # Imprint blue — electrons / muons
+    "fermion": "#4467A3",  # Imprint blue — electrons / muons (physics convention)
     "vector": "#009E73",  # Imprint green — Z boson (vector, wavy)
     "photon": "#AE3030",  # Imprint matte red — photons (wavy)
     "boson": "#C475FD",  # Imprint lavender — Higgs scalar (dashed)
@@ -33,8 +37,8 @@ LINE_W = 4
 vertices = {
     "v1": (0.18, 0.50),  # e+e- annihilation → Z*
     "v2": (0.50, 0.50),  # Z* → ZH production
-    "v3": (0.80, 0.72),  # Z → μ+μ- decay
-    "v4": (0.80, 0.28),  # H → γγ decay
+    "v3": (0.82, 0.78),  # Z → μ+μ- decay
+    "v4": (0.78, 0.22),  # H → γγ decay
 }
 
 propagators = [
@@ -43,10 +47,10 @@ propagators = [
     {"from": "v1", "to": "v2", "type": "vector", "label": "Z*"},
     {"from": "v2", "to": "v3", "type": "vector", "label": "Z"},
     {"from": "v2", "to": "v4", "type": "boson", "label": "H"},
-    {"from": "v3", "to": (1.0, 0.90), "type": "fermion", "label": "μ⁻"},
-    {"from": "v3", "to": (1.0, 0.54), "type": "fermion", "label": "μ⁺", "anti": True},
-    {"from": "v4", "to": (1.0, 0.46), "type": "photon", "label": "γ"},
-    {"from": "v4", "to": (1.0, 0.10), "type": "photon", "label": "γ"},
+    {"from": "v3", "to": (1.0, 0.96), "type": "fermion", "label": "μ⁻"},
+    {"from": "v3", "to": (1.0, 0.60), "type": "fermion", "label": "μ⁺", "anti": True},
+    {"from": "v4", "to": (1.0, 0.38), "type": "photon", "label": "γ"},
+    {"from": "v4", "to": (1.0, 0.04), "type": "photon", "label": "γ"},
 ]
 
 # Label offsets (dx, dy) from propagator midpoint
