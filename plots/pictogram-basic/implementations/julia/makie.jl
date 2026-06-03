@@ -10,27 +10,26 @@ using Random
 Random.seed!(42)
 
 # Theme tokens — Imprint palette, theme-adaptive chrome
-const THEME       = get(ENV, "ANYPLOT_THEME", "light")
-const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
-const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint palette — semantic color assignments matched to fruit categories
+# Imprint palette — semantic color assignments matched to fruit identity
 const COLORS = [
-    colorant"#009E73",  # Apples — brand green (semantic: green apple)
-    colorant"#BD8233",  # Oranges — ochre (semantic: warm orange)
-    colorant"#99B314",  # Bananas — lime (semantic: yellow-green)
-    colorant"#AE3030",  # Mangoes — matte red (semantic: tropical warm)
-    colorant"#C475FD",  # Grapes — lavender (semantic: purple grapes)
+    colorant"#99B314",  # Bananas — lime (yellow-green banana)
+    colorant"#009E73",  # Apples — brand green (green apple)
+    colorant"#BD8233",  # Oranges — ochre (warm orange)
+    colorant"#C475FD",  # Grapes — lavender (purple grapes)
+    colorant"#AE3030",  # Mangoes — matte red (tropical warm)
 ]
 
-# Data — global fruit production (million tonnes)
-const categories = ["Apples", "Oranges", "Bananas", "Mangoes", "Grapes"]
-const values     = [35, 22, 18, 12, 8]
-const unit_size  = 5  # each icon = 5 million tonnes
+# Data — global fruit production (million tonnes, approx. FAO 2021-22), sorted descending
+const categories = ["Bananas", "Apples", "Oranges", "Grapes", "Mangoes"]
+const values     = [116, 88, 79, 77, 57]
+const unit_size  = 20  # each icon = 20 million tonnes
 
-# Layout constants — x_gap set so data aspect matches ~16:9 figure aspect
+# Layout constants
 const n_cats = length(categories)
 const icon_r = 0.45   # icon radius in data units
 const x_gap  = 1.5    # horizontal spacing between icon centres
@@ -45,6 +44,9 @@ fig = Figure(
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
+
+# max_icons = ceil(116 / 20) = 6
+max_icons = ceil(Int, maximum(values) / unit_size)
 
 ax = Axis(
     fig[1, 1];
@@ -67,12 +69,11 @@ ax = Axis(
     ygridvisible       = false,
 )
 
-# Precompute circle angles (60-gon approximates a circle)
+# 60-gon circle approximation — reliable for poly! with DataAspect data-coordinate circles
 θ_circle = range(0, 2π, length = 61)[1:60]
 
-# Draw pictogram icons for each category
-max_icons = ceil(Int, maximum(values) / unit_size)
-label_x   = (max_icons + 1) * x_gap + 0.2  # fixed x for aligned value labels
+# Fixed x for right-aligned value labels
+label_x = (max_icons + 1) * x_gap + 0.3
 
 for i in 1:n_cats
     val      = values[i]
@@ -96,13 +97,13 @@ for i in 1:n_cats
     if fraction > 0.02
         x_pos = (n_full + 1) * x_gap
 
-        # Ghost circle: lightly tinted with coloured stroke
+        # Ghost circle: 25% alpha fill + 2px stroke for readability in both themes
         poly!(ax,
             Point2f.(collect(zip(
                 x_pos .+ icon_r .* cos.(θ_circle),
                 y_pos .+ icon_r .* sin.(θ_circle),
             )));
-            color = (color, 0.15), strokecolor = color, strokewidth = 1.5)
+            color = (color, 0.25), strokecolor = color, strokewidth = 2.0)
 
         # Filled pie sector (clockwise from 12 o'clock)
         θ_arc     = range(π/2, π/2 - 2π * fraction, length = 60)
@@ -113,7 +114,7 @@ for i in 1:n_cats
             color = color, strokewidth = 0)
     end
 
-    # Value label — aligned at fixed x for easy comparison
+    # Value label — aligned right for easy comparison
     text!(ax, label_x, y_pos;
         text     = "$(val) Mt",
         fontsize = 12,
@@ -122,11 +123,19 @@ for i in 1:n_cats
     )
 end
 
-# Axis limits — x span sized to fill landscape with DataAspect circles
-xlims!(ax, -0.8, (max_icons + 3.0) * x_gap)
+# Focal-point annotation — draws the viewer's eye to the world leader
+text!(ax, 0.5 * x_gap, y_positions[1] + y_gap * 0.52;
+    text     = "↑ world's most produced fruit",
+    fontsize = 10,
+    color    = INK_SOFT,
+    align    = (:left, :center),
+)
+
+# Axis limits — x span tuned to ~16:9 with DataAspect
+xlims!(ax, -0.8, (max_icons + 3.5) * x_gap)
 ylims!(ax, y_positions[end] - y_gap * 0.9, y_positions[1] + y_gap * 0.7)
 
-# Unit legend — placed below the lowest category row
+# Unit legend — below the lowest category row
 text!(ax, 0.5 * x_gap, y_positions[end] - y_gap * 0.6;
     text     = "● = $(unit_size) million tonnes",
     fontsize = 11,
