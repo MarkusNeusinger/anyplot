@@ -63,7 +63,7 @@ ax = Axis(
     titlesize          = 20,
     titlecolor         = INK,
     xlabel             = "Time (seconds)",
-    ylabel             = "Amplitude",
+    ylabel             = "Normalized Amplitude",
     xlabelsize         = 14,
     ylabelsize         = 14,
     xticklabelsize     = 12,
@@ -88,11 +88,24 @@ ax = Axis(
 xlims!(ax, 0.0, duration)
 ylims!(ax, -1.1, 1.1)
 
-# Waveform envelope fill — semi-transparent Imprint brand green
-band!(ax, t_env, amp_min, amp_max; color = (BRAND, 0.75))
+# Subtle noise-floor shading behind waveform (±2σ of background noise)
+noise_floor = 0.015 * 2.0
+band!(ax, [0.0, duration], [-noise_floor, -noise_floor], [noise_floor, noise_floor];
+    color = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.08))
+
+# Waveform envelope fill — semi-transparent Imprint brand green with stroke outline
+band!(ax, t_env, amp_min, amp_max; color = (BRAND, 0.72))
+lines!(ax, t_env, amp_max; color = (BRAND, 0.55), linewidth = 0.8)
+lines!(ax, t_env, amp_min; color = (BRAND, 0.55), linewidth = 0.8)
 
 # Zero-amplitude reference line
 hlines!(ax, [0.0]; color = INK_SOFT, linewidth = 1.2)
+
+# P-wave and S-wave arrival annotations
+vlines!(ax, [5.0]; color = RGBAf(INK.r, INK.g, INK.b, 0.35), linewidth = 1.0, linestyle = :dash)
+vlines!(ax, [10.0]; color = RGBAf(INK.r, INK.g, INK.b, 0.35), linewidth = 1.0, linestyle = :dash)
+text!(ax, 5.3, 0.95; text = "P-wave", fontsize = 11, color = INK_SOFT, align = (:left, :top))
+text!(ax, 10.3, 0.95; text = "S-wave", fontsize = 11, color = INK_SOFT, align = (:left, :top))
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
