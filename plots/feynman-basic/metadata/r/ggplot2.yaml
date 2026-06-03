@@ -1,0 +1,280 @@
+library: ggplot2
+language: r
+specification_id: feynman-basic
+created: '2026-06-03T06:09:51Z'
+updated: '2026-06-03T06:37:54Z'
+generated_by: claude-sonnet
+workflow_run: 26866764037
+issue: 4667
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Sophisticated Feynman diagram with all four standard line types (curly gluon,
+    wavy photon, solid-arrow fermion, dashed scalar boson)
+  - 'Imprint palette applied with physics-semantic reasoning: fermion=green(pos1),
+    boson=lavender(pos2), photon=blue(pos3), gluon=ochre(pos4) — canonical order that
+    also maps semantically'
+  - 'Dual-theme implementation works flawlessly: vertex dots flip from INK dark to
+    INK light, all data colors remain identical, backgrounds correct (#FAF8F1 / #1A1A17)'
+  - Custom wavy_line() and gluon_line() functions generate sinusoidal paths as tibbles
+    fed to geom_path — idiomatic ggplot2 grammar-of-graphics approach for a non-standard
+    diagram type
+  - 'Physically accurate process: gg→H→γγ is the dominant Higgs production channel
+    at the LHC, with correct top-quark loop mediating gg-H coupling'
+  - Particle labels colored to match their line type, providing redundant encoding
+    beyond color alone
+  - Time-direction arrow and subtitle together clearly explain the diagram to a non-physics
+    reader
+  weaknesses:
+  - Two helper functions (wavy_line, gluon_line) break the KISS no-functions rule,
+    though they are necessary for the diagram type — consider inlining the data generation
+    directly
+  - Gluon curly lines use a sinusoidal wave (high frequency) rather than true circular
+    loops — in strict Feynman diagram convention, gluon lines have enclosed circular
+    bumps above and below the path axis; the sinusoidal approximation is visually
+    acceptable but physicists may notice
+  - DE-03 storytelling relies primarily on the subtitle text rather than visual hierarchy
+    within the diagram — the Higgs propagator (dashed lavender) could be made slightly
+    thicker or the decay photons could fan out more dramatically to create a stronger
+    visual focal point at the Higgs decay vertex
+  - No set.seed(42) call, though acceptable here since all data is fully deterministic
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "feynman-basic · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), subtitle "Higgs Boson Production via Gluon Fusion: gg → H → γγ" in INK_SOFT (#4A4A44), time arrow and "time" label in INK_MUTED (#6B6A63) — all clearly readable against the light background
+      Data: Two incoming curly gluon lines in ochre (#BD8233), a top-quark fermion triangle in green (#009E73) with directional arrows, a dashed Higgs propagator in lavender (#C475FD), two outgoing wavy photon lines in blue (#4467A3); vertex dots rendered in INK (black); particle labels g/g/t/H/γ/γ colored to match their respective line types
+      Legibility verdict: PASS — all text and labels are clearly readable; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) respectively — clearly readable against the dark background; time arrow and "time" label in INK_MUTED (#A8A79F) — visible; vertex dots flip from black to near-white (INK token), correctly adapting to the dark surface
+      Data: All four particle line colors are identical to the light render — ochre gluons, green fermion triangle, lavender dashed Higgs, blue wavy photons — data colors unchanged as required
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly theme-adapted; no black text on near-black background
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=12pt, subtitle=9pt, geom_text=5.5mm,
+          time label=4mm. Correctly proportioned and readable in both themes at full
+          and mobile resolution.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or diagram elements. Labels well-positioned
+          around line endpoints.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All diagram elements visible: lines at linewidth 1.0-1.2, vertex
+          dots at size=3.5, labels prominently colored to match line types.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct hue families (green/purple/blue/yellow-ochre) used.
+          Imprint palette is CVD-optimised. Particle labels provide redundant encoding
+          beyond color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 (confirmed). Diagram occupies ~65% of canvas with
+          balanced margins. Time arrow at bottom anchors the composition. No overflow,
+          no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A for axes (theme_void). Title correct. Time direction labeled
+          with arrow. Subtitle describes the physics process with mathematical notation.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette positions 1-4 used in canonical order for 4 particle
+          types. Fermion=green(#009E73), boson=lavender(#C475FD), photon=blue(#4467A3),
+          gluon=ochre(#BD8233). Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive.
+          Data colors identical in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom sinusoidal path generators for wavy/curly
+          lines, physics-semantic color mapping, clean void layout. Clearly above
+          library defaults. Not quite publication-ready in a physics journal (gluon
+          lines are sinusoidal approximation not true circular loops) but polished.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'theme_void() removes all axes/spines/grid. Generous margins. Particle
+          labels italic and color-coded. Time arrow adds subtle directionality. Minor:
+          gluon curly lines visually similar to wavy photon lines at a glance (both
+          sinusoidal, just different frequency/amplitude).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through left-to-right time flow, semantic
+          colors, and the subtitle. Time arrow reinforces directionality. Storytelling
+          relies partly on subtitle text rather than pure visual focal point design.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with all four standard line types.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: distinct line styles per particle type,
+          directional arrows on fermions, vertex dots, particle labels, time axis
+          labeled.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time flows left-to-right. Interaction process (gg->H->γγ) correctly
+          laid out with top-quark loop. All 4 vertices positioned logically.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'feynman-basic · r · ggplot2 · anyplot.ai' matches required
+          format. No legend needed — inline labels with scale_color_identity().
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All four Feynman line types demonstrated: solid+arrow (fermion),
+          wavy (photon), curly/high-freq (gluon), dashed (scalar boson). Complete
+          interaction with 4 vertices and all propagator types.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: gg→H→γγ is the dominant Higgs production mechanism at the LHC and
+          a textbook-standard physics example. Neutral scientific context. Top-quark
+          loop correctly mediates the gg-H vertex.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Physically accurate: H→γγ is indeed a ''golden channel'' for Higgs
+          discovery (used at ATLAS/CMS). The gluon fusion process and top-quark loop
+          topology are correct to QFT.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Two helper functions (wavy_line, gluon_line) defined — breaks the
+          no-functions rule. Necessary for generating custom path data, but could
+          be inlined as data.frame construction blocks.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all coordinates are hardcoded expressions with
+          no randomness. No seed needed.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr (bind_rows/mutate), tibble (tibble()), ragg (agg_png)
+          — all actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented code. Logical organization. No over-engineering.
+          No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) — correct output naming. ragg::agg_png
+          — current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot2 grammar for a non-standard diagram: geom_path
+          with group aesthetic for multi-segment lines, geom_segment with arrow()
+          for directed fermion lines, scale_color_identity() for pre-specified colors,
+          theme_void(), coord_cartesian() for explicit limits.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Treating sinusoidal path data as tibbles fed to geom_path is distinctly
+          ggplot2 grammar-of-graphics. The arrow() parameter on geom_segment, group
+          aesthetic management, and scale_color_identity() combination is a ggplot2-specific
+          pattern not easily replicated in imperative plotting libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
