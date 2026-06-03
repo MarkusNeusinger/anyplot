@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: feynman-basic
 created: '2026-06-03T06:18:02Z'
-updated: '2026-06-03T06:25:24Z'
+updated: '2026-06-03T06:48:30Z'
 generated_by: claude-sonnet
 workflow_run: 26866983672
 issue: 4667
@@ -12,37 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Physics-accurate arrow conventions with midpoint placement for fermion direction
-  - 'Correct Imprint palette: brand green for fermions, lavender for virtual photon,
-    both consistent across themes'
-  - Fully deterministic data — hard-coded vertex positions as canvas fractions
-  - SVG marker defs and wavy path via d3.line() show genuine D3 expertise
-  - Clean KISS structure with two well-motivated helper functions
-  - Time axis adds temporal narrative to the physics process
+  - Custom wavyPath and gluonPath functions using d3.line() with parametric geometry
+    produce physically accurate Feynman line styles — sophisticated D3 path generation
+  - 'Correct Imprint palette assignment with intentional physics semantics: green
+    for matter (fermions), purple for electromagnetic force (photon), blue for strong
+    force (gluon), ochre for scalar bosons'
+  - 'Full theme adaptivity: vertex dots, time axis, panel dividers, and all text correctly
+    use t.ink / t.inkSoft / t.grid tokens — both renders are crisp and readable'
+  - Three distinct quantum processes (QED, QCD, Higgs) in a single composition with
+    clear section labels and time axis creates a strong educational narrative
+  - Legend built from actual SVG path samples (not colored rectangles) matches the
+    diagram lines exactly
   weaknesses:
-  - Only two of four particle types (fermion, photon) demonstrated — gluon (curly)
-    and scalar boson (dashed) line styles are not shown; a slightly more complex diagram
-    (e.g., QCD vertex with a gluon leg) would exercise the full spec
-  - Legend text and time label at 15px CSS (30px source) is slightly on the small
-    side for mobile — raise to 17-18px CSS
-  - 'Design excellence ceiling: diagram is clean but could push aesthetic sophistication
-    further — e.g., a faint background grid for spatial reference, or more refined
-    typographic hierarchy between particle label size and diagram subtitle'
+  - Section labels ('QED · e⁻e⁺ → γ* → μ⁻μ⁺', 'QCD · q q̄ → g', 'Higgs · q q̄ → H')
+    at 15px CSS (30px actual at 2×dsr) are slightly small for the 3200px canvas —
+    bumping to 17–18px would improve mobile readability
+  - Right sub-panels (QCD and Higgs) feel slightly compact relative to the dominant
+    QED panel; allocating slightly more horizontal space to the right (e.g., shift
+    divider from 62.5% to 58%) would balance the composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, no pure white
-      Chrome: Title "feynman-basic · javascript · d3 · anyplot.ai" in bold dark ink, ~55% canvas width — well-proportioned and readable. Subtitle in secondary ink (softer grey). Time axis arrow with "time" label in inkSoft. Legend ("Fermion" / "Photon (γ)") in inkSoft at top-right.
-      Data: Four fermion legs in brand green (#009E73) with directional arrows at midpoints (e⁻, e⁺ → μ⁻, μ⁺). Virtual photon (γ*) as wavy lavender (#C475FD) line between two solid black vertex dots. Particle labels in green bold 22px at external legs.
-      Legibility verdict: PASS — all text clearly readable against the cream background. No light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "feynman-basic · javascript · d3 · anyplot.ai" in dark bold ink, ~75% canvas width. Subtitle "QED & QCD Feynman Diagrams · All Four Particle Types" in secondary ink below. Section labels ("QED · e⁻e⁺ → γ* → μ⁻μ⁺", "QCD · q q̄ → g", "Higgs · q q̄ → H") in t.inkSoft. Time axis arrow in t.inkSoft. Panel dividers as dashed grid-colored lines. Particle labels in respective particle colors.
+      Data: Fermion lines in #009E73 (palette[0]) with directional arrows. Photon propagator as wavy line in #C475FD (palette[1]). Gluon propagator as curly/looped line in #4467A3 (palette[2]). Higgs scalar boson as dashed line in #BD8233 (palette[3]). Vertex dots filled with t.ink (dark). Legend at bottom with SVG path samples for each type.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background. No contrast failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, no pure black
-      Chrome: Title and subtitle text rendered in light cream (F0EFE8 / B8B7B0 range) — all readable against dark background. Time axis and legend text similarly light-colored. Vertex dots switch from black fill to white (t.ink adapts correctly).
-      Data: Fermion lines still #009E73 — identical to light render. Photon still #C475FD — identical. Data colors are theme-invariant as required.
-      Legibility verdict: PASS — no dark-on-dark failures. All chrome elements correctly adapt to the dark surface. Brand green #009E73 remains clearly visible against near-black background.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and all text render in light/cream ink (t.ink = #F0EFE8 in dark theme). Section labels and time axis in t.inkSoft (lighter tone). Panel dividers in subtle t.grid. All chrome correctly flipped for dark theme.
+      Data: Data colors IDENTICAL to light render — fermion lines remain #009E73, photon wavy lines remain #C475FD, gluon curly lines remain #4467A3, Higgs dashed lines remain #BD8233. Vertex dots flip to light-colored (t.ink in dark = #F0EFE8) — correct theme adaptation.
+      Legibility verdict: PASS — all text clearly readable against near-black background. No dark-on-dark failures detected. Brand green #009E73 clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -53,83 +55,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title, 16px subtitle, 22px labels,
-          15px legend). 15px legend/time text is slightly small for mobile scaling
-          — 30px source pixels is borderline.
+        comment: All font sizes explicitly set (22px title, 16px subtitle, 20px particle
+          labels, 17px legend, 15px section labels). Readable in both themes. Section
+          labels at 15px CSS slightly small for 3200px canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Labels offset from endpoints with dx/dy, no collisions
-          with lines or vertices.
+        comment: No text or element collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Fermion lines at SW=3.5 CSS (7px source), photon at SW=3.5, vertex
-          dots r=7. All elements clearly visible on both surfaces.
+        comment: All four line types clearly visible. Vertex dots prominent at r=7px
+          CSS. Arrows distinctly rendered.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe Imprint palette
-          members. Shape encoding (line style) also differentiates particle types.
+        comment: Imprint palette is CVD-optimised. Four distinct hue families (green/purple/blue/ochre).
+          No red-green conflict.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Diagram well-centered. Title + legend at top,
-          time arrow at bottom make constructive use of the full canvas.
+        comment: Canvas gate passed. Three-panel layout fills 3200x1800 well. Balanced
+          whitespace. No cut-off content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No conventional x/y data axes needed. Title follows mandatory format.
-          Time axis labeled with 'time'. Process subtitle adds context.
+        comment: Title correctly formatted. Time axis labeled. Section labels provide
+          context in lieu of traditional axis labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'FERMION = t.palette[0] = #009E73 (brand green, first series). PHOTON
-          = t.palette[1] = #C475FD (lavender). Chrome via t.ink / t.inkSoft — theme-adaptive.
-          Both renders correct.'
+        comment: 'Fermion #009E73 (palette[0]), Photon #C475FD (palette[1]), Gluon
+          #4467A3 (palette[2]), Boson #BD8233 (palette[3]). Light bg #FAF8F1, dark
+          bg #1A1A17. Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clearly above configured defaults: physics-accurate arrow conventions,
-          symmetric layout, intentional two-color encoding. Not yet publication-ready
-          — could benefit from more refined typographic hierarchy or additional visual
-          interest.'
+        comment: Above typical default territory. Custom SVG path generators produce
+          Feynman-correct line styles. Physics-motivated color assignment. Multi-panel
+          layout with dashed dividers. Not quite publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid, no spines. Clean whitespace. Well-placed elements. Wavy
-          photon line and arrow markers are polished details. Time axis adds structural
-          clarity.
+        comment: Clean — no axes, spines, or grid clutter. Subtle dashed panel dividers.
+          Theme-adaptive vertex dots. Right sub-panels slightly compact.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear physics narrative: color contrast (green fermions vs purple
-          photon) guides eye through the annihilation/production process. Time axis
-          reinforces temporal flow. Subtitle names the process explicitly.'
+        comment: Three distinct quantum interactions with section labels and time
+          arrow. QED in dominant left panel. Educational narrative through legend.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,55 +135,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram. Implements the spec's exemplar process (e⁻
-          e⁺ annihilation).
+        comment: 'Correct Feynman diagram with all four particle types: fermion (solid+arrow),
+          photon (wavy), gluon (curly), boson (dashed).'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Fermion arrows, wavy photon, vertex dots, time axis, propagator
-          label all present. Missing: gluon (curly) and boson (dashed) line styles
-          not demonstrated.'
+        comment: Distinct line styles, directional arrows on fermions, vertex dots,
+          particle labels, time axis — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: e⁻ e⁺ → γ* → μ⁻ μ⁺ correctly mapped. Arrow directions follow QED
-          conventions. Vertex positions well-placed.
+        comment: QED, QCD, Higgs processes correctly constructed. Particle/antiparticle
+          arrow directions correct by physics convention.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''feynman-basic · javascript · d3 · anyplot.ai'' — correct
-          format. Legend: ''Fermion'' / ''Photon (γ)'' — accurate and clear.'
+        comment: 'Title: ''feynman-basic · javascript · d3 · anyplot.ai'' correct.
+          Legend shows all four line types with SVG path samples.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows fermion lines with direction arrows, wavy photon propagator,
-          vertex dots, time axis, all labels. Missing: gluon/boson line styles.'
+        comment: All four particle types shown. Both particles and antiparticles.
+          Three distinct interaction types (QED, QCD, Higgs).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: e⁻ e⁺ → γ* → μ⁻ μ⁺ is a canonical QED tree-level process. Physics-accurate,
-          neutral scientific content.
+        comment: 'Standard textbook Feynman processes: e⁻e⁺ annihilation (QED), quark-gluon
+          interaction (QCD), quark-Higgs coupling — all real and well-known.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2 vertices, 1 propagator, 4 external legs — exactly correct for this
-          tree-level process. Symmetric layout.
+        comment: Arrow directions follow standard Feynman diagram convention. Vertex
+          topology physically correct for each process.
     code_quality:
       score: 10
       max: 10
@@ -195,35 +192,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Two well-justified helper functions (wavyPath, fermionLine). Flat
-          structure otherwise.
+        comment: Two helper functions (wavyPath, gluonPath) justified by spec requirements.
+          No unnecessary abstraction or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: all positions as fractional canvas coordinates,
-          no RNG.'
+        comment: Fully deterministic. All positions hard-coded, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — d3 is a global. Clean.
+        comment: No imports (d3 is global). No unused declarations.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable, no fake UI, good physics-convention comments.
+        comment: Clean chaining idiom. forEach loops for labels and legend are idiomatic.
+          No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows harness pattern correctly. Title format correct.
+        comment: D3 is interactive library; harness emits both .png and .html correctly.
+          No filesystem writes in snippet.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -231,24 +229,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses d3.select, SVG defs/markers, d3.line() for path generation,
-          ANYPLOT_TOKENS for theme tokens. Harness contract followed precisely.
+        comment: 'Exemplary D3 idioms: select→append→attr chains, SVG defs for reusable
+          markers, theme tokens from window.ANYPLOT_TOKENS, SVG sized from window.ANYPLOT_SIZE.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: SVG marker elements (defs + marker + polygon) for arrowheads, parametric
-          wavy path via d3.line(), midpoint-arrow technique for fermion direction
-          — all D3-specific capabilities.
-  verdict: REJECTED
+        comment: Custom path generation via d3.line() with parametric geometry (sine-wave
+          and cycloidal arches) is distinctively D3. SVG marker elements for arrowheads.
+          Not quite 5/5 as path functions are standalone helpers rather than leveraging
+          D3 data binding for diagram structure.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []
