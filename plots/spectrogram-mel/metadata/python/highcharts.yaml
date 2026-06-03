@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:42:07Z'
-updated: '2026-06-03T18:15:05Z'
+updated: '2026-06-03T18:27:26Z'
 generated_by: claude-sonnet
 workflow_run: 26903356148
 issue: 4672
@@ -12,91 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Full spec compliance: all required features present and correct (mel filterbank,
-    dB scale, sequential colormap, time/Hz axes, colorbar)'
-  - Musical phrase narrative annotations via Highcharts Renderer API add genuine storytelling
-    without any fake interactivity
-  - 'Correct Imprint sequential palette applied to color_axis (minColor #009E73 to
-    maxColor #4467A3)'
-  - Both renders fully theme-adaptive with correct background, ink, and chrome tokens
-  - PIL canvas-pinning guard prevents off-by-one dimension failures; canvas exactly
-    3200x1800
-  - Clean, KISS code with deterministic seed and all imports used
+  - 'Perfect spec compliance: mel filter bank computed from scratch (no librosa dependency),
+    all required parameters (n_fft=2048, hop_length=512, n_mels=128) respected'
+  - 'Imprint sequential colormap (#009E73 → #4467A3) correctly applied to single-polarity
+    continuous dB data'
+  - Section annotations with Highcharts Renderer API create genuine data storytelling
+    — the four musical phrases (G3 phrase, C4 transition, E4 peak, C4 fadeout) are
+    immediately identifiable
+  - Fully theme-adaptive in both renders; no dark-on-dark or light-on-light failures
+  - PIL safety-net pinning ensures exact 3200×1800 canvas dimensions
   weaknesses:
-  - Section labels are positioned at plotTop+52px inside the heatmap area; they sit
-    on a teal/green heatmap background which provides less contrast than a plain background
-    — consider positioning them in the margin above the plot or using a more prominent
-    font weight/color
-  - The mel spectrogram appears visually flat (predominantly mid-range teal) because
-    signal energy is narrow-band below ~500 Hz; a narrower dB floor (e.g., -60 dB
-    clip instead of -80 dB) would compress the colormap dynamic range and make the
-    signal structure more visually salient
+  - Colormap direction (minColor=#009E73 at -60 dB silence, maxColor=#4467A3 at 0
+    dB loud) maps silence to green and loud sounds to blue — counterintuitive for
+    spectrograms; swapping to minColor=#4467A3 / maxColor=#009E73 would be more conventional
+  - First X-axis tick label shows -0.05 (artifact of scipy centered spectrogram windowing)
+    — could confuse viewers; consider clamping to 0.00
+  - Section dividers/labels use raw Renderer API with setTimeout instead of idiomatic
+    xAxis.plotLines and plotBands
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "spectrogram-mel · python · highcharts · anyplot.ai" bold dark ink, readable. Subtitle in soft grey, readable. Axis labels "Frequency (Hz, mel-scaled)" and "Time (s)" bold dark, readable. Tick labels in soft grey, readable. Colorbar "Power (dB)" readable.
-      Data: Imprint sequential colormap green (#009E73) to blue (#4467A3). Signal energy (blue) concentrated in lower frequency bands (15-431 Hz). Percussive bursts visible as small blue spots at ~3147 Hz. Section labels "G3 phrase", "C4 transition", "E4 peak", "C4 fadeout" visible at top of heatmap.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "spectrogram-mel · python · highcharts · anyplot.ai" at 66px bold — readable; subtitle at 38px readable; axis titles "Time (s)" and "Frequency (Hz, mel-scaled)" at 56px — readable; tick labels at 44px (Hz values 15–5387, time values -0.05–3.76) — readable; section labels "G3 phrase", "C4 transition", "E4 peak", "C4 fadeout" at 38px above heatmap — readable; colorbar "Power (dB)" labels from 0 dB to -60 dB — readable
+      Data: Imprint sequential colormap (#009E73 green → #4467A3 blue); energy bands visible at lower frequencies for each musical phrase; percussive transients visible as vertical bright flashes; full dynamic range -60 to 0 dB utilized
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and all text rendered in light cream/soft-grey tones against dark surface. No dark-on-dark failures. All labels, ticks, colorbar text readable against the dark background.
-      Data: Heatmap colors identical to light render — only chrome flips. Same signal structure visible. Dashed dividers adapted to semi-transparent off-white.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: All text rendered in light warm-grey tones (#F0EFE8 primary / #B8B7B0 secondary) — title, axis labels, tick labels, section annotations, and colorbar labels all clearly readable against dark background; legend background uses #242420 ELEVATED_BG with #B8B7B0 border; no dark-on-dark failures detected
+      Data: Heatmap colors identical to light render — same #009E73→#4467A3 gradient with same musical energy pattern; data colors unchanged between themes
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; chrome has flipped correctly
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; section labels on teal heatmap
-          background have slightly reduced contrast
+        comment: All font sizes explicitly set (title 66px dynamic, subtitle 38px,
+          axis titles 56px, ticks 44px); well-proportioned in both themes; no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions
+        comment: Section labels, tick labels, and colorbar labels are all clearly
+          separated; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Heatmap cells visible; plot appears somewhat flat/teal-dominated
-          due to narrow-band signal — inherent to data
+        comment: Heatmap cells show full dynamic range (-60 to 0 dB); energy bands
+          clearly distinguishable; colsize/rowsize=1
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential palette; CVD-safe; no red/green sole-signal encoding
+        comment: Imprint sequential colormap (green→blue) is perceptually uniform
+          and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 correct; well-proportioned margins; colorbar right-aligned
+        comment: Canvas 3200x1800; plot fills ~80% of canvas; colorbar well-positioned;
+          generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz, mel-scaled), Power (dB) all descriptive
+        comment: Time (s), Frequency (Hz, mel-scaled), Power (dB) — all descriptive
           with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly applied; backgrounds #FAF8F1/#1A1A17; both
-          renders theme-correct'
+        comment: 'Uses imprint_seq (#009E73 → #4467A3) for single-polarity continuous
+          data; backgrounds #FAF8F1/#1A1A17; full theme-adaptive chrome in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -106,21 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Musical phrase annotations and subtitle add narrative; above default
-          but not outstanding
+        comment: 'Above well-configured default baseline: dynamic title fontsize,
+          Imprint colormap, section annotations, subtitle. Not yet FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, no grid on heatmap, clean cell borders; above default
+        comment: 'Clean minimal chrome: gridLineWidth=0, lineWidth=0, tickLength=0.
+          No axis spines. Tasteful legend with ELEVATED_BG.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Section labels + dashed dividers + subtitle tell the musical phrase
-          story
+        comment: Section labels with dashed dividers provide clear musical narrative;
+          visual hierarchy guides reader through melodic progression
     spec_compliance:
       score: 15
       max: 15
@@ -130,50 +132,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mel-spectrogram as heatmap; correct chart type
+        comment: Correct mel-spectrogram implemented as heatmap with manually computed
+          mel filter bank
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: dB scale, sequential colormap, time X-axis, mel Hz Y-axis, dB colorbar,
-          n_fft=2048, hop_length=512, n_mels=128, synthesized data
+        comment: dB conversion, mel-scaled Y-axis with Hz labels, X-axis in seconds,
+          colorbar labeled in dB, n_fft=2048, hop_length=512, n_mels=128
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time(s), Y=mel-scaled Hz, color=power(dB)
+        comment: Time on X, mel-scaled frequency on Y, power (dB) encoded as color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: spectrogram-mel · python · highcharts · anyplot.ai; colorbar labeled
-          Power (dB)
+        comment: Title matches {spec-id} · python · highcharts · anyplot.ai format;
+          colorbar labeled Power (dB)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Manual mel filterbank, dB conversion, vibrato, harmonics, percussive
-          transients; comprehensive
+        comment: Synthesized audio with fundamentals + harmonics, percussive transients,
+          four distinct melodic phrases; covers full dynamic range
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Musical melody at 22050 Hz, 4 s; plausible and neutral
+        comment: Neutral musical melody (G3→C4→E4→C4 ascending phrase) representing
+          realistic audio ML preprocessing scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: dB range -80 to 0; time 0-4 s; frequency up to ~5 kHz
+        comment: sample_rate=22050 Hz, duration=4s, n_mels=128, dB range -60 to 0
+          — all standard for audio ML. Frequencies factually correct (G3=196 Hz, C4=262
+          Hz, E4=330 Hz)
     code_quality:
       score: 10
       max: 10
@@ -183,32 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear script
+        comment: 'Linear: imports → data synthesis → mel filter bank → heatmap data
+          → chart config → render → save. No classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear structure; no fake UI
+        comment: Clean, readable code; Renderer overlay for annotations is appropriate
+          complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PIL guard for exact
-          canvas dims
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API throughout
     library_mastery:
       score: 7
       max: 10
@@ -218,15 +225,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct HeatmapSeries + color_axis; category-based axes; Renderer
-          API; CDN-inline pattern
+        comment: Uses Chart(container=container), HighchartsOptions, HeatmapSeries,
+          color_axis, CDP viewport override — all following recommended highcharts-core
+          patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Renderer API for custom dashed dividers and phrase-label SVG overlays;
-          coloraxis with explicit dB stops
+        comment: Highcharts Renderer API (chart.renderer.path, chart.renderer.text,
+          xAxis.toPixels) for custom SVG overlays; color_axis with custom stops and
+          symbolHeight/symbolWidth for colorbar
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -234,9 +243,9 @@ impl_tags:
   - selenium
   - pillow
   techniques:
+  - html-export
   - colorbar
   - annotations
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -244,3 +253,4 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - minimal-chrome
