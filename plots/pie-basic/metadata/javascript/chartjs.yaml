@@ -1,0 +1,267 @@
+library: chartjs
+language: javascript
+specification_id: pie-basic
+created: '2026-06-02T23:39:05Z'
+updated: '2026-06-02T23:58:20Z'
+generated_by: claude-opus
+workflow_run: 26854129196
+issue: 678
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Per-slice luminance-aware percent label color (threshold 0.3) — the prior white-on-lavender
+    / white-on-cyan contrast nit is now resolved: 25% (Microsoft Azure) and 26% (Others)
+    numerals render in dark ink #1A1A17, while AWS / Google Cloud retain off-white
+    #FAF8F1.'
+  - 'Imprint palette positions 1–6 applied in canonical order; first slice is #009E73
+    brand green; data colors are byte-identical between light and dark renders — only
+    chrome flips.'
+  - 'Square 2400×2400 canvas correctly declared via `//# anyplot-orientation: square`;
+    canvas dimension gate passes; nothing clipped or overflowing.'
+  - 'All four spec features delivered: percentage labels on slices ≥ 5%, distinct
+    Imprint colors, six-category legend with inline ''Category — NN%'', and explode
+    on the largest slice (AWS, offset: 30 px).'
+  - Smart < 5% skip threshold (raised from < 4% in attempt 1) now defers both the
+    3% Oracle and 4% Alibaba wedges to the legend — narrow slices no longer crowd
+    their own digits.
+  - 'Idiomatic Chart.js: `animation: false`, single canvas appended to `#container`,
+    no canvas-size tampering, custom `afterDatasetsDraw` plugin is the canonical way
+    to draw labels on top of arcs, `generateLabels` upgrades legend to diagnostic
+    ''Category — NN%'' format.'
+  - Others bucket blended 60% toward `t.pageBg` so it reads as 'rest' rather than
+    competing with named categories — light tail de-emphasis that addresses the prior
+    DE-03 nit.
+  weaknesses:
+  - 'Dark-render legend text reads slightly low-contrast at viewing scale — `labels.color:
+    t.ink` is correctly set, but at fontsize 20 px against #1A1A17 the swatch+text
+    combo looks dim relative to the title (size 34). Bumping legend fontsize to ~22–24
+    px or boosting weight would lift legibility on small screens.'
+  - Slice order is not share-sorted (AWS 31, Azure 25, Google 11, Alibaba 4, Oracle
+    3, Others 26). Sorting descending by share (or descending with Others pinned last)
+    would create a cleaner narrative sweep and is the conventional pie ordering.
+  - LM-02 doesn't push into uniquely Chart.js territory — `hoverOffset` and the custom
+    tooltip callback only appear in interactive HTML, not the screenshot. Consider
+    also exposing centre annotation via `afterDraw` or using `chartjs-plugin-datalabels`
+    patterns inline (datalabels plugin itself isn't allowlisted, but its rendering
+    approach can be mimicked) to lean further into Chart.js fluency.
+  - Three small color helpers (hexToRgb / blendRgb / relLuminance) plus a Chart.js
+    plugin push CQ-01 slightly below strict KISS. They're justified by the luminance-aware
+    label feature, but a future refactor could fold them inline if the feature stays
+    this small.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 across the full 2400×2400 square canvas — no pure-white panel, no padding leaks.
+      Chrome: Title "pie-basic · javascript · chartjs · anyplot.ai" centered at top in dark ink #1A1A17 at fontsize ~34; right-side legend with swatch + "Category — NN%" rows in dark ink, fully readable.
+      Data: Six wedges in Imprint canonical order — AWS #009E73 (31%, exploded ~30 px), Microsoft Azure #C475FD (25%), Google Cloud #4467A3 (11%), Alibaba Cloud #BD8233 (4%), Oracle Cloud #AE3030 (3%), Others (cyan blended 60% toward page bg, 26%). Percent labels at slice midpoints: AWS 31% in white, Azure 25% in dark ink (NEW — was white in attempt 1), Google 11% in white, Others 26% in dark ink (NEW). Alibaba 4% and Oracle 3% are skipped per the < 5% threshold and live only in the legend. First series confirmed as #009E73.
+      Legibility verdict: PASS — every text element is readable against the warm off-white background; the per-slice luminance-aware label color resolves the borderline white-on-lavender/cyan contrast called out in attempt 1.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — no pure black, no light panel.
+      Chrome: Title flipped to light off-white #FAF8F1 at fontsize 34, easily readable. Legend uses t.ink (light off-white) for text and per-slice swatch fills; at the small legend fontsize (20) the text reads slightly dim against the dark background but is fully legible at full 2400 px native — no dark-on-dark failure.
+      Data: Slice colors are byte-identical to the light render (only chrome flipped). Percent labels: white 31% on AWS green, dark-ink 25% on lavender Azure, white 11% on blue Google, dark-ink 26% on cyan Others — same per-slice routing as light render. Brand green #009E73 is vivid against the dark surface.
+      Legibility verdict: PASS — no element fails the dark-on-dark check; the per-slice label routing keeps numerals readable on every wedge color regardless of theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Per-slice luminance-aware label color resolves attempt-1 contrast
+          nits; dark-render legend at fontsize 20 reads slightly dim relative to title
+          34 but is fully legible at native resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: < 5% skip threshold prevents label-vs-slice collisions on narrow
+          wedges; legend offset right keeps it clear of the pie.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wedges distinct via Imprint palette + 3 px page-bg separator strokes;
+          narrow 3%/4% slices still visible thanks to explode-adjacent positioning.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; luminance-aware label color now correct
+          on every wedge.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: '2400×2400 square via `//# anyplot-orientation: square`; canvas gate
+          passed; generous padding; nothing clipped.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandated title format exact; pie has no axes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First slice #009E73, canonical order, t.pageBg backgrounds, chrome
+          flips per theme.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom `afterDatasetsDraw` plugin, luminance-aware label routing,
+          blended Others bucket — solid polish; not pushing into 'wow' territory.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Page-bg separator strokes, generous canvas padding, bold numerals,
+          refined Others fill.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Exploded leader + de-emphasized Others tail; slices still not share-sorted
+          which would tighten the narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'type: ''pie''.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Percent labels, distinct colors, legend, explode on largest — all
+          four delivered.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories → labels, values → dataset.data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly canonical; legend annotated 'Category — NN%'.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Six categories spanning leader, mid-tier, narrow wedges, and Others
+          bucket.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Global cloud market share — neutral, textbook pie use case.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Six values summing to 100, range 3–31.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Flat top-level script but with three color helpers (hexToRgb, blendRgb,
+          relLuminance) and a plugin object — justified by luminance-aware label feature,
+          but slightly above pure KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded data, no RNG, no fetch.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Chart global + window.ANYPLOT_TOKENS per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Compact, well-commented, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness owns output; current Chart.js 4.x config.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'animation: false, mount-node contract honored, plugin registered
+          both globally and on options; generateLabels callback is idiomatic Chart.js.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin, generateLabels, hoverOffset, per-slice
+          offset, custom tooltip — solid use of Chart.js extension points; could push
+          further into Chart.js-only territory.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
