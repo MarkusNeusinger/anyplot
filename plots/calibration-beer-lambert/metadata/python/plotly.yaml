@@ -1,43 +1,58 @@
 library: plotly
+language: python
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:51:36Z'
-updated: '2026-03-09T11:02:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22849775862
+updated: '2026-06-03T08:03:56Z'
+generated_by: claude-sonnet
+workflow_run: 26871227956
 issue: 4410
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/plotly/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Cohesive navy blue color scheme with intentional design hierarchy
-  - All spec requirements fully implemented including prediction interval and unknown
-    sample determination
-  - Excellent data storytelling through the unknown sample focal point with dashed
-    lines
-  - Clean well-structured code with appropriate complexity
-  - Realistic analytical chemistry context with appropriate scales
+  - 'First calibration standard is #009E73 (Imprint brand green) — correct palette
+    lead'
+  - 'All four spec-required features present: regression equation, R² annotation,
+    prediction interval band, unknown sample dashed guide lines'
+  - 'Semantic color choices are well-reasoned: blue (#4467A3) for fit line, matte
+    red (#AE3030) for unknown sample creates clear focal hierarchy'
+  - Data is scientifically rigorous — molar absorptivity, realistic noise, 95% t-distribution
+    prediction interval computed correctly
+  - 'Idiomatic Plotly patterns: fill=toself for confidence band, hovertemplate with
+    extra tag, paper_bgcolor/plot_bgcolor split, both PNG and HTML outputs'
+  - Both themes fully readable — INK token correctly threaded through title, axes,
+    ticks, legend, and annotation box
+  - Marker size hierarchy (calibration standards size=17, unknown size=21) naturally
+    draws the eye to the analytical result
+  - 'Perfect code structure: KISS flat layout, np.random.seed(42), only used imports'
   weaknesses:
-  - Marker sizes could be slightly larger for optimal visibility at full resolution
-  - Library mastery could push further into Plotly-specific features
-  image_description: The plot displays a Beer-Lambert calibration curve on a clean
-    white background. Eight blue circular markers (with white edges) represent calibration
-    standards at concentrations 0, 2, 4, 6, 8, 10, 12, and 14 mg/L, with absorbance
-    values ranging from ~0.003 to ~0.63. A dark navy blue regression line passes through
-    the data with a light blue semi-transparent 95% prediction interval band. A red
-    diamond marker at approximately (8.3, 0.38) represents the unknown sample, with
-    red dashed lines extending horizontally to the y-axis and vertically down to the
-    x-axis, illustrating concentration determination. An annotation box displays "y
-    = 0.0453x + 0.0020" in bold and "R² = 0.99935" with a light background and blue
-    border. The legend in the upper-left corner lists all four traces. The title reads
-    "calibration-beer-lambert · plotly · pyplots.ai" centered at top. X-axis labeled
-    "Concentration (mg/L)" and y-axis "Absorbance". Subtle dashed y-axis gridlines,
-    no x-axis grid.
+  - Prediction interval fill rgba(68,103,163,0.12) is nearly invisible on the dark
+    background (#1A1A17) — 12% opacity of the blue fill blends into near-black; increase
+    to ~0.20 and optionally add a dashed borderline on the band edges so the interval
+    is perceptible in both themes
+  - 'DE-01/DE-02: design is refined but not at publication-ready level — removing
+    the top and right spines (or confirming they are absent via showline=False) and
+    tightening the legend border to a hairline would elevate polish'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "calibration-beer-lambert · python · plotly · anyplot.ai" centered in dark ink, clearly readable; x-axis label "Concentration (mg/L)" and y-axis label "Absorbance" both in dark ink at 12px; tick labels at 10px in INK_SOFT (#4A4A44), all readable; legend box with elevated background (#FFFDF6) and INK_SOFT border
+      Data: Eight green circles (#009E73, size=17) for calibration standards on a near-perfect linear trend; blue regression line (#4467A3, width=3); barely perceptible light-blue prediction interval band (rgba(68,103,163,0.12)) hugging the line; large red diamond (#AE3030, size=21) for the unknown sample at ~8.3 mg/L; dashed red guide lines extending horizontally and vertically to both axes; bottom-right annotation box with bold equation "y = 0.0453x + 0.0020" and "R² = 0.99935" on elevated background
+      Legibility verdict: PASS — all text, labels, and elements clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title in light ink (#F0EFE8), clearly readable against the dark background; axis labels and tick labels in light INK_SOFT (#B8B7B0), all readable; legend box with elevated dark background (#242420) and light border; annotation box with light text on elevated dark background
+      Data: Data colors are identical to the light render — green circles (#009E73) for calibration standards, blue regression line (#4467A3), red diamond (#AE3030) for unknown sample, red dashed guide lines. The 95% prediction interval band (rgba(68,103,163,0.12)) is nearly invisible on the dark background — the 12% opacity of the blue fill blends into the near-black surface, making the band very hard to perceive
+      Legibility verdict: PASS — all text and major data elements are readable; minor concern: prediction interval band nearly invisible in dark theme due to very low fill opacity on dark surface
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -45,64 +60,83 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, labels=22, ticks=18, annotation=20,
-          legend=16'
+        comment: All font sizes explicitly set; title 16px, axis labels 12px, ticks
+          10px, legend 10px, annotation 16px; both themes fully readable; proportions
+          well-balanced
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or data elements; legend, annotation box, and
+          data points well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers size 14/16 with white edges clearly visible, slightly small
-          for canvas
+        comment: 8 sparse data points use appropriately large markers (size=17 for
+          standards, size=21 for unknown); regression line width=3; prediction interval
+          band subtle but present
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue vs red is colorblind-safe with good contrast
+        comment: Three distinct hue families (green, blue, red) plus redundant encoding
+          via marker shapes (circle vs diamond); white outlines on markers; Imprint
+          palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: Canvas 3200x1800 correct; explicit margins (l=80,r=40,t=80,b=60);
+          plot fills canvas well; no cut-off elements in either render
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) with units, Absorbance dimensionless per spec
+        comment: 'X-axis: ''Concentration (mg/L)'' with units; Y-axis: ''Absorbance''
+          (dimensionless per spec)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Imprint brand green); regression line #4467A3
+          (position 3); unknown sample #AE3030 (semantic red anchor); backgrounds
+          #FAF8F1 light / #1A1A17 dark; chrome theme-adaptive in both renders'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive navy blue palette, styled annotation box, clearly above
-          defaults
+        comment: 'Above well-configured default: intentional semantic color hierarchy
+          (green standards, blue fit, red unknown), size variation between markers,
+          styled annotation box; not yet at FiveThirtyEight publication level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle dashed y-grid, light axis lines, generous
-          whitespace
+        comment: Y-only grid (subtle, correct), x-grid off, L-shaped axis frame, white
+          marker outlines, styled legend with elevated background; not every detail
+          fully polished
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Unknown sample with dashed lines creates clear focal point and demonstrates
-          calibration use
+        comment: 'Clear analytical narrative: calibration standards → fit → prediction
+          interval → unknown determination via guide lines; red diamond with dashed
+          guide lines creates strong focal point; R² annotation confirms excellent
+          linearity'
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with linear regression
+        comment: 'Correct plot type: scatter calibration curve with linear regression
+          fit line and confidence band'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: equation, R², prediction interval, unknown with dashed
-          lines'
+        comment: 'All 4 spec features present: regression equation annotation, R²
+          value, 95% prediction interval band, unknown sample with dashed guide lines
+          to both axes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration, Y=absorbance correct
+        comment: 'X: Concentration (mg/L), Y: Absorbance; linear Beer-Lambert relationship;
+          all 8 standards visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive
+        comment: Title matches required format; legend labels descriptive and accurate
     data_quality:
       score: 15
       max: 15
@@ -141,19 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows blank, standards, scatter, unknown determination
+        comment: 'Shows all calibration curve aspects: blank (zero), standards, linear
+          fit, prediction interval, unknown determination'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real UV-Vis spectrophotometry calibration scenario
+        comment: UV-Vis spectrophotometry in neutral scientific context; appropriate
+          noise model; blank included
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic absorptivity, absorbance range, and R² value
+        comment: Molar absorptivity 0.045 realistic for UV-Vis; absorbance 0-0.7 within
+          Beer-Lambert linear range; noise level scientifically plausible
     code_quality:
       score: 10
       max: 10
@@ -163,7 +203,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: 'Flat: imports → constants → data → regression → plot traces → layout
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -175,35 +216,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only os, numpy, plotly.graph_objects imported — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity; good variable naming; no
+          over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good Graph Objects pattern with add_trace, add_shape, add_annotation
+        comment: Expert use of go.Scatter modes, fill=toself for confidence band,
+          add_shape for guide lines, add_annotation for equation box, comprehensive
+          update_layout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom hovertemplates, fill=toself, write_html export
+        comment: 'Uses Plotly-specific features: fill=toself with reversed array concatenation
+          for bands, hovertemplate with HTML formatting and <extra></extra> trace
+          suppression, paper_bgcolor vs plot_bgcolor split, write_html for interactive
+          output'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -216,6 +263,5 @@ impl_tags:
   dataprep:
   - regression
   styling:
-  - edge-highlighting
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
