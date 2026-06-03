@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
