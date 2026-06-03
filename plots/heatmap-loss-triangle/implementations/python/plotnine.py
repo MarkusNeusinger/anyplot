@@ -1,8 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
 """
+
 import os
 
 import numpy as np
@@ -111,7 +112,7 @@ plot = (
     + labs(
         x="Development Period (Years)",
         y="Accident Year",
-        title="heatmap-loss-triangle · plotnine · anyplot.ai",
+        title="heatmap-loss-triangle · python · plotnine · anyplot.ai",
         subtitle="Cumulative Paid Claims — Actual vs Projected  ·  Development Factors shown below",
     )
     + theme_minimal()
