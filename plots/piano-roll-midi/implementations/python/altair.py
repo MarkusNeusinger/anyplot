@@ -1,25 +1,43 @@
-""" pyplots.ai
+"""anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-06-03
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the installed altair package when run from its own directory
+_thisdir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _thisdir]
+del _thisdir
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data: A short melodic phrase with chords (C major progression with melody)
+# Theme tokens (Imprint palette + theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Piano key row shading (theme-adaptive alternating background)
+WHITE_KEY_BG = "#F0EDE6" if THEME == "light" else "#242420"
+BLACK_KEY_BG = "#D8D4CC" if THEME == "light" else "#1A1A17"
+
+# Data: C major progression with melody over 8 measures (32 beats)
 np.random.seed(42)
-
-# MIDI note name mapping
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
-
-# Build a musical phrase: chords + melody over 8 measures (32 beats in 4/4)
 notes = []
 
-# Bass line (lower octave)
+# Bass line (A2–F3)
 bass_pattern = [
     (0, 2, 48),
     (2, 2, 52),
@@ -41,7 +59,7 @@ bass_pattern = [
 for start, dur, pitch in bass_pattern:
     notes.append({"start": start, "duration": dur, "pitch": pitch, "velocity": np.random.randint(60, 80)})
 
-# Chord voicings (mid range)
+# Chord voicings (B3–A4)
 chord_hits = [
     (0, [60, 64, 67]),
     (4, [60, 65, 69]),
@@ -56,7 +74,7 @@ for start, pitches in chord_hits:
     for p in pitches:
         notes.append({"start": start, "duration": 3.5, "pitch": p, "velocity": np.random.randint(50, 75)})
 
-# Melody (upper range, varying rhythms and velocities)
+# Melody (B4–G5, varying rhythms and dynamics)
 melody = [
     (0, 1, 72, 100),
     (1, 0.5, 74, 90),
@@ -97,47 +115,42 @@ for start, dur, pitch, vel in melody:
 
 df = pd.DataFrame(notes)
 df["end"] = df["start"] + df["duration"]
-
-# Create note labels (e.g., C4, D#5)
 df["note_name"] = df["pitch"].apply(lambda p: f"{NOTE_NAMES[p % 12]}{p // 12 - 1}")
 
-# Only include pitches actually used + 1 semitone margin on each side
+# Display pitch range: used pitches ± 1 semitone for piano key context
 used_pitches = set(df["pitch"].unique())
 pitch_min = df["pitch"].min() - 1
 pitch_max = df["pitch"].max() + 1
-# Keep used pitches plus their immediate neighbors for context
 display_pitches = set()
 for p in used_pitches:
     display_pitches.update([p - 1, p, p + 1])
-# Clamp to the overall range
 all_pitches = sorted([p for p in display_pitches if pitch_min <= p <= pitch_max])
 
-# Black key indicators for background shading
-black_key_semitones = {1, 3, 6, 8, 10}
-
-# Create background rows for piano key coloring
-bg_rows = []
-for p in all_pitches:
-    is_black = (p % 12) in black_key_semitones
-    bg_rows.append(
-        {"pitch": p, "note_name": f"{NOTE_NAMES[p % 12]}{p // 12 - 1}", "is_black": is_black, "start": 0, "end": 32}
-    )
-
-bg_df = pd.DataFrame(bg_rows)
-
-# Sort order for y-axis (low pitch at bottom, high at top — reversed for Altair)
+# Sort order: low pitch at bottom (descending list for Altair nominal axis)
 pitch_labels = [f"{NOTE_NAMES[p % 12]}{p // 12 - 1}" for p in reversed(all_pitches)]
 
-# Assign musical layer labels for selection filtering
+# Piano key background rows (black semitones: C#, D#, F#, G#, A#)
+BLACK_SEMITONES = {1, 3, 6, 8, 10}
+bg_rows = [
+    {
+        "pitch": p,
+        "note_name": f"{NOTE_NAMES[p % 12]}{p // 12 - 1}",
+        "is_black": (p % 12) in BLACK_SEMITONES,
+        "start": 0.0,
+        "end": 32.0,
+    }
+    for p in all_pitches
+]
+bg_df = pd.DataFrame(bg_rows)
+
+# Musical layer classification for legend-bound selection
 df["layer"] = df["pitch"].apply(lambda p: "Bass" if p < 55 else ("Chords" if p < 70 else "Melody"))
 
-# Selection: click legend to highlight a musical layer
+# Selections: layer toggle (legend) + measure brush (HTML only)
 layer_selection = alt.selection_point(fields=["layer"], bind="legend")
-
-# Selection: interval selection on x-axis for measure zoom (HTML)
 brush = alt.selection_interval(encodings=["x"])
 
-# Background: alternating shading for black/white keys
+# Layer 1: Alternating piano key row shading
 background = (
     alt.Chart(bg_df)
     .mark_bar()
@@ -145,47 +158,42 @@ background = (
         x=alt.X("start:Q", scale=alt.Scale(domain=[0, 32])),
         x2="end:Q",
         y=alt.Y("note_name:N", sort=pitch_labels),
-        color=alt.condition(alt.datum.is_black, alt.value("#d4d0c8"), alt.value("#f5f3ef")),
+        color=alt.condition(alt.datum.is_black, alt.value(BLACK_KEY_BG), alt.value(WHITE_KEY_BG)),
     )
 )
 
-# Beat grid lines (vertical rules at each beat)
+# Layer 2: Beat grid lines (dashed, subtle)
 beat_positions = pd.DataFrame({"beat": list(range(33))})
 beat_grid = (
-    alt.Chart(beat_positions).mark_rule(strokeDash=[3, 3], opacity=0.25, color="#8a8580").encode(x=alt.X("beat:Q"))
+    alt.Chart(beat_positions).mark_rule(strokeDash=[3, 3], opacity=0.25, color=INK_SOFT).encode(x=alt.X("beat:Q"))
 )
 
-# Measure lines (stronger lines every 4 beats)
+# Layer 3: Measure boundary lines (solid, stronger)
 measure_positions = pd.DataFrame({"beat": list(range(0, 33, 4))})
-measure_grid = (
-    alt.Chart(measure_positions).mark_rule(opacity=0.5, color="#5a554f", strokeWidth=1.5).encode(x=alt.X("beat:Q"))
-)
+measure_grid = alt.Chart(measure_positions).mark_rule(opacity=0.5, color=INK, strokeWidth=1.5).encode(x=alt.X("beat:Q"))
 
-# Color scale: warm amber-to-crimson palette for velocity
-velocity_colors = ["#2c1654", "#5b3a8c", "#9b4dca", "#d4577a", "#f28c38", "#ffd54f"]
-
-# Piano roll notes with selection-based opacity
+# Layer 4: Note bars — Imprint sequential velocity (soft=green #009E73, loud=blue #4467A3)
 note_bars = (
     alt.Chart(df)
-    .mark_bar(cornerRadius=4, stroke="#1a1a2e", strokeWidth=0.6)
+    .mark_bar(cornerRadius=3, stroke=INK, strokeWidth=0.5)
     .encode(
         x=alt.X(
             "start:Q",
             title="Measure",
             axis=alt.Axis(
-                labelFontSize=16,
-                titleFontSize=20,
+                labelFontSize=10,
+                titleFontSize=12,
                 values=list(range(0, 33, 4)),
                 labelExpr="'M' + (datum.value / 4 + 1)",
             ),
         ),
         x2="end:Q",
-        y=alt.Y("note_name:N", sort=pitch_labels, title="Pitch", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
+        y=alt.Y("note_name:N", sort=pitch_labels, title="Pitch", axis=alt.Axis(labelFontSize=9, titleFontSize=12)),
         color=alt.Color(
             "velocity:Q",
             title="Velocity",
-            scale=alt.Scale(range=velocity_colors, domain=[40, 127]),
-            legend=alt.Legend(titleFontSize=18, labelFontSize=16, orient="right", gradientLength=300),
+            scale=alt.Scale(range=["#009E73", "#4467A3"], domain=[40, 127]),
+            legend=alt.Legend(titleFontSize=10, labelFontSize=9, orient="right", gradientLength=150),
         ),
         opacity=alt.condition(layer_selection, alt.value(0.95), alt.value(0.15)),
         tooltip=[
@@ -199,39 +207,49 @@ note_bars = (
     .add_params(layer_selection)
 )
 
-# Layer labels as text annotations on the right edge
+# Layer 5: Musical layer labels at right margin
 layer_label_data = pd.DataFrame(
     [
-        {"x": 32.5, "note_name": "C3", "label": "Bass"},
-        {"x": 32.5, "note_name": "E4", "label": "Chords"},
-        {"x": 32.5, "note_name": "E5", "label": "Melody"},
+        {"x": 32.3, "note_name": "C3", "label": "Bass"},
+        {"x": 32.3, "note_name": "E4", "label": "Chords"},
+        {"x": 32.3, "note_name": "E5", "label": "Melody"},
     ]
 )
 layer_labels = (
     alt.Chart(layer_label_data)
-    .mark_text(align="left", dx=8, fontSize=14, fontWeight="bold", color="#5a554f", fontStyle="italic")
+    .mark_text(align="left", dx=8, fontSize=9, fontWeight="bold", color=INK_MUTED, fontStyle="italic")
     .encode(x=alt.X("x:Q"), y=alt.Y("note_name:N", sort=pitch_labels), text="label:N")
 )
 
-# Layer everything together
+# Title: 46 chars < 67 baseline → fontSize=16 (no scaling needed)
+title = "piano-roll-midi · python · altair · anyplot.ai"
+
+# Compose all five layers with full theme-adaptive configuration
 chart = (
     (background + beat_grid + measure_grid + note_bars + layer_labels)
     .properties(
-        width=1500,
-        height=850,
-        title=alt.Title(
-            text="piano-roll-midi · altair · pyplots.ai",
-            fontSize=28,
-            anchor="middle",
-            offset=20,
-            color="#1a1a2e",
-            subtitleColor="#5a554f",
-        ),
+        width=620, height=330, background=PAGE_BG, title=alt.Title(text=title, fontSize=16, anchor="middle", color=INK)
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(grid=False)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(grid=False, domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.add_params(brush).save("plot.html")
+# Save PNG and pad to exact canvas target (3200 × 1800)
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        "Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save interactive HTML (adds measure brush selection)
+chart.add_params(brush).save(f"plot-{THEME}.html")
