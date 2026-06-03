@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import LineSeries
+from highcharts_core.options.series.area import AreaSeries
 from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -25,6 +25,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette — first series always #009E73
@@ -112,10 +113,25 @@ chart.options.x_axis = {
     "tickInterval": 0.5,
     "gridLineWidth": 0,
     "lineColor": INK_SOFT,
-    "lineWidth": 2,
-    "tickWidth": 2,
+    "lineWidth": 1,
+    "tickWidth": 1,
     "tickLength": 8,
     "tickColor": INK_SOFT,
+    # Emphasize the dominant CH3 triplet region with a subtle highlight band
+    "plotBands": [
+        {
+            "from": 0.97,
+            "to": 1.39,
+            "color": "rgba(0,158,115,0.07)",
+            "zIndex": 1,
+            "label": {
+                "text": "dominant",
+                "style": {"fontSize": "34px", "color": INK_MUTED, "fontStyle": "italic"},
+                "verticalAlign": "top",
+                "y": 20,
+            },
+        }
+    ],
 }
 
 # Y-axis: intensity — max 1.35 gives ~4% headroom above tallest peak (1.30)
@@ -132,8 +148,8 @@ chart.options.y_axis = {
     "gridLineDashStyle": "Dot",
     "gridLineWidth": 1,
     "lineColor": INK_SOFT,
-    "lineWidth": 2,
-    "tickWidth": 2,
+    "lineWidth": 1,
+    "tickWidth": 1,
     "tickLength": 8,
     "tickColor": INK_SOFT,
     "opposite": False,
@@ -153,7 +169,7 @@ chart.options.tooltip = {
 
 chart.options.plot_options = {
     "series": {"animation": False, "states": {"hover": {"lineWidthPlus": 0}}},
-    "line": {"lineWidth": 2, "marker": {"enabled": False}, "turboThreshold": 10000},
+    "area": {"lineWidth": 2, "marker": {"enabled": False}, "turboThreshold": 10000},
 }
 
 # Peak annotations with connector lines (requires annotations.js module)
@@ -165,7 +181,7 @@ chart.options.annotations = [
             "borderWidth": 0,
             "borderRadius": 6,
             "padding": 10,
-            "style": {"fontSize": "34px", "color": INK, "fontWeight": "600"},
+            "style": {"fontSize": "40px", "color": INK_MUTED, "fontWeight": "600"},
             "shape": "connector",
         },
         "labels": [
@@ -177,10 +193,12 @@ chart.options.annotations = [
     }
 ]
 
-series = LineSeries()
+series = AreaSeries()
 series.data = spectrum_data
 series.name = "Ethanol ¹H NMR"
 series.color = BRAND
+series.fill_color = "rgba(0,158,115,0.12)"
+series.fill_opacity = 1
 chart.add_series(series)
 
 # Export — download Highcharts + annotations module for inline embedding
