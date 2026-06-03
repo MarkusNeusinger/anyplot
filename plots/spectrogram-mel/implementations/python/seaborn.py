@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -31,8 +31,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Imprint palette pos 1 — first series
 
-# Imprint sequential colormap for continuous spectrogram data
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+
+# Reversed sequential colormap: blue (low energy) → green (high energy = brand color)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#4467A3", "#009E73"])
 
 sns.set_theme(
     style="ticks",
@@ -105,22 +107,22 @@ audio /= np.abs(audio).max() + 1e-9  # normalize to [-1, 1]
 freqs_stft, times_stft, Zxx = stft(audio, fs=sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)
 power_spectrum = np.abs(Zxx) ** 2
 
-# Mel filterbank (manual, no external audio library dependency)
+# Mel filterbank — fully vectorized with numpy broadcasting (no nested Python loops)
 mel_min = 2595.0 * np.log10(1.0 + 0.0 / 700.0)
 mel_max = 2595.0 * np.log10(1.0 + (sample_rate / 2.0) / 700.0)
 mel_points = np.linspace(mel_min, mel_max, n_mels + 2)
 hz_points = 700.0 * (10.0 ** (mel_points / 2595.0) - 1.0)
 bin_indices = np.clip(np.floor((n_fft + 1) * hz_points / sample_rate).astype(int), 0, len(freqs_stft) - 1)
 
-filterbank = np.zeros((n_mels, len(freqs_stft)))
-for m in range(1, n_mels + 1):
-    f_l, f_c, f_r = bin_indices[m - 1], bin_indices[m], bin_indices[m + 1]
-    if f_c > f_l:
-        for k in range(f_l, f_c):
-            filterbank[m - 1, k] = (k - f_l) / (f_c - f_l)
-    if f_r > f_c:
-        for k in range(f_c, f_r):
-            filterbank[m - 1, k] = (f_r - k) / (f_r - f_c)
+bin_range = np.arange(len(freqs_stft))  # shape (n_freqs,)
+f_l = bin_indices[:-2, np.newaxis]  # shape (n_mels, 1)
+f_c = bin_indices[1:-1, np.newaxis]  # shape (n_mels, 1)
+f_r = bin_indices[2:, np.newaxis]  # shape (n_mels, 1)
+rise_denom = np.where(f_c > f_l, f_c - f_l, 1)
+fall_denom = np.where(f_r > f_c, f_r - f_c, 1)
+filterbank = np.where((bin_range >= f_l) & (bin_range < f_c), (bin_range - f_l) / rise_denom, 0.0) + np.where(
+    (bin_range >= f_c) & (bin_range < f_r), (f_r - bin_range) / fall_denom, 0.0
+)
 
 mel_spec = filterbank @ power_spectrum
 mel_spec_db = 10 * np.log10(np.maximum(mel_spec, 1e-10))
@@ -133,9 +135,21 @@ df_spec = pd.DataFrame(mel_spec_flipped, index=np.arange(n_mels), columns=np.ara
 step = 80
 wave_df = pd.DataFrame({"Time (s)": t[::step], "Amplitude": audio[::step]})
 
-# Plot — two-panel layout: waveform overview (top) + mel-spectrogram (bottom)
-fig, (ax_wave, ax_spec) = plt.subplots(
-    2, 1, figsize=(8, 4.5), dpi=400, height_ratios=[1, 5], gridspec_kw={"hspace": 0.08}
+# Amplitude distribution per vowel for seaborn KDE statistical panel
+kde_records = []
+for i, (lbl, _) in enumerate(vowels):
+    start = i * segment_len
+    end = start + segment_len if i < n_vowels - 1 else len(t)
+    for amp in audio[start:end:20]:  # downsample for performance
+        kde_records.append({"Vowel": lbl, "Amplitude": float(amp)})
+kde_df = pd.DataFrame(kde_records)
+
+# Palette mapping for unique vowels (two /a/ segments merge automatically)
+vowel_palette = {lbl: IMPRINT_PALETTE[j] for j, lbl in enumerate(["/a/", "/e/", "/i/", "/o/", "/u/"])}
+
+# Plot — three-panel layout: waveform / mel-spectrogram / amplitude KDE distributions
+fig, (ax_wave, ax_spec, ax_kde) = plt.subplots(
+    3, 1, figsize=(8, 4.5), dpi=400, height_ratios=[1, 4, 2], gridspec_kw={"hspace": 0.38}
 )
 fig.patch.set_facecolor(PAGE_BG)
 
@@ -148,9 +162,9 @@ ax_wave.set_title(title, fontsize=title_fs, fontweight="medium", pad=8, color=IN
 sns.lineplot(data=wave_df, x="Time (s)", y="Amplitude", ax=ax_wave, color=BRAND, linewidth=1.2, alpha=0.9)
 ax_wave.fill_between(wave_df["Time (s)"], wave_df["Amplitude"], alpha=0.12, color=BRAND)
 ax_wave.set_xlim(0, duration)
-ax_wave.set_ylabel("Amp.", fontsize=8, labelpad=4, color=INK)
+ax_wave.set_ylabel("Amp.", fontsize=9, labelpad=4, color=INK)
 ax_wave.set_xlabel("")
-ax_wave.tick_params(axis="y", labelsize=6, length=2, colors=INK_SOFT)
+ax_wave.tick_params(axis="y", labelsize=7, length=2, colors=INK_SOFT)
 ax_wave.tick_params(axis="x", labelbottom=False, length=0)
 
 # Vowel IPA labels and segment boundaries on waveform
@@ -169,7 +183,7 @@ for sp in ax_wave.spines.values():
     sp.set_edgecolor(INK_SOFT)
     sp.set_linewidth(0.5)
 
-# Bottom panel: mel-spectrogram heatmap (seaborn-native)
+# Middle panel: mel-spectrogram heatmap (seaborn-native)
 sns.heatmap(
     df_spec,
     ax=ax_spec,
@@ -238,6 +252,42 @@ ax_spec.tick_params(axis="both", length=2, width=0.5)
 
 sns.despine(ax=ax_spec, top=True, right=True)
 for sp in ax_spec.spines.values():
+    sp.set_edgecolor(INK_SOFT)
+    sp.set_linewidth(0.5)
+
+# Bottom panel: amplitude distribution per vowel — seaborn KDE statistical visualization
+sns.kdeplot(
+    data=kde_df,
+    x="Amplitude",
+    hue="Vowel",
+    ax=ax_kde,
+    fill=True,
+    alpha=0.3,
+    linewidth=1.2,
+    palette=vowel_palette,
+    hue_order=["/a/", "/e/", "/i/", "/o/", "/u/"],
+    bw_adjust=0.8,
+)
+ax_kde.set_xlabel("Amplitude", fontsize=9, labelpad=4, color=INK)
+ax_kde.set_ylabel("Density", fontsize=9, labelpad=4, color=INK)
+ax_kde.tick_params(axis="both", labelsize=7, length=2, colors=INK_SOFT)
+
+# Style the KDE legend — placed upper-right to avoid overlap with waveform area
+legend = ax_kde.get_legend()
+if legend:
+    legend.set_bbox_to_anchor((1.0, 1.0))
+    legend.set_loc("upper right")
+    legend.get_frame().set_facecolor(ELEVATED_BG)
+    legend.get_frame().set_edgecolor(INK_SOFT)
+    legend.get_frame().set_linewidth(0.5)
+    for text in legend.get_texts():
+        text.set_color(INK)
+        text.set_fontsize(7)
+    legend.get_title().set_color(INK_SOFT)
+    legend.get_title().set_fontsize(7)
+
+sns.despine(ax=ax_kde, top=True, right=True)
+for sp in ax_kde.spines.values():
     sp.set_edgecolor(INK_SOFT)
     sp.set_linewidth(0.5)
 
