@@ -1,85 +1,106 @@
 library: matplotlib
+language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:31Z'
-updated: '2026-03-09T12:07:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22852106646
+updated: '2026-06-03T10:25:08Z'
+generated_by: claude-sonnet
+workflow_run: 26876602017
 issue: 4581
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Dual-colormap approach (Blues/Oranges) with masked arrays elegantly differentiates
-    actual vs projected regions
-  - All spec requirements fully implemented including development factors, cell annotations,
-    and legend
-  - Realistic actuarial data with appropriate scales and development patterns
-  - Clean, well-structured code with good use of matplotlib-specific features
-  - Brightness-adaptive text color ensures readability across all cells
+  - Staircase diagonal boundary is an excellent actuarial-domain design choice that
+    immediately communicates the actual/projected divide
+  - Brightness-aware cell text color logic (RGBA luminance check) produces readable
+    annotations across the full colormap range in both themes
+  - Dark-mode hatching uses INK_SOFT instead of the light-mode PAGE_BG, correctly
+    solving the visibility problem on dark cells
+  - 'Complete spec compliance: all seven required features implemented and visible'
+  - imprint_seq correctly chosen for single-polarity cumulative claim magnitudes
   weaknesses:
-  - Cell annotation fontsize (12) is slightly small relative to other text elements
-    in the plot
-  - Dual colorbars consume noticeable space on the right side of the canvas
-  image_description: The plot displays a 10×10 actuarial loss development triangle
-    heatmap. Rows represent accident years (2015–2024) and columns represent development
-    periods (1–10). The upper-left triangle is colored in a blue sequential colormap
-    (actual/observed values) while the lower-right triangle uses an orange sequential
-    colormap (projected/estimated values). Each cell is annotated with the cumulative
-    claim amount formatted with thousands separators (e.g., "4,200", "30,163"). Projected
-    values appear in italic text. Text color adapts based on cell brightness—white
-    on dark cells, dark gray on light cells. Two vertical colorbars on the right side
-    show scales for "Actual ($)" and "Projected ($)". Development factors (2.50 down
-    to 1.01) are displayed below the x-axis tick labels. A legend at the bottom-left
-    distinguishes "Actual (Observed)" (blue) from "Projected (Estimated)" (orange).
-    The title reads "heatmap-loss-triangle · matplotlib · pyplots.ai". All four spines
-    are removed, and white grid lines separate cells cleanly.
+  - 'Title area is tight at the top: with top=0.92 and the twin-axis label + 9 tick
+    values occupying the same space, the main plot title has minimal margin from the
+    canvas edge — increase top to ~0.94-0.95 or reduce twin-axis labelpad to give
+    the title more room'
+  - Boundary cells at the staircase diagonal have cell annotations that compete slightly
+    with the diagonal line (fontsize 7 + hatching + step-line overlap) — consider
+    raising annotation zorder or a small clip on the diagonal line
+  - ax.imshow(..., aspect=auto) stretches cells to fill the axes; ax.set_aspect(equal)
+    would produce perfectly square cells for a symmetric grid
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct for light theme
+      Chrome: Title "heatmap-loss-triangle · python · matplotlib · anyplot.ai" at 12pt visible but tight near canvas top edge. Axis labels "Accident Year" (y) and "Development Period (Years)" (x) at 10pt — readable. Tick labels at 8pt — readable. Twin-axis header "Age-to-Age Dev. Factors (LDF)" and tick values (2.50 → 1.01) at 7–8pt — readable. All chrome is dark-colored. Cell annotations at 7pt — readable.
+      Data: imprint_seq colormap (brand green #009E73 → blue #4467A3) for solid actual cells; diagonal-hatch overlay (PAGE_BG color) on projected cells. Staircase step-line marks boundary. Colorbar on right with comma-formatted tick labels.
+      Legibility verdict: PASS — all text readable; minor concern is title proximity to canvas top edge
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct for dark theme
+      Chrome: Title, axis labels, tick labels, colorbar labels all render in light cream/silver tones (#F0EFE8 / #B8B7B0 / #A8A79F) — clearly readable against dark background. No dark-on-dark failures. Cell annotations use INK (#F0EFE8) for dark-colored cells — readable. Hatching uses INK_SOFT (#B8B7B0) — visible on dark cells.
+      Data: Identical imprint_seq colors as light render — only chrome flips, data colors constant.
+      Legibility verdict: PASS — all text readable in dark theme
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout. Cell annotations at fontsize
-          12 are readable but slightly small.
+        comment: All font sizes explicitly set; axis labels 10pt, ticks 8pt, annotations
+          7pt readable. Title 12pt is tight with twin-axis header near canvas top.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. White cell borders provide clean separation.
+        comment: Clean layout; staircase diagonal and hatching cause minor annotation
+          readability friction at boundary cells.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells well-sized, colors distinct across both colormaps.
+        comment: All heatmap cells, annotations, staircase diagonal, colorbar, and
+          legend clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blues vs Oranges is colorblind-safe.
+        comment: imprint_seq is CVD-safe; hatching provides redundant encoding for
+          actual/projected distinction.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout but dual colorbars consume space on right side.
+        comment: Correct 2400x2400 canvas; top margin slightly tight with title +
+          twin-axis label + tick values stacked.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on colorbars.
+        comment: 'All labels descriptive with context: Accident Year, Development
+          Period (Years), Age-to-Age Dev. Factors (LDF).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73→#4467A3) correct for single-polarity continuous
+          data. Backgrounds #FAF8F1 and #1A1A17. Chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -87,22 +108,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dual-colormap approach is thoughtful. Italic text for projected,
-          brightness-adaptive text color.
+        comment: Custom imprint_seq, theme-adaptive brightness-aware cell text, staircase
+          diagonal focal-point, twin-axis LDF. Clearly above configured defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, tick marks hidden, white cell borders, clean
-          grid structure.
+        comment: All spines removed, no grid (appropriate for heatmap), custom FuncFormatter
+          on colorbar, PAGE_BG cell borders.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color transition along diagonal tells the actuarial story. Development
-          factors add context.
+        comment: Staircase diagonal creates visual narrative (observed vs IBNR). Color
+          intensity communicates magnitude. LDF twin axis adds analytical depth.
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular matrix heatmap.
+        comment: Correct triangular heatmap with actual/projected visual differentiation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including dual regions, annotations, dev
-          factors, legend.
+        comment: 'All spec features: hatching, comma-formatted annotations, LDF twin
+          axis, imprint_seq color, legend, staircase diagonal, row/column labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axis mapping with all data visible.
+        comment: Accident years on Y, development periods on X, full 10x10 triangle
+          displayed correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data.
+        comment: 'Title: heatmap-loss-triangle · python · matplotlib · anyplot.ai.
+          Legend: Actual (Observed) / Projected (IBNR).'
     data_quality:
       score: 15
       max: 15
@@ -141,20 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full triangle with actual and projected cells, development factors
-          showing maturity.
+        comment: Shows actual and projected triangles, age-to-age factors, chain-ladder
+          projection, IBNR concept, realistic development pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Actuarial insurance claims - real, neutral domain.
+        comment: Insurance reserving with accident years 2015-2024 and development
+          periods 1-10 is canonical actuarial use case; neutral and professional.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic claim amounts and development factors.
+        comment: Initial claims 4,200-7,000 growing to ~30,000-50,000+ via realistic
+          LDFs (2.50 → 1.01) match typical P&C insurance magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -164,7 +189,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes.
+        comment: 'Flat script: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -176,21 +202,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports (os, matplotlib.pyplot, numpy, LinearSegmentedColormap,
+          Patch, Rectangle) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Masked arrays are elegant solution for dual-region heatmap.
+        comment: Well-structured, brightness-adaptive cell text is the right approach,
+          no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -198,21 +226,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of masked arrays, imshow, FuncFormatter, Patch for legend.
+        comment: ax.imshow(), fig.colorbar(), ax.twiny(), axes-method-only usage,
+          FuncFormatter — all idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Masked arrays for dual colormaps, anchor-positioned colorbars are
-          matplotlib-specific.
+        comment: LinearSegmentedColormap.from_list(), FuncFormatter on colorbar, ax.twiny()
+          for LDF display, brightness-luminance via RGBA, Rectangle patches for hatching.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - twin-axes
   - colorbar
   - annotations
   - custom-legend
+  - patches
   - manual-ticks
   patterns:
   - data-generation
@@ -221,4 +252,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
+  - alpha-blending
