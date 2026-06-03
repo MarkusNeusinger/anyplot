@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waveform-audio: Audio Waveform Plot
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -36,7 +36,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — positions 1, 3, 2 for Attack, Sustain, Release phases
+# Imprint palette — positions 1, 2, 3 for Attack, Sustain, Release phases
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - synthetic audio waveform: tone with harmonics and amplitude envelope
@@ -91,8 +91,8 @@ df = pd.DataFrame(
     }
 )
 
-# Imprint palette: Attack=green (pos 1), Sustain=blue (pos 3), Release=lavender (pos 2)
-phase_colors = {"Attack": IMPRINT_PALETTE[0], "Sustain": IMPRINT_PALETTE[2], "Release": IMPRINT_PALETTE[1]}
+# Imprint palette: Attack=green (pos 1), Sustain=lavender (pos 2), Release=blue (pos 3)
+phase_colors = {"Attack": IMPRINT_PALETTE[0], "Sustain": IMPRINT_PALETTE[1], "Release": IMPRINT_PALETTE[2]}
 phase_alphas = {"Attack": 0.85, "Sustain": 0.65, "Release": 0.55}
 
 title = "waveform-audio · python · plotnine · anyplot.ai"
@@ -106,9 +106,9 @@ plot = (
     + geom_hline(yintercept=0, color=INK_MUTED, size=0.4, linetype="solid")
     + geom_vline(xintercept=attack_time, color=INK_SOFT, size=0.3, linetype="dashed", alpha=0.5)
     + geom_vline(xintercept=sustain_time, color=INK_SOFT, size=0.3, linetype="dashed", alpha=0.5)
-    + annotate("text", x=0.025, y=0.90, label="Attack", size=3.0, color=IMPRINT_PALETTE[0], fontstyle="italic")
-    + annotate("text", x=0.575, y=0.90, label="Sustain", size=3.0, color=IMPRINT_PALETTE[2], fontstyle="italic")
-    + annotate("text", x=1.30, y=0.90, label="Release", size=3.0, color=IMPRINT_PALETTE[1], fontstyle="italic")
+    + annotate("text", x=0.025, y=0.90, label="Attack", size=3.5, color=IMPRINT_PALETTE[0], fontstyle="italic")
+    + annotate("text", x=0.575, y=0.90, label="Sustain", size=3.5, color=IMPRINT_PALETTE[1], fontstyle="italic")
+    + annotate("text", x=1.30, y=0.90, label="Release", size=3.5, color=IMPRINT_PALETTE[2], fontstyle="italic")
     + labs(x="Time (seconds)", y="Amplitude", title=title)
     + scale_x_continuous(
         breaks=np.arange(0, duration + 0.1, 0.25), labels=lambda lst: [f"{v:.2f}" for v in lst], expand=(0.01, 0.01)
