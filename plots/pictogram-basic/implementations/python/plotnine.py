@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: plotnine | Python 3.14
+Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
 """
 
