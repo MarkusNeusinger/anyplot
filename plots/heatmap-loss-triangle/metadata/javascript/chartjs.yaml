@@ -1,0 +1,270 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-loss-triangle
+created: '2026-06-03T10:37:11Z'
+updated: '2026-06-03T10:45:13Z'
+generated_by: claude-sonnet
+workflow_run: 26877733993
+issue: 4581
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Full spec compliance: triangular heatmap with actual vs projected distinction,
+    step diagonal, ATA factors row, legend — all implemented correctly'
+  - Proper imprint_seq continuous colormap (t.seq[0]→t.seq[1]) for cell fills; correct
+    theme chrome in both light and dark renders
+  - Excellent theme adaptation — pageBg fills canvas, ink/inkSoft tokens drive all
+    text; dark render has no dark-on-dark failures
+  - Diagonal hatching on projected cells (globalAlpha=0.13) adds a polished visual
+    cue without overwhelming the color signal
+  - All font sizes explicitly set via proportional formulas; readable in both themes
+    at full canvas and at mobile-scaled widths
+  - Deterministic data (no RNG) from hardcoded ultimates/devPct arrays; realistic
+    actuarial values with decreasing ATA factors
+  - 'Clean code: minimal helpers (lerpColor, cellFill, fmtK), no classes, KISS structure'
+  - Clever use of Chart.js scatter type as a transparent canvas scaffold with a custom
+    plugin doing all the drawing
+  weaknesses:
+  - 'Library Mastery is constrained: the implementation bypasses Chart.js''s dataset/scale
+    machinery and draws everything manually through the canvas 2D API — the library
+    is used only as a lifecycle scaffold, not for its high-level charting features'
+  - Legend uses plain solid color swatches; a gradient bar (imprint_seq full range)
+    would better communicate the continuous color scale used in the cells
+  - 'DE-02 not quite perfect: legend swatches and the ATA row share the same bottom
+    strip with tight spacing — a small gap or divider would improve hierarchy'
+  - Title fontsize (Math.round(min(w,h)*0.024) ≈ 58px) is slightly below the style-guide
+    target of ~67px; acceptable but could be nudged up
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the entire canvas — not pure white, correct.
+      Chrome: Title "heatmap-loss-triangle · javascript · chartjs · anyplot.ai" rendered in bold dark ink (#1A1A17), occupying ~70% of canvas width. "Development Period (Years)" x-axis label and rotated "Accident Year" y-axis label in inkSoft (#4A4A44). Column headers (1–10) and row headers (2015–2024) in bold dark ink — all clearly readable.
+      Data: 10×10 heatmap grid with cells colored along the imprint_seq gradient (teal #009E73 → blue #4467A3). Actual (upper-left) cells are fully saturated; projected (lower-right) cells are blended toward pageBg (lighter/washed appearance) plus subtle diagonal hatching at globalAlpha=0.13. A bold step diagonal line (~2.5px) marks the actual/projected boundary. Cell values annotated in K-notation (e.g. "6K", "10K", "22K"); text color flips to pageBg on darker cells for contrast. ATA factors row below (1.733 → 1.010). Legend swatches for "Actual (Observed)" and "Projected / IBNR" at bottom.
+      Legibility verdict: PASS — all text elements are readable; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — not pure black, correct.
+      Chrome: Title and all axis labels render in light ink (#F0EFE8 / #B8B7B0); step diagonal is light-colored (~rgba(240,239,232,0.82)); cell borders use rgba(240,239,232,0.18). No dark-on-dark failures observed.
+      Data: Cell fill colors are identical to the light render — imprint_seq teal→blue gradient unchanged; projected cells lighter + hatching with light-colored strokes (#F0EFE8 at 0.13 alpha). ATA factors and legend text both render in inkSoft tokens.
+      Legibility verdict: PASS — all text readable against the near-black background; data colors identical to light render; chrome correctly flips.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via proportional formulas; title, axis
+          labels, column/row headers, cell values, ATA factors, legend all readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps — grid cells, headers, labels all have adequate
+          spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All heatmap cells clearly visible; actual/projected distinction clear
+          via color+hatching; step diagonal prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (teal→blue) is CVD-safe; cell text flips between pageBg
+          and ink based on cell darkness for adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400 canvas correct for heatmap; grid fills ~70% of canvas
+          with balanced margins; ATA row and legend fit cleanly below
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Development Period (Years)'', Y: ''Accident Year'' — both descriptive
+          with context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses imprint_seq (t.seq[0]→t.seq[1] = #009E73→#4467A3);
+          pageBg=#FAF8F1 light/#1A1A17 dark; theme chrome correctly adapts in both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: fully custom canvas drawing with imprint_seq gradient,
+          cell-darkness-adaptive text, subtle borders, hatching for projected cells
+          — clearly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good refinement: no traditional grid/axes, 0.5px semi-transparent
+          cell borders, 13%-alpha diagonal hatching, step diagonal boundary line;
+          legend could use a gradient scale instead of solid swatches'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: step diagonal immediately draws attention to actual/projected
+          boundary; color intensity encodes magnitude; ATA factors provide actuarial
+          context; visual hierarchy guides the reader'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap matrix with all required structural elements
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: actual upper-left/projected lower-right triangles,
+          distinct styling (color+hatching), step diagonal, cell annotations with
+          K-notation, ATA factors row, legend distinguishing actual vs projected,
+          color intensity encoding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows=accident years 2015-2024, columns=development periods 1-10,
+          isProjected=(r+c)>=ROWS correctly implements triangular structure
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-loss-triangle · javascript · chartjs · anyplot.ai'
+          correct; legend 'Actual (Observed)' / 'Projected / IBNR' clear and descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 10×10 triangle, actual and projected cells, declining
+          ATA factors (1.733→1.010), cumulative claim amounts across all development
+          periods'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real actuarial scenario: cumulative paid claims for accident years
+          2015-2024, chain-ladder method with realistic development pattern'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ultimates $17.8K–$22K, development pattern (30%→100% of ultimate),
+          ATA factors decreasing monotonically — all realistic for a commercial insurance
+          loss triangle
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: data → helpers → plugin → mount → chart; no classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hardcoded ultimates and devPct arrays, no RNG'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; all globals (ANYPLOT_TOKENS, ANYPLOT_THEME, Chart) are
+          harness-provided and all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and purposeful; lerpColor/cellFill/fmtK helpers are necessary
+          for canvas drawing; no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows harness contract: canvas appended to #container, responsive+maintainAspectRatio+animation
+          flags set, square orientation directive present, no manual file save'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct Chart.js scaffolding pattern (scatter type as transparent
+          canvas base + plugin for all drawing); however, Chart.js's high-level dataset/scale
+          machinery is entirely bypassed in favour of raw canvas 2D API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js's custom plugin system (beforeDraw/afterDraw lifecycle
+          hooks) distinctively; using scatter as a transparent scaffold for fully
+          custom canvas rendering is a recognized Chart.js pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
