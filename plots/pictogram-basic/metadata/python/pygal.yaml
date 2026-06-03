@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:41:49Z'
-updated: '2026-06-03T14:09:06Z'
+updated: '2026-06-03T14:17:00Z'
 generated_by: claude-sonnet
 workflow_run: 26889498323
 issue: 4674
@@ -12,119 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - Correct use of pygal.Dot as the closest native chart type for a pictogram; the
-    dot-matrix layout satisfies the ISOTYPE grid-row requirement
-  - Partial icons correctly implemented as proportionally scaled dots (e.g., 0.4x
-    size for a 2k remainder when icon_unit=5)
-  - Full Imprint palette compliance, correct first series color (#009E73 for Apples),
-    and correct theme-adaptive chrome in both renders
-  - Title fontsize scaled by formula to avoid overflow; title correctly formatted
-    with descriptive prefix
-  - Both PNG and HTML outputs saved correctly; sys.path guard prevents module name
-    shadowing
+  - 'Correct Imprint palette applied with brand green #009E73 as first series (Apples),
+    full canonical order across all 5 categories'
+  - Font sizes all explicitly set — title, label, major_label, legend, value — with
+    length-aware title scaling formula
+  - Partial icons correctly implemented via proportional dot sizes (remainder/icon_unit
+    fraction fed to pygal.Dot)
+  - Data sorted descending creating clear visual hierarchy from top (Apples 35k) to
+    bottom (Mangoes 8k)
+  - Both themes render correctly — warm off-white background in light (#FAF8F1), near-black
+    in dark (#1A1A17), all text theme-adaptive; no dark-on-dark failures
+  - HTML output generated alongside PNG, leveraging pygal interactivity
+  - Clean KISS code structure with deterministic data; sys.path guard prevents self-shadowing
   weaknesses:
-  - 'Missing unit legend: spec explicitly requires display a legend indicating the
-    unit value per icon. Add a subtitle or annotation such as Each dot = 5k tonnes
-    to satisfy this requirement.'
-  - 'No x-axis title: the x-axis cumulative labels (5k, 10k, ...) lack a descriptive
-    label explaining they represent Thousands of tonnes — add x_title to give the
-    axis context.'
-  - 'Tight right margin at column 35k: the last Apples dot sits very close to the
-    right canvas edge; increase margin_right from 40 to ~80 to give breathing room.'
+  - 'DE-01/DE-02: Layout retains the default pygal chart border/frame outline visible
+    in the dark render — removing or blending this frame edge into the background
+    would improve polish'
+  - 'DE-02: Spines/chart border not explicitly removed; a thin rectangular outline
+    persists around the plot area, adding unnecessary chrome'
+  - 'LM-02: pygal.Dot is correctly used but deeper library-specific features (e.g.
+    value_formatter hover display, show_minor_x_labels, or interactive legend) are
+    not exploited'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Fruit Production · pictogram-basic · python · pygal · anyplot.ai" in dark ink, ~70% canvas width. Category labels (Apples, Oranges, Bananas, Grapes, Mangoes) in dark ink on left axis. X-axis tick labels (5k, 10k, 15k, 20k, 25k, 30k, 35k) in dark ink. Bottom legend shows color swatches + series names. All text clearly readable.
-      Data: Five rows of dots. Apples: 7 full green (#009E73) dots. Oranges: 4 full lavender (#C475FD) + 1 partial at 25k position. Bananas: 3 full blue (#4467A3) + 1 partial at 20k. Grapes: 3 full ochre (#BD8233). Mangoes: 1 full matte-red (#AE3030) + 1 partial at 10k. Partial icons rendered as smaller proportional circles.
-      Legibility verdict: PASS — no light-on-light text issues
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
+      Chrome: Title "Fruit Production · pictogram-basic · python · pygal · anyplot.ai" is clearly readable at top center. Y-axis category labels (Apples, Oranges, Bananas, Grapes, Mangoes) are dark ink on cream, fully legible. X-axis tick labels (5k–35k) visible. X-axis title "Thousands of tonnes · each dot = 5k t" readable below the chart. Legend at bottom shows five color swatches with category names.
+      Data: Dot-grid layout — Apples row has 7 full green circles (#009E73), Oranges 4 full lavender + 1 partial (~40%), Bananas 3 full blue + 1 partial (~60%), Grapes 3 full ochre (exact), Mangoes 1 full red + 1 partial (~60%). All colors from Imprint palette in canonical order.
+      Legibility verdict: PASS — all text readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: All text (title, category labels, tick labels, legend) renders in light near-white ink and is clearly readable against the dark background. Left spine visible in muted tone. No dark-on-dark text failures.
-      Data: Colors are identical to the light render — Apples green, Oranges lavender, Bananas blue, Grapes ochre, Mangoes matte-red. Only chrome (background, text) flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark failures detected
+      Background: Near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and all labels render in light ink (#F0EFE8) against dark background — fully readable. No dark-on-dark failures. Legend at bottom with light text legible. Thin chart border outline is slightly more visible on dark surface but doesn't affect readability.
+      Data: All dot colors are identical to light render — green for Apples, lavender for Oranges, blue for Bananas, ochre for Grapes, red for Mangoes. Only chrome (background, text, legend) flipped; data colors unchanged as required.
+      Legibility verdict: PASS — all text readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes; no light-on-light or dark-on-dark
-          issues; title fontsize correctly scaled; minor: no descriptive x-axis title'
+        comment: All font sizes explicitly set (title=66 with length-aware formula,
+          labels=56, major_labels=44, legend=44, value=36). Well-proportioned in both
+          themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: No text overlaps; dots, labels, and legend are all non-overlapping.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: dot_size=46 is prominent for sparse data; partial dots clearly show
-          fractional values
+        comment: dot_size=46 creates clearly visible icons; partial icons distinguishable
+          from full ones.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe
+        comment: Imprint palette is CVD-safe; good luminance contrast for all 5 series.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800; good proportions; rightmost dot at 35k
-          column sits tight against right canvas edge — margin_right=40 too small
+        comment: 3200×1800 landscape, generous margins, balanced utilization.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title well-formatted; category labels serve as y-axis; x-axis lacks
-          descriptive title indicating units (thousands of tonnes)
+        passed: true
+        comment: x_title includes units ('Thousands of tonnes · each dot = 5k t').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Apples = #009E73; all 5 series in canonical Imprint
-          order; backgrounds #FAF8F1/#1A1A17 correct; both renders theme-correct'
+        comment: 'First series #009E73 (brand green). Canonical Imprint order. Backgrounds
+          #FAF8F1/#1A1A17. Chrome theme-adaptive.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Custom Imprint palette, intentional descending category order for
-          hierarchy, proper partial dot sizing. Clean professional output above defaults.
+        passed: false
+        comment: Well-configured library default. Clean and professional but not publication-exceptional.
+          Thin chart border persists.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Left spine retained (appropriate for row-chart layout), no grid,
-          generous margins. Not fully minimal but appropriate.
+        passed: false
+        comment: Grid turned off (show_x_guides=False, show_y_guides=False). Generous
+          margins. Chart outline/frame not removed — minor chrome excess.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Descending order creates reading hierarchy; partial dots communicate
-          fractional quantities effectively. No additional emphasis or annotation.
+        passed: false
+        comment: Descending order (Apples→Mangoes) creates clear visual hierarchy.
+          Size comparison across rows is immediately readable.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,55 +133,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.Dot used as pictogram proxy; spec explicitly allows circles;
-          dot-matrix layout matches ISOTYPE grid-row requirement
+        comment: pygal.Dot creates variable-sized dot grid — valid pictogram representation
+          per spec guidance on using simple shapes.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Partial icons, grid rows, left category labels, consistent icon
-          unit all present. Missing: explicit unit legend showing ''1 dot = 5k tonnes''
-          as spec requires.'
+        passed: true
+        comment: Unit legend in x_title, partial icons via proportional values, grid-row
+          layout, category labels on left axis.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories with correct values; cumulative x-axis scale correctly
-          represents dot positions; all data visible
+        comment: Categories on y-axis, cumulative scale on x-axis, all 5 fruit production
+          values correctly represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'Fruit Production · pictogram-basic · python · pygal
-          · anyplot.ai' follows {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai;
-          legend labels match series names
+        comment: 'Title: ''Fruit Production · pictogram-basic · python · pygal · anyplot.ai''
+          — correct prefixed format. Legend labels match data.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multi-category dot matrix, partial icons for non-round values, descending
-          order. Missing unit annotation.
+        comment: Covers full icons, partial icons, varying row lengths — all pictogram
+          features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fruit production (thousands of tonnes) is realistic and neutral
+        comment: Fruit production in thousands of tonnes — real, neutral, comprehensible
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 8-35 thousand tonnes are realistic for major fruit production
-          figures
+        comment: Values 8–35k tonnes per category are plausible for regional agricultural
+          production.
     code_quality:
       score: 10
       max: 10
@@ -190,32 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no unnecessary abstractions
+        comment: Imports → tokens → data → dot matrix → chart config → save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static deterministic data; no random seed needed
+        comment: Fully deterministic hardcoded data — no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, pygal, pygal.style.Style — all used
+        comment: os, sys, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean dot matrix construction; sys.path guard correct and necessary;
-          value_formatter concise
+        comment: Clean Pythonic code; sys.path guard is an appropriate workaround
+          for the self-shadowing issue.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html as required for pygal.
     library_mastery:
       score: 7
       max: 10
@@ -225,15 +226,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.Dot is the correct choice; Style object used correctly; x_labels,
-          legend_at_bottom_columns, dot_size, value_formatter all idiomatic
+        comment: Uses pygal.Dot with Style object correctly. legend_at_bottom, dot_size,
+          value_formatter — idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Interactive HTML export, custom value_formatter for tooltip text,
-          legend_at_bottom with column control
+        passed: false
+        comment: pygal.Dot is library-specific and well-matched to the pictogram use
+          case. HTML interactive export is a pygal hallmark. Deeper interactive features
+          (hover formatter, minor labels) not explored.
   verdict: APPROVED
 impl_tags:
   dependencies: []
