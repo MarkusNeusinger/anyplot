@@ -1,0 +1,254 @@
+library: d3
+language: javascript
+specification_id: piano-roll-midi
+created: '2026-06-03T03:52:07Z'
+updated: '2026-06-03T04:13:06Z'
+generated_by: claude-sonnet
+workflow_run: 26862258081
+issue: 4565
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Domain-authentic piano keyboard design: correct MIDI black-key pattern for alternating
+    rows, C-note bold emphasis for octave markers, monospace font for note labels
+    — shows musical literacy in the implementation.'
+  - Velocity colorbar with musical dynamic markers (pp, mf, ff) at semantically correct
+    velocity fractions — makes the chart immediately comprehensible to a musician.
+  - 'Beat/measure X-axis hierarchy: centered measure labels, varying-weight beat tick
+    marks, sub-beat numbers at reduced opacity — well-structured time representation
+    that mirrors DAW conventions.'
+  - 'Perfect spec compliance: all required features implemented correctly and idiomatically
+    (pitch rows, velocity color, note rectangles, alternating piano rows, beat/measure
+    grid).'
+  weaknesses:
+  - Colorbar numeric ticks and beat sub-labels at 12 px CSS (24 px output) are the
+    smallest text in the chart — consider bumping to 13–14 px CSS to match the other
+    secondary text elements.
+  - Measure boundary gridlines use t.inkSoft (full secondary text color) which reads
+    somewhat prominent in the light theme; a lower-opacity version or t.grid with
+    stroke-width 1.2 would maintain the measure/beat hierarchy while reducing visual
+    noise.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "piano-roll-midi · javascript · d3 · anyplot.ai" in bold dark ink at top. Y-axis labeled "Pitch" in dark ink; tick labels are note names (B3, C4, D4, ... C5, C#5) in monospace font with C notes bolded. X-axis labeled "Time (Beats)"; measure labels ("Measure 1–4") in medium weight; beat sub-labels (2, 3, 4) at reduced opacity. Colorbar on right labeled "Velocity" with pp/mf/ff italic markers. All text clearly readable against light background.
+      Data: Note rectangles range from blue (velocity ~62, low/soft) through neutral purple to red (velocity ~112, loud). Ascending Measure 1 notes fade cool→warm. Measure 4 beat 12 chord (C4+E4+G4) is vivid red — clear focal point. First series is velocity-mapped (not categorical), using Imprint div tokens reversed for blue-to-red effect.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface.
+      Chrome: Title and all labels render in light ink, clearly readable. Black-key row shading uses a light-tinted rgba creating the same keyboard alternation pattern on dark. Colorbar gradient, velocity labels, and pp/mf/ff markers all legible.
+      Data: Note colors are identical to the light render — same blue-to-red velocity arc. The red C major chord at Measure 4 beat 12 is clearly visible on the dark surface. No dark-on-dark text failures observed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor: colorbar ticks and beat sub-labels at 12px CSS are slightly smaller
+          than other secondary text.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All note rectangles clearly visible including 0.25-beat notes. Velocity
+          color range clearly differentiated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Velocity encoded with redundant pp/mf/ff text markers and numeric
+          colorbar. Blue-to-red with neutral midpoint.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good canvas utilization; colorbar fits in right
+          margin without waste.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Pitch (Y) and Time (Beats) (X) — descriptive with unit context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses t.div Imprint tokens reversed for blue-to-red velocity scale
+          matching spec requirement. Backgrounds #FAF8F1 / #1A1A17 correct. Data colors
+          identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: piano keyboard row alternation with correct
+          MIDI black-key indices, C-note bold emphasis, monospace font for note names,
+          musical dynamic markers. Intentional domain-aware design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Row dividers at 0.3 stroke-width, beat vs. measure gridline hierarchy
+          (0.4 vs 1.0), subtle colorbar border. Measure lines slightly prominent in
+          light theme.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Velocity arc (cool-blue opening → vivid-red climax → cool fadeout)
+          creates readable musical narrative. C major chord focal point in Measure
+          4. Dynamic markers anchor musical interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct piano roll: horizontal note rectangles by pitch and time.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: alternating black/white key rows, beat+measure gridlines,
+          auto-fit pitch range, note names, velocity→color mapping.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time in beats, Y=pitch as note names, width=duration, color=velocity.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: piano-roll-midi · javascript · d3 · anyplot.ai. Colorbar
+          serves as velocity legend.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: '34 notes: varying durations (0.25/0.5/1.0), simultaneous chords,
+          ascending/descending lines, syncopation, full velocity range 62-112.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C major melody with accurate MIDI note numbers, realistic dynamic
+          arc. Neutral musical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct MIDI numbers (60=C4, 72=C5), 16-beat/4-measure structure,
+          velocity 62-112.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat procedural: data → SVG setup → scales → drawing → axes → colorbar
+          → title.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only d3 global and window.ANYPLOT_* tokens per harness
+          contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean D3 data joins throughout; appropriate complexity; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 in INTERACTIVE_LIBRARIES; harness emits plot-{theme}.png and plot-{theme}.html.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 idioms: .data().join(), d3.scale*, d3.axis* with .tickValues()/.tickFormat(),
+          .selectAll().filter(), d3.interpolateRgbBasis.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'SVG defs with linearGradient (colorbar) and clipPath (note clipping),
+          custom tickValues for note-name axis, d3.axisRight for colorbar. Minor:
+          gradient/clipPath are SVG primitives composed via D3.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
