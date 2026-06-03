@@ -2,12 +2,12 @@ library: letsplot
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:25:00Z'
-updated: '2026-04-29T15:42:50Z'
+updated: '2026-06-03T08:37:32Z'
 generated_by: claude-sonnet
-workflow_run: 25117530620
+workflow_run: 26872330127
 issue: 653
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.13
+library_version: 4.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-light.html
@@ -15,84 +15,104 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basi
 quality_score: 88
 review:
   strengths:
-  - Theme-adaptive chrome fully implemented with PAGE_BG, INK, INK_SOFT, RULE applied
-    to correct elements
-  - All font sizes explicitly set at correct values (title=24pt, axis=20pt, ticks=16pt)
-  - y-only horizontal grid with no x-grid or minor grid — well-judged minimalism
-  - Monthly temperature dataset is realistic, factually sound, and clearly demonstrates
-    the line plot purpose
-  - Single-series BRAND green consistently correct across both renders
+  - 'Theme-adaptive chrome correctly implemented across both renders — INK/INK_SOFT
+    tokens wired to all text elements, backgrounds match #FAF8F1 (light) / #1A1A17
+    (dark) exactly, no dark-on-dark failures'
+  - 'Layered composition (geom_area + geom_smooth + geom_line + geom_point + geom_text)
+    adds visual depth while respecting single-series palette rule — all layers use
+    brand green #009E73 or INK_SOFT for the LOESS trend'
+  - 'Peak annotation ''Jul: 29.4°C'' with larger emphasis marker (size=7 vs regular
+    size=4) creates a clear focal point and makes the seasonal story explicit'
+  - 'Strongly idiomatic lets-plot usage: layer_tooltips() with title/format/line configuration,
+    geom_smooth(method=''loess''), ggsave with scale=4 — all correct per library API'
+  - Canvas exactly 3200×1800 (ggsize(800,450) + scale=4), gate passed
+  - Code is KISS, reproducible (seed=42), and clean with no unused imports
   weaknesses:
-  - Area fill visible in renders not backed by geom_area() in code — add geom_area(fill=BRAND,
-    alpha=0.15) explicitly to match rendered output
-  - No focal-point emphasis at peak or trough month — larger marker or annotation
-    at July would lift DE-03
-  - LM-02 is low — HTML export uses no letsplot-specific interactive features; layer_tooltips()
-    API would demonstrate library mastery
+  - 'DE-01 moderate: the combination of area fill + LOESS + annotation is thoughtful
+    but doesn''t yet reach ''strong design'' — the area fill opacity (15% light /
+    28% dark) and the LOESS line weight (size=0.8) could be more intentionally balanced;
+    the LOESS dashed line is barely distinguishable from the area fill edge in some
+    regions'
+  - 'LM-02 below default ceiling: layer_tooltips() is a lets-plot distinctive feature
+    but its rich config (title + format + lines) is underutilized — the tooltip title
+    ''Monthly Temperature'' repeats information that could instead show the month
+    name string from MONTH_NAMES; consider using .format(''@month'', ...) to show
+    ''January'' instead of numeric ''1'''
+  - 'VQ-01 minor: title ''line-basic · python · letsplot · anyplot.ai'' (~43 chars)
+    fills ~45% of canvas width at size=16 — acceptable but slightly below the expected
+    50-70% range; bumping to size=18 would improve title presence without overflow
+    risk'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-basic · letsplot · anyplot.ai" in dark ink top-left; y-axis label "Temperature (°C)" rotated, clearly readable; x-axis label "Month" readable; tick labels 1–12 and y-values all legible in dark ink against off-white
-      Data: Single line and points in #009E73 (BRAND green); area fill under line in matching semi-transparent green; horizontal y-axis grid lines subtle
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white.
+      Chrome: Title "line-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable top-left. Axis labels "Month" (X) and "Temperature (°C)" (Y) in dark ink, axis tick labels in soft dark (#4A4A44), all legible. Subtle horizontal grid lines (Y-axis only) in near-transparent ink.
+      Data: Single brand-green (#009E73) line connecting 12 monthly data points with a filled area (15% opacity) beneath it. Small green circle markers on each point (size=4). A dashed gray LOESS smooth in INK_SOFT runs beneath the raw line. The peak point (July) is emphasized with a larger green marker (size=7) and an annotation "Jul: 29.4°C" in dark ink positioned above the peak.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct theme surface
-      Chrome: Title, axis labels, and tick labels all render in light ink tones; readable against dark background; no dark-on-dark failures observed
-      Data: Line, points, and area fill all retain identical #009E73 green — data colors unchanged from light render as required; area fill appears as dark green against the near-black background
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title in near-white (#F0EFE8), clearly readable. Axis labels and tick labels in light-gray (#B8B7B0), legible against the dark background. Grid lines subtle. No dark-on-dark failures found.
+      Data: Brand green (#009E73) line and area fill are identical to the light render — data colors unchanged, only chrome flipped. The LOESS dashed line now appears as a light-gray/white dashed curve, clearly visible over the dark area fill (28% opacity in dark mode, stronger than light). Peak annotation "Jul: 29.4°C" rendered in near-white, clearly legible.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title=24pt, axis_title=20pt, axis_text=16pt all explicitly set; readable
-          in both themes
+        comment: 'All font sizes explicitly set (title=16, axis_title=12, axis_text=10);
+          both renders fully readable. Minor: title spans ~45% of canvas width vs
+          expected ~50-70% — size=18 would improve presence without overflow.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month ticks 1-12 well-spaced, no label collisions
+        comment: No overlapping elements. Peak annotation positioned with nudge_x=0.4,
+          nudge_y=0.9 avoids overlap with line and marker.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: geom_line(size=2) + geom_point(size=5) scale well at 3x export
+        comment: 12 data points (sparse) — marker size=4 and emphasis size=7 for peak
+          are well-adapted to density. Line size=1.5 is prominent. Area fill adds
+          visual weight appropriately.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series BRAND green; strong contrast on both surfaces; CVD-safe
-          Okabe-Ito
+        comment: 'Single-series brand green #009E73 on adaptive background. CVD-safe.
+          LOESS line in INK_SOFT provides redundant shape encoding for the trend.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins; nothing cut off
+        comment: Canvas gate passed (3200x1800). Good margins, plot fills ~65% of
+          canvas. No content cut-off in either render. Balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (degrees C) includes units; Month is descriptive
+        comment: 'Y-axis: ''Temperature (°C)'' with units. X-axis: ''Month'' descriptive.
+          Title format: ''line-basic · python · letsplot · anyplot.ai'' correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
-          theme-adaptive chrome correct'
+        comment: 'Brand green #009E73 used correctly as the single series. Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark). Chrome tokens INK/INK_SOFT wired to all
+          text elements. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -100,22 +120,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Warm custom backgrounds, BRAND green, area fill elevate above generic
-          defaults; not publication-ready
+        comment: 'Clearly above defaults: area fill + LOESS + annotation + emphasis
+          marker combination is thoughtful. Intentional visual hierarchy. Not quite
+          ''strong design'' (6) because the LOESS line at size=0.8 feels visually
+          thin relative to the main line, and the area fill in dark mode is quite
+          heavy (28% opacity).'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: y-only major grid, no x-grid, no minor grid, theme_minimal removes
-          spines; solid refinement
+        comment: Y-grid only (no X-grid, no minor grid), custom RULE opacity, no top/right
+          spines from theme_minimal(). Axis lines kept for structure. Good refinement
+          above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear seasonal arc; area fill helps; no focal-point annotation at
-          peak July or trough January
+        passed: true
+        comment: Peak month annotated with value and larger emphasis marker. LOESS
+          trend line creates a story contrast between raw seasonal variability and
+          smooth trend. Clear focal point at July peak.
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with optional markers
+        comment: Correct basic line plot with connected data points showing continuous
+          variable over time sequence.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single-line, minimal design, axis labels, grid lines, optional markers
-          all present
+        comment: 'All spec features present: clean minimal design, clear axis labels,
+          grid lines, optional markers on data points.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on X, Temperature on Y; all 12 points visible
+        comment: X=months (sequential 1-12), Y=temperature (continuous). All 12 data
+          points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: line-basic · letsplot · anyplot.ai exact format; no legend needed
-          for single series
+        comment: Title 'line-basic · python · letsplot · anyplot.ai' correct. No legend
+          appropriate for single-series.
     data_quality:
       score: 15
       max: 15
@@ -155,21 +182,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 points show complete seasonal cycle with ascending and descending
-          trends
+        comment: 'Shows all aspects of a basic line plot: continuous trend, seasonal
+          pattern, individual data point variation, peak emphasis.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature readings over a year; neutral, real-world scenario
+        comment: Monthly temperature readings over a year — real, comprehensible,
+          neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range ~3-30 degrees C realistic for temperate climate; sinusoidal
-          peak in July factually sound
+        comment: Temperature range ~3-30°C, sinusoidal seasonal pattern (base=15+12sin),
+          +noise 1.5σ. Factually plausible for a temperate climate (matches Central
+          Europe / UK range).
     code_quality:
       score: 10
       max: 10
@@ -179,33 +208,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports -> Theme tokens -> Data -> Plot -> Save; no functions
-          or classes
+        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 14 letsplot symbols imported are used in the code
+        comment: All imported names are used in the code. No extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic grammar-of-graphics construction; no over-engineering
+        comment: Clean, Pythonic, appropriate complexity. MONTH_NAMES dict for annotation
+          label is a nice touch. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct letsplot
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave. Current
+          lets-plot API used throughout.
     library_mastery:
       score: 6
       max: 10
@@ -215,21 +245,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Full ggplot grammar: aes(), geom_*(), scale_*(), theme(), labs(),
-          ggsize() used correctly'
+        comment: Proper grammar-of-graphics layering, correct ggsave with scale=4,
+          theme_minimal() + custom theme override, scale_x_continuous with explicit
+          breaks. Above default.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: ggsize() and ggsave scale=3 are letsplot-specific; HTML export generated;
-          no tooltips or interactive HTML capabilities used
+        passed: true
+        comment: layer_tooltips() with title/format/line config is lets-plot distinctive.
+          geom_smooth(method='loess') uses built-in statistical fitting. HTML export
+          via ggsave. However, the tooltip's month display still shows numeric '1'-'12'
+          rather than leveraging MONTH_NAMES for a richer interactive experience —
+          partially underutilized.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - hover-tooltips
   - html-export
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
