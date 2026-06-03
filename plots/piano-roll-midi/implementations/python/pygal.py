@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-03
@@ -173,45 +173,93 @@ for band_name, v_lo, v_hi in velocity_bands:
             pts.append(None)
     chart.add(band_name, pts if pts else [])
 
-# SVG post-processing: inject alternating black-key row shading behind the data
+# SVG post-processing: inject grid layers and row shading behind the data
 svg_bytes = chart.render()
 svg_str = svg_bytes.decode("utf-8")
 
 try:
-    # pygal renders guide lines as <path d="M0 {y} h{width}" class="guide line">
-    # (horizontal = y-axis guides; vertical guides use "v" not "h")
-    h_guides = []
+    h_guides = []  # (y, width) — horizontal pitch-row guides
+    v_guides = []  # (x, y0, height) — vertical measure guides
+
     for m in re.finditer(r"<path\b([^>]+)>", svg_str):
         tag = m.group(1)
         if "guide" not in tag:
             continue
-        d_m = re.search(r'\bd="M[\d.]+\s+([\d.]+)\s+h([\d.]+)"', tag)
-        if d_m:
-            y, w = float(d_m.group(1)), float(d_m.group(2))
+        # Horizontal guide: M{x} {y} h{w}
+        hm = re.search(r'\bd="M[\d.]+\s+([\d.]+)\s+h([\d.]+)"', tag)
+        if hm:
+            y, w = float(hm.group(1)), float(hm.group(2))
             if w > 200:
-                h_guides.append((y, 0.0, w))
+                h_guides.append((y, w))
+        # Vertical guide: M{x} {y0} v{h}  OR  M{x} {y0} L{x} {y1}
+        vm = re.search(r'\bd="M([\d.]+)\s+([\d.]+)\s+(?:v([\d.]+)|L[\d.]+\s+([\d.]+))"', tag)
+        if vm:
+            x, y0 = float(vm.group(1)), float(vm.group(2))
+            h = float(vm.group(3)) if vm.group(3) else float(vm.group(4)) - y0
+            if h > 200:
+                v_guides.append((x, y0, h))
 
-    h_guides = sorted({(round(y, 3), x1, w) for y, x1, w in h_guides}, key=lambda t: t[0])
+    h_guides = sorted({(round(y, 3), w) for y, w in h_guides}, key=lambda t: t[0])
+    v_guides = sorted({(round(x, 1), round(y0, 1), round(h, 1)) for x, y0, h in v_guides}, key=lambda t: t[0])
 
-    if len(h_guides) == len(pitch_range):
+    inject_parts = []
+
+    # 1. Black-key row shading
+    if len(h_guides) == len(pitch_range) and len(h_guides) > 1:
         pitch_sorted = sorted(pitch_range)
-        # SVG y increases downward; smallest y = top = highest pitch
         y_map = {pitch_sorted[-(i + 1)]: h_guides[i][0] for i in range(len(pitch_sorted))}
-        plot_w = h_guides[0][2]
-        row_h = abs(h_guides[1][0] - h_guides[0][0]) if len(h_guides) > 1 else 36.0
+        plot_w = h_guides[0][1]
+        row_h = abs(h_guides[1][0] - h_guides[0][0])
+        for p in pitch_range:
+            if p % 12 in BLACK_KEYS and p in y_map:
+                inject_parts.append(
+                    f'<rect x="0" y="{y_map[p] - row_h / 2:.3f}" '
+                    f'width="{plot_w:.1f}" height="{row_h:.3f}" '
+                    f'fill="{ROW_SHADE}"/>'
+                )
 
-        rects = "".join(
-            f'<rect x="0" y="{y_map[p] - row_h / 2:.3f}" '
-            f'width="{plot_w:.1f}" height="{row_h:.3f}" '
-            f'fill="{ROW_SHADE}"/>\n'
-            for p in pitch_range
-            if p % 12 in BLACK_KEYS and p in y_map
+    # 2. G7 dominant climax highlight (measures 3-4, beats 8-16): amber wash
+    # Emphasizes the harmonic tension peak of the ii-V-I-vi progression
+    if len(v_guides) >= 5:
+        gy0, gh = v_guides[0][1], v_guides[0][2]
+        cx1, cx2 = v_guides[2][0], v_guides[4][0]
+        climax_fill = "rgba(221,204,119,0.10)" if THEME == "light" else "rgba(221,204,119,0.07)"
+        inject_parts.append(
+            f'<rect x="{cx1:.2f}" y="{gy0:.2f}" width="{cx2 - cx1:.2f}" height="{gh:.2f}" fill="{climax_fill}"/>'
         )
 
-        # Inject shading before first series group (inside the plot transform group)
-        svg_str = re.sub(r'(<g\b[^>]*\bclass="[^"]*\bserie\b[^"]*"[^>]*>)', rects + r"\1", svg_str, count=1)
+    # 3. Beat subdivision lines (quarter-note grid, thinner/muted vs measure lines)
+    BEAT_COLOR = "#C0B8A8" if THEME == "light" else "#3C3C37"
+    if len(v_guides) >= 2:
+        dx_per_measure = v_guides[1][0] - v_guides[0][0]
+        dx_per_beat = dx_per_measure / 4
+        gy0, gh = v_guides[0][1], v_guides[0][2]
+        for i, (mx, _, _) in enumerate(v_guides):
+            if i < len(v_guides) - 1:
+                for b in range(1, 4):
+                    bx = mx + b * dx_per_beat
+                    inject_parts.append(
+                        f'<line x1="{bx:.2f}" y1="{gy0:.2f}" x2="{bx:.2f}" y2="{gy0 + gh:.2f}" '
+                        f'stroke="{BEAT_COLOR}" stroke-width="1.5" stroke-dasharray="6,4"/>'
+                    )
+
+    # 4. Measure boundary lines re-injected above row shading (stronger than beat lines)
+    if len(v_guides) >= 1:
+        gy0, gh = v_guides[0][1], v_guides[0][2]
+        for mx, _, _ in v_guides:
+            inject_parts.append(
+                f'<line x1="{mx:.2f}" y1="{gy0:.2f}" x2="{mx:.2f}" y2="{gy0 + gh:.2f}" '
+                f'stroke="{INK_MUTED}" stroke-width="2.5"/>'
+            )
+
+    if inject_parts:
+        inject_svg = "\n".join(inject_parts) + "\n"
+        svg_str = re.sub(
+            r'(<g\b[^>]*\bclass="[^"]*\bserie\b[^"]*"[^>]*>)', lambda mo: inject_svg + mo.group(1), svg_str, count=1
+        )
+
 except Exception:
-    pass  # graceful degradation: render without black-key shading
+    pass  # graceful degradation: render without custom grid/shading
 
 import cairosvg
 
