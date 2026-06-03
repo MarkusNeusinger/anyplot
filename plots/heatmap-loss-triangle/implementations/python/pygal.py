@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -69,7 +69,11 @@ class LossTriangleHeatmap(Graph):
             r = int(r * opacity + pr * (1 - opacity))
             g = int(g * opacity + pg * (1 - opacity))
             b = int(b * opacity + pb * (1 - opacity))
-        return INK if (r * 299 + g * 587 + b * 114) / 1000 > 140 else ELEVATED_BG
+        luminance = (r * 299 + g * 587 + b * 114) / 1000
+        # In dark mode the blended cell is dark: low luminance needs light text
+        if THEME == "dark":
+            return INK if luminance < 140 else ELEVATED_BG
+        return INK if luminance > 140 else ELEVATED_BG
 
     def _plot(self):
         if not self.matrix_data:
