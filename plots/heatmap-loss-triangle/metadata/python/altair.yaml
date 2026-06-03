@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:57:49Z'
-updated: '2026-06-03T10:06:31Z'
+updated: '2026-06-03T10:18:17Z'
 generated_by: claude-sonnet
 workflow_run: 26877015451
 issue: 4581
@@ -15,33 +15,50 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 quality_score: 89
 review:
   strengths:
-  - 'Excellent spec compliance: all 8 required features implemented (opacity + dashed
-    border for actual/projected, cell annotations, dev-factor row, color magnitude
-    encoding, status legend)'
-  - 'Correct Imprint sequential cmap (#009E73 to #4467A3) applied to continuous claim-magnitude
-    data'
-  - Both renders fully theme-adaptive with no dark-on-dark or light-on-light failures
-  - Actuarially realistic data with proper triangle structure, plausible claims amounts,
-    and realistic development factors
-  - Clean code; alt.when() for conditional opacity/color is idiomatic Altair
+  - Full triangular structure with correct actual/projected distinction via opacity
+    (1.0 vs 0.6) plus amber (#DDCC77) dashed border — both redundant encodings satisfy
+    spec requirement for distinct visual styling
+  - 'Imprint sequential colormap (#009E73 → #4467A3) correctly applied for single-polarity
+    continuous claim magnitude; first color is brand green as required'
+  - 'Theme-adaptive chrome fully wired: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED
+    all flow into configure_axis, configure_view, configure_legend, configure_title
+    — both renders pass the readability check'
+  - Dev factor row with elevated background (ELEVATED_BG) and INK_SOFT text provides
+    direct chain-ladder context within the chart canvas — matches spec requirement
+  - Smart dual-legend placement (color gradient on right, status legend at bottom)
+    avoids crowding and uses available canvas space efficiently
+  - 'Cell text contrast adapts to cell luminance via alt.when() conditional encoding:
+    dark-background cells get PAGE_BG text, light-background cells get INK text'
+  - 'All seven required spec features present and working: triangular structure, actual/projected
+    distinction, color-intensity encoding, cell annotations, dev factors, legend,
+    dashed IBNR boundary'
   weaknesses:
-  - 'Title is missing the python language token. Fix: change "heatmap-loss-triangle
-    · altair · anyplot.ai" to "heatmap-loss-triangle · python · altair · anyplot.ai"'
-  - Design Excellence is strong but not yet top-tier (DE-01=6/8). Consider adding
-    a thin diagonal visual separator at the actual/projected boundary to reinforce
-    storytelling focal point on repair.
+  - 'In dark mode, cells where Cumulative Amount > 55% of max use PAGE_BG (#1A1A17,
+    near-black) as text color on medium-blue (#4467A3) backgrounds — computed contrast
+    ~3.1:1, borderline WCAG AA. Consider using a fixed light color (INK = #F0EFE8)
+    for all cell text in dark mode, or compute contrast from actual cell hex rather
+    than magnitude threshold.'
+  - Inner view dimensions (width=360, height=380) are noticeably smaller than the
+    altair.md canonical recommendation (width=500, height=460) for square format.
+    The canvas gate passed via PIL padding but the chart occupies less of the 2400×2400
+    canvas than optimal. Increase inner view to width=480-500, height=440-460 (with
+    compensating reduction in padding if needed) so the chart is more impactful.
+  - Status legend fixed fill color (symbolFillColor=IMPRINT_SEQ_START=#009E73) represents
+    only the low-value end of the sequential colormap, whereas actual cells span the
+    full gradient. Minor visual inconsistency — consider using a mid-point color or
+    leaving it as-is with a note that it is illustrative.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct theme surface
-      Chrome: title "heatmap-loss-triangle · altair · anyplot.ai" in dark ink, clearly readable; subtitle in muted ink; axis labels "Development Period" (top) and "Accident Year" (left) in dark ink; tick labels in soft ink (#4A4A44); dev factor row labels readable
-      Data: Imprint sequential cmap (#009E73 green → #4467A3 blue) encoding cumulative claim magnitude; actual cells fully opaque; projected cells at 0.6 opacity with dashed amber (#DDCC77) borders; cell annotations (e.g. "3.3M", "19.5M") in theme-adaptive ink (dark on light cells, light on dark cells); color legend "Cumulative Claims" on right; status legend at bottom with opacity-differentiated squares
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "heatmap-loss-triangle · python · altair · anyplot.ai" in dark ink, rendered at top-left — fully readable. Two subtitle lines in muted ink below the title — legible. "Development Period" axis label at the top (x-axis oriented upward), "Accident Year" y-axis label on the left — both clearly readable. Tick labels (year strings 2015–2024, period numbers 1–10) in INK_SOFT — readable at this scale.
+      Data: 10×10 grid of colored cells ranging from brand green (#009E73, low values ~3M) in the upper-left to blue (#4467A3, high values ~29M) across the spectrum. Actual cells (upper-left triangle) are full opacity; projected (IBNR) cells have 0.6 opacity with amber (#DDCC77) dashed border — distinction is clear and visually distinctive. Cell labels in bold ("3.3M", "8.2M", "29.1M", etc.) adapt between PAGE_BG and INK based on cell luminosity. Dev Factor row at the bottom shows "2.500" through "1.008" on an elevated warm background. Color gradient legend on the right labeled "Cumulative Claims" with range 5,000,000–25,000,000. Status legend at bottom shows two squares for "Actual (Observed)" and "Projected (IBNR)".
+      Legibility verdict: PASS — all text is readable against the warm off-white background. Cell annotations are legible in both light and dark cell areas.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct theme surface
-      Chrome: title, axis labels, tick labels, and cell annotations all rendered in light ink (#F0EFE8 / #B8B7B0 range); clearly readable against the dark background; no dark-on-dark failures observed; legend text is light-colored and legible
-      Data: Imprint sequential cmap colors identical to light render (#009E73 → #4467A3) — data colors unchanged, only chrome flipped; amber dashed borders on projected cells remain visible; opacity differentiation maintained
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light off-white/cream (#F0EFE8 / #B8B7B0) — clearly visible against the dark background. No dark-on-dark text failures at the chrome level.
+      Data: Cell colors are identical to the light render — brand green (#009E73) through blue (#4467A3), confirming only chrome flips between themes. The amber dashed borders on projected cells remain clearly visible. Cell text in high-value cells uses PAGE_BG (#1A1A17, near-black) against medium-blue cell backgrounds — this is the one marginal contrast area (estimated ~3.1:1 ratio, borderline WCAG AA). Dev Factor row, color legend, and status legend are all visible.
+      Legibility verdict: PASS (marginal for high-value cell text) — the chart is broadly readable in dark mode. The cell annotation contrast for the highest-value blue cells is slightly borderline but bold font weight keeps it workable. No severe dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,84 +69,88 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, subtitle=11, cell text=12,
-          factor text=11, axis labels=10/12). Readable in both renders. Minor deduction:
-          at mobile widths (~400px), dense cell annotations may approach readability
-          floor for 10x10 grid.'
+        comment: 'All font sizes explicitly set (labelFontSize=10, titleFontSize=12,
+          cell fontSize=12, title fontSize=16). Readable in both themes. Minor deduction:
+          in dark mode, high-value cells get PAGE_BG (#1A1A17) text on medium-blue
+          (#4467A3) — ~3.1:1 contrast, borderline.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Each cell annotation within its own cell area;
-          factor row and status legend clearly separated.
+        comment: No text overlaps. All cell labels fit within cells. No collision
+          between axis labels, legends, or data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells prominently sized; opacity and dashed border clearly
-          distinguish actual from projected; color gradient visible across full magnitude
-          range.
+        comment: Heatmap cells clearly visible. Opacity differentiation (1.0 vs 0.6)
+          cleanly distinguishes actual from projected. Amber dashed border provides
+          redundant encoding. Color gradient spans full range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential cmap is perceptually uniform and CVD-safe. Opacity
-          + dashed border provides redundant non-color encoding.
+        comment: Imprint sequential colormap is CVD-safe. Opacity and dashed border
+          provide redundant encoding beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 appropriate for symmetric heatmap. Grid fills canvas
-          well; balanced margins; legends well-placed.
+        comment: Square 2400x2400 appropriate for symmetric heatmap. Canvas gate passed.
+          Chart fills canvas well with balanced margins. Title, color legend, status
+          legend all fully visible without clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Development Period and Accident Year are descriptive and self-explanatory
-          for the actuarial domain.
+        comment: 'X-axis: ''Development Period'', Y-axis: ''Accident Year'' — descriptive.
+          Title matches required format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 to #4467A3) for continuous magnitude data.
-          Amber #DDCC77 as semantic anchor for IBNR boundary. Correct backgrounds
-          #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
+        comment: 'Imprint sequential cmap (#009E73 → #4467A3) for continuous magnitude
+          — correct. Background #FAF8F1 light / #1A1A17 dark — correct. Theme chrome
+          fully adaptive. Amber (#DDCC77) semantic anchor used correctly for IBNR
+          boundary.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom Imprint sequential cmap, opacity differentiation,
-          dashed amber IBNR boundary, elevated background for dev-factor row, clear
-          typography hierarchy. Clearly above library defaults.'
+        comment: 'Above-default design: opacity differentiation, amber dashed IBNR
+          border, dev factor row with elevated bg, smart legend placement. Intentional
+          choices throughout. Not quite publication-ready (6+) due to somewhat mechanical
+          structure.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid (correct for heatmap), thin PAGE_BG cell strokes for separation,
-          domainWidth=0 removes axis spine lines, custom legend fill/stroke/label
-          styling.
+        comment: Grid removed, domain width 0, view stroke 0, cell separation via
+          subtle 1.5px stroke. Elevated background for dev factor row. Theme-adaptive
+          legend fills. Clear refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy guides viewer: opacity + dashed border creates
-          focal point at actual/projected boundary; color gradient reveals magnitude
-          trends; dev-factor row contextualizes chain-ladder method.'
+        comment: Visual hierarchy between actual/projected regions guides the eye.
+          Gradient naturally shows claim growth pattern. Amber boundary marks the
+          actuarial evaluation line. Clear focal structure. Would need direct insight
+          annotation to reach 6.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,31 +158,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap with upper-left actual and lower-right
-          projected regions.
+        comment: Correct triangular matrix heatmap with mark_rect(). Upper-left actual,
+          lower-right projected structure fully implemented.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: distinct actual/projected styling (opacity
-          + dashed border), cell value annotations, development factors row, color
-          magnitude encoding, status legend, row/column labels.'
+        comment: 'All 8 spec features: triangular structure, distinct styling (opacity+dashed
+          border), diagonal boundary, cell annotations, dev factors row, color-intensity
+          encoding, legend, and row/column labels — all present.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Development Period, Y = Accident Year, color = Cumulative Amount.
-          Correct orientation and full data coverage.
+        comment: Accident Year on Y, Development Period on X, cumulative amount drives
+          color intensity. Full 10x10 triangle (55 actual + 45 projected cells).
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing python language component. Actual: ''heatmap-loss-triangle
-          · altair · anyplot.ai''. Required: ''heatmap-loss-triangle · python · altair
-          · anyplot.ai''. Legend labels otherwise correct.'
+        passed: true
+        comment: 'Title: ''heatmap-loss-triangle · python · altair · anyplot.ai''
+          — matches required format. Status legend and color gradient legend both
+          present with correct labels.'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +192,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 10x10 triangle, both actual and projected regions, realistic
-          distribution, development factors, color magnitude gradient.
+        comment: 'Shows all aspects: complete triangular structure, full development
+          to period 10, both actual and projected regions, age-to-age dev factors
+          (2.50 → 1.008), complete range from early low-value to mature high-value
+          claims.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Actuarial loss development triangle with accident years 2015-2024.
-          Realistic for a mid-sized insurance portfolio.
+        comment: Real-world insurance claims development triangle. Accident years
+          2015-2024, claims 3M-29M range, realistic diminishing development factors.
+          Neutral business/actuarial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base claims $3.2M-$5.1M growing to $19M-$29M final amounts. Development
-          factors (2.50 to 1.008) are actuarially plausible.
+        comment: Claims range ($3.2M-$5.1M initial, developing to $19-29M at period
+          10) is realistic for a mid-sized commercial insurance portfolio. Dev factors
+          (2.50 initial tapering to 1.008 at maturity) reflect real chain-ladder patterns.
     code_quality:
       score: 10
       max: 10
@@ -196,34 +221,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> chrome tokens -> data generation -> chart layers
-          -> save/pad. No functions or classes.'
+        comment: 'Flat script: imports → constants → data generation → chart layers
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys (path fix), altair, numpy, pandas, PIL — all used.
+        comment: 'All imports used: os, sys (PATH fix), altair, numpy, pandas, PIL.Image.
+          No dead imports.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair layering with + operator. Conditional encoding via alt.when().then().otherwise().
-          Appropriate complexity.
+        comment: Clean Altair layer composition with + operator. alt.when().then().otherwise()
+          for conditional encoding. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL padding to exact
-          2400x2400. Current Altair 6 API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses scale_factor=4.0
+          with PIL padding to exact 2400x2400. Current Altair 6.x API.
     library_mastery:
       score: 7
       max: 10
@@ -233,30 +259,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good Altair patterns: encoding types (O/N/Q), layer composition
-          with +, alt.when().then().otherwise() for conditional encoding, alt.Legend
-          configuration.'
+        comment: 'Good idiomatic Altair: proper encoding types (N/O/Q), alt.when().then().otherwise()
+          (Altair 5+ conditional API), alt.Scale() with explicit domain/range, alt.Legend()
+          customization, layer composition with + operator.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses Altair-distinctive features: declarative conditional encoding
-          (alt.when()), layer composition for multi-mark charts, opacity-as-encoding
-          via alt.Opacity, interactive tooltips in HTML output.'
-  verdict: REJECTED
+        comment: 'Uses Altair-specific features: conditional encoding via alt.when(),
+          multi-layer composition combining mark_rect + mark_text + status_legend
+          chart, alt.Opacity encoding with alt.Scale for legend-driven opacity.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
+  - edge-highlighting
