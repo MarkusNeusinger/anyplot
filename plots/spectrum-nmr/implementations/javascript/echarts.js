@@ -9,9 +9,9 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data: synthetic 1H NMR of Ethanol (CH3-CH2-OH) at 300 MHz ---
 // CH3 triplet ~1.17 ppm, CH2 quartet ~3.69 ppm, OH broad singlet ~2.61 ppm, TMS at 0.00
-const nPts = 6001;
+const nPts = 3001;
 const ppmLo = -0.5;
-const ppmHi = 12.0;
+const ppmHi = 4.5;
 const J = 7 / 300; // 7 Hz coupling constant → 0.0233 ppm at 300 MHz
 
 function lorentz(x, x0, amp, hw) {
@@ -70,7 +70,7 @@ chart.setOption({
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { lineStyle: { color: t.inkSoft } },
-    splitLine: { show: false },
+    splitLine: { show: true, lineStyle: { color: t.grid, type: "dashed" } },
   },
 
   yAxis: {
@@ -82,7 +82,7 @@ chart.setOption({
     min: -4,
     max: 96,
     axisLabel: { show: false },
-    axisLine: { show: true, lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false },
   },
