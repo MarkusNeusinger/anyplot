@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: seaborn 0.13.2 | Python 3.14
-Quality: pending | Created: 2026-06-03
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-03
 """
 
 import os
