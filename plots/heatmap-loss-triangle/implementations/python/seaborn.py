@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -78,7 +78,7 @@ annot_labels = np.empty_like(cumulative, dtype=object)
 for i in range(n_years):
     for j in range(n_periods):
         val = cumulative[i, j]
-        annot_labels[i, j] = f"{val / 1000:.0f}K" if val >= 10000 else f"{val:,.0f}"
+        annot_labels[i, j] = f"{val:,.0f}"
 annot_df = pd.DataFrame(annot_labels, index=heatmap_data.index, columns=heatmap_data.columns)
 
 # Masks for actual vs projected regions
@@ -140,6 +140,15 @@ for i in range(n_years):
                 mpatches.Rectangle((j, i), 1, 1, facecolor="none", edgecolor=INK_SOFT, hatch="////", linewidth=0)
             )
 
+# Diagonal step-line marking the latest evaluation boundary (actual vs projected)
+diag_x = [n_periods, n_periods]
+diag_y = [0, 1]
+for i in range(1, n_years):
+    actual_periods = n_years - i
+    diag_x.extend([actual_periods, actual_periods])
+    diag_y.extend([i, i + 1])
+ax.plot(diag_x, diag_y, color=INK, linewidth=2.5, linestyle="-", zorder=5, solid_capstyle="butt")
+
 # Colorbar styling
 cbar = ax.collections[0].colorbar
 if cbar is not None:
@@ -179,14 +188,16 @@ actual_patch = mpatches.Patch(facecolor="#009E73", edgecolor=INK_SOFT, label="Ac
 projected_patch = mpatches.Patch(facecolor="#4467A3", edgecolor=INK_SOFT, hatch="///", label="Projected (IBNR)")
 ax.legend(
     handles=[actual_patch, projected_patch],
-    loc="lower right",
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.12),
     fontsize=8,
     framealpha=0.9,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
     labelcolor=INK,
+    ncol=2,
 )
 
 # Save — no bbox_inches='tight'; figsize×dpi fixes the canvas at 2400×2400
-plt.tight_layout()
+plt.tight_layout(rect=[0, 0.08, 1, 1])
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
