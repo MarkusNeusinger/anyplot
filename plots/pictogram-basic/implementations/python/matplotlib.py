@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-03
@@ -75,7 +75,7 @@ for row_idx, (n_full, frac) in enumerate(zip(full_icons, partials, strict=True))
 
     # Value annotation at row end
     x_end = (n_full + (1 if frac > 0 else 0)) * x_step + icon_r + 0.20
-    ax.text(x_end, y, f"{values[row_idx]} Mt", fontsize=8, color=INK_SOFT, va="center", ha="left")
+    ax.text(x_end, y, f"{values[row_idx]} Mt", fontsize=9, color=INK_SOFT, va="center", ha="left")
 
 # Axes bounds
 ax.set_xlim(-icon_r * 2.2, (max_icons - 1) * x_step + icon_r + 1.9)
@@ -87,15 +87,16 @@ ax.set_yticklabels(categories, fontsize=10, color=INK_SOFT)
 ax.tick_params(axis="y", length=0, labelcolor=INK_SOFT)
 ax.set_xticks([])
 
-# Spine styling
+# Spine styling — L-frame (left + bottom) for row anchoring
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
+ax.spines["bottom"].set_color(INK_SOFT)
+ax.spines["bottom"].set_linewidth(0.5)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["left"].set_linewidth(0.5)
 
 # Title
-title = "pictogram-basic · python · matplotlib · anyplot.ai"
+title = "Estimated Global Fruit Production · pictogram-basic · python · matplotlib · anyplot.ai"
 n_t = len(title)
 title_fs = max(8, round(12 * 67 / n_t)) if n_t > 67 else 12
 ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK, pad=12)
