@@ -1,93 +1,106 @@
 library: plotnine
+language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:40:09Z'
-updated: '2026-03-11T20:10:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22970857471
+updated: '2026-06-03T18:24:11Z'
+generated_by: claude-sonnet
+workflow_run: 26903132790
 issue: 4672
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Cohesive dark theme design with panel background matching colormap floor and harmonized
-    outer background
-  - Rich synthesized audio data with harmonics, chirp sweep, and amplitude decay creating
-    a visually compelling spectrogram
-  - Clean vectorized mel filterbank implementation avoiding librosa dependency
-  - Data-driven annotations using separate DataFrames following grammar-of-graphics
-    principles
-  - Full spec compliance with all required features correctly implemented
+  - Clean vectorized mel filterbank implementation without librosa dependency — all
+    DSP computed from scratch using scipy.signal.stft and numpy matrix ops
+  - 'Multi-layer grammar-of-graphics composition: geom_raster heatmap + ochre spectral
+    peak trajectory + cyan F₀ reference line, each with correctly isolated inherit_aes=False'
+  - 'Theme-adaptive Imprint colormap (PAGE_BG → #009E73 → #4467A3) gives seamless
+    silence-to-energy gradient that adapts correctly to both light and dark surfaces'
+  - 'Full spec compliance: dB scale, mel y-axis with Hz labels, colorbar labeled in
+    dB, synthesized realistic audio with harmonics and percussion bursts, all parameters
+    at recommended values'
   weaknesses:
-  - Library Mastery remains the main gap — implementation uses plotnine correctly
-    but does not leverage truly distinctive features like stat transformations or
-    custom geoms
-  - Annotation reference lines are extremely subtle (alpha 0.12-0.15), nearly invisible
-    in the final render
-  image_description: The plot displays a mel-spectrogram on a fully dark-themed canvas.
-    The x-axis shows time (0-3 seconds) and the y-axis shows mel-scaled frequency
-    with Hz labels at key mel band edges (128, 256, 512, 1024, 2048, 4096, 8000 Hz).
-    The colormap is a custom inferno-like gradient progressing from very dark black/purple
-    (low power ~-60 dB) through magenta and orange to bright yellow (0 dB). Clear
-    horizontal bands of energy are visible at harmonic frequencies (~220, 440, 880
-    Hz), with lower harmonics being brightest and decaying over time. A prominent
-    chirp sweep arcs from approximately 500 Hz at t=0.8s up to ~4000 Hz at t=2.0s,
-    creating a striking curved bright line that serves as the main visual focal point.
-    Two data-driven annotations label the fundamental frequency (F0 in bright yellow)
-    and 3rd harmonic (in orange), with very subtle reference lines at those frequencies.
-    A tall colorbar on the right is labeled Power (dB). The title reads spectrogram-mel
-    plotnine pyplots.ai in bold light gray. The panel background (#000004) matches
-    the colormap floor, and the outer plot background (#0e0e1a) creates a cohesive
-    dark theme throughout.
+  - Spectral peak trajectory (ochre line, size=0.9, alpha=0.65) is thin and partially
+    translucent against the green-blue heatmap; increase to size=1.2 and alpha=0.8
+    so it reads more clearly, especially at mobile scale
+  - F₀ annotation geom_text size=3.5mm (≈10pt) is on the small side for a 3200×1800
+    canvas viewed on mobile; increase to size=4.0 for better readability
+  - Colorbar bottom in dark render (−1A1A17 stop) blends with the near-black legend
+    background, making the −60 dB tick visually ambiguous; consider adding a subtle
+    legend_background=element_rect(fill=ELEVATED_BG) to give the colorbar swatch contrast
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
+      Chrome: Title "spectrogram-mel · python · plotnine · anyplot.ai" in dark ink, bold, centred — fully readable. Y-axis label "Frequency (Hz)" and X-axis label "Time (s)" in dark ink, clear. Tick labels (128–8000 Hz, 0–3 s) in INK_SOFT dark-grey, clearly legible. Colorbar legend title "Power (dB)" and tick values (0, −20, −40, −60) visible on the right.
+      Data: Mel-spectrogram rendered as a teal-green-to-blue heatmap from PAGE_BG (silence) through #009E73 (brand green, mid-energy) to #4467A3 (blue, peak energy). Six rhythmic burst events visible as vertical brightening columns at ~0.3 s intervals. Ochre (#BD8233) spectral peak trajectory line overlaid near the 256–512 Hz band, showing spikes at burst events. Cyan (#2ABCCD) dashed F₀ reference line horizontal at ~330 Hz band. Small "F₀ = 330 Hz" annotation in INK_SOFT just above the reference line.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in INK_SOFT light grey (#B8B7B0) — all readable. Colorbar title and ticks visible in light text. No dark-on-dark text failures observed.
+      Data: Heatmap data colors are identical to light render — same green-blue gradient emerges from the dark surface. The #1A1A17 start of the colormap seamlessly blends silence with the background (intentional design choice). Ochre peak trajectory and cyan F₀ reference line identically positioned and colored as in the light render.
+      Legibility verdict: PASS — all text readable against the near-black background with theme-adaptive INK_SOFT tokens correctly applied. The lowest colorbar swatch (−60 dB = #1A1A17) blends slightly with the dark legend area — minor visual ambiguity but not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis titles=20pt, tick
-          labels=16pt, legend title=16pt, legend text=14pt'
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8);
+          F0 annotation size=3.5mm is readable but slightly small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, y-axis labels well-spaced, annotations avoid
-          collision
+        comment: No overlapping elements; F0 label positioned above reference line
+          without collision
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: geom_raster with interpolate=True produces smooth gap-free spectrogram
+        comment: Heatmap and reference line excellent; spectral peak trajectory (size=0.9,
+          alpha=0.65) somewhat thin against heatmap
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CVD-safe: green-blue sequential colormap, ochre and cyan overlay
+          lines are distinguishable across CVD types'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Custom inferno-like sequential colormap is perceptually uniform and
-          colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 proportions with cohesive dark background, slight right-side
-          weight from colorbar
+        comment: 3200x1800 landscape, heatmap fills plot area well, colorbar well-positioned,
+          no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) and Frequency (Hz) with units, correct title format
+        comment: Time (s), Frequency (Hz), Power (dB) — all descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Sequential colormap uses PAGE_BG→#009E73→#4467A3 (Imprint-derived,
+          theme-adaptive); backgrounds correct (#FAF8F1 light, #1A1A17 dark); all
+          chrome theme-adaptive'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -95,22 +108,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom 10-color gradient, dark panel matching colormap floor, cohesive
-          dark outer background, text color hierarchy
+        comment: 'Strong design: custom Imprint colormap, three analytically purposeful
+          data layers with distinct hue choices (green-blue heatmap, ochre peak, cyan
+          F0), professional spectrogram aesthetic'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed, dark theme throughout, generous legend key, custom
-          margins. Reference lines nearly invisible
+        comment: Grid fully disabled (appropriate for heatmap), clean theme_minimal
+          base, generous plot_margin, properly sized colorbar key
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: F0 and 3rd harmonic annotations guide viewer, chirp sweep creates
-          focal point, time-varying decay adds narrative
+        comment: Spectral peak trajectory guides viewer through temporal energy concentration;
+          F0 reference provides analytical anchor; burst events create clear rhythmic
+          visual pattern
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram with STFT, mel filterbank, and dB conversion
+        comment: Correct mel-spectrogram with mel-scaled frequency axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dB scale, sequential colormap, mel y-axis
-          with Hz labels, colorbar, correct parameters'
+        comment: dB scale, sequential colormap, time X-axis, mel-Hz Y-axis labels,
+          colorbar in dB, n_fft=2048, hop=512, n_mels=128, synthesized audio
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=mel frequency with Hz labels, fill=power in dB
+        comment: X=time(s), Y=mel-band with Hz labels, fill=Power(dB) — all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, colorbar labeled Power (dB)
+        comment: 'Title: ''spectrogram-mel · python · plotnine · anyplot.ai''; colorbar
+          labeled ''Power (dB)'''
     data_quality:
       score: 15
       max: 15
@@ -149,21 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Rich signal with fundamental, harmonics, chirp sweep, noise, time-varying
-          amplitudes
+        comment: Synthesized audio with fundamental (E4, 330 Hz), multiple harmonics,
+          temporal decay, and rhythmic noise bursts — full mel-spectrogram feature
+          coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 220 Hz fundamental with natural harmonics is realistic for speech/music
-          analysis
+        comment: Realistic musical audio signal (E4 note with harmonics + percussion
+          bursts) — neutral, scientifically plausible domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 22050 Hz sample rate, 3-second duration, standard STFT parameters
+        comment: 22050 Hz sample rate, 3s duration, 0 to -60+ dB range — all standard
+          audio ML parameters
     code_quality:
       score: 10
       max: 10
@@ -173,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: Linear Imports→Data→Plot→Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -185,51 +203,52 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, scipy.signal.stft appropriate
+        comment: All imports used; scipy.signal.stft needed for STFT computation
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized mel filterbank, data-driven annotations are elegant
+        comment: Vectorized mel filterbank without librosa is clean and appropriately
+          complex
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: ggplot + geom layers + scales
+          + guides + theme, with correct inherit_aes=False for secondary data layers'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Strong grammar-of-graphics composition with data-driven annotations
-          via separate DataFrames
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: geom_raster(interpolate=True) and guide_colorbar are plotnine-specific
-          but not truly distinctive
+        comment: geom_raster(interpolate=True) for smooth heatmap, guide_colorbar(nbin=256)
+          for fine gradient, multi-dataframe layer composition — distinctively plotnine/ggplot
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
-  - annotations
   - layer-composition
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
-  - binning
+  - rolling-window
   styling:
-  - dark-theme
   - custom-colormap
   - alpha-blending

@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: spectrogram-mel
+created: '2026-06-03T18:22:38Z'
+updated: '2026-06-03T18:38:35Z'
+generated_by: claude-sonnet
+workflow_run: 26903688267
+issue: 4672
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct imprint_seq colormap (green→blue) used for continuous heatmap data
+  - Proper mel-scale frequency axis with perceptually meaningful Hz tick labels (50–8k)
+  - Full theme-adaptive chrome with all INK/INK_SOFT tokens correctly wired to title,
+    labels, spines, and colorbar
+  - Synthesized C major scale with ADSR envelope and harmonic overtones — realistic
+    and domain-appropriate audio
+  - WilkinsonTicks for clean colorbar tick selection, highclip/lowclip for colormap
+    clamping (idiomatic Makie)
+  - Correct canvas 3200×1800 (size=(1600,900) + px_per_unit=2)
+  - dB normalization with peak at 0 dB and -80 dB floor — matches spec requirements
+    exactly
+  weaknesses:
+  - All 4 spines are shown (topspinecolor and rightspinecolor set) — for heatmaps
+    this is acceptable but style guide preference is to remove top/right spines; remove
+    topspinevisible and rightspinevisible or set them to false for cleaner look
+  - 'DE-01: Design is functional and polished but not highly sophisticated — no annotation
+    layer or focal-point emphasis to guide the viewer through the musical pattern'
+  - 'DE-02: Minor — the four-spine frame is borderline for a heatmap but acceptable;
+    no further visual refinement applied beyond the clean colormap and disabled grid'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white
+      Chrome: Title "C Major Scale · spectrogram-mel · julia · makie · anyplot.ai" rendered in dark #1A1A17 text; axis labels "Time (s)" and "Frequency (Hz)" in dark ink; tick labels (0–4s on x, 50/100/200/500/1k/2k/4k/8k Hz on y) in INK_SOFT dark grey; colorbar label "Power (dB)" and ticks visible; all text clearly readable
+      Data: imprint_seq gradient (green #009E73 at low power → blue #4467A3 at high power); 8 distinct temporal bands corresponding to 8 notes of C major scale; lower frequency bands (100–1k Hz) show strong green energy, higher bands dominated by blue noise floor; colorbar range -80 to 0 dB
+      Legibility verdict: PASS — all title, label, and tick text is clearly readable against the warm off-white surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black
+      Chrome: Title in light #F0EFE8 text clearly readable; axis labels in same light color; tick labels in INK_SOFT light grey (#B8B7B0); colorbar label and ticks in light tokens — all readable
+      Data: Same imprint_seq colormap (green → blue) — data colors identical to light render; same spectral pattern with 8 note bands; no dark-on-dark failure observed; brand green #009E73 clearly visible against dark background
+      Legibility verdict: PASS — all chrome adapts correctly; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, and tick labels
+          readable in both themes; colorbar tick labels slightly small but acceptable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; colorbar well-separated from
+          heatmap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap gradient clearly distinguishable; spectral bands visible
+          across both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green-blue) is CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title ~60% width; colorbar well-proportioned;
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) and Frequency (Hz) descriptive with units; title format
+          correct with descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (green→blue) used for continuous heatmap; backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional look with Imprint sequential colormap and clean layout;
+          ADSR synthesis adds musical realism; above default but no standout focal-point
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid disabled (correct for heatmap); 4-spine frame acceptable for
+          enclosed heatmap; colorbar width optimized at 28pt
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 8 distinct temporal note bands visible; mel-scale gives perceptually
+          meaningful frequency axis; musical context adds narrative above default
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram with frequency warped to mel scale
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential colormap, dB scale, colorbar in dB, mel-scale y-axis with
+          Hz labels, time x-axis — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time(s), Y=mel-scaled frequency with Hz labels, color=power(dB)
+          — all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'C Major Scale · spectrogram-mel · julia · makie · anyplot.ai'
+          correct format; colorbar serves as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Mel filterbank, harmonic overtones, ADSR envelope, dB normalization
+          — covers all mel-spectrogram aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthesized C major scale is realistic and musically neutral; appropriate
+          audio ML context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 22050 Hz, 128 mel bands, 4 seconds, -80 to 0 dB range — all standard
+          parameters
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; sequential script structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random — all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean implementation, no fake UI, appropriate complexity for mel-spectrogram
+          synthesis
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: heatmap!, Colorbar, Axis used idiomatically; WilkinsonTicks for auto
+          tick selection; cgrad for colormap
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: WilkinsonTicks (Makie-specific), highclip/lowclip colormap clamping,
+          cgrad gradient, colorant literal syntax — good Makie-specific usage above
+          default
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
