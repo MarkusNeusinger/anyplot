@@ -128,16 +128,8 @@ g.selectAll(".row-line")
   .attr("stroke", t.grid)
   .attr("stroke-width", 0.3);
 
-// Top border
-g.append("line")
-  .attr("x1", 0).attr("x2", iw)
-  .attr("y1", y(maxPitch + 0.5))
-  .attr("y2", y(maxPitch + 0.5))
-  .attr("stroke", t.grid)
-  .attr("stroke-width", 0.3);
-
-// --- Vertical gridlines: beat and measure boundaries ---
-d3.range(0, totalBeats + 1).forEach((beat) => {
+// --- Vertical gridlines: beat and measure boundaries (skip borders at 0 and totalBeats) ---
+d3.range(1, totalBeats).forEach((beat) => {
   const isMeasure = beat % 4 === 0;
   g.append("line")
     .attr("x1", x(beat)).attr("x2", x(beat))
@@ -155,7 +147,7 @@ notesG.selectAll(".note")
   .attr("class", "note")
   .attr("x", (d) => x(d.start) + noteGap)
   .attr("y", (d) => y(d.pitch + 0.5) + noteGap)
-  .attr("width", (d) => Math.max(x(d.start + d.duration) - x(d.start) - noteGap * 2, 2))
+  .attr("width", (d) => Math.max(x(d.start + d.duration) - x(d.start) - noteGap * 2, 6))
   .attr("height", Math.max(rowH - noteGap * 2, 2))
   .attr("fill", (d) => velColor(d.velocity))
   .attr("rx", 3)
@@ -170,7 +162,7 @@ const yAxisG = g.append("g")
   );
 yAxisG.selectAll("text")
   .attr("fill", t.inkSoft)
-  .style("font-size", "12px")
+  .style("font-size", "14px")
   .style("font-family", "monospace");
 yAxisG.selectAll("line").attr("stroke", t.grid);
 yAxisG.select(".domain").attr("stroke", t.inkSoft);
@@ -180,11 +172,11 @@ yAxisG.selectAll("text")
   .filter((d) => d % 12 === 0)
   .attr("fill", t.ink)
   .style("font-weight", "700")
-  .style("font-size", "13px");
+  .style("font-size", "15px");
 
 // Y axis label
 svg.append("text")
-  .attr("transform", `translate(${18},${margin.top + ih / 2}) rotate(-90)`)
+  .attr("transform", `translate(${28},${margin.top + ih / 2}) rotate(-90)`)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
@@ -231,7 +223,7 @@ d3.range(0, totalBeats).forEach((beat) => {
       .attr("y", 19)
       .attr("text-anchor", "middle")
       .attr("fill", t.inkSoft)
-      .style("font-size", "10px")
+      .style("font-size", "12px")
       .style("opacity", "0.75")
       .text(beatInMeasure + 1);
   }
@@ -296,7 +288,7 @@ svg.append("text")
     .attr("y", velScale(vel) + 4)
     .attr("text-anchor", "end")
     .attr("fill", t.inkSoft)
-    .style("font-size", "11px")
+    .style("font-size", "13px")
     .style("font-style", "italic")
     .text(label);
 });
