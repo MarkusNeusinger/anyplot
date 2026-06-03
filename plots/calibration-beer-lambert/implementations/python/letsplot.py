@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-03
@@ -86,7 +86,7 @@ plot = (
         data=df_standards,
         fill=BRAND,
         color="white",
-        size=2.5,
+        size=3.5,
         alpha=0.9,
         shape=21,
         stroke=1.0,
@@ -108,11 +108,11 @@ plot = (
         .line("Concentration: @concentration mg/L")
         .line("Absorbance: @absorbance"),
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=df_eq, size=4, color=INK, family="monospace", hjust=0)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_eq, size=5, color=INK, family="monospace", hjust=0)
     + geom_text(
-        aes(x="x", y="y", label="label"), data=df_unknown_label, size=3.5, color=FOCAL, hjust=0, fontface="italic"
+        aes(x="x", y="y", label="label"), data=df_unknown_label, size=4.5, color=FOCAL, hjust=0, fontface="italic"
     )
-    + labs(x="Concentration (mg/L)", y="Absorbance", title="calibration-beer-lambert · letsplot · pyplots.ai")
+    + labs(x="Concentration (mg/L)", y="Absorbance", title="calibration-beer-lambert · python · letsplot · anyplot.ai")
     + scale_x_continuous(limits=[-0.5, 13.5], breaks=[0, 2, 4, 6, 8, 10, 12])
     + scale_y_continuous(limits=[-0.02, 0.58], breaks=[0, 0.1, 0.2, 0.3, 0.4, 0.5])
     + coord_cartesian(xlim=[-0.5, 13.5], ylim=[-0.02, 0.58])
@@ -127,6 +127,7 @@ plot = (
         panel_grid_minor=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         axis_ticks=element_blank(),
         axis_ticks_length=0,
         plot_margin=[30, 40, 20, 20],
