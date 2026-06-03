@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:43:03Z'
-updated: '2026-06-03T14:09:09Z'
+updated: '2026-06-03T14:17:11Z'
 generated_by: claude-sonnet
 workflow_run: 26889255193
 issue: 4674
@@ -15,44 +15,53 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram
 quality_score: 88
 review:
   strengths:
-  - Correct pictogram/isotype layout with circles in left-aligned rows per category,
-    exactly matching the spec
-  - Partial icons implemented correctly via Altair opacity encoding — fractional remainders
-    are clearly visible in both themes
-  - 'Imprint palette in canonical order (green→lavender→blue→ochre→red) with brand
-    green #009E73 as first series'
-  - Full theme adaptivity — all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
-    ELEVATED_BG) evaluated at render time, both themes pass the readability check
-  - Subtle green highlight bar behind top category (Apples) creates a clear focal
-    point for storytelling
-  - Sort order (highest to lowest) + bold/regular label weight distinction reinforces
-    visual hierarchy
-  - Clean Altair layer composition (highlight + icons + top_labels + other_labels)
-    is idiomatic and maintainable
-  - Canvas padding code correctly follows the altair.md guidance — raises on overshoot,
-    pads on undershoot, no cropping
+  - Highlight bar behind top-value row (Apples) creates clear focal point and visual
+    storytelling
+  - Bold green '35k' label for top value gives strong hierarchy; other labels correctly
+    de-emphasised
+  - Partial opacity correctly communicates fractional icon counts (e.g. 0.4 remainder
+    for Oranges)
+  - Sorted descending by value for immediate comparison — good data design decision
+  - Full Imprint palette positions 1–5 used correctly; brand green on first series
+    (Apples)
+  - Theme-adaptive chrome is correct in both renders — no dark-on-dark failures
+  - 'Perfect spec compliance: unit legend in subtitle, left-aligned labels, grid-row
+    layout, partial icons'
+  - Clean canvas padding to 3200×1800 with PIL, no cropping
+  - Layer composition (highlight + icons + labels) is idiomatic Altair
   weaknesses:
-  - subtitle fontSize=14 equals category labelFontSize=14 — the subtitle should be
-    smaller (e.g. 12px) to create a clearer typographic hierarchy between chart subtitle
-    and data labels
-  - 'DE-01 moderate: the overall aesthetic is polished but not publication-ready —
-    the value-label distinction (bold 14px vs regular 12px) is subtle; a 2-3pt size
-    gap or a background pill behind the top label would add more intentional hierarchy'
-  - 'DE-02 could improve: mark_point size=1200 is good for desktop but may feel over-large
-    at small canvas regions; consider a very subtle drop-shadow or stroke on the highlight
-    bar to lift it visually from the background'
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly NOT pure white. PASS.
-      Chrome: Title "pictogram-basic · python · altair · anyplot.ai" bold at 16px in near-black (#1A1A17) — clearly readable. Subtitles "Global Fruit Production Comparison" and "● = 5k tonnes | partial ● = fractional amount" in muted gray — readable. Category labels (Apples, Oranges, Bananas, Grapes, Mangoes) bold in dark ink at 14px — clearly visible. Value labels (35k bold, others regular) in dark/soft ink — readable.
-      Data: 5 rows of circles sorted by value: Apples (7 green circles), Oranges (4 full + 1 partial purple), Bananas (3 full + 1 partial blue), Grapes (2 full + 1 partial ochre), Mangoes (1 full + 1 partial red). First series is #009E73 brand green. Subtle green highlight bar behind Apples row. Partial icons clearly visible at reduced opacity.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly NOT pure black. PASS.
-      Chrome: Title in light cream (#F0EFE8) — clearly readable against dark bg. Category labels in light text — clearly visible. Value labels in light/muted light text — readable. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — green, lavender, blue, ochre, red circles with same saturation. Green highlight bar behind Apples is subtler on dark surface (teal tint) but still readable. Partial icon opacities preserved correctly.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
+  - Subtitle fontsize=11 is on the small side — at scale_factor=4 it renders at ~44
+    source px, which is readable at full size but borderline at mobile scale (400
+    px wide thumbnail)
+  - Partial icon opacity is applied to the full circle, which on the dark background
+    produces a muted, near-invisible partial icon for some hues (e.g. partial Oranges
+    icon on dark blends into background more than on light)
+  - Design excellence is functional but not sophisticated — icons are plain circles
+    with no custom shape or texture that would distinguish this from a basic dot chart;
+    the ISOTYPE/pictogram identity relies entirely on the subtitle legend
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ #FAF8F1 — correct theme surface, not pure white.\n  Chrome: Title \"pictogram-basic\
+    \ · python · altair · anyplot.ai\" in bold near-black (#1A1A17), clearly\n   \
+    \ readable. Subtitle lines \"Global Fruit Production Comparison\" and \"● = 5k\
+    \ tonnes | partial ● = \n    fractional amount\" in muted grey — small but legible.\
+    \ Y-axis category labels (Apples, Oranges, \n    Bananas, Grapes, Mangoes) in\
+    \ bold dark ink, well-sized at fontsize=14.\n  Data: Five rows of filled circles\
+    \ arranged in a horizontal grid. Apples: 7 green (#009E73) circles; \n    Oranges:\
+    \ 4 lavender (#C475FD) + 1 partial (lighter opacity); Bananas: 3 blue (#4467A3)\
+    \ + 1 partial;\n    Grapes: 2 ochre (#BD8233) + 1 partial; Mangoes: 1 red (#AE3030)\
+    \ + 1 partial. Value labels to the \n    right: \"35k\" in bold green, \"22k\"\
+    –\"8k\" in soft grey. A light green highlight bar spans the Apples row.\n  Legibility\
+    \ verdict: PASS — all text clearly readable against warm off-white background.\n\
+    \nDark render (plot-dark.png):\n  Background: Warm near-black #1A1A17 — correct\
+    \ dark surface, not pure black.\n  Chrome: Title in light cream (#F0EFE8), subtitle\
+    \ in muted grey (#A8A79F), category labels in light \n    text — all readable\
+    \ against the dark background. No dark-on-dark failures observed.\n  Data: Same\
+    \ Imprint palette data colors (green, lavender, blue, ochre, red) — identical\
+    \ to light render\n    as required. Highlight bar behind Apples is a darker green\
+    \ tint on the dark surface. \"35k\" label in\n    #009E73 brand green remains\
+    \ visible. Partial icons slightly more muted on dark background due to\n    opacity\
+    \ interaction, but still distinguishable.\n  Legibility verdict: PASS — all text\
+    \ readable; no dark-on-dark issues; brand green #009E73 visible."
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,76 +72,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set and readable in both themes. Minor:
-          subtitle fontSize=14 equals category labelFontSize=14, flattening the typographic
-          hierarchy slightly.'
+        comment: Title and category labels clearly readable in both themes. Subtitle
+          at fontsize=11 is small but legible at full size; borderline at mobile thumbnail
+          scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: Icons well-spaced in grid; value labels positioned after last icon;
+          no collisions observed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large circles (size=1200) clearly visible; partial icons at reduced
-          opacity are distinguishable in both themes.
+        comment: Circles are large and prominent; partial icons convey fractional
+          amounts clearly via opacity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; five distinct hue families; no red-green-only
-          signal.
+        comment: Imprint palette positions 1-5 used; CVD-safe hue selection.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; chart fills canvas well with balanced padding;
-          no content cut off.
+        comment: Canvas gate passed (3200x1800). Good proportions; category labels
+          left, icons centre, values right. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; no axis labels needed for pictogram type; unit scale
-          shown in subtitle.
+        comment: Unit value in subtitle serves as legend. Title correct format. No
+          redundant axis titles needed for this chart type.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order; light bg #FAF8F1;
-          dark bg #1A1A17; data colors identical across themes; chrome flips correctly.'
+        comment: 'First series (#009E73) on Apples. Imprint positions 1-5 in order.
+          Backgrounds #FAF8F1 / #1A1A17 correct. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Clearly above defaults: highlight bar, label weight hierarchy, clean
-          minimal layout. Not yet publication-ready — value label size gap (14 vs
-          12px) is subtle; more intentional emphasis on top category would lift this.'
+        passed: true
+        comment: 'Above average: highlight bar, bold/green top label, sort order.
+          Not exceptional — icons are plain circles and the pictogram identity relies
+          on the subtitle.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: All spines/ticks/domain removed, no grid (appropriate). Generous
-          row padding. Clean strokeWidth=0 view. Good but not every detail polished.
+        passed: true
+        comment: Spines and ticks removed, no grid. Clean minimal aesthetic. Could
+          push further with more intentional whitespace or typographic refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 'Good: sort order, highlight bar, and label weight distinction guide
-          the reader to Apples as the clear leader. Visual hierarchy is intentional.'
+        passed: true
+        comment: Clear focal point via highlight bar + bold green label. Descending
+          sort aids comparison. Good visual hierarchy between top value and others.
     spec_compliance:
       score: 15
       max: 15
@@ -142,53 +151,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct isotype/pictogram chart with circles in grid-row layout.
+        comment: Correct pictogram/isotype chart with grid of icons per category.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Unit value legend (subtitle), partial icons, left-aligned row layout,
-          category labels — all present.
+        comment: Unit value per icon, partial icons for remainders, grid-row layout,
+          left-axis labels, unit legend in subtitle — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=icon count (proportional to value), Y=categories, all data shown
-          correctly.
+        comment: Categories on Y, icon columns on X; all values correctly mapped to
+          icon counts.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly.
+        comment: 'Title: ''pictogram-basic · python · altair · anyplot.ai'' ✓. Unit
+          value displayed in subtitle.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full icons, partial icons, multiple categories, value labels.
-          Could demonstrate a wider range of icon counts or the optional category-specific
-          icon variant.
+        comment: Full icons, partial icons, multiple categories (5), value labels,
+          unit legend — all aspects covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global fruit production is a real, neutral, comprehensible scenario
-          with plausible relative magnitudes.
+        comment: Fruit production (k tonnes) is real-world plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 35→8 k-tonnes give a nice 2–7 icon range; unit of 5k is well-chosen
-          for readability.
+        comment: Values 8k–35k with unit=5 gives 1–7 icons per row — ideal range for
+          pictogram readability.
     code_quality:
       score: 10
       max: 10
@@ -198,32 +206,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear flow.
+        comment: No functions or classes; clean top-level imperative script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data.
+        comment: All data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair, pandas, PIL.Image — all used. sys.path manipulation is necessary.
+        comment: All imports used; dynamic importlib pattern for sys.path safety is
+          acceptable.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; tooltips are native Altair. Clean layer composition.
+        comment: Appropriate complexity for the task; data construction loop is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with canvas padding
-          logic.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -233,17 +241,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct encoding types, configure_* methods, alt.Title with subtitle,
-          scale=None for manual colors. Importlib-based import is non-standard.
+        comment: Proper encoding types (Q/N), alt.Scale/alt.Axis/alt.Title used correctly,
+          band scale with paddingInner for rows.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: alt.value() for fixed pixel ranges, band scale with paddingInner,
-          opacity encoding for partial icons, layer composition via + operator — all
-          distinctively Altair.
-  verdict: REJECTED
+        comment: Layer composition of 4 marks, HTML export, tooltip encoding, configure_view
+          for background. Not pushing Altair's advanced features (selections, transforms)
+          but uses layering well.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
