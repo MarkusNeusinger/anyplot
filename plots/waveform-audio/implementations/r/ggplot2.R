@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-06-03
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -59,6 +58,14 @@ p <- ggplot(df, aes(x = time)) +
     alpha = 0.78
   ) +
   geom_hline(yintercept = 0, color = INK_MUTED, linewidth = 0.4) +
+  geom_vline(xintercept = p_arrival, color = INK_SOFT,
+             linetype = "dashed", linewidth = 0.5) +
+  geom_vline(xintercept = s_arrival, color = INK_SOFT,
+             linetype = "dotdash", linewidth = 0.5) +
+  annotate("text", x = p_arrival + 0.04, y = 0.90,
+           label = "P", color = INK, size = 3.5, hjust = 0, fontface = "bold") +
+  annotate("text", x = s_arrival + 0.04, y = 0.90,
+           label = "S", color = INK, size = 3.5, hjust = 0, fontface = "bold") +
   scale_x_continuous(
     breaks = seq(0, 2, by = 0.25),
     expand = expansion(mult = 0, add = 0.01)
