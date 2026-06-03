@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-06-03
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
