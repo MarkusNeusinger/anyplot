@@ -7,35 +7,24 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Convex hull (Andrew's monotone chain) in 2D ----------------------------
-function hullCross(O, A, B) {
-  return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
-}
-function convexHull2D(pts) {
-  if (pts.length < 3) return pts.slice();
-  const s = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+// Build a padded convex hull in log–log space; return linear-space coordinates
+function buildPaddedHull(linPts, padLog) {
+  const log = linPts.map(p => [Math.log10(p[0]), Math.log10(p[1])]);
+  const s = log.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (O, A, B) => (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   const lower = [];
   for (const p of s) {
-    while (lower.length >= 2 && hullCross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0)
-      lower.pop();
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
     lower.push(p);
   }
   const upper = [];
   for (let i = s.length - 1; i >= 0; i--) {
     const p = s[i];
-    while (upper.length >= 2 && hullCross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0)
-      upper.pop();
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
     upper.push(p);
   }
-  lower.pop();
-  upper.pop();
-  return lower.concat(upper);
-}
-
-// Build a padded convex hull in log–log space; return linear-space coordinates
-function buildPaddedHull(linPts, padLog) {
-  const log = linPts.map(p => [Math.log10(p[0]), Math.log10(p[1])]);
-  let hull = convexHull2D(log);
+  lower.pop(); upper.pop();
+  let hull = lower.concat(upper);
   if (hull.length < 3) {
     const cx = log.reduce((s, p) => s + p[0], 0) / log.length;
     const cy = log.reduce((s, p) => s + p[1], 0) / log.length;
@@ -44,10 +33,10 @@ function buildPaddedHull(linPts, padLog) {
       [cx + padLog, cy + padLog], [cx - padLog, cy + padLog],
     ];
   }
-  const cx = hull.reduce((s, p) => s + p[0], 0) / hull.length;
-  const cy = hull.reduce((s, p) => s + p[1], 0) / hull.length;
+  const hcx = hull.reduce((s, p) => s + p[0], 0) / hull.length;
+  const hcy = hull.reduce((s, p) => s + p[1], 0) / hull.length;
   return hull.map(p => {
-    const dx = p[0] - cx, dy = p[1] - cy;
+    const dx = p[0] - hcx, dy = p[1] - hcy;
     const d = Math.hypot(dx, dy) || 0.001;
     return [Math.pow(10, p[0] + (dx / d) * padLog), Math.pow(10, p[1] + (dy / d) * padLog)];
   });
@@ -56,8 +45,8 @@ function buildPaddedHull(linPts, padLog) {
 // --- Material data: [family_idx, density_kg_m3, youngs_modulus_GPa] ---------
 const FAMILIES = [
   { name: "Metals",     color: t.palette[0] },
-  { name: "Ceramics",   color: t.palette[2] },
-  { name: "Polymers",   color: t.palette[1] },
+  { name: "Ceramics",   color: t.palette[1] },
+  { name: "Polymers",   color: t.palette[2] },
   { name: "Composites", color: t.palette[3] },
   { name: "Elastomers", color: t.palette[4] },
   { name: "Natural",    color: t.palette[5] },
@@ -147,9 +136,8 @@ const logCentroids = familyPts.map(pts => {
 });
 
 // --- Guide lines: constant E^(1/2)/ρ (lightweight stiffness index) ----------
-// E = (M·ρ)², rendered as dashed reference lines across the density range
 const DENSITY_RANGE = [10, 25000];
-const M_VALUES = [3e-5, 3e-4]; // two index levels
+const M_VALUES = [3e-5, 3e-4];
 const guideLineSeries = M_VALUES.map((M, i) => ({
   type: "line",
   name: i === 0 ? "E^½/ρ = const" : "__guide2",
@@ -250,7 +238,7 @@ chart.setOption({
                 y: cy,
                 textAlign: "center",
                 textVerticalAlign: "middle",
-                font: "bold 15px sans-serif",
+                font: "bold 17px sans-serif",
                 fill: col,
                 opacity: 0.95,
               },
@@ -267,7 +255,7 @@ chart.setOption({
       type: "scatter",
       name: f.name,
       data: familyPts[fi],
-      symbolSize: 9,
+      symbolSize: 12,
       itemStyle: { color: f.color, opacity: 0.9, borderColor: t.pageBg, borderWidth: 1 },
       z: 3,
     })),
