@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-03
+Quality: 88/100 | Updated: 2026-06-03
 """
 
 import os

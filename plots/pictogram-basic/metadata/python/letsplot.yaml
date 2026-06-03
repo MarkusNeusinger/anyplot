@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:42:32Z'
-updated: '2026-06-03T14:20:19Z'
+updated: '2026-06-03T14:35:05Z'
 generated_by: claude-sonnet
 workflow_run: 26889746359
 issue: 4674
@@ -12,54 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Correct pictogram chart type using geom_tile with alpha-blending for partial icons
-    — functional and spec-compliant approach
-  - 'Imprint palette applied in canonical order with Brazil (first series) correctly
-    using #009E73'
-  - 'Full theme adaptation: both light (#FAF8F1) and dark (#1A1A17) backgrounds render
-    correctly with adaptive INK/INK_SOFT tokens throughout'
-  - Alternating lane backgrounds (LANE_BG) add visual refinement and improve row readability
-  - Native letsplot layer_tooltips() used for interactive HTML output — not fake interactivity
-  - Value labels ('45k MT', etc.) provide direct data readout alongside the pictogram
-  - '''★ Top producer'' annotation in brand green creates a clear focal point on Brazil'
-  - Clean code structure with proper KISS pattern and deterministic hardcoded data
-  - scale_alpha_identity() correctly paired with alpha aes mapping for partial icon
-    representation
-  - HTML output saved alongside PNG for interactive use
+  - Correct Imprint palette in canonical order with Brazil (#009E73) first — consistent
+    across both renders
+  - Partial icons encoded via scale_alpha_identity() with MIN_ALPHA floor (0.33) preventing
+    invisible icons — elegant approach
+  - Alternating lane backgrounds (geom_rect) provide structure without grid lines,
+    keeping chrome minimal
+  - 'Strong data storytelling: ''★ Top producer'' annotation, right-side value labels,
+    and quantity-sorted order all guide the viewer'
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT correctly applied to all text
+    elements in both light and dark renders'
+  - layer_tooltips() provides native letsplot interactivity with context-rich content
+  - Both PNG and HTML outputs generated — leverages letsplot's dual static/interactive
+    capability
   weaknesses:
-  - 'Indonesia''s partial tile (alpha=0.2 of #BD8233) is barely visible on the light
-    background — the ochre at 20% alpha over the off-white lane blends into the background.
-    Consider a minimum alpha floor of 0.3-0.35 so the faintest partial icon remains
-    clearly distinguishable from the background'
-  - Icons are plain colored squares with no pictographic identity — while squares
-    are spec-compliant, using Unicode symbols (e.g., ☕ for coffee) or distinct shapes
-    would elevate this from a segmented bar chart to a true ISOTYPE pictogram. At
-    minimum, circles would be more iconic than rectangles
-  - 'DE-01: Aesthetic design is clean but not publication-ready — the plain square
-    tiles lack the visual character expected of a pictogram chart. Even switching
-    to geom_point with a larger size and ''square'' shape, or using Unicode text labels
-    as the icon markers, would dramatically increase visual impact'
-  - Subtitle does the job of the icon-value legend, but a formal legend entry (e.g.,
-    '□ = 5k MT') as an annotation near the bottom-left would make the chart more self-contained
-    and spec-aligned with 'display a legend indicating this'
+  - Partial icons in dark mode lose the 'fading' metaphor — on a dark background,
+    alpha blending produces darker/murkier versions of each color rather than lighter
+    tints, making the partial icons look like a different data series rather than
+    a fractional unit. Consider rendering partial icons with a pattern fill or outline-only
+    style for dark mode.
+  - Scale note '● = 5k MT' at geom_text size=3.5mm is on the small side (~10pt at
+    final resolution). Increase to size=4 or 4.5 to ensure mobile readability.
+  - 'Design could push further: the alternating lane backgrounds and annotation are
+    good foundations, but marker size=12 on large circles leaves room for more distinctive
+    icon styling (e.g., filled circles with heavier stroke or custom point shape).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white
-      Chrome: Title "pictogram-basic · python · letsplot · anyplot.ai" bold dark (#1A1A17), clearly readable. Subtitle "Coffee Production by Country — Each icon represents 5 thousand metric tonnes" in soft ink (#4A4A44), readable. Y-axis country labels bold dark, readable. No x-axis tick labels (hidden, appropriate). Value labels ("45k MT" etc.) in INK_SOFT with bold face, clearly readable.
-      Data: Five rows of colored square tiles — Brazil 9 green (#009E73) tiles, Vietnam 6 purple (#C475FD) full + 1 partial (40% alpha = lighter lavender), Colombia 2 blue (#4467A3) full + 1 partial (80% alpha), Indonesia 2 ochre (#BD8233) full + 1 partial (20% alpha = very faint cream tile barely distinguishable from the light lane background), Ethiopia 1 red (#AE3030) full + 1 partial (60% alpha = muted rose). Alternating gray lane bands separate rows. Star annotation "★ Top producer" in brand green above Brazil row. First series is #009E73 ✓.
-      Legibility verdict: PASS overall, but Indonesia's 0.2-alpha partial tile (third tile) is nearly invisible against the off-white lane background — a minor but real visibility concern.
+      Background: Warm off-white (#FAF8F1) — correct light surface.
+      Chrome: Title "pictogram-basic · python · letsplot · anyplot.ai" in bold dark ink, clearly readable. Subtitle in softer INK_SOFT tone, readable. Y-axis category labels (Brazil, Vietnam, Colombia, Indonesia, Ethiopia) in bold dark ink — all clear. Value labels "45k MT", "32k MT" etc. in INK_SOFT, readable. "★ Top producer" annotation in brand green. Small "● = 5k MT" scale note in bottom-left, small but readable.
+      Data: 5 rows of filled circles. Brazil: 9 full green (#009E73) circles. Vietnam: 6 full lavender (#C475FD) + 1 partial (lighter tint at alpha≈0.4). Colombia: 2 full blue (#4467A3) + 1 partial (slightly faded). Indonesia: 2 full ochre (#BD8233) + 1 very light partial (alpha≈0.33). Ethiopia: 1 full red (#AE3030) + 1 partial. Alternating grey lane backgrounds visible on even rows.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
-      Chrome: Title and country labels in near-white (#F0EFE8), clearly readable against dark background. Subtitle in soft light tone (#B8B7B0), readable. Value labels in INK_SOFT dark equivalent, readable. No dark-on-dark failures found.
-      Data: Data colors are identical to light render — Brazil green, Vietnam purple, Colombia blue, Indonesia ochre, Ethiopia red. Alternating lanes switch to dark gray (#2A2A26). The 0.2-alpha partial tile for Indonesia appears as a very dark brownish square, slightly more distinguishable against the dark lane than on the light side, but still quite subtle. Star annotation in brand green remains visible.
-      Legibility verdict: PASS — all chrome elements are correctly adapted to dark theme, no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title and subtitle in light-colored ink (#F0EFE8 / #B8B7B0) — both readable against dark background. Y-axis labels in light bold ink — readable. Value labels in lighter INK_SOFT tone (#B8B7B0) — readable. "★ Top producer" annotation still in brand green (#009E73). Scale note in lighter tone. No dark-on-dark failures observed.
+      Data: Imprint palette colors identical to light render — Brazil green, Vietnam lavender, Colombia blue, Indonesia ochre, Ethiopia red. Partial icons appear as darker/murkier versions of their category color on the dark surface (alpha blending behavior differs from light mode where partials appear as lighter tints). All full icons fully visible and distinct.
+      Legibility verdict: PASS — all text elements are readable on the dark background with properly adaptive chrome tokens applied.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,56 +61,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set. Title=16, subtitle=11, axis_text_y=10.
-          Readable in both themes. Minor: subtitle at size=11 is slightly small at
-          mobile scale but acceptable.'
+        comment: 'All font sizes explicitly set and readable in both themes. Minor
+          deduction: scale note at size=3.5mm and Top Producer annotation at size=4mm
+          are on the smaller side for mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Star annotation and value label for
-          Brazil are well-spaced.
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Full tiles are clearly visible. Indonesia's partial tile (alpha=0.2)
-          is barely distinguishable from the light background — ochre at 20% alpha
-          on off-white/light-gray lane. Main data elements are clear but the weakest
-          partial icon is problematic.
+        comment: Full icons clearly visible at size=12. Partial icons visible but
+          alpha blending on dark bg produces darker/murkier versions rather than lighter
+          fades, slightly reducing the 'partial' metaphor clarity in dark mode.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Spatial position encodes quantity redundantly
-          with color — no reliance on hue alone.
+        comment: Imprint palette is CVD-safe. Category position (row) provides redundant
+          encoding beyond color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. ggsize(800,450) + scale=4 = 3200x1800. Good layout
-          filling the canvas. Alternating lanes provide visual structure. Appropriate
-          margins.
+        comment: Canvas gate passed (3200x1800, ggsize 800x450 + scale=4). Well-balanced
+          layout with good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''pictogram-basic · python · letsplot · anyplot.ai''.
-          Subtitle provides context and icon value. Country labels on y-axis. No axis
-          titles needed for this chart type.'
+        comment: Title correct. Y-axis shows category labels. Subtitle provides full
+          context including icon scale.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Brazil) = #009E73 ✓. Imprint palette canonical order
-          ✓. Light background #FAF8F1 ✓. Dark background #1A1A17 ✓. Theme-adaptive
-          INK/INK_SOFT tokens applied throughout ✓.'
+        comment: 'First series (Brazil) = #009E73. Multi-series in Imprint canonical
+          order. Backgrounds #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive
+          in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -126,25 +116,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Alternating lane backgrounds, star annotation, value
-          labels show design thought. However plain colored squares as 'icons' limit
-          the visual character — a true pictogram should use more iconic shapes. Not
-          yet publication-ready.
+        comment: 'Above defaults: Imprint palette correctly applied, alternating lane
+          backgrounds add polish, circle stroke (PAGE_BG color) gives clean definition.
+          Not at 6 as marker style stays standard circles without further design differentiation.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: panel_grid removed, axis ticks hidden, axis labels
-          cleared, alternating lanes as visual separator. Above default minimal customization.'
+        comment: 'Excellent cleanup: no grid, no ticks, no legend box, no axis lines.
+          Alternating lanes provide subtle visual structure. theme_minimal() plus
+          explicit blank elements = well-refined.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear focal point: Brazil''s 9 tiles dominate visually. Star annotation
-          identifies top producer. Ordered from most to least (visual ranking). Subtitle
-          provides context. Good but not exceptional storytelling.'
+        comment: 'Strong storytelling: ''★ Top producer'' annotation for Brazil, right-side
+          value labels for quick reading, countries sorted by quantity (highest first),
+          subtitle explains icon scale. Viewer immediately sees the ranking hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -154,56 +144,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram chart type with repeated icons per row, partial
-          alpha icons for remainders, left-aligned grid layout.
+        comment: Correct pictogram/isotype chart with icon grid layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: consistent unit value, partial icons, left-aligned
-          grid layout, category labels on y-axis, icon value indicator in subtitle.'
+        comment: 'All spec features: consistent icon value, partial icons for remainders,
+          grid-like row arrangement, left-axis category labels, legend note (scale
+          note in corner).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X position = icon column count encoding quantity, Y = categories.
-          All 5 categories visible with correct icon counts.
+        comment: Correct icon counts per category. Brazil=9, Vietnam=6+partial, Colombia=2+partial,
+          Indonesia=2+partial, Ethiopia=1+partial — all match values/icon_value.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'pictogram-basic · python · letsplot · anyplot.ai' — correct
-          format. Subtitle doubles as legend ('Each icon represents 5 thousand metric
-          tonnes'). Category legend is via y-axis labels.
+        comment: Title = 'pictogram-basic · python · letsplot · anyplot.ai'. Y-axis
+          labels serve as category legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows grid layout, partial icons at various alpha levels, multiple
-          categories. Slight deduction: no differentiation between category icon shapes
-          (optional per spec, but would better showcase the pictogram concept).'
+        comment: 'Demonstrates all pictogram features: varying quantities (1–9 icons),
+          partial icons for remainders, icon scale, category comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Top coffee-producing countries (2023 data) — real, neutral, science/agriculture
-          domain. Plausible values.
+        comment: Coffee production by country — real-world, neutral, comprehensible
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (45k, 32k, 14k, 11k, 8k MT) are realistic for global coffee
-          production. Good spread from 8 to 45 demonstrates the chart effectively.
+        comment: 5 categories within the 3–8 spec range. Values (45, 32, 14, 11, 8
+          thousand MT) are realistic proportions for top coffee producers. icon_value=5
+          creates 1–9 icons per row, good visual density.
     code_quality:
       score: 10
       max: 10
@@ -213,14 +202,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → grid build → plot → save. No functions
-          or classes.'
+        comment: Linear Imports → Tokens → Data → Plot → Save structure. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data, fully deterministic.
+        comment: Deterministic hardcoded data — no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -232,14 +221,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Loop for tile data construction is clean.
-          No fake UI or over-engineering.
+        comment: Clean Pythonic code. Pictogram grid construction via loop is appropriate
+          for the task. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png (scale=4, path='.') and plot-{THEME}.html.
     library_mastery:
       score: 7
       max: 10
@@ -249,24 +238,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with multiple geom layers, scale_alpha_identity(),
-          scale_fill_manual(), proper theme customization. Above default.
+        comment: 'Excellent grammar-of-graphics composition: geom_rect + geom_point
+          + multiple geom_text layers. scale_alpha_identity() for identity-scale alpha
+          mapping. scale_fill_manual with limits. Properly idiomatic.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive HTML (letsplot-specific), scale_alpha_identity()
-          for partial icon technique, geom_rect() for lane backgrounds. Above generic
-          usage.
-  verdict: REJECTED
+        comment: Uses layer_tooltips() — letsplot's distinctive interactive tooltip
+          API. Generates both HTML and PNG outputs. scale_alpha_identity() is a letsplot-specific
+          identity-scale idiom.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - iteration-over-groups
   dataprep: []
