@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waveform-audio: Audio Waveform Plot
-Library: plotly | Python
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-03
 """
 
 import os
