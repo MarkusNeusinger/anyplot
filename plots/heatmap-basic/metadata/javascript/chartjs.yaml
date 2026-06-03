@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: heatmap-basic
 created: '2026-06-02T23:44:30Z'
-updated: '2026-06-02T23:50:12Z'
+updated: '2026-06-03T00:01:51Z'
 generated_by: claude-opus
 workflow_run: 26854410420
 issue: 691
@@ -12,68 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Idiomatic Chart.js plugin pattern: a scatter base is used purely for axis layout
-    while a `heatmap-painter` plugin draws cells, per-cell values, and a vertical
-    colorbar in beforeDatasetsDraw/afterDatasetsDraw — a clean way to extend Chart.js
-    with a non-native chart type without reaching for a sibling library.'
-  - Imprint imprint_div tokens (t.div) are interpolated piecewise (lo→mid, mid→hi)
-    so the diverging palette is theme-aware and the midpoint matches the page background
+  - 'Idiomatic Chart.js plugin pattern: a scatter base provides axis layout while
+    `heatmap-painter` paints cells, per-cell values, focal stroke, and the colorbar
+    in `beforeDatasetsDraw`/`afterDatasetsDraw` — a clean way to extend Chart.js with
+    a non-native chart type without reaching for a sibling library.'
+  - 1 px `t.grid` hairline grid between cells now preserves the matrix structure in
+    dark mode even where `imprint_div` fades into `pageBg` near the midpoint — directly
+    addresses the attempt 1 VQ-03 dark-fade weakness.
+  - Focal `t.ink` stroke around the two cells of the strongest off-diagonal pair (Cons.
+    Conf.×Unemploy. = -0.81) creates a clear data-storytelling anchor — addresses
+    the attempt 1 DE-03 'no focal point' feedback.
+  - Imprint `imprint_div` tokens are interpolated piecewise (lo→mid, mid→hi) so the
+    diverging palette is theme-aware and the midpoint matches the page background
     in both renders.
-  - 'Cell value text color adapts to cell saturation: |v|>0.55 uses #FAF8F1, otherwise
-    t.ink — keeps every annotation readable across the full -1..+1 range in both themes.'
-  - Title format exactly matches the mandated `{Descriptive} · {spec-id} · {language}
-    · {library} · anyplot.ai` pattern, and the colorbar carries a rotated 'Pearson
-    correlation (r)' axis title.
-  - 'Square canvas is correctly opted into via the `//# anyplot-orientation: square`
-    directive — saved PNGs are exactly 2400×2400, passing the canvas gate.'
-  - 'Spec checklist is fully met: diverging colormap for ±values, in-cell value annotations,
-    colorbar legend, and a logical category grouping (real-economy → labor → prices
-    → markets → trade → wages).'
+  - 'Cell value text color adapts to cell saturation (`|v| > 0.55 → #FAF8F1`, else
+    `t.ink`) — keeps every annotation readable across the full -1..+1 range in both
+    themes.'
+  - Title format exactly matches `{Descriptive} · {spec-id} · {language} · {library}
+    · anyplot.ai`, and the colorbar carries a rotated 'Pearson correlation (r)' axis
+    title.
+  - 'Square canvas correctly opted into via `//# anyplot-orientation: square` — canvas
+    gate file absent, dimensions pass.'
+  - 'Full spec checklist met: diverging colormap for ±values, in-cell value annotations,
+    colorbar legend, logical category ordering.'
   weaknesses:
-  - 'DE-03 (Data Storytelling): the heatmap shows interesting structure (Cons. Conf.
-    ↔ Unemploy. at -0.81, Stocks ↔ Cons. Conf. at +0.79, Exports ↔ Imports at +0.73)
-    but no annotation, highlight stroke, or emphasis directs the viewer to a focal
-    point — the chart presents data without a story. Consider stroking the most extreme
-    off-diagonal cell(s) with a thin t.ink border, or adding a single subtle annotation
-    near the strongest correlation.'
-  - 'DE-01 (Aesthetic Sophistication): solid baseline but no extra polish beyond chrome
-    — e.g., no thin separator between header/labels and cell grid, no rounded cells,
-    no inter-cell gutter to suggest a matrix structure. A 1–2 px gutter in t.pageBg
-    between cells would also reduce the ''big slab of color'' feel on the saturated
-    quadrants and improve cell discrimination in the dark render.'
-  - 'VQ-03 (Element Visibility, dark render): because imprint_div''s midpoint is t.pageBg
-    by design, cells with |r| < ~0.15 (Inflation×GDP=0.18, Stocks×Inflation=-0.07,
-    Interest×Exports=0.07, etc.) lose almost all chrome against the warm-near-black
-    background — the cell boundary visually disappears and only the value text remains.
-    This is the intended Imprint behaviour, but a 1 px t.grid inter-cell hairline
-    (or a faint cell stroke) would preserve the grid structure without breaking the
-    diverging color story.'
-  - 'LM-02 (Distinctive Features): the implementation leans on a hand-rolled canvas
-    painter rather than on Chart.js-specific affordances — Chart.js scales and chartArea
-    are used, but the actual heatmap painting is generic 2D canvas work that doesn''t
-    really showcase library features. This is inherent to Chart.js not shipping a
-    matrix chart natively, but it caps how high LM-02 can reasonably score.'
-  - 'CQ-01 (KISS): the implementation defines four helper functions (hexToRgb, lerp,
-    divColor, the plugin object). All are needed, but consider inlining `lerp` into
-    `divColor` to shave one helper — minor.'
+  - 'DE-01 (Aesthetic Sophistication): The focal stroke at lineWidth=2.5 reads slightly
+    heavy in the dark render where the bright `t.ink` (near-white) sits against the
+    saturated red — could be tuned to ~1.5–2 px or use a slightly softer ink to feel
+    less stark while still anchoring the eye.'
+  - 'LM-02 (Distinctive Features): the heatmap painting itself is generic 2D-canvas
+    work and doesn''t really showcase Chart.js-specific features beyond the plugin
+    lifecycle hooks and using a scatter base for axis layout. Inherent to Chart.js
+    not shipping a matrix chart natively, but it caps how high LM-02 can reasonably
+    score.'
+  - Colorbar title rotation uses +π/2 (clockwise) so 'Pearson correlation (r)' reads
+    top-to-bottom — slightly non-standard versus the matplotlib/seaborn convention
+    of -π/2 (counter-clockwise, reads bottom-to-top). Minor visual nit, both work;
+    only mention if a future repair pass is already touching the colorbar.
   image_description: |-
-    Light render (plot-light.png, 2400×2400):
-      Background: warm off-white at ~#FAF8F1 across the whole canvas — not pure white. PASS.
-      Chrome: title "Macro Indicator Correlations · heatmap-basic · javascript · chartjs · anyplot.ai" sits centered at the top in dark ink at ~18 px (CSS), comfortably contained well within the canvas. Ten column labels (GDP, Unemploy., Inflation, Interest, Stocks, Housing, Cons. Conf., Exports, Imports, Wages) sit above the matrix rotated ~35° in t.inkSoft. Row labels in the same softened ink run down the left side. Colorbar tick labels (1.0, 0.5, 0, -0.5, -1.0) on the right are readable in t.inkSoft, and the rotated colorbar title "Pearson correlation (r)" sits against the right canvas edge in t.ink — every glyph is fully inside the saved frame, no clipping. All chrome is comfortably readable against the warm off-white background.
-      Data: 10×10 matrix painted with imprint_div (red ↔ off-white midpoint ↔ blue). Saturated cells (|r|>0.55) carry #FAF8F1 value text; lighter cells carry dark ink — every "1.00", "-0.62", "0.18" … "1.00" is readable. Strong negatives (Unemploy. row, Cons. Conf.×Unemploy. = -0.81) read deep red; strong positives (Stocks×GDP=0.74, Cons. Conf.×Stocks=0.79, Exports×Imports=0.73) read deep blue. Diagonal of 1.00 is consistently deep blue. First categorical series rule (#009E73) is N/A for a diverging continuous colormap.
-      Legibility verdict: PASS.
+    Light render (plot-light.png):
+      Background: Warm off-white near #FAF8F1 — correct light page background.
+      Chrome: Title "Macro Indicator Correlations · heatmap-basic · javascript · chartjs · anyplot.ai" sits centered at the top in dark ink, fully readable. Ten column labels (GDP, Unemploy., Inflation, Interest, Stocks, Housing, Cons. Conf., Exports, Imports, Wages) sit above the matrix rotated ~35° in soft ink; the same labels run down the left side, also fully readable. The colorbar's rotated "Pearson correlation (r)" title and the 1.0 / 0.5 / 0 / -0.5 / -1.0 ticks all sit inside the canvas (no clipping). All chrome text is comfortably readable against the warm off-white.
+      Data: A 10×10 matrix painted with the Imprint `imprint_div` gradient — saturated red (#AE3030 pole) for strong negatives (Cons. Conf.×Unemploy. = -0.81), deep blue (#4467A3 pole) for strong positives (Cons. Conf.×Stocks = 0.79, Stocks×GDP = 0.74), and an off-white midpoint matching the page background for near-zero values. Each cell carries its correlation value as text: white on saturated cells (|r| > 0.55), dark ink on lighter cells, so every value is readable. A new 1 px `t.grid` hairline between cells preserves the matrix structure. A heavier dark stroke (lineWidth 2.5) anchors the two cells of the strongest off-diagonal pair (Cons. Conf.×Unemploy. = -0.81) — a clear focal point.
+      Legibility verdict: PASS
 
-    Dark render (plot-dark.png, 2400×2400):
-      Background: warm near-black around #1A1A17 — not pure black. PASS.
-      Chrome: identical title in light ink, fully readable. Column and row labels in t.inkSoft sit cleanly against the dark surface — no dark-on-dark failures. Colorbar gradient and tick labels (1.0…-1.0) are readable in t.inkSoft. The rotated "Pearson correlation (r)" title against the right edge is in light t.ink, fully visible, no clipping.
-      Data: cell colors are identical to the light render — same imprint_div poles (#AE3030 red, #4467A3 blue) — only the midpoint flips to follow the page background. Strong-correlation cells render the same red and blue saturation as the light version. Near-zero cells (|r| < ~0.2: Stocks×Inflation=-0.07, Interest×Exports=0.07, Wages×Unemploy.=-0.07, Inflation×GDP=0.18) fade almost completely into the dark page background, so the matrix grid visually breaks up in those quadrants — this is the intended imprint_div theme-adaptive midpoint, but it does cost some cell-boundary clarity. Per-cell value text remains readable everywhere: saturated cells keep #FAF8F1 text, near-midpoint cells use light t.ink against the dark page-tinted cell.
-      Legibility verdict: PASS (with the noted imprint_div midpoint-fade caveat captured under VQ-03).
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17 — correct dark page background, NOT pure black.
+      Chrome: Title and axis tick labels render in light ink — fully readable, no dark-on-dark failures. Tick labels visible at 15 px in `t.inkSoft`; the rotated colorbar title in `t.ink` is bright and clear. No "near-black-on-near-black" text anywhere.
+      Data: The poles (#AE3030 red, #4467A3 blue) are identical to the light render — only the diverging midpoint flips to follow `t.pageBg`, which is the documented `imprint_div` contract (not a palette-identity violation). The new 1 px `t.grid` hairlines now make the cell boundaries visible even where `|r| < 0.15` cells fade into the dark page background — this directly resolves the attempt 1 VQ-03 dark-fade concern. Per-cell value text remains readable everywhere (white on saturated, light `t.ink` on near-midpoint dark cells). The focal stroke flips to bright `t.ink` (near-white) at lineWidth 2.5 around the -0.81 cells — visually loud but unmistakably the focal anchor.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -81,58 +74,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title 18px, axis/cell text 15px, colorbar ticks 14px — all readable
-          in both themes. In-cell value text adapts (white on saturated, ink on midpoint).
-          Minor: at 400 px thumbnail scale (1/6) cell text drops to ~2.5 px CSS —
-          borderline mobile readability.'
+        comment: Title 18 px, ticks 15 px, cell values 15 px, colorbar ticks 14 px
+          — readable in both themes; mobile-readable at ~400 px scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated column labels at 35° do not collide; row labels, cell values,
-          and colorbar ticks all clear of each other.
+        comment: Rotated 35° x-tick labels don't collide; cell values centered with
+          adequate cell size; no overlap with colorbar.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All cells, ticks, and colorbar visible in light. In dark, |r| < ~0.15
-          cells fade into the page background (imprint_div midpoint = pageBg by design);
-          cell text is still readable but the matrix grid structure dissolves in those
-          quadrants.
+        comment: 1 px t.grid hairline between cells preserves matrix structure even
+          where imprint_div fades to pageBg (fixes attempt 1 dark-mode fade).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red↔blue diverging via imprint_div is a CVD-safe diverging palette;
-          not relying on red-green to distinguish polarity.
+        comment: Red-blue diverging — CVD-safe, no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Saved at exactly 2400×2400 (square orientation directive present).
-          Title proportion ~60–65% of width, balanced axis tick sizes, colorbar fits
-          in the reserved right padding, no overflow.
+        comment: Square orientation directive present; canvas gate file absent so
+          2400×2400 met; no overflow; nothing clipped at canvas edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is the descriptive form. Colorbar carries a rotated 'Pearson
-          correlation (r)' title — gives units/measure for the color encoding.
+        comment: Descriptive title; colorbar carries rotated 'Pearson correlation
+          (r)' axis title.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_div for diverging continuous data (correct choice for
-          -1..+1). Page backgrounds are #FAF8F1 and #1A1A17 in their respective themes.
-          Chrome is theme-correct (no dark-on-dark, no light-on-light).'
+        comment: 'imprint_div used correctly (poles identical across themes, midpoint
+          theme-adaptive). Backgrounds #FAF8F1 / #1A1A17 verified.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -140,24 +126,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom plugin pattern, rotated column headers, theme-adaptive midpoint,
-          colorbar with rotated title. Polished but no extra refinement (cell gutter,
-          header separator, rounded corners) to push it further.
+        comment: 'Polished: hairline cell separators, focal stroke, value-text adaptation.
+          Focal stroke at 2.5 px reads slightly heavy in dark mode.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines off (border display:false), no grid, generous outer padding,
-          colorbar sits in dedicated right-padding region.
+        comment: 'Spines off (border display: false), no axis grid lines, subtle 1
+          px inter-cell hairline, generous padding.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: No focal point or emphasis — the extreme Cons.Conf×Unemploy = -0.81
-          and Stocks×Cons.Conf = 0.79 cells are visually equivalent to every other
-          strong cell. A subtle stroke on one or two cells would create a story.
+        comment: Focal stroke around Cons. Conf.×Unemploy. = -0.81 creates a clear
+          focal anchor — directly addresses attempt 1 feedback.
     spec_compliance:
       score: 15
       max: 15
@@ -167,27 +151,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Heatmap — correct.
+        comment: Correct heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap for ±values ✓, value annotations in cells ✓, colorbar
-          legend with title ✓, logical category ordering ✓.
+        comment: Diverging colormap for ±values, value annotations in cells, colorbar
+          legend, logical category ordering.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 10×10 symmetric correlation matrix with all 10 labels on both axes.
+        comment: Full 10×10 matrix with all rows/cols visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches '{Descriptive} · {spec-id} · {language} · {library}
-          · anyplot.ai'. Legend N/A (continuous color encoding handled by colorbar).
+        comment: Title matches the mandated `{Descriptive} · {spec-id} · {language}
+          · {library} · anyplot.ai` form. No data-series legend needed for a single-series
+          heatmap.
     data_quality:
       score: 15
       max: 15
@@ -197,61 +182,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10×10 matrix exercises the full -1..+1 diverging range and varied
-          magnitudes.
+        comment: Full -1..+1 range exercised, diagonal at 1.00, mix of strong/weak/positive/negative
+          correlations.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pearson correlations between 10 macroeconomic indicators — neutral,
-          plausible, no controversy.
+        comment: Macro indicator correlations are plausible and politically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values bounded in [-1, 1] with diagonal = 1.00; signs and magnitudes
-          are economically plausible (GDP↔Stocks positive, GDP↔Unemploy. negative,
-          etc.).
+        comment: Correlation coefficients in [-1, 1] with realistic interrelations.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Four small helpers (hexToRgb, lerp, divColor, plugin). All needed;
-          lerp could arguably be inlined into divColor for one fewer function.
+        comment: Two small helpers (hexToRgb, divColor) plus one plugin object — lerp
+          was inlined into divColor per attempt 1 feedback.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Matrix is hard-coded; no RNG.
+        comment: Hard-coded matrix — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — only browser globals (window.ANYPLOT_TOKENS, Chart)
-          as the harness contract requires.
+        comment: Uses harness globals (window.Chart, window.ANYPLOT_TOKENS) only —
+          no imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean plugin pattern, no fake interactivity, layout.padding.right
-          reserves space for colorbar so the painter doesn't fight the chart area.
+        comment: Clean plugin pattern, well-commented, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness produces plot-light.png/plot-dark.png; snippet does not touch
-          the filesystem (correct for the JS runtime).
+        comment: No bare savefig — harness handles PNG + HTML output. responsive/maintainAspectRatio/animation
+          set correctly.
     library_mastery:
       score: 7
       max: 10
@@ -261,20 +242,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Chart.js plugin API (beforeDatasetsDraw / afterDatasetsDraw),
-          layout.padding, scales.afterBuildTicks, ticks.callback — all standard Chart.js
-          extension points. responsive/maintainAspectRatio/animation are configured
-          per the harness contract.
+        comment: Standard Chart.js plugin API (beforeDatasetsDraw/afterDatasetsDraw),
+          scales config with afterBuildTicks and tick callbacks.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leans on a scatter base purely for axis layout, then paints into
-          chartArea with raw 2D canvas. That is a clever Chart.js workaround for a
-          non-native chart type, but the heatmap drawing itself does not exercise
-          Chart.js-specific features — capped by the library not shipping a matrix
-          chart.
+        comment: Scatter base for axes is clever, but heatmap painting itself is raw
+          2D canvas; capped by Chart.js not shipping a matrix chart.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -282,9 +258,7 @@ impl_tags:
   - colorbar
   - annotations
   - manual-ticks
-  - custom-legend
   patterns:
-  - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
@@ -292,3 +266,4 @@ impl_tags:
   styling:
   - custom-colormap
   - minimal-chrome
+  - edge-highlighting
