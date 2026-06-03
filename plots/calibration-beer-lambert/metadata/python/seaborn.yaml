@@ -1,41 +1,47 @@
 library: seaborn
+language: python
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:49:10Z'
-updated: '2026-03-09T11:00:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22849775845
+updated: '2026-06-03T08:13:52Z'
+generated_by: claude-sonnet
+workflow_run: 26871130450
 issue: 4410
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Excellent use of sns.regplot combining scatter, regression, and CI in one call
-  - 'Strong data storytelling: unknown sample with projection lines creates a clear
-    focal point demonstrating practical calibration use'
-  - Perfect spec compliance with all required features (equation, R², prediction interval,
-    unknown sample)
-  - Realistic analytical chemistry data with appropriate Beer-Lambert values
-  - Clean, well-refined visual design with custom palette, despined axes, and subtle
-    grid
+  - 'Complete spec compliance: all required features present (regression equation
+    annotation, 95% PI band, unknown sample with dashed projection lines)'
+  - Excellent Imprint palette usage with brand green (#009E73) for calibration data
+    and lavender (#C475FD) for unknown sample; both themes correctly rendered
+  - 'Thoughtful storytelling: arrow annotation explicitly guides the viewer through
+    the concentration-determination workflow'
+  - 'Seaborn features well-utilized: sns.regplot combining scatter + regression +
+    CI, sns.rugplot for calibration standard positions, sns.despine for clean styling'
+  - Realistic, physically accurate Beer-Lambert data (R²=0.9995, appropriate absorbance
+    range, noise level σ=0.008)
   weaknesses:
-  - Prediction interval band could be slightly more visible (alpha=0.08 is very faint)
-  - Visual refinement could be pushed further (e.g., more refined tick styling)
-  image_description: 'The plot displays a Beer-Lambert calibration curve with "Concentration
-    (mg/L)" on the x-axis (0-16) and "Absorbance" on the y-axis (0-0.7). Eight blue
-    circular markers represent calibration standards at 0, 2, 4, 6, 8, 10, 12, and
-    14 mg/L, with white edge highlights. A blue linear regression line runs through
-    the points, accompanied by a narrow 95% confidence interval band (from sns.regplot)
-    and a wider, very subtle 95% prediction interval band in light gray. A white-bordered
-    text box in the upper left displays the equation "y = 0.0454x + 0.0016" and "R²
-    = 0.9994". An orange diamond marker at ~8.3 mg/L absorbance 0.38 represents the
-    unknown sample, with dashed orange lines projecting to both axes. An annotation
-    arrow labels it "Unknown: 8.3 mg/L". The legend in the lower right lists three
-    items: 95% Prediction Interval, Linear Fit (95% CI), and Unknown Sample. Top and
-    right spines are removed, and a subtle y-axis grid is visible. The title reads
-    "calibration-beer-lambert · seaborn · pyplots.ai".'
+  - Unknown sample annotation text at fontsize=7.5 is slightly small for optimal mobile
+    readability — consider bumping to 8.5–9pt
+  - 'DE-01 could be elevated with minor typographic polish: bolder R² line in equation
+    box or slightly stronger emphasis on the unknown sample as focal point'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "calibration-beer-lambert · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Concentration (mg/L)" and "Absorbance" in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt, readable. Regression equation box in elevated warm background (#FFFDF6) with INK_SOFT border.
+      Data: 8 calibration points in brand green (#009E73) with white edges. Regression line in #009E73. 95% PI band in light green (alpha=0.10). Unknown sample diamond in lavender (#C475FD) at (12.1 mg/L, 0.54 AU). Dashed lavender projection lines to both axes. Arrow annotation in lavender.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels in light cream (#F0EFE8), clearly readable against dark surface. Tick labels in #B8B7B0, readable. Regression equation box in dark elevated background (#242420). No dark-on-dark failures detected.
+      Data: Colors identical to light render — brand green (#009E73) calibration points and regression line, lavender (#C475FD) unknown sample. PI band slightly more prominent due to adaptive alpha=0.18. Theme-invariant data colors confirmed.
+      Legibility verdict: PASS — all text readable against dark background, theme-adaptive chrome correctly applied
   criteria_checklist:
     visual_quality:
       score: 29
@@ -43,42 +49,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotation 16pt, equation 18pt'
+        comment: All primary font sizes explicitly set (title 12pt, axes 10pt, ticks
+          8pt, legend 8pt). Unknown sample annotation at 7.5pt slightly small but
+          readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; equation box, legend, and annotation well-separated
+        comment: No overlapping text or data elements. Regression box, arrow annotation,
+          and legend well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (s=280) for 8 points; prediction interval band
-          very faint (alpha=0.08)
+        comment: 8 calibration points at s=80 appropriately sized. Unknown sample
+          diamond at size=9 clearly distinguishable. PI band visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and orange palette is colorblind-safe with strong contrast
+        comment: Brand green + lavender from Imprint palette are CVD-safe and distinguishable
+          without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with ~60% canvas utilization and balanced margins
+        comment: Canvas gate passed. Well-proportioned layout with good data-to-canvas
+          ratio. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) with units, Absorbance (dimensionless per spec)
+        comment: Concentration (mg/L) with units, Absorbance correctly dimensionless,
+          correct title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, unknown sample #C475FD (Imprint pos 2), backgrounds
+          #FAF8F1/#1A1A17, all chrome theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -88,22 +106,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, styled equation box, seaborn
-          ticks style with talk context
+        comment: 'Strong design: Imprint palette, rug plot for marginal distribution,
+          elevated annotation box, arrow annotation in matching lavender. Clearly
+          above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid (alpha=0.2), generous whitespace,
-          refined marker edges
+        comment: Spines removed via sns.despine, subtle y-axis grid alpha=0.15, clean
+          whitespace, legend with elevated frame.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Unknown sample with projection lines creates focal point; orange
-          vs blue color contrast guides viewer
+        comment: Projection lines and arrow annotation explicitly guide viewer through
+          concentration-determination process. Clear focal point on unknown sample.
     spec_compliance:
       score: 15
       max: 15
@@ -113,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter plot with linear regression fit for calibration
-          curve'
+        comment: Calibration curve with scatter points and linear regression fit —
+          correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: regression equation, R², prediction interval, unknown
-          sample with dashed lines'
+        comment: 'All spec features: regression equation + R² annotation, 95% prediction
+          interval band, unknown sample with dashed projection lines to both axes.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on x-axis, absorbance on y-axis, correct Beer-Lambert
-          relationship
+        comment: Concentration on x-axis, Absorbance on y-axis, linear Beer-Lambert
+          relationship correctly shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive and match data
+        comment: Title follows {spec-id} · python · seaborn · anyplot.ai format. Legend
+          labels informative and match visual elements.
     data_quality:
       score: 15
       max: 15
@@ -144,20 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows blank, calibration standards, linear fit, prediction interval,
-          and unknown interpolation
+        comment: Blank at c=0, full concentration range to 13.5 mg/L, unknown sample
+          example, prediction interval all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: UV-Vis spectrophotometry calibration with realistic mg/L concentrations
+        comment: UV-Vis spectrophotometry calibration is a realistic, neutral scientific
+          scenario. Absorbance values consistent with real measurements.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic Beer-Lambert values: epsilon*l ~0.045, absorbance 0-0.63'
+        comment: epsilon*l=0.045 L/mg, absorbance range 0.001-0.6, R²=0.9995, noise
+          sigma=0.008 — all physically plausible Beer-Lambert values.
     code_quality:
       score: 10
       max: 10
@@ -167,32 +189,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, regression, plot, save. No functions/classes'
+        comment: 'Clear linear flow: imports → constants → data → regression → PI
+          → canvas → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(7) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, scipy'
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
+          scipy.stats.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for calibration curve with prediction
-          interval
+        comment: Clean, Pythonic. PI calculation appropriately detailed. Theme-adaptive
+          alpha for PI band is a thoughtful touch.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, current API
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', current API.
     library_mastery:
       score: 7
       max: 10
@@ -202,14 +226,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.regplot for scatter+regression+CI, DataFrame API, sns.set_theme
-          and sns.despine
+        comment: Good use of sns.regplot (scatter + regression + CI in one call),
+          sns.rugplot, sns.set_theme, sns.despine. Correct axes-level API usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.regplot with CI band and sns.set_theme with context are seaborn-distinctive
+        comment: regplot's built-in CI band and rugplot are seaborn-distinctive. Combination
+          of regplot CI + manual fill_between for wider PI band is elegant seaborn-specific
+          pattern.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -222,6 +248,5 @@ impl_tags:
   dataprep:
   - regression
   styling:
-  - edge-highlighting
-  - grid-styling
   - alpha-blending
+  - edge-highlighting

@@ -1,41 +1,49 @@
 library: plotnine
+language: python
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:48:02Z'
-updated: '2026-03-09T11:12:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22849775837
+updated: '2026-06-03T08:16:41Z'
+generated_by: claude-sonnet
+workflow_run: 26871523272
 issue: 4410
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent visual storytelling with unknown sample projection lines demonstrating
-    calibration workflow
-  - 'Strong design refinement: custom panel background, selective grid lines, polished
-    label boxes'
-  - Perfect spec compliance with all required features implemented
-  - Colorblind-safe with redundant shape encoding (circles vs diamonds)
-  - Clean idiomatic plotnine code with proper grammar of graphics patterns
+  - 'Perfect spec compliance: all five required features (regression line, prediction
+    band, equation, R², dashed projection lines) present and correctly implemented'
+  - Both light and dark renders are fully theme-adaptive with correct backgrounds
+    (#FAF8F1/#1A1A17) and no dark-on-dark or light-on-light failures
+  - 'Semantic color choice: red (#AE3030) for unknown sample is justified; redundant
+    shape encoding (circle vs diamond) ensures CVD safety'
+  - stat_smooth(method='lm') with fill is idiomatic plotnine/ggplot2 approach — avoids
+    manual CI calculation and keeps code concise
+  - 'Data generation is realistic: concentrations, molar absorptivity, noise level,
+    and R²=0.99901 reflect an authentic UV-Vis spectrophotometry calibration curve'
   weaknesses:
-  - Minor whitespace below bottom legend could be tighter
-  - Data points have very little scatter (R²=0.999), could show slightly more realistic
-    measurement noise
-  image_description: The plot displays a Beer-Lambert calibration curve on a clean
-    white/light gray background. Seven blue circular calibration standard points are
-    plotted along a strong linear regression line (blue, ~1.4pt width) with a subtle
-    light blue prediction interval band. The regression equation "y = 0.0453x + 0.0023"
-    and "R² = 0.99901" are shown in labeled boxes with a light beige fill (#F0F0EA)
-    in the upper-left area. A single red diamond marker represents the unknown sample
-    at approximately (7.5, 0.34), with gray dashed horizontal and vertical lines extending
-    to both axes to illustrate concentration determination. The x-axis is labeled
-    "Concentration (mg/L)" in bold, the y-axis "Absorbance" in bold. The title reads
-    "calibration-beer-lambert · plotnine · pyplots.ai" in bold at the top. A bottom
-    legend distinguishes "Calibration Standards" (blue circle) from "Unknown Sample"
-    (red diamond). Only horizontal y-axis grid lines are shown (subtle gray), with
-    clean axis lines on both sides.
+  - Annotation label text (geom_label size=3.5mm) renders slightly small on 3200×1800
+    canvas — increase to 4.0–4.5mm for better at-a-glance readability
+  - Title fontsize 10pt is below the 12pt style-guide starting value — 11–12pt would
+    give more visual presence at full resolution without overflow
+  - Tick marks remain visible adding minor chrome clutter — consider axis_ticks_length=0
+    in theme() for a cleaner minimal look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "calibration-beer-lambert · python · plotnine · anyplot.ai" in bold dark ink, clearly readable; x-axis label "Concentration (mg/L)" and y-axis label "Absorbance" in bold dark ink; tick labels in medium grey (#4A4A44 INK_SOFT) — all readable
+      Data: Seven green (#009E73) circle markers for calibration standards with green regression line and subtle light-green prediction band (alpha=0.15); red diamond (#AE3030) for unknown sample at ~(10.4, 0.47); dashed grey projection lines to both axes; annotation boxes with regression equation and R²
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title and axis labels in light off-white (#F0EFE8 INK) — clearly readable; tick labels in lighter grey (#B8B7B0 INK_SOFT) — readable, no dark-on-dark failures observed; annotation boxes use elevated dark background (#242420) with light text
+      Data: Green calibration markers and regression line identical in color to light render (#009E73) — theme-independent data colors confirmed; red unknown sample diamond (#AE3030) clearly visible; dashed projection lines visible against dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -43,66 +51,78 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt bold,
-          tick labels 16pt, legend 15pt'
+        comment: All text readable in both themes; annotation labels size=3.5mm slightly
+          small for 3200×1800 canvas; title 10pt below 12pt starting value
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements; annotation boxes in empty upper-left region
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points size=6 with stroke=1.2, clearly visible for 8 data points
+        comment: Sparse data (7 points) with size=4 markers appropriate; regression
+          line and prediction band clearly visible
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green pair uses redundant shape encoding (circle vs diamond)
+          for CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue vs red colorblind-safe with redundant shape encoding
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 proportions, minor whitespace below legend
+        comment: Canvas gate passed (3200×1800); proportions balanced; generous whitespace;
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) with units, Absorbance (dimensionless)
+        comment: X-axis includes units (mg/L); Y-axis 'Absorbance' correct; title
+          format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 first series; semantic red #AE3030 for unknown;
+          backgrounds #FAF8F1/#1A1A17 correct; all chrome theme-adaptive'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, intentional typography hierarchy, label boxes with
-          beige fill, panel background
+        comment: Custom Imprint palette with semantic hierarchy; prediction band adds
+          statistical depth; rounded annotation boxes; above-baseline polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Selective grid lines, custom panel background, axis lines, generous
-          margins
+        comment: theme_minimal base; x-axis major grid removed; only subtle y-axis
+          gridlines; explicit axis lines re-added; bottom legend with elevated background
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Unknown sample projection lines create clear analytical workflow
-          narrative
+        comment: Dashed projection lines clearly demonstrate calibration curve usage;
+          regression equation and R² reinforce analytical rigor; clear focal point
+          on unknown sample
     spec_compliance:
       score: 15
       max: 15
@@ -112,49 +132,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with scatter and linear regression
+        comment: Calibration curve scatter plot with linear regression — correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: equation, R², prediction band, unknown sample with
-          dashed lines'
+        comment: 'All required features: regression equation, R², prediction band,
+          dashed projection lines, unknown sample point'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on x, absorbance on y
+        comment: Concentration on x-axis, absorbance on y-axis; all data fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Title matches spec-id · python · plotnine · anyplot.ai format; legend
+          labels descriptive and correct
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows blank, standards, linear relationship, unknown interpolation;
-          minimal scatter
+        comment: Calibration standards, regression fit, prediction interval, unknown
+          sample, dashed lines, equation and R² all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic analytical chemistry UV-Vis spectrophotometry scenario
+        comment: Seven standards at 0–12 mg/L; molar absorptivity 0.045; realistic
+          noise; R²=0.99901 authentic for UV-Vis spectrophotometry
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic molar absorptivity, concentrations, and absorbance values
+        comment: Axis ranges sensible for domain; limits provide breathing room without
+          distortion
     code_quality:
       score: 10
       max: 10
@@ -164,48 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, regression, plot, save'
+        comment: No functions or classes; clean procedural script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported symbols used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, follows plotnine conventions
+        comment: Appropriate complexity; no fake UI; clear minimal data preparation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 dpi
+        comment: Saves as plot-{THEME}.png via f-string; correct filename pattern
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of stat_smooth, geom_segment, geom_label, scale_*_manual,
-          inherit_aes
+        comment: Full grammar-of-graphics layering; stat_smooth(method='lm') for regression+CI;
+          inherit_aes=False discipline; scale_shape_manual for redundant encoding
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: stat_smooth(method=lm) with confidence band, geom_label with label_r
+        comment: stat_smooth with fill for prediction band is distinctively plotnine;
+          geom_label label_r for rounded corners; multiple scale_*_manual for legend
+          merging; good but no faceting or coord transforms
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -218,5 +243,4 @@ impl_tags:
   dataprep:
   - regression
   styling:
-  - grid-styling
   - alpha-blending
