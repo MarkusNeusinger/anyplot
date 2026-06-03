@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-ashby-material: Ashby Material Selection Chart
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-06-03
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 89/100 | Created: 2026-06-03
 
 library(ggplot2)
 library(dplyr)
