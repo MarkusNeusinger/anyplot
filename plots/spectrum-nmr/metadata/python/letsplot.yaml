@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: spectrum-nmr
 created: '2026-03-09T12:52:11Z'
-updated: '2026-06-03T12:12:58Z'
+updated: '2026-06-03T12:23:41Z'
 generated_by: claude-sonnet
 workflow_run: 26883236331
 issue: 4676
@@ -12,43 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Physically accurate Lorentzian NMR synthesis with correct coupling constants and
-    intensity ratios — the data is chemically sound
-  - geom_area (alpha=0.15) + geom_line combination creates an authentic spectrum silhouette
-    unique to NMR plots
-  - Full theme-adaptive chrome with correct INK/INK_SOFT/PAGE_BG tokens throughout
-    all elements including annotations
-  - All four required peak groups (CH3 triplet, CH2 quartet, OH singlet, TMS reference)
-    annotated with two-line chemical assignment labels
-  - Correct x-axis reversal with scale_x_reverse — the NMR convention is respected
+  - 'Excellent scientific accuracy: Lorentzian peak shapes, correct J-coupling multiplets
+    (triplet/quartet/singlet), chemically accurate chemical shifts for ethanol'
+  - 'Full spec compliance: reversed X-axis convention, TMS reference, all peak groups
+    labeled with assignment and ppm value'
+  - Correct theme-adaptive chrome in both renders — INK token applied to geom_text
+    annotations ensures no dark-on-dark failure in dark mode
+  - layer_tooltips() with custom .format() and .line() chains demonstrates a distinctive
+    lets-plot capability not available in plotnine
+  - geom_area (alpha=0.15) + geom_line combination creates authentic scientific spectrum
+    appearance
+  - Clean, minimal code — Lorentzian summation is elegant and the interactive tooltip
+    setup is well-structured
   weaknesses:
-  - CH3 (triplet) annotation at y=1.65 sits very close to the panel top edge; increase
-    scale_y_continuous upper expansion from 0.15 to 0.20, or lower the label to y=1.58,
-    to add safe clearance
-  - 'LM-02 is low: no lets-plot-distinctive interactive or statistical features leveraged
-    — consider adding hover tooltips via geom_text or using lets-plot built-in theme
-    extensions to demonstrate library uniqueness'
-  - DE-01 could be elevated by adding a subtle horizontal baseline rule (geom_hline
-    at y=0) in INK_SOFT and slightly bolder peak text styling to create stronger visual
-    hierarchy
+  - geom_text annotation size=5.5 mm is slightly above the recommended <=5 mm for
+    lets-plot annotation text; consider reducing to 4.5-5.0 for tighter proportion
+  - 'DE-01/DE-03 have room for growth: a subtle reference region shading (e.g., light
+    fill highlighting the CH2 quartet range) or size-encoded peak heights could strengthen
+    the visual narrative'
+  - LM-02 could leverage more advanced lets-plot features (e.g., geom_ribbon for integration
+    regions, or a secondary annotation layer for coupling constants)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
-      Chrome: Title "Ethanol 1H NMR · spectrum-nmr · python · letsplot · anyplot.ai" in dark INK (#1A1A17), spans ~65-70% of width. Axis labels "delta Chemical Shift (ppm)" and "Intensity (a.u.)" in dark INK, size=12. Tick labels in INK_SOFT (#4A4A44), size=10. All readable.
-      Data: Single series in Imprint brand green #009E73. geom_area fill at alpha=0.15 plus geom_line size=1.2. Four peak groups visible: CH3 triplet ~1.52 a.u. at 1.18 ppm, CH2 quartet ~1.23 a.u. at 3.69 ppm, OH singlet ~0.61 a.u. at 2.61 ppm, TMS reference ~1.0 a.u. at 0.00 ppm. All annotated with two-line peak labels in INK text.
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "Ethanol 1H NMR · spectrum-nmr · python · letsplot · anyplot.ai" in dark ink, clearly readable. X-axis label "delta Chemical Shift (ppm)" and Y-axis label "Intensity (a.u.)" in dark ink at size=12, readable. Tick labels in INK_SOFT (#4A4A44), readable. Subtle horizontal grid lines only on Y-axis.
+      Data: Brand green #009E73 line and area fill (alpha=0.15). Four bold peak annotations in dark INK: CH2 (quartet) 3.69 ppm, OH (singlet) 2.61 ppm, CH3 (triplet) 1.18 ppm, TMS 0.00 ppm. First series is #009E73 — correct.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title and axis labels in light INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). All clearly readable against dark background. No dark-on-dark failures. Grid lines subtle and visible.
-      Data: Data colors identical to light render — brand green #009E73 unchanged. Peak annotations in light INK text, all readable.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title and axis labels in cream (#F0EFE8), clearly readable against dark background. Tick labels in #B8B7B0 (INK_SOFT dark), readable. No dark-on-dark failures. Subtle grid lines visible.
+      Data: Brand green #009E73 spectrum — identical to light render, data colors unchanged. Peak annotation labels use INK token (#F0EFE8 in dark mode), appearing as cream-white text — clearly readable, no dark-on-dark issue.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,51 +57,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes at correct sizes. Minor deduction:
-          CH3 (triplet) two-line annotation at y=1.65 sits with very tight clearance
-          to the panel top edge.'
+        comment: Title, axis labels, tick labels all correctly sized and readable
+          in both themes via INK/INK_SOFT tokens. Annotation geom_text at size=5.5mm
+          slightly above recommended <=5mm but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Peak labels clearly positioned above peaks with no collisions between
-          labels or between labels and data.
+        comment: No text collisions; peak labels positioned clearly above each signal
+          group.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 5000-point spectrum line size=1.2 renders crisply; Lorentzian peaks
-          well-resolved; area fill alpha=0.15 appropriately subtle.
+        comment: Dense spectral data (5000 pts) rendered appropriately as line+area;
+          peaks sharp and distinguishable from baseline.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green series with strong contrast on both backgrounds;
-          no CVD concerns.
+        comment: 'Single series brand green #009E73; no red-green sole-signal; adequate
+          contrast on both surfaces.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Correct 3200x1800 canvas. Title ~65-70% width ideal. Minor deduction:
-          CH3 label at y=1.65 at panel expansion boundary; needs more clearance.'
+        comment: Canvas gate passed (3200x1800); 20% top expansion provides space
+          for highest annotation; no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: delta Chemical Shift (ppm) and Intensity (a.u.) both descriptive
-          with units. Title follows mandated format.
+        comment: 'X: delta Chemical Shift (ppm), Y: Intensity (a.u.) — descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73 (Imprint position 1). Backgrounds #FAF8F1
-          / #1A1A17. Both renders theme-correct.'
+        comment: 'Single series uses #009E73; PAGE_BG #FAF8F1 light / #1A1A17 dark;
+          both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -110,23 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: geom_area + geom_line combination is authentic NMR spectrum appearance.
-          Theme-adaptive chrome throughout. Above default but no exceptional flourishes.
+        comment: 'Above default (4): geom_area+geom_line layering gives authentic
+          spectral look; interactive tooltips; scientific Lorentzian peaks show design
+          intent. Not exceptional for 7-8.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis grid removed, Y-axis grid at size=0.2 subtle, tick marks removed,
-          generous plot_margin. Meaningfully above default.
+        comment: theme_minimal removes top/right spines; X grid eliminated; tick marks
+          removed; Y grid only; area fill alpha=0.15 subtle.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Four annotated peak labels provide chemical assignment context. Descriptive
-          title prefix. Clean baseline with prominent peaks creates natural focal
-          hierarchy. Above default.
+        comment: Labeled peaks clearly tell the ethanol NMR story; line+fill hierarchy
+          draws eye to signals. Could add integration shading or coupling constant
+          annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct NMR spectrum using Lorentzian peak synthesis.
+        comment: Correct NMR spectrum with reversed X-axis via scale_x_reverse.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X-axis reversed, splitting patterns (triplet/quartet/singlet), peak
-          labels with chemical shift values, TMS reference at 0 ppm, clean baseline.
+        comment: X-axis reversed; Lorentzian splitting patterns (triplet/quartet/singlet);
+          peak labels with ppm values; TMS reference at 0 ppm; clean baseline with
+          geom_hline.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: chemical_shift on reversed x-axis, intensity on y-axis; full 0-5
-          ppm range visible.
+        comment: chemical_shift -> X, intensity -> Y; full 0-5 ppm range displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows mandated format. No legend needed for single series.
+        comment: Title follows {Descriptive} · {spec-id} · {language} · {library}
+          · anyplot.ai format. No legend (single series, correct omission).
     data_quality:
       score: 15
       max: 15
@@ -166,23 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All peak types covered: CH3 triplet, CH2 quartet, OH singlet, TMS
-          reference. Lorentzian lineshapes, 5000 points, OH correctly broadened for
-          exchange.'
+        comment: 'All NMR feature types: triplet (CH3), quartet (CH2), singlet (OH),
+          TMS reference; J-coupling faithfully reproduced.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol 1H NMR is the canonical chemistry teaching example; neutral
-          and widely recognized.
+        comment: Synthetic 1H NMR of ethanol — canonical teaching example; chemically
+          accurate shifts; neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-5 ppm range appropriate for ethanol. J-coupling 0.06 ppm and intensity
-          ratios (1:2:1, 1:3:3:1) are chemically correct.
+        comment: 5000 points, 0-5 ppm range, peak heights and widths realistic for
+          1H NMR.
     code_quality:
       score: 10
       max: 10
@@ -192,60 +194,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: No functions or classes; clean linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic baseline noise.
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All lets_plot imports used; os, numpy, pandas all used.
+        comment: All imported symbols are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Lorentzian loop construction is compact and clear. No fake interactivity.
+        comment: Lorentzian summation loop is readable; tooltip configuration clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly with path=.
+        comment: Saves plot-{THEME}.png (scale=4, path='.') and plot-{THEME}.html;
+          current API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Full ggplot grammar: multiple geom layers, element_* theme tokens,
+          ggsize + ggsave with scale=4, scale_x_reverse, scale_y_continuous; fully
+          idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar layering, scale_x_reverse, scale_y_continuous
-          expand, theme() customization with correct element types.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: geom_area + geom_line layer composition and HTML export are library-distinctive.
-          Does not leverage lets-plot-specific features beyond what plotnine would
-          offer identically.
+        comment: layer_tooltips() with .format() and .line() custom formatting is
+          a lets-plot-exclusive feature; HTML export alongside PNG. Slightly below
+          max as no geom_ribbon or advanced stat layers used.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

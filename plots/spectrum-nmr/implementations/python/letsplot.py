@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-03
+Quality: 91/100 | Updated: 2026-06-03
 """
 
 import os
