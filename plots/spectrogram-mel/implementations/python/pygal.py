@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-11
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-06-03
 """
 
 import os
@@ -11,15 +11,28 @@ import numpy as np
 from scipy import signal
 
 
-# Remove script directory from sys.path to avoid name collision with pygal package
+# Remove script directory from sys.path to avoid pygal package name collision
 sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
 
 from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+title_str = "spectrogram-mel · python · pygal · anyplot.ai"
+n_title = len(title_str)
+title_font_size = round(66 * 67 / n_title) if n_title > 67 else 66
+
+
 def interpolate_color(value, min_val, max_val, colormap):
-    """Map a scalar value to an interpolated hex color from the colormap."""
     normalized = max(0.0, min(1.0, (value - min_val) / (max_val - min_val))) if max_val != min_val else 1.0
     pos = normalized * (len(colormap) - 1)
     lo, hi = int(pos), min(int(pos) + 1, len(colormap) - 1)
@@ -56,8 +69,8 @@ class MelSpectrogramChart(Graph):
         plot_width = self.view.width
         plot_height = self.view.height
 
-        margin_left, margin_right = 250, 250
-        margin_top, margin_bottom = 40, 160
+        margin_left, margin_right = 160, 200
+        margin_top, margin_bottom = 30, 100
 
         avail_w = plot_width - margin_left - margin_right
         avail_h = plot_height - margin_bottom - margin_top
@@ -81,27 +94,27 @@ class MelSpectrogramChart(Graph):
                 rect.set("fill", color)
                 rect.set("stroke", "none")
 
-        # Border
+        # Border around spectrogram
         border = self.svg.node(grp, "rect", x=x0, y=y0, width=avail_w, height=avail_h)
         border.set("fill", "none")
-        border.set("stroke", "#333333")
-        border.set("stroke-width", "3")
+        border.set("stroke", INK_SOFT)
+        border.set("stroke-width", "2")
 
-        axis_label_size = 52
-        tick_font_size = 38
+        axis_label_size = 56
+        tick_font_size = 44
 
         # X-axis label
-        tx = self.svg.node(grp, "text", x=x0 + avail_w / 2, y=y0 + avail_h + 145)
+        tx = self.svg.node(grp, "text", x=x0 + avail_w / 2, y=y0 + avail_h + 90)
         tx.set("text-anchor", "middle")
-        tx.set("fill", "#333333")
+        tx.set("fill", INK)
         tx.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
         tx.text = "Time (s)"
 
         # Y-axis label
-        yl_x, yl_y = x0 - 190, y0 + avail_h / 2
+        yl_x, yl_y = x0 - 130, y0 + avail_h / 2
         ty = self.svg.node(grp, "text", x=yl_x, y=yl_y, transform=f"rotate(-90, {yl_x}, {yl_y})")
         ty.set("text-anchor", "middle")
-        ty.set("fill", "#333333")
+        ty.set("fill", INK)
         ty.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
         ty.text = "Frequency (Hz)"
 
@@ -111,13 +124,13 @@ class MelSpectrogramChart(Graph):
             frac = i / (n_x_ticks - 1)
             tick_x = x0 + frac * avail_w
             tick_y = y0 + avail_h
-            line = self.svg.node(grp, "line", x1=tick_x, y1=tick_y, x2=tick_x, y2=tick_y + 15)
-            line.set("stroke", "#333333")
+            line = self.svg.node(grp, "line", x1=tick_x, y1=tick_y, x2=tick_x, y2=tick_y + 12)
+            line.set("stroke", INK_SOFT)
             line.set("stroke-width", "2")
             time_val = self.time_bins[int(frac * (len(self.time_bins) - 1))]
-            tt = self.svg.node(grp, "text", x=tick_x, y=tick_y + 55)
+            tt = self.svg.node(grp, "text", x=tick_x, y=tick_y + 48)
             tt.set("text-anchor", "middle")
-            tt.set("fill", "#333333")
+            tt.set("fill", INK_SOFT)
             tt.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
             tt.text = f"{time_val:.1f}"
 
@@ -125,12 +138,12 @@ class MelSpectrogramChart(Graph):
         for freq_hz, norm_pos in zip(self.mel_freq_labels, self.mel_freq_positions, strict=True):
             tick_x = x0
             tick_y = y0 + (1 - norm_pos) * avail_h
-            line = self.svg.node(grp, "line", x1=tick_x - 15, y1=tick_y, x2=tick_x, y2=tick_y)
-            line.set("stroke", "#333333")
+            line = self.svg.node(grp, "line", x1=tick_x - 12, y1=tick_y, x2=tick_x, y2=tick_y)
+            line.set("stroke", INK_SOFT)
             line.set("stroke-width", "2")
-            lbl = self.svg.node(grp, "text", x=tick_x - 25, y=tick_y + 12)
+            lbl = self.svg.node(grp, "text", x=tick_x - 20, y=tick_y + 14)
             lbl.set("text-anchor", "end")
-            lbl.set("fill", "#333333")
+            lbl.set("fill", INK_SOFT)
             lbl.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
             lbl.text = f"{freq_hz / 1000:.1f}k" if freq_hz >= 1000 else f"{int(freq_hz)}"
 
@@ -139,7 +152,7 @@ class MelSpectrogramChart(Graph):
         for note_name, norm_y, time_frac in self.note_annotations:
             ax = x0 + time_frac * avail_w
             ay = y0 + (1 - norm_y) * avail_h
-            # Circle marker with dark outline for visibility
+            # Circle markers with dual-color rings for contrast on spectrogram
             marker = self.svg.node(grp, "circle", cx=ax, cy=ay, r=16)
             marker.set("fill", "none")
             marker.set("stroke", "#000000")
@@ -149,21 +162,20 @@ class MelSpectrogramChart(Graph):
             marker2.set("fill", "none")
             marker2.set("stroke", "#ffffff")
             marker2.set("stroke-width", "2.5")
-            # Text shadow for readability
+            # Text shadow for legibility over varying spectrogram colors
             shadow = self.svg.node(grp, "text", x=ax + 22, y=ay + 6)
             shadow.set("fill", "#000000")
-            shadow.set("opacity", "0.7")
+            shadow.set("opacity", "0.8")
             shadow.set("style", f"font-size:{annot_size}px;font-weight:bold;font-family:sans-serif")
             shadow.text = note_name
-            # Label
             at = self.svg.node(grp, "text", x=ax + 20, y=ay + 4)
             at.set("fill", "#ffffff")
             at.set("style", f"font-size:{annot_size}px;font-weight:bold;font-family:sans-serif")
             at.text = note_name
 
         # Colorbar
-        cb_w, cb_h = 50, avail_h * 0.85
-        cb_x = x0 + avail_w + 50
+        cb_w, cb_h = 45, avail_h * 0.85
+        cb_x = x0 + avail_w + 40
         cb_y = y0 + (avail_h - cb_h) / 2
 
         n_segments = 100
@@ -174,10 +186,10 @@ class MelSpectrogramChart(Graph):
             self.svg.node(grp, "rect", x=cb_x, y=cb_y + i * seg_h, width=cb_w, height=seg_h + 1, fill=seg_color)
 
         # Colorbar border
-        self.svg.node(grp, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, fill="none", stroke="#333333")
+        self.svg.node(grp, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, fill="none", stroke=INK_SOFT)
 
-        # Colorbar ticks
-        cb_label_size = 36
+        # Colorbar ticks and labels
+        cb_label_size = 44
         for i in range(6):
             pos = i / 5
             val = max_val - (max_val - min_val) * pos
@@ -185,18 +197,18 @@ class MelSpectrogramChart(Graph):
             tl = self.svg.node(
                 grp, "line", x1=cb_x + cb_w, y1=cb_y + pos * cb_h, x2=cb_x + cb_w + 10, y2=cb_y + pos * cb_h
             )
-            tl.set("stroke", "#333333")
+            tl.set("stroke", INK_SOFT)
             tl.set("stroke-width", "2")
-            ct = self.svg.node(grp, "text", x=cb_x + cb_w + 20, y=ty_pos)
-            ct.set("fill", "#333333")
+            ct = self.svg.node(grp, "text", x=cb_x + cb_w + 18, y=ty_pos)
+            ct.set("fill", INK_SOFT)
             ct.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
             ct.text = f"{val:.0f}"
 
         # Colorbar title
-        cbt = self.svg.node(grp, "text", x=cb_x + cb_w / 2, y=cb_y - 25)
+        cbt = self.svg.node(grp, "text", x=cb_x + cb_w / 2, y=cb_y - 22)
         cbt.set("text-anchor", "middle")
-        cbt.set("fill", "#333333")
-        cbt.set("style", "font-size:42px;font-weight:bold;font-family:sans-serif")
+        cbt.set("fill", INK)
+        cbt.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
         cbt.text = "dB"
 
     def _compute(self):
@@ -208,7 +220,7 @@ class MelSpectrogramChart(Graph):
         self._box.ymax = n_mels
 
 
-# --- Data generation ---
+# Data
 np.random.seed(42)
 
 sample_rate = 22050
@@ -232,7 +244,7 @@ for idx, freq in enumerate(note_freqs):
 
 audio_signal += 0.02 * np.random.randn(len(t))
 
-# --- Mel spectrogram computation ---
+# Mel spectrogram computation (manual filterbank — no librosa dependency)
 n_fft = 2048
 hop_length = 512
 n_mels_count = 128
@@ -265,74 +277,54 @@ mel_spec_db = mel_spec_db - db_max_val
 db_floor = -80.0
 mel_spec_db = np.maximum(mel_spec_db, db_floor)
 
-# Higher-resolution display (reduce pixelation)
+# Subsample for display resolution
 time_step = max(1, len(times_stft) // 220)
 mel_step = max(1, n_mels_count // 128)
 mel_spec_display = mel_spec_db[::mel_step, ::time_step]
 times_display = times_stft[::time_step]
 
-# Y-axis tick positions
+# Y-axis tick positions (mel-scaled Hz labels)
 tick_freqs_hz = [100, 200, 500, 1000, 2000, 4000, 8000]
-mel_max_val = 2595.0 * np.log10(1.0 + fmax / 700.0)
 mel_tick_positions = []
 mel_tick_labels = []
 for f in tick_freqs_hz:
-    norm_pos = 2595.0 * np.log10(1.0 + f / 700.0) / mel_max_val
+    norm_pos = 2595.0 * np.log10(1.0 + f / 700.0) / mel_max
     if 0 <= norm_pos <= 1:
         mel_tick_positions.append(norm_pos)
         mel_tick_labels.append(f)
 
-# Note annotations for storytelling: mark each note onset with its name
+# Note onset annotations for storytelling
 annotations = []
 for idx, (name, freq) in enumerate(zip(note_names, note_freqs, strict=True)):
     time_frac = (idx * note_duration + note_duration * 0.08) / duration
-    freq_norm = 2595.0 * np.log10(1.0 + freq / 700.0) / mel_max_val
+    freq_norm = 2595.0 * np.log10(1.0 + freq / 700.0) / mel_max
     annotations.append((name, freq_norm, time_frac))
 
-# Inferno colormap (extended for smoother gradients)
-inferno_colors = [
-    "#000004",
-    "#0d0829",
-    "#1b0c41",
-    "#2c105c",
-    "#4a0c6b",
-    "#651a80",
-    "#781c6d",
-    "#8c2981",
-    "#a52c60",
-    "#b73779",
-    "#cf4446",
-    "#dd513a",
-    "#ed6925",
-    "#f4821a",
-    "#fb9b06",
-    "#f7cf3a",
-    "#f7d13d",
-    "#f9e969",
-    "#fcffa4",
-]
+# Imprint sequential colormap: #4467A3 (low dB) → #009E73 (high dB)
+imprint_seq = ["#4467A3", "#009E73"]
 
-# Style
+# Plot style with Imprint palette and theme-adaptive chrome
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),
-    title_font_size=72,
-    legend_font_size=48,
-    label_font_size=42,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    title_font_size=title_font_size,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
     font_family="sans-serif",
 )
 
-# Chart
+# Chart — 3200×1800 landscape canvas (hard rule: no deviation)
 chart = MelSpectrogramChart(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="spectrogram-mel \u00b7 pygal \u00b7 pyplots.ai",
+    title=title_str,
     spectrogram_data=mel_spec_display.tolist(),
     time_bins=times_display.tolist(),
     mel_freq_labels=mel_tick_labels,
@@ -340,28 +332,29 @@ chart = MelSpectrogramChart(
     note_annotations=annotations,
     db_min=db_floor,
     db_max=0,
-    colormap=inferno_colors,
+    colormap=imprint_seq,
     show_legend=False,
-    margin=60,
-    margin_top=160,
-    margin_bottom=40,
+    margin=40,
+    margin_top=120,
+    margin_bottom=30,
     show_x_labels=False,
     show_y_labels=False,
 )
 
 chart.add("", [0])
 
-# Save
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+# Save PNG + HTML (pygal is interactive)
+chart.render_to_file(f"plot-{THEME}.svg")
+chart.render_to_png(f"plot-{THEME}.png")
 
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>spectrogram-mel - pygal</title>
+    <title>spectrogram-mel - python - pygal - anyplot.ai</title>
     <style>
-        body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; }}
+        body {{ margin: 0; display: flex; justify-content: center; align-items: center;
+               min-height: 100vh; background: {PAGE_BG}; }}
         .chart {{ max-width: 100%; height: auto; }}
     </style>
 </head>
@@ -373,5 +366,5 @@ html_content = f"""<!DOCTYPE html>
 </html>
 """
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
