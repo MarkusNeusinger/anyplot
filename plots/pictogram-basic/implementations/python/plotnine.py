@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -97,13 +97,13 @@ plot = (
     ggplot(df_full, aes(x="col", y="category"))
     # Layer 1: Full icon tiles — fill mapped to category via Imprint palette
     + geom_tile(aes(fill="category"), width=tile_w, height=tile_h)
-    # Layer 2: Partial icon outline (dashed border, low alpha)
+    # Layer 2: Partial icon outline (dashed border, faint fill so unfilled region is visible)
     + geom_tile(
         aes(fill="category", color="border"),
         data=df_outline,
         height=tile_h,
         width=tile_w,
-        alpha=0.2,
+        alpha=0.3,
         linetype="dashed",
         size=0.6,
         show_legend=False,
@@ -112,10 +112,10 @@ plot = (
     + geom_tile(aes(fill="category", width="width"), data=df_partial, height=tile_h, show_legend=False)
     # Layer 4: Value labels
     + geom_text(
-        aes(x="col", y="category", label="label"), data=label_df, size=3.5, color=INK, ha="left", fontweight="bold"
+        aes(x="col", y="category", label="label"), data=label_df, size=4.0, color=INK, ha="left", fontweight="bold"
     )
     + scale_fill_manual(
-        name="Each ■", values=fruit_colors, breaks=["Apples"], labels=["= 5k tonnes"], guide=guide_legend(nrow=1)
+        name="Each square = 5k tonnes", values=fruit_colors, breaks=["Apples"], labels=[""], guide=guide_legend(nrow=1)
     )
     + scale_color_identity()
     + scale_x_continuous(limits=(0.3, x_max), expand=(0, 0))
