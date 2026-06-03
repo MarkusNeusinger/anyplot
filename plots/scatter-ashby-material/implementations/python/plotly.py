@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-03
@@ -61,7 +61,7 @@ families = {
         "symbol": "triangle-up",
     },
     "Elastomers": {
-        "density": (900, 1300),
+        "density": (700, 1500),
         "modulus": (0.001, 0.1),
         "n": 20,
         "color": IMPRINT_PALETTE[4],
@@ -168,11 +168,11 @@ for family, props in families.items():
     # Family label at log-space centroid
     centroid_d = 10 ** np.mean(np.log10(d))
     centroid_m = 10 ** np.mean(np.log10(m))
-    # Push Composites label downward to reduce proximity with Ceramics
+    # Adjust labels to avoid crowding — Composites lower, Metals further left
     if family == "Composites":
         centroid_m /= 2.0
-    if family == "Ceramics":
-        centroid_d *= 1.3
+    if family == "Metals":
+        centroid_d /= 1.8
     fig.add_annotation(
         x=np.log10(centroid_d),
         y=np.log10(centroid_m),
@@ -180,7 +180,7 @@ for family, props in families.items():
         yref="y",
         text=f"<b>{family}</b>",
         showarrow=False,
-        font={"size": 14, "color": INK, "family": "Arial, Helvetica, sans-serif"},
+        font={"size": 12, "color": INK, "family": "Arial, Helvetica, sans-serif"},
         bgcolor=ELEVATED_BG,
         borderpad=5,
         bordercolor=INK_SOFT,
@@ -273,10 +273,10 @@ fig.update_layout(
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "x": 0.98,
-        "y": 0.02,
-        "xanchor": "right",
-        "yanchor": "bottom",
+        "x": 0.01,
+        "y": 0.99,
+        "xanchor": "left",
+        "yanchor": "top",
         "itemsizing": "constant",
     },
     font={"family": "Arial, Helvetica, sans-serif", "color": INK},
