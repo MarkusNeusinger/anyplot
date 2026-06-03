@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:25:11Z'
-updated: '2026-06-03T06:31:06Z'
+updated: '2026-06-03T06:49:50Z'
 generated_by: claude-sonnet
 workflow_run: 26866541331
 issue: 4667
@@ -12,42 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 82
 review:
   strengths:
-  - Perfect spec compliance — all Feynman diagram elements present (fermion lines
-    with direction arrowheads, wavy photon propagator, dashed weak boson propagator,
-    vertex markers, time axis label)
-  - Excellent theme adaptation — data colors identical in both renders; vertex markers
-    correctly flip black→white; no dark-on-dark failures
-  - Clever paired palette strategy — fermion line and arrowhead series share same
-    Imprint color for visual coherence
-  - Scientifically accurate data — e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺ is a real QED+electroweak process
-    with correct particle/antiparticle flow conventions
-  - Correct pygal output — both plot-{THEME}.png and plot-{THEME}.html saved per theme
+  - Realistic QED+electroweak s-channel annihilation diagram (e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺)
+    — a textbook particle physics example
+  - 'Imprint palette correctly applied: e⁻ green (#009E73), e⁺ lavender (#C475FD),
+    μ⁻ blue (#4467A3), μ⁺ ochre (#BD8233), γ red (#AE3030), Z⁰ cyan (#2ABCCD) in canonical
+    order'
+  - Theme-adaptive chrome works correctly — both light (#FAF8F1) and dark (#1A1A17)
+    renders pass readability checks with proper text contrast
+  - SVG post-processing adds propagator labels (γ, Z⁰) directly on the diagram and
+    removes arrowhead helper series from the legend — clean legend output
+  - 'Physics-correct arrowhead direction convention: particle flows forward in time
+    (→), antiparticle flows backward (←)'
+  - Wavy sinusoidal photon propagator and dashed Z⁰ boson propagator correctly distinguish
+    the two internal lines
+  - Mandatory title format with descriptive prefix correctly implemented and font-size
+    scaled for long title string
   weaknesses:
-  - Legend has 11 entries including separate arrowhead series (e⁻ (→), e⁺ (←), μ⁻
-    (→), μ⁺ (←)) which adds visual noise — ideally hide arrowhead series from legend
-    so only 6 physics-meaningful entries appear
-  - Legend font (44px on 2400px canvas) is borderline at 400px mobile scale — consider
-    raising to 48–50px
-  - Design storytelling could be strengthened by adding direct text labels on γ and
-    Z⁰ propagator lines instead of relying solely on the legend
+  - Gluon curly/looped line style not demonstrated — the spec mentions it as a required
+    line type. Consider including a gluon propagator (e.g., QCD vertex) or at least
+    showing the curly style variant in a corner annotation
+  - Arrowhead calculation repeated verbatim four times for each fermion — extract
+    inline or simplify using a vector helper tuple list to reduce CQ-01 penalty
+  - The large centred γ and Z⁰ SVG labels visually dominate the diagram and partially
+    obscure the photon wavy line — consider reducing font size (~0.7×) or offsetting
+    them further above/below the propagator lines
+  - legend_font_size=48 renders somewhat small in the 2400×2400 canvas when viewed
+    at thumbnail size; style-guide default for pygal square canvas is 48 which is
+    acceptable but borderline
+  - Z⁰ is a vector boson — using a dashed line is non-canonical (vector bosons conventionally
+    use wavy lines). If dashes are kept to distinguish γ vs Z⁰, add a brief code comment
+    explaining the stylistic choice
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺ · feynman-basic · python · pygal · anyplot.ai" wraps to two lines in dark text — fully readable. Legend labels and "Time →" axis title in dark text — all clearly visible.
-      Data: First series (e⁻ fermion) = #009E73 (brand green) ✓. e⁺ antifermion = #C475FD (Imprint #2). μ⁻ fermion = #4467A3 (Imprint #3). μ⁺ antifermion = #BD8233 (Imprint #4). γ virtual photon = #AE3030 (Imprint #5, red wavy). Z⁰ virtual boson = #2ABCCD (Imprint #6, cyan dashed). Vertex markers = large black filled circles.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺ · feynman-basic · python · pygal · anyplot.ai" wraps to 2 lines at top, dark ink on light background — fully readable. "Time →" x-axis label visible at bottom centre. Legend at very bottom shows 7 labelled entries with coloured swatches — text small but readable at full resolution. No tick labels shown (correct for Feynman diagram schematic).
+      Data: e⁻ fermion in #009E73 (brand green) — top-left to centre-right diagonal. e⁺ antifermion in #C475FD (lavender) — bottom-left to centre. μ⁻ fermion in #4467A3 (blue) — centre to top-right. μ⁺ antifermion in #BD8233 (ochre) — centre to bottom-right. Wavy sinusoidal photon propagator in #AE3030 (matte red) connecting the two vertex dots. Dashed horizontal Z⁰ propagator in #2ABCCD (cyan). Two black vertex dots (dots_size=18) at the annihilation and pair-creation points. Large bold γ label (red) and Z⁰ label (cyan) centred on the propagator region — intentional diagrammatic labelling. Arrowheads visible on each fermion line.
+      Legibility verdict: PASS — all elements readable, correct Imprint palette, warm off-white background confirmed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface.
-      Chrome: Title, legend labels, and "Time →" label all render in light (#F0EFE8-range) text — clearly readable against dark background. Vertex markers flip from black filled circles to light/white filled circles (correct INK token flip).
-      Data: All data colors identical to light render — green, purple, blue, ochre, red, cyan unchanged across themes. Only chrome (background, text, vertex dot color) flips.
-      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 visible on dark surface; all text elements readable.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and "Time →" label render in light cream text (#F0EFE8) against the dark surface — fully readable. Legend entries also in light text — readable. No dark-on-dark failures observed.
+      Data: Data colours are identical to the light render — e⁻ #009E73, e⁺ #C475FD, μ⁻ #4467A3, μ⁺ #BD8233, γ #AE3030, Z⁰ #2ABCCD — only the chrome (background, title, legend text) has flipped. Vertex dots appear white/light against the dark background (correct: INK token used for vertices flips to #F0EFE8). The γ and Z⁰ labels remain in their respective data colours (#AE3030 and #2ABCCD) which are equally readable on the dark surface.
+      Legibility verdict: PASS — all text light-on-dark, all data elements visible, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -55,51 +67,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title, legend, axis label readable
-          in both themes. Minor deduction: 44px legend text borderline at 400px mobile
-          scale.'
+        comment: Font sizes explicitly set; title wraps to 2 lines (expected for long
+          descriptive+mandated prefix); γ/Z⁰ labels prominent; legend slightly small
+          but readable at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; legend entries cleanly arranged; no data/label
-          overlap.
+        comment: Intentional overlap of large propagator labels with diagram lines
+          is by design; no unintentional text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All particle lines, arrowheads, vertex markers clearly visible with
-          appropriate stroke widths.
+        comment: All particle lines, arrowheads, vertex markers, and propagator lines
+          clearly visible; dashed Z⁰ slightly thin against wavy photon nearby
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; line-style redundancy (solid/wavy/dashed)
-          provides secondary signal beyond hue.
+        comment: Imprint palette applied, CVD-safe; redundant encoding via line style
+          further distinguishes propagator types
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 2400x2400 square canvas; diagram centered with balanced whitespace;
-          no content cut off.
+        comment: Diagram centred well in 2400×2400 canvas with appropriate margins;
+          slight unused space on left/right edges
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with correct format; Time → label provides physics
-          orientation.
+        comment: Time→ x-axis label correct; empty y-axis appropriate for schematic
+          Feynman diagram; title has descriptive prefix + mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; canonical Imprint palette order; backgrounds
-          correct; data colors identical across themes; chrome correctly flips.'
+        comment: 'First series #009E73; canonical Imprint order maintained; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly in both themes'
     design_excellence:
       score: 13
       max: 20
@@ -109,24 +121,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Paired Imprint colors for fermion+arrowhead series; custom stroke
-          widths per particle type; above configured default but not FiveThirtyEight-level.
+        comment: 'Above defaults: Imprint palette, explicit typography, clean schematic
+          layout, SVG post-processing for on-diagram labels; large centred propagator
+          labels feel slightly heavy'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid fully suppressed; tick labels hidden by design; custom margins;
-          varying stroke widths polished.
+        comment: Grid off, tick labels hidden, bottom legend with 4 columns; some
+          default pygal legend box styling visible
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Time-directed particle flow with arrowheads; wavy/dashed line styles
-          distinguish mediators; Time → label orients the diagram.
+        comment: Diagram tells the e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺ annihilation story clearly;
+          colour coding + arrowheads + propagator labels guide the viewer through
+          the interaction
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,90 +148,95 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY coordinate plot correctly used to construct Feynman diagram.
+        comment: Feynman diagram correctly implemented using pygal XY chart with multi-series
+          lines
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Solid fermion lines, wavy photon, dashed boson, arrowheads, vertex
-          markers, particle labels, time axis label all present.
+        comment: Fermion lines+arrows, wavy photon, dashed boson, vertex markers,
+          propagator labels, time axis all present; gluon curly/looped line style
+          not shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time left→right on x-axis; spatial position on y-axis; propagators
-          span between vertices.
+        comment: Time left→right; incoming particles left, outgoing right; vertices
+          at correct positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: Descriptive · feynman-basic · python · pygal
-          · anyplot.ai. Legend labels all particle series.'
+        comment: Title format correct with descriptive prefix; legend labels accurate;
+          arrowhead helper series correctly hidden from legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All Feynman diagram feature types: fermions with arrows, virtual
-          photon (wavy), weak boson (dashed), interaction vertices, initial+final
-          state particles.'
+        comment: Shows fermion+antifermion lines with directional arrows, photon (wavy)
+          and electroweak boson (dashed) propagators, interaction vertices — missing
+          gluon curly style
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺ is a genuine QED+electroweak s-channel annihilation
-          process; neutral, scientifically accurate.
+        comment: e⁻e⁺ → γ/Z⁰ → μ⁻μ⁺ is a canonical textbook QED+electroweak process
+          used in particle physics courses worldwide
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Two-vertex s-channel diagram with symmetric geometry; correct particle/antiparticle
-          flow directions.
+        comment: Vertex positions, particle trajectories, and propagator angles are
+          physically plausible and symmetric
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or classes; linear Imports → Data → Style → Chart →
-          Save.
+        comment: One helper function _process_svg_for_png breaks KISS; function is
+          needed for SVG post-processing but repetitive arrowhead numpy blocks further
+          add to complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no stochastic operations.
+        comment: All data is deterministic (hardcoded physics coordinates, numpy linspace)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, numpy, pygal, pygal.style.Style.'
+        comment: 'All imports used: os, re, sys (path manipulation), numpy, pygal,
+          Style, cairosvg'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Inline numpy arrowhead computation clean; physics semantics justify
-          four explicit blocks.
+        comment: Arrowhead calculation repeated verbatim 4 times with identical pattern
+          — reduces elegance; overall approach appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html per pygal requirements.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API;
+          cairosvg used correctly
     library_mastery:
       score: 7
       max: 10
@@ -227,20 +246,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct XY() usage; Style() with full token coverage; per-series
-          stroke and dot controls; dasharray stroke_style.
+        comment: 'Uses pygal.XY, Style, stroke_width, stroke_style={''dasharray'':
+          ...} idiomatically; SVG export + cairosvg is the correct pygal PNG pipeline'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML interactive output (pygal signature); interactive tooltips with
-          physics labels; dasharray dashed propagator styling.
+        comment: Leverages pygal's native SVG output for post-processing (add labels,
+          hide series); HTML interactive output preserved — distinctively pygal
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []

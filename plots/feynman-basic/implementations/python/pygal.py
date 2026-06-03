@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-03
+Quality: 82/100 | Updated: 2026-06-03
 """
 
 import os
