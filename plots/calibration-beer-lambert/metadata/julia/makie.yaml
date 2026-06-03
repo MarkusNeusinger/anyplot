@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: calibration-beer-lambert
+created: '2026-06-03T08:14:17Z'
+updated: '2026-06-03T08:38:11Z'
+generated_by: claude-sonnet
+workflow_run: 26872010184
+issue: 4410
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Complete Imprint palette + theme-adaptive chrome implementation: all chrome tokens
+    (INK, INK_SOFT, INK_MUTED, ELEVATED_BG) correctly wired to every visual element
+    in both themes'
+  - 'Excellent spec coverage: all four required features (regression annotation, prediction
+    band, unknown determination guide lines, units) implemented cleanly'
+  - Realistic, specific data context (nitrate UV-Vis colorimetric assay) with factually
+    plausible Beer-Lambert parameters
+  - 'Idiomatic Makie usage: band! for prediction interval is the correct primitive;
+    axislegend properly configured'
+  - KISS code structure with full reproducibility via Random.seed!(42)
+  weaknesses:
+  - Prediction interval band alpha=0.15 is very subtle -- nearly invisible in dark
+    render against the near-black background; consider alpha=0.25-0.30 so the band
+    reads as a deliberate design element even when the interval is tight
+  - Both-axis grid could be simplified to y-axis-only grid for a regression line plot
+    (horizontal lines help read y-values; vertical grid adds noise without aiding
+    readability on a continuous x variable)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) -- correct theme surface, not pure white.
+      Chrome: Title "calibration-beer-lambert · julia · makie · anyplot.ai" in dark (#1A1A17) -- fully readable. Axis labels "Concentration (mg/L)" and "Absorbance" in dark ink at 14pt -- balanced and clear. Tick labels (0, 5, 10, 15 on x; 0.0, 0.5, 1.0 on y) in soft dark (#4A4A44) at 12pt -- readable. Regression equation annotation "y = 0.0644x +0.0028 / R^2 = 0.9998" in muted gray lower-right -- readable. Legend upper-left with 4 entries, elevated light background (#FFFDF6), soft frame.
+      Data: Calibration standard scatter points in #009E73 (Imprint brand green) with white stroke, markersize=14. Regression line in same #009E73. Very narrow semi-transparent green prediction interval band (alpha=0.15, tight due to R^2=0.9998). Dashed horizontal and vertical guide lines in #4467A3 (Imprint blue). Diamond marker for unknown sample in same blue at markersize=16. Subtle x and y grid lines at alpha=0.12.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) -- correct dark surface.
+      Chrome: Title in near-white (#F0EFE8) -- clearly readable. Axis labels in same near-white -- readable. Tick labels in soft gray (#B8B7B0) -- readable. Annotation text in muted light gray (#A8A79F) -- readable against dark background. Legend with dark elevated background (#242420) and soft-gray frame -- text readable. No dark-on-dark failure anywhere.
+      Data: All data colors identical to light render -- green calibration points and line, blue dashed guide lines and diamond marker are unchanged. Prediction band very slightly less perceptible at alpha=0.15 on dark background but still identifiable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick sizes=12, legend=12, annotation=15); balanced X/Y; readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend upper-left clear of data; annotation
+          lower-right isolated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (9 points) uses appropriate markersize 14/16; prediction
+          band narrow by design (R^2=0.9998); all elements visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green and blue are CVD-safe; redundant encoding via dashed/solid
+          and circle/diamond shapes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); generous axis ranges; balanced margins;
+          good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Concentration (mg/L) with units; Y: Absorbance as specified'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; unknown uses Imprint[3] #4467A3; backgrounds
+          #FAF8F1/#1A1A17; all chrome tokens theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: Imprint palette, theme-adaptive chrome, intentional
+          axis ranges, marker strokes, two-color scheme; not yet strongly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'L-frame spines removed; subtle grid alpha=0.12; white marker strokes;
+          legend elevated background; minor: both-axis grid where y-only would be
+          cleaner'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Unknown sample guide lines create clear visual story; regression
+          equation annotation reinforces quantitative takeaway; clear visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: scatter + regression line + prediction interval band'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All four spec features: regression equation/R2, prediction interval
+          band, unknown dashed guide lines, units on x-axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on x, Absorbance on y; all 8 standards visible; Beer-Lambert
+          linearity followed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: calibration-beer-lambert · julia · makie · anyplot.ai; legend
+          covers all four visual elements'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Beer-Lambert calibration elements: blank, multiple standards,
+          regression, uncertainty, unknown determination'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Nitrate colorimetric assay UV-Vis 540nm environmental water testing
+          -- highly specific and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-15 mg/L nitrate range, absorbance 0-0.98, epsilon_l=0.065 L/mg
+          plausible, unknown at 8.1 mg/L within range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear: imports -> seed -> constants -> data -> regression
+          -> plot -> save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 5 imports (CairoMakie, Colors, Random, Statistics, Printf) are
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia; @sprintf for annotation; no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of band!, scatter! with strokecolor, lines!, text!, axislegend,
+          RGBAf -- all idiomatic CairoMakie
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! (Makie-native shaded region primitive), axislegend, RGBAf for
+          alpha-blended colors are distinctive; overall pattern still transferable
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
