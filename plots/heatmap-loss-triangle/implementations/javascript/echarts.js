@@ -1,13 +1,8 @@
 // anyplot.ai
 // heatmap-loss-triangle: Actuarial Loss Development Triangle
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-03
-//# anyplot-orientation: square
-
-// anyplot.ai
-// heatmap-loss-triangle: Actuarial Loss Development Triangle
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-03
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -31,6 +26,7 @@ const ataFactors = pctPaid.slice(1).map((v, i) => (v / pctPaid[i]).toFixed(3));
 const actualData = [];
 const projectedData = [];
 let actualMin = Infinity, actualMax = 0;
+let projectedMin = Infinity, projectedMax = 0;
 
 for (let i = 0; i < 10; i++) {
   for (let j = 0; j < 10; j++) {
@@ -41,9 +37,33 @@ for (let i = 0; i < 10; i++) {
       if (value > actualMax) actualMax = value;
     } else {
       projectedData.push([j, i, value]);
+      if (value < projectedMin) projectedMin = value;
+      if (value > projectedMax) projectedMax = value;
     }
   }
 }
+
+// --- Grid geometry for evaluation-date boundary line (CSS pixels, 1200×1200 canvas) ---
+const gridLeft = 90, gridRight = 132, gridTop = 148, gridBottom = 145;
+const canvasW = 1200;
+const gridW = canvasW - gridLeft - gridRight; // 978
+const gridH = canvasW - gridTop - gridBottom; // 907
+const cellW = gridW / 10;
+const cellH = gridH / 10;
+
+// Staircase polyline tracing the diagonal boundary between actual and projected regions
+const boundaryPoints = [[gridLeft + 10 * cellW, gridTop]];
+for (let i = 0; i < 10; i++) {
+  const x = gridLeft + (10 - i) * cellW;
+  const yBot = gridTop + (i + 1) * cellH;
+  boundaryPoints.push([x, yBot]);
+  if (i < 9) {
+    boundaryPoints.push([gridLeft + (10 - i - 1) * cellW, yBot]);
+  }
+}
+
+// Legend centering: two items ~370px wide total
+const legendLeft = Math.round((canvasW - 370) / 2);
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -63,10 +83,10 @@ chart.setOption({
   },
 
   grid: {
-    left: 90,
-    right: 132,
-    top: 148,
-    bottom: 145
+    left: gridLeft,
+    right: gridRight,
+    top: gridTop,
+    bottom: gridBottom
   },
 
   xAxis: {
@@ -103,24 +123,35 @@ chart.setOption({
     inverse: true
   },
 
-  visualMap: {
-    min: actualMin,
-    max: actualMax,
-    seriesIndex: [0],
-    show: true,
-    orient: "vertical",
-    right: 12,
-    top: "middle",
-    itemHeight: 200,
-    itemWidth: 14,
-    inRange: { color: t.seq || ["#009E73", "#4467A3"] },
-    text: [
-      "$" + Math.round(actualMax) + "M",
-      "$" + Math.round(actualMin) + "M"
-    ],
-    textStyle: { color: t.inkSoft, fontSize: 12 },
-    calculable: false
-  },
+  visualMap: [
+    {
+      // Actual cells: full Imprint sequential colormap with colorbar
+      min: actualMin,
+      max: actualMax,
+      seriesIndex: [0],
+      show: true,
+      orient: "vertical",
+      right: 12,
+      top: "middle",
+      itemHeight: 200,
+      itemWidth: 14,
+      inRange: { color: t.seq || ["#009E73", "#4467A3"] },
+      text: [
+        "$" + Math.round(actualMax) + "M",
+        "$" + Math.round(actualMin) + "M"
+      ],
+      textStyle: { color: t.inkSoft, fontSize: 12 },
+      calculable: false
+    },
+    {
+      // Projected cells: muted (38% opacity) variant of imprint_seq — encodes magnitude
+      min: projectedMin,
+      max: projectedMax,
+      seriesIndex: [1],
+      show: false,
+      inRange: { color: ["rgba(0,158,115,0.38)", "rgba(68,103,163,0.38)"] }
+    }
+  ],
 
   series: [
     {
@@ -129,7 +160,7 @@ chart.setOption({
       data: actualData,
       label: {
         show: true,
-        fontSize: 12,
+        fontSize: 13,
         color: "#FFFFFF",
         formatter: (p) => "$" + p.value[2].toFixed(1) + "M"
       },
@@ -145,24 +176,32 @@ chart.setOption({
       data: projectedData,
       label: {
         show: true,
-        fontSize: 12,
+        fontSize: 13,
         color: t.inkSoft,
         fontStyle: "italic",
         formatter: (p) => "$" + p.value[2].toFixed(1) + "M"
       },
       itemStyle: {
-        color: t.elevatedBg,
+        // color controlled by second visualMap; border marks actual/projected boundary
         borderColor: t.inkSoft,
-        borderWidth: 1
+        borderWidth: 1.5
       },
       emphasis: { disabled: true }
     }
   ],
 
   graphic: [
+    // Evaluation-date diagonal boundary — bold staircase stroke as structural landmark
+    {
+      type: "polyline",
+      shape: { points: boundaryPoints },
+      style: { stroke: t.ink, lineWidth: 2.5, fill: "none" },
+      z: 10
+    },
+    // Bottom legend centered on canvas
     {
       type: "group",
-      left: 420,
+      left: legendLeft,
       bottom: 22,
       children: [
         {
@@ -183,16 +222,16 @@ chart.setOption({
         },
         {
           type: "rect",
-          shape: { x: 196, y: 2, width: 18, height: 14 },
+          shape: { x: 200, y: 2, width: 18, height: 14 },
           style: {
-            fill: t.elevatedBg,
+            fill: "rgba(68,103,163,0.38)",
             stroke: t.inkSoft,
-            lineWidth: 1
+            lineWidth: 1.5
           }
         },
         {
           type: "text",
-          x: 218,
+          x: 222,
           y: 0,
           style: {
             text: "Projected / IBNR",
