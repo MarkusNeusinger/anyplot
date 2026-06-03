@@ -4,7 +4,6 @@
 #' Quality: 86/100 | Created: 2026-06-03
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -68,11 +67,18 @@ icon_list <- lapply(seq_len(nrow(fruit_data)), function(i) {
 icons <- do.call(rbind, icon_list)
 icons$category <- factor(icons$category, levels = cat_levels)
 
+# Focal emphasis: identify the top category for storytelling
+top_cat   <- fruit_ordered$category[1]
+ratio_str <- sprintf("%.1f", max(fruit_data$value) / min(fruit_data$value))
+subtitle  <- paste0(top_cat, " leads at ", max(fruit_data$value), " kt — ",
+                    ratio_str, "× the smallest category")
+
 # Value labels: exact totals positioned right of last icon column
 label_df <- data.frame(
   category = factor(fruit_data$category, levels = cat_levels),
   x_pos    = n_max + 0.75,
   label    = paste0(fruit_data$value, " kt"),
+  fontface = ifelse(fruit_data$category == top_cat, "bold", "plain"),
   stringsAsFactors = FALSE
 )
 
@@ -96,10 +102,10 @@ p <- ggplot() +
     aes(x = icon_col, y = category, color = category, alpha = fill_alpha),
     shape = 19, size = 5
   ) +
-  # Exact value labels at row end
+  # Exact value labels at row end; top category bolded for focal emphasis
   geom_text(
     data  = label_df,
-    aes(x = x_pos, y = category, label = label),
+    aes(x = x_pos, y = category, label = label, fontface = fontface),
     hjust = 0, color = INK_SOFT, size = 3.5
   ) +
   scale_alpha_identity() +
@@ -109,9 +115,10 @@ p <- ggplot() +
     expand = expansion(mult = 0)
   ) +
   labs(
-    title   = "pictogram-basic · r · ggplot2 · anyplot.ai",
-    caption = paste0("Each ● represents ", ICON_UNIT,
-                     " thousand tons  |  faded icon = partial unit")
+    title    = "pictogram-basic · r · ggplot2 · anyplot.ai",
+    subtitle = subtitle,
+    caption  = paste0("Each ● represents ", ICON_UNIT,
+                      " thousand tons  |  faded icon = partial unit")
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -123,7 +130,9 @@ p <- ggplot() +
     axis.text.y      = element_text(color = INK, size = 10, hjust = 1,
                                     margin = margin(r = 6)),
     axis.ticks       = element_blank(),
-    plot.title       = element_text(color = INK, size = 12, hjust = 0,
+    plot.title       = element_text(color = INK, size = 12, hjust = 0, face = "bold",
+                                    margin = margin(b = 4)),
+    plot.subtitle    = element_text(color = INK_SOFT, size = 9, hjust = 0,
                                     margin = margin(b = 14)),
     plot.caption     = element_text(color = INK_MUTED, size = 8, hjust = 0,
                                     margin = margin(t = 12)),
