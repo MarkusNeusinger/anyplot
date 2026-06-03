@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-03
+Library: plotnine 0.15.5 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
