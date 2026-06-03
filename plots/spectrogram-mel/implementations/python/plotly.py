@@ -1,21 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-11
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - Synthesize audio with multiple frequency components (melody-like)
+# Theme-adaptive chrome — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap for single-polarity continuous data (dB magnitude)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
+# Reference line color — theme-adaptive subtle overlay
+REF_COLOR = "rgba(74,74,68,0.35)" if THEME == "light" else "rgba(184,183,176,0.35)"
+
+# Data: synthesize audio with melody-like frequency components
 np.random.seed(42)
 sample_rate = 22050
 duration = 4.0
 n_samples = int(sample_rate * duration)
 t = np.linspace(0, duration, n_samples, endpoint=False)
 
-# Create a rich audio signal: melody with harmonics and chirp
 signal = (
     0.5 * np.sin(2 * np.pi * 440 * t)
     + 0.3 * np.sin(2 * np.pi * 880 * t)
@@ -24,13 +38,13 @@ signal = (
     + 0.15 * np.sin(2 * np.pi * 3000 * t) * np.exp(-t / 2)
     + 0.1 * np.random.randn(n_samples)
 )
-# Add amplitude envelope to simulate natural audio
+# Amplitude envelope: short fade-in, extended fade-out
 envelope = np.ones(n_samples)
 envelope[: int(0.05 * sample_rate)] = np.linspace(0, 1, int(0.05 * sample_rate))
 envelope[-int(0.3 * sample_rate) :] = np.linspace(1, 0, int(0.3 * sample_rate))
 signal *= envelope
 
-# STFT computation
+# STFT computation (manual, no librosa dependency)
 n_fft = 2048
 hop_length = 512
 window = np.hanning(n_fft)
@@ -39,15 +53,11 @@ stft_matrix = np.zeros((n_fft // 2 + 1, n_frames))
 for i in range(n_frames):
     start = i * hop_length
     frame = signal[start : start + n_fft] * window
-    spectrum = np.fft.rfft(frame)
-    stft_matrix[:, i] = np.abs(spectrum) ** 2
+    stft_matrix[:, i] = np.abs(np.fft.rfft(frame)) ** 2
 
-# Mel filterbank
+# Mel filterbank construction
 n_mels = 128
-f_min = 0.0
-f_max = sample_rate / 2.0
-
-
+f_min, f_max = 0.0, sample_rate / 2.0
 mel_min = 2595.0 * np.log10(1.0 + f_min / 700.0)
 mel_max = 2595.0 * np.log10(1.0 + f_max / 700.0)
 mel_points = np.linspace(mel_min, mel_max, n_mels + 2)
@@ -56,9 +66,7 @@ freq_bins = np.floor((n_fft + 1) * hz_points / sample_rate).astype(int)
 
 filterbank = np.zeros((n_mels, n_fft // 2 + 1))
 for m in range(1, n_mels + 1):
-    f_left = freq_bins[m - 1]
-    f_center = freq_bins[m]
-    f_right = freq_bins[m + 1]
+    f_left, f_center, f_right = freq_bins[m - 1], freq_bins[m], freq_bins[m + 1]
     for k in range(f_left, f_center):
         if f_center != f_left:
             filterbank[m - 1, k] = (k - f_left) / (f_center - f_left)
@@ -66,12 +74,10 @@ for m in range(1, n_mels + 1):
         if f_right != f_center:
             filterbank[m - 1, k] = (f_right - k) / (f_right - f_center)
 
-# Apply mel filterbank and convert to dB
+# Mel spectrogram in dB (normalised to 0 dB peak)
 mel_spec = filterbank @ stft_matrix
 mel_spec = np.maximum(mel_spec, 1e-10)
-mel_spec_db = 10.0 * np.log10(mel_spec)
-ref_db = mel_spec_db.max()
-mel_spec_db = mel_spec_db - ref_db
+mel_spec_db = 10.0 * np.log10(mel_spec) - 10.0 * np.log10(mel_spec.max())
 
 # Time and frequency axes
 time_axis = np.arange(n_frames) * hop_length / sample_rate
@@ -84,12 +90,15 @@ fig = go.Figure(
         z=mel_spec_db,
         x=time_axis,
         y=mel_freqs,
-        colorscale="Inferno",
+        colorscale=imprint_seq,
         colorbar={
-            "title": {"text": "dB", "font": {"size": 20}},
-            "tickfont": {"size": 16},
-            "thickness": 18,
+            "title": {"text": "dB", "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
+            "thickness": 16,
             "len": 0.85,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
         },
         zmin=-80,
         zmax=0,
@@ -97,45 +106,54 @@ fig = go.Figure(
     )
 )
 
-# Style
 fig.update_layout(
-    title={"text": "spectrogram-mel · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
-    xaxis={"title": {"text": "Time (s)", "font": {"size": 22}}, "tickfont": {"size": 18}, "showgrid": False},
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    title={
+        "text": "spectrogram-mel · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"
+    },
+    xaxis={
+        "title": {"text": "Time (s)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     yaxis={
-        "title": {"text": "Frequency (Hz)", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Frequency (Hz)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "tickvals": [50, 100, 200, 500, 1000, 2000, 4000, 8000],
         "ticktext": ["50", "100", "200", "500", "1k", "2k", "4k", "8k"],
         "showgrid": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
         "range": [np.log10(mel_freqs[1]), np.log10(mel_freqs[-1])],
     },
-    template="plotly_white",
-    plot_bgcolor="rgba(0,0,0,0)",
-    width=1600,
-    height=900,
-    margin={"l": 80, "r": 30, "t": 70, "b": 60},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 10, "font_family": "monospace", "font_color": INK, "bordercolor": INK_SOFT},
 )
 
-# Reference lines at key frequency bands for visual refinement
-for freq, _label in [(440, "A4"), (1000, "1 kHz"), (4000, "4 kHz")]:
+# Subtle reference lines at perceptually meaningful frequency bands
+for freq in [440, 1000, 4000]:
     fig.add_shape(
         type="line",
         x0=time_axis[0],
         x1=time_axis[-1],
         y0=freq,
         y1=freq,
-        line={"color": "rgba(255,255,255,0.25)", "width": 1, "dash": "dot"},
+        line={"color": REF_COLOR, "width": 1, "dash": "dot"},
     )
 
-# Annotations for data storytelling — guide viewer to key spectral features
-annotations = [
+# Annotations guiding viewer through key spectral features
+for ann in [
     {"x": 0.5, "y": np.log10(440), "text": "Harmonics (A4)", "ax": -80, "ay": -45},
     {"x": 2.2, "y": np.log10(400), "text": "Chirp sweep", "ax": 70, "ay": 40},
     {"x": 0.6, "y": np.log10(3000), "text": "Decaying tone", "ax": 70, "ay": -30},
     {"x": 0.3, "y": np.log10(100), "text": "Noise floor", "ax": -65, "ay": -30},
-]
-for ann in annotations:
+]:
     fig.add_annotation(
         x=ann["x"],
         y=ann["y"],
@@ -144,29 +162,18 @@ for ann in annotations:
         showarrow=True,
         arrowhead=2,
         arrowsize=1.2,
-        arrowwidth=2,
-        arrowcolor="#FFFFFF",
+        arrowwidth=1.5,
+        arrowcolor=INK_SOFT,
         ax=ann["ax"],
         ay=ann["ay"],
-        font={"size": 14, "color": "#FFFFFF", "family": "Arial"},
-        bordercolor="#FFFFFF",
+        font={"size": 11, "color": INK, "family": "Arial"},
+        bordercolor=INK_SOFT,
         borderwidth=1,
         borderpad=4,
-        bgcolor="#1a1a1a",
+        bgcolor=ELEVATED_BG,
         opacity=0.9,
     )
 
-# Custom hover label styling for Plotly-specific polish
-fig.update_layout(
-    hoverlabel={
-        "bgcolor": "rgba(30,30,30,0.9)",
-        "font_size": 14,
-        "font_family": "monospace",
-        "font_color": "white",
-        "bordercolor": "rgba(255,255,255,0.3)",
-    }
-)
-
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — canvas: 800×450 × scale=4 → 3200×1800 px (landscape)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
