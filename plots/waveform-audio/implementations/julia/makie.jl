@@ -1,7 +1,7 @@
 # anyplot.ai
 # waveform-audio: Audio Waveform Plot
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-06-03
+# Quality: 93/100 | Created: 2026-06-03
 
 using CairoMakie
 using Colors
