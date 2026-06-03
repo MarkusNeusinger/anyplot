@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waveform-audio: Audio Waveform Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
@@ -149,10 +149,10 @@ chart = pygal.XY(
     x_value_formatter=lambda x: f"{x:.2f}",
     value_formatter=lambda x: f"{x:.3f}",
     print_values=False,
-    margin_top=50,
-    margin_bottom=70,
-    margin_left=80,
-    margin_right=40,
+    margin_top=80,
+    margin_bottom=100,
+    margin_left=100,
+    margin_right=60,
     spacing=25,
     show_minor_x_labels=False,
     explicit_size=True,
@@ -177,7 +177,9 @@ chart.add(
 )
 # Peak transient — larger dot (18) for visibility against dense waveform
 chart.add("Peak transient", peak_marker, stroke_style={"width": 0}, dots_size=18, show_dots=True, fill=False)
-chart.add(None, zero_line, stroke_style={"width": 1.5, "dasharray": "4,6"}, show_dots=False, fill=False)
+chart.add(
+    None, zero_line, stroke_style={"width": 3.0, "dasharray": "10,5", "linecap": "round"}, show_dots=False, fill=False
+)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
