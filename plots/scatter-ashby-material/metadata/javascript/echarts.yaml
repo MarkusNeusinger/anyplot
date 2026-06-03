@@ -1,0 +1,267 @@
+library: echarts
+language: javascript
+specification_id: scatter-ashby-material
+created: '2026-06-03T16:24:45Z'
+updated: '2026-06-03T16:43:24Z'
+generated_by: claude-sonnet
+workflow_run: 26897271343
+issue: 4677
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Programmatic Graham-scan convex hull builds accurate material family boundary
+    envelopes in log-log space with a configurable 0.20-decade padding — a genuinely
+    impressive ECharts custom series implementation
+  - Log-centroid label placement correctly positions family names at the visual center
+    of each cluster, matching the Ashby chart convention
+  - 'Full spec coverage: log-log axes, hull regions, per-family scatter series, and
+    E^½/ρ guide lines all present'
+  - All 7 families use realistic, domain-accurate property values (e.g., Tungsten
+    at 19,300 kg/m³ / 400 GPa, Elastomers at 0.002–0.05 GPa) spanning the canonical
+    Ashby chart range
+  - ECharts custom series renderItem (polygon + text group) is used expertly — one
+    of ECharts' most powerful and library-distinctive capabilities
+  - 'Both light and dark renders are fully theme-correct: Imprint palette, transparent
+    background letting pageBg show, and all chrome tokens (ink, inkSoft, grid) applied
+    consistently'
+  weaknesses:
+  - 'Guide lines (E^½/ρ = const) appear in the chart without any visible label — legend.data
+    is explicitly set to only family names, so the ''E^½/ρ = const'' series name is
+    excluded from the legend and no in-chart annotation is present. Viewers see unexplained
+    diagonal dashes. Fix: either add the series name to legend.data or add a small
+    text annotation near the upper end of one guide line.'
+  - 'Minor label-on-marker overlap in the Composites and Polymers regions — family
+    labels are positioned at the log-centroid which coincides with the densest point
+    cluster. Fix: add a semi-transparent pageBg-colored background behind each family
+    text label (ECharts text style supports backgroundColor).'
+  - 'Family text labels at 17px are borderline-small for mobile-thumbnail readability
+    at ~400 px viewport width. Fix: increase to 20–22px.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as expected — not pure white.
+      Chrome: Title "scatter-ashby-material · javascript · echarts · anyplot.ai" is dark and clearly readable at fontSize=22. Y-axis label "Young's Modulus (GPa)" and X-axis label "Density (kg/m³)" both clearly readable in dark ink at fontSize=16. Tick labels (fontSize=13) readable. Bottom legend (Metals, Ceramics, Polymers, Composites, Elastomers, Natural, Foams) readable at fontSize=14.
+      Data: Seven material family hull regions with fill opacity=0.15 and border stroke at 0.55 opacity. First family (Metals) renders in #009E73 (brand green), followed by Ceramics (#C475FD lavender), Polymers (#4467A3 blue), Composites (#BD8233 ochre), Elastomers (#AE3030 matte red), Natural (#2ABCCD cyan), Foams (#954477 rose). Scatter markers (size=12) per family clearly visible with pageBg border. Two dashed diagonal guide lines visible but unlabeled. Log-log axes clearly spanning density 10–25000 kg/m³ and Young's modulus 0.001–1000 GPa.
+      Legibility verdict: PASS — all text readable against the light background. Minor: family labels (17px) slightly small for mobile thumbnails; Composites/Polymers labels partially overlap scatter markers.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as expected — not pure black.
+      Chrome: Title clearly visible in light (#F0EFE8) ink. Y-axis and X-axis labels visible in light inkSoft tone. Tick labels and legend text all readable in light colors. No dark-on-dark text failures observed.
+      Data: Identical data colors to light render — all 7 Imprint palette hues unchanged. Hull regions, scatter markers, and guide lines all correctly visible against the dark background. Brand green #009E73 for Metals clearly legible.
+      Legibility verdict: PASS — all text readable against the dark background; chrome correctly flips to light tones while data colors remain constant.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes. Family
+          labels at 17px borderline-small for mobile thumbnail scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor label-on-marker overlap in Composites and Polymers regions
+          where log-centroid falls on the densest cluster.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size=12, opacity=0.9) well-adapted to 55 data points. Hull
+          regions (opacity=0.15) provide context without obscuring data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with hull regions + text labels provides redundant
+          encoding for 7 series at the discrimination boundary.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Generous margins (left:110, right:60, top:80,
+          bottom:100). Good utilization of the landscape format.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Density (kg / m³)'', Y: ''Young''s Modulus (GPa)'' — both descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Metals (first family) = t.palette[0] = #009E73. Full canonical Imprint
+          order. Transparent background lets pageBg show. All chrome tokens correctly
+          applied in both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Well above configured defaults: programmatic convex hull, log-centroid
+          label placement, and performance index guide lines demonstrate domain expertise
+          and intentional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hull opacity tuned (0.15), marker borders with pageBg for definition,
+          guide lines subtle (dashed + 0.45 opacity). Generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Visual hierarchy via hull → marker → label layers is effective. However,
+          the E^½/ρ guide lines appear unlabeled (excluded from legend), reducing
+          their storytelling value to viewers unfamiliar with the index.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Log-log scatter with material family hull regions — exactly the Ashby
+          chart type specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log scales, colored hull envelopes, per-family labels, axis labels
+          with units, distinct colors, and E^½/ρ guide lines all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density (kg/m³), Y=Young's modulus (GPa). All 7 families represented
+          with 55 realistic data points.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-ashby-material · javascript · echarts · anyplot.ai'
+          matches required format. Legend correctly lists all 7 family names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 7 material families, individual scatter points,
+          hull envelopes, and performance index guide lines.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic Ashby materials science data — genuine educational use case,
+          entirely neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Domain-accurate values: Tungsten at 19,300 kg/m³ / 400 GPa, silicon
+          carbide at 3200 kg/m³ / 410 GPa, soft rubber at 1000 kg/m³ / 0.002 GPa.
+          Full canonical Ashby chart range.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: buildPaddedHull helper is necessary for non-trivial convex hull.
+          Otherwise flat structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data, fully deterministic — no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — echarts and ANYPLOT_TOKENS are globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Appropriate complexity for the visualization
+          task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set. echarts.init with no explicit size or devicePixelRatio.
+          Correct harness pattern.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of log-type axes, scatter series per family, and the custom
+          series type for hull rendering.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom series with renderItem (polygon + text group) is distinctively
+          ECharts-specific and highly advanced. One point deducted as a second ECharts-distinctive
+          capability (e.g., tooltip formatter, dataset binding) could further demonstrate
+          mastery.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
