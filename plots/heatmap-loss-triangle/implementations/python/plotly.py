@@ -1,50 +1,65 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-03
 """
+
+import os
+import sys
+
+
+# Prevent this file (plotly.py) from shadowing the installed plotly package
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p and os.path.abspath(p) != _here]
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data: Cumulative paid claims triangle (10 accident years x 10 development periods)
-np.random.seed(42)
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
 
+# Imprint palette — theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint sequential colormap for continuous loss data (green → blue)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+# Amber anchor for projected / IBNR region
+ANYPLOT_AMBER = "#DDCC77"
+
+# Data generation
+np.random.seed(42)
 accident_years = list(range(2015, 2025))
 development_periods = list(range(1, 11))
 n_years = len(accident_years)
 n_periods = len(development_periods)
 
-# Age-to-age development factors (decreasing as claims mature)
 dev_factors = [2.50, 1.60, 1.30, 1.15, 1.08, 1.05, 1.03, 1.02, 1.01]
 
-# Generate base first-period claims for each accident year (increasing trend)
 base_claims = np.array([4200, 4500, 4800, 5100, 5500, 5800, 6200, 6500, 6900, 7300], dtype=float)
 base_claims += np.random.normal(0, 200, n_years)
 base_claims = np.round(base_claims / 100) * 100
 
-# Build the full 10x10 cumulative triangle
 cumulative = np.full((n_years, n_periods), np.nan)
 cumulative[:, 0] = base_claims
-
 for col in range(1, n_periods):
     factor = dev_factors[col - 1] + np.random.normal(0, 0.02, n_years)
     cumulative[:, col] = cumulative[:, col - 1] * factor
-
 cumulative = np.round(cumulative, 0)
 
-# Determine actual vs projected: row i has actual data for columns 0..(n_years-1-i)
 is_actual = np.full((n_years, n_periods), False)
 for i in range(n_years):
-    actual_cols = n_years - i
-    is_actual[i, :actual_cols] = True
+    is_actual[i, : n_years - i] = True
 
-# Normalize for color contrast
 z_min = np.nanmin(cumulative)
 z_max = np.nanmax(cumulative)
 
-# Plot using numeric axes for precise shape/annotation control
+# Figure
 fig = go.Figure()
 
 fig.add_trace(
@@ -52,45 +67,51 @@ fig.add_trace(
         z=cumulative,
         x=list(range(n_periods)),
         y=list(range(n_years)),
-        colorscale="Blues",
+        colorscale=imprint_seq,
         zmin=z_min,
         zmax=z_max,
         colorbar={
-            "title": {"text": "Cumulative Claims ($)", "font": {"size": 18}},
-            "tickfont": {"size": 14},
-            "thickness": 25,
-            "len": 0.8,
+            "title": {"text": "Cumulative Claims ($)", "font": {"size": 10, "color": INK}},
+            "tickfont": {"size": 9, "color": INK_SOFT},
+            "thickness": 14,
+            "len": 0.75,
             "tickformat": ",.0f",
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
         },
-        hovertemplate="Accident Year: %{customdata[0]}<br>Dev Period: %{customdata[1]}"
-        "<br>Claims: $%{z:,.0f}<extra></extra>",
+        hovertemplate=(
+            "Accident Year: %{customdata[0]}<br>Dev Period: %{customdata[1]}<br>Claims: $%{z:,.0f}<extra></extra>"
+        ),
         customdata=[[(accident_years[i], development_periods[j]) for j in range(n_periods)] for i in range(n_years)],
         showscale=True,
     )
 )
 
-
-# Cell value annotations with per-cell contrast colors
+# Cell value annotations — bolder font for actual cells, lighter for projected
 annotations = []
 for i in range(n_years):
     for j in range(n_periods):
         val = cumulative[i, j]
         relative = (val - z_min) / (z_max - z_min)
-        font_color = "white" if relative > 0.55 else "#222222"
+        font_color = "#F0EFE8" if relative > 0.50 else INK
         boundary = j == n_years - 1 - i
+        projected = not is_actual[i, j]
+        # Typographic distinction: actual cells use Arial Black, projected use regular Arial
+        font_family = "Arial, sans-serif" if projected else "Arial Black, Arial, sans-serif"
         annotations.append(
             {
                 "x": j,
                 "y": i,
                 "text": f"{val:,.0f}",
                 "showarrow": False,
-                "font": {"size": 17, "color": font_color, "family": "Arial Black, Arial, sans-serif"},
-                "bgcolor": "rgba(255,255,255,0.75)" if boundary else None,
-                "borderpad": 3 if boundary else 0,
+                "font": {"size": 9, "color": font_color, "family": font_family},
+                "bgcolor": ELEVATED_BG if boundary else None,
+                "borderpad": 2 if boundary else 0,
             }
         )
 
-# Add amber overlay rectangles for projected cells
+# Projected cell overlays (Imprint amber tint to distinguish from actual)
 shapes = []
 for i in range(n_years):
     for j in range(n_periods):
@@ -103,12 +124,12 @@ for i in range(n_years):
                     "y0": i - 0.5,
                     "y1": i + 0.5,
                     "line": {"color": "rgba(0,0,0,0)"},
-                    "fillcolor": "rgba(255, 165, 0, 0.20)",
+                    "fillcolor": "rgba(221,204,119,0.22)",
                     "layer": "above",
                 }
             )
 
-# Diagonal line separating actual from projected (top-right to bottom-left)
+# Diagonal separator (actual vs projected boundary)
 shapes.append(
     {
         "type": "line",
@@ -116,95 +137,99 @@ shapes.append(
         "y0": 0 - 0.5,
         "x1": 0 - 0.5,
         "y1": n_years - 1 + 0.5,
-        "line": {"color": "rgba(60, 60, 60, 0.6)", "width": 2, "dash": "dash"},
+        "line": {"color": INK_SOFT, "width": 2, "dash": "dash"},
         "layer": "above",
     }
 )
 
-# Development factors as individual annotations aligned with columns
+# Development factors row below the x-axis
 for k, factor in enumerate(dev_factors):
     annotations.append(
         {
             "x": (k + 0.5) / n_periods,
-            "y": -0.14,
+            "y": -0.20,
             "xref": "paper",
             "yref": "paper",
             "text": f"{factor:.3f}",
             "showarrow": False,
-            "font": {"size": 13, "color": "#555555", "family": "Arial, Helvetica, sans-serif"},
+            "font": {"size": 8, "color": INK_MUTED, "family": "Arial, sans-serif"},
             "xanchor": "center",
         }
     )
 annotations.append(
     {
-        "x": 0.0,
-        "y": -0.14,
+        "x": -0.01,
+        "y": -0.20,
         "xref": "paper",
         "yref": "paper",
         "text": "<b>Dev Factors</b>",
         "showarrow": False,
-        "font": {"size": 13, "color": "#555555", "family": "Arial, Helvetica, sans-serif"},
+        "font": {"size": 8, "color": INK_MUTED, "family": "Arial, sans-serif"},
         "xanchor": "right",
     }
 )
 
-# Legend for actual vs projected
+# Legend: actual vs projected
 annotations.append(
     {
         "x": 0.01,
-        "y": 1.06,
+        "y": 1.10,
         "xref": "paper",
         "yref": "paper",
         "text": "■ <b>Actual</b> (observed)",
         "showarrow": False,
-        "font": {"size": 16, "color": "#306998", "family": "Arial, Helvetica, sans-serif"},
+        "font": {"size": 10, "color": "#4467A3", "family": "Arial, sans-serif"},
         "xanchor": "left",
     }
 )
 annotations.append(
     {
-        "x": 0.18,
-        "y": 1.06,
+        "x": 0.36,
+        "y": 1.10,
         "xref": "paper",
         "yref": "paper",
-        "text": "■ <b>Projected</b> (estimated IBNR)",
+        "text": "■ <b>Projected</b> (est. IBNR)",
         "showarrow": False,
-        "font": {"size": 16, "color": "#CC7722", "family": "Arial, Helvetica, sans-serif"},
+        "font": {"size": 10, "color": ANYPLOT_AMBER, "family": "Arial, sans-serif"},
         "xanchor": "left",
     }
 )
 
-# Style
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "heatmap-loss-triangle · plotly · pyplots.ai",
-        "font": {"size": 28, "family": "Arial, Helvetica, sans-serif", "color": "#1a1a2e"},
+        "text": "heatmap-loss-triangle · python · plotly · anyplot.ai",
+        "font": {"size": 16, "family": "Arial, sans-serif", "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
     },
     xaxis={
-        "title": {"text": "Development Period (Years)", "font": {"size": 22, "color": "#2c3e50"}},
-        "tickfont": {"size": 17, "color": "#34495e"},
+        "title": {"text": "Development Period (Years)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": list(range(n_periods)),
         "ticktext": [str(p) for p in development_periods],
         "side": "bottom",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Accident Year", "font": {"size": 22, "color": "#2c3e50"}},
-        "tickfont": {"size": 17, "color": "#34495e"},
+        "title": {"text": "Accident Year", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": list(range(n_years)),
         "ticktext": [str(y) for y in accident_years],
         "autorange": "reversed",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     shapes=shapes,
     annotations=annotations,
-    margin={"l": 140, "r": 100, "t": 120, "b": 140},
-    paper_bgcolor="#fafafa",
-    plot_bgcolor="#fafafa",
+    margin={"l": 70, "r": 95, "t": 100, "b": 100},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
