@@ -1,3 +1,7 @@
+// anyplot.ai
+// waveform-audio: Audio Waveform Plot
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-03
 //# anyplot-orientation: landscape
 // anyplot.ai
 // waveform-audio: Audio Waveform Plot
