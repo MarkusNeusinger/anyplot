@@ -76,11 +76,11 @@ const annotPlugin = {
     const xPx = scales.x.getPixelForValue(unknownConc);
     const yPx = scales.y.getPixelForValue(unknownAbs);
     ctx.fillStyle = t.palette[4];
-    ctx.font = `bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.font = `bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.textAlign = 'left';
     ctx.fillText(`A = ${unknownAbs.toFixed(3)}`, left + 6, yPx - 8);
     ctx.textAlign = 'center';
-    ctx.fillText(`c = ${unknownConc.toFixed(1)} mg/L`, xPx, bottom - 10);
+    ctx.fillText(`c = ${unknownConc.toFixed(1)} mg/L`, xPx, bottom - 28);
 
     ctx.restore();
   }
@@ -212,6 +212,7 @@ new Chart(canvas, {
           stepSize: 2,
         },
         grid: { color: t.grid },
+        border: { display: false },
       },
       y: {
         min: -0.02,
@@ -228,6 +229,7 @@ new Chart(canvas, {
           stepSize: 0.1,
         },
         grid: { color: t.grid },
+        border: { display: false },
       },
     },
   },
