@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: feynman-basic
 created: '2026-06-03T06:36:29Z'
-updated: '2026-06-03T06:44:01Z'
+updated: '2026-06-03T07:18:59Z'
 generated_by: claude-sonnet
 workflow_run: 26867054632
 issue: 4667
@@ -12,39 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Perfectly correct QED physics: e⁻e⁺ annihilation → γ* → μ⁻μ⁺ with proper arrow
-    conventions (particle forward, antiparticle reversed)'
-  - Elegant wavy photon line built from multiple bezier curves — creative use of ECharts
-    graphic primitives
-  - 'Flawless theme adaptation: vertex dots use t.ink and correctly flip between black
-    (light) and white (dark); both renders fully readable'
-  - Intentional two-color hierarchy (brand green for fermions, palette blue for photon)
-    communicates particle-type semantics
-  - Process description subtitle and time axis provide strong narrative scaffolding
+  - Physics-authentic rendering with correct line styles for all four particle types
+    (wavy bezier photon, curly bezier gluon, dashed scalar boson, solid+arrow fermion)
+    — technically accurate to textbook Feynman conventions
+  - Three distinct QFT processes (QED, QCD, EW) with correct antiparticle arrow reversal
+    conventions and labeled reaction equations
+  - 'Semantically meaningful Imprint palette choices: blue (#4467A3) for EM photon,
+    lavender (#C475FD) for QCD gluon, ochre (#BD8233) for Higgs boson — physics-appropriate
+    color coding'
+  - Polished vertex highlight rings (semi-transparent color glow + solid dot) add
+    visual refinement and draw attention to interaction points
+  - Complete legend with time-axis arrow and four particle-type samples provides a
+    self-contained teaching reference
   weaknesses:
-  - Only 2 of 4 particle types shown (fermion + photon); gluon curly line and scalar
-    boson dashed line are absent — add a second small Feynman diagram panel (e.g.
-    quark-quark via gluon exchange) to demonstrate full particle-type coverage
-  - 'DE-01 below potential: design is clean but functional; add subtle semi-transparent
-    ring around each vertex dot (~18px radius) to draw the eye to interaction points;
-    increase outgoing fermion line widths slightly for visual differentiation'
-  - Corner particle labels (e⁻, e⁺, μ⁻, μ⁺) positioned within 86 CSS px of canvas
-    edges — shift inward by 40–50 CSS px each for safer mobile-scale margins
+  - 'C_GLUON and C_BOSON declarations carry wrong hex comments (`// #DE8F05 amber`
+    and `// #CC4C38 red`) — actual values are t.palette[1]=#C475FD (lavender) and
+    t.palette[3]=#BD8233 (ochre); misleading for future readers'
+  - Legend text (fontSize 19px) and QED reaction caption (fontSize 19px) are marginally
+    small for the canvas size — 22-24px would improve mobile readability
+  - Title uses fontSize 30 rather than the ECharts style-guide recommendation of 22;
+    acceptable visually but above the canonical value
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "feynman-basic · javascript · echarts · anyplot.ai" centered in dark ink (~65% width), clearly readable. Process description subtitle in secondary ink also readable. Particle labels (e⁻, e⁺, μ⁻, μ⁺) in brand green at corners — all visible but close to edges. γ* label in blue above center photon line. Legend text "fermion" and "photon (γ*)" in soft ink. Time axis label readable.
-      Data: Four fermion legs in brand green #009E73 with directional arrowheads. Virtual photon wavy line in blue #4467A3 connecting two black vertex dots. All elements clearly visible.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "feynman-basic · javascript · echarts · anyplot.ai" in dark ink (fontSize 30) — clearly readable. Panel subtitles "QED: Electron-Positron Annihilation", "QCD: Quark-Gluon Exchange", "EW: Higgs Scalar Boson H → ff̄" in medium inkSoft — readable. Particle labels (e⁻, e⁺, μ⁻, μ⁺, q, q̄, g, γ*, H, f, f̄) in respective series colors — readable. Legend labels and QED reaction caption in inkSoft — readable at canvas size, marginally small for mobile.
+      Data: Left panel — e⁻e⁺ → γ* → μ⁻μ⁺ diagram: brand green (#009E73) fermion lines with directional arrowheads, wavy blue (#4467A3) virtual photon propagator, black vertex dots with green glow rings. Right-top panel — QCD quark-gluon exchange: curly lavender (#C475FD) gluon propagator connecting two quark vertices with amber-tinted glow rings. Right-bottom panel — Higgs decay: ochre (#BD8233) dashed scalar boson line into a fermion pair. All four particle line types clearly rendered. Bottom legend with time-axis arrow.
+      Legibility verdict: PASS — all text readable against warm off-white background; no overflow or clipping
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and all text switch to light ink — clearly readable against dark surface. Particle labels remain visible. Vertex dots correctly flip to near-white (t.ink = #F0EFE8 on dark). Legend text and time axis in light secondary ink. No dark-on-dark failures.
-      Data: Fermion lines remain brand green #009E73 (identical to light render). Photon wavy line remains blue #4467A3 (identical to light render). Data colors are theme-independent as required.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in cream/light text (#F0EFE8) — clearly readable. Panel subtitles in light inkSoft (#B8B7B0) — readable. Vertex dots rendered as white/light circles (t.ink flipped to light in dark mode — correct theme-adaptive behavior). Legend labels and reaction caption in light ink — readable. Panel dividers in lighter grid tone — subtle and appropriate.
+      Data: All Imprint palette data colors identical to light render — brand green fermions, blue photon, lavender gluon, ochre Higgs boson — correct per spec (data colors must be theme-invariant, only chrome flips). No dark-on-dark issues detected.
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable against near-black background
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,75 +57,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes. Corner labels
-          close to canvas edges but all pixels visible; slight mobile-scale concern.
+        comment: All font sizes explicitly set; title (30px), panel labels (18px),
+          particle labels (22-30px), legend (19px). Legible in both themes. Legend
+          text marginally small for mobile.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, zero collisions between text, lines, and arrows.
+        comment: No overlapping elements in either render; well-spaced particle labels
+          and panel elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Fermion lines, photon waves, vertex dots, and arrowheads all well-sized
-          and clearly visible.
+        comment: All four particle line types clearly visible; appropriate line widths
+          (LW=5, LW_OUT=6.5); vertex dots prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue pairing is CVD-safe; not a red-green combination.
+        comment: CVD-safe Imprint palette; four particle types distinctly colored;
+          no red-green confusion
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; diagram fills canvas well with balanced margins.
+        comment: Canvas gate passed; three-panel layout fills canvas well; balanced
+          margins; time axis and legend well-placed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Particle labels (e⁻, e⁺, γ*, μ⁻, μ⁺) are descriptive and physically
-          correct.
+        comment: Panel titles, particle labels, reaction captions all descriptive;
+          time axis labeled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (fermions) = #009E73. Photon uses #4467A3 (palette[2])
-          — defensible semantic choice (blue for EM radiation). Background correct
-          for both themes. Data colors identical between themes.'
+        comment: 'First series (fermion) = #009E73 brand green; Imprint palette positions
+          0-3 for four particle types; backgrounds #FAF8F1 light / #1A1A17 dark; data
+          colors identical across themes; chrome correctly flips'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional color coding (green=matter, blue=force-carrier) above
-          defaults. Professional physics-diagram styling. Not yet at publication level
-          — editorial choices could be bolder.
+        comment: 'Strong design clearly above defaults: physics-authentic bezier line
+          styles, vertex highlight rings, semantic Imprint color assignments (blue=EM
+          photon, lavender=QCD gluon, ochre=Higgs), clean typography hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No unnecessary spines or grid (appropriate). Background clean, whitespace
-          generous, vertex dots theme-adapt correctly. Room to polish further.
+        comment: No axes (correct for diagram), panel dividers in t.grid color, vertex
+          glow rings, clean legend, generous whitespace between panels
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Process description narrates physics, time axis orients viewer, central
-          wavy photon creates focal point. Color hierarchy guides eye. Could be elevated
-          with vertex highlighting.
+        comment: Three-panel QED→QCD→EW narrative arc, reaction equation captions,
+          time axis arrow for physics orientation, panel subtitles contextualize each
+          process
     spec_compliance:
       score: 15
       max: 15
@@ -133,57 +139,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with vertices, propagators, and directional
-          fermion legs.
+        comment: 'Correct Feynman diagram with all four line styles: solid+arrow fermion,
+          wavy photon, curly gluon, dashed scalar boson'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct line styles (solid fermion, wavy photon), directional arrows
-          (correct particle/antiparticle convention), vertex dots, particle labels,
-          time axis.
+        comment: 'All spec features present: distinct line styles, directional arrows
+          on fermions (particle/antiparticle), vertex dots, propagator labels, time
+          axis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time runs left to right; two interaction vertices correctly placed;
-          all propagators mapped accurately.
+        comment: Three QFT processes covering all particle types; correct vertex count
+          (2 per process); physics-accurate topology
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'feynman-basic · javascript · echarts · anyplot.ai'. Legend
-          entries 'fermion' and 'photon (γ*)' match the diagram.
+        comment: 'Title: ''feynman-basic · javascript · echarts · anyplot.ai'' — correct
+          format. Legend shows all four particle line types.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: e⁻e⁺ → γ* → μ⁻μ⁺ is a complete process. Only 2 of 4 particle types
-          shown (fermion + photon); gluon and scalar boson omitted.
+        comment: All four particle types shown; both particle and antiparticle arrows
+          demonstrated; virtual and real propagators; multiple vertex types
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Electron-positron annihilation via virtual photon to muon pair is
-          canonical QED. Correct physics, neutral scientific topic.
+        comment: QED e⁻e⁺ → γ* → μ⁻μ⁺, QCD quark-gluon exchange, EW Higgs decay —
+          all physically accurate, standard textbook processes, neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2 vertices, 5 propagators — within spec range. Appropriately simple
-          for 'basic' diagram.
+        comment: Diagram coordinates well-proportioned; 6 total vertices (within spec
+          range of 2-6); layout symmetric and clean
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -191,35 +197,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Three utility functions (wavyBeziers, arrowPoints, lerp) justified
-          by diagram geometry; code otherwise flat and clear.
+        comment: Helper functions (wavyBeziers, curlyBeziers, dashedLine, arrow, lerp,
+          vertexDot) are necessary for procedural bezier generation and appropriate
+          for this diagram type
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All coordinates hardcoded; fully deterministic.
+        comment: Fully deterministic; all coordinates and parameters hardcoded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Uses only window.ANYPLOT_TOKENS and echarts global.
+        comment: No imports needed (ECharts is a global); clean code structure
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, well-organized; no fake interactivity; appropriate complexity.
+        passed: false
+        comment: 'Inaccurate hex comments: C_GLUON says ''// #DE8F05 amber'' but t.palette[1]=#C475FD
+          (lavender); C_BOSON says ''// #CC4C38 red'' but t.palette[3]=#BD8233 (ochre).
+          Code behavior is correct but comments are misleading.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false, landscape orientation directive, echarts.init
-          with no explicit size/DPR. Correct API usage.'
+        comment: Correct harness output (plot-{theme}.png and .html); animation:false;
+          no explicit size on echarts.init
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -227,27 +236,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ECharts graphic API with correct primitive types (bezierCurve,
-          polyline, polygon, circle, text). Proper token mapping.
+        comment: animation:false present; no explicit width/height on echarts.init;
+          no devicePixelRatio; correct window.ANYPLOT_TOKENS usage; backgroundColor:t.pageBg
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: ECharts graphic API for custom vector shapes is ECharts-specific.
-          Bezier-wave photon is creative. However, ECharts is used as a rendering
-          canvas rather than its data-visualization-specific features.
-  verdict: REJECTED
+        comment: Uses ECharts graphic layer (bezierCurve, polyline, polygon, circle,
+          text primitives) — distinctively ECharts approach for custom diagram rendering.
+          Drawing primitives are generic 2D graphics concepts but the graphic[] API
+          integration is ECharts-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - annotations
+  - patches
   - custom-legend
-  - html-export
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
