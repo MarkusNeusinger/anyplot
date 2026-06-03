@@ -1,0 +1,234 @@
+library: ggplot2
+language: r
+specification_id: pictogram-basic
+created: '2026-06-03T14:10:07Z'
+updated: '2026-06-03T14:26:26Z'
+generated_by: claude-sonnet
+workflow_run: 26889871751
+issue: 4674
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correct Imprint palette assignment with brand green to leading category and matte
+    red to lowest — semantically coherent
+  - 'Partial icon implementation accurate: alpha = fractional remainder of value/ICON_UNIT'
+  - Both themes render cleanly with no dark-on-dark or light-on-light failures
+  - Subtitle and bold focal emphasis on top-category value label create effective
+    data storytelling
+  - Grid-free, spine-free layout is right for a pictogram
+  - scale_alpha_identity() elegantly handles partial-icon fading
+  weaknesses:
+  - Caption font (8pt) is at the lower readable limit for the 3200x1800 canvas — increase
+    plot.caption size to 9pt in theme()
+  - Design is clean-and-correct but not visually inventive — no additional flourish
+    beyond icon grid and color assignment limits DE-01 ceiling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "pictogram-basic · r · ggplot2 · anyplot.ai" bold in dark ink (12pt); subtitle in muted ink (9pt); y-axis category labels in dark ink (10pt); value labels in muted ink; caption in tertiary muted text (8pt). All readable.
+      Data: 5-row × 8-column icon grid. Apples (green #009E73), Grapes (lavender #C475FD), Oranges (blue #4467A3), Mangoes (ochre #BD8233), Strawberries (matte red #AE3030). Empty slots shown as muted ring outlines. Partial icons faded via alpha. Value labels right-aligned with bold "38 kt" for top category.
+      Legibility verdict: PASS — all text readable; first data series is #009E73 (brand green) ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle flip to off-white light ink; category labels and value labels use light ink tokens. No dark-on-dark failures observed. Caption in tertiary muted light text, legible. All chrome elements correctly theme-adaptive.
+      Data: Colors identical to light render — green, lavender, blue, ochre, and matte red are unchanged across themes. Empty rings and partial icons remain visible on dark background. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; caption at 8pt is slightly small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; value labels safely positioned right of icon grid
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Full, partial, and empty icons all clearly visible; size=5 appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; five distinct hue families
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas; good proportions; no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; caption explains icon unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green for leading category; Imprint positions 2-5 in order;
+          correct backgrounds
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: data-driven color assignment, bold focal emphasis
+          on leader, clean subtitle narrative'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid-free, spine-free; generous margins; ring outlines serve as scale
+          indicators without clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle states key insight with ratio; bold top-category label;
+          descending rank order reads naturally
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct isotype/pictogram with repeated circle icons in rows ordered
+          by value
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent unit, partial icons, grid-like rows, left-axis labels,
+          unit caption
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 5 categories with correct values; all data accurately represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; caption replaces legend effectively
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full icons, partial icons, empty placeholders, value annotations,
+          color coding, unit legend all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production (thousand tons) — real-world plausible and neutral;
+          5 categories within recommended range
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 12-38 kt realistic; ICON_UNIT=5 produces sensible 2-8 icon
+          range per row
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; straightforward sequential script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: lapply for grid, setNames for color_map, ifelse in aes — all idiomatic
+          R
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with ragg device; no bare plot.png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-layer geom_point; scale_alpha_identity; scale_color_manual
+          with named vector; factor levels for y-axis ordering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition for background/foreground geometry; aes(fontface=fontface)
+          for conditional bold; scale_alpha_identity for partial icons
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
