@@ -1,0 +1,238 @@
+library: echarts
+language: javascript
+specification_id: spectrum-nmr
+created: '2026-06-03T12:24:30Z'
+updated: '2026-06-03T12:45:39Z'
+generated_by: claude-sonnet
+workflow_run: 26883742161
+issue: 4676
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Scientifically accurate Lorentzian peak simulation with correct J-coupling constants
+    and 1:2:1 / 1:3:3:1 intensity ratios for triplet/quartet
+  - Both themes render correctly with proper token usage — no dark-on-dark or light-on-light
+    failures
+  - 'Full spec compliance: reversed x-axis, TMS reference, all required splitting
+    patterns and peak labels'
+  - Clean NMR-appropriate styling (hidden y-axis tick labels, subtle grid, gradient
+    fill)
+  weaknesses:
+  - markPoint annotation fontSize (13) is slightly small for mobile readability; consider
+    increasing to 15
+  - 'DE-02: Visual refinement could be stronger — consider hiding the x-axis spine
+    line for a fully floating spectrum look common in scientific NMR plots'
+  - 'LM-02: markLine could enhance storytelling by adding a horizontal zero-intensity
+    baseline marker; tooltip (present in interactive HTML output) could show exact
+    ppm/intensity on hover'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "spectrum-nmr · javascript · echarts · anyplot.ai" in dark ink, centered, clearly readable. X-axis label "Chemical Shift (ppm)" visible at bottom. Y-axis label "Intensity (a.u.)" rotated on left, readable. X-axis tick labels (4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5, 0, -0.5) in dark soft ink, readable. Y-axis tick labels hidden (intentional NMR style). Peak annotations (CH₂, CH₃, OH, TMS) in dark ink, all readable.
+      Data: Brand green (#009E73) NMR spectrum line with subtle gradient fill. Four peak groups visible: CH₂ quartet ~3.69 ppm (tallest), CH₃ triplet ~1.17 ppm (tall), OH broad singlet ~2.61 ppm (medium), TMS singlet ~0.00 ppm (small). Reversed x-axis correct (high ppm on left).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, and peak annotations all appear in off-white/light text, clearly readable against the dark background. No dark-on-dark failures observed. Dashed grid lines visible and subtle.
+      Data: Brand green (#009E73) spectrum line is identical to light render — data colors unchanged, only chrome flips. All peak groups equally visible on dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title (22px), axis labels (16px), tick labels (14px) readable in
+          both themes. markPoint fontSize 13 slightly small but acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak labels well-spaced, no collisions between labels or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All Lorentzian peaks sharp and clearly visible; gradient fill is
+          subtle and non-obscuring.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series brand green #009E73, CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; generous margins, balanced layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) and Intensity (a.u.) with units; correct title
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'palette[0] (#009E73) as first series; #FAF8F1 light / #1A1A17 dark
+          backgrounds correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Scientifically accurate Lorentzian peaks with J-coupling; gradient
+          fill; clean minimal approach.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-axis hidden for NMR style; subtle dashed grid; could further remove
+          x-axis spine line.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: markPoint annotations identify chemical groups; peak height ratios
+          communicate proton count.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum as line plot with reversed x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: X-axis reversed, sharp Lorentzian peaks, triplet/quartet splitting,
+          peak labels, TMS reference, clean baseline.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chemical shift on x (reversed), intensity on y; all four groups visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is spectrum-nmr · javascript · echarts · anyplot.ai; no legend
+          needed for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Baseline, TMS reference, triplet/quartet/singlet patterns, correct
+          intensity ratios, broad OH peak.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR at 300 MHz — scientifically accurate and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 3001 data points in spec range; -0.5 to 4.5 ppm appropriate for ethanol;
+          realistic amplitudes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single lorentz() helper justified for DRY physics; rest is flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; hardcoded physics constants.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses browser globals correctly.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false; echarts.init without explicit size; no devicePixelRatio.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct patterns: animation: false, showSymbol: false, type: value
+          axes, areaStyle with token mapping.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses markPoint, areaStyle gradient, inverse axis. Could use markLine
+          for baseline or emphasis styling.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
