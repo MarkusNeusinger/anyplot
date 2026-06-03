@@ -1,0 +1,241 @@
+library: highcharts
+language: python
+specification_id: waveform-audio
+created: '2026-06-03T01:19:29Z'
+updated: '2026-06-03T01:38:48Z'
+generated_by: claude-sonnet
+workflow_run: 26857611677
+issue: 4563
+language_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Syllable band overlays (plotBands) are a high-quality design choice that immediately
+    communicates speech structure to the viewer
+  - Min/max envelope downsampling (1500 windows x 2 samples) correctly handles the
+    88200-sample waveform without aliasing artifacts
+  - 'Complete theme-adaptive chrome: all INK, INK_SOFT, GRID tokens applied throughout
+    — both renders look correct'
+  - Both PNG and HTML artifacts saved correctly; CDP + PIL belt-and-braces ensures
+    exact 3200x1800 output
+  - Acoustically realistic synthetic data (harmonics, hanning envelopes, noise floor,
+    silence gap)
+  weaknesses:
+  - 'Y-axis range is ±0.8 instead of the spec-mandated ±1.0 — fix: set min: -1.0,
+    max: 1.0, tickInterval: 0.5 on y_axis'
+  - LM-02 could be stronger — no use of Highcharts-specific advanced features beyond
+    plotBands/plotLines; consider Highcharts Boost module or navigator for dense waveform
+    data
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Speech Waveform · waveform-audio · python · highcharts · anyplot.ai" in bold dark ink, spans ~75% canvas width; subtitle in INK_SOFT (muted dark); axis labels "Time (seconds)" and "Amplitude" in dark INK at 56px; tick labels in INK_SOFT at 44px — all readable
+      Data: Brand green #009E73 area fill with 40% opacity; two syllable bands in rgba(0,158,115,0.09) highlight voiced regions 0.15-0.65s and 0.85-1.55s; zero reference line clearly visible; dense waveform with two syllable peaks and silence gap
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels shift to light cream F0EFE8; tick labels and subtitle shift to B8B7B0; all text clearly readable against dark background; no dark-on-dark failures detected
+      Data: Waveform color identical to light render — brand green #009E73 unchanged; syllable bands slightly more saturated (rgba(0,158,115,0.13)) but tasteful; zero line visible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized; dynamically scaled title; both renders
+          readable; subtitle at 40px is at low end
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; syllable bands do not obscure labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Min/max envelope rendering produces clean dense waveform; fillOpacity
+          0.40 appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series brand green; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed; generous margins; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome tokens
+          theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Syllable bands add narrative; subtitle and dynamic title scaling
+          show care; still within standard area-chart conventions
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Semi-transparent fill, subtle grid tokens, zero reference line, clean
+          axis presentation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Syllable bands highlight voiced regions; silence gap immediately
+          visible; subtitle reinforces narrative
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Area series with threshold:0 produces mirrored filled waveform as
+          specified
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Semi-transparent fill, zero line, time axis, synthetic data, envelope
+          rendering all present; y-axis range is +-0.8 not +-1.0 as spec requires
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time in seconds, Y=normalized amplitude; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format with descriptive prefix; legend disabled for
+          single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two syllables, harmonic structure, silence gap, noise floor, hanning
+          envelopes all demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: F0=130 Hz typical male voice; 44100 Hz sample rate; acoustically
+          realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized amplitude domain; 2s duration; standard audio sample rate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Min/max envelope algorithm clear; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; CDP+PIL ensures exact
+          3200x1800
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Chart(container), HighchartsOptions, AreaSeries, CDN-inline embedding,
+          CDP viewport override all correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotBands and plotLines are Highcharts-specific; bidirectional fill
+          via threshold:0; could use Boost module or navigator for denser signal work
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending

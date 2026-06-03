@@ -1,0 +1,247 @@
+library: ggplot2
+language: r
+specification_id: waveform-audio
+created: '2026-06-03T01:20:06Z'
+updated: '2026-06-03T01:36:59Z'
+generated_by: claude-sonnet
+workflow_run: 26857738559
+issue: 4563
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - geom_ribbon(aes(ymin=pmin(amplitude,0), ymax=pmax(amplitude,0))) is the idiomatic
+    ggplot2 pattern for waveform visualization — splits the ribbon at the zero line
+    elegantly
+  - Seismic P-wave/S-wave application with annotated arrival markers adds meaningful
+    context and data storytelling well above a generic demo
+  - 'Perfect spec compliance: all required features present (zero-line, semi-transparent
+    fill, correct normalized axes, synthetic data)'
+  - Flawless theme adaptation — every chrome element uses the correct INK/INK_SOFT/INK_MUTED
+    token; dark render has no dark-on-dark failures
+  - Dynamic title size formula (max(8, round(12 * 67 / nchar(title)))) handles the
+    long descriptive prefix correctly
+  weaknesses:
+  - 'Title size floor is 8pt — computed size for this title is 11pt which is only
+    1pt above the 10pt axis labels; minimal visual hierarchy. Raise the floor to 12pt:
+    max(12L, round(14 * 67 / nchar(plot_title))) so the title is always clearly dominant'
+  - 'Grid rendered with INK_MUTED at full opacity on dark background (#A8A79F on #1A1A17)
+    gives slightly more contrast than ideal. Consider a darker shade e.g. ''#5A5A52''
+    for the dark-theme grid to reduce prominence (ggplot2 cannot use alpha for grid
+    lines)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title 'Seismic P-wave & S-wave Arrivals · waveform-audio · r · ggplot2 · anyplot.ai' in dark ink (#1A1A17) at computed 11pt — readable. Axis labels 'Time (s)' and 'Normalized Amplitude' at 10pt — clearly readable. Tick labels at 8pt — readable. P and S bold annotations in dark ink at y=0.90 — readable above waveform peaks.
+      Data: Brand green #009E73 filled ribbon (alpha=0.78) shows quiet pre-P noise, moderate P-wave packet, dominant S-wave burst, and decaying coda. Zero-line horizontal rule visible. Dashed vertical line at P arrival, dot-dash vertical line at S arrival.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in cream #F0EFE8 — clearly readable against dark background. Axis labels in #F0EFE8 — readable. Tick labels in #B8B7B0 — readable. P and S annotations in cream — readable. Grid lines in #A8A79F — slightly more prominent on dark vs light (expected ggplot2 limitation — no alpha for grid), but not overwhelming.
+      Data: Brand green #009E73 ribbon identical to light render — vibrant and highly visible on dark surface. All data colors match light render exactly.
+      Legibility verdict: PASS — no dark-on-dark failures observed
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title at 11pt vs 10pt axis labels
+          creates narrow but present hierarchy
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: P/S annotations at y=0.90 are above waveform peaks; no collision
+          with data or other text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8000-sample ribbon with alpha=0.78 is density-appropriate; waveform
+          prominent in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series; P/S distinguished by line style and label,
+          not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); generous margins; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) and Normalized Amplitude are descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both renders
+          theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: purposeful seismic application with annotated P/S
+          arrivals shows intentional design; clean typography; but single-color ribbon
+          is visually simple'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Good: axis ticks removed, minor grid disabled, panel border removed
+          with L-frame axis lines, subtle major grid'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear narrative: quiet pre-P noise to P-wave to dominant S-wave
+          to coda; vertical reference lines guide viewer'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled-area waveform symmetric around zero using geom_ribbon
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill, zero-line reference, time on x-axis, normalized
+          amplitude -1 to +1, synthetic data — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time in seconds on X, normalized amplitude on Y, y-limits +-1.05
+          show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title uses optional descriptive prefix + correct format; no legend
+          needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Waveform shows filled area, zero-line, amplitude envelope dynamics,
+          P/S annotations, and coda
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Seismic P-wave/S-wave arrivals is a canonical waveform application
+          listed in spec; realistic decay envelopes
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8000 samples over 2 s at realistic amplitudes normalized to [-0.92,
+          0.92]
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat linear script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean structure; dynamic title size formula is elegant; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave with ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent: geom_ribbon with pmin/pmax is the idiomatic ggplot2 pattern
+          for split-fill waveforms; expansion(), annotate(), and theme layer composition
+          all correct'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of layer composition and expansion() but no particularly
+          advanced ggplot2 capability beyond standard geoms
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
