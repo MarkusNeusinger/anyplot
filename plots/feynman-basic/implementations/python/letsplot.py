@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -96,7 +96,7 @@ vertex_df = pd.DataFrame(
 labels_df = pd.DataFrame(
     {
         "x": [0.03, 0.03, (v1x + v2x) / 2, 0.97, 0.97, 0.97],
-        "y": [v1y + ext + 0.02, v1y - ext - 0.02, v1y + 0.065, v3y + 0.15, v3y + gluon_dy + 0.02, v1y - ext - 0.02],
+        "y": [v1y + ext + 0.02, v1y - ext - 0.02, v1y + 0.065, v3y + 0.15, v3y + gluon_dy + 0.06, v1y - ext - 0.02],
         "label": ["e⁻", "e⁺", "Z*", "q", "g", "q̅"],
         "fill": [ELEVATED_BG] * 6,
     }
@@ -107,7 +107,7 @@ time_df = pd.DataFrame({"x": [0.23], "xend": [0.63], "y": [0.10], "yend": [0.10]
 time_lbl = pd.DataFrame({"x": [0.43], "y": [0.055], "label": ["time"]})
 
 # Legend (consolidated: one DataFrame per line type, one text DataFrame)
-leg_x0, leg_len = 0.06, 0.065
+leg_x0, leg_len = 0.09, 0.065
 leg_top, leg_dy = 0.97, 0.054
 
 leg_fermion = pd.DataFrame({"x": [leg_x0], "xend": [leg_x0 + leg_len], "y": [leg_top], "yend": [leg_top]})
@@ -186,10 +186,11 @@ plot = (
         data=labels_df,
         mapping=aes(x="x", y="y", label="label", fill="fill"),
         size=22,
-        color=INK,
+        color=INK_SOFT,
         fontface="italic",
         label_padding=0.2,
         label_r=0.15,
+        label_size=0.3,
         alpha=0.92,
     )
     + scale_fill_identity()
@@ -221,7 +222,7 @@ plot = (
     + geom_path(data=leg_gluon, mapping=aes(x="x", y="y", group="grp"), size=1.8, color=GLUON_COLOR)
     + geom_text(data=leg_text, mapping=aes(x="x", y="y", label="label"), size=10, color=INK_SOFT, hjust=0)
     # Reaction equation — bold focal point showing the full QED+QCD process
-    + geom_text(data=eq_df, mapping=aes(x="x", y="y", label="label"), size=18, color=INK, fontface="bold")
+    + geom_text(data=eq_df, mapping=aes(x="x", y="y", label="label"), size=13, color=INK, fontface="bold")
     + coord_fixed(ratio=0.5625)
     + xlim(-0.02, 1.08)
     + ylim(0.02, 1.05)
