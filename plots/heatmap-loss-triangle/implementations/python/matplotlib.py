@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -71,13 +71,13 @@ cbar.set_label("Cumulative Claims ($)", fontsize=8, color=INK)
 cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
 cbar.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:,.0f}"))
 cbar.outline.set_edgecolor(INK_SOFT)
-plt.setp(plt.getp(cbar.ax, "yticklabels"), color=INK_SOFT)
 
-# Hatching overlay on projected cells
+# Hatching overlay on projected cells — theme-adaptive hatch color for visibility in dark mode
+hatch_color = INK_SOFT if THEME == "dark" else PAGE_BG
 for i in range(n_years):
     for j in range(n_periods):
         if is_projected[i, j] and not np.isnan(triangle[i, j]):
-            rect = Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, hatch="///", edgecolor=PAGE_BG, linewidth=0)
+            rect = Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, hatch="///", edgecolor=hatch_color, linewidth=0)
             ax.add_patch(rect)
 
 # Cell borders
@@ -86,7 +86,9 @@ for i in range(n_years + 1):
 for j in range(n_periods + 1):
     ax.axvline(j - 0.5, color=PAGE_BG, linewidth=1.0)
 
-# Cell annotations with brightness-adaptive text color
+# Cell annotations — brightness-adaptive text color with dark-mode correction
+# All imprint_seq colors have brightness < 0.5, so use PAGE_BG (light) in light mode
+# and INK (cream) in dark mode to ensure readable contrast on dark cells
 for i in range(n_years):
     for j in range(n_periods):
         val = triangle[i, j]
@@ -95,7 +97,10 @@ for i in range(n_years):
         norm_val = (val - vmin) / (vmax - vmin)
         rgba = imprint_seq(norm_val)
         brightness = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
-        text_color = PAGE_BG if brightness < 0.5 else INK
+        if brightness < 0.5:
+            text_color = PAGE_BG if THEME == "light" else INK
+        else:
+            text_color = INK if THEME == "light" else PAGE_BG
         fontstyle = "italic" if is_projected[i, j] else "normal"
         ax.text(
             j,
@@ -109,6 +114,16 @@ for i in range(n_years):
             fontweight="medium",
         )
 
+# Staircase diagonal — focal-point boundary between actual (upper-left) and projected (lower-right)
+# Starts at (n_periods-0.5, 0.5) and steps down-left to (0.5, n_years-0.5)
+diag_xs = [n_periods - 0.5]
+diag_ys = [0.5]
+for i in range(1, n_years):
+    x_boundary = (n_periods - i) - 0.5
+    diag_xs.extend([x_boundary, x_boundary])
+    diag_ys.extend([i - 0.5, i + 0.5])
+ax.plot(diag_xs, diag_ys, color=INK_SOFT, linewidth=2.5, zorder=5, alpha=0.8, solid_capstyle="butt")
+
 # Axes styling
 title = "heatmap-loss-triangle · python · matplotlib · anyplot.ai"
 n_chars = len(title)
@@ -121,13 +136,13 @@ ax.set_yticks(range(n_years))
 ax.set_yticklabels(accident_years, fontsize=8, color=INK_SOFT)
 ax.set_xlabel("Development Period (Years)", fontsize=10, color=INK, labelpad=8)
 ax.set_ylabel("Accident Year", fontsize=10, color=INK, labelpad=6)
-ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=30)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=20)
 ax.tick_params(axis="both", length=0, colors=INK_SOFT)
 
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-# Development factors on a twin x-axis at the top (after colorbar to avoid layout conflict)
+# Development factors on a twin x-axis at the top
 ax_top = ax.twiny()
 ax_top.set_xlim(ax.get_xlim())
 ax_top.set_xticks([j + 1 for j in range(len(dev_factors))])
@@ -140,7 +155,7 @@ for spine in ax_top.spines.values():
 # Legend below the heatmap
 legend_elements = [
     Patch(facecolor=imprint_seq(0.55), edgecolor=PAGE_BG, label="Actual (Observed)"),
-    Patch(facecolor=imprint_seq(0.55), edgecolor=PAGE_BG, hatch="///", label="Projected (IBNR)"),
+    Patch(facecolor=imprint_seq(0.55), edgecolor=hatch_color, hatch="///", label="Projected (IBNR)"),
 ]
 leg = ax.legend(
     handles=legend_elements,
@@ -154,7 +169,7 @@ leg = ax.legend(
 )
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-fig.subplots_adjust(left=0.10, bottom=0.14, top=0.90)
+fig.subplots_adjust(left=0.10, bottom=0.14, top=0.92)
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
