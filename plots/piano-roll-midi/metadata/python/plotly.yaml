@@ -1,89 +1,105 @@
 library: plotly
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:50:15Z'
-updated: '2026-03-07T20:25:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912224
+updated: '2026-06-03T03:36:47Z'
+generated_by: claude-sonnet
+workflow_run: 26861629668
 issue: 4565
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - 'Excellent musical data choice: I-V-vi-IV progression with realistic voicings
-    and dynamics'
-  - 'Effective visual hierarchy: melody notes clearly distinguished from accompaniment
-    via height and opacity'
-  - 'Rich contextual annotations: measure numbers, chord labels, and descriptive axis
-    labels'
-  - Smart use of invisible scatter for Plotly hover tooltips with detailed note information
-  - Clean Plasma colorscale mapping velocity to color with proper colorbar
+  - 'Perfect spec compliance: all piano roll features implemented correctly (note
+    rectangles, velocity coloring, keyboard row shading, beat/measure grid, note names
+    on Y-axis, auto-fit pitch range)'
+  - 'Multi-layered visual encoding: velocity->color, melody role->note height+opacity,
+    key type->background shading -- each channel adds non-redundant information'
+  - Authentic DAW-style aesthetics with measure labels, chord annotations, and keyboard
+    row context
+  - 'Expert Plotly pattern: invisible scatter trace used to attach both colorbar and
+    per-note hover tooltips to shape-based note rectangles'
+  - Complete theme adaptation in both renders -- no dark-on-dark or light-on-light
+    failures
   weaknesses:
-  - Tick font size at 15pt is slightly below the 16pt guideline
-  - Very short notes (0.25 beats) appear quite narrow and could benefit from a minimum
-    visual width
-  image_description: The plot displays a MIDI piano roll visualization with horizontal
-    rectangles representing musical notes across 4 measures of a C major chord progression
-    (I-V-vi-IV). The y-axis shows pitch as MIDI note names (A2 through G5), and the
-    x-axis shows beat position in Measure.Beat format (M1.1 through M5.1). Notes are
-    colored using the Plasma colorscale — deep blue/purple for soft velocities (~68)
-    through pink/orange to bright yellow for loud velocities (~120). Melody notes
-    (highest pitch at each onset) appear taller and more opaque than accompaniment
-    notes. Subtle gray bands mark black key rows. Solid vertical lines separate measures,
-    with dotted lines at beat subdivisions. "Measure 1-4" labels appear at top, chord
-    names (C maj, G maj, A min, F maj) below the plot. A vertical colorbar on the
-    right shows the Velocity (MIDI 0-127) scale. The background is a clean near-white
-    with the plotly_white template.
+  - 'Velocity colorscale uses custom 2-stop Imprint-color gradient (#4467A3->#AE3030)
+    instead of an approved imprint_seq or imprint_div scale. For full compliance,
+    use a reversed imprint_div with theme-adaptive midpoint: VEL_SCALE = [[0.0, "#4467A3"],
+    [0.5, ELEVATED_BG], [1.0, "#AE3030"]] -- maintains blue=soft->red=loud direction
+    while conforming to the Imprint diverging colormap structure.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) -- correct theme surface
+      Chrome: Title "piano-roll-midi · python · plotly · anyplot.ai" in dark ink, clearly readable at ~70% canvas width. Y-axis label "Pitch (MIDI Note Name)" and X-axis label "Beat Position (Measure.Beat)" in dark text. Tick labels (A2 through G5 on Y; M1.1-M5.1 on X) in dark secondary text. Measure number annotations ("Measure 1"-"Measure 4") and chord labels ("C maj", "G maj", "A min", "F maj") in muted dark text. All text readable.
+      Data: Note rectangles colored blue (#4467A3) to red (#AE3030) by velocity. Melody notes are taller (height=0.42) and more opaque (0.95) than accompaniment notes (height=0.32, opacity=0.72). Background alternating row shading for black keys. Vertical measure boundary lines (stronger) and beat dotted lines (lighter). Velocity colorbar on right with elevated-background box.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) -- correct dark theme surface
+      Chrome: Title in light off-white (#F0EFE8), clearly readable against dark background. Axis labels in light text. Tick labels in light secondary text (#B8B7B0). Measure and chord annotations in light muted text. Colorbar shows light text. No dark-on-dark failures detected.
+      Data: Note rectangle colors identical to light render -- same blue-to-red velocity gradient. Background row shading visible as subtle dark-on-dark stripes. All data elements distinguishable against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28pt, labels 22pt, ticks
-          15pt). Tick fonts slightly under 16pt guideline.
+        comment: All font sizes explicitly set (title 16px, axis labels 12px, tick
+          labels 10px). Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Y-axis labels well-spaced by showing every other
-          white key.
+        comment: No overlap between note rectangles, labels, tick labels, measure
+          headers, or chord annotations.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Note rectangles clearly visible. Melody notes taller/bolder. Some
-          very short notes (0.25 beats) are narrow.
+        comment: Notes clearly visible; melody notes taller and more opaque than accompaniment
+          notes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Plasma colorscale is perceptually uniform and colorblind-safe.
+        comment: Blue-to-red gradient has luminance variation, not a red-green issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins and properly positioned
-          colorbar.
+        comment: 3200x1800 confirmed. ~75% canvas width used. Balanced margins. Colorbar
+          positioned well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Pitch (MIDI Note Name) and Beat
-          Position (Measure.Beat).'
+        comment: 'Y: Pitch (MIDI Note Name), X: Beat Position (Measure.Beat), colorbar:
+          Velocity (MIDI 0-127). All descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). Chrome theme-adaptive. But
+          velocity colorscale [[0, #4467A3], [1, #AE3030]] is custom -- neither imprint_seq
+          nor imprint_div. Should use reversed imprint_div with theme-adaptive midpoint.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -91,22 +107,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: Plasma palette, black key shading, melody/accompaniment
-          distinction, Arial Black title.'
+        comment: Multi-layered encoding (color=velocity, height=melody role, row shading=key
+          type). DAW-authentic aesthetic. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle dotted beat lines, faint pitch lines,
-          appropriate measure boundary weight.
+        comment: Custom shape-based grid, differentiated measure vs. beat lines, styled
+          colorbar. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: melody prominence, chord labels, measure annotations,
-          velocity dynamics.'
+        comment: Melody/accompaniment visual hierarchy. Chord labels + measure numbers
+          guide viewer through harmonic structure.
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles by pitch and time.
+        comment: 'Correct piano roll: grid-based, horizontal note rectangles, pitch
+          Y-axis, time X-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: note names, key shading, beat/measure
-          grid, velocity color, auto-fit range.'
+        comment: 'All spec features: note rectangles, velocity color, black-key row
+          shading, beat/measure grid, note names, auto-fit range.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch, length=duration, color=velocity. All correct.
+        comment: 'X: beat position, Y: MIDI pitch, color: velocity, width: note duration
+          -- all correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Colorbar serves as velocity legend.
+        comment: 'Title: piano-roll-midi · python · plotly · anyplot.ai. Velocity
+          colorbar correctly labeled.'
     data_quality:
       score: 15
       max: 15
@@ -145,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Chord voicings, melodic lines, varied rhythms, wide velocity range,
-          multiple durations.
+        comment: Wide pitch range, varying durations, varying velocities, melodic
+          and chordal content, 4 chord qualities, 4 measures.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: I-V-vi-IV in C major is a real, recognizable musical pattern with
-          coherent voice leading.
+        comment: Real C major chord progression (I-V-vi-IV). Correct MIDI note numbers.
+          Musically plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic MIDI range (A2-G5), velocities (68-120), 4 measures of
-          4/4.
+        comment: Velocity 68-120 realistic. Note durations represent eighth to half
+          notes. MIDI pitch A2-G5 realistic for piano.
     code_quality:
       score: 10
       max: 10
@@ -170,33 +189,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, figure, shapes, layout, save.'
+        comment: 'Linear: imports -> theme tokens -> data -> shapes/layout -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded note data.
+        comment: All data hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used.
+        comment: os, sys, numpy, plotly.graph_objects -- all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean melody classification, appropriate complexity for the visualization.
+        comment: Clean, Pythonic. sys.path workaround necessary and commented. Shape
+          loops inherent to chart type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 and plot.html with CDN.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -204,15 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure with shapes, annotations, scatter for hover.
-          Shape layering properly used.
+        comment: 'Strong: go.Figure() + add_shape() for rectangles, invisible go.Scatter
+          for colorbar+hover, add_annotation() for labels, layer for z-ordering.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Invisible scatter for hover tooltips, HTML export, colorbar integration,
-          shape layering.
+        comment: HTML export with rich HTML hover tooltips. Invisible scatter + colorbar
+          pattern is Plotly-specific. layer parameter for shape z-ordering.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -220,15 +241,12 @@ impl_tags:
   - colorbar
   - annotations
   - hover-tooltips
-  - manual-ticks
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
   - edge-highlighting
