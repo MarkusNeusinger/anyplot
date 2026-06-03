@@ -3,7 +3,7 @@ title: Actuarial Loss Development Triangle
 
 # Specification tracking
 created: "2026-03-06T19:53:43Z"
-updated: null
+updated: "2026-06-03T17:28:45Z"
 issue: 4581
 suggested: MarkusNeusinger
 
@@ -16,6 +16,7 @@ tags:
     - matrix
   domain:
     - finance
+    - insurance
   features:
     - annotated
     - color-mapped
