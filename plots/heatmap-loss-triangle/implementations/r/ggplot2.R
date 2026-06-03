@@ -28,12 +28,12 @@ pct_paid <- c(0.40, 0.65, 0.80, 0.88, 0.93, 0.96, 0.98, 0.990, 0.995, 1.000)
 # Ultimate claims per accident year (in $M)
 ultimates <- c(42.5, 38.2, 51.3, 47.8, 55.1, 49.6, 61.2, 57.4, 63.8, 68.5)
 
-# Age-to-age development factors
+# Age-to-age development factors (period p -> period p+1)
 ata_factors <- pct_paid[2:10] / pct_paid[1:9]
-ata_str     <- paste(
-  "Age-to-Age Factors:",
-  paste(sprintf("%.3f", ata_factors), collapse = " → ")
-)
+
+# y-axis levels: accident years + ATA row at bottom
+y_levels <- c(as.character(accident_years), "ATA Factor")
+y_limits <- c("ATA Factor", rev(as.character(accident_years)))
 
 # Build full 10 x 10 triangle grid
 df <- expand.grid(
@@ -52,22 +52,43 @@ df <- expand.grid(
     ),
     label   = sprintf("$%.1fM", cumulative),
     dev_fac = factor(dev_period, levels = 1:10),
-    acc_fac = factor(accident_year, levels = 2015:2024)
+    acc_fac = factor(as.character(accident_year), levels = y_levels)
   )
 
-df_proj    <- filter(df, !is_actual)
-year_order <- rev(levels(df$acc_fac))  # oldest (2015) at top
+df_proj <- filter(df, !is_actual)
+
+# ATA factor row: background tiles and text annotations
+df_ata_bg <- data.frame(
+  acc_fac = factor(rep("ATA Factor", 10), levels = y_levels),
+  dev_fac = factor(1:10, levels = 1:10)
+)
+
+# ATA factors at periods 2-10 (multiplicative factor from prior period)
+df_ata <- data.frame(
+  acc_fac = factor(rep("ATA Factor", 9), levels = y_levels),
+  dev_fac = factor(2:10, levels = 1:10),
+  label   = sprintf("×%.3f", ata_factors)
+)
+
+# Semi-transparent red tint for projected cells (~15% opacity) + opaque border
+proj_fill <- "#AE303026"
 
 # Plot
 p <- ggplot(df, aes(x = dev_fac, y = acc_fac)) +
-  # All cells: colored by cumulative claims (Imprint sequential: green -> blue)
+  # ATA factor row: muted elevated background
+  geom_tile(data = df_ata_bg,
+            fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.1) +
+  # Main triangle: colored by cumulative claims (Imprint sequential: green -> blue)
   geom_tile(aes(fill = cumulative), color = INK_SOFT, linewidth = 0.15) +
-  # Projected cells: red border to distinguish IBNR estimates from actual
+  # Projected cells: semi-transparent red tint + opaque border for stronger contrast
   geom_tile(data = df_proj,
-            fill = NA, color = "#AE3030", linewidth = 0.5) +
+            fill = proj_fill, color = "#AE3030", linewidth = 0.5) +
   # Cell value labels
   geom_text(aes(label = label),
-            color = "white", size = 1.8, fontface = "bold") +
+            color = "white", size = 2.2, fontface = "bold") +
+  # ATA factor annotations in bottom row
+  geom_text(data = df_ata, aes(label = label),
+            color = INK_MUTED, size = 1.8) +
   # Imprint sequential colormap: brand green -> blue
   scale_fill_gradient(
     low    = "#009E73",
@@ -75,14 +96,13 @@ p <- ggplot(df, aes(x = dev_fac, y = acc_fac)) +
     name   = "Claims ($M)",
     labels = function(x) sprintf("%.0f", x)
   ) +
-  # Oldest accident year at top (actuarial convention)
-  scale_y_discrete(limits = year_order) +
+  # Oldest accident year at top (actuarial convention); ATA row at bottom
+  scale_y_discrete(limits = y_limits) +
   labs(
-    title    = "heatmap-loss-triangle · r · ggplot2 · anyplot.ai",
-    subtitle = ata_str,
-    x        = "Development Period (Years)",
-    y        = "Accident Year",
-    caption  = "▪ Actual (observed)   ▫ Projected / IBNR estimate (red border)"
+    title   = "heatmap-loss-triangle · r · ggplot2 · anyplot.ai",
+    x       = "Development Period (Years)",
+    y       = "Accident Year",
+    caption = "▪ Actual (observed)   ▫ Projected / IBNR estimate (red tint + border)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -92,7 +112,6 @@ p <- ggplot(df, aes(x = dev_fac, y = acc_fac)) +
     axis.title        = element_text(color = INK,       size = 10),
     axis.text         = element_text(color = INK_SOFT,  size = 8),
     plot.title        = element_text(color = INK,       size = 12, face = "bold"),
-    plot.subtitle     = element_text(color = INK_MUTED, size = 7),
     plot.caption      = element_text(color = INK_MUTED, size = 7, hjust = 0),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT,  size = 8),
