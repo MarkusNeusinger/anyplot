@@ -1,63 +1,80 @@
-""" pyplots.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-10
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-06-03
 """
 
-import altair as alt
-import pandas as pd
+import importlib
+import os
+import sys
 
+
+# Drop script dir from sys.path so `altair` resolves to the package, not this file
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
+alt = importlib.import_module("altair")
+pd = importlib.import_module("pandas")
+Image = importlib.import_module("PIL.Image")
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — positions 1–5 for 5 categories
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Fruit production (thousands of tonnes)
 categories = ["Apples", "Oranges", "Bananas", "Grapes", "Mangoes"]
 values = [35, 22, 18, 12, 8]
-# Colorblind-safe palette (no red-green conflict): steel blue, amber, teal, purple, coral
-colors = ["#306998", "#E8A838", "#2A9D8F", "#9B59B6", "#D55E00"]
+colors = IMPRINT_PALETTE
 unit_value = 5
 max_icons = max(v // unit_value + (1 if v % unit_value else 0) for v in values)
 top_value = max(values)
 
-# Build row data: one row per icon position
+# Build icon grid: one row per icon position per category
 rows = []
 for cat, val, color in zip(categories, values, colors, strict=True):
     full_icons = val // unit_value
     remainder = (val % unit_value) / unit_value
-
     for i in range(full_icons):
         rows.append({"category": cat, "col": i, "opacity": 1.0, "color": color, "value": val})
-
     if remainder > 0:
         rows.append({"category": cat, "col": full_icons, "opacity": round(remainder, 2), "color": color, "value": val})
 
 df = pd.DataFrame(rows)
 
-# Category sort order (by value descending)
+# Sort order: highest value first
 sort_order = [c for _, c in sorted(zip(values, categories, strict=True), reverse=True)]
 
-# Plot - circles arranged in a grid
-chart = (
+title_str = "pictogram-basic · python · altair · anyplot.ai"
+
+# Icons layer — circles in a grid
+icons = (
     alt.Chart(df)
     .mark_point(size=1200, filled=True, strokeWidth=0)
     .encode(
         x=alt.X(
             "col:Q",
             title=None,
-            scale=alt.Scale(domain=[-0.4, max_icons + 0.8]),
+            scale=alt.Scale(domain=[-0.4, max_icons + 1.2]),
             axis=alt.Axis(labels=False, ticks=False, domain=False, grid=False),
         ),
         y=alt.Y(
             "category:N",
             title=None,
             sort=sort_order,
-            scale=alt.Scale(type="band", paddingInner=0.45, paddingOuter=0.15),
+            scale=alt.Scale(type="band", paddingInner=0.4, paddingOuter=0.15),
             axis=alt.Axis(
-                labelFontSize=22,
+                labelFontSize=14,
                 labelFontWeight="bold",
-                labelColor="#333333",
+                labelColor=INK,
                 ticks=False,
                 domain=False,
                 grid=False,
-                labelPadding=18,
+                labelPadding=15,
             ),
         ),
         color=alt.Color("color:N", scale=None),
@@ -66,61 +83,75 @@ chart = (
     )
 )
 
-# Value labels at end of each row - emphasize top category
+# Value label layer
 label_data = []
 for cat, val in zip(categories, values, strict=True):
     icon_count = val // unit_value + (1 if val % unit_value else 0)
-    label_data.append(
-        {"category": cat, "col": icon_count + 0.3, "label": f"{val}k", "value": val, "is_top": val == top_value}
-    )
-
+    label_data.append({"category": cat, "col": icon_count + 0.35, "label": f"{val}k", "is_top": val == top_value})
 label_df = pd.DataFrame(label_data)
 
-# Top category label (bold, larger, darker)
 top_labels = (
     alt.Chart(label_df[label_df["is_top"]])
-    .mark_text(align="left", baseline="middle", fontSize=22, fontWeight="bold", color="#222222")
+    .mark_text(align="left", baseline="middle", fontSize=14, fontWeight="bold", color=INK)
     .encode(x=alt.X("col:Q"), y=alt.Y("category:N", sort=sort_order), text=alt.Text("label:N"))
 )
 
-# Other category labels
 other_labels = (
     alt.Chart(label_df[~label_df["is_top"]])
-    .mark_text(align="left", baseline="middle", fontSize=18, fontWeight="bold", color="#777777")
+    .mark_text(align="left", baseline="middle", fontSize=12, color=INK_SOFT)
     .encode(x=alt.X("col:Q"), y=alt.Y("category:N", sort=sort_order), text=alt.Text("label:N"))
 )
 
-# Highlight bar behind top category for visual storytelling
-top_cat = sort_order[0]
-highlight_df = pd.DataFrame([{"category": top_cat}])
+# Subtle highlight bar behind the top category for visual storytelling
+highlight_df = pd.DataFrame([{"category": sort_order[0]}])
 highlight = (
     alt.Chart(highlight_df)
-    .mark_bar(color="#306998", opacity=0.07, cornerRadius=6)
-    .encode(y=alt.Y("category:N", sort=sort_order), x=alt.value(0), x2=alt.value(1480))
+    .mark_bar(color="#009E73", opacity=0.07, cornerRadius=4)
+    .encode(y=alt.Y("category:N", sort=sort_order), x=alt.value(0), x2=alt.value(620))
 )
 
-# Combine layers with compact height for better canvas utilization
+# Combine layers
 combined = (
-    (highlight + chart + top_labels + other_labels)
+    (highlight + icons + top_labels + other_labels)
     .properties(
-        width=1480,
-        height=800,
+        width=620,
+        height=320,
+        background=PAGE_BG,
         title=alt.Title(
-            text="pictogram-basic \u00b7 altair \u00b7 pyplots.ai",
+            text=title_str,
             subtitle=[
                 "Global Fruit Production Comparison",
-                f"\u25cf = {unit_value}k tonnes  |  partial \u25cf = fractional amount",
+                f"● = {unit_value}k tonnes  |  partial ● = fractional amount",
             ],
-            fontSize=28,
-            subtitleFontSize=16,
-            subtitleColor="#888888",
+            fontSize=16,
+            subtitleFontSize=14,
+            subtitleColor=INK_MUTED,
+            color=INK,
             anchor="start",
-            offset=20,
+            offset=15,
         ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.12, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-combined.save("plot.png", scale_factor=3.0)
-combined.save("plot.html")
+# Save PNG and HTML
+combined.save(f"plot-{THEME}.png", scale_factor=4.0)
+combined.save(f"plot-{THEME}.html")
+
+# Pad PNG to exact 3200×1800 target (landscape); do NOT crop
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        "Shrink chart .properties(width=, height=) and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
