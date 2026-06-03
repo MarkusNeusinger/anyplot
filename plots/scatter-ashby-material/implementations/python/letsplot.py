@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-03
@@ -28,6 +28,7 @@ from lets_plot import (
     layer_tooltips,
     scale_color_manual,
     scale_fill_manual,
+    scale_shape_manual,
     scale_x_log10,
     scale_y_log10,
     theme,
@@ -45,9 +46,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A36"
+FILL_ALPHA = 0.22 if THEME == "light" else 0.30
 
-# Imprint palette — 7 canonical positions for 7 material families
-# Alphabetical factor order: Ceramics, Composites, Elastomers, Foams, Metals, Natural Materials, Polymers
+# Imprint palette — 7 canonical positions for 7 material families (insertion order: Metals first)
 IMPRINT_7 = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data — Density (kg/m^3) vs Young's modulus (GPa) for common engineering materials
@@ -213,14 +214,13 @@ plot = (
         data=guide_df, mapping=aes(x="density", y="modulus", label="label"), size=5, color=INK_MUTED, angle=38, hjust=0
     )
     # Elliptical envelopes per family
-    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=0.22)
-    # Individual material data points with interactive tooltips
+    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=FILL_ALPHA)
+    # Individual material data points with interactive tooltips; shape encodes family for CVD safety
     + geom_point(
         data=df,
-        mapping=aes(x="density", y="modulus", color="family"),
+        mapping=aes(x="density", y="modulus", color="family", shape="family"),
         size=3.5,
         alpha=0.88,
-        shape=16,
         tooltips=layer_tooltips()
         .format("density", ".0f")
         .format("modulus", ".3g")
@@ -251,6 +251,7 @@ plot = (
     + scale_y_log10(name="Young’s Modulus (GPa)")
     + scale_color_manual(values=IMPRINT_7, name="Material Family")
     + scale_fill_manual(values=IMPRINT_7)
+    + scale_shape_manual(values=[16, 17, 15, 3, 8, 5, 4], name="Material Family")
     + guides(fill="none")
     + labs(title=title, subtitle="Young’s Modulus vs Density — Material Selection Landscape")
     + theme_minimal()
@@ -267,7 +268,7 @@ plot = (
         panel_grid_major=element_line(size=0.25, color=GRID_COLOR),
         panel_grid_minor=element_blank(),
         legend_position="right",
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="transparent"),
         axis_line=element_line(color=INK_SOFT, size=0.3),
     )
     + ggsize(800, 450)
