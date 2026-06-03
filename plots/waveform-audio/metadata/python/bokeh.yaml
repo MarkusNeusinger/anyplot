@@ -1,118 +1,141 @@
 library: bokeh
+language: python
 specification_id: waveform-audio
 created: '2026-03-07T14:58:42Z'
-updated: '2026-03-07T15:11:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22801238619
+updated: '2026-06-03T01:21:58Z'
+generated_by: claude-sonnet
+workflow_run: 26857356300
 issue: 4563
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/bokeh/plot.html
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/bokeh/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent phase-coded visual storytelling with three blue shades distinguishing
-    attack/sustain/release, plus labels and boundary lines
-  - Idiomatic Bokeh usage with varea, BoxAnnotation, Label, ColumnDataSource, and
-    Span models
-  - Complete spec compliance with all required features including min/max envelope
-    rendering
-  - Clean, well-structured code with realistic audio signal synthesis (fundamental
-    + harmonics + envelope + tremolo)
-  - Dual output (PNG + interactive HTML) leverages Bokeh web capability
+  - 'Correct idiomatic Bokeh: varea() for filled waveform area, ColumnDataSource,
+    BoxAnnotation for phase shading, and Span for reference lines - all distinctively
+    Bokeh idioms'
+  - 'Full spec compliance: filled waveform symmetric around zero, min/max envelope
+    rendering for dense 33K-sample data, zero baseline, semi-transparent fill, and
+    synthetic multi-harmonic signal with amplitude envelope'
+  - 'Strong data storytelling: Attack/Sustain/Release phase labels, dashed boundary
+    lines, and color-coded shading guide the viewer through audio dynamics'
+  - 'Correct theme-adaptive chrome in both renders: warm off-white (#FAF8F1) and near-black
+    (#1A1A17) backgrounds with appropriate INK/INK_SOFT tokens for all text and grid
+    elements'
+  - 'Proper canvas handling: 3200x1800 with correct min_border reservations, oversized
+    window + PIL crop technique avoids viewport clipping'
   weaknesses:
-  - BoxAnnotation phase region shading at alpha 0.04 is nearly invisible and could
-    be more prominent
-  - Phase labels at 16pt with 0.7 alpha are somewhat faint compared to main chart
-    elements
-  image_description: The plot displays an audio waveform rendered as three color-coded
-    filled areas (using Bokeh's varea glyph) symmetric around a zero baseline. The
-    attack phase (0-0.05s) is rendered in a lighter blue (#4A90D9), the sustain phase
-    (0.05-1.2s) in Python Blue (#306998), and the release phase (1.2-1.5s) in a darker
-    blue (#1D4F72). Each phase is labeled at the top of the chart in italic grey text
-    ("Attack", "Sustain", "Release") with dashed vertical lines marking the phase
-    boundaries. Faint BoxAnnotation background shading differentiates the three regions.
-    The x-axis reads "Time (seconds)" ranging from 0 to ~1.4, and the y-axis reads
-    "Amplitude" with ticks at -1.0, -0.5, 0.0, 0.5, 1.0. The title "waveform-audio
-    · bokeh · pyplots.ai" is displayed in dark grey at the top left. A horizontal
-    zero-line bisects the waveform. The background is a light blue-grey (#F7F9FC)
-    with subtle dashed y-grid lines. X-grid, ticks, and outline are removed. The waveform
-    clearly shows the attack-sustain-release envelope with visible tremolo modulation
-    creating a wavy upper/lower boundary.
+  - 'Palette canonical order violated: positions 1 (#009E73), 3 (#4467A3), 6 (#2ABCCD)
+    used instead of canonical 1,2,3 order (skips #C475FD lavender at position 2).
+    The cool-progression aesthetic justification does not qualify as a semantic exception
+    per the style guide rule - fix by using positions 1,2,3 or justify with a semantic
+    label-color match'
+  - Phase labels at 28pt may be unreadable on mobile (~4.7 source-px at 400px viewport
+    width); consider increasing to 32-34pt to match tick label size and improve mobile
+    readability
+  - Attack phase occupies only ~3.3% of total x-range (0.05s of 1.5s), making the
+    Attack label and green region barely visible without zooming; consider slightly
+    widening the attack phase or enlarging the Attack label font for better balance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "waveform-audio · python · bokeh · anyplot.ai" in dark ink (#1A1A17), fully readable. Y-axis label "Amplitude" and X-axis label "Time (seconds)" in dark ink. Tick labels (-1, -0.5, 0, 0.5, 1 on Y; 0 to 1.4 on X) in INK_SOFT (#4A4A44), all readable. Phase labels "Attack", "Sustain", "Release" in italic INK_MUTED (#6B6A63) at 28pt, readable at full resolution.
+      Data: Three waveform phases - a narrow green (#009E73) attack region at far left (0-0.05s), a wide blue (#4467A3) sustain region in the middle (0.05-1.2s), and a cyan (#2ABCCD) release region tapering to zero at right (1.2-1.5s). Semi-transparent fills (alpha 0.40-0.45) with edge outline lines. Phase background shading at alpha=0.09 subtly highlights each region. Zero baseline dashed line visible. Dashed vertical boundary lines at phase transitions.
+      Legibility verdict: PASS - all text readable, no overflow, no clipping observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), fully readable against dark background. Y-axis label "Amplitude" and X-axis label "Time (seconds)" in light text, readable. Tick labels in INK_SOFT (#B8B7B0 for dark), all readable - no dark-on-dark failures observed. Phase labels "Attack", "Sustain", "Release" in INK_MUTED (#A8A79F for dark), readable.
+      Data: Data colors are identical to the light render - same green/blue/cyan waveform phases with the same alpha fill levels. Only chrome (background, text, grid) flips between themes. Brand green #009E73 in the Attack phase remains clearly visible against the dark background.
+      Legibility verdict: PASS - all text readable against dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 30pt, axis labels 22pt, tick
-          labels 18pt, phase labels 16pt. All meet thresholds and are clearly readable.'
+        comment: 'All sizes explicitly set: 50pt title, 42pt axis labels, 34pt ticks,
+          28pt phase annotations. Both themes readable. Minor concern: 28pt phase
+          labels in narrow Attack region may be small on mobile (~4.7px at 400px viewport).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere. Phase labels well-spaced.
+        comment: No text overlaps detected in either render. Phase labels at y=0.92
+          are horizontally separated from each other.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Waveform clearly visible with min/max envelope rendering and outline
-          edges at line_width=2.
+        comment: Waveform clearly visible in both themes. Min/max envelope (chunk_size=8)
+          handles 33K dense samples cleanly. Three color-coded phases visually distinct.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette colors used. Fills have meaningful alpha
+          but remain distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Monochromatic blue palette with three distinct shades. No colorblind
-          issues.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good horizontal fill. Minor deduction for phase labels consuming
-          top margin space.
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). 3200x1800 with
+          correct min_border values. Waveform fills canvas well. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) includes units. Amplitude is descriptive for normalized
-          audio.
+        comment: 'X: ''Time (seconds)'' with units. Y: ''Amplitude'' (inherently unitless
+          for normalized audio). Title correctly formatted.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series #009E73 correct. Backgrounds #FAF8F1/#1A1A17 correct.
+          Chrome theme-adaptive correct. However, palette positions 1,3,6 used instead
+          of canonical 1,2,3 (skips #C475FD lavender). No semantic justification for
+          skipping position 2 - this is aesthetic cherry-picking which the style guide
+          prohibits.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive three-shade blue palette with intentional hierarchy. Custom
-          background tint, refined title color, muted axis colors. Clearly above defaults.
+        comment: Above default (4). Intentional phase color hierarchy, professional
+          layout, removed frame outline. Not yet at FiveThirtyEight publication level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-grid only with alpha 0.3 and dashed style, x-grid removed, ticks
-          removed, outline removed. BoxAnnotation shading at alpha 0.04 is nearly
-          invisible.
+        comment: Above default (2). X-grid removed, Y-grid at 0.15 alpha, frame outline
+          removed, minor ticks removed. Good but not every detail polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Phase labels, color-coded regions, and dashed boundary lines create
-          clear visual hierarchy. Viewer immediately understands attack-sustain-release
-          structure.
+        comment: Above default (2). Phase labels + boundary lines + color-coded shading
+          clearly guide viewer through audio dynamics. Good visual hierarchy but not
+          exceptional storytelling.
     spec_compliance:
       score: 15
       max: 15
@@ -122,52 +145,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct audio waveform with filled area symmetric around zero.
+        comment: 'Correct: filled waveform area symmetric around zero baseline, exactly
+          as specified.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled area, semi-transparent fill, zero-line,
-          time axis, normalized amplitude, min/max envelope, synthetic data.'
+        comment: 'All spec features: filled area (varea), semi-transparent fill, zero
+          baseline (Span), min/max envelope rendering, synthetic harmonics + envelope.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, amplitude on y-axis, correct ranges.
+        comment: 'X: time in seconds (0-1.5s). Y: normalized amplitude -1 to +1 (Range1d
+          -1.12 to 1.12 with minor buffer). 33075 samples within 5000-50000 spec range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series; phase labels
-          serve as contextual guides.
+        comment: 'Title: ''waveform-audio · python · bokeh · anyplot.ai'' - exact
+          required format. No legend needed (phases labeled directly via annotations).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows dynamics (attack-sustain-release), harmonic content, tremolo
-          modulation. Could include silence or clipping for more edge cases.
+        comment: 'Shows all aspects: attack/sustain/release dynamics, varying amplitude,
+          tremolo modulation, multiple harmonics (fundamental + 2nd + 3rd + 5th).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic A3 note (220Hz) with harmonics, 22050Hz sample rate, 1.5s
-          duration.
+        comment: Musical note A3 at 220Hz, 1.5s clip, standard 22050Hz sample rate,
+          attack-sustain-release envelope. Entirely neutral technical content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard sample rate, normalized amplitude, realistic duration and
-          frequency.
+        comment: Normalized amplitude -1 to +1 per spec. Standard sample rate. Realistic
+          envelope timing (5% attack, 30% release).
     code_quality:
       score: 10
       max: 10
@@ -177,37 +202,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save linear structure with no functions or
-          classes.
+        comment: 'Linear procedural structure: imports → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic via sine wave synthesis.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting,
-          bokeh.resources.'
+        comment: 'All imports used: os, sys, time, Path, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, PIL.Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear sections. Envelope chunking and phase boolean
-          masks are clean and Pythonic.
+        comment: Clean, Pythonic. Loop for outline edges is concise. PIL crop for
+          exact sizing is clever. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also exports plot.html with CDN
-          resources.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API used.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -215,28 +239,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of varea, ColumnDataSource, Span, BoxAnnotation, and Label
-          models. Idiomatic Bokeh patterns throughout.
+        comment: 'Expert Bokeh usage: varea() for dual-boundary fill, ColumnDataSource
+          as data backbone, BoxAnnotation for region highlighting, Span for reference
+          lines, Label for annotations, Range1d for y-range control.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: varea glyph, BoxAnnotation, Label model, ColumnDataSource binding,
-          and dual PNG+HTML output are distinctively Bokeh.
+        comment: BoxAnnotation and Span are genuinely Bokeh-specific; implementing
+          them in matplotlib would require axvspan/axhspan workarounds. varea() for
+          two-boundary fill is a distinctive Bokeh API. Strong Bokeh-specific usage
+          throughout.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
   - annotations
-  - manual-ticks
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep:
-  - normalization
+  - binning
   styling:
   - alpha-blending
-  - grid-styling
