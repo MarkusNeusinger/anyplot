@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
@@ -34,19 +34,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 
-# Imprint palette — sequential velocity colormap interpolator
-def _lerp_hex(c0, c1, t):
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r = int(round(r0 + (r1 - r0) * t))
-    g = int(round(g0 + (g1 - g0) * t))
-    b = int(round(b0 + (b1 - b0) * t))
-    return f"#{r:02X}{g:02X}{b:02X}"
-
-
-# Sequential blue→red: soft (low velocity) to loud (high velocity)
-# Direct interpolation avoids near-background midpoint that would hide notes
-VELOCITY_PALETTE = [_lerp_hex("#4467A3", "#AE3030", t / 255.0) for t in range(256)]
+# imprint_seq: brand green (#009E73) → blue (#4467A3) — 256-stop pre-computed inline
+VELOCITY_PALETTE = [
+    f"#{round(68 * t / 255):02X}{round(158 - 55 * t / 255):02X}{round(115 + 48 * t / 255):02X}" for t in range(256)
+]
 
 # Data
 note_names_map = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
