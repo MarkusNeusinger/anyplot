@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waveform-audio: Audio Waveform Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-03
@@ -26,6 +26,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+SYLLABLE_BAND = "rgba(0,158,115,0.09)" if THEME == "light" else "rgba(0,158,115,0.13)"
 
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = IMPRINT_PALETTE[0]  # Imprint palette position 1 — ALWAYS first series
@@ -57,13 +58,23 @@ envelope[mask2] = np.hanning(mask2.sum()) * 0.80
 raw = raw * envelope + 0.005 * np.random.randn(n_samples)
 raw = np.clip(raw, -1.0, 1.0)
 
-# Downsample to 3 000 display points
-n_display = 3000
-step = n_samples // n_display
-t_disp = t_full[::step][:n_display]
-amp_disp = raw[::step][:n_display]
+# Min/max envelope downsampling — captures peaks and troughs per window, avoids aliasing
+# 1500 windows × 2 samples (peak + trough) = 3000 display points
+n_windows = 1500
+window_size = n_samples // n_windows
+t_env = []
+for i in range(n_windows):
+    start = i * window_size
+    end = min(start + window_size, n_samples)
+    w = raw[start:end]
+    times = t_full[start:end]
+    max_i = int(np.argmax(w))
+    min_i = int(np.argmin(w))
+    t_env.append((float(times[max_i]), float(w[max_i])))
+    t_env.append((float(times[min_i]), float(w[min_i])))
+t_env.sort()
 
-data_points = [[round(float(tv), 6), round(float(av), 5)] for tv, av in zip(t_disp, amp_disp, strict=True)]
+data_points = [[round(t, 6), round(a, 5)] for t, a in t_env]
 
 # Title — font size scaled to prevent overflow at 3200 px width
 title = "Speech Waveform · waveform-audio · python · highcharts · anyplot.ai"
@@ -82,10 +93,14 @@ chart.options.chart = {
     "marginBottom": 130,
     "marginLeft": 155,
     "marginRight": 60,
-    "marginTop": 90,
+    "marginTop": 120,
 }
 
 chart.options.title = {"text": title, "style": {"fontSize": f"{title_px}px", "color": INK, "fontWeight": "600"}}
+chart.options.subtitle = {
+    "text": "Two voiced syllables with harmonic structure (F0 = 130 Hz) separated by a brief silence gap",
+    "style": {"fontSize": "40px", "color": INK_SOFT},
+}
 
 chart.options.x_axis = {
     "title": {"text": "Time (seconds)", "style": {"fontSize": "56px", "color": INK}},
@@ -95,14 +110,18 @@ chart.options.x_axis = {
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
     "gridLineWidth": 1,
+    "plotBands": [
+        {"from": 0.15, "to": 0.65, "color": SYLLABLE_BAND},
+        {"from": 0.85, "to": 1.55, "color": SYLLABLE_BAND},
+    ],
 }
 
 chart.options.y_axis = {
     "title": {"text": "Amplitude", "style": {"fontSize": "56px", "color": INK}},
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
-    "min": -1.2,
-    "max": 1.2,
-    "tickInterval": 0.5,
+    "min": -0.8,
+    "max": 0.8,
+    "tickInterval": 0.4,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
@@ -115,7 +134,7 @@ chart.options.colors = [BRAND]
 chart.options.plot_options = {
     "area": {
         "marker": {"enabled": False},
-        "fillOpacity": 0.35,
+        "fillOpacity": 0.40,
         "threshold": 0,
         "lineWidth": 1.5,
         "states": {"hover": {"lineWidth": 1.5}},
