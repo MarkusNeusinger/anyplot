@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -13,6 +13,7 @@ import sys
 _here = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 sys.path = [p for p in sys.path if os.path.realpath(p if p else os.getcwd()) != _here]
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -33,7 +34,9 @@ PHOTON = "#C475FD"  # Imprint position 2 (lavender)    — photons
 GLUON = "#4467A3"  # Imprint position 3 (blue)         — gluons (reference only)
 SCALAR = "#BD8233"  # Imprint position 4 (ochre)        — scalar bosons (reference only)
 
+IMPRINT_PALETTE = [FERMION, PHOTON, GLUON, SCALAR, "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+sns.set_palette(IMPRINT_PALETTE)
 
 # Canvas — landscape 3200 × 1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -101,6 +104,21 @@ ax.text(0.50, 0.08, "time", fontsize=8, color=INK_MUTED, ha="center", style="ita
 # Separator between main diagram and reference legend
 ax.plot([0.03, 0.97], [0.03, 0.03], color=INK_SOFT, lw=0.5, alpha=0.4)
 
+# Elevated card background for reference legend (visual separation)
+legend_card = mpatches.FancyBboxPatch(
+    (0.01, -0.21),
+    0.98,
+    0.23,
+    boxstyle="round,pad=0.0",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    linewidth=0.5,
+    alpha=1.0,
+    transform=ax.transData,
+    zorder=0.5,
+)
+ax.add_patch(legend_card)
+
 # === Reference legend: all 4 particle line styles ===
 ref_y = -0.07
 ref_spans = [(0.05, 0.18), (0.30, 0.43), (0.55, 0.68), (0.80, 0.93)]
@@ -140,14 +158,15 @@ sns.lineplot(data=boson_ref, x="x", y="y", ax=ax, color=SCALAR, linewidth=2.5, l
 
 # Reference labels below each style
 for (xs0, xs1), name, col in zip(ref_spans, ref_names, ref_cols, strict=False):
-    ax.text((xs0 + xs1) / 2, ref_y - 0.04, name, fontsize=7, ha="center", va="top", color=col, fontweight="bold")
+    ax.text((xs0 + xs1) / 2, ref_y - 0.05, name, fontsize=8, ha="center", va="top", color=col, fontweight="bold")
 
 # Title — 66 chars, within 67-char baseline so no scaling needed
 title = "Compton Scattering · feynman-basic · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
 ax.set_xlim(-0.05, 1.05)
-ax.set_ylim(-0.22, 1.02)
+ax.set_ylim(-0.24, 1.02)
 ax.axis("off")
+sns.despine(ax=ax, left=True, bottom=True)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
