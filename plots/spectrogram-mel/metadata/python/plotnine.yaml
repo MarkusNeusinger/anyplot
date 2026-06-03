@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:40:09Z'
-updated: '2026-06-03T18:13:56Z'
+updated: '2026-06-03T18:24:11Z'
 generated_by: claude-sonnet
 workflow_run: 26903132790
 issue: 4672
@@ -12,46 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Excellent multi-layer grammar-of-graphics composition (geom_raster + geom_line
-    + geom_segment + geom_text with separate datasets and inherit_aes=False) — idiomatic
-    plotnine
-  - 'Perfect spec compliance: manual mel filterbank (vectorized, no librosa dependency),
-    correct dB conversion, Hz-labeled Y-axis, proper STFT parameters'
-  - 'Thoughtful Imprint-derived colormap [PAGE_BG → #009E73 → #4467A3] — Imprint sequential
-    cmap fully compliant, with smart PAGE_BG floor for silence-blends-with-background
-    effect'
-  - Ochre (#BD8233) spectral peak trajectory visually pops against the green/blue
-    spectrogram — strong contrast
-  - 'Both themes fully correct: backgrounds, chrome, and colorbar all theme-adaptive;
-    data colors identical across renders'
+  - Clean vectorized mel filterbank implementation without librosa dependency — all
+    DSP computed from scratch using scipy.signal.stft and numpy matrix ops
+  - 'Multi-layer grammar-of-graphics composition: geom_raster heatmap + ochre spectral
+    peak trajectory + cyan F₀ reference line, each with correctly isolated inherit_aes=False'
+  - 'Theme-adaptive Imprint colormap (PAGE_BG → #009E73 → #4467A3) gives seamless
+    silence-to-energy gradient that adapts correctly to both light and dark surfaces'
+  - 'Full spec compliance: dB scale, mel y-axis with Hz labels, colorbar labeled in
+    dB, synthesized realistic audio with harmonics and percussion bursts, all parameters
+    at recommended values'
   weaknesses:
-  - 'F0 reference line uses #009E73 (brand green) against a green-dominant spectrogram
-    — low contrast especially under CVD (deuteranopia). Change color to IMPRINT_PALETTE[5]
-    (#2ABCCD cyan) or INK_SOFT for visual distinction from the heatmap'
-  - F0 annotation label geom_text(size=3.0) (~8.5pt) is very small — increase to size=3.5–4.0
-    to ensure mobile readability
-  - guide_colorbar(nbin=256, display='raster') — display is not a recognized plotnine
-    parameter, replace with raster=True
-  - 'DE-01 gap: to reach 6+/8, polish the typography — bold the title weight via element_text(weight=''bold'')
-    or add slight padding between colorbar and plot'
+  - Spectral peak trajectory (ochre line, size=0.9, alpha=0.65) is thin and partially
+    translucent against the green-blue heatmap; increase to size=1.2 and alpha=0.8
+    so it reads more clearly, especially at mobile scale
+  - F₀ annotation geom_text size=3.5mm (≈10pt) is on the small side for a 3200×1800
+    canvas viewed on mobile; increase to size=4.0 for better readability
+  - Colorbar bottom in dark render (−1A1A17 stop) blends with the near-black legend
+    background, making the −60 dB tick visually ambiguous; consider adding a subtle
+    legend_background=element_rect(fill=ELEVATED_BG) to give the colorbar swatch contrast
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface
-      Chrome: Title "spectrogram-mel · python · plotnine · anyplot.ai" in dark ink — readable. Axis labels "Time (s)" and "Frequency (Hz)" in dark ink — readable. Tick labels (0–3s; 128–8000 Hz) in dark gray INK_SOFT — readable. Colorbar "Power (dB)" label in dark ink.
-      Data: 3-stop gradient [#FAF8F1 → #009E73 → #4467A3] fills the mel-spectrogram raster. Bright vertical stripes at ~0.3, 0.8, 1.3, 1.8, 2.3, 2.8s are rhythmic noise bursts. Ochre (#BD8233) spectral peak trajectory visible as jagged line in lower frequency region. Dashed green (#009E73, alpha=0.6) F0 reference line at ~330 Hz. Small "F0 = 330 Hz" annotation in INK_SOFT above reference line.
-      Legibility verdict: PASS — all text readable; F0 label small but identifiable
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
+      Chrome: Title "spectrogram-mel · python · plotnine · anyplot.ai" in dark ink, bold, centred — fully readable. Y-axis label "Frequency (Hz)" and X-axis label "Time (s)" in dark ink, clear. Tick labels (128–8000 Hz, 0–3 s) in INK_SOFT dark-grey, clearly legible. Colorbar legend title "Power (dB)" and tick values (0, −20, −40, −60) visible on the right.
+      Data: Mel-spectrogram rendered as a teal-green-to-blue heatmap from PAGE_BG (silence) through #009E73 (brand green, mid-energy) to #4467A3 (blue, peak energy). Six rhythmic burst events visible as vertical brightening columns at ~0.3 s intervals. Ochre (#BD8233) spectral peak trajectory line overlaid near the 256–512 Hz band, showing spikes at burst events. Cyan (#2ABCCD) dashed F₀ reference line horizontal at ~330 Hz band. Small "F₀ = 330 Hz" annotation in INK_SOFT just above the reference line.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct Imprint dark surface
-      Chrome: Title in near-white (#F0EFE8) — readable. Axis labels in near-white — readable. Tick labels in light gray (#B8B7B0) — readable. Colorbar label in light text — readable. No dark-on-dark failures observed.
-      Data: Same gradient colors as light render — identical [#FAF8F1-equivalent dark floor → #009E73 → #4467A3]. Ochre peak trajectory same color. F0 reference line same green. Data colors confirmed identical across both themes; only chrome flips.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in INK_SOFT light grey (#B8B7B0) — all readable. Colorbar title and ticks visible in light text. No dark-on-dark text failures observed.
+      Data: Heatmap data colors are identical to light render — same green-blue gradient emerges from the dark surface. The #1A1A17 start of the colormap seamlessly blends silence with the background (intentional design choice). Ochre peak trajectory and cyan F₀ reference line identically positioned and colored as in the light render.
+      Legibility verdict: PASS — all text readable against the near-black background with theme-adaptive INK_SOFT tokens correctly applied. The lowest colorbar swatch (−60 dB = #1A1A17) blends slightly with the dark legend area — minor visual ambiguity but not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,78 +55,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt,
-          legend 8pt). F0 annotation geom_text(size=3.0) ~8.5pt is small at mobile
-          widths.
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8);
+          F0 annotation size=3.5mm is readable but slightly small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions observed in either render.
+        comment: No overlapping elements; F0 label positioned above reference line
+          without collision
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Heatmap, peak trajectory, F0 line, and colorbar all visible and well-sized.
-          F0 label marginally small.
+        comment: Heatmap and reference line excellent; spectral peak trajectory (size=0.9,
+          alpha=0.65) somewhat thin against heatmap
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'F0 reference line uses #009E73 (brand green) against green-dominant
-          spectrogram — low contrast under CVD. Dashed linetype provides partial redundancy.
-          Ochre peak trajectory well-contrasted.'
+        passed: true
+        comment: 'CVD-safe: green-blue sequential colormap, ochre and cyan overlay
+          lines are distinguishable across CVD types'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 px correct. Good proportions; plot fills canvas
-          well; colorbar properly positioned right; generous margins.
+        comment: 3200x1800 landscape, heatmap fills plot area well, colorbar well-positioned,
+          no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz), Power (dB) colorbar — all descriptive with
-          units.
+        comment: Time (s), Frequency (Hz), Power (dB) — all descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '3-stop gradient [PAGE_BG → #009E73 → #4467A3] is Imprint-derived
-          sequential cmap. Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive
-          in both renders.'
+        comment: 'Sequential colormap uses PAGE_BG→#009E73→#4467A3 (Imprint-derived,
+          theme-adaptive); backgrounds correct (#FAF8F1 light, #1A1A17 dark); all
+          chrome theme-adaptive'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clearly above default: custom Imprint 3-stop colormap, intentional
-          multi-layer composition, thoughtful color contrast. Not quite publication-ready.'
+        comment: 'Strong design: custom Imprint colormap, three analytically purposeful
+          data layers with distinct hue choices (green-blue heatmap, ochre peak, cyan
+          F0), professional spectrogram aesthetic'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid fully removed, theme_minimal base, narrow well-proportioned
-          colorbar. Clean plot area.
+        comment: Grid fully disabled (appropriate for heatmap), clean theme_minimal
+          base, generous plot_margin, properly sized colorbar key
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spectral peak trajectory (ochre) guides eye through dominant frequency.
-          F0 reference + label grounds the viewer. Rhythmic burst stripes visible.
-          Clear visual hierarchy.
+        comment: Spectral peak trajectory guides viewer through temporal energy concentration;
+          F0 reference provides analytical anchor; burst events create clear rhythmic
+          visual pattern
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram using geom_raster with mel-scaled frequency
-          axis.
+        comment: Correct mel-spectrogram with mel-scaled frequency axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: dB conversion, Hz-labeled Y-axis, Power (dB) colorbar, n_fft=2048/hop_length=512/n_mels=128.
-          Sequential Imprint cmap used instead of viridis/magma.
+        comment: dB scale, sequential colormap, time X-axis, mel-Hz Y-axis labels,
+          colorbar in dB, n_fft=2048, hop=512, n_mels=128, synthesized audio
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time(s), Y=mel band to Hz, fill=Power(dB). All correctly mapped.
+        comment: X=time(s), Y=mel-band with Hz labels, fill=Power(dB) — all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'spectrogram-mel · python · plotnine · anyplot.ai' correct.
-          Colorbar 'Power (dB)' correct.
+        comment: 'Title: ''spectrogram-mel · python · plotnine · anyplot.ai''; colorbar
+          labeled ''Power (dB)'''
     data_quality:
       score: 15
       max: 15
@@ -171,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Fundamental + harmonics + rhythmic bursts + amplitude decay. Full
-          mel-spectrogram feature range shown.
+        comment: Synthesized audio with fundamental (E4, 330 Hz), multiple harmonics,
+          temporal decay, and rhythmic noise bursts — full mel-spectrogram feature
+          coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthesized musical note E4 (330 Hz) with harmonics and percussion
-          bursts — realistic and neutral audio ML scenario.
+        comment: Realistic musical audio signal (E4 note with harmonics + percussion
+          bursts) — neutral, scientifically plausible domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22050 Hz sample rate, 3s duration, 128 mel bands, n_fft=2048, hop_length=512
-          — all standard audio parameters.
+        comment: 22050 Hz sample rate, 3s duration, 0 to -60+ dB range — all standard
+          audio ML parameters
     code_quality:
       score: 10
       max: 10
@@ -196,55 +191,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → synthesis → STFT → mel filterbank →
-          DataFrame → plot → save.'
+        comment: Linear Imports→Data→Plot→Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation explained and necessary.
+        comment: All imports used; scipy.signal.stft needed for STFT computation
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized mel filterbank, clean grammar-of-graphics composition,
-          well-organized sections.
+        comment: Vectorized mel filterbank without librosa is clean and appropriately
+          complex
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in',
-          verbose=False)
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: ggplot + geom layers + scales
+          + guides + theme, with correct inherit_aes=False for secondary data layers'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Expert multi-layer grammar: geom_raster, geom_line/segment/text
-          with separate data and inherit_aes=False, scale_fill_gradientn, guide_colorbar.
-          Minor: display=''raster'' not a valid plotnine param.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: geom_raster for efficient heatmap, multi-dataset layer composition
-          with inherit_aes=False distinctive to ggplot paradigm. Not uniquely plotnine
-          vs. ggplot2/letsplot.
-  verdict: REJECTED
+        comment: geom_raster(interpolate=True) for smooth heatmap, guide_colorbar(nbin=256)
+          for fine gradient, multi-dataframe layer composition — distinctively plotnine/ggplot
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -257,8 +248,7 @@ impl_tags:
   - data-generation
   - matrix-construction
   dataprep:
-  - normalization
   - rolling-window
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
