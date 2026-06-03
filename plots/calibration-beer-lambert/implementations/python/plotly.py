@@ -1,14 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-09
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - calibration standards for UV-Vis spectrophotometry
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — positions used
+BRAND = "#009E73"  # calibration standards — position 1, always first series
+BLUE = "#4467A3"  # regression line — position 3
+RED = "#AE3030"  # unknown sample — semantic anchor for focal/reference point
+
+# Data - UV-Vis spectrophotometry calibration standards
 np.random.seed(42)
 concentration = np.array([0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0])
 molar_absorptivity = 0.045
@@ -16,7 +31,7 @@ absorbance_true = molar_absorptivity * concentration
 absorbance = absorbance_true + np.random.normal(0, 0.008, len(concentration))
 absorbance[0] = 0.003
 
-# Linear regression using numpy
+# Linear regression
 slope, intercept = np.polyfit(concentration, absorbance, 1)
 absorbance_pred = slope * concentration + intercept
 ss_res = np.sum((absorbance - absorbance_pred) ** 2)
@@ -30,8 +45,7 @@ n = len(concentration)
 conc_mean = np.mean(concentration)
 mse = ss_res / (n - 2)
 se_pred = np.sqrt(mse * (1 + 1 / n + (conc_fit - conc_mean) ** 2 / np.sum((concentration - conc_mean) ** 2)))
-# t-critical value for 95% two-sided, df=6 (pre-computed)
-t_crit = 2.447
+t_crit = 2.447  # t-critical for 95% two-sided, df=6 (pre-computed)
 pred_upper = abs_fit + t_crit * se_pred
 pred_lower = abs_fit - t_crit * se_pred
 
@@ -39,16 +53,20 @@ pred_lower = abs_fit - t_crit * se_pred
 unknown_absorbance = 0.38
 unknown_concentration = (unknown_absorbance - intercept) / slope
 
+# Title — 55 chars, below 67-char baseline → default fontsize applies
+title = "calibration-beer-lambert · python · plotly · anyplot.ai"
+title_fontsize = round(16 * min(1.0, 67 / len(title)))
+
 # Plot
 fig = go.Figure()
 
-# Prediction interval band
+# 95% prediction interval band
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([conc_fit, conc_fit[::-1]]),
         y=np.concatenate([pred_upper, pred_lower[::-1]]),
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.12)",
+        fillcolor="rgba(68,103,163,0.12)",
         line={"color": "rgba(0,0,0,0)"},
         name="95% Prediction Interval",
         showlegend=True,
@@ -63,7 +81,7 @@ fig.add_trace(
         y=abs_fit,
         mode="lines",
         name=f"Fit: y = {slope:.4f}x + {intercept:.4f}",
-        line={"color": "#1a3a5c", "width": 3},
+        line={"color": BLUE, "width": 3},
         hovertemplate="Conc: %{x:.2f} mg/L<br>Predicted Abs: %{y:.4f}<extra></extra>",
     )
 )
@@ -75,7 +93,7 @@ fig.add_trace(
         y=absorbance,
         mode="markers",
         name="Calibration Standards",
-        marker={"size": 14, "color": "#306998", "line": {"color": "white", "width": 2}, "symbol": "circle"},
+        marker={"size": 17, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}, "symbol": "circle"},
         hovertemplate="<b>Standard %{pointNumber}</b><br>Concentration: %{x:.1f} mg/L<br>Absorbance: %{y:.4f}<extra></extra>",
     )
 )
@@ -87,19 +105,19 @@ fig.add_trace(
         y=[unknown_absorbance],
         mode="markers",
         name=f"Unknown ({unknown_concentration:.1f} mg/L)",
-        marker={"size": 16, "color": "#E8453C", "line": {"color": "white", "width": 2}, "symbol": "diamond"},
+        marker={"size": 21, "color": RED, "line": {"color": PAGE_BG, "width": 2}, "symbol": "diamond"},
         hovertemplate="<b>Unknown Sample</b><br>Concentration: %{x:.2f} mg/L<br>Absorbance: %{y:.4f}<extra></extra>",
     )
 )
 
-# Dashed lines from unknown to axes
+# Dashed guide lines from unknown sample to both axes
 fig.add_shape(
     type="line",
     x0=unknown_concentration,
     y0=0,
     x1=unknown_concentration,
     y1=unknown_absorbance,
-    line={"color": "#E8453C", "width": 2, "dash": "dash"},
+    line={"color": RED, "width": 1.5, "dash": "dash"},
 )
 fig.add_shape(
     type="line",
@@ -107,72 +125,75 @@ fig.add_shape(
     y0=unknown_absorbance,
     x1=unknown_concentration,
     y1=unknown_absorbance,
-    line={"color": "#E8453C", "width": 2, "dash": "dash"},
+    line={"color": RED, "width": 1.5, "dash": "dash"},
 )
 
-# Equation and R² annotation
+# Regression equation and R² annotation — placed in lower-right area clear of legend
 fig.add_annotation(
-    x=3.0,
-    y=0.55,
+    x=0.97,
+    y=0.06,
+    xref="paper",
+    yref="paper",
     text=f"<b>y = {slope:.4f}x + {intercept:.4f}</b><br>R² = {r_squared:.5f}",
     showarrow=False,
-    font={"size": 20, "color": "#1a3a5c", "family": "Arial, sans-serif"},
-    bgcolor="rgba(248, 250, 252, 0.92)",
-    bordercolor="rgba(48, 105, 152, 0.5)",
-    borderwidth=2,
+    font={"size": 16, "color": INK, "family": "Arial, sans-serif"},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
     borderpad=10,
-    align="left",
+    align="right",
+    xanchor="right",
+    yanchor="bottom",
 )
 
 # Layout
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     title={
-        "text": "calibration-beer-lambert · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#1a3a5c", "family": "Arial, sans-serif"},
+        "text": title,
+        "font": {"size": title_fontsize, "color": INK, "family": "Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Concentration (mg/L)", "font": {"size": 22, "color": "#2d4a6f"}},
-        "tickfont": {"size": 18, "color": "#4a4a4a"},
+        "title": {"text": "Concentration (mg/L)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "range": [-0.5, 15.5],
         "showgrid": False,
         "zeroline": False,
-        "linecolor": "#c0c0c0",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
         "ticks": "outside",
-        "tickwidth": 1,
-        "tickcolor": "#c0c0c0",
+        "tickcolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Absorbance", "font": {"size": 22, "color": "#2d4a6f"}},
-        "tickfont": {"size": 18, "color": "#4a4a4a"},
+        "title": {"text": "Absorbance", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "range": [-0.05, 0.75],
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
-        "griddash": "dash",
         "zeroline": False,
-        "linecolor": "#c0c0c0",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
         "ticks": "outside",
-        "tickwidth": 1,
-        "tickcolor": "#c0c0c0",
+        "tickcolor": INK_SOFT,
     },
-    template="plotly_white",
     legend={
-        "font": {"size": 16, "color": "#4a4a4a"},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
         "xanchor": "left",
         "yanchor": "top",
-        "bgcolor": "rgba(248, 250, 252, 0.92)",
-        "bordercolor": "rgba(0,0,0,0.15)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 100, "r": 80, "t": 100, "b": 80},
-    plot_bgcolor="white",
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — landscape 3200×1800 (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
