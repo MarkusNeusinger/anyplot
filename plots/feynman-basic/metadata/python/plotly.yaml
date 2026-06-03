@@ -1,40 +1,49 @@
 library: plotly
+language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:21:37Z'
-updated: '2026-03-07T21:45:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22807440233
+updated: '2026-06-03T06:24:56Z'
+generated_by: claude-sonnet
+workflow_run: 26866262922
 issue: 4667
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - 'Excellent physics accuracy: real gluon fusion process with correct topology'
-  - All four particle line styles (straight, wavy, curly, dashed) are visually distinct
-    and well-rendered
-  - Professional design with serif typography, custom color palette, and clean layout
-  - Handcrafted legend with miniature line-style demonstrations
-  - Tapered line endpoints on wavy and curly lines add polish
-  - Interactive features (hover tooltips, HTML export) leverage Plotly strengths
+  - Sinusoidal wave generation with endpoint tapering produces physics-accurate wavy
+    lines for photons and Z bosons
+  - Antiparticle convention correctly implemented (arrow direction reversed via ndx/ndy
+    flip)
+  - Custom bottom legend with working miniature line-style samples (mini-wavy curves
+    + dashed shape) — not a default plotly legend
+  - Semantic exception for fermion=blue documented with domain justification; all
+    4 colors from Imprint palette
+  - Fully deterministic, flat, readable code with appropriate complexity for the diagram
+    type
+  - Both themes render correctly with all chrome adapting; vertex dots flip from black
+    to white as expected
   weaknesses:
-  - 'Minor: bottom-left gluon g label sits slightly close to the curly line'
-  - Red-green color pair could be improved for stronger colorblind accessibility
-  image_description: The plot displays a Feynman diagram for gluon fusion Higgs production
-    with diphoton decay (gg → H → γγ) on a clean white background. Two green curly
-    gluon lines enter from the left, connecting to the top and bottom vertices of
-    a blue triangular top-quark loop (fermions shown as solid blue lines with prominent
-    flow arrows). From the right vertex of the triangle, a purple dashed Higgs boson
-    line connects to a fourth vertex, from which two red wavy photon lines emerge
-    going upper-right and lower-right. Each propagator is labeled with its particle
-    symbol (g, t, t̄, H, γ) in bold colored serif text. Four black vertex dots with
-    white borders mark interaction points. A custom line-style legend in the bottom-right
-    demonstrates all four particle types with miniature line samples. A gray time
-    arrow with italic "time" label runs along the bottom. The title reads "gg → H
-    → γγ (Gluon Fusion) · feynman-basic · plotly · pyplots.ai" in serif font at the
-    top.
+  - Left margin (l=40) is tighter than the recommended l=80; could crowd elements
+    if diagram is extended — increase l to 60-80 and adjust xaxis range accordingly
+  - Particle labels at 22px are large; fine for this diagram but could create overlap
+    if layout is denser
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Higgs-strahlung · feynman-basic · python · plotly · anyplot.ai" centered in dark serif text — fully readable. No axis labels (axes hidden, appropriate for Feynman diagram). Time arrow italic label in INK_MUTED, readable. Legend text in particle-type colors, readable.
+      Data: Blue (#4467A3) solid fermion lines with directional arrows; green (#009E73) sinusoidal wavy Z*/Z boson lines; lavender (#C475FD) dashed Higgs line; red (#AE3030) high-frequency wavy photon lines. Vertex dots as black filled circles. Particle labels (e⁻, e⁺, Z*, Z, H, μ⁻, μ⁺, γ, γ) in matching colors. First categorical data color is #009E73 for Z boson (semantic exception: fermion uses blue per physics convention).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title text is now light-colored and fully visible against dark background. Time arrow label readable. Legend text readable. No dark-on-dark failures observed. Vertex dots correctly flip to white (INK adapts to #F0EFE8 in dark theme).
+      Data: All four particle-type colors (blue #4467A3, green #009E73, lavender #C475FD, red #AE3030) are identical to the light render — only chrome flipped. Wavy lines, dashed lines, and fermion arrows all clearly visible.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 27
@@ -45,45 +54,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 30pt, labels 24pt serif, legend
-          16pt, time 20pt'
+        comment: All text readable in both themes; particle labels at 22px prominent;
+          legend 14px clear; generous sizing appropriate for diagram type
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels well-positioned with manual offsets; bottom-left g label slightly
-          close to gluon curl
+        comment: Labels well-offset from propagator midpoints; no true overlaps detected;
+          slight proximity between lower-left labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 4 excellent; wavy, curly, dashed, solid patterns all crisp
-          and distinct
+        comment: Line width 4px (16 source px) clearly visible; 400-point wavy curves
+          smooth; arrows large and prominent; vertex dots 64 source px
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Redundant encoding: color + line style (solid/wavy/dashed); CVD-safe
+          Imprint palette'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Four distinct colors with good luminance contrast; red-green pair
-          mitigated by distinct line styles
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Diagram fills canvas well with appropriate margins; legend positioned
-          near diagram
+        comment: Canvas gate passed (3200x1800); left margin l=40 tighter than recommended
+          l=80 but no clipping observed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for Feynman diagram; title descriptive with
-          process notation; time axis labeled
+        comment: Axes appropriately hidden for diagram type; title descriptive with
+          process name; particle labels as content identifiers
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: All 4 colors from Imprint palette slots 1,2,3,5; semantic exception
+          for fermion=blue documented; backgrounds correct; colors theme-invariant
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -91,22 +107,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom 4-color palette, serif font for physics context,
-          professional look'
+        comment: Sinusoidal wave generation with tapering; antiparticle arrow convention;
+          custom legend with accurate line-style samples; semantic color mapping documented;
+          serif typography for physics context
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes hidden, vertex dots with white edge highlighting, handcrafted
-          legend, tapered line endpoints
+        comment: All axes hidden; no grid; clean background; no decorative noise;
+          well-balanced whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear physics narrative: gluon fusion through top-quark loop to
-          Higgs to photon pair; time axis guides viewer'
+        comment: Complete scientifically accurate process; time arrow guides reading
+          direction; vertex dots emphasize interaction points; dual encoding aids
+          identification
     spec_compliance:
       score: 15
       max: 15
@@ -116,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with all required elements
+        comment: 'Correct Feynman diagram with all 4 required line types: solid+arrow,
+          wavy-low-freq, wavy-high-freq, dashed'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All four line styles, arrows on fermions, vertex dots, particle labels,
-          time axis, clean layout
+        comment: Distinct line styles; arrows with antiparticle reversal; time axis
+          labeled; vertex dots; propagator labels; clean layout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Vertices correctly positioned; propagators connect correct vertices;
-          topology physically accurate
+        comment: Data follows spec structure; all 4 particle types represented; 4
+          vertices / 9 propagators within spec range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format; custom legend identifies all four
-          particle line styles
+        comment: Title follows {Descriptive Title} · {spec-id} · python · plotly ·
+          anyplot.ai format; legend shows all 4 types with accurate samples
     data_quality:
       score: 15
       max: 15
@@ -147,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 particle types shown; fermion arrows; vertex interactions;
-          particle/antiparticle distinction
+        comment: All 4 particle types; particle/antiparticle distinction; complete
+          process with initial state, propagators, final state
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gluon fusion is a real particle physics process; primary Higgs production
-          mode at the LHC
+        comment: Higgs-strahlung is a real and accurate lepton-collider process; correct
+          physics notation; standard conventions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Diagram topology is physically correct with clean readable layout
+        comment: Normalized coordinate system appropriate; physically sensible topology;
+          propagator count within spec range
     code_quality:
       score: 10
       max: 10
@@ -171,34 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot construction, save'
+        comment: Flat procedural code; no functions/classes; data as plain dicts/lists
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded vertices and propagators
+        comment: Fully deterministic; no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both actively used
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop with type branching; taper function for wavy/curly lines
-          is elegant
+        comment: Clean loop over propagators; appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions; also exports HTML
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current plotly API;
+          autosize=False per library rules
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -206,25 +226,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of Graph Objects API: go.Scatter, add_annotation, add_shape,
-          update_layout'
+        comment: go.Figure/go.Scatter; add_annotation for arrows; add_shape for lines;
+          update_layout; write_image + write_html
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses hovertemplate for interactive tooltips and write_html for interactivity
+        comment: plotly annotation arrows for particle direction; hovertemplate on
+          each particle; HTML export with CDN; mixed trace+annotation+shape approach
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting

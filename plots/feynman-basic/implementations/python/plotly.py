@@ -1,48 +1,70 @@
-""" pyplots.ai
+""" anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - Gluon fusion Higgs production with diphoton decay: gg → H → γγ (via top loop)
-# Showcases all 4 particle types: fermion (straight), photon (wavy), gluon (curly), boson (dashed)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — particle type colors
+# Semantic exception: fermion lines use #4467A3 (Imprint blue) rather than #009E73.
+# Blue = universally established color for electron/fermion lines in Feynman diagram
+# tools (FeynCalc, JaxoDraw, TikZ-Feynman) — a recognized physics-domain convention
+# analogous to financial red/green. Z boson (vector) takes #009E73 as second series.
+COLORS = {
+    "fermion": "#4467A3",  # Imprint blue — electrons / muons (physics convention)
+    "vector": "#009E73",  # Imprint green — Z boson (vector, wavy)
+    "photon": "#AE3030",  # Imprint matte red — photons (wavy)
+    "boson": "#C475FD",  # Imprint lavender — Higgs scalar (dashed)
+}
+LINE_W = 4
+
+# Data — Higgs-strahlung: e+e- → Z* → ZH → μ+μ- γγ (lepton collider)
+# Showcases all 4 line types: fermion (straight + arrow), vector Z (wavy),
+# photon (wavy), scalar H (dashed)
 vertices = {
-    "v1": (0.18, 0.74),  # top of top-quark triangle
-    "v2": (0.18, 0.26),  # bottom of top-quark triangle
-    "v3": (0.48, 0.50),  # right of triangle (Higgs emission)
-    "v4": (0.76, 0.50),  # Higgs decay vertex
+    "v1": (0.18, 0.50),  # e+e- annihilation → Z*
+    "v2": (0.50, 0.50),  # Z* → ZH production
+    "v3": (0.82, 0.78),  # Z → μ+μ- decay
+    "v4": (0.78, 0.22),  # H → γγ decay
 }
 
 propagators = [
-    {"from": (0.0, 0.88), "to": "v1", "type": "gluon", "label": "g"},
-    {"from": (0.0, 0.12), "to": "v2", "type": "gluon", "label": "g"},
-    {"from": "v1", "to": "v2", "type": "fermion", "label": "t"},
-    {"from": "v2", "to": "v3", "type": "fermion", "label": "t"},
-    {"from": "v3", "to": "v1", "type": "fermion", "label": "t̄"},
-    {"from": "v3", "to": "v4", "type": "boson", "label": "H"},
-    {"from": "v4", "to": (0.98, 0.84), "type": "photon", "label": "γ"},
-    {"from": "v4", "to": (0.98, 0.16), "type": "photon", "label": "γ"},
+    {"from": (0.0, 0.72), "to": "v1", "type": "fermion", "label": "e⁻"},
+    {"from": (0.0, 0.28), "to": "v1", "type": "fermion", "label": "e⁺", "anti": True},
+    {"from": "v1", "to": "v2", "type": "vector", "label": "Z*"},
+    {"from": "v2", "to": "v3", "type": "vector", "label": "Z"},
+    {"from": "v2", "to": "v4", "type": "boson", "label": "H"},
+    {"from": "v3", "to": (1.0, 0.96), "type": "fermion", "label": "μ⁻"},
+    {"from": "v3", "to": (1.0, 0.60), "type": "fermion", "label": "μ⁺", "anti": True},
+    {"from": "v4", "to": (1.0, 0.38), "type": "photon", "label": "γ"},
+    {"from": "v4", "to": (1.0, 0.04), "type": "photon", "label": "γ"},
 ]
 
-# Label offsets per propagator (dx, dy from midpoint)
+# Label offsets (dx, dy) from propagator midpoint
 label_offsets = [
-    (-0.04, 0.06),  # g (top)
-    (-0.04, -0.07),  # g (bottom)
-    (-0.06, 0.0),  # t (left side, vertical)
-    (0.0, -0.06),  # t (bottom-right diagonal)
-    (0.0, 0.06),  # t̄ (top-right diagonal)
-    (0.0, 0.06),  # H (above)
-    (-0.03, 0.045),  # γ (upper-right)
-    (-0.03, -0.055),  # γ (lower-right)
+    (-0.04, 0.06),  # e⁻
+    (-0.04, -0.06),  # e⁺
+    (0.00, 0.07),  # Z*
+    (0.00, 0.07),  # Z
+    (0.00, -0.07),  # H
+    (-0.04, 0.05),  # μ⁻
+    (-0.04, -0.05),  # μ⁺
+    (-0.04, 0.05),  # γ upper
+    (-0.04, -0.05),  # γ lower
 ]
-
-# Colors per particle type
-COLORS = {"fermion": "#306998", "gluon": "#2E7D32", "photon": "#C62828", "boson": "#7B1FA2"}
-LINE_W = 4
 
 fig = go.Figure()
 
@@ -52,8 +74,9 @@ for i, prop in enumerate(propagators):
     color = COLORS[prop["type"]]
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
     length = np.sqrt(dx**2 + dy**2)
+    ptype = prop["type"]
 
-    if prop["type"] == "fermion":
+    if ptype == "fermion":
         fig.add_trace(
             go.Scatter(
                 x=[p0[0], p1[0]],
@@ -61,12 +84,13 @@ for i, prop in enumerate(propagators):
                 mode="lines",
                 line={"color": color, "width": LINE_W},
                 showlegend=False,
-                hovertemplate=f"<b>{prop['label']}</b><br>Top quark (fermion)<extra></extra>",
+                hovertemplate=f"<b>{prop['label']}</b><extra></extra>",
             )
         )
-        # Prominent flow arrow at midpoint
         mx, my = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
         ndx, ndy = dx / length, dy / length
+        if prop.get("anti"):
+            ndx, ndy = -ndx, -ndy  # antiparticle: arrow reversed
         fig.add_annotation(
             x=mx + 0.018 * ndx,
             y=my + 0.018 * ndy,
@@ -84,12 +108,13 @@ for i, prop in enumerate(propagators):
             text="",
         )
 
-    elif prop["type"] == "photon":
+    elif ptype in ("photon", "vector"):
         t = np.linspace(0, 1, 400)
         perp_x, perp_y = -dy / length, dx / length
-        amp = 0.032
+        amp = 0.030
+        freq = 10 if ptype == "photon" else 7  # Z slightly fewer oscillations
         taper = np.minimum(t / 0.07, 1.0) * np.minimum((1 - t) / 0.07, 1.0)
-        wave = amp * np.sin(2 * np.pi * 10 * t) * taper
+        wave = amp * np.sin(2 * np.pi * freq * t) * taper
         fig.add_trace(
             go.Scatter(
                 x=p0[0] + t * dx + wave * perp_x,
@@ -97,33 +122,11 @@ for i, prop in enumerate(propagators):
                 mode="lines",
                 line={"color": color, "width": LINE_W},
                 showlegend=False,
-                hovertemplate=f"<b>{prop['label']}</b><br>Photon<extra></extra>",
+                hovertemplate=f"<b>{prop['label']}</b><extra></extra>",
             )
         )
 
-    elif prop["type"] == "gluon":
-        t = np.linspace(0, 1, 800)
-        dir_x, dir_y = dx / length, dy / length
-        perp_x, perp_y = -dy / length, dx / length
-        amp = 0.032
-        n_loops = 7
-        theta = 2 * np.pi * n_loops * t
-        taper = np.minimum(t / 0.07, 1.0) * np.minimum((1 - t) / 0.07, 1.0)
-        # Perpendicular + parallel displacement creates curly loops
-        perp_disp = amp * np.sin(theta) * taper
-        para_disp = amp * 0.45 * (1 - np.cos(theta)) * taper
-        fig.add_trace(
-            go.Scatter(
-                x=p0[0] + t * dx + perp_disp * perp_x - para_disp * dir_x,
-                y=p0[1] + t * dy + perp_disp * perp_y - para_disp * dir_y,
-                mode="lines",
-                line={"color": color, "width": LINE_W},
-                showlegend=False,
-                hovertemplate=f"<b>{prop['label']}</b><br>Gluon<extra></extra>",
-            )
-        )
-
-    elif prop["type"] == "boson":
+    elif ptype == "boson":
         fig.add_trace(
             go.Scatter(
                 x=[p0[0], p1[0]],
@@ -131,69 +134,101 @@ for i, prop in enumerate(propagators):
                 mode="lines",
                 line={"color": color, "width": LINE_W, "dash": "10px,6px"},
                 showlegend=False,
-                hovertemplate=f"<b>{prop['label']}</b><br>Higgs boson (scalar)<extra></extra>",
+                hovertemplate=f"<b>{prop['label']}</b><extra></extra>",
             )
         )
 
-    # Particle label
-    mx = (p0[0] + p1[0]) / 2 + label_offsets[i][0]
-    my = (p0[1] + p1[1]) / 2 + label_offsets[i][1]
+    # Particle label at propagator midpoint + offset
+    lx = (p0[0] + p1[0]) / 2 + label_offsets[i][0]
+    ly = (p0[1] + p1[1]) / 2 + label_offsets[i][1]
     fig.add_annotation(
-        x=mx,
-        y=my,
+        x=lx,
+        y=ly,
         text=f"<b>{prop['label']}</b>",
         showarrow=False,
-        font={"size": 24, "color": color, "family": "serif"},
+        font={"size": 22, "color": color, "family": "serif"},
         xanchor="center",
         yanchor="middle",
     )
 
-# Vertex dots
+# Vertex dots (theme-adaptive ink color)
 for name, (vx, vy) in vertices.items():
     fig.add_trace(
         go.Scatter(
             x=[vx],
             y=[vy],
             mode="markers",
-            marker={"size": 16, "color": "#1a1a1a", "line": {"width": 2.5, "color": "white"}},
+            marker={"size": 16, "color": INK, "line": {"width": 2.5, "color": PAGE_BG}},
             showlegend=False,
             hovertemplate=f"<b>Vertex {name}</b><br>Interaction point<extra></extra>",
         )
     )
 
-# Line style legend (bottom-right, centered under decay products)
-legend_x0, legend_y0 = 0.66, 0.08
-legend_entries = [
+# Legend — 4 particle types with miniature line samples, horizontal row at bottom
+leg_items = [
     ("fermion", "Fermion (straight)"),
+    ("vector", "Z boson (wavy)"),
     ("photon", "Photon (wavy)"),
-    ("gluon", "Gluon (curly)"),
-    ("boson", "Boson (dashed)"),
+    ("boson", "Higgs (dashed)"),
 ]
 legend_ts = np.linspace(0, 1, 200)
 legend_taper = np.minimum(legend_ts / 0.1, 1.0) * np.minimum((1 - legend_ts) / 0.1, 1.0)
-for j, (ptype, desc) in enumerate(legend_entries):
-    lx, ly = legend_x0, legend_y0 - j * 0.055
-    col, lw_len = COLORS[ptype], 0.06
-    if ptype in ("fermion", "boson"):
-        dash = "10px,6px" if ptype == "boson" else None
-        fig.add_shape(type="line", x0=lx, y0=ly, x1=lx + lw_len, y1=ly, line={"color": col, "width": 3, "dash": dash})
+lw_len = 0.060
+x_starts = [0.04, 0.27, 0.52, 0.75]
+y_leg = -0.065
+
+for j, (ptype, desc) in enumerate(leg_items):
+    lx = x_starts[j]
+    ly = y_leg
+    col = COLORS[ptype]
+
+    if ptype == "fermion":
+        fig.add_shape(type="line", x0=lx, y0=ly, x1=lx + lw_len, y1=ly, line={"color": col, "width": 3})
+        fig.add_annotation(
+            x=lx + lw_len * 0.62,
+            y=ly,
+            ax=lx + lw_len * 0.38,
+            ay=ly,
+            xref="x",
+            yref="y",
+            axref="x",
+            ayref="y",
+            showarrow=True,
+            arrowhead=3,
+            arrowsize=1.8,
+            arrowwidth=2.5,
+            arrowcolor=col,
+            text="",
+        )
+    elif ptype == "boson":
+        fig.add_shape(
+            type="line", x0=lx, y0=ly, x1=lx + lw_len, y1=ly, line={"color": col, "width": 3, "dash": "10px,6px"}
+        )
     else:
-        theta_s = 2 * np.pi * (5 if ptype == "photon" else 4) * legend_ts
-        px = lx + legend_ts * lw_len - (0.005 * (1 - np.cos(theta_s)) * legend_taper if ptype == "gluon" else 0)
-        py = ly + 0.012 * np.sin(theta_s) * legend_taper
+        freq_leg = 5 if ptype == "photon" else 4
+        theta_s = 2 * np.pi * freq_leg * legend_ts
+        px = lx + legend_ts * lw_len
+        py = ly + 0.011 * np.sin(theta_s) * legend_taper
         fig.add_trace(
             go.Scatter(x=px, y=py, mode="lines", line={"color": col, "width": 2.5}, showlegend=False, hoverinfo="skip")
         )
+
     fig.add_annotation(
-        x=lx + 0.07, y=ly, text=desc, showarrow=False, font={"size": 16, "color": col}, xanchor="left", yanchor="middle"
+        x=lx + lw_len + 0.010,
+        y=ly,
+        text=desc,
+        showarrow=False,
+        font={"size": 14, "color": col},
+        xanchor="left",
+        yanchor="middle",
     )
 
-# Time axis arrow
+# Time axis arrow (bottom of diagram)
 fig.add_annotation(
-    x=0.60,
-    y=-0.04,
-    ax=0.0,
-    ay=-0.04,
+    x=0.68,
+    y=-0.12,
+    ax=0.04,
+    ay=-0.12,
     xref="x",
     yref="y",
     axref="x",
@@ -202,29 +237,28 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=2,
     arrowwidth=2,
-    arrowcolor="#888",
+    arrowcolor=INK_MUTED,
     text="",
 )
 fig.add_annotation(
-    x=0.30, y=-0.075, text="<i>time</i>", showarrow=False, font={"size": 20, "color": "#888"}, xanchor="center"
+    x=0.36, y=-0.145, text="<i>time</i>", showarrow=False, font={"size": 18, "color": INK_MUTED}, xanchor="center"
 )
 
-# Layout
+# Title: 62 chars — under 67, default 16px applies, no scaling needed
+title = "Higgs-strahlung · feynman-basic · python · plotly · anyplot.ai"
+
 fig.update_layout(
-    title={
-        "text": "gg → H → γγ (Gluon Fusion) · feynman-basic · plotly · pyplots.ai",
-        "font": {"size": 30, "family": "serif"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    xaxis={"visible": False, "range": [-0.06, 1.06], "fixedrange": True},
-    yaxis={"visible": False, "range": [-0.12, 1.02], "fixedrange": True},
-    template="plotly_white",
-    plot_bgcolor="white",
-    margin={"l": 30, "r": 30, "t": 75, "b": 30},
+    autosize=False,
+    margin={"l": 40, "r": 40, "t": 70, "b": 40},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK, "family": "serif"},
+    title={"text": title, "font": {"size": 16, "family": "serif"}, "x": 0.5, "xanchor": "center"},
+    xaxis={"visible": False, "range": [-0.06, 1.10], "fixedrange": True},
+    yaxis={"visible": False, "range": [-0.20, 1.05], "fixedrange": True},
     showlegend=False,
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — canvas: 3200 × 1800 (landscape)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
