@@ -1,21 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-11
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-06-03
 """
+
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Prevent this file (bokeh.py) from shadowing the bokeh package on sys.path
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p and os.path.abspath(p) != _here]
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d, Title
-from bokeh.plotting import figure, save
+from bokeh.plotting import figure
+from PIL import Image
 from scipy.spatial import ConvexHull
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens — Imprint palette style guide
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — density (kg/m³) vs Young's modulus (GPa) for 7 material families
 np.random.seed(42)
 
-
-# Data - realistic material properties (density kg/m³ vs Young's modulus GPa)
 families = {
     "Metals": {
         "density": [
@@ -68,26 +91,19 @@ families = {
     },
 }
 
-# Colorblind-safe palette - deuteranopia-friendly (no brown/gold confusion)
-colors = {
-    "Metals": "#306998",
-    "Polymers": "#E8833A",
-    "Ceramics": "#B5494E",
-    "Composites": "#5BA05B",
-    "Elastomers": "#9B6FB8",
-    "Foams": "#D4A84B",
-    "Natural Materials": "#6B8E8E",
-}
+# Imprint palette in canonical order; 7 families use first 7 positions
+family_names = list(families.keys())
+family_colors = {name: IMPRINT_PALETTE[i] for i, name in enumerate(family_names)}
 
-# Emphasis levels for visual hierarchy (key structural families emphasized)
+# Visual hierarchy — primary structural families carry more emphasis
 emphasis = {
-    "Metals": {"fill_alpha": 0.22, "line_width": 3.5, "marker_size": 28},
-    "Ceramics": {"fill_alpha": 0.18, "line_width": 3, "marker_size": 26},
-    "Composites": {"fill_alpha": 0.16, "line_width": 2.5, "marker_size": 22},
-    "Polymers": {"fill_alpha": 0.14, "line_width": 2, "marker_size": 20},
-    "Natural Materials": {"fill_alpha": 0.12, "line_width": 2, "marker_size": 18},
-    "Elastomers": {"fill_alpha": 0.12, "line_width": 1.5, "marker_size": 16},
-    "Foams": {"fill_alpha": 0.12, "line_width": 1.5, "marker_size": 14},
+    "Metals": {"fill_alpha": 0.20, "line_width": 3.0, "marker_size": 22},
+    "Ceramics": {"fill_alpha": 0.18, "line_width": 2.5, "marker_size": 20},
+    "Composites": {"fill_alpha": 0.16, "line_width": 2.5, "marker_size": 18},
+    "Polymers": {"fill_alpha": 0.14, "line_width": 2.0, "marker_size": 18},
+    "Natural Materials": {"fill_alpha": 0.12, "line_width": 2.0, "marker_size": 16},
+    "Elastomers": {"fill_alpha": 0.12, "line_width": 1.5, "marker_size": 14},
+    "Foams": {"fill_alpha": 0.12, "line_width": 1.5, "marker_size": 12},
 }
 
 rows = []
@@ -95,68 +111,78 @@ for family_name, props in families.items():
     for d, m in zip(props["density"], props["modulus"], strict=True):
         jitter_d = d * (1 + np.random.uniform(-0.08, 0.08))
         jitter_m = m * (1 + np.random.uniform(-0.12, 0.12))
-        rows.append({"family": family_name, "density": jitter_d, "modulus": jitter_m, "color": colors[family_name]})
-
+        rows.append({"family": family_name, "density": jitter_d, "modulus": jitter_m})
 df = pd.DataFrame(rows)
 
-# Plot
+# Title — 52 chars < 67 baseline, no font scaling needed
+title_str = "scatter-ashby-material · python · bokeh · anyplot.ai"
+
+# Plot — 3200×1800 landscape, log-log axes
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     x_axis_type="log",
     y_axis_type="log",
-    x_axis_label="Density (kg/m\u00b3)",
+    x_axis_label="Density (kg/m³)",
     y_axis_label="Young's Modulus (GPa)",
-    title="scatter-ashby-material \u00b7 bokeh \u00b7 pyplots.ai",
+    title=title_str,
     x_range=Range1d(10, 50000),
     y_range=Range1d(0.0005, 1000),
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
+# Subtitle
+p.add_layout(
+    Title(
+        text="Young's Modulus vs Density — Material Selection Map",
+        text_font_size="24pt",
+        text_color=INK_MUTED,
+        text_font_style="italic",
+    ),
+    "above",
+)
+
+# Hover tooltip
 p.add_tools(
-    HoverTool(tooltips=[("Family", "@family"), ("Density", "@x{0,0} kg/m\u00b3"), ("Modulus", "@y{0.000} GPa")])
+    HoverTool(tooltips=[("Family", "@family"), ("Density", "@density{0,0} kg/m³"), ("Modulus", "@modulus{0.000} GPa")])
 )
 
-# Performance index guide lines: E/rho = constant (lightweight stiffness)
-# On log-log plot, E = C * rho is a line with slope 1
-for c_val, label_text, lx, ly in [(0.01, "E/\u03c1 = 0.01", 5000, 0.01 * 5000), (1.0, "E/\u03c1 = 1", 500, 1.0 * 500)]:
-    guide_x = [10, 50000]
-    guide_y = [c_val * 10, c_val * 50000]
-    p.line(guide_x, guide_y, line_color="#777777", line_width=2.5, line_dash="dashed", line_alpha=0.5)
+# Performance index guide lines — E/ρ = constant (slope 1 on log-log)
+for c_val, label_text, lx, ly in [(0.01, "E/ρ = 0.01", 8000, 0.01 * 8000), (1.0, "E/ρ = 1", 500, 1.0 * 500)]:
+    p.line(
+        [10, 50000],
+        [c_val * 10, c_val * 50000],
+        line_color=INK_MUTED,
+        line_width=2.0,
+        line_dash="dashed",
+        line_alpha=0.55,
+    )
     p.add_layout(
         Label(
             x=lx,
             y=ly,
             text=label_text,
-            text_font_size="18pt",
-            text_font_style="normal",
-            text_color="#555555",
-            text_alpha=1.0,
-            x_offset=10,
-            y_offset=-15,
-            background_fill_color="#FAFAFA",
-            background_fill_alpha=0.7,
+            text_font_size="16pt",
+            text_font_style="italic",
+            text_color=INK_MUTED,
+            x_offset=8,
+            y_offset=-10,
+            background_fill_color=ELEVATED_BG,
+            background_fill_alpha=0.80,
         )
     )
 
-# Label offset map to avoid overlap (manually tuned for known data positions)
-label_offsets = {
-    "Metals": (40, 25),
-    "Ceramics": (-80, 35),
-    "Composites": (0, 30),
-    "Polymers": (0, -30),
-    "Elastomers": (0, -25),
-    "Foams": (-10, 25),
-    "Natural Materials": (25, -25),
-}
-
-# Draw convex hull envelopes for each family
+# Convex hull envelopes + centroid labels per family
 legend_items = []
-for family_name in families:
+for family_name in family_names:
     fam_df = df[df["family"] == family_name]
     log_x = np.log10(fam_df["density"].values)
     log_y = np.log10(fam_df["modulus"].values)
-    color = colors[family_name]
+    color = family_colors[family_name]
     emph = emphasis[family_name]
 
     if len(fam_df) >= 3:
@@ -167,7 +193,9 @@ for family_name in families:
 
         center_log_x = pts[hull.vertices, 0].mean()
         center_log_y = pts[hull.vertices, 1].mean()
-        expand_factor = 0.08 if family_name in ("Metals", "Ceramics") else 0.15
+
+        # Tighter expand for crowded upper region, more room for sparse lower families
+        expand_factor = 0.10 if family_name in ("Metals", "Ceramics", "Composites") else 0.16
         expanded = hull_pts.copy()
         for i in range(len(expanded)):
             dx = expanded[i, 0] - center_log_x
@@ -175,114 +203,137 @@ for family_name in families:
             expanded[i, 0] += dx * expand_factor
             expanded[i, 1] += dy * expand_factor
 
-        hull_x = list(10 ** expanded[:, 0])
-        hull_y = list(10 ** expanded[:, 1])
-
         p.patch(
-            hull_x,
-            hull_y,
+            list(10 ** expanded[:, 0]),
+            list(10 ** expanded[:, 1]),
             fill_alpha=emph["fill_alpha"],
             fill_color=color,
             line_color=color,
-            line_alpha=0.5,
+            line_alpha=0.65,
             line_width=emph["line_width"],
         )
 
-        # Position label at top of hull to reduce overlap
-        top_idx = np.argmax(pts[hull.vertices, 1])
-        label_x = 10 ** pts[hull.vertices[top_idx], 0]
-        label_y = 10 ** pts[hull.vertices[top_idx], 1]
-        x_off, y_off = label_offsets.get(family_name, (0, 15))
+        # Label at log-space centroid — reduces crowding vs top-of-hull approach
         p.add_layout(
             Label(
-                x=label_x,
-                y=label_y,
+                x=10**center_log_x,
+                y=10**center_log_y,
                 text=family_name,
-                text_font_size="18pt",
+                text_font_size="20pt",
                 text_font_style="bold",
                 text_color=color,
-                text_alpha=0.85,
-                x_offset=x_off,
-                y_offset=y_off,
+                x_offset=0,
+                y_offset=10,
             )
         )
 
 # Scatter points per family
-for family_name in families:
+for family_name in family_names:
     fam_df = df[df["family"] == family_name]
-    source = ColumnDataSource(data={"x": fam_df["density"], "y": fam_df["modulus"], "family": fam_df["family"]})
+    source = ColumnDataSource(
+        data={
+            "x": fam_df["density"].values,
+            "y": fam_df["modulus"].values,
+            "density": fam_df["density"].values,
+            "modulus": fam_df["modulus"].values,
+            "family": fam_df["family"].values,
+        }
+    )
     emph = emphasis[family_name]
     renderer = p.scatter(
         x="x",
         y="y",
         source=source,
         size=emph["marker_size"],
-        color=colors[family_name],
-        alpha=0.75,
-        line_color="white",
+        color=family_colors[family_name],
+        alpha=0.82,
+        line_color=PAGE_BG,
         line_width=1.5,
     )
     legend_items.append(LegendItem(label=family_name, renderers=[renderer]))
 
-# Add legend
+# Inside legend — bottom_right is empty in this Ashby chart layout
 legend = Legend(
     items=legend_items,
-    location="top_right",
-    label_text_font_size="17pt",
-    glyph_height=45,
-    glyph_width=45,
-    spacing=12,
-    padding=18,
+    location="bottom_right",
+    label_text_font_size="24pt",
+    label_text_color=INK_SOFT,
+    glyph_height=40,
+    glyph_width=40,
+    spacing=8,
+    padding=16,
     margin=20,
-    background_fill_alpha=0.8,
-    background_fill_color="#FFFFFF",
-    border_line_alpha=0.2,
-    border_line_color="#CCCCCC",
+    background_fill_alpha=0.92,
+    background_fill_color=ELEVATED_BG,
+    border_line_color=INK_SOFT,
+    border_line_alpha=0.4,
 )
-p.add_layout(legend, "right")
+p.add_layout(legend)
 
-# Style - refined typography and visual polish
-p.title.text_font_size = "28pt"
+# Typography
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 p.title.text_font_style = "normal"
-p.title.text_color = "#333333"
-p.add_layout(
-    Title(
-        text="Young's Modulus vs Density — Material Selection Map",
-        text_font_size="16pt",
-        text_color="#888888",
-        text_font_style="italic",
-    ),
-    "above",
-)
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.axis_label_text_color = "#444444"
-p.yaxis.axis_label_text_color = "#444444"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.major_label_text_color = "#555555"
-p.yaxis.major_label_text_color = "#555555"
 
-# Minimal grid - horizontal only for cleaner look on log-log
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+
+# Grid — both axes, subtle opacity for log-log scatter
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.08
-p.ygrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.12
 p.xgrid.grid_line_width = 1
 p.ygrid.grid_line_width = 1
-p.xgrid.grid_line_dash = [4, 4]
 
+# Chrome — remove outline and axis lines for a clean Ashby aesthetic
 p.outline_line_color = None
-p.xaxis.minor_tick_line_color = None
-p.yaxis.minor_tick_line_color = None
-p.xaxis.major_tick_line_color = None
-p.yaxis.major_tick_line_color = None
 p.xaxis.axis_line_color = None
 p.yaxis.axis_line_color = None
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-p.background_fill_color = "#FAFAFA"
-p.border_fill_color = "#FFFFFF"
-p.min_border_left = 80
-p.min_border_bottom = 60
+# Save HTML (catalog interactive artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="Ashby Material Selection Chart")
+# Screenshot PNG via headless Chrome — Selenium 4 / Selenium Manager.
+# Chrome's viewport is smaller than the window size by a fixed overhead (~139 px
+# on this host). Use a 400 px taller window so the full 1800 px figure is visible,
+# then crop the screenshot back to exactly 3200×1800.
+W, H = 3200, 1800
+WIN_H = H + 400  # extra headroom so the full figure fits in the viewport
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{WIN_H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, WIN_H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+raw_path = f"plot-{THEME}-raw.png"
+driver.save_screenshot(raw_path)
+driver.quit()
+
+# Crop screenshot to exact canvas size
+img = Image.open(raw_path)
+img_cropped = img.crop((0, 0, W, H))
+img_cropped.save(f"plot-{THEME}.png")
+Path(raw_path).unlink(missing_ok=True)
