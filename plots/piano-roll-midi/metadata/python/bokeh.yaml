@@ -1,47 +1,51 @@
 library: bokeh
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:47:49Z'
-updated: '2026-03-07T19:59:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912200
+updated: '2026-06-03T03:51:14Z'
+generated_by: claude-sonnet
+workflow_run: 26861695811
 issue: 4565
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/bokeh/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - 'Excellent domain-specific data: musically meaningful phrase with scale runs,
-    chord progression (I-IV-V-I), and dynamic variation that tells a clear musical
-    story'
-  - 'All spec features implemented: black/white key shading, beat/measure grid differentiation,
-    note names on y-axis, velocity color mapping, auto-fit pitch range'
-  - 'Good use of Bokeh-specific features: HoverTool, ColumnDataSource, ColorBar, level-based
-    rendering, HTML export'
-  - Clean visual design with custom grid lines, removed default chrome, and white
-    note borders for clarity
-  - Fully deterministic data with no randomness
+  - Correct imprint_seq colormap (green→blue) for velocity mapping
+  - 'All spec requirements met: note names on y-axis, alternating piano key shading,
+    differentiated beat/measure grid lines, color bar'
+  - 'Excellent bokeh feature utilization: ColorBar, HoverTool, FixedTicker, major_label_overrides,
+    ColumnDataSource with level=underlay'
+  - Both themes correctly adapted with appropriate tokens throughout
+  - Musical phrase is rich and domain-authentic (C major scales + I-IV-V-I chords
+    + resolution)
   weaknesses:
-  - Turbo colormap is not the most colorblind-accessible choice; viridis or cividis
-    would score higher on accessibility
-  - Manual grid line drawing via p.line loop is slightly non-idiomatic compared to
-    Bokeh grid styling options
-  image_description: The plot displays a MIDI piano roll visualization with horizontal
-    colored rectangles representing musical notes. The y-axis shows pitch names from
-    B3 to D#5, with alternating white and light gray background rows distinguishing
-    white keys from black keys on a piano. The x-axis shows time in beats from 0 to
-    16. Notes are colored using a Turbo colormap ranging from blue (low velocity/soft)
-    through green and yellow to red (high velocity/loud). Vertical grid lines mark
-    beats, with thicker/darker lines at measure boundaries (beats 0, 4, 8, 12, 16).
-    A color bar on the right indicates the velocity scale from 40 to 120. The title
-    reads "piano-roll-midi · bokeh · pyplots.ai". The musical content shows an ascending
-    C major scale (measures 1-2), descending scale (measures 3-4), block chords building
-    to a red-colored climax at beat 10 (measures 5-6), and a resolving melodic phrase
-    (measures 7-8). White borders separate individual note rectangles clearly.
+  - 'DE-01 moderate: piano roll design is professional but relies on standard DAW
+    conventions without standout visual innovation beyond the spec requirements'
+  - 'DE-02 partially met: custom grid lines are a nice touch, but removing more default
+    chrome (e.g. axis tick marks) would improve refinement'
+  - 'DE-03 limited: musical narrative arc is present in the data but the visualization
+    provides no annotations or focal emphasis to guide the viewer to notice the crescendo→climax→resolution
+    story'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "piano-roll-midi · python · bokeh · anyplot.ai" in dark ink, clearly readable. X-axis label "Time (beats)" and Y-axis label "Pitch" in dark ink, proportional 42pt sizing. Tick labels for note names (B3–D#5) and beat numbers (0–16) in INK_SOFT, fully readable at 34pt. Color bar labeled "Velocity" with tick values 40–120 readable. Alternating background row shading distinguishes black/white piano keys (very light cream vs. slightly darker grey-cream).
+      Data: Note rectangles colored via imprint_seq (#009E73 → #4467A3). Soft notes are teal-green, loud notes are blue. Custom grid lines at every beat (subtle 12% opacity) with stronger lines at measures 0,4,8,12,16 (40% opacity). All note rectangles clearly visible.
+      Legibility verdict: PASS — all text elements fully readable against the warm off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 / #B8B7B0 tokens) — clearly readable against the dark background. No dark-on-dark failures detected. Alternating row shading is subtly visible (near-black vs. slightly lighter dark rows). Color bar with light-text labels readable.
+      Data: Note rectangle colors are identical to the light render (same teal-green to blue gradient from imprint_seq). Data color invariance confirmed. Custom grid lines visible.
+      Legibility verdict: PASS — all text elements fully readable against the warm near-black surface; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -49,44 +53,54 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt, color bar title 18pt, color bar labels 16pt'
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          tick labels). All text readable at full size in both light and dark themes.
+          No legibility failures.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; y-axis note names well spaced, x-axis beat numbers
-          clear
+        comment: No text or element overlaps. Note rectangles have 0.18 gap (height=0.82),
+          chords are on separate pitch rows. Clean layout throughout.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Note rectangles clearly visible with white borders, height 0.8 gives
-          good spacing
+        comment: Note rectangles are clearly visible with appropriate size. Velocity
+          gradient clearly distinguishes dynamic range. Color bar legible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Turbo palette is perceptually more uniform than rainbow but not as
-          colorblind-safe as viridis/cividis
+        comment: imprint_seq (green→blue) is CVD-safe. No red-green sole-signal encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, plot fills space well, color bar positioned
-          with adequate margins
+        comment: Canvas 3200×1800. min_border values (bottom=160, left=180, top=110,
+          right=80) correctly reserve space for large text. Canvas gate passed. Color
+          bar well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (beats) and Pitch (MIDI note) descriptive with units
+        comment: 'X: ''Time (beats)'', Y: ''Pitch'', Title correct format. Units present
+          where needed.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'VELOCITY_PALETTE correctly interpolates #009E73→#4467A3 (imprint_seq).
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Data colors identical across
+          both renders.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -94,22 +108,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Turbo palette vibrant and effective; white note borders, alternating
-          key shading, clean background; above defaults
+        comment: Professional piano roll design with domain-appropriate alternating
+          row shading. Intentional velocity-color hierarchy. Custom grid differentiating
+          beats from measures. Solid but not visually inventive beyond the spec conventions.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Default grids removed, custom beat/measure grid lines with differentiated
-          alpha/width, outline removed, generous margins
+        comment: Custom manual grid lines replace bokeh default grid. outline_line_color=None
+          removes frame. Alternating background rows are subtle and don't compete
+          with data. Could further refine by removing tick marks.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Musical data tells a clear story with ascending crescendo, chord
-          climax, and gentle resolution
+        comment: Musical narrative arc (crescendo→climax→resolution) is encoded in
+          velocity colors, but no annotations or focal emphasis guide the viewer to
+          the story. Data storytelling is implicit rather than intentional.
     spec_compliance:
       score: 15
       max: 15
@@ -119,27 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles positioned by pitch
-          and time
+        comment: 'Correct piano roll: horizontal rectangles by pitch (y) and time
+          (x), width=duration, color=velocity.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: duration as bar length, velocity color, key shading,
-          grid lines, note names, auto-fit range'
+        comment: Note names on y-axis (major_label_overrides), alternating row shading
+          for black/white keys, beat/measure grid lines with differentiated strength,
+          sequential velocity colormap.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in beats, Y=pitch with note names, all data visible
+        comment: X=time in beats, Y=pitch as note names, color=velocity, width=duration.
+          Auto-fit range with 1-note margin.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, ColorBar legend for velocity
+        comment: 'Title: ''piano-roll-midi · python · bokeh · anyplot.ai'' correct.
+          ColorBar labeled ''Velocity'' with correct tick marks.'
     data_quality:
       score: 15
       max: 15
@@ -149,22 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varied durations (0.25-2.0 beats), velocities (55-120), scales,
-          chords, melodic passages
+        comment: Covers scalar melody (ascending/descending runs), polyphony (block
+          chords), varying durations (eighth notes to whole notes), full velocity
+          range (55-127), 8 measures.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic C major musical phrase with scale runs, I-IV-V-I chord
-          progression, melodic resolution
+        comment: C major phrase with I-IV-V-I progression. Velocities in realistic
+          MIDI range. Note lengths (0.25-2.0 beats) are musically standard. Neutral,
+          non-controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches C4-D5, velocities 55-120, 8 measures - all sensible
-          for musical context
+        comment: Pitch range B3-D5 auto-fits data with 1-note margin. Time range 0-16
+          beats. Velocity colormap low=40 high=127 spans realistic MIDI range.
     code_quality:
       score: 10
       max: 10
@@ -174,61 +196,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions/classes
+        comment: No functions or classes. Flat, readable script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded note data
+        comment: Fully deterministic — all notes hardcoded, no random state.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used including save and Resources for HTML export
+        comment: All imports used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI elements
+        comment: No fake UI. Appropriate complexity. Inline VELOCITY_PALETTE computation
+          is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good use of ColumnDataSource, figure, rect, LinearColorMapper, ColorBar,
-          FixedTicker; minor: manual grid lines via p.line loop'
+        comment: ColumnDataSource, LinearColorMapper, ColorBar, HoverTool, FixedTicker,
+          major_label_overrides, level='underlay' for background rects, toolbar_location=None.
+          Fully idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, HTML export, ColumnDataSource pattern,
-          level-based rendering
+        comment: 'Strong use of bokeh-specific features: level=''underlay'' for background
+          rects, major_label_overrides for note name y-axis, LinearColorMapper+ColorBar
+          for velocity, HoverTool with format strings, interactive HTML output. Missing
+          advanced transforms or server-side callbacks.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
   - colorbar
   - hover-tooltips
-  - manual-ticks
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap

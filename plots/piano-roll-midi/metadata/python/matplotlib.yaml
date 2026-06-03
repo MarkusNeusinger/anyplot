@@ -1,82 +1,106 @@
 library: matplotlib
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:46:50Z'
-updated: '2026-03-07T19:58:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912198
+updated: '2026-06-03T03:28:57Z'
+generated_by: claude-sonnet
+workflow_run: 26861506154
 issue: 4565
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent visual design with rounded note rectangles, shadow effects, and alternating
-    key shading that authentically mimics DAW piano rolls
-  - 'Perfect spec compliance with all required features: black/white key distinction,
-    beat/measure grid hierarchy, auto-fit pitch range, velocity colorbar'
-  - Thoughtful musical data with melodic contour, dynamic build, and harmonic structure
-    that tells a story
-  - Clean well-structured code with appropriate use of matplotlib patch and path effects
-    systems
-  weaknesses: []
-  image_description: The plot displays a MIDI piano roll visualization spanning 8
-    measures (32 beats). The y-axis shows pitch names from B3 to A#5 in monospace
-    font, with alternating light gray and very light gray row backgrounds distinguishing
-    black keys from white keys. The x-axis shows measure numbers 1-9. Horizontal rounded
-    rectangles represent notes, with length indicating duration and color (from the
-    plasma colormap) indicating velocity — deep purple/magenta for soft notes through
-    orange for moderate to bright yellow for loud. Vertical grid lines mark beats
-    (thin light gray) and measure boundaries (thicker darker gray). A colorbar on
-    the right shows the velocity scale labeled "Velocity (MIDI)" ranging from 40 to
-    127. The title reads "piano-roll-midi · matplotlib · pyplots.ai". All spines are
-    removed. The background is a warm off-white. The musical data shows a clear melodic
-    contour with bass accompaniment, building to a climax in measures 6-7 with bright
-    yellow high-velocity notes.
+  - 'Exceptional spec compliance: all required features (alternating key rows, beat/measure
+    grid, velocity colormap, pitch note labels, rounded note rectangles) implemented
+    correctly'
+  - Polished visual design using FancyBboxPatch with rounded corners and path-effects
+    shadow — clearly above matplotlib defaults and evokes a real DAW piano roll aesthetic
+  - Correct use of imprint_seq colormap for continuous velocity data with fully theme-adaptive
+    chrome (INK/INK_SOFT tokens used throughout, including colorbar)
+  - Rich realistic musical data spanning 8 measures with melody, bass, and chords
+    showing dynamic variation from piano to forte
+  - All spines removed, subtle beat/measure grid with differentiated line weights
+    (0.7 vs 0.35 px), tick marks hidden — refined visual chrome
+  weaknesses:
+  - plt.tight_layout() is used — library guide recommends fig.subplots_adjust() instead
+    of tight_layout() to avoid potential canvas drift (canvas gate passed here, so
+    no actual drift, but worth correcting for future robustness)
+  - A few pyplot-level calls (plt.colorbar, plt.setp, plt.tight_layout) instead of
+    figure/axes methods — minor style inconsistency with the library guide which prefers
+    ax-level API
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "piano-roll-midi · python · matplotlib · anyplot.ai" visible in dark ink at top; Y-axis label "Pitch" and X-axis label "Measure" in dark ink; tick labels in slightly lighter INK_SOFT gray; all clearly readable
+      Data: Note bars rendered as rounded horizontal rectangles using imprint_seq colormap (green #009E73 at low velocity ~65, transitions through teal/cyan, to blue #4467A3 at high velocity ~127); alternating row shading with subtle gray stripes (#EBE9E2) for black-key rows; vertical beat lines thin and subtle; measure boundary lines slightly thicker; colorbar on right side labeled "Velocity (MIDI)" with range 40–120
+      Legibility verdict: PASS — all text readable, no dark-on-dark, no overflow, no clipping
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface; black-key rows shade to #242420 (ELEVATED_BG), barely distinguishable but present
+      Chrome: Title in light #F0EFE8 (INK); axis labels and tick labels in #B8B7B0 (INK_SOFT) — all readable against dark background; colorbar label and ticks also in light colors; no dark-on-dark failures observed
+      Data: Same imprint_seq colormap — green-to-blue gradient colors are identical to light render; notes appear slightly more vivid against dark background (expected perceptual effect, not a data color change); colorbar gradient identical
+      Legibility verdict: PASS — all text clearly readable, correct theme adaptation, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar 18pt'
+        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, colorbar=10/8).
+          Monospace for pitch names aids alignment. Slightly small at 8pt for 26 pitch
+          rows but appropriate for density. Both themes readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, pitch labels and measure numbers well-spaced
+        comment: No text or data overlap. Pitch labels spaced correctly with monospace
+          font. Colorbar sits outside plot area without intruding.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Note rectangles 0.8 units tall with rounded corners, clearly visible
-          and distinguishable
+        comment: Note bars at 0.8 row-height with rounded corners are clearly visible.
+          Width proportional to duration. Path-effects shadow adds depth without obscuring.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Plasma colormap is perceptually uniform and colorblind-safe
+        comment: imprint_seq (green-to-blue) is CVD-safe. Colorbar provides continuous
+          legend. Row shading uses low-contrast neutral tones that don't compete.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout, plot fills canvas well with compact colorbar
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with balanced
+          margins. Colorbar neatly positioned right. Good use of whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Domain-appropriate labels: Measure, Pitch, Velocity (MIDI)'
+        comment: 'Title correct format. X: ''Measure'' (appropriate, no unit needed).
+          Y: ''Pitch'' (appropriate). Colorbar: ''Velocity (MIDI)'' with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used correctly for continuous velocity data (single-polarity).
+          Light bg #FAF8F1, dark bg #1A1A17. Theme-adaptive chrome tokens applied
+          throughout (INK, INK_SOFT, INK_MUTED). Data colors identical between renders.'
     design_excellence:
       score: 15
       max: 20
@@ -86,22 +110,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom plasma palette, rounded FancyBboxPatch with shadow effects,
-          monospace pitch labels, alternating key shading
+        comment: 'Strong design: FancyBboxPatch rounded note bars, path-effects shadow,
+          alternating row shading mirroring real DAW aesthetics, monospace font for
+          note names, custom imprint_seq colormap. Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines removed, tick marks hidden, differentiated grid lines,
-          colorbar outline hidden
+        comment: All spines removed, tick marks hidden (length=0), subtle differentiated
+          grid (0.7px measures vs 0.35px beats), colorbar outline removed, path effects
+          on notes. Very refined — vertical grid lines functional for piano roll but
+          add some visual density.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Musical structure with dynamic build to climax, velocity color variation
-          conveys dynamics
+        comment: 'Velocity colormap creates visual hierarchy: climax in measures 5-7
+          visibly more intense (darker blue). Data shows complete musical arc (opening,
+          development, climax, resolution). Note durations encode rhythm. Color guides
+          viewer to dynamic structure.'
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles on pitch/time grid
+        comment: Correct piano roll / MIDI grid visualization with horizontal note
+          rectangles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: key shading, beat grid, note names, velocity
-          colorbar, auto-fit range'
+        comment: 'All spec features: alternating black/white key row shading, beat/measure
+          grid lines, velocity colormap, pitch note names on Y-axis, data auto-fits
+          pitch range (B3-A#5).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch, all data visible
+        comment: X=time in measures, Y=pitch, bar width=duration, color=velocity.
+          All data visible within range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, colorbar serves as velocity legend
+        comment: Title 'piano-roll-midi · python · matplotlib · anyplot.ai' exact
+          match. Colorbar labeled 'Velocity (MIDI)'.
     data_quality:
       score: 15
       max: 15
@@ -140,20 +173,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows melody, bass, chords, varying durations and velocities across
-          8 measures
+        comment: 'Shows all aspects: varying durations (0.5 to 4 beats), chords (simultaneous
+          notes), melody+bass+chord layers, full velocity range (65-127), 8 complete
+          measures.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic musical phrase with melody, bass, and chord voicings
+        comment: Real-world music production scenario. MIDI pitches correct (C4=60),
+          standard beat structure, realistic musical phrase with structural arc.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 59-82 and velocities 65-127 are realistic ranges
+        comment: MIDI note numbers correctly mapped, 4 beats/measure, velocity in
+          0-127 range, pitch range B3-A#5 sensible for a keyboard phrase.
     code_quality:
       score: 10
       max: 10
@@ -163,31 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: 'Linear: imports → constants → data → plot setup → patches → axes
+          → colorbar → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, data is deterministic
+        comment: np.random.seed(42) set. Data is deterministic hardcoded notes.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, mcolors, mpatches, patheffects, pyplot, numpy,
+          LinearSegmentedColormap.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: Clean Pythonic code. FancyBboxPatch with path effects is appropriate
+          complexity. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, current API
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400) — correct naming, no bbox_inches='tight'.
     library_mastery:
       score: 7
       max: 10
@@ -197,15 +236,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes methods, ScalarMappable for colorbar, axhspan/axvline
-          for grid
+        comment: Good use of FancyBboxPatch, axhspan, axvline, ScalarMappable colorbar
+          pattern. Some pyplot-level calls (plt.colorbar, plt.setp, plt.tight_layout)
+          instead of figure-level methods.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FancyBboxPatch with rounded boxstyle, path_effects for shadow depth,
-          axhspan for rows
+        comment: FancyBboxPatch with boxstyle='round' and pe.withStroke() path effects
+          are distinctly matplotlib — not easily replicated in other libraries. axhspan
+          for row shading is also matplotlib-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -216,8 +257,10 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
-  - grid-styling

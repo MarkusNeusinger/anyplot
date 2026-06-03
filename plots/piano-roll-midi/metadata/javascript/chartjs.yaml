@@ -1,0 +1,266 @@
+library: chartjs
+language: javascript
+specification_id: piano-roll-midi
+created: '2026-06-03T03:54:08Z'
+updated: '2026-06-03T04:16:21Z'
+generated_by: claude-sonnet
+workflow_run: 26862192857
+issue: 4565
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Sophisticated custom Chart.js plugin using beforeDraw/afterDraw with canvas2D
+    coordinate mapping via scale.getPixelForValue — a non-trivial technique that correctly
+    implements a chart type not natively supported by Chart.js
+  - Imprint sequential palette (green→blue via t.seq) correctly applied to continuous
+    velocity data; both themes render with theme-adaptive chrome and identical data
+    colors
+  - 'Musically accurate 8-measure classical phrase in C major with full feature coverage:
+    whole/half/quarter/eighth/16th note durations, simultaneous chords, bass+melody
+    layers, authentic MIDI velocity ranges'
+  - Beat vs. measure line strength distinction (0.5px vs 1.5px) shows musical understanding;
+    black key alternating row shading uses theme-correct opacity tokens
+  - Velocity colorbar with ppp/fff dynamic labels provides intuitive legend for the
+    continuous color encoding; alpha blending (0.60–1.00) adds depth to the note rectangles
+  - 'All spec requirements met: note names on Y-axis (white keys only, musically correct),
+    auto-fitted pitch range, velocity-to-color mapping using imprint_seq'
+  - Deterministic hard-coded data, animation:false, no imports — clean idiomatic Chart.js
+    structure
+  weaknesses:
+  - Velocity colorbar font set to '12px sans-serif' in canvas2D context — at Chart.js
+    devicePixelRatio=2 this renders as ~24px physical on a 3200px canvas, which is
+    smaller than the 14px tick labels and may be illegible when scaled to mobile widths;
+    increase to at least 14px CSS
+  - 'Note border color in dark theme uses ''rgba(0,0,0,0.55)'' (always black) — on
+    the near-black #1A1A17 background, black borders on dark note fills reduce note
+    edge definition; use ''rgba(240,239,232,0.35)'' for dark theme to match other
+    theme-adaptive strokes'
+  - 'Bottom layout padding (65px) is tight for the colorbar area: cbTop = chart.height
+    - 52 positions the gradient bar very close to the canvas edge, leaving minimal
+    room for the label row; increase bottom padding to at least 80px or adjust cbTop
+    offset'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "piano-roll-midi · javascript · chartjs · anyplot.ai" in dark text (~22px) occupies ~65% of width, fully readable. Y-axis shows pitch names (F5 down to E2, white keys only) in dark secondary text at 13px. X-axis shows measure labels M1–M8 in dark secondary text at 14px. Axis titles "Pitch" and "Time (Measures, 4/4)" in dark primary text at 16px. Velocity colorbar labels "ppp", "Velocity (dynamics)", "fff" in secondary dark text at 12px — small but readable at full resolution.
+      Data: Note rectangles using imprint_seq gradient (green #009E73 for low velocity, transitioning through teal to blue #4467A3 for high velocity). Black key rows shaded with subtle warm-dark rgba(26,26,23,0.07) strips. Beat lines (0.5px) and measure lines (1.5px) in warm-dark stroke. Gradient colorbar across full plot width.
+      Legibility verdict: PASS — all text readable; minor concern about colorbar 12px label size at mobile scaling.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct theme surface, not pure black.
+      Chrome: Title in light cream text — clearly readable on dark background. Y-axis pitch labels and X-axis measure labels in secondary light text — readable, no dark-on-dark issues. Axis titles in light primary text. Velocity colorbar labels in light secondary text.
+      Data: Note rectangle colors are IDENTICAL to light render — same green-to-blue gradient (imprint_seq). Black key row shading uses rgba(240,239,232,0.07) — very subtle lighter bands against the near-black background, visible but appropriately understated. Note borders use rgba(0,0,0,0.55) — dark border on dark theme is slightly less effective but note fills are bright enough to be visible.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All primary text explicitly sized and readable in both themes; velocity
+          colorbar labels at 12px CSS slightly small for mobile scaling
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; simultaneous note overlaps are expected piano
+          roll behavior
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Notes clearly visible with velocity alpha blending; color gradient
+          distinguishes dynamics effectively
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-to-blue is CVD-safe; no red-green sole-signal issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct landscape 3200x1800; good canvas utilization; bottom colorbar
+          area tight but not clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: ''Pitch'', X: ''Time (Measures, 4/4)'' with units; title format
+          correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq via t.seq for continuous velocity data; theme-adaptive
+          chrome via ANYPLOT_TOKENS; identical data colors across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: velocity alpha blending, black key
+          shading, gradient colorbar, musical data arc; not yet at strong-design level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Chart.js default grid replaced with custom beat/measure lines of
+          distinct weights; box frame appropriate for piano roll; refinement evident
+          but not fully polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 8-measure arc with dynamic build toward M7 climax and M8 descent;
+          velocity coloring reinforces narrative; ppp/fff labels guide interpretation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct piano roll with horizontal note rectangles positioned by
+          pitch and time
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Note names on Y-axis (white keys), alternating black/white key rows,
+          beat+measure gridlines, velocity colormap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time=X, pitch=Y, duration=width, velocity=color; auto-fitted pitch
+          range with margin
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'piano-roll-midi · javascript · chartjs · anyplot.ai' correct;
+          velocity colorbar as continuous legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full range: 16th to whole notes, chords, bass+melody layers, 8 measures,
+          varied velocities'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classical phrase in C major (C/Am/F/G progression); musically accurate
+          pitch/duration/velocity data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 82 notes in 8 measures; MIDI velocity 62-105 realistic; pitch range
+          F2-E5 appropriate for piano phrase
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: tokens → helpers → data → canvas → chart; small pure
+          helper functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic note data; no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart.js and ANYPLOT_TOKENS from harness globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured plugin; no over-engineering; no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, responsive:true, maintainAspectRatio:false; harness
+          owns PNG output
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom plugin with beforeDraw/afterDraw, scale tick callbacks, scatter
+          scaffold for coordinate system — idiomatic Chart.js plugin pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.chartArea coordinate system, scale.getPixelForValue() for canvas2D
+          mapping, ctx.createLinearGradient for velocity bar — features distinctive
+          to Chart.js plugin system
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
