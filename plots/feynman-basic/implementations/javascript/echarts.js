@@ -1,7 +1,7 @@
 // anyplot.ai
 // feynman-basic: Feynman Diagram for Particle Interactions
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-03
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-03
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
