@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waveform-audio: Audio Waveform Plot
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
