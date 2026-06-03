@@ -1,13 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-09
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-06-03
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Patch
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.patches import Patch, Rectangle
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap — single-polarity cumulative claim amounts
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data
 np.random.seed(42)
@@ -26,7 +40,7 @@ initial_claims = np.array([4200, 4500, 4800, 5100, 5400, 5700, 6000, 6300, 6600,
 triangle = np.full((n_years, n_periods), np.nan)
 is_projected = np.full((n_years, n_periods), True)
 
-# Fill the upper-left actual triangle
+# Fill upper-left actual triangle
 for i in range(n_years):
     triangle[i, 0] = initial_claims[i]
     n_actual = n_periods - i
@@ -36,112 +50,111 @@ for i in range(n_years):
     for j in range(n_actual):
         is_projected[i, j] = False
 
-# Fill the lower-right projected triangle using chain-ladder
+# Fill lower-right projected triangle using chain-ladder
 for i in range(1, n_years):
     n_actual = n_periods - i
     for j in range(n_actual, n_periods):
         triangle[i, j] = triangle[i, j - 1] * dev_factors[j - 1]
 
-# Prepare masked arrays for actual and projected regions
-actual_data = np.ma.masked_where(is_projected | np.isnan(triangle), triangle)
-projected_data = np.ma.masked_where(~is_projected | np.isnan(triangle), triangle)
-
-# Shared normalization across both regions
 vmin, vmax = np.nanmin(triangle), np.nanmax(triangle)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — square canvas for symmetric heatmap grid (2400×2400 px)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Use imshow for each region with masked arrays
-im_actual = ax.imshow(actual_data, cmap="Blues", vmin=vmin, vmax=vmax, aspect="auto")
-im_projected = ax.imshow(projected_data, cmap="Oranges", vmin=vmin, vmax=vmax, aspect="auto")
+# Heatmap with Imprint sequential colormap
+im = ax.imshow(triangle, cmap=imprint_seq, vmin=vmin, vmax=vmax, aspect="auto")
 
-# Add white cell borders
+# Colorbar — create before twin axis so layout is established correctly
+cbar = fig.colorbar(im, ax=ax, pad=0.02, shrink=0.80)
+cbar.set_label("Cumulative Claims ($)", fontsize=8, color=INK)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:,.0f}"))
+cbar.outline.set_edgecolor(INK_SOFT)
+plt.setp(plt.getp(cbar.ax, "yticklabels"), color=INK_SOFT)
+
+# Hatching overlay on projected cells
+for i in range(n_years):
+    for j in range(n_periods):
+        if is_projected[i, j] and not np.isnan(triangle[i, j]):
+            rect = Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, hatch="///", edgecolor=PAGE_BG, linewidth=0)
+            ax.add_patch(rect)
+
+# Cell borders
 for i in range(n_years + 1):
-    ax.axhline(i - 0.5, color="white", linewidth=1.5)
+    ax.axhline(i - 0.5, color=PAGE_BG, linewidth=1.0)
 for j in range(n_periods + 1):
-    ax.axvline(j - 0.5, color="white", linewidth=1.5)
+    ax.axvline(j - 0.5, color=PAGE_BG, linewidth=1.0)
 
-# Annotate each cell with formatted value
+# Cell annotations with brightness-adaptive text color
 for i in range(n_years):
     for j in range(n_periods):
         val = triangle[i, j]
         if np.isnan(val):
             continue
-        projected = is_projected[i, j]
-        cmap = plt.cm.Oranges if projected else plt.cm.Blues
-        rgba = cmap((val - vmin) / (vmax - vmin))
-        brightness = sum(rgba[:3]) / 3
-        text_color = "white" if brightness < 0.55 else "#333333"
-        fontstyle = "italic" if projected else "normal"
+        norm_val = (val - vmin) / (vmax - vmin)
+        rgba = imprint_seq(norm_val)
+        brightness = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
+        text_color = PAGE_BG if brightness < 0.5 else INK
+        fontstyle = "italic" if is_projected[i, j] else "normal"
         ax.text(
             j,
             i,
             f"{val:,.0f}",
             ha="center",
             va="center",
-            fontsize=12,
+            fontsize=7,
             color=text_color,
             fontstyle=fontstyle,
             fontweight="medium",
         )
 
-# Axes setup
+# Axes styling
+title = "heatmap-loss-triangle · python · matplotlib · anyplot.ai"
+n_chars = len(title)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+
 ax.set_xticks(range(n_periods))
-ax.set_xticklabels(development_periods, fontsize=16)
+ax.set_xticklabels(development_periods, fontsize=8, color=INK_SOFT)
 ax.set_yticks(range(n_years))
-ax.set_yticklabels(accident_years, fontsize=16)
-ax.set_xlabel("Development Period (Years)", fontsize=20, labelpad=30)
-ax.set_ylabel("Accident Year", fontsize=20)
-ax.set_title("heatmap-loss-triangle · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+ax.set_yticklabels(accident_years, fontsize=8, color=INK_SOFT)
+ax.set_xlabel("Development Period (Years)", fontsize=10, color=INK, labelpad=8)
+ax.set_ylabel("Accident Year", fontsize=10, color=INK, labelpad=6)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=30)
+ax.tick_params(axis="both", length=0, colors=INK_SOFT)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
-ax.spines["left"].set_visible(False)
-ax.tick_params(axis="both", length=0)
+for spine in ax.spines.values():
+    spine.set_visible(False)
 
-# Development factors below the x-axis tick labels
-ax.text(-0.5, n_years + 0.1, "Dev Factor:", ha="left", va="top", fontsize=11, color="#555555", fontweight="bold")
-for j in range(len(dev_factors)):
-    ax.text(
-        j + 1,
-        n_years + 0.1,
-        f"{dev_factors[j]:.2f}",
-        ha="center",
-        va="top",
-        fontsize=11,
-        color="#555555",
-        fontweight="medium",
-    )
+# Development factors on a twin x-axis at the top (after colorbar to avoid layout conflict)
+ax_top = ax.twiny()
+ax_top.set_xlim(ax.get_xlim())
+ax_top.set_xticks([j + 1 for j in range(len(dev_factors))])
+ax_top.set_xticklabels([f"{f:.2f}" for f in dev_factors], fontsize=7, color=INK_MUTED)
+ax_top.set_xlabel("Age-to-Age Dev. Factors (LDF)", fontsize=8, color=INK_MUTED, labelpad=6)
+ax_top.tick_params(length=0, colors=INK_MUTED, labelcolor=INK_MUTED)
+for spine in ax_top.spines.values():
+    spine.set_visible(False)
 
-# Colorbars — one for each colormap, stacked vertically on the right
-cbar_actual = fig.colorbar(im_actual, ax=ax, pad=0.015, shrink=0.42, anchor=(0.0, 1.0))
-cbar_actual.set_label("Actual ($)", fontsize=14)
-cbar_actual.ax.tick_params(labelsize=12)
-cbar_actual.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-
-cbar_projected = fig.colorbar(im_projected, ax=ax, pad=0.015, shrink=0.42, anchor=(0.0, 0.0))
-cbar_projected.set_label("Projected ($)", fontsize=14)
-cbar_projected.ax.tick_params(labelsize=12)
-cbar_projected.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-
-# Legend
+# Legend below the heatmap
 legend_elements = [
-    Patch(facecolor=plt.cm.Blues(0.5), edgecolor="white", label="Actual (Observed)"),
-    Patch(facecolor=plt.cm.Oranges(0.5), edgecolor="white", label="Projected (Estimated)"),
+    Patch(facecolor=imprint_seq(0.55), edgecolor=PAGE_BG, label="Actual (Observed)"),
+    Patch(facecolor=imprint_seq(0.55), edgecolor=PAGE_BG, hatch="///", label="Projected (IBNR)"),
 ]
-ax.legend(
+leg = ax.legend(
     handles=legend_elements,
     loc="upper left",
-    fontsize=16,
+    fontsize=7,
     frameon=True,
-    fancybox=True,
-    shadow=False,
-    edgecolor="#cccccc",
-    facecolor="white",
-    bbox_to_anchor=(0.0, -0.12),
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    bbox_to_anchor=(0.0, -0.10),
+    bbox_transform=ax.transAxes,
 )
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.10, bottom=0.14, top=0.90)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
