@@ -6,7 +6,6 @@
 const t = window.ANYPLOT_TOKENS;
 
 // Material data: x = density (kg/m³), y = Young's modulus (GPa)
-// Classic Ashby chart — six material families
 const families = [
   {
     name: "Metals",
@@ -20,7 +19,7 @@ const families = [
   },
   {
     name: "Ceramics",
-    color: t.palette[2],
+    color: t.palette[1],
     data: [
       { x: 3200, y: 380 }, { x: 3500, y: 300 }, { x: 2600, y: 76 },
       { x: 3900, y: 400 }, { x: 2200, y: 400 }, { x: 3000, y: 200 },
@@ -30,7 +29,7 @@ const families = [
   },
   {
     name: "Polymers",
-    color: t.palette[1],
+    color: t.palette[2],
     data: [
       { x: 950,  y: 2.0 }, { x: 1050, y: 3.0 }, { x: 1300, y: 1.3 },
       { x: 1400, y: 3.5 }, { x: 1100, y: 0.8 }, { x: 960,  y: 1.7 },
@@ -100,7 +99,40 @@ function guideLineData(k, xMin, xMax, steps) {
   return result;
 }
 
-// Plugin to draw family labels after datasets are painted
+// Andrew's monotone chain — convex hull of pixel-space points
+function convexHull(pts) {
+  if (pts.length < 3) return pts.slice();
+  function cross(o, a, b) {
+    return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  }
+  const sorted = pts.slice().sort((a, b) => a.x - b.x || a.y - b.y);
+  const lower = [];
+  for (const p of sorted) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const p = sorted[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
+// Expand hull outward from centroid by `margin` pixels for visual padding
+function expandHull(hull, cx, cy, margin) {
+  return hull.map(p => {
+    const dx = p.x - cx;
+    const dy = p.y - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    return { x: p.x + (dx / dist) * margin, y: p.y + (dy / dist) * margin };
+  });
+}
+
+// Plugin: convex-hull envelopes + family labels + guide-line annotations
 const familyLabelPlugin = {
   id: "familyLabels",
   afterDatasetsDraw(chart) {
@@ -108,22 +140,49 @@ const familyLabelPlugin = {
     const xScale = chart.scales.x;
     const yScale = chart.scales.y;
 
+    // 1. Draw convex-hull filled regions behind labels
+    families.forEach(family => {
+      const pixelPts = family.data.map(p => ({
+        x: xScale.getPixelForValue(p.x),
+        y: yScale.getPixelForValue(p.y),
+      }));
+      const hull = convexHull(pixelPts);
+      if (hull.length < 2) return;
+
+      // Centroid of hull for expansion
+      const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length;
+      const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length;
+      const expanded = expandHull(hull, cx, cy, 18);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(expanded[0].x, expanded[0].y);
+      for (let i = 1; i < expanded.length; i++) ctx.lineTo(expanded[i].x, expanded[i].y);
+      ctx.closePath();
+      ctx.fillStyle = family.color + "28"; // ~16% opacity fill
+      ctx.strokeStyle = family.color + "70"; // ~44% opacity border
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // 2. Draw family name pills at log-centroids
     families.forEach(family => {
       const c = logCentroid(family.data);
       const px = xScale.getPixelForValue(c.x);
       const py = yScale.getPixelForValue(c.y);
 
       ctx.save();
-      ctx.font = "bold 15px sans-serif";
+      ctx.font = "bold 18px sans-serif";
       const metrics = ctx.measureText(family.name);
-      const pad = 5;
+      const pad = 6;
       const bw = metrics.width + pad * 2;
-      const bh = 22 + pad * 2;
+      const bh = 26 + pad * 2;
 
-      // Semi-transparent pill background for legibility
       ctx.fillStyle = t.pageBg + "D0";
       ctx.beginPath();
-      ctx.roundRect(px - bw / 2, py - bh / 2, bw, bh, 4);
+      ctx.roundRect(px - bw / 2, py - bh / 2, bw, bh, 5);
       ctx.fill();
 
       ctx.fillStyle = family.color;
@@ -132,6 +191,21 @@ const familyLabelPlugin = {
       ctx.fillText(family.name, px, py);
       ctx.restore();
     });
+
+    // 3. Label the E/ρ guide lines at a mid-right anchor
+    const labelDataX = 12000;
+    const glPx = xScale.getPixelForValue(labelDataX);
+    const gl1Py = yScale.getPixelForValue(0.02 * labelDataX / 1000);
+    const gl2Py = yScale.getPixelForValue(0.004 * labelDataX / 1000);
+
+    ctx.save();
+    ctx.font = "italic 13px sans-serif";
+    ctx.fillStyle = t.inkSoft + "CC";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("E/ρ = 0.02", glPx + 6, gl1Py - 4);
+    ctx.fillText("E/ρ = 0.004", glPx + 6, gl2Py - 4);
+    ctx.restore();
   },
 };
 
