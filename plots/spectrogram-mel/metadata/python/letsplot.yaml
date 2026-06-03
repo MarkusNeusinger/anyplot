@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:40:37Z'
-updated: '2026-06-03T18:18:11Z'
+updated: '2026-06-03T18:28:57Z'
 generated_by: claude-sonnet
 workflow_run: 26903464023
 issue: 4672
@@ -12,55 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — mel-spectrogram with correct n_fft=2048, hop_length=512,
-    n_mels=128, dB conversion, mel-scale y-axis with Hz tick labels, and a labeled
-    dB colorbar, all implemented via pure numpy without external audio libraries
-  - Excellent synthesized data quality — C major arpeggio (C4, E4, G4, C5) with vibrato,
-    harmonics, and bell-shaped amplitude envelope produces a musically realistic mel
-    spectrogram that clearly shows the harmonic series structure
-  - Theme-adaptive chrome fully correct — both light (#FAF8F1) and dark (#1A1A17)
-    backgrounds implemented, all text tokens (INK, INK_SOFT) thread through title,
-    axis labels, tick labels, and legend; no dark-on-dark or light-on-light failures
-  - 'Palette compliance — imprint_seq gradient (#009E73 → #4467A3) correctly applied
-    to the single-polarity continuous dB data; this is the prescribed approach for
-    heatmaps'
-  - Note annotations (C4, E4, G4, C5) add meaningful musical context and create a
-    clear focal point guiding the viewer through the arpeggio sequence
-  - Interactive letsplot features well-leveraged — layer_tooltips with formatted time/frequency/power
-    display and HTML export are genuinely distinctive to lets-plot
-  - Clean code — KISS structure, seed set (np.random.seed(42)), all imports used,
-    no over-engineering
+  - Mel filter bank implemented entirely in numpy without scipy/librosa -- clean,
+    dependency-free signal processing
+  - 'Full spec compliance: all required parameters (n_fft=2048, hop_length=512, n_mels=128),
+    dB scale, Hz labels at key band edges'
+  - Musical note annotations (C4/E4/G4/C5) add genuine data storytelling -- viewer
+    immediately understands the melody structure
+  - 'Correct imprint_seq colormap (#009E73 to #4467A3) for sequential power data'
+  - Theme-adaptive chrome correctly threads all six tokens through every visual element
+    in both renders
   weaknesses:
-  - 'DE-01/DE-03 moderate: The upper ~55% of the frequency axis (roughly 2k–10k Hz)
-    is an almost uniform teal noise floor with very little musical content, making
-    roughly half the canvas visually monotonous. Consider clamping the displayed y-range
-    to 0–4000 Hz (or 0–5000 Hz) so the interesting harmonic detail fills the full
-    canvas height, dramatically improving visual sophistication and storytelling.'
-  - 'DE-02 minor: Grid lines (panel_grid_major) are visible through the spectrogram
-    tiles and slightly clutter the color data. For a heatmap/spectrogram, grid lines
-    add noise rather than aiding reading — set panel_grid_major=element_blank() and
-    panel_grid_minor=element_blank() for a cleaner result.'
-  - 'VQ-01 minor: Note annotation font (geom_text size=4 mm ≈ 11pt) is on the small
-    side at the canvas resolution; consider size=5 to make note labels (C4, E4, G4,
-    C5) more prominent without overlapping.'
+  - Colorbar tick label rendering at small display sizes is slightly compact -- legend_text
+    size=10 is at the minimum; size=11 would improve readability at mobile widths
+  - Axis spines still visible; for a heatmap/spectrogram, removing all four spines
+    (axis_line=element_blank()) would be cleaner and more refined
+  - 'LM-02 has room to grow: could leverage letsplot-native features more (e.g. theme
+    flavor presets, custom legend key sizing)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, clearly visible as a cream surface outside and inside the plot area.
-      Chrome: Title "spectrogram-mel · python · letsplot · anyplot.ai" in dark ink, ~50% of canvas width — readable. X-axis label "Time (s)" and Y-axis label "Frequency (Hz)" in dark text, clearly legible. Tick labels (0 to 2.5 on x; 100, 200, 500, 1k, 2k, 5k, 10k on y) in slightly muted dark ink — all readable. Colorbar legend "Power (dB)" on right side with gradient swatch and dB tick values — readable.
-      Data: Mel spectrogram rendered as geom_tile heatmap using imprint_seq gradient (#009E73 green at low dB → #4467A3 blue at high dB). Upper frequency region (2k–10k Hz) is predominantly uniform teal at the -10 dB noise floor. Lower region (100–1k Hz) shows the C major arpeggio with visible harmonic structure. Note labels C4, E4, G4, C5 are overlaid in small bold dark text at each note's fundamental frequency and time position.
-      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
+      Background: Warm off-white #FAF8F1 -- correct
+      Chrome: Title "spectrogram-mel · python · letsplot · anyplot.ai" at top-left in near-black INK (#1A1A17), clearly readable. Axis labels "Time (s)" and "Frequency (Hz)" in INK at size 12. Tick labels (0, 0.5, 1.0, ... / 100, 200, 500, 1k, 2k, 4k) in INK_SOFT (#4A4A44) at size 10, readable. Colorbar title "Power (dB)" and tick values (-10 to ~50) in INK/INK_SOFT, legible. Legend frame uses ELEVATED_BG (#FFFDF6).
+      Data: Spectrogram uses imprint_seq gradient (low=#009E73 green, high=#4467A3 blue). Low-power regions (background above musical note bands) appear teal/green. High-power bands (C4 ~262Hz, E4 ~330Hz, G4 ~392Hz, C5 ~523Hz fundamentals and harmonics) appear in darker blue. Four note labels (C4, E4, G4, C5) in bold dark INK text overlay the spectrogram at each note's time-frequency position.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface.
-      Chrome: Title, axis labels, tick labels, and colorbar text all rendered in light-colored text (#F0EFE8 / #B8B7B0) — fully readable against the dark background. No dark-on-dark failures observed. Legend box has elevated dark fill (#242420) with subtle border.
-      Data: Spectrogram colors are identical to the light render — imprint_seq gradient (green → blue) unchanged across themes, confirming palette data colors are theme-independent. Note labels (C4, E4, G4, C5) appear in near-white (#F0EFE8) since color=INK resolves to the dark-theme ink token — readable on the teal/green background.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 -- correct
+      Chrome: Title in near-white INK (#F0EFE8) clearly readable against dark background. Axis labels in INK (#F0EFE8) at size 12, readable. Tick labels in INK_SOFT (#B8B7B0) at size 10, readable. Colorbar legend uses ELEVATED_BG (#242420) fill with INK_SOFT label text -- no dark-on-dark failure. No black text on dark background detected.
+      Data: Colors identical to light render -- imprint_seq gradient (#009E73 to #4467A3) unchanged. Note annotations (C4, E4, G4, C5) render in light INK (#F0EFE8) -- visible against the mid-tone teal/blue spectrogram tiles. Brand green #009E73 visible as low-power background tile color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,54 +53,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title, axis labels, ticks all readable
-          in both themes. Minor: note annotation geom_text size=4mm is slightly small
-          at canvas resolution.'
+        comment: 'All font sizes explicitly set. Readable in both themes. Minor: colorbar
+          tick labels slightly compact at reduced display sizes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements or data collisions.
+        comment: No text overlaps. Note annotations well-separated at each note's
+          fundamental band.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Tiles clearly visible and properly colored. Minor deduction: large
-          upper frequency region (2k-10k Hz) is uniform noise floor, reducing informational
-          density of the visual.'
+        comment: Spectrogram tiles clearly show intensity variation. Note bands distinctly
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential imprint_seq cmap (green→blue) is CVD-safe and provides
-          good luminance contrast across the dB range.
+        comment: Imprint sequential gradient CVD-safe. No red-green sole encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (ggsize 800x450, scale=4). Generous margins,
-          colorbar well-positioned, no content cut off.
+        comment: Canvas gate passed (3200x1800). Clean proportions. Adequate margins
+          for colorbar.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Time (s)'', Y: ''Frequency (Hz)'', colorbar: ''Power (dB)''
-          — all descriptive with units.'
+        comment: 'X: Time (s), Y: Frequency (Hz), colorbar: Power (dB). All descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') is the prescribed
-          imprint_seq sequential colormap for single-polarity continuous data. Backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark). Both themes correct.'
+        comment: 'imprint_seq (#009E73 to #4467A3) correct for single-polarity continuous
+          data. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -123,25 +105,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: intentional note annotations, vibrato
-          synthesis, custom theme tokens, interactive tooltips. Reduced by the large
-          monotone upper frequency region occupying ~55% of canvas area.'
+        comment: Above default. Musical note annotations and frequency clamping show
+          design thought. Full adaptive chrome tokens.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Subtle grid (size=0.3), styled legend, clean axis lines, custom
-          theme. Deduction: panel_grid_major lines visible through heatmap tiles —
-          inappropriate for spectrograms, adds noise over color data.'
+        comment: Grid removed (appropriate for spectrogram). ELEVATED_BG for legend.
+          Axis spines still present -- removal would improve polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Note annotations (C4, E4, G4, C5) create a clear focal point and
-          narrate the C major arpeggio sequence. Above default but storytelling impact
-          reduced by the large empty upper region.
+        comment: Note annotations guide viewer to melody structure. Frequency clamping
+          to 4kHz eliminates noise floor.
     spec_compliance:
       score: 15
       max: 15
@@ -151,30 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram implemented as geom_tile heatmap with mel-scaled
-          frequency axis.
+        comment: Correct mel-spectrogram via geom_tile. Mel-scaled y-axis with Hz
+          labels.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dB scale, mel-scale y-axis with Hz labels,
-          colorbar labeled in dB, time x-axis in seconds, n_fft=2048/hop_length=512/n_mels=128,
-          synthesized audio.'
+        comment: Mel filter bank from scratch, dB conversion, imprint_seq colormap,
+          dB colorbar, canonical parameters.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time (s) on x, Frequency (Hz) mel-scaled on y, Power (dB) as fill
-          color — all correctly mapped.
+        comment: X=time(s), Y=mel band with Hz labels, fill=Power(dB). Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'spectrogram-mel · python · letsplot · anyplot.ai' — exact
-          required format. Colorbar 'Power (dB)' correctly labeled.
+        comment: Title in exact required format. Colorbar labeled Power (dB).
     data_quality:
       score: 15
       max: 15
@@ -184,23 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive coverage: mel filter bank, STFT, dB conversion, mel-scale
-          interpolation, harmonic content, vibrato, bell-shaped amplitude envelopes,
-          4-note arpeggio.'
+        comment: C major arpeggio with 4 notes, 5 harmonics per note, vibrato, noise
+          floor. 128 mel bands.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C major arpeggio (C4, E4, G4, C5) at 22050 Hz sample rate — realistic
-          and neutral musical audio context.
+        comment: Real-world plausible musical audio. Neutral content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies 261-523 Hz for arpeggio notes correct. dB range -10 to
-          ~45 dB appropriate for synthesized audio. 3-second duration reasonable.
+        comment: 3s at 22050 Hz, n_fft=2048, hop_length=512, n_mels=128 -- canonical
+          parameters.
     code_quality:
       score: 10
       max: 10
@@ -210,33 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data synthesis → STFT → mel filterbank
-          → DataFrame → plot → save. No functions or classes.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before noise generation.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used; no unused imports.
+        comment: All imported symbols used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic numpy implementation of STFT and mel filterbank.
-          Appropriate complexity for a spectral analysis without external DSP dependencies.
+        comment: Clean, readable. layer_tooltips() is genuine interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct.
     library_mastery:
       score: 7
       max: 10
@@ -246,32 +218,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: geom_tile + geom_text layer composition, scale_fill_gradient,
-          scale_y_continuous with custom breaks, labs, ggsize, theme. Solid but not
-          maximally idiomatic.'
+        comment: geom_tile, scale_fill_gradient, scale_y_continuous with breaks/labels,
+          layer_tooltips -- idiomatic letsplot patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips with formatted multi-line tooltip (time/frequency/power
-          with custom number formats) is a genuinely distinctive lets-plot feature.
-          HTML export adds interactivity. Above generic usage.
-  verdict: REJECTED
+        comment: layer_tooltips() with .format() chain and .min_width() is distinctly
+          letsplot. HTML export via ggsave is letsplot-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - hover-tooltips
-  - html-export
   - manual-ticks
-  - layer-composition
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
-  - normalization
+  - binning
   styling:
   - custom-colormap
   - alpha-blending
