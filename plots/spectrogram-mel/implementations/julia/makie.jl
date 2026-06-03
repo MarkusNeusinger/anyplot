@@ -1,7 +1,7 @@
 # anyplot.ai
 # spectrogram-mel: Mel-Spectrogram for Audio Analysis
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-06-03
+# Quality: 88/100 | Created: 2026-06-03
 
 using CairoMakie
 using Colors
