@@ -4,6 +4,7 @@
 // Quality: 87/100 | Created: 2026-06-03
 
 const t = window.ANYPLOT_TOKENS;
+const theme = window.ANYPLOT_THEME;
 const { width, height } = window.ANYPLOT_SIZE;
 const margin = { top: 80, right: 80, bottom: 90, left: 100 };
 const iw = width - margin.left - margin.right;
@@ -43,11 +44,14 @@ const se    = Math.sqrt(ssRes / (n - 2));
 const tCrit = 2.447;
 const unknownConc = (unknownAbs - intercept) / slope;
 
+// Band opacity adapts to theme — dark background needs stronger fill for visibility
+const bandOpacity = theme === "dark" ? 0.25 : 0.15;
+
 // --- Scales ---
 const xScale = d3.scaleLinear().domain([-0.5, 16.5]).range([0, iw]);
 const yScale = d3.scaleLinear().domain([-0.03, 0.76]).range([ih, 0]);
 
-// --- Prediction band (sampled at fine intervals) ---
+// --- Prediction band data (sampled at fine intervals) ---
 const bandPts = d3.range(-0.4, 16.15, 0.1).map(x => {
   const yHat = slope * x + intercept;
   const hw   = tCrit * se * Math.sqrt(1 + 1 / n + (x - xMean) ** 2 / Sxx);
@@ -61,13 +65,14 @@ const svg = d3.select("#container")
   .attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-// --- Y-axis gridlines (behind everything) ---
-[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7].forEach(v => {
-  g.append("line")
-    .attr("x1", 0).attr("x2", iw)
-    .attr("y1", yScale(v)).attr("y2", yScale(v))
-    .attr("stroke", t.grid).attr("stroke-width", 1);
-});
+// --- Y-axis gridlines (behind everything) — D3 data join ---
+g.selectAll(".ygrid")
+  .data([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+  .join("line")
+  .attr("class", "ygrid")
+  .attr("x1", 0).attr("x2", iw)
+  .attr("y1", v => yScale(v)).attr("y2", v => yScale(v))
+  .attr("stroke", t.grid).attr("stroke-width", 1);
 
 // --- Prediction interval band ---
 g.append("path")
@@ -77,14 +82,15 @@ g.append("path")
     .y0(d => yScale(d.lo))
     .y1(d => yScale(d.hi)))
   .attr("fill", t.palette[2])
-  .attr("opacity", 0.15);
+  .attr("opacity", bandOpacity);
 
-// --- Regression line ---
-g.append("line")
-  .attr("x1", xScale(-0.4)).attr("y1", yScale(slope * -0.4 + intercept))
-  .attr("x2", xScale(16.0)).attr("y2", yScale(slope * 16.0 + intercept))
+// --- Regression line (d3.line path generator — more idiomatic than SVG <line>) ---
+g.append("path")
+  .datum([[-0.4, slope * -0.4 + intercept], [16.0, slope * 16.0 + intercept]])
+  .attr("d", d3.line().x(d => xScale(d[0])).y(d => yScale(d[1])))
   .attr("stroke", t.palette[2])
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("fill", "none");
 
 // --- Unknown sample dashed guide lines ---
 // Horizontal: y-axis edge → unknown point (shows measured absorbance)
@@ -176,6 +182,13 @@ const legendItems = [
   { type: "band", color: t.palette[2], label: "95% prediction interval" },
   { type: "dot",  color: t.palette[4], label: "Unknown sample" },
 ];
+
+// Subtle legend background for visual polish
+g.append("rect")
+  .attr("x", lx - 10).attr("y", ly - 10)
+  .attr("width", 244).attr("height", legendItems.length * 26 + 18)
+  .attr("fill", t.elevatedBg).attr("rx", 4).attr("opacity", 0.85);
+
 legendItems.forEach((item, i) => {
   const iy = ly + i * 26;
   if (item.type === "dot") {
@@ -188,10 +201,16 @@ legendItems.forEach((item, i) => {
       .attr("x2", lx + 20).attr("y2", iy + 6)
       .attr("stroke", item.color).attr("stroke-width", 2.5);
   } else {
+    // Band swatch: elevated opacity + outline stroke for dark-theme readability
     g.append("rect")
       .attr("x", lx).attr("y", iy)
       .attr("width", 20).attr("height", 12)
-      .attr("fill", item.color).attr("opacity", 0.15);
+      .attr("fill", item.color).attr("opacity", 0.5);
+    g.append("rect")
+      .attr("x", lx).attr("y", iy)
+      .attr("width", 20).attr("height", 12)
+      .attr("fill", "none")
+      .attr("stroke", item.color).attr("stroke-width", 1).attr("opacity", 0.85);
   }
   g.append("text")
     .attr("x", lx + 26).attr("y", iy + 11)
