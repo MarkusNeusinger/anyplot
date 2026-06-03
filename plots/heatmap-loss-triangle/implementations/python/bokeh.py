@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
-Library: bokeh | Python 3.13
-Quality: 90/100 | Updated: 2026-06-03
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-03
 """
 
 # Remove this script's directory from sys.path so 'import bokeh' finds the installed package,
