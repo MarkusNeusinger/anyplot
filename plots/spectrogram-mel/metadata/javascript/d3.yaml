@@ -1,0 +1,250 @@
+library: d3
+language: javascript
+specification_id: spectrogram-mel
+created: '2026-06-03T18:20:46Z'
+updated: '2026-06-03T18:44:10Z'
+generated_by: claude-sonnet
+workflow_run: 26903905452
+issue: 4672
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Gamma-compressed colorscale (dbGamma=2.2) is a sophisticated real-world technique
+    that improves visual dynamic range by pushing noise floor dark and keeping harmonic
+    peaks vivid green
+  - Synthesized C major scale with physically accurate note frequencies, 10 harmonics
+    per note, and realistic attack/sustain/decay envelopes produces a genuinely instructive
+    mel-spectrogram
+  - 'All spec requirements satisfied: mel scale, decibel conversion, colorbar labeled
+    in dB, time axis, Hz labels at key mel band edges'
+  - Correct Imprint sequential tokens (t.seq) used for continuous color mapping; theme-adaptive
+    chrome correctly adapts across light and dark renders
+  - SVG linearGradient + d3.axisRight colorbar is idiomatic and elegant D3 implementation
+  weaknesses:
+  - Colorbar 'Power (dB)' rotated label and tick labels at 14px CSS are at the lower
+    end of the recommended range — increasing to 15-16px would improve legibility
+    when scaled down
+  - 'DE-02: Axis domain lines rendered as solid inkSoft strokes rather than de-emphasized;
+    colorbar has no visual frame refinement beyond the gradient rect'
+  - 'LM-02: Color scale uses d3.interpolateRgb(t.seq[1], t.seq[0]) rather than the
+    more D3-idiomatic d3.scaleSequential(d3.interpolateRgbBasis(t.seq)) — minor API
+    refinement opportunity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) in canvas margins (title area, axis areas, colorbar region). The heatmap plot area is filled with mel-spectrogram data cells.
+      Chrome: Title "spectrogram-mel · javascript · d3 · anyplot.ai" in dark ink at 22px, clearly readable. X-axis tick labels 0.0s-4.0s at 15px and Y-axis tick labels 100Hz-8kHz at 15px are readable. Axis labels "Time (s)" and "Frequency (Hz)" at 18px are clear. Colorbar "Power (dB)" label and tick labels at 14px are readable.
+      Data: Blue-slate noise floor (Imprint seq[1] ~#4467A3) with bright brand-green (#009E73) harmonic bands showing C major scale ascending then descending. Colorbar transitions from blue-slate (-80 dB, bottom) to green (0 dB, top). Dashed reference lines at 100/250/500/1k/2k/4k/8kHz are subtly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) in canvas margins. The heatmap data colors are identical to light render.
+      Chrome: Title and all axis text render in light inkSoft token, clearly visible against the dark background. Colorbar tick labels are light-colored and readable. No dark-on-dark failures detected — all chrome elements adapted via ANYPLOT_TOKENS.
+      Data: Identical data colors to light render — same blue-slate noise floor and same brand-green harmonics. C major arc pattern reads with same clarity.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (22px title, 18px axis labels, 15px
+          tick labels, 14px colorbar); readable in both themes. Minor deduction: colorbar
+          labels at 14px are at the minimum range.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text detected in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clear; harmonic bands prominent; reference lines subtly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential blue-green is CVD-safe; strong luminance contrast
+          between noise floor and harmonics
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (landscape 3200x1800); well-balanced proportions;
+          colorbar correctly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s), Frequency (Hz), Power (dB) — all with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses Imprint t.seq tokens (seq[0]=green at peak, seq[1]=blue at
+          noise floor); backgrounds #FAF8F1 light / #1A1A17 dark; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): gamma compression (dbGamma=2.2) and musical C
+          major pattern show design sophistication; not yet at strong design (6) due
+          to limited typographic polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above defaults: dashed reference lines at key frequency bands are
+          subtle and useful; axis domain lines remain as solid inkSoft strokes; colorbar
+          frame has no extra polish'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: C major ascending-descending melody creates clear arc; harmonic
+          overtones visible; reference lines aid frequency interpretation; clear focal
+          point at melody peak'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram as 2D intensity heatmap with mel-scaled Y
+          axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 128 mel bins, dB conversion (10*log10), colorbar labeled in dB, time
+          axis, Hz tick labels at key mel band edges, synthesized audio
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, mel-scaled frequency on Y, power (dB) encoded as color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'spectrogram-mel · javascript · d3 · anyplot.ai' matches required
+          format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full mel-spectrogram: 128 mel bins, 200 time frames, 10 harmonics
+          per note, amplitude envelope, ascending+descending melody'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C major scale with physically accurate note frequencies (C4=261.6
+          Hz etc.) — neutral, recognizable musical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 seconds, 40-8000 Hz, n_mels=128 (spec-recommended), power -80 to
+          0 dB (standard audio dynamic range)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure with minimal necessary helper arrow functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: note frequencies and mel bin centers are fixed'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only global d3 and ANYPLOT_TOKENS/SIZE used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 harness handles plot-{theme}.png + plot-{theme}.html output correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Modern D3 join pattern, d3.scaleLinear, d3.axisBottom/Right, d3.interpolateRgb,
+          SVG linearGradient via defs — above default-3
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG linearGradient for colorbar, custom manual mel-scale Y-axis tick
+          rendering, gamma-compressed D3 color interpolation — above default-1
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
