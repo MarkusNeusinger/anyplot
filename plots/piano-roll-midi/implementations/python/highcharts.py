@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
-Library: highcharts | Python 3.13
-Quality: 92/100 | Updated: 2026-06-03
+Library: highcharts unknown | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-03
 """
 
 import os
