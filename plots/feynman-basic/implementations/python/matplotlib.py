@@ -1,5 +1,7 @@
-"""anyplot.ai — feynman-basic
-Feynman Diagram for Particle Interactions
+""" anyplot.ai
+feynman-basic: Feynman Diagram for Particle Interactions
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-03
 """
 
 import os
