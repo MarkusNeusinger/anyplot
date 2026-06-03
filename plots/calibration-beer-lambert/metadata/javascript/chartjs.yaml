@@ -1,0 +1,248 @@
+library: chartjs
+language: javascript
+specification_id: calibration-beer-lambert
+created: '2026-06-03T08:20:03Z'
+updated: '2026-06-03T08:38:36Z'
+generated_by: claude-sonnet
+workflow_run: 26872104514
+issue: 4410
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Complete Beer-Lambert spec implementation with scatter points, regression line,
+    PI band, and unknown sample projection lines
+  - 'Expert use of Chart.js fill: "+1" technique for shaded prediction band between
+    two datasets'
+  - Custom afterDraw plugin cleanly places regression equation, R², and axis readout
+    annotations using canvas primitives
+  - Semantic use of palette[4] (#AE3030) for unknown sample provides clear visual
+    distinction within Imprint palette
+  - Legend filter elegantly hides internal _-prefixed helper datasets
+  weaknesses:
+  - A = 0.350 annotation positioned at left + 6 px is very close to the left canvas
+    margin — shift to left + 16 for breathing room
+  - 'Prediction band border lines (borderColor: palette[0] + 66) are barely visible
+    — consider removing borderWidth entirely and keeping only the fill for a cleaner
+    look'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color
+      Chrome: Title "calibration-beer-lambert · javascript · chartjs · anyplot.ai" in dark text — readable. Axis labels "Concentration (mg/L)" and "Absorbance" in dark ink — readable. Tick labels in inkSoft color — readable. Regression equation (A = 0.0498c + 0.0014) and R² = 0.99986 annotations in dark ink — readable.
+      Data: 7 calibration standard scatter points in #009E73 (brand green). Linear regression line in #009E73. Very narrow 95% prediction band in semi-transparent #009E73 (correctly narrow for R²=0.99986). Unknown sample as matte-red triangle (#AE3030) at (7.0, 0.350) with dashed projection lines in same color. Axis readout annotations in matte-red.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title and all labels render in light text — fully readable. No dark-on-dark failures detected. Axis labels and ticks use theme-adaptive light colors. Regression equation annotation appears in light ink — readable.
+      Data: Calibration points and regression line remain in #009E73 (identical to light render). Unknown sample triangle remains in #AE3030 (identical to light render). Prediction band nearly imperceptible on dark background — correctly narrow for this R² value, not a defect.
+      Legibility verdict: PASS — all text elements clearly readable against near-black background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22, axis labels 18, ticks 14,
+          legend 16, annotations 15-16 px). Minor: A=0.350 annotation at left+6px
+          is very tight against left edge.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions between regression equation, axis readouts, ticks,
+          or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Calibration points (radius 10) and unknown sample triangle (radius
+          13) are prominent. PI band correctly narrow for R²=0.99986.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Unknown sample uses triangle shape as redundant encoding alongside
+          matte-red color, maintaining CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well, balanced margins, legend near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance per spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary series in #009E73, unknown sample in #AE3030 (semantic anchor),
+          light/dark backgrounds correct, chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured-default: intentional semantic color, custom annotation
+          plugin, transparent PI band, triangle pointStyle. Not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'border: display false removes spines, grid uses theme tokens, legend
+          filtered to hide _ datasets, generous title padding'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed projection lines with axis readouts demonstrate calibration
+          workflow. Regression equation + R² prominently displayed.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed scatter+line chart correctly implements Beer-Lambert calibration
+          curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: scatter calibration standards, regression
+          line, R² annotation, equation annotation, 95% PI band, unknown sample with
+          dashed projection lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on x, Absorbance on y, all 7 standards visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly calibration-beer-lambert · javascript · chartjs · anyplot.ai.
+          Legend shows 4 meaningful series, internal helper datasets filtered.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Blank (zero), 6 calibration standards, linear fit, prediction band,
+          unknown sample — complete demonstration
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: UV-Vis spectrophotometry scenario with realistic concentrations (0-12
+          mg/L) and plausible absorbance values (0.003-0.601)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentration range within Beer-Lambert linearity (A < 1.0), correct
+          proportionality through dataset
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data constants → regression math → mount canvas → plugins
+          → chart'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses globals window.ANYPLOT_TOKENS and Chart as required
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom plugins elegantly encapsulate background fill and annotation
+          drawing. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-rendered HTML+PNG output; no deprecated APIs
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of Chart.js: mixed dataset types, fill: +1 for area-between
+          bands, lifecycle hooks for custom canvas drawing, filter callback for legend
+          pruning'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'fill: +1 for prediction band, pointStyle: triangle, custom canvas
+          plugins, borderDash for dashed lines — excellent but not uniquely creative
+          application'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
