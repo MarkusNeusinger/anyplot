@@ -1,8 +1,15 @@
-""" pyplots.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-10
+Library: seaborn | Python
 """
+
+import os
+import sys
+
+
+# Remove this file's directory from sys.path so "import seaborn" resolves to the library
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != _this_dir]
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -10,47 +17,67 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data — Fruit production (thousands of tonnes), sorted by value for visual hierarchy
-categories = ["Apples", "Grapes", "Oranges", "Bananas", "Strawberries"]
-values = [35, 28, 22, 18, 12]
-unit_value = 5
+THEME = os.getenv("ANYPLOT_THEME", "light")
 
-# Custom fruit-inspired palette — distinctive and colorblind-safe
-fruit_colors = {
-    "Apples": "#C23B22",  # rich red
-    "Grapes": "#6B5B95",  # deep purple
-    "Oranges": "#E08A2C",  # warm orange
-    "Bananas": "#D4A843",  # golden yellow
-    "Strawberries": "#D45B7A",  # rosy pink
-}
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Build faded versions for partial icons
-fruit_faded = {}
-for cat, hex_color in fruit_colors.items():
-    r, g, b = mcolors.to_rgb(hex_color)
-    faded = (r + (1 - r) * 0.6, g + (1 - g) * 0.6, b + (1 - b) * 0.6)
-    fruit_faded[cat] = mcolors.to_hex(faded)
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
-# Build DataFrame for seaborn stripplot — each row is one icon
+# Data — Developer survey: most-used programming languages (% of respondents)
+categories = ["Python", "JavaScript", "Java", "C++", "Go"]
+values = [67, 55, 43, 32, 25]
+unit_value = 10  # each icon = 10% of respondents
+
+# Category colors from Imprint palette in canonical order
+cat_colors = {cat: IMPRINT_PALETTE[i] for i, cat in enumerate(categories)}
+
+# Faded colors for partial icons — blend with PAGE_BG to signal fractional remainder
+cat_faded = {}
+for i, cat in enumerate(categories):
+    rc, gc, bc = mcolors.to_rgb(IMPRINT_PALETTE[i])
+    rb, gb, bb = mcolors.to_rgb(PAGE_BG)
+    opacity = 0.35
+    cat_faded[cat] = mcolors.to_hex(
+        (rc * opacity + rb * (1 - opacity), gc * opacity + gb * (1 - opacity), bc * opacity + bb * (1 - opacity))
+    )
+
+# Build icon DataFrame — each row is one icon dot
 rows = []
 for cat, val in zip(categories, values, strict=True):
-    full_icons = int(val // unit_value)
+    full_icons = val // unit_value
     partial = (val % unit_value) / unit_value
-
     for j in range(full_icons):
         rows.append({"category": cat, "x": j, "icon_type": "full"})
-
     if partial > 0:
         rows.append({"category": cat, "x": full_icons, "icon_type": "partial"})
 
 df = pd.DataFrame(rows)
 
-# Plot setup — use seaborn theming and styling
-sns.set_theme(style="white", context="talk", font_scale=1.1)
-fig, ax = plt.subplots(figsize=(16, 7.5))
+# Theme-aware seaborn setup
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.labelcolor": INK_SOFT,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-# Use sns.stripplot for categorical dot layout — distinctive seaborn feature
-# stripplot places individual observations along a categorical axis
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+fig.set_facecolor(PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Full icons via seaborn stripplot — discrete dot placement along y-axis categories
 df_full = df[df["icon_type"] == "full"]
 if not df_full.empty:
     sns.stripplot(
@@ -60,11 +87,11 @@ if not df_full.empty:
         hue="category",
         order=categories,
         hue_order=categories,
-        palette=fruit_colors,
-        size=25,
+        palette=cat_colors,
+        size=14,
         marker="o",
-        edgecolor="white",
-        linewidth=1.5,
+        edgecolor=PAGE_BG,
+        linewidth=0.8,
         jitter=False,
         dodge=False,
         legend=False,
@@ -72,7 +99,7 @@ if not df_full.empty:
         ax=ax,
     )
 
-# Partial icons — use stripplot per category with faded colors
+# Partial icons — faded to signal fractional remainder
 df_partial = df[df["icon_type"] == "partial"]
 for cat in categories:
     cat_partial = df_partial[df_partial["category"] == cat]
@@ -82,11 +109,11 @@ for cat in categories:
             x="x",
             y="category",
             order=categories,
-            color=fruit_faded[cat],
-            size=25,
+            color=cat_faded[cat],
+            size=14,
             marker="o",
-            edgecolor="white",
-            linewidth=1.5,
+            edgecolor=PAGE_BG,
+            linewidth=0.8,
             jitter=False,
             dodge=False,
             legend=False,
@@ -94,46 +121,46 @@ for cat in categories:
             ax=ax,
         )
 
-# Highlight the top category with a subtle background band
-ax.axhspan(-0.4, 0.4, color=fruit_colors[categories[0]], alpha=0.06, zorder=0)
+# Subtle highlight band for the top category row
+ax.axhspan(-0.4, 0.4, color=IMPRINT_PALETTE[0], alpha=0.07, zorder=0)
 
-# Value annotations on the right side for storytelling
-for idx, val in enumerate(values):
-    total_icons = int(val // unit_value) + (1 if val % unit_value > 0 else 0)
+# Value annotations to the right of each row
+for idx, (_cat, val) in enumerate(zip(categories, values, strict=True)):
+    total_icons = val // unit_value + (1 if val % unit_value > 0 else 0)
     ax.text(
-        total_icons + 0.4,
+        total_icons + 0.3,
         idx,
-        f"{val:,}k",
-        fontsize=16,
+        f"{val}%",
+        fontsize=8,
         va="center",
         ha="left",
-        color="#444444",
+        color=INK,
         fontweight="bold" if idx == 0 else "normal",
     )
 
-# Labels and styling
-ax.set_xlabel("Icons (each = 5 thousand tonnes)", fontsize=16, color="#888888", labelpad=12)
+# Axis styling
+ax.set_xlabel(f"Icons (each = {unit_value}% of respondents)", fontsize=10, color=INK_SOFT, labelpad=8)
 ax.set_ylabel("")
-ax.tick_params(axis="y", length=0, pad=10, labelsize=20)
+ax.tick_params(axis="y", length=0, pad=8, labelsize=8, colors=INK)
 ax.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
 
-max_icons = max(val // unit_value for val in values) + 2
-ax.set_xlim(-0.7, max_icons + 0.8)
+max_x_pos = max(v // unit_value + (1 if v % unit_value > 0 else 0) for v in values)
+ax.set_xlim(-0.7, max_x_pos + 1.5)
 
-ax.set_title("pictogram-basic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+ax.set_title("pictogram-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=14, color=INK)
 
-sns.despine(left=True, bottom=True)
+sns.despine(left=True, bottom=True, ax=ax)
 
-# Legend annotation
+# Unit legend annotation — tertiary text
 ax.annotate(
-    f"\u25cf = {unit_value:,} thousand tonnes   (lighter = partial value)",
-    xy=(0.5, -0.08),
+    f"● = {unit_value}% of respondents   (lighter = partial unit)",
+    xy=(0.5, -0.10),
     xycoords="axes fraction",
-    fontsize=16,
+    fontsize=8,
     ha="center",
     va="top",
-    color="#666666",
+    color=INK_MUTED,
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
