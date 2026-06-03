@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
-Library: bokeh
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
